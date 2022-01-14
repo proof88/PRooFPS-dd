@@ -7,7 +7,9 @@ This game is the successor of the original PR00FPS:
 https://github.com/proof88/PR00FPS
 
 This game is still under development.
+
 Milestones: https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=due_date&state=open
+
 The board for this project is under my name (not under this repo): https://github.com/users/proof88/projects/6
 
 You can follow the project on my facebook page:
