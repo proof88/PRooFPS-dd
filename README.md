@@ -6,13 +6,13 @@
 This game is the successor of the original PR00FPS:
 https://github.com/proof88/PR00FPS
 
-This game is still under development.
+This game is still **under development**.
 
-Milestones: https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=due_date&state=open
+**Milestones**: https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=due_date&state=open
 
-The board for this project is under my name (not under this repo): https://github.com/users/proof88/projects/6
+The **board for this project** is under my name (not under this repo): https://github.com/users/proof88/projects/6
 
-You can follow the project on my facebook page:
+You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
 
 Clicking on the image below brings you to a short **YouTube teaser video**:
