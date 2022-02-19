@@ -1,0 +1,15 @@
+# english.txt - English language file
+#
+
+# Error messages
+# --------------------------------------------------------
+ERROR IN CODE!
+Couldn't initialize the graphics subsystem!
+Couldn't initialize the sound manager subsystem!
+Couldn't initialize the newtorking subsystem!
+An error occured while shutting down the graphics subsystem!
+An error occured while shutting down the sound manager subsystem!
+An error occured while shutting down the networking subsystem!
+Error
+Warning
+Info

@@ -1,0 +1,15 @@
+# magyar.txt - Magyar nyelvi fájl
+#
+
+# Hibaüzenetek
+# --------------------------------------------------------
+HIBA A KÓDBAN!
+A grafikus alrendszert nem lehet elindítani!
+A hangkezelõ alrendszert nem lehet elindítani!
+A hálózatkezelõ alrendszert nem lehet elindítani!
+A grafikus alrendszer leállítása közben hiba történt!
+A hangkezelõ alrendszer leállítása közben hiba történt!
+A hálózatkezelõ alrendszer leállítása közben hiba történt!
+Hiba
+Figyelmeztetés
+Info
