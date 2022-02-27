@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Tests">
+      <UniqueIdentifier>{ac8f9d26-abcf-48a6-a35d-5375e10f7452}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -30,6 +33,9 @@
     <ClInclude Include="CustomPGE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\MapsTest.h">
+      <Filter>Source Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -40,6 +46,9 @@
     </ClCompile>
     <ClCompile Include="CustomPGE.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\PRooFPS-dd-Tests.cpp">
+      <Filter>Source Files\Tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

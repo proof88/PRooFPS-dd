@@ -78,6 +78,7 @@
 
 #pragma warning(disable:4100)  /* unreferenced formal parameter */
 
+#ifndef TESTING
 int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPSTR lpCmdLine, const int nCmdShow)
 {
     CustomPGE* const gameEngine = CustomPGE::createAndGetCustomPGEinstance();
@@ -123,11 +124,12 @@ int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, con
     return nResult;
 } // WinMain()
 
-
 __declspec(dllexport) int APIENTRY g3tVersion()
 {
     return 1;
 }
+
+#endif
 
 /*
 BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )

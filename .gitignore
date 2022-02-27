@@ -15,6 +15,7 @@
 
 # Build results
 [Dd]ebug/
+[Dd]ebugTest_PRooFPS-dd/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
