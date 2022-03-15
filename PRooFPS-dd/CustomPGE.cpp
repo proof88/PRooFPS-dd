@@ -25,14 +25,11 @@ static const std::string GAME_VERSION = "0.1.0.0 Alpha";
 // ############################### PUBLIC ################################
 
 
-/**
-    Creates and gets the only instance.
-*/
 CustomPGE* CustomPGE::createAndGetCustomPGEinstance()
 {
     static CustomPGE pgeInstance((GAME_NAME + " " + GAME_VERSION).c_str());
     return &pgeInstance;
-} // createAndGetCustomPGEinstance()
+}
 
 
 // ############################## PROTECTED ##############################
@@ -42,29 +39,27 @@ CustomPGE* CustomPGE::createAndGetCustomPGEinstance()
     This is the only usable ctor, this is used by the static createAndGet().
 */
 CustomPGE::CustomPGE(const char* gameTitle) :
-    PGE(gameTitle)
+    PGE(gameTitle),
+    maps(getPRRE())
 {
 
-} // CustomPGE(...)
-
+}
 
 CustomPGE::~CustomPGE()
 {
 
-} // ~CustomPGE()
-
+}
 
 CConsole& CustomPGE::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
-} // getConsole()
+}
 
 
 const char* CustomPGE::getLoggerModuleName()
 {
     return "CustomPGE";
-} // getLoggerModuleName()
-
+}
 
 /**
     Must-have minimal stuff before loading anything.
@@ -82,9 +77,10 @@ void CustomPGE::onGameInitializing()
     getConsole().SetBoolsColor( FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "00FFFF" );
 
     // Turn everything on for development only
-    getConsole().SetLoggingState("4LLM0DUL3S", true);
-}
+    //getConsole().SetLoggingState("4LLM0DUL3S", true);
 
+    CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), true);
+}
 
 /** 
     Loading game content here.
@@ -96,17 +92,16 @@ void CustomPGE::onGameInitialized()
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
 
-    // TODO: load map, etc.
+    maps.initialize();
 
     getPRRE().WriteList();
 
-} // onGameInitialized()
-
+}
 
 /** 
     Game logic here.
-    DO NOT make any unnecessary operations here, as this function must complete below 16 msecs to keep 60 fps!
-    Avoid dynamic memory allocations as well! Make sure you use a preallocated memory pool!
+    Game engine invokes this in every frame.
+    DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
 */
 void CustomPGE::onGameRunning()
 {
@@ -126,8 +121,7 @@ void CustomPGE::onGameRunning()
     //str << "key: " << input.getKeyboard().isKeyPressed(VK_RETURN);
 
     //window.SetCaption(str.str());
-} // onGameRunning()
-
+}
 
 /** 
     Freeing up game content here.
@@ -138,7 +132,7 @@ void CustomPGE::onGameDestroying()
     getPRRE().getObject3DManager().DeleteAll();
 
     getConsole().Deinitialize();
-} // onGameRunning()
+}
 
 
 // ############################### PRIVATE ###############################

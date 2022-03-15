@@ -13,6 +13,9 @@
 #include "../../../PGE/PGE/PGE.h"
 #include "../../../PGE/PGE/PRRE/include/external/Object3D/PRREObject3DManager.h"
 
+#include "Consts.h"
+#include "Maps.h"
+
 /**
     The customized game engine class. This handles the game logic. Singleton.
 */
@@ -22,19 +25,22 @@ class CustomPGE :
 
 public:
 
-    static CustomPGE* createAndGetCustomPGEinstance();  /**< Creates and gets the only instance. */
+    static CustomPGE* createAndGetCustomPGEinstance();
+    static const char* getLoggerModuleName();
 
     // ---------------------------------------------------------------------------
 
     CConsole& getConsole() const;
-    static const char* getLoggerModuleName();
+    
    
 protected:
 
-    CustomPGE()
+    CustomPGE() :
+        maps(getPRRE())
     {}
 
-    CustomPGE(const CustomPGE&)
+    CustomPGE(const CustomPGE&) :
+        maps(getPRRE())
     {}
 
     CustomPGE& operator=(const CustomPGE&)
@@ -53,6 +59,7 @@ protected:
 
 private:
 
+    Maps maps;
 
     // ---------------------------------------------------------------------------
 

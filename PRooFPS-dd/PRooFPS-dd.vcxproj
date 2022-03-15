@@ -124,7 +124,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Consts.h" />
     <ClInclude Include="CustomPGE.h" />
+    <ClInclude Include="Maps.h" />
     <ClInclude Include="PRooFPS-dd.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -133,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CustomPGE.cpp" />
+    <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

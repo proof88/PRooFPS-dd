@@ -1,9 +1,14 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
-
 #pragma once
+
+/*
+    ###################################################################################
+    stdafx.h
+    Precompiled header for PRooFPS-dd
+    Made by PR00F88, West Whiskhyll Entertainment
+    2022
+    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
+    ###################################################################################
+*/
 
 // C RunTime Header Files
 #include <conio.h>
