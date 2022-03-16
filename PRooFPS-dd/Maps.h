@@ -67,7 +67,7 @@ private:
     // ---------------------------------------------------------------------------
 
     static bool lineShouldBeIgnored(const std::string& sLine);
-    static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue);
+    static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
     bool lineHandleLayout(const std::string& sLine, TPRREfloat& y);
 

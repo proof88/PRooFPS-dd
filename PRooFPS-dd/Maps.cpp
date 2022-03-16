@@ -114,7 +114,7 @@ bool Maps::load(const char* fname)
         {
             continue;
         }
-        else if ( lineIsValueAssignment(sLine, sVar, sValue) )
+        else if ( lineIsValueAssignment(sLine, sVar, sValue, bParseError) )
         {
             // TODO assign value
             if ( bMapLayoutReached )
@@ -123,7 +123,7 @@ bool Maps::load(const char* fname)
                 bParseError = true;
             }
         }
-        else
+        else if ( !bParseError )
         {
             bMapLayoutReached = true;
             bParseError &= lineHandleLayout(sLine, y);
@@ -134,6 +134,7 @@ bool Maps::load(const char* fname)
     if ( bParseError )
     {
         getConsole().EOLnOO("ERROR: failed to parse file!");
+        unload();
         return false;
     }
 
@@ -257,7 +258,7 @@ bool Maps::lineShouldBeIgnored(const std::string& sLine)
     return sLine.empty() || (sLine[0] == '#');
 }
 
-bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue)
+bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError)
 {
     const std::string::size_type nAssignmentPos = sLine.find('=');
     if ( nAssignmentPos == std::string::npos )
@@ -268,6 +269,7 @@ bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, st
     if ( (nAssignmentPos == (sLine.length() - 1)) || (nAssignmentPos == 0 ) )
     {
         CConsole::getConsoleInstance("Maps").EOLn("ERROR: erroneous assignment: %s!", sLine.c_str());
+        bParseError = true;
         return false;
     }
 

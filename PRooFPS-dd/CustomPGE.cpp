@@ -95,7 +95,7 @@ void CustomPGE::onGameInitialized()
     getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
     maps.initialize();
-    maps.load("gamedata/maps/map_test.txt");
+    maps.load("gamedata/maps/map_test_good.txt");
 
     getPRRE().WriteList();
 
