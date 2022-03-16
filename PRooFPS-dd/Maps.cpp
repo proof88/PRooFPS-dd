@@ -13,6 +13,9 @@
 
 #include "Consts.h"
 
+// TODO cpp11 initializer list, and then it can be moved into the function too
+static std::set<char> foregroundBlocks;
+static std::set<char> backgroundBlocks;
 
 // ############################### PUBLIC ################################
 
@@ -30,6 +33,24 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     m_tex_floor  = PGENULL;
     m_tex_aztec1 = PGENULL;
     m_objectsMinY = 0.0f;
+    m_width = 0;
+    m_height = 0;
+
+    foregroundBlocks.insert('A');
+    foregroundBlocks.insert('B');
+    foregroundBlocks.insert('C');
+    foregroundBlocks.insert('D');
+    foregroundBlocks.insert('E');
+    foregroundBlocks.insert('F');
+    foregroundBlocks.insert('G');
+
+    backgroundBlocks.insert('H');
+    backgroundBlocks.insert('I');
+    backgroundBlocks.insert('J');
+    backgroundBlocks.insert('K');
+    backgroundBlocks.insert('L');
+    backgroundBlocks.insert('M');
+    backgroundBlocks.insert('N');
 }
 
 Maps::~Maps()
@@ -69,130 +90,52 @@ bool Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
     std::ifstream f;
-    f.open (fname, std::ifstream::in);
-    char c;
-    TPRREfloat x = 0.0f, y = 4.0f;
-    TPRREfloat maxx = x;
 
+    f.open (fname, std::ifstream::in);
     if ( !f.good() )
     {
         getConsole().EOLnOO("ERROR: failed to open file!");
         return false;
     }
 
-    do
+    bool bParseError = false;
+    bool bMapLayoutReached = false;
+    const std::streamsize nBuffSize = 1024;
+    char cLine[nBuffSize];
+    TPRREfloat y = 4.0f;
+    while ( !bParseError && !f.eof() )
     {
-        c = static_cast<char>(f.get());
-        switch (c)
+        f.getline(cLine, nBuffSize);
+        // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
+        PFL::strClr( cLine );
+        const std::string sLine(cLine);
+        std::string sVar, sValue;
+        if ( lineShouldBeIgnored(sLine) )
         {
-          case 'A':
-          case 'C':
-          case 'Q':
-          case 'X':
-          case 'H':
-          case 'B':
-          case 'D':
-          case 'I':
-          case 'V':
-          case 'P': m_objects_h++;
-                    m_objects = (PRREObject3D**) realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
-                    if ( m_objects ) {
-                      switch (c) {
-                        case 'A':
-                        case 'C':
-                        case 'Q':
-                        case 'H':
-                        case 'B':
-                        case 'D':
-                        case 'I':
-                        case 'V':
-                        case 'X':
-                        case 'P': m_objects[m_objects_h-1] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
-                                  m_objects[m_objects_h-1]->SetLit(true);
-                                  break;
-                      }
-                      switch (c) {
-                        case 'H': 
-                        case 'X': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick1);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'B': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick2);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'P': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_floor);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'D': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_crate);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'Q': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick1);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'A': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_aztec1);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'C': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_castle4);
-                                  m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
-                                  break;
-                        case 'I': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick3);
-                                  break;
-                        case 'V': m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick4);
-                                  break;                                           
-                      }
-
-                      //m_objects[m_objects_h-1]->setVertexTransferMode(PRRE_VT_RETAINED);
-
-                      switch (c) {
-                        case 'Q': PRREVector tmp(x, y, 0.0f);
-                                  m_candleLights.push_back(tmp);
-                                  break;
-                      }
-
-                      switch (c) {
-                        case 'A':
-                        case 'Q':
-                        case 'X':
-                        case 'H':
-                        case 'I':
-                        case 'V':
-                        case 'B': m_objects[m_objects_h-1]->getPosVec().Set(x, y, 0.0f); 
-                                  break;
-                      }
-                      switch (c) {
-                        case 'C':
-                        case 'D':
-                        case 'P': m_objects[m_objects_h-1]->getPosVec().Set(x, y, -GAME_BLOCK_SIZE_Z); 
-                                  break;
-                      } 
-                      switch (c) {
-                        case 'I': m_start.SetX(x);
-                                  m_start.SetY(y);
-                                  m_start.SetZ(GAME_PLAYERS_POS_Z);
-                                  break;
-                        case 'V': m_end.SetX(x);
-                                  m_end.SetY(y);
-                                  m_end.SetZ(GAME_PLAYERS_POS_Z);
-                                  break;
-                      }
-                      switch (c) {
-                        case 'X': //EnemyManager->Create(x,y,GAME_PLAYERS_POS_Z);
-                                  break;
-                      }
-                      x = x + GAME_BLOCK_SIZE_X;
-                      if ( x > maxx ) maxx = x;
-                    }
-                    else
-                    {
-                      return false;
-                    }
-                    break;
-          case '\n': y = y - GAME_BLOCK_SIZE_Y;
-                     x = 0.0;
-                     break;
+            continue;
         }
-    } while (f.good());
-
+        else if ( lineIsValueAssignment(sLine, sVar, sValue) )
+        {
+            // TODO assign value
+            if ( bMapLayoutReached )
+            {
+                getConsole().EOLn("ERROR: parse: assignment after map layout block: %s!", sLine.c_str());
+                bParseError = true;
+            }
+        }
+        else
+        {
+            bMapLayoutReached = true;
+            bParseError &= lineHandleLayout(sLine, y);
+        }
+    };
     f.close();
+
+    if ( bParseError )
+    {
+        getConsole().EOLnOO("ERROR: failed to parse file!");
+        return false;
+    }
 
     m_gfx.getCamera().getPosVec().Set(m_end.getX(), m_end.getY(), GAME_CAM_Z);
 
@@ -223,13 +166,15 @@ void Maps::unload()
         m_objects = NULL;
         m_objects_h = 0;
     }
+    m_width = 0;
+    m_height = 0;
 }
 
 void Maps::shutdown()
 {
-    unload();
     if ( m_gfx.isInitialized() )
     {
+        unload();
         m_gfx.getTextureManager().DeleteAll();
         m_tex_brick1 = PGENULL;
         m_tex_brick2 = PGENULL;
@@ -240,6 +185,16 @@ void Maps::shutdown()
         m_tex_aztec1 = PGENULL;
         m_tex_castle4 = PGENULL;
     }
+}
+
+unsigned int Maps::width() const
+{
+    return m_width;
+}
+
+unsigned int Maps::height() const
+{
+    return m_height;
 }
 
 void Maps::updateVisibilitiesForRenderer()
@@ -297,3 +252,84 @@ std::vector<PRREVector>& Maps::getCandleLights()
 
 // ############################### PRIVATE ###############################
 
+bool Maps::lineShouldBeIgnored(const std::string& sLine)
+{
+    return sLine.empty() || (sLine[0] == '#');
+}
+
+bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue)
+{
+    const std::string::size_type nAssignmentPos = sLine.find('=');
+    if ( nAssignmentPos == std::string::npos )
+    {
+        return false;
+    }
+
+    if ( (nAssignmentPos == (sLine.length() - 1)) || (nAssignmentPos == 0 ) )
+    {
+        CConsole::getConsoleInstance("Maps").EOLn("ERROR: erroneous assignment: %s!", sLine.c_str());
+        return false;
+    }
+
+    sVar = sLine.substr(0, nAssignmentPos);
+    sValue = sLine.substr(nAssignmentPos+1);
+    return true;
+}
+
+bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
+{
+    m_height++;
+    if ( m_width < sLine.length() )
+    {
+        m_width = sLine.length();
+    }
+
+    TPRREfloat x = 0.0f;
+    TPRREfloat maxx = x;
+    std::string::size_type i = 0;
+
+    while ( i != sLine.length() )
+    {
+        const char c = sLine[i];
+        i++;
+        const bool bForeground = foregroundBlocks.find(c) != foregroundBlocks.end();
+        const bool bBackground = backgroundBlocks.find(c) != backgroundBlocks.end();
+
+        x = x + GAME_BLOCK_SIZE_X;
+        if ( x > maxx )
+        {
+            maxx = x;
+        }
+        
+        if ( !bForeground && !bBackground )
+        {
+            continue;
+        }
+
+        m_objects_h++;
+        m_objects = (PRREObject3D**) realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
+        m_objects[m_objects_h-1] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+        m_objects[m_objects_h-1]->SetLit(true);
+        m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick1);
+        m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
+
+        m_objects[m_objects_h-1]->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
+
+        /*switch (c) {
+            case 'Q': PRREVector tmp(x, y, 0.0f);
+                      m_candleLights.push_back(tmp);
+                      break;
+          }*/
+
+        /*case 'I': m_start.SetX(x);
+                    m_start.SetY(y);
+                    m_start.SetZ(GAME_PLAYERS_POS_Z);
+                    break;
+          case 'V': m_end.SetX(x);
+                    m_end.SetY(y);
+                    m_end.SetZ(GAME_PLAYERS_POS_Z);
+                    break;*/
+    }
+    y = y - GAME_BLOCK_SIZE_Y;
+    return true;
+}

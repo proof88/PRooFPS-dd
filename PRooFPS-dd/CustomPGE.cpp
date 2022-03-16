@@ -91,8 +91,11 @@ void CustomPGE::onGameInitialized()
 
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
+    getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
+    getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
     maps.initialize();
+    maps.load("gamedata/maps/map_test.txt");
 
     getPRRE().WriteList();
 
@@ -115,6 +118,15 @@ void CustomPGE::onGameRunning()
 
     input.getMouse().SetCursorPos(window.getX() + window.getWidth()/2,
                                   window.getY() + window.getHeight()/2);
+
+    if ( input.getKeyboard().isKeyPressed( VK_LEFT ) )
+    {
+        getPRRE().getCamera().Strafe(-0.1f);
+    }
+    if ( input.getKeyboard().isKeyPressed( VK_RIGHT ) )
+    {
+        getPRRE().getCamera().Strafe(0.1f);
+    }
 
     std::stringstream str;
     //str << "MX1: " << changeX << "   MY1: " << changeY;

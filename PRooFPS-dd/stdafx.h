@@ -27,6 +27,7 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -36,3 +37,4 @@
 #include <windows.h>
 
 // Own headers
+#include "../../../PFL/PFL/PFL.h"
