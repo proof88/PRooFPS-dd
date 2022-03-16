@@ -98,7 +98,7 @@ void CustomPGE::onGameInitialized()
     maps.load("gamedata/maps/map_test_good.txt");
 
     getPRRE().WriteList();
-
+    getConsole().OOOLn("CustomPGE::onGameInitialized() done!");
 }
 
 /** 
@@ -141,8 +141,11 @@ void CustomPGE::onGameRunning()
 */
 void CustomPGE::onGameDestroying()
 {
+    getConsole().OLnOI("CustomPGE::onGameDestroying() ...");
+    maps.shutdown();
     getPRRE().getObject3DManager().DeleteAll();
 
+    getConsole().OOOLn("CustomPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
 }
 

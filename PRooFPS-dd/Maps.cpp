@@ -25,17 +25,12 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
 {
     m_objects_h  = 0;
     m_objects    = NULL;
-    m_tex_brick1 = PGENULL;
-    m_tex_brick2 = PGENULL;
-    m_tex_brick3 = PGENULL;
-    m_tex_brick4 = PGENULL;
-    m_tex_crate  = PGENULL;
-    m_tex_floor  = PGENULL;
-    m_tex_aztec1 = PGENULL;
+    m_texRed     = PGENULL;
     m_objectsMinY = 0.0f;
     m_width = 0;
     m_height = 0;
 
+    // TODO cpp11 initializer list
     foregroundBlocks.insert('A');
     foregroundBlocks.insert('B');
     foregroundBlocks.insert('C');
@@ -70,14 +65,7 @@ const char* Maps::getLoggerModuleName()
 
 bool Maps::initialize()
 {
-    m_tex_brick1 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\brick1.bmp");
-    m_tex_brick2 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\brick2.bmp");
-    m_tex_brick3 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\brick3.bmp");
-    m_tex_brick4 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\brick4.bmp");
-    m_tex_aztec1 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\aztec01.bmp");
-    m_tex_castle4 = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\castle04.bmp");
-    m_tex_crate  = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\crate.bmp");
-    m_tex_floor  = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\floor.bmp");
+    m_texRed = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\red.bmp");
     return true;
 }
 
@@ -122,6 +110,10 @@ bool Maps::load(const char* fname)
                 getConsole().EOLn("ERROR: parse: assignment after map layout block: %s!", sLine.c_str());
                 bParseError = true;
             }
+            else
+            {
+                lineHandleAssignment(sVar, sValue);
+            }
         }
         else if ( !bParseError )
         {
@@ -150,12 +142,14 @@ bool Maps::load(const char* fname)
         }
     }
 
-    getConsole().SOLnOO("Map loaded!");
+    getConsole().SOLnOO("Map loaded with width %d and height %d!", m_width, m_height);
     return true;
 }
 
 void Maps::unload()
 {
+    getConsole().OLnOI("Maps::unload() ...");
+    m_Block2Texture.clear();
     m_candleLights.clear();
     if ( m_objects )
     {
@@ -169,23 +163,17 @@ void Maps::unload()
     }
     m_width = 0;
     m_height = 0;
+    getConsole().OOOLn("Maps::unload() done!");
 }
 
 void Maps::shutdown()
 {
+    getConsole().OLnOI("Maps::shutdown() ...");
     if ( m_gfx.isInitialized() )
     {
         unload();
-        m_gfx.getTextureManager().DeleteAll();
-        m_tex_brick1 = PGENULL;
-        m_tex_brick2 = PGENULL;
-        m_tex_brick3 = PGENULL;
-        m_tex_brick4 = PGENULL;
-        m_tex_crate = PGENULL;
-        m_tex_floor = PGENULL;   
-        m_tex_aztec1 = PGENULL;
-        m_tex_castle4 = PGENULL;
     }
+    getConsole().OOOLn("Maps::shutdown() done!");
 }
 
 unsigned int Maps::width() const
@@ -273,9 +261,69 @@ bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, st
         return false;
     }
 
-    sVar = sLine.substr(0, nAssignmentPos);
-    sValue = sLine.substr(nAssignmentPos+1);
+    // sLine is already trimmed: neither leading nor trailing spaces
+
+    // get rid of trailing spaces from the variable name itself, standing before the '=' char
+    // TODO: should rather use std::string compatible PFL::strClr()
+    std::string::size_type nSpPos = sLine.find(' ');
+    if ( nSpPos != std::string::npos )
+    {
+        if ( nSpPos < nAssignmentPos )
+        {
+            sVar = sLine.substr(0, nSpPos);
+            if ( sVar.find(' ') != std::string::npos )
+            {
+                // we should not have more space before '=' char
+                CConsole::getConsoleInstance("Maps").EOLn("ERROR: erroneous assignment, failed to parse variable in line: %s!", sLine.c_str());
+                bParseError = true;
+                return false;
+            }
+        }
+        else
+        {
+            // should never reach this point based on above 2 conditions
+            CConsole::getConsoleInstance("Maps").EOLn("ERROR: erroneous assignment: %s!", sLine.c_str());
+            bParseError = true;
+            return false;
+        }
+    }
+    else
+    {
+        sVar = sLine.substr(0, nAssignmentPos);
+    }
+
+    // get rid of leading spaces from the value itself, standing after the '=' char
+    std::string::size_type i = nAssignmentPos+1;
+    while ( (i < sLine.length()) && sLine[i] == ' ' )
+    {
+        i++;
+    }
+
+    if ( i < sLine.length() )
+    {
+        sValue = sLine.substr(i);
+    }
+    else
+    {
+        CConsole::getConsoleInstance("Maps").EOLn("ERROR: erroneous assignment, failed to parse value in line: %s!", sLine.c_str());
+        bParseError = true;
+        return false;
+    }
+
     return true;
+}
+
+void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
+{
+    if ( sVar.length() == 1 )
+    {
+        // dont store these variables, they just for block texture assignment
+        m_Block2Texture[sVar[0]] = sValue;
+        getConsole().OLn("Block %s has texture %s", sVar.c_str(), sValue.c_str());
+        return;
+    }
+    // only vars with length > 1 are to be stored as actual variables
+    getConsole().OLn("Var \"%s\" = \"%s\"", sVar.c_str(), sValue.c_str());
 }
 
 bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
@@ -312,7 +360,32 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         m_objects = (PRREObject3D**) realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
         m_objects[m_objects_h-1] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
         m_objects[m_objects_h-1]->SetLit(true);
-        m_objects[m_objects_h-1]->getMaterial().setTexture(m_tex_brick1);
+
+        PRRETexture* tex = PGENULL;
+        if ( m_Block2Texture.find(c) == m_Block2Texture.end() )
+        {
+            const std::string sc(1,c); // WA for CConsole lack support of %c
+            getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
+            tex = m_texRed;
+        }
+        else
+        {
+            const std::string sTexName = "gamedata\\textures\\" + m_Block2Texture[c];
+            tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
+            if ( !tex )
+            {
+                getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                tex = m_texRed;
+            }
+        }
+        if ( !tex )
+        {
+            // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
+            const std::string sc(1,c); // WA for CConsole lack support of %c
+            getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+        }
+
+        m_objects[m_objects_h-1]->getMaterial().setTexture(tex);
         m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
 
         m_objects[m_objects_h-1]->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);

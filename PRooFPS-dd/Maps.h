@@ -59,7 +59,8 @@ private:
     std::vector<PRREVector> m_candleLights;
 
     PR00FsReducedRenderingEngine& m_gfx;
-    PRRETexture* m_tex_brick1, *m_tex_brick2, *m_tex_brick3, *m_tex_brick4, *m_tex_crate, *m_tex_floor, *m_tex_aztec1, *m_tex_castle4;
+    std::map<char, std::string> m_Block2Texture;
+    PRRETexture* m_texRed;
     PRREVector m_start, m_end;
     float m_objectsMinY;
     unsigned int m_width, m_height;
@@ -69,6 +70,7 @@ private:
     static bool lineShouldBeIgnored(const std::string& sLine);
     static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
+    void lineHandleAssignment(std::string& sVar, std::string& sValue);
     bool lineHandleLayout(const std::string& sLine, TPRREfloat& y);
 
 }; // class Maps
