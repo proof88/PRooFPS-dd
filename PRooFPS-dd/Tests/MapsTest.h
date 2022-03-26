@@ -85,20 +85,21 @@ private:
     bool test_initially_empty()
     {
         Maps maps(*engine);
-        return assertFalse(maps.loaded(), "loaded") & assertEquals(0u, maps.width(), "width") & assertEquals(0u, maps.height(), "height ");
+        bool b = assertFalse(maps.loaded(), "loaded 1") & assertEquals(0u, maps.width(), "width 1") & assertEquals(0u, maps.height(), "height 1") & assertTrue(maps.getVars().empty(), "getVars 1");
+        b &= assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.loaded(), "loaded 2") & assertEquals(0u, maps.width(), "width 2") & assertEquals(0u, maps.height(), "height 2") & assertTrue(maps.getVars().empty(), "getVars 2");
+        return b;
     }
 
     bool test_map_load_bad_filename()
     {
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 1");
-        b &= assertEquals(0u, maps.width(), "width 1");
-        b &= assertEquals(0u, maps.height(), "height 1");
         b &= assertFalse(maps.load("gamedata/maps/egsdghsdghsdghdsghgds.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertTrue(maps.getVars().empty(), "getVars 2");
         return b;
     }
 
@@ -106,13 +107,11 @@ private:
     {
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 1");
-        b &= assertEquals(0u, maps.width(), "width 1");
-        b &= assertEquals(0u, maps.height(), "height 1");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_assignment.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertTrue(maps.getVars().empty(), "getVars 2");
         return b;
     }
 
@@ -120,13 +119,11 @@ private:
     {
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 1");
-        b &= assertEquals(0u, maps.width(), "width 1");
-        b &= assertEquals(0u, maps.height(), "height 1");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_order.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertTrue(maps.getVars().empty(), "getVars 2");
         return b;
     }
 
@@ -134,13 +131,14 @@ private:
     {
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 1");
-        b &= assertEquals(0u, maps.width(), "width 1");
-        b &= assertEquals(0u, maps.height(), "height 1");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded 2");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 2");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 2");
+        b &= assertEquals(1u, maps.getVars().size(), "getVars 2");
+        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2b"); }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 2b"); }
+
         return b;
     }
 
@@ -152,16 +150,24 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 1");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
+        b &= assertEquals(1u, maps.getVars().size(), "getVars 1");
+        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1b"); }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 1b"); }
         
         maps.unload();
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertTrue(maps.getVars().empty(), "getVars 2");
 
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
+        b &= assertEquals(1u, maps.getVars().size(), "getVars 3");
+        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3b"); }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 3b"); }
+
         return b;
     }
 

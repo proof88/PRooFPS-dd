@@ -1,7 +1,7 @@
 /*
     ###################################################################################
     Maps.cpp
-    Customized PGE for PRooFPS-dd
+    Map loader for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2022
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
@@ -163,6 +163,7 @@ void Maps::unload()
     }
     m_width = 0;
     m_height = 0;
+    m_vars.clear();
     getConsole().OOOLn("Maps::unload() done!");
 }
 
@@ -234,12 +235,17 @@ std::vector<PRREVector>& Maps::getCandleLights()
     return m_candleLights;
 }
 
+const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
+{
+    return m_vars;
+}
 
 
 // ############################## PROTECTED ##############################
 
 
 // ############################### PRIVATE ###############################
+
 
 bool Maps::lineShouldBeIgnored(const std::string& sLine)
 {
@@ -324,6 +330,7 @@ void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
     }
     // only vars with length > 1 are to be stored as actual variables
     getConsole().OLn("Var \"%s\" = \"%s\"", sVar.c_str(), sValue.c_str());
+    m_vars[sVar] = sValue.c_str();
 }
 
 bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)

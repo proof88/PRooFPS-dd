@@ -10,9 +10,11 @@
     ###################################################################################
 */
 
+#include <map>
 #include <string>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
+#include "../../../PGE/PGE/PGEcfgVariable.h"
 #include "../../../PGE/PGE/PRRE/include/external/PR00FsReducedRenderingEngine.h"
 
 class Maps
@@ -40,6 +42,7 @@ public:
     PRREVector& getEndPos();
     float getObjectsMinY() const;
     std::vector<PRREVector>& getCandleLights();
+    const std::map<std::string, PGEcfgVariable>& getVars() const;
 
 protected:
 
@@ -58,6 +61,7 @@ private:
 
     std::vector<PRREVector> m_candleLights;
 
+    std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
