@@ -2,8 +2,12 @@
 
 # Blank lines are also ignored by loader
 
+# Variable name are case-sensitive!
+
 # Name of the map is that will be displayed in map select submenu
 Name = Test Map
+
+Gravity = 2.0
 
 # Preview Image is not needed to be explicitly defined here, as
 # image file with same name is to be used implicitly as preview.
