@@ -87,7 +87,8 @@ private:
         Maps maps(*engine);
         bool b = assertFalse(maps.loaded(), "loaded 1") & assertEquals(0u, maps.width(), "width 1") & assertEquals(0u, maps.height(), "height 1") & assertTrue(maps.getVars().empty(), "getVars 1");
         b &= assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 2") & assertEquals(0u, maps.width(), "width 2") & assertEquals(0u, maps.height(), "height 2") & assertTrue(maps.getVars().empty(), "getVars 2");
+        b &= assertFalse(maps.loaded(), "loaded 2") & assertEquals(0u, maps.width(), "width 2") & assertEquals(0u, maps.height(), "height 2") & assertTrue(maps.getVars().empty(), "getVars 2") &
+            assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
     }
 
@@ -100,6 +101,7 @@ private:
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
     }
 
@@ -112,6 +114,7 @@ private:
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
     }
 
@@ -124,6 +127,7 @@ private:
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
     }
 
@@ -135,9 +139,13 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 2");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 2");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 2");
-        b &= assertEquals(1u, maps.getVars().size(), "getVars 2");
-        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2b"); }
-        catch (const std::exception&) { b = assertTrue(false, "getVars 2b"); }
+        b &= assertEquals(2u, maps.getVars().size(), "getVars 2");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+        try {
+            b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2a");
+            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 2b");
+        }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
         return b;
     }
@@ -150,23 +158,32 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 1");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
-        b &= assertEquals(1u, maps.getVars().size(), "getVars 1");
-        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1b"); }
-        catch (const std::exception&) { b = assertTrue(false, "getVars 1b"); }
+        b &= assertEquals(2u, maps.getVars().size(), "getVars 1");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
+        try {
+            b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1a");
+            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 1b");
+        }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
         
         maps.unload();
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints 2");
 
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
-        b &= assertEquals(1u, maps.getVars().size(), "getVars 3");
-        try { b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3b"); }
-        catch (const std::exception&) { b = assertTrue(false, "getVars 3b"); }
+        b &= assertEquals(2u, maps.getVars().size(), "getVars 3");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
+        try {
+            b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3a");
+            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 3b");
+        }
+        catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         return b;
     }

@@ -17,6 +17,7 @@
 static std::set<char> foregroundBlocks;
 static std::set<char> backgroundBlocks;
 
+
 // ############################### PUBLIC ################################
 
 
@@ -31,21 +32,22 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     m_height = 0;
 
     // TODO cpp11 initializer list
-    foregroundBlocks.insert('A');
     foregroundBlocks.insert('B');
-    foregroundBlocks.insert('C');
     foregroundBlocks.insert('D');
-    foregroundBlocks.insert('E');
     foregroundBlocks.insert('F');
     foregroundBlocks.insert('G');
+    foregroundBlocks.insert('H');
+    foregroundBlocks.insert('I');
+    foregroundBlocks.insert('J');
 
-    backgroundBlocks.insert('H');
-    backgroundBlocks.insert('I');
-    backgroundBlocks.insert('J');
-    backgroundBlocks.insert('K');
-    backgroundBlocks.insert('L');
-    backgroundBlocks.insert('M');
-    backgroundBlocks.insert('N');
+    backgroundBlocks.insert('a');
+    backgroundBlocks.insert('c');
+    backgroundBlocks.insert('e');
+    backgroundBlocks.insert('m');
+    backgroundBlocks.insert('n');
+    backgroundBlocks.insert('o');
+    backgroundBlocks.insert('r');
+    backgroundBlocks.insert('S');
 }
 
 Maps::~Maps()
@@ -130,7 +132,8 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    m_gfx.getCamera().getPosVec().Set(m_end.getX(), m_end.getY(), GAME_CAM_Z);
+    // TODO: place camera!
+    //m_gfx.getCamera().getPosVec().Set(m_end.getX(), m_end.getY(), GAME_CAM_Z);
 
     m_objectsMinY = m_objects[0]->getPosVec().getY();
     for (int i = 0; i < m_objects_h; i++)
@@ -164,6 +167,7 @@ void Maps::unload()
     m_width = 0;
     m_height = 0;
     m_vars.clear();
+    m_spawnpoints.clear();
     getConsole().OOOLn("Maps::unload() done!");
 }
 
@@ -215,14 +219,9 @@ void Maps::updateVisibilitiesForRenderer()
     }
 }
 
-PRREVector& Maps::getStartPos()
+const std::set<PRREVector>& Maps::getSpawnpoints() const
 {
-    return m_start;
-}
-
-PRREVector& Maps::getEndPos()
-{
-    return m_end;
+    return m_spawnpoints;
 }
 
 float Maps::getObjectsMinY() const
@@ -397,20 +396,12 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
 
         m_objects[m_objects_h-1]->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
 
-        /*switch (c) {
-            case 'Q': PRREVector tmp(x, y, 0.0f);
-                      m_candleLights.push_back(tmp);
-                      break;
-          }*/
-
-        /*case 'I': m_start.SetX(x);
-                    m_start.SetY(y);
-                    m_start.SetZ(GAME_PLAYERS_POS_Z);
-                    break;
-          case 'V': m_end.SetX(x);
-                    m_end.SetY(y);
-                    m_end.SetZ(GAME_PLAYERS_POS_Z);
-                    break;*/
+        switch (c)
+        {
+        case 'S': m_spawnpoints.insert(PRREVector(x, y, GAME_PLAYERS_POS_Z));
+                  break;
+        default: /* NOP */;
+        }
     }
     y = y - GAME_BLOCK_SIZE_Y;
     return true;

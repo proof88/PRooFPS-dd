@@ -16,6 +16,47 @@
 #include "Consts.h"
 #include "Maps.h"
 
+class CPlayer
+{
+private:       
+    bool used; 
+    int health;
+    PRREVector pos, oldpos;
+    PRREVector force;
+    PRREObject3D* obj;
+    PR00FsReducedRenderingEngine* pGFX;
+    float gravity;
+    bool jumping;
+    bool canfall;
+    bool running;
+
+public:
+    CPlayer();
+    void ShutDown();
+    void SetRendererObject(PR00FsReducedRenderingEngine* gfx);
+    int getHealth() const;
+    PRREVector& getPos1();
+    PRREVector& getOPos1();
+    PRREObject3D* getAttachedObject() const;
+    float getGravity() const;
+    bool isJumping() const;
+    bool isFalling() const;
+    bool canFall() const;
+    void UpdateOldPos();
+    void SetHealth(int value);
+    void AttachObject(PRREObject3D* value, bool blend);
+    void SetGravity(float value);
+    void Jump();
+    void StopJumping();
+    void DoDamage(int dmg); 
+    void SetCanFall(bool state);
+    bool isRunning() const;
+    void SetRun(bool state);
+    PRREVector& getForce();
+    void UpdateForce(float x, float y, float z);
+
+} ;
+
 /**
     The customized game engine class. This handles the game logic. Singleton.
 */
@@ -56,10 +97,30 @@ protected:
     virtual void onGameRunning();      /**< Game logic here. */
     virtual void onGameDestroying();   /**< Freeing up game content here. */
 
+    void KeyBoard(int fps, bool& won);
+    void CameraMovement(int fps);
+    void Gravity(int fps);
+    bool Colliding(PRREObject3D& a, PRREObject3D& b);
+    bool Colliding2( float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
+                     float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz );
+    void Collision(bool& won);
+    void FrameLimiter(int fps_ms);
 
 private:
 
     Maps maps;
+
+    int fps, fps_counter;                 /* fps méréséhez segédváltozók */
+    unsigned int fps_lastmeasure;         /* - || - */
+    unsigned int fps_ms;                  /* - || - */
+
+    CPlayer player;
+    PRRETexture* playertex;
+    bool bAllowJump;
+    bool spacereleased, ctrlreleased;
+    bool shiftreleased, enterreleased;
+    bool won;
+    float cameraMinY;
 
     // ---------------------------------------------------------------------------
 

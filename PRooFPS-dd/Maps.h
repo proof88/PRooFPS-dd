@@ -11,6 +11,7 @@
 */
 
 #include <map>
+#include <set>
 #include <string>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
@@ -38,8 +39,7 @@ public:
     unsigned int width() const;
     unsigned int height() const;
     void updateVisibilitiesForRenderer();
-    PRREVector& getStartPos();
-    PRREVector& getEndPos();
+    const std::set<PRREVector>& getSpawnpoints() const;
     float getObjectsMinY() const;
     std::vector<PRREVector>& getCandleLights();
     const std::map<std::string, PGEcfgVariable>& getVars() const;
@@ -65,7 +65,7 @@ private:
     PR00FsReducedRenderingEngine& m_gfx;
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
-    PRREVector m_start, m_end;
+    std::set<PRREVector> m_spawnpoints;
     float m_objectsMinY;
     unsigned int m_width, m_height;
 
