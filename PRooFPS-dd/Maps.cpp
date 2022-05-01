@@ -132,9 +132,6 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    // TODO: place camera!
-    //m_gfx.getCamera().getPosVec().Set(m_end.getX(), m_end.getY(), GAME_CAM_Z);
-
     m_objectsMinY = m_objects[0]->getPosVec().getY();
     for (int i = 0; i < m_objects_h; i++)
     {
@@ -222,6 +219,23 @@ void Maps::updateVisibilitiesForRenderer()
 const std::set<PRREVector>& Maps::getSpawnpoints() const
 {
     return m_spawnpoints;
+}
+
+const PRREVector& Maps::getRandomSpawnpoint() const
+{
+    if ( m_spawnpoints.empty() )
+    {
+        throw std::runtime_error("No spawnpoints!");
+    }
+    const int iElem = PFL::random(0, m_spawnpoints.size()-1);
+    auto it = m_spawnpoints.begin();
+    int i = 0;
+    while ( i < iElem )
+    {
+        i++;
+        it++;
+    }
+    return *it;
 }
 
 float Maps::getObjectsMinY() const

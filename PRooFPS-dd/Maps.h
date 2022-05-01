@@ -40,6 +40,7 @@ public:
     unsigned int height() const;
     void updateVisibilitiesForRenderer();
     const std::set<PRREVector>& getSpawnpoints() const;
+    const PRREVector& getRandomSpawnpoint() const;
     float getObjectsMinY() const;
     std::vector<PRREVector>& getCandleLights();
     const std::map<std::string, PGEcfgVariable>& getVars() const;

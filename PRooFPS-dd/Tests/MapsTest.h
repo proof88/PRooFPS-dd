@@ -41,6 +41,7 @@ protected:
         AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
     }
 
     virtual bool setUp()
@@ -184,6 +185,33 @@ private:
             b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 3b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
+
+        return b;
+    }
+
+    bool test_map_get_random_spawnpoint()
+    {
+        Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.loaded(), "loaded 2");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+        
+        if ( b )
+        {
+            std::set<PRREVector> originalSpawnpoints = maps.getSpawnpoints();
+            int i = 0;
+            try {
+                while ( !originalSpawnpoints.empty() && (i < 50) )
+                {
+                    const PRREVector sp = maps.getRandomSpawnpoint();
+                    originalSpawnpoints.erase(sp);
+                    i++;
+                }
+                b = assertTrue(originalSpawnpoints.empty(), "original empty");
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
 
         return b;
     }

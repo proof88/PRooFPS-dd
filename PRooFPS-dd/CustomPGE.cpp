@@ -247,6 +247,7 @@ void CustomPGE::onGameInitialized()
     player.AttachObject( getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H), true );
     playertex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1.bmp" );
     player.getAttachedObject()->getMaterial().setTexture( playertex );
+    player.getPos1() = maps.getRandomSpawnpoint();
 
     getPRRE().WriteList();
     getConsole().OOOLn("CustomPGE::onGameInitialized() done!");
@@ -595,13 +596,17 @@ void CustomPGE::onGameRunning()
     }
 
     player.UpdateOldPos();
-    //KeyBoard(fps, won);
+    KeyBoard(fps, won);
     if ( !won )
     {
         Gravity(fps);
         Collision(won);
     }
-    //CameraMovement( fps );
+    CameraMovement( fps );
+    if ( player.getAttachedObject() != PGENULL )
+    {
+        player.getAttachedObject()->getPosVec().Set( player.getPos1().getX(), player.getPos1().getY(), player.getPos1().getZ() );
+    }
     //map.UpdateVisibilitiesForRenderer();
 
     // képkockaszám limitáló (akkor kell, ha nincs vsync)
