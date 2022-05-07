@@ -98,6 +98,7 @@ protected:
     virtual void onGameDestroying();   /**< Freeing up game content here. */
 
     void KeyBoard(int fps, bool& won);
+    void Mouse(int /*fps*/, bool& won);
     void CameraMovement(int fps);
     void Gravity(int fps);
     bool Colliding(PRREObject3D& a, PRREObject3D& b);
@@ -115,6 +116,8 @@ private:
     unsigned int fps_ms;                  /* - || - */
 
     CPlayer player;
+    PRREObject3D* xhair;
+    PRREObject3D* wpn;
     PRRETexture* playertex;
     bool bAllowJump;
     bool spacereleased, ctrlreleased;

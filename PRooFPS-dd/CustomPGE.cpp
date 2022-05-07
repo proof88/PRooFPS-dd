@@ -236,6 +236,8 @@ void CustomPGE::onGameInitialized()
 {
     getConsole().OLnOI("CustomPGE::onGameInitialized()");
 
+    getPRRE().getScreen().SetVSyncEnabled(true);
+
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
     getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
@@ -245,16 +247,112 @@ void CustomPGE::onGameInitialized()
     maps.load("gamedata/maps/map_test_good.txt");
 
     player.AttachObject( getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H), true );
-    playertex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1.bmp" );
+    playertex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1m.bmp" );
     player.getAttachedObject()->getMaterial().setTexture( playertex );
     player.getPos1() = maps.getRandomSpawnpoint();
+
+    wpn = getPRRE().getObject3DManager().createPlane(1.f, 0.5f);
+    wpn->SetDoubleSided(true);
+    PRRETexture* wpntex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_wpn_mchgun_b_nolabel.bmp" );
+    wpn->getMaterial().setTexture( wpntex );
+    wpn->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
+
+    xhair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
+    xhair->SetStickedToScreen(true);
+    xhair->SetDoubleSided(true);
+    xhair->SetTestingAgainstZBuffer(false);
+    xhair->SetLit(false);
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview), use PRRE_SRC_ALPHA, PRRE_ONE
+    // otherwise (bitmaps saved by Flash) just use PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA to utilize real alpha
+    xhair->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
+    PRRETexture* xhairtex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
+    xhair->getMaterial().setTexture( xhairtex );
+
+    
 
     getPRRE().WriteList();
     getConsole().OOOLn("CustomPGE::onGameInitialized() done!");
 
+    getInput().getMouse().SetCursorPos(
+        getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
+        getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
+    getPRRE().getWindow().SetCursorVisible(false);
+    
     fps_lastmeasure = GetTickCount();
     fps = 0;
 }
+
+//function bulletProc() {
+//	this._x += this.xMove * _root.BULLETSPEED;
+//	this._y += this.yMove * _root.BULLETSPEED;
+//	for (obj in _root.mc_map) {
+//		if (typeof(_root.mc_map[obj])=="movieclip"){
+//			if ( _root.collides(this._x, this._y, this._width, this._height,
+//								_root.mc_map[obj]._x, _root.mc_map[obj]._y, _root.mc_map[obj]._width, _root.mc_map[obj]._height)
+//				)
+//			{
+//				if ( _root.mc_map[obj]._name.substr(0,8) == "mc_snail" ) {
+//					if ( _root.mc_map[obj].health > 0 ) {
+//						_root.mc_map[obj].health -= _root.BULLETDAMAGE;
+//						//trace(_root.mc_map[obj]._name);
+//						if ( _root.mc_map[obj].health <= 0 ) {
+//							
+//							_root.killedSnails++;
+//							//trace(_root.killedSnails);
+//							_root.gameEnds += 4000;
+//							if ( _root.mc_map[obj]._currentframe == 1 ) { _root.mc_map[obj].gotoAndPlay(11); }
+//							else if ( _root.mc_map[obj]._currentframe == 2 ) { _root.mc_map[obj].gotoAndPlay(3); }
+//						}
+//						_root.mc_map.attachMovie("lnk_mc_blood", "mc_blood"+_root.bloodCount, _root.mc_map.getNextHighestDepth());
+//						eval("_root.mc_map.mc_blood"+_root.bloodCount)._x = this._x;
+//						eval("_root.mc_map.mc_blood"+_root.bloodCount)._y = this._y;
+//						_root.bloodCount++;
+//						this.onEnterFrame = null;
+//						removeMovieClip( this );
+//						break;
+//					}
+//				}
+//				if ( _root.mc_map[obj]._name.substr(0,4) == "inst" ) {
+//					this.onEnterFrame = null;
+//					removeMovieClip( this );
+//					break;
+//				}
+//			}
+//		}
+//	}
+//}
+
+//function Shoot(cf, nx, ny) {
+//		_root.mc_map.attachMovie("lnk_mc_rocket", "mc_rocket"+_root.rocketCount, _root.mc_map.getNextHighestDepth());
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).gotoAndStop(cf);
+//		var neg:Number = -1;
+//		if ( cf == 1 ) { neg = 1 };
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).xMove = neg;
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).yMove = 0;
+//		
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount)._x = nx;
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount)._y = ny;
+//		//trace(eval("_root.mc_map.mc_rocket"+_root.rocketCount)._x+"  "+ eval("_root.mc_map.mc_rocket"+_root.rocketCount)._y);
+//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).onEnterFrame = _root.rocketProc;
+//		_root.rocketCount++;
+//		_root.mc_startrocketsound.gotoAndPlay(2);
+//	}
+
+//function Shoot() {
+//		_root.mc_bulletpacer.play();
+//		var aimShit:Number = _root.randRange(-_root.AIMDIFFICULTY, _root.AIMDIFFICULTY);
+//		_root.mc_map.attachMovie("lnk_mc_bullet", "mc_bullet"+_root.bulletCount, _root.mc_map.getNextHighestDepth());
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._rotation = this.mc_player_arm1._rotation + aimShit;
+//		var neg:Number = 1;
+//		if ( this._currentframe == 2 ) { neg = -1 };
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).xMove = Math.cos((this.mc_player_arm1._rotation+aimShit)*Math.PI/180.0) * neg;
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).yMove = Math.sin((this.mc_player_arm1._rotation+aimShit)*Math.PI/180.0) * neg;
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._x = this.newX + eval("_root.mc_map.mc_bullet"+_root.bulletCount).xMove*this.mc_player_arm1._width;
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._y = this.newY+150 + eval("_root.mc_map.mc_bullet"+_root.bulletCount).yMove*this.mc_player_arm1._width;
+//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).onEnterFrame = _root.bulletProc;
+//		_root.bulletCount++;
+//		this.ammo--;
+//	}
 
 /** 
     Freeing up game content here.
@@ -265,6 +363,7 @@ void CustomPGE::onGameDestroying()
     getConsole().OLnOI("CustomPGE::onGameDestroying() ...");
     maps.shutdown();
     getPRRE().getObject3DManager().DeleteAll();
+    getPRRE().getWindow().SetCursorVisible(true);
 
     getConsole().OOOLn("CustomPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
@@ -272,8 +371,7 @@ void CustomPGE::onGameDestroying()
 
 void CustomPGE::KeyBoard(int /*fps*/, bool& won)
 {
-    PRREWindow& wnd = getPRRE().getWindow();
-    PGEInputKeyboard& keybd = getInput().getKeyboard();
+    const PGEInputKeyboard& keybd = getInput().getKeyboard();
   float speed;
 
   if ( player.isRunning() )
@@ -282,7 +380,9 @@ void CustomPGE::KeyBoard(int /*fps*/, bool& won)
       speed = GAME_PLAYER_SPEED1/60.0f;
   
   if ( keybd.isKeyPressed(VK_ESCAPE) )
-      wnd.Close();
+  {
+      getPRRE().getWindow().Close();
+  }
       
   if ( !won )
   {
@@ -291,7 +391,6 @@ void CustomPGE::KeyBoard(int /*fps*/, bool& won)
         if ( !player.isJumping() && !player.isFalling() && bAllowJump )
         {
             player.getPos1().SetX( player.getPos1().getX() - speed );
-            player.getAttachedObject()->getAngleVec().SetY( 180.0f );
         }
     }
     if ( keybd.isKeyPressed( VK_RIGHT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')) )
@@ -299,7 +398,6 @@ void CustomPGE::KeyBoard(int /*fps*/, bool& won)
         if ( !player.isJumping() && !player.isFalling() && bAllowJump )
         {
             player.getPos1().SetX( player.getPos1().getX() + speed );
-            player.getAttachedObject()->getAngleVec().SetY( 0.0f );
         }
     }
 
@@ -356,6 +454,27 @@ void CustomPGE::KeyBoard(int /*fps*/, bool& won)
         else 
            enterreleased = true;  
   } // won
+}
+
+
+void CustomPGE::Mouse(int /*fps*/, bool& /*won*/)
+{
+    PGEInputMouse& mouse = getInput().getMouse();
+
+    const int oldmx = mouse.getCursorPosX();
+    const int oldmy = mouse.getCursorPosY();
+
+    mouse.SetCursorPos(
+        getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
+        getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
+
+    const int dx = oldmx - mouse.getCursorPosX();
+    const int dy = oldmy - mouse.getCursorPosY();
+
+    xhair->getPosVec().Set(
+        xhair->getPosVec().getX() + dx,
+        xhair->getPosVec().getY() - dy,
+        0.f);
 }
 
 
@@ -564,27 +683,11 @@ void CustomPGE::FrameLimiter(int fps_ms)
 void CustomPGE::onGameRunning()
 {
     PRREWindow& window = getPRRE().getWindow();
-    const PGEInputHandler& input = PGEInputHandler::createAndGet();
 
     if ( fps == 0 ) {
         fps = 60;
     }
     fps_ms = GetTickCount();
-
-    /*const int oldmx = input.getMouse().getCursorPosX();
-    const int oldmy = input.getMouse().getCursorPosY();*/
-
-    input.getMouse().SetCursorPos(window.getX() + window.getWidth()/2,
-                                  window.getY() + window.getHeight()/2);
-
-    if ( input.getKeyboard().isKeyPressed( VK_LEFT ) )
-    {
-        getPRRE().getCamera().Strafe(-0.1f);
-    }
-    if ( input.getKeyboard().isKeyPressed( VK_RIGHT ) )
-    {
-        getPRRE().getCamera().Strafe(0.1f);
-    }
 
     if ( player.getPos1().getY() != player.getOPos1().getY() )
     { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
@@ -597,6 +700,7 @@ void CustomPGE::onGameRunning()
 
     player.UpdateOldPos();
     KeyBoard(fps, won);
+    Mouse(fps, won);
     if ( !won )
     {
         Gravity(fps);
@@ -607,11 +711,29 @@ void CustomPGE::onGameRunning()
     {
         player.getAttachedObject()->getPosVec().Set( player.getPos1().getX(), player.getPos1().getY(), player.getPos1().getZ() );
     }
+    wpn->getPosVec().Set( player.getPos1().getX(), player.getPos1().getY(), player.getPos1().getZ() );
+
+    const TPRREfloat distX = xhair->getPosVec().getX();
+    const TPRREfloat distY = xhair->getPosVec().getY();
+    //distY = _root.mc_mouseTarget._y - (_y + 30);
+    if ( xhair->getPosVec().getX() < 0.f )
+    {
+        player.getAttachedObject()->getAngleVec().SetY( 0.f );
+        wpn->getAngleVec().SetY( 0.f );
+        wpn->getAngleVec().SetZ( atan( distY/distX )*180.f / PFL::PI );
+    }
+    else
+    {
+        player.getAttachedObject()->getAngleVec().SetY( 180.f );
+        wpn->getAngleVec().SetY( 180.f );
+        wpn->getAngleVec().SetZ( -atan( distY/distX )*180.f / PFL::PI );
+    }
+
     //map.UpdateVisibilitiesForRenderer();
 
     // képkockaszám limitáló (akkor kell, ha nincs vsync)
     fps_ms = GetTickCount() - fps_ms;
-    FrameLimiter(fps_ms);
+    //FrameLimiter(fps_ms);
     // fps mérõ frissítése 
     fps_counter++;
     if ( GetTickCount() - GAME_FPS_INTERVAL >= fps_lastmeasure )
