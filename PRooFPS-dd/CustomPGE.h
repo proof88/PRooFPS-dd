@@ -38,6 +38,7 @@ public:
     PRREVector& getPos1();
     PRREVector& getOPos1();
     PRREObject3D* getAttachedObject() const;
+    void UpdatePositions(const PRREVector& targetPos);
     float getGravity() const;
     bool isJumping() const;
     bool isFalling() const;
@@ -106,6 +107,7 @@ protected:
                      float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz );
     void Collision(bool& won);
     void FrameLimiter(int fps_ms);
+    void UpdateBullets();
 
 private:
 
@@ -117,7 +119,6 @@ private:
 
     CPlayer player;
     PRREObject3D* xhair;
-    PRREObject3D* wpn;
     PRRETexture* playertex;
     bool bAllowJump;
     bool spacereleased, ctrlreleased;

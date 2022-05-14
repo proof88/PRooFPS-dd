@@ -12,6 +12,8 @@
 
 #include "CustomPGE.h"
 
+#include <cassert>
+
 #include "../../../PGE/PGE/PRRE/include/external/PRREuiManager.h"
 #include "../../../PGE/PGE/PRRE/include/external/Display/PRREWindow.h"
 #include "../../../PGE/PGE/PRRE/include/external/PRRECamera.h"
@@ -73,6 +75,15 @@ PRREObject3D* CPlayer::getAttachedObject() const
   return obj;
 }
 
+void CPlayer::UpdatePositions(const PRREVector& targetPos)
+{
+    if ( getAttachedObject() != PGENULL )
+    {
+        getAttachedObject()->getPosVec().Set( getPos1().getX(), getPos1().getY(), getPos1().getZ() );
+        getAttachedObject()->getAngleVec().SetY( (targetPos.getX() < 0.f) ? 0.f : 180.f );
+    }
+}
+
 float CPlayer::getGravity() const
 {
   return gravity;
@@ -100,7 +111,6 @@ void CPlayer::UpdateOldPos() {
 void CPlayer::SetHealth(int value) {
   health = value;
 }
-
 
 void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
   obj = value;   
@@ -251,24 +261,18 @@ void CustomPGE::onGameInitialized()
     player.getAttachedObject()->getMaterial().setTexture( playertex );
     player.getPos1() = maps.getRandomSpawnpoint();
 
-    wpn = getPRRE().getObject3DManager().createPlane(1.f, 0.5f);
-    wpn->SetDoubleSided(true);
-    PRRETexture* wpntex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_wpn_mchgun_b_nolabel.bmp" );
-    wpn->getMaterial().setTexture( wpntex );
-    wpn->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
+    assert( getWeaponManager().load("gamedata/weapons/machinegun.txt") );
 
     xhair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
     xhair->SetStickedToScreen(true);
     xhair->SetDoubleSided(true);
     xhair->SetTestingAgainstZBuffer(false);
     xhair->SetLit(false);
-    // for bitmaps not having proper alpha bits (e.g. saved by irfanview), use PRRE_SRC_ALPHA, PRRE_ONE
-    // otherwise (bitmaps saved by Flash) just use PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA to utilize real alpha
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PRRE_SRC_ALPHA, PRRE_ONE)
+    // otherwise (bitmaps saved by Flash) just use (PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
     xhair->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
     PRRETexture* xhairtex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
     xhair->getMaterial().setTexture( xhairtex );
-
-    
 
     getPRRE().WriteList();
     getConsole().OOOLn("CustomPGE::onGameInitialized() done!");
@@ -321,22 +325,6 @@ void CustomPGE::onGameInitialized()
 //		}
 //	}
 //}
-
-//function Shoot(cf, nx, ny) {
-//		_root.mc_map.attachMovie("lnk_mc_rocket", "mc_rocket"+_root.rocketCount, _root.mc_map.getNextHighestDepth());
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).gotoAndStop(cf);
-//		var neg:Number = -1;
-//		if ( cf == 1 ) { neg = 1 };
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).xMove = neg;
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).yMove = 0;
-//		
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount)._x = nx;
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount)._y = ny;
-//		//trace(eval("_root.mc_map.mc_rocket"+_root.rocketCount)._x+"  "+ eval("_root.mc_map.mc_rocket"+_root.rocketCount)._y);
-//		eval("_root.mc_map.mc_rocket"+_root.rocketCount).onEnterFrame = _root.rocketProc;
-//		_root.rocketCount++;
-//		_root.mc_startrocketsound.gotoAndPlay(2);
-//	}
 
 //function Shoot() {
 //		_root.mc_bulletpacer.play();
@@ -475,6 +463,12 @@ void CustomPGE::Mouse(int /*fps*/, bool& /*won*/)
         xhair->getPosVec().getX() + dx,
         xhair->getPosVec().getY() - dy,
         0.f);
+
+    if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
+    {
+        // TODO: obviously we will need a getActiveWeapon() for WeaponManager and its shoot() should be called
+        getWeaponManager().getWeapons()[0].shoot();
+    }
 }
 
 
@@ -675,6 +669,18 @@ void CustomPGE::FrameLimiter(int fps_ms)
   }
 }
 
+
+void CustomPGE::UpdateBullets()
+{
+    // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
+    // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
+    std::list<Bullet>& bullets = getWeaponManager().getBullets();
+    for (auto& bullet : bullets)
+    {
+        bullet.Update();
+    }
+}
+
 /** 
     Game logic here.
     Game engine invokes this in every frame.
@@ -706,28 +712,13 @@ void CustomPGE::onGameRunning()
         Gravity(fps);
         Collision(won);
     }
-    CameraMovement( fps );
-    if ( player.getAttachedObject() != PGENULL )
-    {
-        player.getAttachedObject()->getPosVec().Set( player.getPos1().getX(), player.getPos1().getY(), player.getPos1().getZ() );
-    }
-    wpn->getPosVec().Set( player.getPos1().getX(), player.getPos1().getY(), player.getPos1().getZ() );
-
-    const TPRREfloat distX = xhair->getPosVec().getX();
-    const TPRREfloat distY = xhair->getPosVec().getY();
-    //distY = _root.mc_mouseTarget._y - (_y + 30);
-    if ( xhair->getPosVec().getX() < 0.f )
-    {
-        player.getAttachedObject()->getAngleVec().SetY( 0.f );
-        wpn->getAngleVec().SetY( 0.f );
-        wpn->getAngleVec().SetZ( atan( distY/distX )*180.f / PFL::PI );
-    }
-    else
-    {
-        player.getAttachedObject()->getAngleVec().SetY( 180.f );
-        wpn->getAngleVec().SetY( 180.f );
-        wpn->getAngleVec().SetZ( -atan( distY/distX )*180.f / PFL::PI );
-    }
+    CameraMovement( fps );   
+    player.UpdatePositions( xhair->getPosVec() );
+    // TODO: obviously we will need a getActiveWeapon() for WeaponManager
+    Weapon& wpn = getWeaponManager().getWeapons()[0];
+    wpn.UpdatePositions(player.getPos1(), xhair->getPosVec());   
+    wpn.Update();
+    UpdateBullets();
 
     //map.UpdateVisibilitiesForRenderer();
 
@@ -744,7 +735,7 @@ void CustomPGE::onGameRunning()
     } 
 
     std::stringstream str;
-    str << fps;
+    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << fps;
     window.SetCaption(str.str());
 }
 
