@@ -735,7 +735,7 @@ void CustomPGE::onGameRunning()
     } 
 
     std::stringstream str;
-    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << fps;
+    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
     window.SetCaption(str.str());
 }
 
