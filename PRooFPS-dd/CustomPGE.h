@@ -113,9 +113,9 @@ private:
 
     Maps maps;
 
-    int fps, fps_counter;                 /* fps méréséhez segédváltozók */
+    int m_fps, fps_counter;                 /* fps méréséhez segédváltozók */
     unsigned int fps_lastmeasure;         /* - || - */
-    unsigned int fps_ms;                  /* - || - */
+    unsigned int m_fps_ms;                  /* - || - */
 
     CPlayer player;
     PRREObject3D* xhair;
@@ -123,7 +123,7 @@ private:
     bool bAllowJump;
     bool spacereleased, ctrlreleased;
     bool shiftreleased, enterreleased;
-    bool won;
+    bool m_won;
     float cameraMinY;
 
     // ---------------------------------------------------------------------------

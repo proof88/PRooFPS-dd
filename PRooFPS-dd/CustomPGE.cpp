@@ -188,17 +188,17 @@ CustomPGE::CustomPGE(const char* gameTitle) :
     PGE(gameTitle),
     maps(getPRRE())
 {
-    fps = 0;
+    m_fps = 0;
     fps_counter = 0;
     fps_lastmeasure = 0;
-    fps_ms = 0;
+    m_fps_ms = 0;
 
     spacereleased = true;
     ctrlreleased = true;
     shiftreleased = true;
     enterreleased = true;
 
-    won = false;
+    m_won = false;
     cameraMinY = 0.0f;
 }
 
@@ -283,7 +283,7 @@ void CustomPGE::onGameInitialized()
     getPRRE().getWindow().SetCursorVisible(false);
     
     fps_lastmeasure = GetTickCount();
-    fps = 0;
+    m_fps = 0;
 }
 
 //function bulletProc() {
@@ -690,10 +690,10 @@ void CustomPGE::onGameRunning()
 {
     PRREWindow& window = getPRRE().getWindow();
 
-    if ( fps == 0 ) {
-        fps = 60;
+    if ( m_fps == 0 ) {
+        m_fps = 60;
     }
-    fps_ms = GetTickCount();
+    m_fps_ms = GetTickCount();
 
     if ( player.getPos1().getY() != player.getOPos1().getY() )
     { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
@@ -705,14 +705,14 @@ void CustomPGE::onGameRunning()
     }
 
     player.UpdateOldPos();
-    KeyBoard(fps, won);
-    Mouse(fps, won);
-    if ( !won )
+    KeyBoard(m_fps, m_won);
+    Mouse(m_fps, m_won);
+    if ( !m_won)
     {
-        Gravity(fps);
-        Collision(won);
+        Gravity(m_fps);
+        Collision(m_won);
     }
-    CameraMovement( fps );   
+    CameraMovement(m_fps);
     player.UpdatePositions( xhair->getPosVec() );
     // TODO: obviously we will need a getActiveWeapon() for WeaponManager
     Weapon& wpn = getWeaponManager().getWeapons()[0];
@@ -723,19 +723,19 @@ void CustomPGE::onGameRunning()
     //map.UpdateVisibilitiesForRenderer();
 
     // képkockaszám limitáló (akkor kell, ha nincs vsync)
-    fps_ms = GetTickCount() - fps_ms;
-    //FrameLimiter(fps_ms);
+    m_fps_ms = GetTickCount() - m_fps_ms;
+    //FrameLimiter(m_fps_ms);
     // fps mérõ frissítése 
     fps_counter++;
     if ( GetTickCount() - GAME_FPS_INTERVAL >= fps_lastmeasure )
     {
-        fps = fps_counter * (1000/GAME_FPS_INTERVAL); 
+        m_fps = fps_counter * (1000/GAME_FPS_INTERVAL);
         fps_counter = 0;
         fps_lastmeasure = GetTickCount();
     } 
 
     std::stringstream str;
-    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
+    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << m_fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
     window.SetCaption(str.str());
 }
 
