@@ -334,3 +334,6 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 *.html
+PRooFPS-dd/GameNetworkingSockets.dll
+PRooFPS-dd/libcrypto-3.dll
+PRooFPS-dd/libprotobufd.dll
