@@ -234,7 +234,7 @@ void CustomPGE::onGameInitializing()
     getConsole().SetBoolsColor( FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "00FFFF" );
 
     // Turn everything on for development only
-    //getConsole().SetLoggingState("4LLM0DUL3S", true);
+    getConsole().SetLoggingState("4LLM0DUL3S", true);
 
     CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), true);
 }
@@ -244,6 +244,7 @@ void CustomPGE::onGameInitializing()
 */
 void CustomPGE::onGameInitialized()
 {
+    getConsole().SetLoggingState("4LLM0DUL3S", false);
     getConsole().OLnOI("CustomPGE::onGameInitialized()");
 
     getPRRE().getScreen().SetVSyncEnabled(true);
