@@ -337,3 +337,4 @@ ASALocalRun/
 PRooFPS-dd/GameNetworkingSockets.dll
 PRooFPS-dd/libcrypto-3.dll
 PRooFPS-dd/libprotobufd.dll
+*.exe
