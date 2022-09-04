@@ -20,16 +20,15 @@
 class CPlayer
 {
 private:       
-    bool used; 
-    int health;
+    int m_nHealth;
     PRREVector pos, oldpos;
     PRREVector force;
     PRREObject3D* obj;
     PR00FsReducedRenderingEngine* pGFX;
-    float gravity;
-    bool jumping;
-    bool canfall;
-    bool running;
+    float m_fGravity;
+    bool m_bJumping;
+    bool b_mCanFall;
+    bool m_bRunning;
 
 public:
     CPlayer();

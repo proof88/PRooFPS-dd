@@ -29,13 +29,13 @@ static const std::string GAME_VERSION = "0.1.0.0 Alpha";
 
 CPlayer::CPlayer()
 {
-  health = 100;
+  m_nHealth = 100;
   obj = PGENULL;
   pGFX = NULL;
-  gravity = 0.0;
-  jumping = false;
-  canfall = true;
-  running = false;
+  m_fGravity = 0.0;
+  m_bJumping = false;
+  b_mCanFall = true;
+  m_bRunning = false;
 }
 
 void CPlayer::ShutDown()
@@ -57,7 +57,7 @@ void CPlayer::SetRendererObject(PR00FsReducedRenderingEngine* gfx)
 /* visszaadja a játékos életerejét */
 int CPlayer::getHealth() const
 {
-  return health;
+  return m_nHealth;
 }
 
 PRREVector& CPlayer::getPos1()
@@ -86,22 +86,22 @@ void CPlayer::UpdatePositions(const PRREVector& targetPos)
 
 float CPlayer::getGravity() const
 {
-  return gravity;
+  return m_fGravity;
 }
 
 bool CPlayer::isJumping() const
 {
-  return jumping;
+  return m_bJumping;
 }
 
 bool CPlayer::isFalling() const
 {
-  return ( gravity == 0.0f );
+  return ( m_fGravity == 0.0f );
 }
 
 bool CPlayer::canFall() const
 {
-  return canfall;
+  return b_mCanFall;
 }
 
 void CPlayer::UpdateOldPos() {
@@ -109,7 +109,7 @@ void CPlayer::UpdateOldPos() {
 }
 
 void CPlayer::SetHealth(int value) {
-  health = value;
+  m_nHealth = value;
 }
 
 void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
@@ -124,38 +124,38 @@ void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
 }
 
 void CPlayer::SetGravity(float value) {
-  gravity = value;
+  m_fGravity = value;
 }
 
 void CPlayer::Jump() {
-  jumping = true;
-  gravity = GAME_GRAVITY_MAX;
+  m_bJumping = true;
+  m_fGravity = GAME_GRAVITY_MAX;
   force.SetX( pos.getX()-oldpos.getX() );
   force.SetY( pos.getY()-oldpos.getY() );
   force.SetZ( pos.getZ()-oldpos.getZ() );
 }
 
 void CPlayer::StopJumping() {
-  jumping = false;
+  m_bJumping = false;
 }
 
 void CPlayer::DoDamage(int dmg) {
-  health = health - dmg;
-  if ( health < 0 ) health = 0;
+  m_nHealth = m_nHealth - dmg;
+  if ( m_nHealth < 0 ) m_nHealth = 0;
 }
 
 void CPlayer::SetCanFall(bool state) {
-  canfall = state;
+  b_mCanFall = state;
 }
 
 bool CPlayer::isRunning() const
 {
-    return running;
+    return m_bRunning;
 }
 
 void CPlayer::SetRun(bool state)
 {
-    running = state;
+    m_bRunning = state;
 }
 
 PRREVector& CPlayer::getForce()
@@ -335,10 +335,10 @@ void PRooFPSddPGE::onGameInitialized()
 //				)
 //			{
 //				if ( _root.mc_map[obj]._name.substr(0,8) == "mc_snail" ) {
-//					if ( _root.mc_map[obj].health > 0 ) {
-//						_root.mc_map[obj].health -= _root.BULLETDAMAGE;
+//					if ( _root.mc_map[obj].m_nHealth > 0 ) {
+//						_root.mc_map[obj].m_nHealth -= _root.BULLETDAMAGE;
 //						//trace(_root.mc_map[obj]._name);
-//						if ( _root.mc_map[obj].health <= 0 ) {
+//						if ( _root.mc_map[obj].m_nHealth <= 0 ) {
 //							
 //							_root.killedSnails++;
 //							//trace(_root.killedSnails);
