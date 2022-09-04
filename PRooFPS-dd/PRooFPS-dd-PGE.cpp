@@ -186,20 +186,20 @@ PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 */
 PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
-    maps(getPRRE())
+    m_maps(getPRRE())
 {
     m_fps = 0;
-    fps_counter = 0;
-    fps_lastmeasure = 0;
+    m_fps_counter = 0;
+    m_fps_lastmeasure = 0;
     m_fps_ms = 0;
 
-    spacereleased = true;
-    ctrlreleased = true;
-    shiftreleased = true;
-    enterreleased = true;
+    m_bSpaceReleased = true;
+    m_bCtrlReleased = true;
+    m_bShiftReleased = true;
+    m_enterreleased = true;
 
-    m_won = false;
-    cameraMinY = 0.0f;
+    m_bWon = false;
+    m_fCameraMinY = 0.0f;
 }
 
 PRooFPSddPGE::~PRooFPSddPGE()
@@ -254,26 +254,26 @@ void PRooFPSddPGE::onGameInitialized()
     getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
     getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
-    maps.initialize();
-    maps.load("gamedata/maps/map_test_good.txt");
+    m_maps.initialize();
+    assert( m_maps.load("gamedata/maps/map_test_good.txt") );
 
-    player.AttachObject( getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H), true );
-    playertex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1m.bmp" );
-    player.getAttachedObject()->getMaterial().setTexture( playertex );
-    player.getPos1() = maps.getRandomSpawnpoint();
+    m_player.AttachObject( getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H), true );
+    m_pTexPlayer = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1m.bmp" );
+    m_player.getAttachedObject()->getMaterial().setTexture( m_pTexPlayer );
+    m_player.getPos1() = m_maps.getRandomSpawnpoint();
 
     assert( getWeaponManager().load("gamedata/weapons/machinegun.txt") );
 
-    xhair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
-    xhair->SetStickedToScreen(true);
-    xhair->SetDoubleSided(true);
-    xhair->SetTestingAgainstZBuffer(false);
-    xhair->SetLit(false);
+    m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
+    m_pObjXHair->SetStickedToScreen(true);
+    m_pObjXHair->SetDoubleSided(true);
+    m_pObjXHair->SetTestingAgainstZBuffer(false);
+    m_pObjXHair->SetLit(false);
     // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PRRE_SRC_ALPHA, PRRE_ONE)
     // otherwise (bitmaps saved by Flash) just use (PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
-    xhair->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
+    m_pObjXHair->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
     PRRETexture* xhairtex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
-    xhair->getMaterial().setTexture( xhairtex );
+    m_pObjXHair->getMaterial().setTexture( xhairtex );
 
     getPRRE().WriteList();
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
@@ -283,7 +283,7 @@ void PRooFPSddPGE::onGameInitialized()
         getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
     getPRRE().getWindow().SetCursorVisible(false);
     
-    fps_lastmeasure = GetTickCount();
+    m_fps_lastmeasure = GetTickCount();
     m_fps = 0;
 }
 
@@ -350,7 +350,7 @@ void PRooFPSddPGE::onGameInitialized()
 void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
-    maps.shutdown();
+    m_maps.shutdown();
     getPRRE().getObject3DManager().DeleteAll();
     getPRRE().getWindow().SetCursorVisible(true);
 
@@ -363,7 +363,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   float speed;
 
-  if ( player.isRunning() )
+  if ( m_player.isRunning() )
       speed = GAME_PLAYER_SPEED2/60.0f;
   else
       speed = GAME_PLAYER_SPEED1/60.0f;
@@ -377,71 +377,71 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
   {
     if ( keybd.isKeyPressed( VK_LEFT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')) )
     {
-        if ( !player.isJumping() && !player.isFalling() && bAllowJump )
+        if ( !m_player.isJumping() && !m_player.isFalling() && m_bAllowJump )
         {
-            player.getPos1().SetX( player.getPos1().getX() - speed );
+            m_player.getPos1().SetX( m_player.getPos1().getX() - speed );
         }
     }
     if ( keybd.isKeyPressed( VK_RIGHT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')) )
     {
-        if ( !player.isJumping() && !player.isFalling() && bAllowJump )
+        if ( !m_player.isJumping() && !m_player.isFalling() && m_bAllowJump )
         {
-            player.getPos1().SetX( player.getPos1().getX() + speed );
+            m_player.getPos1().SetX( m_player.getPos1().getX() + speed );
         }
     }
 
     if ( keybd.isKeyPressed( VK_SPACE ) )
     {
-        if ( spacereleased )
+        if ( m_bSpaceReleased )
         {
-            if ( !player.isJumping() && bAllowJump && !player.isFalling() )
+            if ( !m_player.isJumping() && m_bAllowJump && !m_player.isFalling() )
             {
-                player.Jump();
+                m_player.Jump();
                 
-                spacereleased = false;
+                m_bSpaceReleased = false;
             }
         }
     }
     else
-        spacereleased = true;
+        m_bSpaceReleased = true;
 
     if ( keybd.isKeyPressed( VK_CONTROL ) )
     {
-          if ( ctrlreleased )
+          if ( m_bCtrlReleased )
           {
             //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
-            ctrlreleased = false;
+            m_bCtrlReleased = false;
           }
     }
     else 
-       ctrlreleased = true;
+       m_bCtrlReleased = true;
 
     if ( keybd.isKeyPressed( VK_SHIFT ) )
     {
-          if ( shiftreleased )
+          if ( m_bShiftReleased )
           {
             //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
-            shiftreleased = false;
-            if ( player.isRunning() )
-                player.SetRun(false);
+            m_bShiftReleased = false;
+            if ( m_player.isRunning() )
+                m_player.SetRun(false);
             else
-                player.SetRun(true);
+                m_player.SetRun(true);
           }
     }
     else 
-       shiftreleased = true;
+       m_bShiftReleased = true;
   }
   else
   {
         if ( keybd.isKeyPressed( VK_RETURN ) )
         {
-              if ( enterreleased )
+              if ( m_enterreleased )
               {
 
               }
         }
         else 
-           enterreleased = true;  
+           m_enterreleased = true;  
   } // won
 }
 
@@ -460,9 +460,9 @@ void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
     const int dx = oldmx - mouse.getCursorPosX();
     const int dy = oldmy - mouse.getCursorPosY();
 
-    xhair->getPosVec().Set(
-        xhair->getPosVec().getX() + dx,
-        xhair->getPosVec().getY() - dy,
+    m_pObjXHair->getPosVec().Set(
+        m_pObjXHair->getPosVec().getX() + dx,
+        m_pObjXHair->getPosVec().getY() - dy,
         0.f);
 
     if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
@@ -536,17 +536,17 @@ bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, f
      }              
 }
 
-// a player ütközéseit kezeli
+// a m_player ütközéseit kezeli
 void PRooFPSddPGE::Collision(bool& /*won*/)
 { 
-    PRREObject3D* plobj = player.getAttachedObject();
+    PRREObject3D* plobj = m_player.getAttachedObject();
     PRREVector pos, oldpos;
-    pos = player.getOPos1();
-    oldpos = player.getPos1();
+    pos = m_player.getOPos1();
+    oldpos = m_player.getPos1();
 
-    player.getPos1().SetX( player.getPos1().getX() + player.getForce().getX() );
+    m_player.getPos1().SetX( m_player.getPos1().getX() + m_player.getForce().getX() );
 
-    if ( player.getOPos1().getY() != player.getPos1().getY() )
+    if ( m_player.getOPos1().getY() != m_player.getPos1().getY() )
     {
         for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
         {
@@ -554,19 +554,19 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
             if ( (obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()) )
             {
               if ( Colliding2( obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                               player.getOPos1().getX(), player.getPos1().getY(), player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
+                               m_player.getOPos1().getX(), m_player.getPos1().getY(), m_player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
                  )
               {  
-                player.getPos1().SetY( player.getOPos1().getY() );
-                if ( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 <= player.getPos1().getY()-GAME_PLAYER_H/2.0f + 0.01f )
+                m_player.getPos1().SetY( m_player.getOPos1().getY() );
+                if ( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 <= m_player.getPos1().getY()-GAME_PLAYER_H/2.0f + 0.01f )
                 {
-                  player.SetCanFall( false );
-                  player.getPos1().SetY( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 + GAME_PLAYER_H/2.0f + 0.01f);
-                  player.UpdateForce(0.0f, 0.0f, 0.0f);
+                  m_player.SetCanFall( false );
+                  m_player.getPos1().SetY( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 + GAME_PLAYER_H/2.0f + 0.01f);
+                  m_player.UpdateForce(0.0f, 0.0f, 0.0f);
                 }
                 else
                 {
-                    player.SetCanFall( true );
+                    m_player.SetCanFall( true );
                     
                 }
                 break;
@@ -575,7 +575,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
         }
     }
 
-    if ( player.getOPos1().getX() != player.getPos1().getX() )
+    if ( m_player.getOPos1().getX() != m_player.getPos1().getX() )
     {
         for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
           {
@@ -583,10 +583,10 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
             if ( (obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()) )
             {
               if ( Colliding2( obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                               player.getPos1().getX(), player.getPos1().getY(), player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
+                               m_player.getPos1().getX(), m_player.getPos1().getY(), m_player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
                  )
               {
-                player.getPos1().SetX( player.getOPos1().getX() );
+                m_player.getPos1().SetX( m_player.getOPos1().getX() );
                 break;
               }
             }
@@ -601,61 +601,61 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     float speed = GAME_CAM_SPEED / 60.0f;
 
     /* ne mehessen túlságosan balra vagy jobbra a kamera */
-    //if ( player.getPos1().getX() < maps.getStartPos().getX() )
-    //    celx = maps.getStartPos().getX();
+    //if ( m_player.getPos1().getX() < m_maps.getStartPos().getX() )
+    //    celx = m_maps.getStartPos().getX();
     //else
-    //    if ( player.getPos1().getX() > maps.getEndPos().getX() )
-    //        celx = maps.getEndPos().getX();
+    //    if ( m_player.getPos1().getX() > m_maps.getEndPos().getX() )
+    //        celx = m_maps.getEndPos().getX();
     //     else
-            celx = player.getPos1().getX();
+            celx = m_player.getPos1().getX();
 
     /* ne mehessen túlságosan le és fel a kamera */
-    //if ( player.getPos1().getY() < cameraMinY )
-    //    cely = cameraMinY;
+    //if ( m_player.getPos1().getY() < m_fCameraMinY )
+    //    cely = m_fCameraMinY;
     //else
-    //    if ( player.getPos1().getY() > GAME_CAM_MAX_Y )
+    //    if ( m_player.getPos1().getY() > GAME_CAM_MAX_Y )
     //        cely = GAME_CAM_MAX_Y;
     //    else
-            cely = player.getPos1().getY();
+            cely = m_player.getPos1().getY();
 
     /* a játékoshoz igazítjuk a kamerát */
-    if ( player.getPos1().getX() != campos.getX() )
+    if ( m_player.getPos1().getX() != campos.getX() )
     {
         campos.SetX(campos.getX() + ((celx - campos.getX())/speed) );
     }
-    if ( player.getPos1().getY() != campos.getY() )
+    if ( m_player.getPos1().getY() != campos.getY() )
     {
         campos.SetY(campos.getY() + ((cely - campos.getY())/speed) );
     }
 
     getPRRE().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), player.getPos1().getZ() );
+    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_player.getPos1().getZ() );
 
 } // CameraMovement()
 
 
 void PRooFPSddPGE::Gravity(int fps)
 {
-  if ( player.isJumping() )
+  if ( m_player.isJumping() )
   {
-    player.SetGravity( player.getGravity()-GAME_JUMPING_SPEED/(float)fps );
-    if ( player.getGravity() < 0.0 )
+    m_player.SetGravity( m_player.getGravity()-GAME_JUMPING_SPEED/(float)fps );
+    if ( m_player.getGravity() < 0.0 )
     {
-      player.SetGravity( 0.0 );
-      player.StopJumping();
+      m_player.SetGravity( 0.0 );
+      m_player.StopJumping();
     }
   }
   else
   {
-    if ( player.getGravity() > GAME_GRAVITY_MIN )
+    if ( m_player.getGravity() > GAME_GRAVITY_MIN )
     {
-      player.SetGravity( player.getGravity()-GAME_FALLING_SPEED/(float)fps );
-      if ( player.getGravity() < GAME_GRAVITY_MIN ) player.SetGravity( GAME_GRAVITY_MIN );
+      m_player.SetGravity( m_player.getGravity()-GAME_FALLING_SPEED/(float)fps );
+      if ( m_player.getGravity() < GAME_GRAVITY_MIN ) m_player.SetGravity( GAME_GRAVITY_MIN );
     }
   }
-  player.getPos1().SetY( player.getPos1().getY() + player.getGravity() );
-  if ( player.getPos1().getY() < maps.getObjectsMinY()-5.0f )
-      player.SetHealth(0);
+  m_player.getPos1().SetY( m_player.getPos1().getY() + m_player.getGravity() );
+  if ( m_player.getPos1().getY() < m_maps.getObjectsMinY()-5.0f )
+      m_player.SetHealth(0);
 }
 
 void PRooFPSddPGE::FrameLimiter(int fps_ms)
@@ -696,28 +696,28 @@ void PRooFPSddPGE::onGameRunning()
     }
     m_fps_ms = GetTickCount();
 
-    if ( player.getPos1().getY() != player.getOPos1().getY() )
+    if ( m_player.getPos1().getY() != m_player.getOPos1().getY() )
     { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
-        bAllowJump = false;
+        m_bAllowJump = false;
     }
     else
     {
-        bAllowJump = true;
+        m_bAllowJump = true;
     }
 
-    player.UpdateOldPos();
-    KeyBoard(m_fps, m_won);
-    Mouse(m_fps, m_won);
-    if ( !m_won)
+    m_player.UpdateOldPos();
+    KeyBoard(m_fps, m_bWon);
+    Mouse(m_fps, m_bWon);
+    if ( !m_bWon)
     {
         Gravity(m_fps);
-        Collision(m_won);
+        Collision(m_bWon);
     }
     CameraMovement(m_fps);
-    player.UpdatePositions( xhair->getPosVec() );
+    m_player.UpdatePositions( m_pObjXHair->getPosVec() );
     // TODO: obviously we will need a getActiveWeapon() for WeaponManager
     Weapon& wpn = getWeaponManager().getWeapons()[0];
-    wpn.UpdatePositions(player.getPos1(), xhair->getPosVec());   
+    wpn.UpdatePositions(m_player.getPos1(), m_pObjXHair->getPosVec());   
     wpn.Update();
     UpdateBullets();
 
@@ -727,12 +727,12 @@ void PRooFPSddPGE::onGameRunning()
     m_fps_ms = GetTickCount() - m_fps_ms;
     //FrameLimiter(m_fps_ms);
     // fps mérõ frissítése 
-    fps_counter++;
-    if ( GetTickCount() - GAME_FPS_INTERVAL >= fps_lastmeasure )
+    m_fps_counter++;
+    if ( GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure )
     {
-        m_fps = fps_counter * (1000/GAME_FPS_INTERVAL);
-        fps_counter = 0;
-        fps_lastmeasure = GetTickCount();
+        m_fps = m_fps_counter * (1000/GAME_FPS_INTERVAL);
+        m_fps_counter = 0;
+        m_fps_lastmeasure = GetTickCount();
     } 
 
     std::stringstream str;

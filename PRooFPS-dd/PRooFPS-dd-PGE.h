@@ -78,11 +78,11 @@ public:
 protected:
 
     PRooFPSddPGE() :
-        maps(getPRRE())
+        m_maps(getPRRE())
     {}
 
     PRooFPSddPGE(const PRooFPSddPGE&) :
-        maps(getPRRE())
+        m_maps(getPRRE())
     {}
 
     PRooFPSddPGE& operator=(const PRooFPSddPGE&)
@@ -111,20 +111,20 @@ protected:
 
 private:
 
-    Maps maps;
+    Maps m_maps;
 
-    int m_fps, fps_counter;                 /* fps méréséhez segédváltozók */
-    unsigned int fps_lastmeasure;         /* - || - */
+    int m_fps, m_fps_counter;                 /* fps méréséhez segédváltozók */
+    unsigned int m_fps_lastmeasure;         /* - || - */
     unsigned int m_fps_ms;                  /* - || - */
 
-    CPlayer player;
-    PRREObject3D* xhair;
-    PRRETexture* playertex;
-    bool bAllowJump;
-    bool spacereleased, ctrlreleased;
-    bool shiftreleased, enterreleased;
-    bool m_won;
-    float cameraMinY;
+    CPlayer m_player;
+    PRREObject3D* m_pObjXHair;
+    PRRETexture* m_pTexPlayer;
+    bool m_bAllowJump;
+    bool m_bSpaceReleased, m_bCtrlReleased;
+    bool m_bShiftReleased, m_enterreleased;
+    bool m_bWon;
+    float m_fCameraMinY;
 
     // ---------------------------------------------------------------------------
 
