@@ -30,7 +30,7 @@ static const std::string GAME_VERSION = "0.1.0.0 Alpha";
 CPlayer::CPlayer()
 {
   m_nHealth = 100;
-  obj = PGENULL;
+  m_pObj = PGENULL;
   pGFX = NULL;
   m_fGravity = 0.0;
   m_bJumping = false;
@@ -40,10 +40,10 @@ CPlayer::CPlayer()
 
 void CPlayer::ShutDown()
 {
-    if ( obj != PGENULL )
+    if (m_pObj != PGENULL )
     {
-        delete obj;
-        obj = PGENULL;
+        delete m_pObj;
+        m_pObj = PGENULL;
     }
     pGFX = NULL;
 }
@@ -62,17 +62,17 @@ int CPlayer::getHealth() const
 
 PRREVector& CPlayer::getPos1()
 {
-  return pos;
+  return m_vecPos;
 }
 
 PRREVector& CPlayer::getOPos1()
 {
-  return oldpos;
+  return m_vecOldPos;
 }
 
 PRREObject3D* CPlayer::getAttachedObject() const
 {
-  return obj;
+  return m_pObj;
 }
 
 void CPlayer::UpdatePositions(const PRREVector& targetPos)
@@ -105,7 +105,7 @@ bool CPlayer::canFall() const
 }
 
 void CPlayer::UpdateOldPos() {
-  oldpos = pos;
+    m_vecOldPos = m_vecPos;
 }
 
 void CPlayer::SetHealth(int value) {
@@ -113,13 +113,13 @@ void CPlayer::SetHealth(int value) {
 }
 
 void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
-  obj = value;   
-  if ( obj != PGENULL )
+  m_pObj = value;
+  if ( m_pObj != PGENULL )
   {  
-      obj->SetDoubleSided(true);
+      m_pObj->SetDoubleSided(true);
       if ( blend )
-          obj->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA);
-      obj->SetLit(false);
+          m_pObj->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA);
+      m_pObj->SetLit(false);
   }
 }
 
@@ -130,9 +130,9 @@ void CPlayer::SetGravity(float value) {
 void CPlayer::Jump() {
   m_bJumping = true;
   m_fGravity = GAME_GRAVITY_MAX;
-  force.SetX( pos.getX()-oldpos.getX() );
-  force.SetY( pos.getY()-oldpos.getY() );
-  force.SetZ( pos.getZ()-oldpos.getZ() );
+  m_vecForce.SetX(m_vecPos.getX() - m_vecOldPos.getX() );
+  m_vecForce.SetY(m_vecPos.getY() - m_vecOldPos.getY() );
+  m_vecForce.SetZ(m_vecPos.getZ() - m_vecOldPos.getZ() );
 }
 
 void CPlayer::StopJumping() {
@@ -160,14 +160,14 @@ void CPlayer::SetRun(bool state)
 
 PRREVector& CPlayer::getForce()
 {
-    return force;
+    return m_vecForce;
 }
 
 void CPlayer::UpdateForce(float x, float y, float z)
 {
-    force.SetX(x);
-    force.SetY(y);
-    force.SetZ(z);
+    m_vecForce.SetX(x);
+    m_vecForce.SetY(y);
+    m_vecForce.SetZ(z);
 }
 
 
@@ -577,7 +577,7 @@ bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, f
 // a m_player ütközéseit kezeli
 void PRooFPSddPGE::Collision(bool& /*won*/)
 { 
-    PRREObject3D* plobj = m_player.getAttachedObject();
+    const PRREObject3D* const plobj = m_player.getAttachedObject();
     PRREVector pos, oldpos;
     pos = m_player.getOPos1();
     oldpos = m_player.getPos1();

@@ -21,9 +21,9 @@ class CPlayer
 {
 private:       
     int m_nHealth;
-    PRREVector pos, oldpos;
-    PRREVector force;
-    PRREObject3D* obj;
+    PRREVector m_vecPos, m_vecOldPos;
+    PRREVector m_vecForce;
+    PRREObject3D* m_pObj;
     PR00FsReducedRenderingEngine* pGFX;
     float m_fGravity;
     bool m_bJumping;
