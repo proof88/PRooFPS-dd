@@ -62,7 +62,7 @@
 
 #include "stdafx.h"  // PCH
 
-#include "CustomPGE.h"    // Using our customized PGE.
+#include "PRooFPS-dd-PGE.h"    // Using our customized PGE.
 
 /**
     Entry point of our application.
@@ -81,7 +81,7 @@
 #ifndef TESTING
 int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPSTR lpCmdLine, const int nCmdShow)
 {
-    CustomPGE* const gameEngine = CustomPGE::createAndGetCustomPGEinstance();
+    PRooFPSddPGE* const gameEngine = PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
     
     // Initializing the game engine.
     int nResult = gameEngine->initializeGame();

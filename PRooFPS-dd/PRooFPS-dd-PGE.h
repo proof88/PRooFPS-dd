@@ -2,7 +2,7 @@
 
 /*
     ###################################################################################
-    CustomPGE.h
+    PRooFPSddPGE.h
     Customized PGE for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2022
@@ -61,13 +61,13 @@ public:
 /**
     The customized game engine class. This handles the game logic. Singleton.
 */
-class CustomPGE :
+class PRooFPSddPGE :
     public PGE
 {
 
 public:
 
-    static CustomPGE* createAndGetCustomPGEinstance();
+    static PRooFPSddPGE* createAndGetPRooFPSddPGEinstance();
     static const char* getLoggerModuleName();
 
     // ---------------------------------------------------------------------------
@@ -77,21 +77,21 @@ public:
    
 protected:
 
-    CustomPGE() :
+    PRooFPSddPGE() :
         maps(getPRRE())
     {}
 
-    CustomPGE(const CustomPGE&) :
+    PRooFPSddPGE(const PRooFPSddPGE&) :
         maps(getPRRE())
     {}
 
-    CustomPGE& operator=(const CustomPGE&)
+    PRooFPSddPGE& operator=(const PRooFPSddPGE&)
     {
         return *this;
     }
 
-    explicit CustomPGE(const char* gametitle);  /**< This is the only usable ctor, this is used by the static createAndGet(). */
-    virtual ~CustomPGE();
+    explicit PRooFPSddPGE(const char* gametitle);  /**< This is the only usable ctor, this is used by the static createAndGet(). */
+    virtual ~PRooFPSddPGE();
 
     virtual void onGameInitializing(); /**< Must-have minimal stuff before loading anything. */
     virtual void onGameInitialized();  /**< Loading game content here. */
@@ -129,4 +129,4 @@ private:
     // ---------------------------------------------------------------------------
 
 
-}; // class CustomPGE
+}; // class PRooFPSddPGE

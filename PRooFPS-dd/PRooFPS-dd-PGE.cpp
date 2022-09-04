@@ -1,6 +1,6 @@
 /*
     ###################################################################################
-    CustomPGE.cpp
+    PRooFPSddPGE.cpp
     Customized PGE for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2022
@@ -10,7 +10,7 @@
 
 #include "stdafx.h"  // PCH
 
-#include "CustomPGE.h"
+#include "PRooFPS-dd-PGE.h"
 
 #include <cassert>
 
@@ -171,9 +171,9 @@ void CPlayer::UpdateForce(float x, float y, float z)
 }
 
 
-CustomPGE* CustomPGE::createAndGetCustomPGEinstance()
+PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
-    static CustomPGE pgeInstance((GAME_NAME + " " + GAME_VERSION).c_str());
+    static PRooFPSddPGE pgeInstance((GAME_NAME + " " + GAME_VERSION).c_str());
     return &pgeInstance;
 }
 
@@ -184,7 +184,7 @@ CustomPGE* CustomPGE::createAndGetCustomPGEinstance()
 /**
     This is the only usable ctor, this is used by the static createAndGet().
 */
-CustomPGE::CustomPGE(const char* gameTitle) :
+PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     maps(getPRRE())
 {
@@ -202,27 +202,27 @@ CustomPGE::CustomPGE(const char* gameTitle) :
     cameraMinY = 0.0f;
 }
 
-CustomPGE::~CustomPGE()
+PRooFPSddPGE::~PRooFPSddPGE()
 {
 
 }
 
-CConsole& CustomPGE::getConsole() const
+CConsole& PRooFPSddPGE::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
 
-const char* CustomPGE::getLoggerModuleName()
+const char* PRooFPSddPGE::getLoggerModuleName()
 {
-    return "CustomPGE";
+    return "PRooFPSddPGE";
 }
 
 /**
     Must-have minimal stuff before loading anything.
     Game engine calls this before even finishing its own initialization.
 */
-void CustomPGE::onGameInitializing()
+void PRooFPSddPGE::onGameInitializing()
 {
     // Earliest we can enable our own logging
     getConsole().Initialize((GAME_NAME + " " + GAME_VERSION + " log").c_str(), true);
@@ -242,10 +242,10 @@ void CustomPGE::onGameInitializing()
 /** 
     Loading game content here.
 */
-void CustomPGE::onGameInitialized()
+void PRooFPSddPGE::onGameInitialized()
 {
     getConsole().SetLoggingState("4LLM0DUL3S", false);
-    getConsole().OLnOI("CustomPGE::onGameInitialized()");
+    getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
     getPRRE().getScreen().SetVSyncEnabled(true);
 
@@ -276,7 +276,7 @@ void CustomPGE::onGameInitialized()
     xhair->getMaterial().setTexture( xhairtex );
 
     getPRRE().WriteList();
-    getConsole().OOOLn("CustomPGE::onGameInitialized() done!");
+    getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
     getInput().getMouse().SetCursorPos(
         getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
@@ -347,18 +347,18 @@ void CustomPGE::onGameInitialized()
     Freeing up game content here.
     Free up everything that has been allocated in onGameInitialized() and onGameRunning().
 */
-void CustomPGE::onGameDestroying()
+void PRooFPSddPGE::onGameDestroying()
 {
-    getConsole().OLnOI("CustomPGE::onGameDestroying() ...");
+    getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
     maps.shutdown();
     getPRRE().getObject3DManager().DeleteAll();
     getPRRE().getWindow().SetCursorVisible(true);
 
-    getConsole().OOOLn("CustomPGE::onGameDestroying() done!");
+    getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
 }
 
-void CustomPGE::KeyBoard(int /*fps*/, bool& won)
+void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   float speed;
@@ -446,7 +446,7 @@ void CustomPGE::KeyBoard(int /*fps*/, bool& won)
 }
 
 
-void CustomPGE::Mouse(int /*fps*/, bool& /*won*/)
+void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
 {
     PGEInputMouse& mouse = getInput().getMouse();
 
@@ -474,7 +474,7 @@ void CustomPGE::Mouse(int /*fps*/, bool& /*won*/)
 
 
 // két adott objektum ütközik-e egymással
-bool CustomPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
+bool PRooFPSddPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
 {
   if (
        ( 
@@ -505,7 +505,7 @@ bool CustomPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
 }       
 
 // két térbeli terület ütközik-e egymással
-bool CustomPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
+bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
                       float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
 {
   if (
@@ -537,7 +537,7 @@ bool CustomPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, floa
 }
 
 // a player ütközéseit kezeli
-void CustomPGE::Collision(bool& /*won*/)
+void PRooFPSddPGE::Collision(bool& /*won*/)
 { 
     PRREObject3D* plobj = player.getAttachedObject();
     PRREVector pos, oldpos;
@@ -594,7 +594,7 @@ void CustomPGE::Collision(bool& /*won*/)
     }
 }
 
-void CustomPGE::CameraMovement(int /*fps*/)
+void PRooFPSddPGE::CameraMovement(int /*fps*/)
 {
     PRREVector campos = getPRRE().getCamera().getPosVec();
     float celx, cely;
@@ -634,7 +634,7 @@ void CustomPGE::CameraMovement(int /*fps*/)
 } // CameraMovement()
 
 
-void CustomPGE::Gravity(int fps)
+void PRooFPSddPGE::Gravity(int fps)
 {
   if ( player.isJumping() )
   {
@@ -658,7 +658,7 @@ void CustomPGE::Gravity(int fps)
       player.SetHealth(0);
 }
 
-void CustomPGE::FrameLimiter(int fps_ms)
+void PRooFPSddPGE::FrameLimiter(int fps_ms)
 {
   //if ( GAME_MAXFPS > 0 )
   {
@@ -671,7 +671,7 @@ void CustomPGE::FrameLimiter(int fps_ms)
 }
 
 
-void CustomPGE::UpdateBullets()
+void PRooFPSddPGE::UpdateBullets()
 {
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
@@ -687,7 +687,7 @@ void CustomPGE::UpdateBullets()
     Game engine invokes this in every frame.
     DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
 */
-void CustomPGE::onGameRunning()
+void PRooFPSddPGE::onGameRunning()
 {
     PRREWindow& window = getPRRE().getWindow();
 
