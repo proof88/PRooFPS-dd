@@ -195,6 +195,9 @@
     <ClInclude Include="..\..\..\PGE\PGE\PRRE\include\external\Object3D\PRREVertexTransferMode.h">
       <Filter>Header Files\PGE\PRRE\Object3D</Filter>
     </ClInclude>
+    <ClInclude Include="PRooFPS-dd-packet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

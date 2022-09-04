@@ -172,6 +172,7 @@
     <ClInclude Include="..\..\..\PGE\PGE\PRRE\include\external\Render\PRRERendererHWfixedPipe.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PRRE\include\external\Render\PRRERendererSWincremental.h" />
     <ClInclude Include="Consts.h" />
+    <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
     <ClInclude Include="Maps.h" />
     <ClInclude Include="PRooFPS-dd.h" />

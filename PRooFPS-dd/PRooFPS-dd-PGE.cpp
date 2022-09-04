@@ -233,10 +233,17 @@ void PRooFPSddPGE::onGameInitializing()
     getConsole().SetFloatsColor( FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "FFFF00" );
     getConsole().SetBoolsColor( FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "00FFFF" );
 
+    // PRooFPSddPGE (game) logs
+    getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+    // Network logs
+    getConsole().SetLoggingState("PGESysNET", true);
+    getConsole().SetLoggingState("PgeNetwork", true);
+    getConsole().SetLoggingState("PgeServer", true);
+    getConsole().SetLoggingState("PgeClient", true);
+
     // Turn everything on for development only
     getConsole().SetLoggingState("4LLM0DUL3S", true);
-
-    CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), true);
 }
 
 /** 
@@ -244,8 +251,9 @@ void PRooFPSddPGE::onGameInitializing()
 */
 void PRooFPSddPGE::onGameInitialized()
 {
-    getConsole().SetLoggingState("4LLM0DUL3S", false);
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
+
+    getConsole().SetLoggingState("4LLM0DUL3S", false);
 
     getPRRE().getScreen().SetVSyncEnabled(true);
 
@@ -276,6 +284,36 @@ void PRooFPSddPGE::onGameInitialized()
     m_pObjXHair->getMaterial().setTexture( xhairtex );
 
     getPRRE().WriteList();
+
+    if (getNetwork().isServer())
+    {
+        // MsgUserSetup is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserSetup MUST NOT be received by server over network!
+        // MsgUserSetup is received only by clients over network!
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetup::id));
+
+        // MsgUserUpdate is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserUpdate MUST NOT be received by server over network!
+        // MsgUserUpdate is received only by clients over network!
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
+
+        if (!getNetwork().getServer().startListening())
+        {
+            PGE::showErrorDialog("Server has FAILED to start listening!");
+            assert(false);
+        }
+    }
+    else
+    {
+        getNetwork().getClient().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
+
+        if (!getNetwork().getClient().connectToServer("127.0.0.1"))
+        {
+            PGE::showErrorDialog("Client has FAILED to establish connection to the server!");
+            assert(false);
+        }
+    }
+
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
     getInput().getMouse().SetCursorPos(
@@ -743,3 +781,325 @@ void PRooFPSddPGE::onGameRunning()
 
 // ############################### PRIVATE ###############################
 
+
+void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
+{
+    bool found = false;
+    do
+    {
+        sprintf_s(szNewUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength, "User%d", 10000 + (rand() % 100000));
+        for (const auto& client : m_mapPlayers)
+        {
+            found = (client.first == szNewUserName);
+            if (found)
+            {
+                break;
+            }
+        }
+    } while (found);
+}
+
+void PRooFPSddPGE::WritePlayerList()
+{
+    getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
+    for (const auto& player : m_mapPlayers)
+    {
+        getConsole().OLn("Username: %s; connHandleServerSide: %u; address: %s",
+            player.first.c_str(), player.second.m_connHandleServerSide, player.second.m_sIpAddress.c_str());
+    }
+    getConsole().OO();
+}
+
+void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
+{
+    if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(msg.m_szUserName)))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: user %s (connHandleServerSide: %u) is already present in players list!",
+            __func__, msg.m_szUserName, connHandleServerSide);
+        assert(false);
+        return;
+    }
+
+    if (msg.m_bCurrentClient)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): this is me, my name is %s, connHandleServerSide: %u, my IP: %s",
+            __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress);
+        // store our username so we can refer to it anytime later
+        m_sUserName = msg.m_szUserName;
+
+        if (getNetwork().isServer())
+        {
+            getPRRE().getUImanager().addText("Server, User name: " + m_sUserName, 10, 30);
+        }
+        else
+        {
+            getPRRE().getUImanager().addText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
+        }
+    }
+    else
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): new user %s (connHandleServerSide: %u; IP: %s) connected",
+            __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress);
+    }
+
+    // insert user into map using wacky syntax
+    m_mapPlayers[msg.m_szUserName];
+    m_mapPlayers[msg.m_szUserName].m_connHandleServerSide = connHandleServerSide;
+    m_mapPlayers[msg.m_szUserName].m_sIpAddress = msg.m_szIpAddress;
+
+    PRREObject3D* const plane = getPRRE().getObject3DManager().createPlane(0.5f, 0.5f);
+    if (!plane)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
+        // TODO: should exit or sg
+        return;
+    }
+
+    plane->SetDoubleSided(true);
+    plane->getPosVec().SetX(0);
+    plane->getPosVec().SetZ(2);
+
+    plane->setVertexModifyingHabit(PRRE_VMOD_STATIC);
+    plane->setVertexReferencingMode(PRRE_VREF_INDEXED);
+
+    m_mapPlayers[msg.m_szUserName].m_pObject3D = plane;
+
+    getNetwork().WriteList();
+    WritePlayerList();
+}
+
+void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
+{
+    if (!getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgUserConnected, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+    const char* szConnectedUserName = nullptr;
+
+    if (msg.bCurrentClient)
+    {
+        // server is processing its own birth
+        if (m_mapPlayers.size() == 0)
+        {
+            char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
+            genUniqueUserName(szNewUserName);
+            getConsole().OLn("PRooFPSddPGE::%s(): first (local) user %s connected and I'm server, so this is me (connHandleServerSide: %u)",
+                __func__, szNewUserName, connHandleServerSide);
+
+            szConnectedUserName = szNewUserName;
+
+            pge_network::PgePacket newPktSetup;
+            proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress);
+
+            // server injects this msg to self so resources for player will be allocated
+            getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
+        }
+        else
+        {
+            // cannot happen
+            getConsole().EOLn("PRooFPSddPGE::%s(): user (connHandleServerSide: %u) connected with bCurrentClient as true but it is not me, CANNOT HAPPEN!",
+                __func__, connHandleServerSide);
+            assert(false);
+            return;
+        }
+    }
+    else
+    {
+        // server is processing another user's birth
+        if (m_mapPlayers.empty())
+        {
+            // cannot happen because at least the user of the server should be in the map!
+            // this should happen only if we are dedicated server but currently only listen-server is supported!
+            getConsole().EOLn("PRooFPSddPGE::%s(): non-server user (connHandleServerSide: %u) connected but map of players is still empty, CANNOT HAPPEN!",
+                __func__, connHandleServerSide);
+            assert(false);
+            return;
+        }
+
+        char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
+        genUniqueUserName(szNewUserName);
+        szConnectedUserName = szNewUserName;
+        getConsole().OLn("PRooFPSddPGE::%s(): new remote user %s (connHandleServerSide: %u) connected (from %s) and I'm server",
+            __func__, szConnectedUserName, connHandleServerSide, msg.szIpAddress);
+
+        pge_network::PgePacket newPktSetup;
+        proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress);
+
+        // server injects this msg to self so resources for player will be allocated
+        getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
+
+        // inform all other clients about this new user
+        getNetwork().getServer().SendPacketToAllClients(newPktSetup, connHandleServerSide);
+
+        // now we send this msg to the client with this bool flag set so client will know it is their connect
+        proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
+        msgUserSetup.m_bCurrentClient = true;
+        getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
+
+        // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
+        // otherwise client won't know about them, so this way the client will detect them as newly connected users;
+        // we also send MsgUserUpdate about each player so new client will immediately have their positions updated.
+        pge_network::PgePacket newPktUserUpdate;
+        for (const auto& it : m_mapPlayers)
+        {
+            proofps_dd::MsgUserSetup::initPkt(
+                newPktSetup,
+                it.second.m_connHandleServerSide,
+                false,
+                it.first, it.second.m_sIpAddress);
+            getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
+
+            proofps_dd::MsgUserUpdate::initPkt(
+                newPktUserUpdate,
+                it.second.m_connHandleServerSide,
+                it.second.m_pObject3D->getPosVec().getX(), it.second.m_pObject3D->getPosVec().getY(), it.second.m_pObject3D->getPosVec().getZ());
+            getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
+        }
+    }
+}
+
+void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
+{
+    auto it = m_mapPlayers.begin();
+    while (it != m_mapPlayers.end())
+    {
+        if (it->second.m_connHandleServerSide == connHandleServerSide)
+        {
+            break;
+        }
+        it++;
+    }
+
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return;
+    }
+
+    const std::string& sClientUserName = it->first;
+
+    if (getNetwork().isServer())
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm server", __func__, sClientUserName.c_str());
+    }
+    else
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
+    }
+
+    if (it->second.m_pObject3D)
+    {
+        delete it->second.m_pObject3D;  // yes, dtor will remove this from its Object3DManager too!
+    }
+
+    m_mapPlayers.erase(it);
+
+    getNetwork().WriteList();
+    WritePlayerList();
+}
+
+void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
+{
+    if (!getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgUserCmdMove, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+    auto it = m_mapPlayers.begin();
+    while (it != m_mapPlayers.end())
+    {
+        if (it->second.m_connHandleServerSide == connHandleServerSide)
+        {
+            break;
+        }
+        it++;
+    }
+
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return;
+    }
+
+    const std::string& sClientUserName = it->first;
+
+    PRREObject3D* obj = it->second.m_pObject3D;
+    if (!obj)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, sClientUserName.c_str());
+        return;
+    }
+
+    if ((pktUserCmdMove.m_dirHorizontal == proofps_dd::HorizontalDirection::NONE) &&
+        (pktUserCmdMove.m_dirVertical == proofps_dd::VerticalDirection::NONE))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
+        return;
+    }
+
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s sent valid cmdMove", __func__, sClientUserName.c_str());
+    switch (pktUserCmdMove.m_dirHorizontal)
+    {
+    case proofps_dd::HorizontalDirection::LEFT:
+        obj->getPosVec().SetX(obj->getPosVec().getX() - 0.01f);
+        break;
+    case proofps_dd::HorizontalDirection::RIGHT:
+        obj->getPosVec().SetX(obj->getPosVec().getX() + 0.01f);
+        break;
+    default: /* no-op */
+        break;
+    }
+
+    switch (pktUserCmdMove.m_dirVertical)
+    {
+    case proofps_dd::VerticalDirection::DOWN:
+        obj->getPosVec().SetY(obj->getPosVec().getY() - 0.01f);
+        break;
+    case proofps_dd::VerticalDirection::UP:
+        obj->getPosVec().SetY(obj->getPosVec().getY() + 0.01f);
+        break;
+    default: /* no-op */
+        break;
+    }
+
+    pge_network::PgePacket pktOut;
+    proofps_dd::MsgUserUpdate::initPkt(pktOut, connHandleServerSide, obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ());
+    getNetwork().getServer().SendPacketToAllClients(pktOut);
+    // this msgUserUpdate should be also sent to server as self
+    // maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
+    getNetwork().getServer().getPacketQueue().push_back(pktOut);
+}
+
+void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
+{
+    auto it = m_mapPlayers.begin();
+    while (it != m_mapPlayers.end())
+    {
+        if (it->second.m_connHandleServerSide == connHandleServerSide)
+        {
+            break;
+        }
+        it++;
+    }
+
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return;
+    }
+
+    PRREObject3D* obj = it->second.m_pObject3D;
+    if (!obj)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, it->first.c_str());
+        return;
+    }
+
+    obj->getPosVec().SetX(msg.m_pos.x);
+    obj->getPosVec().SetY(msg.m_pos.y);
+}
