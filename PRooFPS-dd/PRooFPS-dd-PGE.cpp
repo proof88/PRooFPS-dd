@@ -265,11 +265,6 @@ void PRooFPSddPGE::onGameInitialized()
     m_maps.initialize();
     assert( m_maps.load("gamedata/maps/map_test_good.txt") );
 
-    m_player.AttachObject( getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H), true );
-    m_pTexPlayer = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\giraffe1m.bmp" );
-    m_player.getAttachedObject()->getMaterial().setTexture( m_pTexPlayer );
-    m_player.getPos1() = m_maps.getRandomSpawnpoint();
-
     assert( getWeaponManager().load("gamedata/weapons/machinegun.txt") );
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
@@ -386,7 +381,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   float speed;
 
-  if ( m_player.isRunning() )
+  if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
       speed = GAME_PLAYER_SPEED2/60.0f;
   else
       speed = GAME_PLAYER_SPEED1/60.0f;
@@ -400,16 +395,16 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
   {
     if ( keybd.isKeyPressed( VK_LEFT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')) )
     {
-        if ( !m_player.isJumping() && !m_player.isFalling() && m_bAllowJump )
+        if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() && !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() && m_bAllowJump )
         {
-            m_player.getPos1().SetX( m_player.getPos1().getX() - speed );
+            m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() - speed );
         }
     }
     if ( keybd.isKeyPressed( VK_RIGHT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')) )
     {
-        if ( !m_player.isJumping() && !m_player.isFalling() && m_bAllowJump )
+        if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() && !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() && m_bAllowJump )
         {
-            m_player.getPos1().SetX( m_player.getPos1().getX() + speed );
+            m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() + speed );
         }
     }
 
@@ -417,9 +412,9 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
     {
         if ( m_bSpaceReleased )
         {
-            if ( !m_player.isJumping() && m_bAllowJump && !m_player.isFalling() )
+            if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() && m_bAllowJump && !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() )
             {
-                m_player.Jump();
+                m_mapPlayers[m_sUserName].m_legacyPlayer.Jump();
                 
                 m_bSpaceReleased = false;
             }
@@ -445,10 +440,10 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
           {
             //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
             m_bShiftReleased = false;
-            if ( m_player.isRunning() )
-                m_player.SetRun(false);
+            if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
+                m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(false);
             else
-                m_player.SetRun(true);
+                m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(true);
           }
     }
     else 
@@ -562,14 +557,14 @@ bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, f
 // a m_player ütközéseit kezeli
 void PRooFPSddPGE::Collision(bool& /*won*/)
 { 
-    const PRREObject3D* const plobj = m_player.getAttachedObject();
+    const PRREObject3D* const plobj = m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject();
     PRREVector pos, oldpos;
-    pos = m_player.getOPos1();
-    oldpos = m_player.getPos1();
+    pos = m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1();
+    oldpos = m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1();
 
-    m_player.getPos1().SetX( m_player.getPos1().getX() + m_player.getForce().getX() );
+    m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() + m_mapPlayers[m_sUserName].m_legacyPlayer.getForce().getX() );
 
-    if ( m_player.getOPos1().getY() != m_player.getPos1().getY() )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getY() != m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() )
     {
         for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
         {
@@ -577,19 +572,19 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
             if ( (obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()) )
             {
               if ( Colliding2( obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                               m_player.getOPos1().getX(), m_player.getPos1().getY(), m_player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getX(), m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
                  )
               {  
-                m_player.getPos1().SetY( m_player.getOPos1().getY() );
-                if ( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 <= m_player.getPos1().getY()-GAME_PLAYER_H/2.0f + 0.01f )
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetY(m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getY() );
+                if ( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 <= m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY()-GAME_PLAYER_H/2.0f + 0.01f )
                 {
-                  m_player.SetCanFall( false );
-                  m_player.getPos1().SetY( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 + GAME_PLAYER_H/2.0f + 0.01f);
-                  m_player.UpdateForce(0.0f, 0.0f, 0.0f);
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.SetCanFall( false );
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetY( obj->getPosVec().getY()+obj->getSizeVec().getY()/2 + GAME_PLAYER_H/2.0f + 0.01f);
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.UpdateForce(0.0f, 0.0f, 0.0f);
                 }
                 else
                 {
-                    m_player.SetCanFall( true );
+                    m_mapPlayers[m_sUserName].m_legacyPlayer.SetCanFall( true );
                     
                 }
                 break;
@@ -598,7 +593,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
         }
     }
 
-    if ( m_player.getOPos1().getX() != m_player.getPos1().getX() )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getX() != m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() )
     {
         for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
           {
@@ -606,10 +601,10 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
             if ( (obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()) )
             {
               if ( Colliding2( obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                               m_player.getPos1().getX(), m_player.getPos1().getY(), m_player.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX(), m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ() )
                  )
               {
-                m_player.getPos1().SetX( m_player.getOPos1().getX() );
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getX() );
                 break;
               }
             }
@@ -630,7 +625,7 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     //    if ( m_player.getPos1().getX() > m_maps.getEndPos().getX() )
     //        celx = m_maps.getEndPos().getX();
     //     else
-            celx = m_player.getPos1().getX();
+            celx = m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX();
 
     /* ne mehessen túlságosan le és fel a kamera */
     //if ( m_player.getPos1().getY() < m_fCameraMinY )
@@ -639,46 +634,46 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     //    if ( m_player.getPos1().getY() > GAME_CAM_MAX_Y )
     //        cely = GAME_CAM_MAX_Y;
     //    else
-            cely = m_player.getPos1().getY();
+            cely = m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY();
 
     /* a játékoshoz igazítjuk a kamerát */
-    if ( m_player.getPos1().getX() != campos.getX() )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() != campos.getX() )
     {
         campos.SetX(campos.getX() + ((celx - campos.getX())/speed) );
     }
-    if ( m_player.getPos1().getY() != campos.getY() )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() != campos.getY() )
     {
         campos.SetY(campos.getY() + ((cely - campos.getY())/speed) );
     }
 
     getPRRE().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_player.getPos1().getZ() );
+    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getZ() );
 
 } // CameraMovement()
 
 
 void PRooFPSddPGE::Gravity(int fps)
 {
-  if ( m_player.isJumping() )
+  if (m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() )
   {
-    m_player.SetGravity( m_player.getGravity()-GAME_JUMPING_SPEED/(float)fps );
-    if ( m_player.getGravity() < 0.0 )
+      m_mapPlayers[m_sUserName].m_legacyPlayer.SetGravity(m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity()-GAME_JUMPING_SPEED/(float)fps );
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity() < 0.0 )
     {
-      m_player.SetGravity( 0.0 );
-      m_player.StopJumping();
+        m_mapPlayers[m_sUserName].m_legacyPlayer.SetGravity( 0.0 );
+        m_mapPlayers[m_sUserName].m_legacyPlayer.StopJumping();
     }
   }
   else
   {
-    if ( m_player.getGravity() > GAME_GRAVITY_MIN )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity() > GAME_GRAVITY_MIN )
     {
-      m_player.SetGravity( m_player.getGravity()-GAME_FALLING_SPEED/(float)fps );
-      if ( m_player.getGravity() < GAME_GRAVITY_MIN ) m_player.SetGravity( GAME_GRAVITY_MIN );
+        m_mapPlayers[m_sUserName].m_legacyPlayer.SetGravity(m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity()-GAME_FALLING_SPEED/(float)fps );
+      if (m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity() < GAME_GRAVITY_MIN ) m_mapPlayers[m_sUserName].m_legacyPlayer.SetGravity( GAME_GRAVITY_MIN );
     }
   }
-  m_player.getPos1().SetY( m_player.getPos1().getY() + m_player.getGravity() );
-  if ( m_player.getPos1().getY() < m_maps.getObjectsMinY()-5.0f )
-      m_player.SetHealth(0);
+  m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetY(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() + m_mapPlayers[m_sUserName].m_legacyPlayer.getGravity() );
+  if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() < m_maps.getObjectsMinY()-5.0f )
+      m_mapPlayers[m_sUserName].m_legacyPlayer.SetHealth(0);
 }
 
 void PRooFPSddPGE::FrameLimiter(int fps_ms)
@@ -719,7 +714,7 @@ void PRooFPSddPGE::onGameRunning()
     }
     m_fps_ms = GetTickCount();
 
-    if ( m_player.getPos1().getY() != m_player.getOPos1().getY() )
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() != m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getY() )
     { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
         m_bAllowJump = false;
     }
@@ -728,7 +723,7 @@ void PRooFPSddPGE::onGameRunning()
         m_bAllowJump = true;
     }
 
-    m_player.UpdateOldPos();
+    m_mapPlayers[m_sUserName].m_legacyPlayer.UpdateOldPos();
     KeyBoard(m_fps, m_bWon);
     Mouse(m_fps, m_bWon);
     if ( !m_bWon)
@@ -737,10 +732,10 @@ void PRooFPSddPGE::onGameRunning()
         Collision(m_bWon);
     }
     CameraMovement(m_fps);
-    m_player.UpdatePositions( m_pObjXHair->getPosVec() );
+    m_mapPlayers[m_sUserName].m_legacyPlayer.UpdatePositions( m_pObjXHair->getPosVec() );
     // TODO: obviously we will need a getActiveWeapon() for WeaponManager
     Weapon& wpn = getWeaponManager().getWeapons()[0];
-    wpn.UpdatePositions(m_player.getPos1(), m_pObjXHair->getPosVec());   
+    wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1(), m_pObjXHair->getPosVec());
     wpn.Update();
     UpdateBullets();
 
@@ -883,7 +878,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     m_mapPlayers[msg.m_szUserName].m_connHandleServerSide = connHandleServerSide;
     m_mapPlayers[msg.m_szUserName].m_sIpAddress = msg.m_szIpAddress;
 
-    PRREObject3D* const plane = getPRRE().getObject3DManager().createPlane(0.5f, 0.5f);
+    PRREObject3D* const plane = getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);
     if (!plane)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
@@ -891,14 +886,10 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         return;
     }
 
-    plane->SetDoubleSided(true);
-    plane->getPosVec().SetX(0);
-    plane->getPosVec().SetZ(2);
-
-    plane->setVertexModifyingHabit(PRRE_VMOD_STATIC);
-    plane->setVertexReferencingMode(PRRE_VREF_INDEXED);
-
-    m_mapPlayers[msg.m_szUserName].m_pObject3D = plane;
+    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
+    PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
+    plane->getMaterial().setTexture(pTexPlayer);
+    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
 
     getNetwork().WriteList();
     WritePlayerList();
@@ -991,7 +982,9 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
                 it.second.m_connHandleServerSide,
-                it.second.m_pObject3D->getPosVec().getX(), it.second.m_pObject3D->getPosVec().getY(), it.second.m_pObject3D->getPosVec().getZ());
+                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getX(),
+                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getY(),
+                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
@@ -1026,9 +1019,9 @@ void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
     }
 
-    if (it->second.m_pObject3D)
+    if (it->second.m_legacyPlayer.getAttachedObject())
     {
-        delete it->second.m_pObject3D;  // yes, dtor will remove this from its Object3DManager too!
+        delete it->second.m_legacyPlayer.getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
     }
 
     m_mapPlayers.erase(it);
@@ -1064,7 +1057,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     const std::string& sClientUserName = it->first;
 
-    PRREObject3D* obj = it->second.m_pObject3D;
+    PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
     if (!obj)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, sClientUserName.c_str());
@@ -1129,7 +1122,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         return;
     }
 
-    PRREObject3D* obj = it->second.m_pObject3D;
+    PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
     if (!obj)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, it->first.c_str());

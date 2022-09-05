@@ -66,8 +66,9 @@ struct Player_t
                                                                            This is not the same handle as client have for the connection
                                                                            towards the server! Those connection handles are not related
                                                                            to each other! */
-    PRREObject3D* m_pObject3D;
     std::string m_sIpAddress;
+
+    CPlayer m_legacyPlayer;
 };
 
 /**
@@ -132,9 +133,7 @@ private:
     unsigned int m_fps_lastmeasure;         /* - || - */
     unsigned int m_fps_ms;                  /* - || - */
 
-    CPlayer m_player;
     PRREObject3D* m_pObjXHair;
-    PRRETexture* m_pTexPlayer;
     bool m_bAllowJump;
     bool m_bSpaceReleased, m_bCtrlReleased;
     bool m_bShiftReleased, m_enterreleased;
