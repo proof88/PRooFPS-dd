@@ -105,10 +105,13 @@ protected:
     explicit PRooFPSddPGE(const char* gametitle);  /**< This is the only usable ctor, this is used by the static createAndGet(). */
     virtual ~PRooFPSddPGE();
 
-    virtual void onGameInitializing(); /**< Must-have minimal stuff before loading anything. */
-    virtual void onGameInitialized();  /**< Loading game content here. */
-    virtual void onGameRunning();      /**< Game logic here. */
-    virtual void onGameDestroying();   /**< Freeing up game content here. */
+    virtual void onGameInitializing() override;               /**< Must-have minimal stuff before loading anything. */
+    virtual void onGameInitialized() override;                /**< Loading game content here. */
+    virtual void onGameRunning() override;                    /**< Game logic here. */
+    virtual void onPacketReceived(
+        pge_network::PgeNetworkConnectionHandle connHandle,
+        const pge_network::PgePacket& pkt) override;          /**< Called when a new network packet is received. */
+    virtual void onGameDestroying() override;                 /**< Freeing up game content here. */
 
     void KeyBoard(int fps, bool& won);
     void Mouse(int /*fps*/, bool& won);

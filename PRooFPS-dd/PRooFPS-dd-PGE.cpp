@@ -381,21 +381,6 @@ void PRooFPSddPGE::onGameInitialized()
 //		this.ammo--;
 //	}
 
-/** 
-    Freeing up game content here.
-    Free up everything that has been allocated in onGameInitialized() and onGameRunning().
-*/
-void PRooFPSddPGE::onGameDestroying()
-{
-    getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
-    m_maps.shutdown();
-    getPRRE().getObject3DManager().DeleteAll();
-    getPRRE().getWindow().SetCursorVisible(true);
-
-    getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
-    getConsole().Deinitialize();
-}
-
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
@@ -776,6 +761,57 @@ void PRooFPSddPGE::onGameRunning()
     std::stringstream str;
     str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << m_fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
     window.SetCaption(str.str());
+}
+
+/**
+    Called when a new network packet is received.
+*/
+void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_connHandleServerSide, const pge_network::PgePacket& pkt)
+{
+    switch (pkt.pktId)
+    {
+    case pge_network::MsgUserConnected::id:
+        HandleUserConnected(m_connHandleServerSide, pkt.msg.userConnected);
+        break;
+    case pge_network::MsgUserDisconnected::id:
+        HandleUserDisconnected(m_connHandleServerSide, pkt.msg.userDisconnected);
+        break;
+    case pge_network::MsgApp::id:
+    {
+        switch (static_cast<proofps_dd::ElteFailMsgId>(pkt.msg.app.msgId))
+        {
+        case proofps_dd::MsgUserSetup::id:
+            HandleUserSetup(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
+            break;
+        case proofps_dd::MsgUserCmdMove::id:
+            HandleUserCmdMove(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
+            break;
+        case proofps_dd::MsgUserUpdate::id:
+            HandleUserUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
+            break;
+        default:
+            getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.pktId);
+        }
+        break;
+    }
+    default:
+        getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pkt.pktId);
+    }
+}
+
+/**
+    Freeing up game content here.
+    Free up everything that has been allocated in onGameInitialized() and onGameRunning().
+*/
+void PRooFPSddPGE::onGameDestroying()
+{
+    getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
+    m_maps.shutdown();
+    getPRRE().getObject3DManager().DeleteAll();
+    getPRRE().getWindow().SetCursorVisible(true);
+
+    getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
+    getConsole().Deinitialize();
 }
 
 
