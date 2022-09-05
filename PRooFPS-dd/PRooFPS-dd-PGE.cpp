@@ -714,32 +714,39 @@ void PRooFPSddPGE::onGameRunning()
     }
     m_fps_ms = GetTickCount();
 
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() != m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getY() )
-    { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
-        m_bAllowJump = false;
-    }
-    else
-    {
-        m_bAllowJump = true;
-    }
+    // having a user name means that server accepted the connection and sent us a user name, for which we have initialized our player;
+    // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
+    bool bValidConnection = !m_sUserName.empty();
 
-    m_mapPlayers[m_sUserName].m_legacyPlayer.UpdateOldPos();
-    KeyBoard(m_fps, m_bWon);
-    Mouse(m_fps, m_bWon);
-    if ( !m_bWon)
+    if (bValidConnection)
     {
-        Gravity(m_fps);
-        Collision(m_bWon);
-    }
-    CameraMovement(m_fps);
-    m_mapPlayers[m_sUserName].m_legacyPlayer.UpdatePositions( m_pObjXHair->getPosVec() );
-    // TODO: obviously we will need a getActiveWeapon() for WeaponManager
-    Weapon& wpn = getWeaponManager().getWeapons()[0];
-    wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1(), m_pObjXHair->getPosVec());
-    wpn.Update();
-    UpdateBullets();
+        if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() != m_mapPlayers[m_sUserName].m_legacyPlayer.getOPos1().getY())
+        { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
+            m_bAllowJump = false;
+        }
+        else
+        {
+            m_bAllowJump = true;
+        }
 
-    //map.UpdateVisibilitiesForRenderer();
+        m_mapPlayers[m_sUserName].m_legacyPlayer.UpdateOldPos();
+        KeyBoard(m_fps, m_bWon);
+        Mouse(m_fps, m_bWon);
+        if (!m_bWon)
+        {
+            Gravity(m_fps);
+            Collision(m_bWon);
+        }
+        CameraMovement(m_fps);
+        m_mapPlayers[m_sUserName].m_legacyPlayer.UpdatePositions(m_pObjXHair->getPosVec());
+        // TODO: obviously we will need a getActiveWeapon() for WeaponManager
+        Weapon& wpn = getWeaponManager().getWeapons()[0];
+        wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1(), m_pObjXHair->getPosVec());
+        wpn.Update();
+        UpdateBullets();
+
+        //map.UpdateVisibilitiesForRenderer();
+    }
 
     // képkockaszám limitáló (akkor kell, ha nincs vsync)
     m_fps_ms = GetTickCount() - m_fps_ms;
@@ -754,7 +761,7 @@ void PRooFPSddPGE::onGameRunning()
     } 
 
     std::stringstream str;
-    str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << m_fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
+    //str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << m_fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
     window.SetCaption(str.str());
 }
 
