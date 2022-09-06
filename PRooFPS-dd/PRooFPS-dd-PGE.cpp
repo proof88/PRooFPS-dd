@@ -896,7 +896,6 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
-    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
 
     getNetwork().WriteList();
     WritePlayerList();
@@ -912,6 +911,10 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
     }
 
     const char* szConnectedUserName = nullptr;
+
+    const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
+    pge_network::PgePacket newPktUserUpdate;
+    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ());
 
     if (msg.bCurrentClient)
     {
@@ -930,6 +933,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
             // server injects this msg to self so resources for player will be allocated
             getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
+            getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
         }
         else
         {
@@ -964,19 +968,21 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
         // server injects this msg to self so resources for player will be allocated
         getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
+        getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
 
         // inform all other clients about this new user
         getNetwork().getServer().SendPacketToAllClients(newPktSetup, connHandleServerSide);
+        getNetwork().getServer().SendPacketToAllClients(newPktUserUpdate, connHandleServerSide);
 
         // now we send this msg to the client with this bool flag set so client will know it is their connect
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
+        getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
         // we also send MsgUserUpdate about each player so new client will immediately have their positions updated.
-        pge_network::PgePacket newPktUserUpdate;
         for (const auto& it : m_mapPlayers)
         {
             proofps_dd::MsgUserSetup::initPkt(
@@ -1129,13 +1135,14 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         return;
     }
 
-    PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
-    if (!obj)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, it->first.c_str());
-        return;
-    }
-
-    obj->getPosVec().SetX(msg.m_pos.x);
-    obj->getPosVec().SetY(msg.m_pos.y);
+    it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    //PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
+    //if (!obj)
+    //{
+    //    getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, it->first.c_str());
+    //    return;
+    //}
+    //
+    //obj->getPosVec().SetX(msg.m_pos.x);
+    //obj->getPosVec().SetY(msg.m_pos.y);
 }
