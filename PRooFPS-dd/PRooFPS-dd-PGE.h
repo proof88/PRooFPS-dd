@@ -29,6 +29,7 @@ private:
     bool m_bJumping;
     bool b_mCanFall;
     bool m_bRunning;
+    bool m_bAllowJump;
 
 public:
     CPlayer();
@@ -47,6 +48,8 @@ public:
     void SetHealth(int value);
     void AttachObject(PRREObject3D* value, bool blend);
     void SetGravity(float value);
+    bool jumpAllowed() const;
+    void SetJumpAllowed(bool b);
     void Jump();
     void StopJumping();
     void DoDamage(int dmg); 
@@ -134,7 +137,6 @@ private:
     unsigned int m_fps_ms;                  /* - || - */
 
     PRREObject3D* m_pObjXHair;
-    bool m_bAllowJump;
     bool m_bSpaceReleased, m_bCtrlReleased;
     bool m_bShiftReleased, m_enterreleased;
     bool m_bWon;
