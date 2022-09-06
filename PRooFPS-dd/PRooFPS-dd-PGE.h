@@ -39,7 +39,6 @@ public:
     PRREVector& getPos1();
     PRREVector& getOPos1();
     PRREObject3D* getAttachedObject() const;
-    void UpdatePositions(const PRREVector& targetPos);
     float getGravity() const;
     bool isJumping() const;
     bool isFalling() const;
@@ -127,6 +126,7 @@ protected:
     void Collision(bool& won);
     void FrameLimiter(int fps_ms);
     void UpdateBullets();
+    void SendUserUpdates();
 
 private:
 

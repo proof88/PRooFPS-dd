@@ -76,15 +76,6 @@ PRREObject3D* CPlayer::getAttachedObject() const
   return m_pObj;
 }
 
-void CPlayer::UpdatePositions(const PRREVector& targetPos)
-{
-    if ( getAttachedObject() != PGENULL )
-    {
-        getAttachedObject()->getPosVec().Set( getPos1().getX(), getPos1().getY(), getPos1().getZ() );
-        getAttachedObject()->getAngleVec().SetY( (targetPos.getX() < 0.f) ? 0.f : 180.f );
-    }
-}
-
 float CPlayer::getGravity() const
 {
   return m_fGravity;
@@ -725,6 +716,40 @@ void PRooFPSddPGE::UpdateBullets()
     }
 }
 
+void PRooFPSddPGE::SendUserUpdates()
+{
+    if (!getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
+        return;
+    }
+
+    for (auto& player : m_mapPlayers)
+    {
+        auto& legacyPlayer = player.second.m_legacyPlayer;
+        pge_network::PgePacket newPktUserUpdate;
+        proofps_dd::MsgUserUpdate::initPkt(
+            newPktUserUpdate,
+            player.second.m_connHandleServerSide,
+            legacyPlayer.getPos1().getX(),
+            legacyPlayer.getPos1().getY(),
+            legacyPlayer.getPos1().getZ());
+
+        for (auto& sendToThisPlayer : m_mapPlayers)
+        {
+            if (sendToThisPlayer.second.m_connHandleServerSide == 0)
+            {
+                // server injects this packet to own queue
+                getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+            }
+            else
+            {
+                getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktUserUpdate);
+            }
+        }
+    }
+}
+
 /** 
     Game logic here.
     Game engine invokes this in every frame.
@@ -764,16 +789,18 @@ void PRooFPSddPGE::onGameRunning()
             KeyBoard(m_fps, m_bWon);
         }
         Mouse(m_fps, m_bWon);
+
         if (getNetwork().isServer())
         {
             if (!m_bWon)
             {
                 Gravity(m_fps);
                 Collision(m_bWon);
+                SendUserUpdates();
             }
         }
         CameraMovement(m_fps);
-        m_mapPlayers[m_sUserName].m_legacyPlayer.UpdatePositions(m_pObjXHair->getPosVec());
+
         // TODO: obviously we will need a getActiveWeapon() for WeaponManager
         Weapon& wpn = getWeaponManager().getWeapons()[0];
         wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1(), m_pObjXHair->getPosVec());
@@ -1174,6 +1201,14 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     }
 
     it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+
+    it->second.m_legacyPlayer.getAttachedObject()->getPosVec().Set(
+        it->second.m_legacyPlayer.getPos1().getX(),
+        it->second.m_legacyPlayer.getPos1().getY(),
+        it->second.m_legacyPlayer.getPos1().getZ());
+
+    //legacyPlayer.getAttachedObject()->getAngleVec().SetY((targetPos.getX() < 0.f) ? 0.f : 180.f);
+
     //PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
     //if (!obj)
     //{
