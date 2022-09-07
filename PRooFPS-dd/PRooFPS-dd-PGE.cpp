@@ -566,8 +566,6 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
         const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
-        const PRREVector pos = legacyPlayer.getOPos1();
-        const PRREVector oldpos = legacyPlayer.getPos1();
 
         legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + legacyPlayer.getForce().getX());
 
@@ -579,7 +577,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                 if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
                 {
                     if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
+                        legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
                         legacyPlayer.getPos1().SetY(legacyPlayer.getOPos1().getY());
@@ -608,7 +606,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                 if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
                 {
                     if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
+                        legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
                         legacyPlayer.getPos1().SetX(legacyPlayer.getOPos1().getX());
@@ -729,6 +727,12 @@ void PRooFPSddPGE::SendUserUpdates()
     for (auto& player : m_mapPlayers)
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
+
+        if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
+        {
+            continue;
+        }
+
         pge_network::PgePacket newPktUserUpdate;
         proofps_dd::MsgUserUpdate::initPkt(
             newPktUserUpdate,
@@ -752,26 +756,12 @@ void PRooFPSddPGE::SendUserUpdates()
     }
 }
 
-/** 
-    Game logic here.
-    Game engine invokes this in every frame.
-    DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
+/**
+    Game logic right before the engine would do anything.
+    This is invoked at the very beginning of the main game loop, before processing window messages and incoming network packets.
 */
-void PRooFPSddPGE::onGameRunning()
+void PRooFPSddPGE::onGameFrameBegin()
 {
-    PRREWindow& window = getPRRE().getWindow();
-
-    if ( m_fps == 0 ) {
-        m_fps = 60;
-    }
-    m_fps_ms = GetTickCount();
-
-    // having a user name means that server accepted the connection and sent us a user name, for which we have initialized our player;
-    // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
-    bool bValidConnection = !m_sUserName.empty();
-
-    if (bValidConnection)
-    {
         if (getNetwork().isServer())
         {
             for (auto& player : m_mapPlayers)
@@ -789,6 +779,28 @@ void PRooFPSddPGE::onGameRunning()
                 legacyPlayer.UpdateOldPos();
             }
         }
+}
+
+/** 
+    Game logic here.
+    Game engine invokes this in every frame.
+    DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
+*/
+void PRooFPSddPGE::onGameRunning()
+{
+    PRREWindow& window = getPRRE().getWindow();
+
+    if ( m_fps == 0 ) {
+        m_fps = 60;
+    }
+    m_fps_ms = GetTickCount();
+
+    // having a user name means that server accepted the connection and sent us a user name, for which we have initialized our player;
+    // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
+    const bool bValidConnection = !m_sUserName.empty();
+
+    if (bValidConnection)
+    {
         KeyBoard(m_fps, m_bWon);
         Mouse(m_fps, m_bWon);
 
@@ -924,6 +936,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         assert(false);
         return;
     }
+
+    assert(0 != strnlen(msg.m_szUserName, sizeof(msg.m_szUserName)));
 
     if (msg.m_bCurrentClient)
     {
@@ -1145,16 +1159,6 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     }
 
     auto& legacyPlayer = it->second.m_legacyPlayer;
-    
-    if (pktUserCmdMove.m_bJumpAction)
-    {
-        if (!legacyPlayer.isJumping() &&
-            legacyPlayer.jumpAllowed() &&
-            !legacyPlayer.isFalling())
-        {
-            legacyPlayer.Jump();
-        }
-    }
 
     const float fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
 
@@ -1171,6 +1175,16 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         if (!legacyPlayer.isJumping() && !legacyPlayer.isFalling() && legacyPlayer.jumpAllowed())
         {
             legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + fSpeed);
+        }
+    }
+
+    if (pktUserCmdMove.m_bJumpAction)
+    {
+        if (!legacyPlayer.isJumping() &&
+            legacyPlayer.jumpAllowed() &&
+            !legacyPlayer.isFalling())
+        {
+            legacyPlayer.Jump();
         }
     }
 
@@ -1206,7 +1220,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         return;
     }
 
-    // getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
     it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 
