@@ -390,12 +390,6 @@ void PRooFPSddPGE::onGameInitialized()
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
-    float speed;
-
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
-        speed = GAME_PLAYER_SPEED2/60.0f;
-    else
-        speed = GAME_PLAYER_SPEED1/60.0f;
   
     if ( keybd.isKeyPressed(VK_ESCAPE) )
     {
@@ -428,16 +422,13 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
             m_bSpaceReleased = true;
         }
     
+        bool bToggleRunWalk = false;
         if ( keybd.isKeyPressed( VK_SHIFT ) )
         {
             if ( m_bShiftReleased )
             {
-              //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
-              m_bShiftReleased = false;
-              if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
-                  m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(false);
-              else
-                  m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(true);
+                bToggleRunWalk = true;
+                m_bShiftReleased = false;
             }
         }
         else
@@ -445,10 +436,10 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
             m_bShiftReleased = true;
         }
     
-        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction)
+        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk)
         {
             pge_network::PgePacket pkt;
-            proofps_dd::MsgUserCmdMove::initPkt(pkt, strafe, bSendJumpAction);
+            proofps_dd::MsgUserCmdMove::initPkt(pkt, strafe, bSendJumpAction, bToggleRunWalk);
         
             if (getNetwork().isServer())
             {
@@ -1171,7 +1162,27 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     auto& legacyPlayer = it->second.m_legacyPlayer;
 
-    const float fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
+    float fSpeed;
+    if (legacyPlayer.isRunning())
+    {
+        fSpeed = GAME_PLAYER_SPEED2 / 60.0f;
+    }
+    else
+    {
+        fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
+    }
+
+    if (pktUserCmdMove.m_bSendSwitchToRunning)
+    {
+        if (legacyPlayer.isRunning())
+        {
+            legacyPlayer.SetRun(false);
+        }
+        else
+        {
+            legacyPlayer.SetRun(true);
+        }
+    }
 
     if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::LEFT )
     {

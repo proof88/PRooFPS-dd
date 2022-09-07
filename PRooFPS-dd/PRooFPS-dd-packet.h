@@ -72,7 +72,8 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const Strafe& strafe,
-            bool jump)
+            bool bJump,
+            bool bSwitchToRunning)
         {
             assert(sizeof(MsgUserCmdMove) <= pge_network::MsgApp::nMessageMaxLength);
             memset(&pkt, 0, sizeof(pkt));
@@ -83,13 +84,15 @@ namespace proofps_dd
 
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
             msgUserCmdMove.m_strafe = strafe;
-            msgUserCmdMove.m_bJumpAction = jump;
+            msgUserCmdMove.m_bJumpAction = bJump;
+            msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
 
             return true;
         }
 
         Strafe m_strafe;
         bool m_bJumpAction;
+        bool m_bSendSwitchToRunning;
     };
 
     // server -> self (inject) and clients
