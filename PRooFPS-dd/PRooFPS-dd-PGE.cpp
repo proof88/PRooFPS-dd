@@ -379,90 +379,92 @@ void PRooFPSddPGE::onGameInitialized()
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
-  float speed;
+    float speed;
 
-  if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
-      speed = GAME_PLAYER_SPEED2/60.0f;
-  else
-      speed = GAME_PLAYER_SPEED1/60.0f;
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
+        speed = GAME_PLAYER_SPEED2/60.0f;
+    else
+        speed = GAME_PLAYER_SPEED1/60.0f;
   
-  if ( keybd.isKeyPressed(VK_ESCAPE) )
-  {
-      getPRRE().getWindow().Close();
-  }
+    if ( keybd.isKeyPressed(VK_ESCAPE) )
+    {
+        getPRRE().getWindow().Close();
+    }
       
-  if ( !won )
-  {
-    if ( keybd.isKeyPressed( VK_LEFT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')) )
+    if ( !won )
     {
-        if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() && !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() && m_mapPlayers[m_sUserName].m_legacyPlayer.jumpAllowed())
+        proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
+        if (keybd.isKeyPressed(VK_LEFT) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')))
         {
-            m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() - speed );
+            strafe = proofps_dd::Strafe::LEFT;
         }
-    }
-    if ( keybd.isKeyPressed( VK_RIGHT ) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')) )
-    {
-        if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() && !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() && m_mapPlayers[m_sUserName].m_legacyPlayer.jumpAllowed())
+        if (keybd.isKeyPressed(VK_RIGHT) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')))
         {
-            m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().SetX(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() + speed );
+            strafe = proofps_dd::Strafe::RIGHT;
         }
-    }
-
-    if ( keybd.isKeyPressed( VK_SPACE ) )
-    {
-        if ( m_bSpaceReleased )
+    
+        bool bSendJumpAction = false;
+        if ( keybd.isKeyPressed( VK_SPACE ) )
         {
-            if ( !m_mapPlayers[m_sUserName].m_legacyPlayer.isJumping() &&
-                m_mapPlayers[m_sUserName].m_legacyPlayer.jumpAllowed() &&
-                !m_mapPlayers[m_sUserName].m_legacyPlayer.isFalling() )
+            if (m_bSpaceReleased)
             {
-                m_mapPlayers[m_sUserName].m_legacyPlayer.Jump();
-                
+                bSendJumpAction = true;
                 m_bSpaceReleased = false;
+            }
+        }
+        else
+        {
+            m_bSpaceReleased = true;
+        }
+    
+        if ( keybd.isKeyPressed( VK_SHIFT ) )
+        {
+            if ( m_bShiftReleased )
+            {
+              //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
+              m_bShiftReleased = false;
+              if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(false);
+              else
+                  m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(true);
+            }
+        }
+        else
+        {
+            m_bShiftReleased = true;
+        }
+    
+        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction)
+        {
+            pge_network::PgePacket pkt;
+            proofps_dd::MsgUserCmdMove::initPkt(pkt, strafe, bSendJumpAction);
+        
+            if (getNetwork().isServer())
+            {
+                // inject this packet to server's queue
+                // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
+                getNetwork().getServer().getPacketQueue().push_back(pkt);
+            }
+            else
+            {
+                getNetwork().getClient().SendToServer(pkt);
             }
         }
     }
     else
-        m_bSpaceReleased = true;
-
-    if ( keybd.isKeyPressed( VK_CONTROL ) )
     {
-          if ( m_bCtrlReleased )
-          {
-            //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
-            m_bCtrlReleased = false;
-          }
-    }
-    else 
-       m_bCtrlReleased = true;
-
-    if ( keybd.isKeyPressed( VK_SHIFT ) )
-    {
-          if ( m_bShiftReleased )
-          {
-            //BulletManager->Create(Player->GetX(),Player->GetY()-0.15,Player->GetZ(),-1);
-            m_bShiftReleased = false;
-            if (m_mapPlayers[m_sUserName].m_legacyPlayer.isRunning() )
-                m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(false);
-            else
-                m_mapPlayers[m_sUserName].m_legacyPlayer.SetRun(true);
-          }
-    }
-    else 
-       m_bShiftReleased = true;
-  }
-  else
-  {
         if ( keybd.isKeyPressed( VK_RETURN ) )
         {
-              if ( m_enterreleased )
-              {
-
-              }
+            if ( m_enterreleased )
+            {
+    
+            }
         }
-        else 
-           m_enterreleased = true;  
-  } // won
+        else
+        {
+            m_enterreleased = true;
+        }
+    } // won
 }
 
 
@@ -786,8 +788,8 @@ void PRooFPSddPGE::onGameRunning()
 
                 legacyPlayer.UpdateOldPos();
             }
-            KeyBoard(m_fps, m_bWon);
         }
+        KeyBoard(m_fps, m_bWon);
         Mouse(m_fps, m_bWon);
 
         if (getNetwork().isServer())
@@ -1135,47 +1137,51 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     const std::string& sClientUserName = it->first;
 
-    PRREObject3D* obj = it->second.m_legacyPlayer.getAttachedObject();
-    if (!obj)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): user %s doesn't have associated Object3D!", __func__, sClientUserName.c_str());
-        return;
-    }
-
-    if ((pktUserCmdMove.m_dirHorizontal == proofps_dd::HorizontalDirection::NONE) &&
-        (pktUserCmdMove.m_dirVertical == proofps_dd::VerticalDirection::NONE))
+    if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
+        (!pktUserCmdMove.m_bJumpAction))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s sent valid cmdMove", __func__, sClientUserName.c_str());
-    switch (pktUserCmdMove.m_dirHorizontal)
+    auto& legacyPlayer = it->second.m_legacyPlayer;
+    
+    if (pktUserCmdMove.m_bJumpAction)
     {
-    case proofps_dd::HorizontalDirection::LEFT:
-        obj->getPosVec().SetX(obj->getPosVec().getX() - 0.01f);
-        break;
-    case proofps_dd::HorizontalDirection::RIGHT:
-        obj->getPosVec().SetX(obj->getPosVec().getX() + 0.01f);
-        break;
-    default: /* no-op */
-        break;
+        if (!legacyPlayer.isJumping() &&
+            legacyPlayer.jumpAllowed() &&
+            !legacyPlayer.isFalling())
+        {
+            legacyPlayer.Jump();
+        }
     }
 
-    switch (pktUserCmdMove.m_dirVertical)
+    const float fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
+
+    if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::LEFT )
     {
-    case proofps_dd::VerticalDirection::DOWN:
-        obj->getPosVec().SetY(obj->getPosVec().getY() - 0.01f);
-        break;
-    case proofps_dd::VerticalDirection::UP:
-        obj->getPosVec().SetY(obj->getPosVec().getY() + 0.01f);
-        break;
-    default: /* no-op */
-        break;
+        if (!legacyPlayer.isJumping() && !legacyPlayer.isFalling() && legacyPlayer.jumpAllowed())
+        {
+            //getConsole().OLn("PRooFPSddPGE::%s(): user %s sent valid cmdMove", __func__, sClientUserName.c_str());
+            legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() - fSpeed);
+        }
+    }
+    if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::RIGHT )
+    {
+        if (!legacyPlayer.isJumping() && !legacyPlayer.isFalling() && legacyPlayer.jumpAllowed())
+        {
+            legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + fSpeed);
+        }
     }
 
+    // currently server always sending out UserUpdate packets to all clients so this response here is not needed
     pge_network::PgePacket pktOut;
-    proofps_dd::MsgUserUpdate::initPkt(pktOut, connHandleServerSide, obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ());
+    proofps_dd::MsgUserUpdate::initPkt(
+        pktOut,
+        connHandleServerSide,
+        legacyPlayer.getPos1().getX(),
+        legacyPlayer.getPos1().getY(),
+        legacyPlayer.getPos1().getZ());
     getNetwork().getServer().SendPacketToAllClients(pktOut);
     // this msgUserUpdate should be also sent to server as self
     // maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
@@ -1199,6 +1205,8 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return;
     }
+
+    // getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
     it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 

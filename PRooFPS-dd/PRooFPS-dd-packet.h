@@ -24,20 +24,6 @@ namespace proofps_dd
         USER_UPDATE
     };
 
-    enum class VerticalDirection : std::uint8_t
-    {
-        NONE = 0,
-        UP,
-        DOWN
-    };
-
-    enum class HorizontalDirection : std::uint8_t
-    {
-        NONE = 0,
-        LEFT,
-        RIGHT
-    };
-
     // server -> self (inject) and clients
     struct MsgUserSetup
     {
@@ -70,6 +56,13 @@ namespace proofps_dd
         char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
     };
 
+    enum class Strafe : std::uint8_t
+    {
+        NONE = 0,
+        LEFT,
+        RIGHT
+    };
+
     // clients -> server
     // MsgUserCmdMove messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdate
     struct MsgUserCmdMove
@@ -78,8 +71,8 @@ namespace proofps_dd
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
-            const HorizontalDirection& dirHorizontal,
-            const VerticalDirection& dirVertical)
+            const Strafe& strafe,
+            bool jump)
         {
             assert(sizeof(MsgUserCmdMove) <= pge_network::MsgApp::nMessageMaxLength);
             memset(&pkt, 0, sizeof(pkt));
@@ -89,14 +82,14 @@ namespace proofps_dd
             pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id);
 
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
-            msgUserCmdMove.m_dirHorizontal = dirHorizontal;
-            msgUserCmdMove.m_dirVertical = dirVertical;
+            msgUserCmdMove.m_strafe = strafe;
+            msgUserCmdMove.m_bJumpAction = jump;
 
             return true;
         }
 
-        HorizontalDirection m_dirHorizontal;
-        VerticalDirection m_dirVertical;
+        Strafe m_strafe;
+        bool m_bJumpAction;
     };
 
     // server -> self (inject) and clients
