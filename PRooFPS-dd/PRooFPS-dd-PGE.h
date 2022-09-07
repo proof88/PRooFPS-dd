@@ -30,6 +30,7 @@ private:
     bool b_mCanFall;
     bool m_bRunning;
     bool m_bAllowJump;
+    bool m_bExpectingStartPos;
 
 public:
     CPlayer();
@@ -57,7 +58,8 @@ public:
     void SetRun(bool state);
     PRREVector& getForce();
     void UpdateForce(float x, float y, float z);
-
+    bool isExpectingStartPos() const;
+    void SetExpectingStartPos(bool b);
 };
 
 struct Player_t

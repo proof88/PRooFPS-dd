@@ -37,6 +37,7 @@ CPlayer::CPlayer()
   b_mCanFall = true;
   m_bRunning = false;
   m_bAllowJump = false;
+  m_bExpectingStartPos = true;
 }
 
 void CPlayer::ShutDown()
@@ -168,6 +169,16 @@ void CPlayer::UpdateForce(float x, float y, float z)
     m_vecForce.SetX(x);
     m_vecForce.SetY(y);
     m_vecForce.SetZ(z);
+}
+
+bool CPlayer::isExpectingStartPos() const
+{
+    return m_bExpectingStartPos;
+}
+
+void CPlayer::SetExpectingStartPos(bool b)
+{
+    m_bExpectingStartPos = b;
 }
 
 
@@ -577,7 +588,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                 if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
                 {
                     if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
+                        legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
                         legacyPlayer.getPos1().SetY(legacyPlayer.getOPos1().getY());
@@ -606,7 +617,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                 if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
                 {
                     if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
+                        legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
                         legacyPlayer.getPos1().SetX(legacyPlayer.getOPos1().getX());
@@ -1223,6 +1234,12 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
     it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+
+    if (it->second.m_legacyPlayer.isExpectingStartPos())
+    {
+        it->second.m_legacyPlayer.SetExpectingStartPos(false);
+        it->second.m_legacyPlayer.getOPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    }
 
     it->second.m_legacyPlayer.getAttachedObject()->getPosVec().Set(
         it->second.m_legacyPlayer.getPos1().getX(),
