@@ -158,7 +158,9 @@ private:
     void HandleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);
     void HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected& msg);
     void HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& msg);
+    void HandleUserTarget(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserTarget& msg);
     void HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg);
+    void HandleUserUpdate2(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate2& msg);
 
 
 }; // class PRooFPSddPGE

@@ -21,7 +21,9 @@ namespace proofps_dd
     {
         USER_SETUP = 0,
         USER_CMD_MOVE,
-        USER_UPDATE
+        USER_CMD_TARGET,
+        USER_UPDATE,
+        USER_UPDATE_2
     };
 
     // server -> self (inject) and clients
@@ -95,6 +97,32 @@ namespace proofps_dd
         bool m_bSendSwitchToRunning;
     };
 
+    // clients -> server
+    // MsgUserTarget messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdate
+    struct MsgUserTarget
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::USER_CMD_TARGET;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            TPRREfloat fPlayerAngleY)
+        {
+            assert(sizeof(MsgUserTarget) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            // m_connHandleServerSide is ignored in this message
+            //pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserTarget::id);
+
+            proofps_dd::MsgUserTarget& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserTarget&>(pkt.msg.app.cData);
+            msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
+
+            return true;
+        }
+
+        TPRREfloat m_fPlayerAngleY;
+    };
+
     // server -> self (inject) and clients
     struct MsgUserUpdate
     {
@@ -122,6 +150,31 @@ namespace proofps_dd
         }
 
         TXYZ m_pos;
+    };
+
+    // server -> self (inject) and clients
+    struct MsgUserUpdate2
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::USER_UPDATE_2;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const TPRREfloat fPlayerAngleY)
+        {
+            assert(sizeof(MsgUserUpdate2) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate2::id);
+
+            proofps_dd::MsgUserUpdate2& msgUserCmdUpdate2 = reinterpret_cast<proofps_dd::MsgUserUpdate2&>(pkt.msg.app.cData);
+            msgUserCmdUpdate2.m_fPlayerAngleY = fPlayerAngleY;
+
+            return true;
+        }
+
+        TPRREfloat m_fPlayerAngleY;
     };
 
 } // namespace proofps_dd
