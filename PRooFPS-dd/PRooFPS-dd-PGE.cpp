@@ -829,7 +829,7 @@ void PRooFPSddPGE::onGameRunning()
             }
         }
         KeyBoard(m_fps, m_bWon);
-        //Mouse(m_fps, m_bWon);
+        Mouse(m_fps, m_bWon);
         CameraMovement(m_fps);
 
         // TODO: obviously we will need a getActiveWeapon() for WeaponManager
