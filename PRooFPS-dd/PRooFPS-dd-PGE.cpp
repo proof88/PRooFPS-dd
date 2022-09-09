@@ -649,7 +649,7 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     //    if ( m_player.getPos1().getX() > m_maps.getEndPos().getX() )
     //        celx = m_maps.getEndPos().getX();
     //     else
-            celx = m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX();
+            celx = m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getX();
 
     /* ne mehessen túlságosan le és fel a kamera */
     //if ( m_player.getPos1().getY() < m_fCameraMinY )
@@ -658,20 +658,20 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     //    if ( m_player.getPos1().getY() > GAME_CAM_MAX_Y )
     //        cely = GAME_CAM_MAX_Y;
     //    else
-            cely = m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY();
+            cely = m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getY();
 
     /* a játékoshoz igazítjuk a kamerát */
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getX() != campos.getX() )
+    if (celx != campos.getX() )
     {
         campos.SetX(campos.getX() + ((celx - campos.getX())/speed) );
     }
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getY() != campos.getY() )
+    if (cely != campos.getY() )
     {
         campos.SetY(campos.getY() + ((cely - campos.getY())/speed) );
     }
 
     getPRRE().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1().getZ() );
+    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getZ() );
 
 } // CameraMovement()
 
@@ -746,10 +746,10 @@ void PRooFPSddPGE::SendUserUpdates()
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
-        //if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
-        //{
-        //    continue;
-        //}
+        if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
+        {
+            continue;
+        }
 
         pge_network::PgePacket newPktUserUpdate;
         proofps_dd::MsgUserUpdate::initPkt(
@@ -1301,18 +1301,17 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
-    it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    //it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 
     if (it->second.m_legacyPlayer.isExpectingStartPos())
     {
         it->second.m_legacyPlayer.SetExpectingStartPos(false);
+        it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
         it->second.m_legacyPlayer.getOPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
     }
 
     it->second.m_legacyPlayer.getAttachedObject()->getPosVec().Set(
-        it->second.m_legacyPlayer.getPos1().getX(),
-        it->second.m_legacyPlayer.getPos1().getY(),
-        it->second.m_legacyPlayer.getPos1().getZ());
+        msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }
 
 void PRooFPSddPGE::HandleUserUpdate2(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate2& msg)
