@@ -821,12 +821,6 @@ void PRooFPSddPGE::onGameRunning()
     {
         if (getNetwork().isServer())
         {
-            
-        }
-        
-
-        if (getNetwork().isServer())
-        {
             if (!m_bWon)
             {
                 Gravity(m_fps);
@@ -840,7 +834,7 @@ void PRooFPSddPGE::onGameRunning()
 
         // TODO: obviously we will need a getActiveWeapon() for WeaponManager
         Weapon& wpn = getWeaponManager().getWeapons()[0];
-        wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1(), m_pObjXHair->getPosVec());
+        wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
         wpn.Update();
         if (getNetwork().isServer())
         {
