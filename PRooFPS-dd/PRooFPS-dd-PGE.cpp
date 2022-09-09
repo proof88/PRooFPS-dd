@@ -746,10 +746,10 @@ void PRooFPSddPGE::SendUserUpdates()
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
-        if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
-        {
-            continue;
-        }
+        //if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
+        //{
+        //    continue;
+        //}
 
         pge_network::PgePacket newPktUserUpdate;
         proofps_dd::MsgUserUpdate::initPkt(
@@ -759,7 +759,7 @@ void PRooFPSddPGE::SendUserUpdates()
             legacyPlayer.getPos1().getY(),
             legacyPlayer.getPos1().getZ());
 
-        for (auto& sendToThisPlayer : m_mapPlayers)
+        for (const auto& sendToThisPlayer : m_mapPlayers)
         {
             if (sendToThisPlayer.second.m_connHandleServerSide == 0)
             {
@@ -819,8 +819,11 @@ void PRooFPSddPGE::onGameRunning()
 
     if (bValidConnection)
     {
-        KeyBoard(m_fps, m_bWon);
-        //Mouse(m_fps, m_bWon);
+        if (getNetwork().isServer())
+        {
+            
+        }
+        
 
         if (getNetwork().isServer())
         {
@@ -831,6 +834,8 @@ void PRooFPSddPGE::onGameRunning()
                 SendUserUpdates();
             }
         }
+        KeyBoard(m_fps, m_bWon);
+        //Mouse(m_fps, m_bWon);
         CameraMovement(m_fps);
 
         // TODO: obviously we will need a getActiveWeapon() for WeaponManager
