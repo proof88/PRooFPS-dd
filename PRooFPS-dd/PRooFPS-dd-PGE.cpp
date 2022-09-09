@@ -780,23 +780,23 @@ void PRooFPSddPGE::SendUserUpdates()
 */
 void PRooFPSddPGE::onGameFrameBegin()
 {
-        if (getNetwork().isServer())
+    if (getNetwork().isServer())
+    {
+        for (auto& player : m_mapPlayers)
         {
-            for (auto& player : m_mapPlayers)
-            {
-                auto& legacyPlayer = player.second.m_legacyPlayer;
-                if (legacyPlayer.getPos1().getY() != legacyPlayer.getOPos1().getY())
-                { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
-                    legacyPlayer.SetJumpAllowed(false);
-                }
-                else
-                {
-                    legacyPlayer.SetJumpAllowed(true);
-                }
-
-                legacyPlayer.UpdateOldPos();
+            auto& legacyPlayer = player.second.m_legacyPlayer;
+            if (legacyPlayer.getPos1().getY() != legacyPlayer.getOPos1().getY())
+            { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
+                legacyPlayer.SetJumpAllowed(false);
             }
+            else
+            {
+                legacyPlayer.SetJumpAllowed(true);
+            }
+
+            legacyPlayer.UpdateOldPos();
         }
+    }
 }
 
 /** 
@@ -820,7 +820,7 @@ void PRooFPSddPGE::onGameRunning()
     if (bValidConnection)
     {
         KeyBoard(m_fps, m_bWon);
-        Mouse(m_fps, m_bWon);
+        //Mouse(m_fps, m_bWon);
 
         if (getNetwork().isServer())
         {
@@ -1176,7 +1176,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     const std::string& sClientUserName = it->first;
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
-        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning))
+        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
@@ -1232,17 +1232,17 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         }
     }
 
-    pge_network::PgePacket pktOut;
-    proofps_dd::MsgUserUpdate::initPkt(
-        pktOut,
-        connHandleServerSide,
-        legacyPlayer.getPos1().getX(),
-        legacyPlayer.getPos1().getY(),
-        legacyPlayer.getPos1().getZ());
-    getNetwork().getServer().SendPacketToAllClients(pktOut);
-    // this msgUserUpdate should be also sent to server as self
-    // maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
-    getNetwork().getServer().getPacketQueue().push_back(pktOut);
+    //pge_network::PgePacket pktOut;
+    //proofps_dd::MsgUserUpdate::initPkt(
+    //    pktOut,
+    //    connHandleServerSide,
+    //    legacyPlayer.getPos1().getX(),
+    //    legacyPlayer.getPos1().getY(),
+    //    legacyPlayer.getPos1().getZ());
+    //getNetwork().getServer().SendPacketToAllClients(pktOut);
+    //// this msgUserUpdate should be also sent to server as self
+    //// maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
+    //getNetwork().getServer().getPacketQueue().push_back(pktOut);
 }
 
 void PRooFPSddPGE::HandleUserTarget(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserTarget& msg)
