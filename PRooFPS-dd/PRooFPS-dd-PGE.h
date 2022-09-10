@@ -24,6 +24,7 @@ private:
     PRREVector m_vecPos, m_vecOldPos;
     PRREVector m_vecForce;
     PRREObject3D* m_pObj;
+    Weapon* m_pWpn;
     PR00FsReducedRenderingEngine* pGFX;
     float m_fGravity;
     bool m_bJumping;
@@ -60,6 +61,8 @@ public:
     void UpdateForce(float x, float y, float z);
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
+    Weapon* getWeapon();
+    void SetWeapon(Weapon* wpn);
 };
 
 struct Player_t

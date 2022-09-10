@@ -31,6 +31,7 @@ CPlayer::CPlayer()
 {
   m_nHealth = 100;
   m_pObj = PGENULL;
+  m_pWpn = NULL;
   pGFX = NULL;
   m_fGravity = 0.0;
   m_bJumping = false;
@@ -47,6 +48,10 @@ void CPlayer::ShutDown()
         delete m_pObj;
         m_pObj = PGENULL;
     }
+
+    // do not delete m_pWpn, WeaponManager will take care of it
+    m_pWpn = NULL;
+
     pGFX = NULL;
 }
 
@@ -181,6 +186,16 @@ void CPlayer::SetExpectingStartPos(bool b)
     m_bExpectingStartPos = b;
 }
 
+Weapon* CPlayer::getWeapon()
+{
+    return m_pWpn;
+}
+
+void CPlayer::SetWeapon(Weapon* wpn)
+{
+    m_pWpn = wpn;
+}
+
 
 PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
@@ -275,8 +290,6 @@ void PRooFPSddPGE::onGameInitialized()
 
     m_maps.initialize();
     assert( m_maps.load("gamedata/maps/map_test_good.txt") );
-
-    assert( getWeaponManager().load("gamedata/weapons/machinegun.txt") );
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -832,10 +845,23 @@ void PRooFPSddPGE::onGameRunning()
         Mouse(m_fps, m_bWon);
         CameraMovement(m_fps);
 
-        // TODO: obviously we will need a getActiveWeapon() for WeaponManager
-        Weapon& wpn = getWeaponManager().getWeapons()[0];
-        wpn.UpdatePositions(m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
-        wpn.Update();
+        for (auto& player : m_mapPlayers)
+        {
+            Weapon& wpn = *(player.second.m_legacyPlayer.getWeapon());
+            if (m_sUserName == player.first)
+            {
+                // my xhair is used to update weapon angle
+                wpn.UpdatePositions(player.second.m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
+                // I control only my weapon
+                wpn.Update();
+            }
+            else
+            {
+                // other players' weapon angle will be updated by MsgUserUpdate2
+                wpn.UpdatePosition(player.second.m_legacyPlayer.getAttachedObject()->getPosVec());
+            }
+        }
+        
         if (getNetwork().isServer())
         {
             UpdateBullets();
@@ -1001,6 +1027,9 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
+    assert(getWeaponManager().load("gamedata/weapons/machinegun.txt"));
+    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(&(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]));
+
     getNetwork().WriteList();
     WritePlayerList();
 }
@@ -1140,6 +1169,9 @@ void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandl
     {
         delete it->second.m_legacyPlayer.getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
     }
+
+    // do not delete wpn object associated to player, because it would invalidate other players' ptr to their weapon in the vector
+    // instead all weapons will be deleted anyway at game shutdown
 
     m_mapPlayers.erase(it);
 
