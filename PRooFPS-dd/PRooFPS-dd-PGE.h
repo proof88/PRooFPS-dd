@@ -22,6 +22,7 @@ class CPlayer
 private:       
     int m_nHealth;
     PRREVector m_vecPos, m_vecOldPos;
+    TPRREfloat m_fPlayerAngleY, m_fOldPlayerAngleY;
     PRREVector m_vecForce;
     PRREObject3D* m_pObj;
     Weapon* m_pWpn;
@@ -40,6 +41,8 @@ public:
     int getHealth() const;
     PRREVector& getPos1();
     PRREVector& getOPos1();
+    TPRREfloat& getAngleY();
+    TPRREfloat& getOldAngleY();
     PRREObject3D* getAttachedObject() const;
     float getGravity() const;
     bool isJumping() const;
@@ -122,8 +125,8 @@ protected:
         const pge_network::PgePacket& pkt) override;          /**< Called when a new network packet is received. */
     virtual void onGameDestroying() override;                 /**< Freeing up game content here. */
 
-    void KeyBoard(int fps, bool& won);
-    void Mouse(int /*fps*/, bool& won);
+    void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt);
+    void Mouse(int /*fps*/, bool& won, pge_network::PgePacket& pkt);
     void CameraMovement(int fps);
     void Gravity(int fps);
     bool Colliding(PRREObject3D& a, PRREObject3D& b);
@@ -161,9 +164,7 @@ private:
     void HandleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);
     void HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected& msg);
     void HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& msg);
-    void HandleUserTarget(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserTarget& msg);
     void HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg);
-    void HandleUserUpdate2(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate2& msg);
 
 
 }; // class PRooFPSddPGE

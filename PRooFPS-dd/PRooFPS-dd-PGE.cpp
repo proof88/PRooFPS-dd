@@ -39,6 +39,8 @@ CPlayer::CPlayer()
   m_bRunning = false;
   m_bAllowJump = false;
   m_bExpectingStartPos = true;
+  m_fPlayerAngleY = 0.f;
+  m_fOldPlayerAngleY = 0.f;
 }
 
 void CPlayer::ShutDown()
@@ -77,6 +79,16 @@ PRREVector& CPlayer::getOPos1()
   return m_vecOldPos;
 }
 
+TPRREfloat& CPlayer::getAngleY()
+{
+    return m_fPlayerAngleY;
+}
+
+TPRREfloat& CPlayer::getOldAngleY()
+{
+    return m_fOldPlayerAngleY;
+}
+
 PRREObject3D* CPlayer::getAttachedObject() const
 {
   return m_pObj;
@@ -104,6 +116,7 @@ bool CPlayer::canFall() const
 
 void CPlayer::UpdateOldPos() {
     m_vecOldPos = m_vecPos;
+    m_fOldPlayerAngleY = m_fPlayerAngleY;
 }
 
 void CPlayer::SetHealth(int value) {
@@ -406,7 +419,7 @@ void PRooFPSddPGE::onGameInitialized()
 //		this.ammo--;
 //	}
 
-void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
+void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   
@@ -457,19 +470,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
     
         if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk)
         {
-            pge_network::PgePacket pkt;
-            proofps_dd::MsgUserCmdMove::initPkt(pkt, strafe, bSendJumpAction, bToggleRunWalk);
-        
-            if (getNetwork().isServer())
-            {
-                // inject this packet to server's queue
-                // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
-                getNetwork().getServer().getPacketQueue().push_back(pkt);
-            }
-            else
-            {
-                getNetwork().getClient().SendToServer(pkt);
-            }
+            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk);
         }
     }
     else
@@ -489,7 +490,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won)
 }
 
 
-void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
+void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
     PGEInputMouse& mouse = getInput().getMouse();
 
@@ -508,31 +509,26 @@ void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
         return;
     }
 
+    const TPRREfloat fOldPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
+    
     m_pObjXHair->getPosVec().Set(
         m_pObjXHair->getPosVec().getX() + dx,
         m_pObjXHair->getPosVec().getY() - dy,
         0.f);
+    
+    const TPRREfloat fNewPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
 
-    const TPRREfloat fPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
+    if (fOldPlayerAngleY == fNewPlayerAngleY)
+    {
+        return;
+    }
 
     //if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
     //{
     //    getWeaponManager().getWeapons()[0]->shoot();
     //}
 
-    pge_network::PgePacket pkt;
-    proofps_dd::MsgUserTarget::initPkt(pkt, fPlayerAngleY);
-
-    if (getNetwork().isServer())
-    {
-        // inject this packet to server's queue
-        // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
-        getNetwork().getServer().getPacketQueue().push_back(pkt);
-    }
-    else
-    {
-        getNetwork().getClient().SendToServer(pkt);
-    }
+    proofps_dd::MsgUserCmdMove::setAngleY(pkt, fNewPlayerAngleY);
 }
 
 
@@ -769,29 +765,28 @@ void PRooFPSddPGE::SendUserUpdates()
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
-        if (legacyPlayer.getPos1() == legacyPlayer.getOPos1())
+        if ((legacyPlayer.getPos1() != legacyPlayer.getOPos1()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY()))
         {
-            continue;
-        }
+            pge_network::PgePacket newPktUserUpdate;
+            proofps_dd::MsgUserUpdate::initPkt(
+                newPktUserUpdate,
+                player.second.m_connHandleServerSide,
+                legacyPlayer.getPos1().getX(),
+                legacyPlayer.getPos1().getY(),
+                legacyPlayer.getPos1().getZ(),
+                legacyPlayer.getAngleY());
 
-        pge_network::PgePacket newPktUserUpdate;
-        proofps_dd::MsgUserUpdate::initPkt(
-            newPktUserUpdate,
-            player.second.m_connHandleServerSide,
-            legacyPlayer.getPos1().getX(),
-            legacyPlayer.getPos1().getY(),
-            legacyPlayer.getPos1().getZ());
-
-        for (const auto& sendToThisPlayer : m_mapPlayers)
-        {
-            if (sendToThisPlayer.second.m_connHandleServerSide == 0)
+            for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                // server injects this packet to own queue
-                getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
-            }
-            else
-            {
-                getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktUserUpdate);
+                if (sendToThisPlayer.second.m_connHandleServerSide == 0)
+                {
+                    // server injects this packet to own queue
+                    getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+                }
+                else
+                {
+                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktUserUpdate);
+                }
             }
         }
     }
@@ -854,8 +849,25 @@ void PRooFPSddPGE::onGameRunning()
         
         if (window.isActive())
         {
-            KeyBoard(m_fps, m_bWon);
-            Mouse(m_fps, m_bWon);
+            pge_network::PgePacket pkt;
+            proofps_dd::MsgUserCmdMove::initPkt(pkt);
+
+            KeyBoard(m_fps, m_bWon, pkt);
+            Mouse(m_fps, m_bWon, pkt);
+
+            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
+            {
+                if (getNetwork().isServer())
+                {
+                    // inject this packet to server's queue
+                    // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
+                    getNetwork().getServer().getPacketQueue().push_back(pkt);
+                }
+                else
+                {
+                    getNetwork().getClient().SendToServer(pkt);
+                }
+            }
         }
 
         CameraMovement(m_fps);
@@ -877,7 +889,6 @@ void PRooFPSddPGE::onGameRunning()
             }
             else
             {
-                // other players' weapon angle will be updated by MsgUserUpdate2
                 wpn->UpdatePosition(player.second.m_legacyPlayer.getAttachedObject()->getPosVec());
             }
         }
@@ -932,12 +943,6 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
             break;
         case proofps_dd::MsgUserUpdate::id:
             HandleUserUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
-            break;
-        case proofps_dd::MsgUserTarget::id:
-            HandleUserTarget(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserTarget&>(pkt.msg.app.cData));
-            break;
-        case proofps_dd::MsgUserUpdate2::id:
-            HandleUserUpdate2(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate2&>(pkt.msg.app.cData));
             break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.pktId);
@@ -1067,7 +1072,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
     const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
-    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ());
+    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f);
 
     if (msg.bCurrentClient)
     {
@@ -1150,7 +1155,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_connHandleServerSide,
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getX(),
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getY(),
-                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ());
+                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ(),
+                it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
@@ -1227,7 +1233,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     const std::string& sClientUserName = it->first;
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
-        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning))
+        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
+        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
@@ -1283,6 +1290,11 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         }
     }
 
+    if (pktUserCmdMove.m_fPlayerAngleY != -1.f)
+    {
+        legacyPlayer.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
+    }
+
     //pge_network::PgePacket pktOut;
     //proofps_dd::MsgUserUpdate::initPkt(
     //    pktOut,
@@ -1294,37 +1306,6 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     //// this msgUserUpdate should be also sent to server as self
     //// maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
     //getNetwork().getServer().getPacketQueue().push_back(pktOut);
-}
-
-void PRooFPSddPGE::HandleUserTarget(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserTarget& msg)
-{
-    auto it = m_mapPlayers.begin();
-    while (it != m_mapPlayers.end())
-    {
-        if (it->second.m_connHandleServerSide == connHandleServerSide)
-        {
-            break;
-        }
-        it++;
-    }
-
-    if (m_mapPlayers.end() == it)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
-    }
-
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserTarget", __func__, it->first.c_str());
-
-    pge_network::PgePacket pktOut;
-    proofps_dd::MsgUserUpdate2::initPkt(
-        pktOut,
-        connHandleServerSide,
-        msg.m_fPlayerAngleY);
-    getNetwork().getServer().SendPacketToAllClients(pktOut);
-    // this MsgUserUpdate2 should be also sent to server as self
-    // maybe the SendPacketToAllClients() should be enhanced to contain packet injection for server's packet queue!
-    getNetwork().getServer().getPacketQueue().push_back(pktOut);
 }
 
 void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
@@ -1358,27 +1339,10 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     it->second.m_legacyPlayer.getAttachedObject()->getPosVec().Set(
         msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-}
 
-void PRooFPSddPGE::HandleUserUpdate2(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate2& msg)
-{
-    auto it = m_mapPlayers.begin();
-    while (it != m_mapPlayers.end())
+    if (msg.m_fPlayerAngleY != -1.f)
     {
-        if (it->second.m_connHandleServerSide == connHandleServerSide)
-        {
-            break;
-        }
-        it++;
+        it->second.m_legacyPlayer.getAngleY() = msg.m_fPlayerAngleY;
+        it->second.m_legacyPlayer.getAttachedObject()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
-
-    if (m_mapPlayers.end() == it)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
-    }
-
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate2: %f", __func__, it->first.c_str(), msg.m_pos.x);
-
-    it->second.m_legacyPlayer.getAttachedObject()->getAngleVec().SetY(msg.m_fPlayerAngleY);
 }
