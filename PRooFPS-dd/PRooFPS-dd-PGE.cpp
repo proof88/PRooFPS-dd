@@ -264,12 +264,18 @@ void PRooFPSddPGE::onGameInitializing()
 
     // Network logs
     getConsole().SetLoggingState("PGESysNET", true);
-    getConsole().SetLoggingState("PgeNetwork", true);
-    getConsole().SetLoggingState("PgeServer", true);
-    getConsole().SetLoggingState("PgeClient", true);
+    getConsole().SetLoggingState(getNetwork().getLoggerModuleName(), true);
+    getConsole().SetLoggingState(getNetwork().getServer().getLoggerModuleName(), true);
+    getConsole().SetLoggingState(getNetwork().getClient().getLoggerModuleName(), true);
+
+    // Misc engine logs
+    getConsole().SetLoggingState("PRREWindow", true);
 
     // Turn everything on for development only
     getConsole().SetLoggingState("4LLM0DUL3S", true);
+
+    // we need PGE::runGame() invoke EVERYTHING even when window is NOT active, and we will decide in onGameRunning() what NOT to do if window is inactive
+    SetInactiveLikeActive(true);
 }
 
 /** 
@@ -841,8 +847,13 @@ void PRooFPSddPGE::onGameRunning()
                 SendUserUpdates();
             }
         }
-        KeyBoard(m_fps, m_bWon);
-        Mouse(m_fps, m_bWon);
+        
+        if (window.isActive())
+        {
+            KeyBoard(m_fps, m_bWon);
+            Mouse(m_fps, m_bWon);
+        }
+
         CameraMovement(m_fps);
 
         for (auto& player : m_mapPlayers)
