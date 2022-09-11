@@ -503,6 +503,11 @@ void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
     const int dx = oldmx - mouse.getCursorPosX();
     const int dy = oldmy - mouse.getCursorPosY();
 
+    if ((dx == 0) && (dy == 0))
+    {
+        return;
+    }
+
     m_pObjXHair->getPosVec().Set(
         m_pObjXHair->getPosVec().getX() + dx,
         m_pObjXHair->getPosVec().getY() - dy,
@@ -510,11 +515,10 @@ void PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/)
 
     const TPRREfloat fPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
 
-    if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
-    {
-        // TODO: obviously we will need a getActiveWeapon() for WeaponManager and its shoot() should be called
-        getWeaponManager().getWeapons()[0].shoot();
-    }
+    //if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
+    //{
+    //    getWeaponManager().getWeapons()[0]->shoot();
+    //}
 
     pge_network::PgePacket pkt;
     proofps_dd::MsgUserTarget::initPkt(pkt, fPlayerAngleY);
@@ -858,18 +862,23 @@ void PRooFPSddPGE::onGameRunning()
 
         for (auto& player : m_mapPlayers)
         {
-            Weapon& wpn = *(player.second.m_legacyPlayer.getWeapon());
+            Weapon* const wpn = player.second.m_legacyPlayer.getWeapon();
+            if (!wpn)
+            {
+                continue;
+            }
+
             if (m_sUserName == player.first)
             {
                 // my xhair is used to update weapon angle
-                wpn.UpdatePositions(player.second.m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
+                wpn->UpdatePositions(player.second.m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
                 // I control only my weapon
-                wpn.Update();
+                wpn->Update();
             }
             else
             {
                 // other players' weapon angle will be updated by MsgUserUpdate2
-                wpn.UpdatePosition(player.second.m_legacyPlayer.getAttachedObject()->getPosVec());
+                wpn->UpdatePosition(player.second.m_legacyPlayer.getAttachedObject()->getPosVec());
             }
         }
         
@@ -1039,7 +1048,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     plane->getMaterial().setTexture(pTexPlayer);
 
     assert(getWeaponManager().load("gamedata/weapons/machinegun.txt"));
-    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(&(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]));
+    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]);
 
     getNetwork().WriteList();
     WritePlayerList();
