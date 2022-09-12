@@ -110,6 +110,16 @@ namespace proofps_dd
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
         }
 
+        static void setWpnAngles(
+            pge_network::PgePacket& pkt,
+            TPRREfloat fWpnAngleY,
+            TPRREfloat fWpnAngleZ)
+        {
+            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
+            msgUserCmdMove.m_fWpnAngleZ = fWpnAngleZ;
+        }
+
         static bool shouldSend(
             const pge_network::PgePacket& pkt)
         {
@@ -122,6 +132,8 @@ namespace proofps_dd
         bool m_bJumpAction;
         bool m_bSendSwitchToRunning;
         TPRREfloat m_fPlayerAngleY;
+        TPRREfloat m_fWpnAngleY;
+        TPRREfloat m_fWpnAngleZ;
     };
 
     // server -> self (inject) and clients

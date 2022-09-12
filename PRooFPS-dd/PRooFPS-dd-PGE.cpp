@@ -767,6 +767,8 @@ void PRooFPSddPGE::SendUserUpdates()
 
         if ((legacyPlayer.getPos1() != legacyPlayer.getOPos1()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY()))
         {
+            // TODO: weapon old and current angles should be also saved and checked here!
+            // otherwise weapon angle update will happen only if player position changes ...
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
@@ -855,8 +857,19 @@ void PRooFPSddPGE::onGameRunning()
             KeyBoard(m_fps, m_bWon, pkt);
             Mouse(m_fps, m_bWon, pkt);
 
+            CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
+            Weapon* const wpn = legacyPlayer.getWeapon();
+            if (wpn)
+            {
+                // my xhair is used to update weapon angle
+                wpn->UpdatePositions(legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
+                // I control only my weapon
+                wpn->Update();
+            }
+
             if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
             {
+                proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ());
                 if (getNetwork().isServer())
                 {
                     // inject this packet to server's queue
@@ -882,10 +895,7 @@ void PRooFPSddPGE::onGameRunning()
 
             if (m_sUserName == player.first)
             {
-                // my xhair is used to update weapon angle
-                wpn->UpdatePositions(player.second.m_legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
-                // I control only my weapon
-                wpn->Update();
+                
             }
             else
             {
@@ -1295,6 +1305,13 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         legacyPlayer.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
     }
 
+    Weapon* const wpn = legacyPlayer.getWeapon();
+    if (wpn)
+    {
+        wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
+        wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+    }
+
     //pge_network::PgePacket pktOut;
     //proofps_dd::MsgUserUpdate::initPkt(
     //    pktOut,
@@ -1327,8 +1344,6 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     }
 
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
-
-    //it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 
     if (it->second.m_legacyPlayer.isExpectingStartPos())
     {
