@@ -204,6 +204,11 @@ Weapon* CPlayer::getWeapon()
     return m_pWpn;
 }
 
+const Weapon* CPlayer::getWeapon() const
+{
+    return m_pWpn;
+}
+
 void CPlayer::SetWeapon(Weapon* wpn)
 {
     m_pWpn = wpn;
@@ -776,7 +781,9 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getPos1().getX(),
                 legacyPlayer.getPos1().getY(),
                 legacyPlayer.getPos1().getZ(),
-                legacyPlayer.getAngleY());
+                legacyPlayer.getAngleY(),
+                legacyPlayer.getWeapon()->getObject3D().getAngleVec().getY(),
+                legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ());
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
@@ -1082,7 +1089,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
     const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
-    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f);
+    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f);
 
     if (msg.bCurrentClient)
     {
@@ -1166,7 +1173,9 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getX(),
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getY(),
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ(),
-                it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY());
+                it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY(),
+                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getY(),
+                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
@@ -1360,4 +1369,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         it->second.m_legacyPlayer.getAngleY() = msg.m_fPlayerAngleY;
         it->second.m_legacyPlayer.getAttachedObject()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
+
+    it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
+    it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 }

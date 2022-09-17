@@ -65,6 +65,7 @@ public:
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
     Weapon* getWeapon();
+    const Weapon* getWeapon() const;
     void SetWeapon(Weapon* wpn);
 };
 

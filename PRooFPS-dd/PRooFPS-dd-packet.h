@@ -147,7 +147,9 @@ namespace proofps_dd
             const TPRREfloat x,
             const TPRREfloat y,
             const TPRREfloat z,
-            TPRREfloat fPlayerAngleY)
+            TPRREfloat fPlayerAngleY,
+            TPRREfloat fWpnAngleY,
+            TPRREfloat fWpnAngleZ)
         {
             assert(sizeof(MsgUserUpdate) <= pge_network::MsgApp::nMessageMaxLength);
             memset(&pkt, 0, sizeof(pkt));
@@ -160,12 +162,16 @@ namespace proofps_dd
             msgUserCmdUpdate.m_pos.y = y;
             msgUserCmdUpdate.m_pos.z = z;
             msgUserCmdUpdate.m_fPlayerAngleY = fPlayerAngleY;
+            msgUserCmdUpdate.m_fWpnAngleY = fWpnAngleY;
+            msgUserCmdUpdate.m_fWpnAngleZ = fWpnAngleZ;
 
             return true;
         }
 
         TXYZ m_pos;
         TPRREfloat m_fPlayerAngleY;
+        TPRREfloat m_fWpnAngleY;
+        TPRREfloat m_fWpnAngleZ;
     };
 
 } // namespace proofps_dd
