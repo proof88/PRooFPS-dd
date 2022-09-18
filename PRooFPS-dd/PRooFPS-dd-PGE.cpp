@@ -506,7 +506,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 }
 
 
-bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
+bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& /*pkt*/)
 {
     PGEInputMouse& mouse = getInput().getMouse();
 
@@ -524,19 +524,11 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     {
         return false;
     }
-
-    const TPRREfloat fOldPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
     
     m_pObjXHair->getPosVec().Set(
         m_pObjXHair->getPosVec().getX() + dx,
         m_pObjXHair->getPosVec().getY() - dy,
         0.f);
-    
-    const TPRREfloat fNewPlayerAngleY = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
-    if (fOldPlayerAngleY != fNewPlayerAngleY)
-    {
-        proofps_dd::MsgUserCmdMove::setAngleY(pkt, fNewPlayerAngleY);
-    }
 
     return true;
 
@@ -861,7 +853,6 @@ void PRooFPSddPGE::onGameRunning()
             {
                 Gravity(m_fps);
                 Collision(m_bWon);
-                SendUserUpdates();
             }
         }
         
@@ -874,6 +865,14 @@ void PRooFPSddPGE::onGameRunning()
             Mouse(m_fps, m_bWon, pkt);
 
             CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
+
+            legacyPlayer.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
+            legacyPlayer.getAttachedObject()->getAngleVec().SetY(legacyPlayer.getAngleY());
+            if (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
+            {
+                proofps_dd::MsgUserCmdMove::setAngleY(pkt, legacyPlayer.getAngleY());
+            }
+
             Weapon* const wpn = legacyPlayer.getWeapon();
             if (wpn)
             {
@@ -901,6 +900,14 @@ void PRooFPSddPGE::onGameRunning()
                 {
                     getNetwork().getClient().SendToServer(pkt);
                 }
+            }
+        }
+
+        if (getNetwork().isServer())
+        {
+            if (!m_bWon)
+            {
+                SendUserUpdates();
             }
         }
 
@@ -1325,6 +1332,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     if (pktUserCmdMove.m_fPlayerAngleY != -1.f)
     {
         legacyPlayer.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
+        legacyPlayer.getAttachedObject()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
     Weapon* const wpn = legacyPlayer.getWeapon();
@@ -1368,7 +1376,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
-        it->second.m_legacyPlayer.getAngleY() = msg.m_fPlayerAngleY;
+        //it->second.m_legacyPlayer.getAngleY() = msg.m_fPlayerAngleY;
         it->second.m_legacyPlayer.getAttachedObject()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
 
