@@ -23,6 +23,7 @@ private:
     int m_nHealth;
     PRREVector m_vecPos, m_vecOldPos;
     TPRREfloat m_fPlayerAngleY, m_fOldPlayerAngleY;
+    PRREVector m_vWpnAngle, m_vOldWpnAngle;
     PRREVector m_vecForce;
     PRREObject3D* m_pObj;
     Weapon* m_pWpn;
@@ -67,6 +68,8 @@ public:
     Weapon* getWeapon();
     const Weapon* getWeapon() const;
     void SetWeapon(Weapon* wpn);
+    PRREVector& getOldWeaponAngle();
+    PRREVector& getWeaponAngle();
 };
 
 struct Player_t
@@ -127,7 +130,7 @@ protected:
     virtual void onGameDestroying() override;                 /**< Freeing up game content here. */
 
     void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt);
-    void Mouse(int /*fps*/, bool& won, pge_network::PgePacket& pkt);
+    bool Mouse(int fps, bool& won, pge_network::PgePacket& pkt);
     void CameraMovement(int fps);
     void Gravity(int fps);
     bool Colliding(PRREObject3D& a, PRREObject3D& b);

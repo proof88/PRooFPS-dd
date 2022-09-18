@@ -116,6 +116,7 @@ namespace proofps_dd
             TPRREfloat fWpnAngleZ)
         {
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWpnAngleZ;
         }
