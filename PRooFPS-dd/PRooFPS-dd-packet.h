@@ -101,6 +101,15 @@ namespace proofps_dd
             msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
         }
 
+        static void setMouse(
+            pge_network::PgePacket& pkt,
+            bool bShootAction)
+        {
+            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            msgUserCmdMove.m_bShouldSend = true;
+            msgUserCmdMove.m_bShootAction = bShootAction;
+        }
+
         static void setAngleY(
             pge_network::PgePacket& pkt,
             TPRREfloat fPlayerAngleY)
@@ -132,6 +141,7 @@ namespace proofps_dd
         Strafe m_strafe;
         bool m_bJumpAction;
         bool m_bSendSwitchToRunning;
+        bool m_bShootAction;
         TPRREfloat m_fPlayerAngleY;
         TPRREfloat m_fWpnAngleY;
         TPRREfloat m_fWpnAngleZ;

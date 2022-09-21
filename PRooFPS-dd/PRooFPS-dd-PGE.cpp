@@ -506,9 +506,14 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 }
 
 
-bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& /*pkt*/)
+bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
     PGEInputMouse& mouse = getInput().getMouse();
+
+    if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
+    {
+        proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+    }
 
     const int oldmx = mouse.getCursorPosX();
     const int oldmy = mouse.getCursorPosY();
@@ -531,11 +536,6 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& /*p
         0.f);
 
     return true;
-
-    //if ( mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) )
-    //{
-    //    getWeaponManager().getWeapons()[0]->shoot();
-    //}
 }
 
 
@@ -1294,7 +1294,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
         (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
-        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend))
+        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend) &&
+        (!pktUserCmdMove.m_bShootAction))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
@@ -1361,6 +1362,11 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         legacyPlayer.getWeaponAngle().Set(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ);
         wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
         wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+
+        if (pktUserCmdMove.m_bShootAction)
+        {
+            wpn->shoot();
+        }
     }
 }
 
