@@ -825,6 +825,17 @@ void PRooFPSddPGE::onGameFrameBegin()
             legacyPlayer.UpdateOldPos();
         }
     }
+    else
+    {
+        // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
+        // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
+        const bool bValidConnection = !m_sUserName.empty();
+        if ( bValidConnection )
+        {
+            CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
+            legacyPlayer.UpdateOldPos();
+        }
+    }
 }
 
 /** 
