@@ -1216,23 +1216,23 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
 void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
 {
-    auto it = m_mapPlayers.begin();
-    while (it != m_mapPlayers.end())
+    auto playerIt = m_mapPlayers.begin();
+    while (playerIt != m_mapPlayers.end())
     {
-        if (it->second.m_connHandleServerSide == connHandleServerSide)
+        if (playerIt->second.m_connHandleServerSide == connHandleServerSide)
         {
             break;
         }
-        it++;
+        playerIt++;
     }
 
-    if (m_mapPlayers.end() == it)
+    if (m_mapPlayers.end() == playerIt)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return;
     }
 
-    const std::string& sClientUserName = it->first;
+    const std::string& sClientUserName = playerIt->first;
 
     if (getNetwork().isServer())
     {
@@ -1243,15 +1243,23 @@ void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
     }
 
-    if (it->second.m_legacyPlayer.getAttachedObject())
+    if (playerIt->second.m_legacyPlayer.getAttachedObject())
     {
-        delete it->second.m_legacyPlayer.getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
+        delete playerIt->second.m_legacyPlayer.getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
     }
 
-    // do not delete wpn object associated to player, because it would invalidate other players' ptr to their weapon in the vector
-    // instead all weapons will be deleted anyway at game shutdown
+    Weapon* const wpn = playerIt->second.m_legacyPlayer.getWeapon();
+    if (wpn)
+    {
+        const auto wpnIt = std::find(getWeaponManager().getWeapons().begin(), getWeaponManager().getWeapons().end(), wpn);
+        if (wpnIt != getWeaponManager().getWeapons().end())
+        {
+            getWeaponManager().getWeapons().erase(wpnIt);
+        }
+        delete wpn;
+    }
 
-    m_mapPlayers.erase(it);
+    m_mapPlayers.erase(playerIt);
 
     getNetwork().WriteList();
     WritePlayerList();
