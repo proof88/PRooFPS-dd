@@ -879,7 +879,8 @@ void PRooFPSddPGE::onGameRunning()
 
             legacyPlayer.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
             legacyPlayer.getAttachedObject()->getAngleVec().SetY(legacyPlayer.getAngleY());
-            if (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
+            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) ||
+                (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY()))
             {
                 proofps_dd::MsgUserCmdMove::setAngleY(pkt, legacyPlayer.getAngleY());
             }
@@ -893,14 +894,14 @@ void PRooFPSddPGE::onGameRunning()
                 // I control only my weapon
                 wpn->Update();
 
-                if (legacyPlayer.getOldWeaponAngle() != legacyPlayer.getWeaponAngle())
+                if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || (legacyPlayer.getOldWeaponAngle() != legacyPlayer.getWeaponAngle()))
                 {
                     proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, legacyPlayer.getWeaponAngle().getY(), legacyPlayer.getWeaponAngle().getZ());
                 }
             }
 
             if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
-            {   // shouldSend() at this point means that there were actual mouse move so MsgUserCmdMove will be sent out
+            {   // shouldSend() at this point means that there were actual input so MsgUserCmdMove will be sent out
                 if (getNetwork().isServer())
                 {
                     // inject this packet to server's queue
