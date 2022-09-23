@@ -783,6 +783,19 @@ void PRooFPSddPGE::UpdateBullets()
     }
 }
 
+void PRooFPSddPGE::UpdateWeapons()
+{
+    for (auto& player : m_mapPlayers)
+    {
+        Weapon* const wpn = player.second.m_legacyPlayer.getWeapon();
+        if (!wpn)
+        {
+            continue;
+        }
+        wpn->Update();
+    }
+}
+
 void PRooFPSddPGE::SendUserUpdates()
 {
     if (!getNetwork().isServer())
@@ -914,8 +927,6 @@ void PRooFPSddPGE::onGameRunning()
                 // my xhair is used to update weapon angle
                 wpn->UpdatePositions(legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
                 legacyPlayer.getWeaponAngle().Set(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ());
-                // I control only my weapon
-                wpn->Update();
 
                 if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || (legacyPlayer.getOldWeaponAngle() != legacyPlayer.getWeaponAngle()))
                 {
@@ -968,6 +979,7 @@ void PRooFPSddPGE::onGameRunning()
         
         if (getNetwork().isServer())
         {
+            UpdateWeapons();
             UpdateBullets();
         }
 
@@ -1472,6 +1484,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
         getWeaponManager().getBullets().push_back(
             Bullet(
                 getPRRE(),
+                msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z) );

@@ -138,6 +138,7 @@ protected:
                      float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz );
     void Collision(bool& won);
     void FrameLimiter(int fps_ms);
+    void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();
 
