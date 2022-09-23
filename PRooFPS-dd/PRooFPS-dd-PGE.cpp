@@ -351,6 +351,8 @@ void PRooFPSddPGE::onGameInitialized()
         // MsgUserUpdate is received only by clients over network!
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
 
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
+
         if (!getNetwork().getServer().startListening())
         {
             PGE::showErrorDialog("Server has FAILED to start listening!");
@@ -748,15 +750,36 @@ void PRooFPSddPGE::FrameLimiter(int fps_ms)
   }
 }
 
-
 void PRooFPSddPGE::UpdateBullets()
 {
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
+    pge_network::PgePacket newPktBulletUpdate;
     std::list<Bullet>& bullets = getWeaponManager().getBullets();
     for (auto& bullet : bullets)
     {
         bullet.Update();
+        proofps_dd::MsgBulletUpdate::initPkt(
+            newPktBulletUpdate,
+            0,
+            bullet.getId(),
+            bullet.getObject3D().getPosVec().getX(),
+            bullet.getObject3D().getPosVec().getY(),
+            bullet.getObject3D().getPosVec().getZ(),
+            bullet.getObject3D().getAngleVec().getX(),
+            bullet.getObject3D().getAngleVec().getY(),
+            bullet.getObject3D().getAngleVec().getZ(),
+            bullet.getObject3D().getSizeVec().getX(),
+            bullet.getObject3D().getSizeVec().getY(),
+            bullet.getObject3D().getSizeVec().getZ());
+        
+        for (const auto& sendToThisPlayer : m_mapPlayers)
+        {
+            if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+            {   // since bullet.Update() updates the bullet position already, server doesn't send this to itself
+                getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktBulletUpdate);
+            }
+        }
     }
 }
 
@@ -993,6 +1016,9 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
             break;
         case proofps_dd::MsgUserUpdate::id:
             HandleUserUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
+            break;
+        case proofps_dd::MsgBulletUpdate::id:
+            HandleBulletUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
             break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.pktId);
@@ -1365,7 +1391,12 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         if (pktUserCmdMove.m_bShootAction)
         {
-            wpn->shoot();
+            if (getNetwork().isServer())
+            {
+                // server will have the new bullet, clients will learn about the new bullet when server is sending out
+                // the regular bullet updates
+                wpn->shoot();
+            }
         }
     }
 }
@@ -1408,4 +1439,49 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+}
+
+void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgBulletUpdate& msg)
+{
+    if (getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgBulletUpdate, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+    Bullet* pBullet = nullptr;
+
+    auto it = getWeaponManager().getBullets().begin();
+    while (it != getWeaponManager().getBullets().end())
+    {
+        if (it->getId() == msg.m_bulletId)
+        {
+            break;
+        }
+        it++;
+    }
+
+    if (getWeaponManager().getBullets().end() == it)
+    {
+        // need to create this new bullet first on our side
+        //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+
+        // TODO: here it is okay to get all the properties of the bullet, but if it is not a new bullet, it is not nice to
+        // send every property in all BulletUpdate, this should be improved in future ...
+        getWeaponManager().getBullets().push_back(
+            Bullet(
+                getPRRE(),
+                msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
+                msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
+                msg.m_size.x, msg.m_size.y, msg.m_size.z) );
+        pBullet = &(getWeaponManager().getBullets().back());
+    }
+    else
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: old bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+        pBullet = &(*it);
+    }
+
+    pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }

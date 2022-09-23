@@ -13,6 +13,7 @@
 #include <cassert>
 
 #include "../../../PGE/PGE/Network/PgePacket.h"
+#include "../../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
 
 namespace proofps_dd
 {
@@ -23,7 +24,8 @@ namespace proofps_dd
         USER_CMD_MOVE,
         USER_CMD_TARGET,
         USER_UPDATE,
-        USER_UPDATE_2
+        USER_UPDATE_2,
+        BULLET_UPDATE
     };
 
     // server -> self (inject) and clients
@@ -183,6 +185,52 @@ namespace proofps_dd
         TPRREfloat m_fPlayerAngleY;
         TPRREfloat m_fWpnAngleY;
         TPRREfloat m_fWpnAngleZ;
+    };
+
+    // server -> self (inject) and clients
+    struct MsgBulletUpdate
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::BULLET_UPDATE;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const Bullet::BulletId bulletId,
+            const TPRREfloat px,
+            const TPRREfloat py,
+            const TPRREfloat pz,
+            const TPRREfloat ax,
+            const TPRREfloat ay,
+            const TPRREfloat az,
+            const TPRREfloat sx,
+            const TPRREfloat sy,
+            const TPRREfloat sz)
+        {
+            assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id);
+
+            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData);
+            msgBulletUpdate.m_bulletId = bulletId;
+            msgBulletUpdate.m_pos.x = px;
+            msgBulletUpdate.m_pos.y = py;
+            msgBulletUpdate.m_pos.z = pz;
+            msgBulletUpdate.m_angle.x = ax;
+            msgBulletUpdate.m_angle.y = ay;
+            msgBulletUpdate.m_angle.z = az;
+            msgBulletUpdate.m_size.x = sx;
+            msgBulletUpdate.m_size.y = sy;
+            msgBulletUpdate.m_size.z = sz;
+
+            return true;
+        }
+
+        Bullet::BulletId m_bulletId;
+        TXYZ m_pos;
+        TXYZ m_angle;
+        TXYZ m_size;
     };
 
 } // namespace proofps_dd
