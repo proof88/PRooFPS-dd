@@ -324,7 +324,8 @@ void PRooFPSddPGE::onGameInitialized()
     getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
     m_maps.initialize();
-    assert( m_maps.load("gamedata/maps/map_test_good.txt") );
+    const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
+    assert( mapLoaded );
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -363,7 +364,41 @@ void PRooFPSddPGE::onGameInitialized()
     {
         getNetwork().getClient().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
 
-        if (!getNetwork().getClient().connectToServer("127.0.0.1"))
+        std::string sIp = "127.0.0.1";
+        std::ifstream f;
+        f.open("gyorsan.txt", std::ifstream::in);
+        if (!f.good())
+        {
+            getConsole().OLn("No gyorsan.txt found!");
+        }
+        else
+        {
+            getConsole().OLn("Found gyorsan.txt");
+            const std::streamsize nBuffSize = 1024;
+            char cLine[nBuffSize];
+            int i = 0;
+            while (!f.eof())
+            {
+                f.getline(cLine, nBuffSize);
+                // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
+                PFL::strClrLeads(cLine);
+                const std::string sTrimmedLine(cLine);
+                if (i == 0)
+                {
+                    sIp = sTrimmedLine;
+                    getConsole().OLn("IP override: %s", sIp.c_str());
+                }
+                else
+                {
+                    getConsole().OLn("Logging override: %s", sTrimmedLine.c_str());
+                    getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
+                }
+                i++;
+            };
+            f.close();
+        }
+
+        if (!getNetwork().getClient().connectToServer(sIp))
         {
             PGE::showErrorDialog("Client has FAILED to establish connection to the server!");
             assert(false);
@@ -1140,7 +1175,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
-    assert(getWeaponManager().load("gamedata/weapons/machinegun.txt"));
+    const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt");
+    assert(bWpnLoaded);
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]);
 
     getNetwork().WriteList();
