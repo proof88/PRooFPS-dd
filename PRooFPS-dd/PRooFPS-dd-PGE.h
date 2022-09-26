@@ -151,10 +151,11 @@ private:
     unsigned int m_fps_ms;                  /* - || - */
 
     PRREObject3D* m_pObjXHair;
-    bool m_bSpaceReleased, m_bCtrlReleased;
+    bool m_bSpaceReleased, m_bBackSpaceReleased, m_bCtrlReleased;
     bool m_bShiftReleased, m_enterreleased;
     bool m_bWon;
     float m_fCameraMinY;
+    bool m_bShowGuiDemo;
 
     std::string m_sUserName;   /**< User name received from server in PgePktUserConnected (server instance also receives this from itself). */
     std::map<std::string, Player_t> m_mapPlayers;  /**< Connected players. Used by both server and clients. Key is user name. */

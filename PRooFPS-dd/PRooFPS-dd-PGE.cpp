@@ -249,12 +249,14 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_ms = 0;
 
     m_bSpaceReleased = true;
+    m_bBackSpaceReleased = true;
     m_bCtrlReleased = true;
     m_bShiftReleased = true;
     m_enterreleased = true;
 
     m_bWon = false;
     m_fCameraMinY = 0.0f;
+    m_bShowGuiDemo = false;
 }
 
 PRooFPSddPGE::~PRooFPSddPGE()
@@ -480,6 +482,26 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     {
         getPRRE().getWindow().Close();
     }
+
+    if (keybd.isKeyPressed(VK_BACK))
+    {
+        if (m_bBackSpaceReleased)
+        {
+            m_bShowGuiDemo = !m_bShowGuiDemo;
+            getPRRE().ShowGuiDemo(m_bShowGuiDemo);
+            getPRRE().getWindow().SetCursorVisible(m_bShowGuiDemo);
+            m_bBackSpaceReleased = false;
+        }
+    }
+    else
+    {
+        m_bBackSpaceReleased = true;
+    }
+
+    if (m_bShowGuiDemo)
+    {
+        return;
+    }
       
     if ( !won )
     {
@@ -545,6 +567,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 
 bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
+    if (m_bShowGuiDemo)
+    {
+        return false;
+    }
+
     PGEInputMouse& mouse = getInput().getMouse();
 
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
