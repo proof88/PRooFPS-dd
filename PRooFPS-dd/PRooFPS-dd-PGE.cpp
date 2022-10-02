@@ -815,8 +815,10 @@ void PRooFPSddPGE::UpdateBullets()
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
     std::list<Bullet>& bullets = getWeaponManager().getBullets();
-    for (auto& bullet : bullets)
+    auto it = bullets.begin();
+    while (it != bullets.end())
     {
+        auto& bullet = *it;
         bullet.Update();
 
         proofps_dd::MsgBulletUpdate::initPkt(
@@ -833,14 +835,29 @@ void PRooFPSddPGE::UpdateBullets()
             bullet.getObject3D().getSizeVec().getY(),
             bullet.getObject3D().getSizeVec().getZ());
 
-        //for (const auto& player : m_mapPlayers)
-        //{
-        //    if (Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
-        //    {
-        //        proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true;
-        //        break; // we can stop since 1 bullet can touch 1 player only at a time
-        //    }
-        //}
+        for (const auto& player : m_mapPlayers)
+        {
+            if (bullet.getOwner() == player.second.m_connHandleServerSide)
+            {
+                // bullet cannot hit the owner, at least for now ...
+                // in the future, when bullets start in proper position, we won't need this check ...
+                // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
+                continue;
+            }
+
+            if (Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
+            {
+                it = bullets.erase(it); // delete it right now, otherwise we would send further updates to clients about this bullet
+                proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true; // clients will also delete this bullet on their side
+                break; // we can stop since 1 bullet can touch 1 player only at a time
+            }
+        }
+
+        if (!proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate))
+        {
+            // no player hit happened with this bullet, iterate to next
+            it++;
+        }
         
         for (const auto& sendToThisPlayer : m_mapPlayers)
         {
@@ -1546,12 +1563,12 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
 
     if (getWeaponManager().getBullets().end() == it)
     {
-        //if (msg.m_bDelete)
-        //{
-        //    getConsole().EOLn("PRooFPSddPGE::%s(): new bullet, but already to be deleted!", __func__);
-        //    assert(false);
-        //    return;
-        //}
+        if (msg.m_bDelete)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): new bullet, but already to be deleted!", __func__);
+            assert(false);
+            return;
+        }
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
 
@@ -1574,11 +1591,11 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
         pBullet = &(*it);
     }
 
-    //if (msg.m_bDelete)
-    //{
-    //    getWeaponManager().getBullets().erase(it);
-    //    return;
-    //}
+    if (msg.m_bDelete)
+    {
+        getWeaponManager().getBullets().erase(it);
+        return;
+    }
 
     pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }
