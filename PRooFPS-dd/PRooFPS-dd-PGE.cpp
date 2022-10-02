@@ -1209,7 +1209,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
-    const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt");
+    const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt", connHandleServerSide);
     assert(bWpnLoaded);
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]);
 
