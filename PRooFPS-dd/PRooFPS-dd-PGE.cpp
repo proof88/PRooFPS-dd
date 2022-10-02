@@ -835,6 +835,9 @@ void PRooFPSddPGE::UpdateBullets()
             bullet.getObject3D().getSizeVec().getY(),
             bullet.getObject3D().getSizeVec().getZ());
 
+        bool bDeleteBullet = false;
+
+        // check if bullet is hitting a player
         for (const auto& player : m_mapPlayers)
         {
             if (bullet.getOwner() == player.second.m_connHandleServerSide)
@@ -847,18 +850,40 @@ void PRooFPSddPGE::UpdateBullets()
 
             if (Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
             {
-                it = bullets.erase(it); // delete it right now, otherwise we would send further updates to clients about this bullet
-                proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true; // clients will also delete this bullet on their side
+                bDeleteBullet = true;
                 break; // we can stop since 1 bullet can touch 1 player only at a time
             }
         }
 
-        if (!proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate))
+        if ( !bDeleteBullet )
         {
-            // no player hit happened with this bullet, iterate to next
+            // check if bullet is hitting a map element
+            for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
+            {
+                PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
+                if ((obj != PGENULL) && (obj != &(bullet.getObject3D())) && (obj->isColliding_TO_BE_REMOVED()))
+                {
+                    if (Colliding(*obj, bullet.getObject3D()))
+                    {
+                        bDeleteBullet = true;
+                        break; // we can stop since 1 bullet can touch 1 map element
+                    }
+                }
+            }
+        }
+
+        if ( bDeleteBullet )
+        {
+            it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
+            proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true; // clients will also delete this bullet on their side
+        }
+        else
+        {
+            // bullet didn't touch anything, go to next
             it++;
         }
         
+        // 'it' is referring to next bullet, don't use it from here!
         for (const auto& sendToThisPlayer : m_mapPlayers)
         {
             if (sendToThisPlayer.second.m_connHandleServerSide != 0)
@@ -1565,8 +1590,8 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
     {
         if (msg.m_bDelete)
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): new bullet, but already to be deleted!", __func__);
-            assert(false);
+            // this is valid scenario: when 2 players are at almost same position (partially overlapping), the bullet will immediately hit the other player
+            // when being fired. In such case, we can just ignore doing anything here on client side.
             return;
         }
         // need to create this new bullet first on our side
