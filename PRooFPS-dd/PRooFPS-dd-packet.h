@@ -187,7 +187,7 @@ namespace proofps_dd
         TPRREfloat m_fWpnAngleZ;
     };
 
-    // server -> self (inject) and clients
+    // server -> clients
     struct MsgBulletUpdate
     {
         static const ElteFailMsgId id = ElteFailMsgId::BULLET_UPDATE;
@@ -223,14 +223,22 @@ namespace proofps_dd
             msgBulletUpdate.m_size.x = sx;
             msgBulletUpdate.m_size.y = sy;
             msgBulletUpdate.m_size.z = sz;
+            msgBulletUpdate.m_bDelete = false;
 
             return true;
+        }
+
+        static bool& getDelete(pge_network::PgePacket& pkt)
+        {
+            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData);
+            return msgBulletUpdate.m_bDelete;
         }
 
         Bullet::BulletId m_bulletId;
         TXYZ m_pos;
         TXYZ m_angle;
         TXYZ m_size;
+        bool m_bDelete;
     };
 
 } // namespace proofps_dd

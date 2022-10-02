@@ -603,7 +603,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
 }
 
 
-bool PRooFPSddPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
+bool PRooFPSddPGE::Colliding(const PRREObject3D& a, const PRREObject3D& b)
 {
   if (
        ( 
@@ -818,6 +818,7 @@ void PRooFPSddPGE::UpdateBullets()
     for (auto& bullet : bullets)
     {
         bullet.Update();
+
         proofps_dd::MsgBulletUpdate::initPkt(
             newPktBulletUpdate,
             0,
@@ -831,6 +832,15 @@ void PRooFPSddPGE::UpdateBullets()
             bullet.getObject3D().getSizeVec().getX(),
             bullet.getObject3D().getSizeVec().getY(),
             bullet.getObject3D().getSizeVec().getZ());
+
+        //for (const auto& player : m_mapPlayers)
+        //{
+        //    if (Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
+        //    {
+        //        proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true;
+        //        break; // we can stop since 1 bullet can touch 1 player only at a time
+        //    }
+        //}
         
         for (const auto& sendToThisPlayer : m_mapPlayers)
         {
@@ -1517,7 +1527,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
 {
     if (getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgBulletUpdate, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received MsgBulletUpdate, CANNOT HAPPEN!", __func__);
         assert(false);
         return;
     }
@@ -1536,6 +1546,12 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
 
     if (getWeaponManager().getBullets().end() == it)
     {
+        //if (msg.m_bDelete)
+        //{
+        //    getConsole().EOLn("PRooFPSddPGE::%s(): new bullet, but already to be deleted!", __func__);
+        //    assert(false);
+        //    return;
+        //}
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
 
@@ -1549,12 +1565,20 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z) );
         pBullet = &(getWeaponManager().getBullets().back());
+        it = getWeaponManager().getBullets().end();
+        it--; // iterator points to this newly inserted last bullet
     }
     else
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: old bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
         pBullet = &(*it);
     }
+
+    //if (msg.m_bDelete)
+    //{
+    //    getWeaponManager().getBullets().erase(it);
+    //    return;
+    //}
 
     pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }
