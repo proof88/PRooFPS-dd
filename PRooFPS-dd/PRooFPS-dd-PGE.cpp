@@ -603,7 +603,6 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
 }
 
 
-// két adott objektum ütközik-e egymással
 bool PRooFPSddPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
 {
   if (
@@ -634,7 +633,6 @@ bool PRooFPSddPGE::Colliding(PRREObject3D& a, PRREObject3D& b)
      }
 }       
 
-// két térbeli terület ütközik-e egymással
 bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
                       float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
 {
@@ -666,7 +664,6 @@ bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, f
      }              
 }
 
-// a m_player ütközéseit kezeli
 void PRooFPSddPGE::Collision(bool& /*won*/)
 { 
     for (auto& player : m_mapPlayers)
@@ -1095,7 +1092,7 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
             HandleBulletUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
             break;
         default:
-            getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.pktId);
+            getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
         }
         break;
     }
