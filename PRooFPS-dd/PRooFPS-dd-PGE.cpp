@@ -872,7 +872,7 @@ void PRooFPSddPGE::UpdateBullets()
                 Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
             {
                 bDeleteBullet = true;
-                player.second.m_legacyPlayer.DoDamage(10);
+                player.second.m_legacyPlayer.DoDamage(bullet.getDamageHp());
                 if (player.second.m_legacyPlayer.getHealth() == 0)
                 {
                     getConsole().OLn("Player %s has been killed!", player.first.c_str());
