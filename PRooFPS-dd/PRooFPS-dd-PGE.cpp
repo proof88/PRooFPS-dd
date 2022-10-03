@@ -1093,14 +1093,6 @@ void PRooFPSddPGE::onGameRunning()
             }
         }
 
-        if (getNetwork().isServer())
-        {
-            if (!m_bWon)
-            {
-                SendUserUpdates();
-            }
-        }
-
         CameraMovement(m_fps);
 
         for (auto& player : m_mapPlayers)
@@ -1125,6 +1117,7 @@ void PRooFPSddPGE::onGameRunning()
         {
             UpdateWeapons();
             UpdateBullets();
+            SendUserUpdates();
         }
 
         //map.UpdateVisibilitiesForRenderer();
@@ -1486,6 +1479,12 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     }
 
     auto& legacyPlayer = it->second.m_legacyPlayer;
+
+    if (legacyPlayer.getHealth() == 0)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
+        return;
+    }
 
     if (pktUserCmdMove.m_bSendSwitchToRunning)
     {

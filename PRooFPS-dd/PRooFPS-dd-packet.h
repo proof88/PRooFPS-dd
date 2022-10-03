@@ -67,7 +67,7 @@ namespace proofps_dd
         RIGHT
     };
 
-    // clients -> server
+    // clients -> server + server self (inject)
     // MsgUserCmdMove messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdate
     struct MsgUserCmdMove
     {
