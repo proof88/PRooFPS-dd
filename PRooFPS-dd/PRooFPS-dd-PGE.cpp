@@ -124,6 +124,16 @@ void CPlayer::SetHealth(int value) {
   m_nHealth = value;
 }
 
+void CPlayer::UpdateOldHealth()
+{
+    m_nOldHealth = m_nHealth;
+}
+
+int CPlayer::getOldHealth() const
+{
+    return m_nOldHealth;
+}
+
 void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
   m_pObj = value;
   if ( m_pObj != PGENULL )
@@ -502,6 +512,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     {
         return;
     }
+
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
+    {
+        return;
+    }
       
     if ( !won )
     {
@@ -577,6 +592,11 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+    }
+
+    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
+    {
+        return false;
     }
 
     const int oldmx = mouse.getCursorPosX();
@@ -838,7 +858,7 @@ void PRooFPSddPGE::UpdateBullets()
         bool bDeleteBullet = false;
 
         // check if bullet is hitting a player
-        for (const auto& player : m_mapPlayers)
+        for (auto& player : m_mapPlayers)
         {
             if (bullet.getOwner() == player.second.m_connHandleServerSide)
             {
@@ -848,9 +868,15 @@ void PRooFPSddPGE::UpdateBullets()
                 continue;
             }
 
-            if (Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
+            if ((player.second.m_legacyPlayer.getHealth() > 0) &&
+                Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
             {
                 bDeleteBullet = true;
+                player.second.m_legacyPlayer.DoDamage(10);
+                if (player.second.m_legacyPlayer.getHealth() == 0)
+                {
+                    getConsole().OLn("Player %s has been killed!", player.first.c_str());
+                }
                 break; // we can stop since 1 bullet can touch 1 player only at a time
             }
         }
@@ -920,7 +946,8 @@ void PRooFPSddPGE::SendUserUpdates()
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
         if ((legacyPlayer.getPos1() != legacyPlayer.getOPos1()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
-            || (legacyPlayer.getWeaponAngle() != legacyPlayer.getOldWeaponAngle()))
+            || (legacyPlayer.getWeaponAngle() != legacyPlayer.getOldWeaponAngle())
+            || (legacyPlayer.getHealth() != legacyPlayer.getOldHealth()))
         {
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(
@@ -931,7 +958,11 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getPos1().getZ(),
                 legacyPlayer.getAngleY(),
                 legacyPlayer.getWeaponAngle().getY(),
-                legacyPlayer.getWeaponAngle().getZ());
+                legacyPlayer.getWeaponAngle().getZ(),
+                legacyPlayer.getHealth());
+
+            // Note that health is not needed by server since it already has the updated health, but for convenience
+            // we put that into MsgUserUpdate and send anyway as other stuff.
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
@@ -970,6 +1001,7 @@ void PRooFPSddPGE::onGameFrameBegin()
             }
 
             legacyPlayer.UpdateOldPos();
+            legacyPlayer.UpdateOldHealth();
         }
     }
     else
@@ -981,6 +1013,7 @@ void PRooFPSddPGE::onGameFrameBegin()
         {
             CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
             legacyPlayer.UpdateOldPos();
+            legacyPlayer.UpdateOldHealth();
         }
     }
 }
@@ -1272,7 +1305,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
     const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
-    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f);
+    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100);
 
     if (msg.bCurrentClient)
     {
@@ -1358,7 +1391,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ(),
                 it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY(),
                 it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getY(),
-                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ());
+                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ(),
+                it.second.m_legacyPlayer.getHealth());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
@@ -1563,6 +1597,8 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+
+    it->second.m_legacyPlayer.SetHealth(msg.m_nHealth);
 }
 
 void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgBulletUpdate& msg)
@@ -1592,6 +1628,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
         {
             // this is valid scenario: when 2 players are at almost same position (partially overlapping), the bullet will immediately hit the other player
             // when being fired. In such case, we can just ignore doing anything here on client side.
+            // TODO: btw why does sender send the message like this anyway to clients?!
             return;
         }
         // need to create this new bullet first on our side

@@ -20,7 +20,7 @@
 class CPlayer
 {
 private:       
-    int m_nHealth;
+    int m_nHealth, m_nOldHealth;
     PRREVector m_vecPos, m_vecOldPos;
     TPRREfloat m_fPlayerAngleY, m_fOldPlayerAngleY;
     PRREVector m_vWpnAngle, m_vOldWpnAngle;
@@ -51,6 +51,8 @@ public:
     bool canFall() const;
     void UpdateOldPos();
     void SetHealth(int value);
+    void UpdateOldHealth();
+    int getOldHealth() const;
     void AttachObject(PRREObject3D* value, bool blend);
     void SetGravity(float value);
     bool jumpAllowed() const;
