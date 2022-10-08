@@ -875,7 +875,8 @@ void PRooFPSddPGE::UpdateBullets()
                 player.second.m_legacyPlayer.DoDamage(bullet.getDamageHp());
                 if (player.second.m_legacyPlayer.getHealth() == 0)
                 {
-                    getConsole().OLn("Player %s has been killed!", player.first.c_str());
+                    getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed!", __func__, player.first.c_str());
+                    HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
                 }
                 break; // we can stop since 1 bullet can touch 1 player only at a time
             }
@@ -933,6 +934,23 @@ void PRooFPSddPGE::UpdateWeapons()
     }
 }
 
+void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
+{
+    player.getAttachedObject()->Hide();
+    player.getWeapon()->getObject3D().Hide();
+
+    if (bMe)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
+        m_pObjXHair->Hide();
+        // TODO: start timer for self to respwan
+    }
+    else
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
+    }
+}
+
 void PRooFPSddPGE::SendUserUpdates()
 {
     if (!getNetwork().isServer())
@@ -962,7 +980,7 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getHealth());
 
             // Note that health is not needed by server since it already has the updated health, but for convenience
-            // we put that into MsgUserUpdate and send anyway as other stuff.
+            // we put that into MsgUserUpdate and send anyway like all the other stuff.
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
@@ -986,11 +1004,11 @@ void PRooFPSddPGE::SendUserUpdates()
 */
 void PRooFPSddPGE::onGameFrameBegin()
 {
-    if (getNetwork().isServer())
+    for (auto& player : m_mapPlayers)
     {
-        for (auto& player : m_mapPlayers)
+        auto& legacyPlayer = player.second.m_legacyPlayer;
+        if (getNetwork().isServer())
         {
-            auto& legacyPlayer = player.second.m_legacyPlayer;
             if (legacyPlayer.getPos1().getY() != legacyPlayer.getOPos1().getY())
             { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
                 legacyPlayer.SetJumpAllowed(false);
@@ -999,19 +1017,12 @@ void PRooFPSddPGE::onGameFrameBegin()
             {
                 legacyPlayer.SetJumpAllowed(true);
             }
-
-            legacyPlayer.UpdateOldPos();
-            legacyPlayer.UpdateOldHealth();
         }
-    }
-    else
-    {
         // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
         // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
         const bool bValidConnection = !m_sUserName.empty();
-        if ( bValidConnection )
+        if (bValidConnection)
         {
-            CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
             legacyPlayer.UpdateOldPos();
             legacyPlayer.UpdateOldHealth();
         }
@@ -1597,7 +1608,17 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
     it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
+    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
+    //    __func__, msg.m_nHealth, it->second.m_legacyPlayer.getHealth(), it->second.m_legacyPlayer.getOldHealth());
+
     it->second.m_legacyPlayer.SetHealth(msg.m_nHealth);
+    if ((it->second.m_legacyPlayer.getOldHealth() > 0) && (it->second.m_legacyPlayer.getHealth() == 0))
+    {
+        // only clients fall here, since server already set oldhealth to 0 in this frame
+        // because it had already set health to 0 in previous frame
+        getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
+        HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
+    }
 }
 
 void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgBulletUpdate& msg)

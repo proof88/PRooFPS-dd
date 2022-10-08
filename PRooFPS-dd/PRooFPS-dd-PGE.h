@@ -143,6 +143,7 @@ protected:
     void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();
+    void HandlePlayerDied(bool bMe, CPlayer& player);
 
 private:
 
