@@ -591,6 +591,8 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
 
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
+        // sending mouse action is still allowed when player is dead, since server will treat that
+        // as respawn request
         proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
     }
 
@@ -1493,6 +1495,13 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if (legacyPlayer.getHealth() == 0)
     {
+        if (pktUserCmdMove.m_bShootAction)
+        {
+            getConsole().OLn("PRooFPSddPGE::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
+            return;
+        }
+
+        // for dead player, only the shoot action is allowed which is treated as respawn request
         getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
         return;
     }
