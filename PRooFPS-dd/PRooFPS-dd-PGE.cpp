@@ -41,6 +41,7 @@ CPlayer::CPlayer()
   m_bExpectingStartPos = true;
   m_fPlayerAngleY = 0.f;
   m_fOldPlayerAngleY = 0.f;
+  m_bRespawn = false;
 }
 
 void CPlayer::ShutDown()
@@ -233,6 +234,16 @@ PRREVector& CPlayer::getOldWeaponAngle()
 PRREVector& CPlayer::getWeaponAngle()
 {
     return m_vWpnAngle;
+}
+
+std::chrono::time_point<std::chrono::steady_clock>& CPlayer::getTimeDied()
+{
+    return m_timeDied;
+}
+
+bool& CPlayer::getRespawnFlag()
+{
+    return m_bRespawn;
 }
 
 
@@ -812,9 +823,12 @@ void PRooFPSddPGE::Gravity(int fps)
             }
         }
         legacyPlayer.getPos1().SetY(legacyPlayer.getPos1().getY() + legacyPlayer.getGravity());
-        if (legacyPlayer.getPos1().getY() < m_maps.getObjectsMinY() - 5.0f)
+        
+        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsMinY() - 5.0f) )
         {
+            getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
             legacyPlayer.SetHealth(0);
+            HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
         }
     }
 }
@@ -940,6 +954,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
 {
     player.getAttachedObject()->Hide();
     player.getWeapon()->getObject3D().Hide();
+    player.getTimeDied() = std::chrono::steady_clock::now();
 
     if (bMe)
     {
@@ -953,10 +968,42 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     }
 }
 
+void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
+{
+    player.getAttachedObject()->Show();
+    player.getWeapon()->getObject3D().Show();
+    player.getWeapon()->Reset();
+    if (bMe)
+    {
+        m_pObjXHair->Show();
+    }
+}
+
+void PRooFPSddPGE::UpdateRespawnTimers()
+{
+    for (auto& player : m_mapPlayers)
+    {
+        if (player.second.m_legacyPlayer.getHealth() > 0)
+        {
+            continue;
+        }
+
+        const std::chrono::duration<float> timeDiff = std::chrono::steady_clock::now() - player.second.m_legacyPlayer.getTimeDied();
+        if (timeDiff.count() > 3.f)
+        {
+            // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
+            player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
+            player.second.m_legacyPlayer.SetHealth(100);
+            player.second.m_legacyPlayer.getRespawnFlag() = true;
+        }
+    }
+}
+
 void PRooFPSddPGE::SendUserUpdates()
 {
     if (!getNetwork().isServer())
     {
+        // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
         getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
         return;
     }
@@ -979,7 +1026,11 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getAngleY(),
                 legacyPlayer.getWeaponAngle().getY(),
                 legacyPlayer.getWeaponAngle().getZ(),
-                legacyPlayer.getHealth());
+                legacyPlayer.getHealth(),
+                player.second.m_legacyPlayer.getRespawnFlag());
+
+            // we always reset respawn flag here
+            player.second.m_legacyPlayer.getRespawnFlag() = false;
 
             // Note that health is not needed by server since it already has the updated health, but for convenience
             // we put that into MsgUserUpdate and send anyway like all the other stuff.
@@ -1130,6 +1181,7 @@ void PRooFPSddPGE::onGameRunning()
         {
             UpdateWeapons();
             UpdateBullets();
+            UpdateRespawnTimers();
             SendUserUpdates();
         }
 
@@ -1311,7 +1363,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
     const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
-    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100);
+    proofps_dd::MsgUserUpdate::initPkt(newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false);
 
     if (msg.bCurrentClient)
     {
@@ -1398,7 +1450,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY(),
                 it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getY(),
                 it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ(),
-                it.second.m_legacyPlayer.getHealth());
+                it.second.m_legacyPlayer.getHealth(),
+                false);
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
@@ -1621,12 +1674,21 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     //    __func__, msg.m_nHealth, it->second.m_legacyPlayer.getHealth(), it->second.m_legacyPlayer.getOldHealth());
 
     it->second.m_legacyPlayer.SetHealth(msg.m_nHealth);
-    if ((it->second.m_legacyPlayer.getOldHealth() > 0) && (it->second.m_legacyPlayer.getHealth() == 0))
+
+    if (msg.m_bRespawn)
     {
-        // only clients fall here, since server already set oldhealth to 0 in this frame
-        // because it had already set health to 0 in previous frame
-        getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
-        HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
+        getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
+        HandlePlayerRespawned(it->first == m_sUserName, it->second.m_legacyPlayer);
+    }
+    else
+    {
+        if ((it->second.m_legacyPlayer.getOldHealth() > 0) && (it->second.m_legacyPlayer.getHealth() == 0))
+        {
+            // only clients fall here, since server already set oldhealth to 0 in this frame
+            // because it had already set health to 0 in previous frame
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
+            HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
+        }
     }
 }
 

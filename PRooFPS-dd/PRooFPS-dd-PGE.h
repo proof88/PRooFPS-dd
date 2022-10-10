@@ -10,6 +10,8 @@
     ###################################################################################
 */
 
+#include <chrono>
+
 #include "../../../PGE/PGE/PGE.h"
 #include "../../../PGE/PGE/PRRE/include/external/Object3D/PRREObject3DManager.h"
 
@@ -34,6 +36,8 @@ private:
     bool m_bRunning;
     bool m_bAllowJump;
     bool m_bExpectingStartPos;
+    std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
+    bool m_bRespawn;
 
 public:
     CPlayer();
@@ -72,6 +76,8 @@ public:
     void SetWeapon(Weapon* wpn);
     PRREVector& getOldWeaponAngle();
     PRREVector& getWeaponAngle();
+    std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
+    bool& getRespawnFlag();
 };
 
 struct Player_t
@@ -144,6 +150,8 @@ protected:
     void UpdateBullets();
     void SendUserUpdates();
     void HandlePlayerDied(bool bMe, CPlayer& player);
+    void HandlePlayerRespawned(bool bMe, CPlayer& player);
+    void UpdateRespawnTimers();
 
 private:
 
