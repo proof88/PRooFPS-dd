@@ -39,6 +39,7 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
     bool m_bRespawn;
     int m_nFrags, m_nOldFrags;
+    int m_nDeaths, m_nOldDeaths;
 
 public:
     CPlayer();
@@ -82,6 +83,9 @@ public:
     int& getFrags();
     const int& getFrags() const;
     int& getOldFrags();
+    int& getDeaths();
+    const int& getDeaths() const;
+    int& getOldDeaths();
 };
 
 struct Player_t

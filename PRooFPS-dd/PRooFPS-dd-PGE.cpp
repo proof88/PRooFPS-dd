@@ -43,7 +43,9 @@ CPlayer::CPlayer() :
   m_bExpectingStartPos(true),
   m_bRespawn(false),
   m_nFrags(0),
-  m_nOldFrags(0)
+  m_nOldFrags(0),
+  m_nDeaths(0),
+  m_nOldDeaths(0)
 {
 }
 
@@ -262,6 +264,21 @@ const int& CPlayer::getFrags() const
 int& CPlayer::getOldFrags()
 {
     return m_nOldFrags;
+}
+
+int& CPlayer::getDeaths()
+{
+    return m_nDeaths;
+}
+
+const int& CPlayer::getDeaths() const
+{
+    return m_nDeaths;
+}
+
+int& CPlayer::getOldDeaths()
+{
+    return m_nOldDeaths;
 }
 
 
@@ -990,11 +1007,16 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     {
         getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         m_pObjXHair->Hide();
-        // TODO: start timer for self to respwan
     }
     else
     {
         getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
+    }
+
+    if (getNetwork().isServer())
+    {
+        player.getDeaths()++;
+        getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, player.getDeaths());
     }
 }
 
@@ -1045,7 +1067,8 @@ void PRooFPSddPGE::SendUserUpdates()
         if ((legacyPlayer.getPos1() != legacyPlayer.getOPos1()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
             || (legacyPlayer.getWeaponAngle() != legacyPlayer.getOldWeaponAngle())
             || (legacyPlayer.getHealth() != legacyPlayer.getOldHealth())
-            || (legacyPlayer.getFrags() != legacyPlayer.getOldFrags()))
+            || (legacyPlayer.getFrags() != legacyPlayer.getOldFrags())
+            || (legacyPlayer.getDeaths() != legacyPlayer.getOldDeaths()))
         {
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(
@@ -1059,7 +1082,8 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getWeaponAngle().getZ(),
                 legacyPlayer.getHealth(),
                 legacyPlayer.getRespawnFlag(),
-                legacyPlayer.getFrags());
+                legacyPlayer.getFrags(),
+                legacyPlayer.getDeaths());
 
             // we always reset respawn flag here
             player.second.m_legacyPlayer.getRespawnFlag() = false;
@@ -1410,7 +1434,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
     const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
     proofps_dd::MsgUserUpdate::initPkt(
-        newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0);
+        newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
     if (msg.bCurrentClient)
     {
@@ -1499,7 +1523,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ(),
                 it.second.m_legacyPlayer.getHealth(),
                 false,
-                it.second.m_legacyPlayer.getFrags());
+                it.second.m_legacyPlayer.getFrags(),
+                it.second.m_legacyPlayer.getDeaths());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
     }
