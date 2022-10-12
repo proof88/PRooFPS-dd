@@ -38,7 +38,7 @@ private:
     bool m_bExpectingStartPos;
     std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
     bool m_bRespawn;
-    int m_nFrags;
+    int m_nFrags, m_nOldFrags;
 
 public:
     CPlayer();
@@ -80,6 +80,8 @@ public:
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
     bool& getRespawnFlag();
     int& getFrags();
+    const int& getFrags() const;
+    int& getOldFrags();
 };
 
 struct Player_t
