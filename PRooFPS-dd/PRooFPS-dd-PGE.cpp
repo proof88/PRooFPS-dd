@@ -290,6 +290,17 @@ PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
     return &pgeInstance;
 }
 
+CConsole& PRooFPSddPGE::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
+
+const char* PRooFPSddPGE::getLoggerModuleName()
+{
+    return "PRooFPSddPGE";
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -320,17 +331,6 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
 PRooFPSddPGE::~PRooFPSddPGE()
 {
 
-}
-
-CConsole& PRooFPSddPGE::getConsole() const
-{
-    return CConsole::getConsoleInstance(getLoggerModuleName());
-}
-
-
-const char* PRooFPSddPGE::getLoggerModuleName()
-{
-    return "PRooFPSddPGE";
 }
 
 /**
@@ -531,6 +531,10 @@ void PRooFPSddPGE::onGameInitialized()
 //		_root.bulletCount++;
 //		this.ammo--;
 //	}
+
+
+// ############################### PRIVATE ###############################
+
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 {
@@ -1363,10 +1367,6 @@ void PRooFPSddPGE::onGameDestroying()
     getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
 }
-
-
-// ############################### PRIVATE ###############################
-
 
 void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
 {
