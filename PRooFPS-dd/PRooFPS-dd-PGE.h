@@ -38,6 +38,7 @@ private:
     bool m_bExpectingStartPos;
     std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
     bool m_bRespawn;
+    int m_nFrags;
 
 public:
     CPlayer();
@@ -78,6 +79,7 @@ public:
     PRREVector& getWeaponAngle();
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
     bool& getRespawnFlag();
+    int& getFrags();
 };
 
 struct Player_t
@@ -176,6 +178,7 @@ private:
     // ---------------------------------------------------------------------------
 
     void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
+    std::map<std::string, Player_t>::iterator getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide);
     void WritePlayerList();
     void HandleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg);
     void HandleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);

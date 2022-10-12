@@ -27,21 +27,23 @@ static const std::string GAME_VERSION = "0.1.0.0 Alpha";
 // ############################### PUBLIC ################################
 
 
-CPlayer::CPlayer()
+CPlayer::CPlayer() :
+  m_nHealth(100),
+  m_nOldHealth(100),
+  m_fPlayerAngleY(0.f),
+  m_fOldPlayerAngleY(0.f),
+  m_pObj(PGENULL),
+  m_pWpn(NULL),
+  pGFX(NULL),
+  m_fGravity(0.f),
+  m_bJumping(false),
+  b_mCanFall(true),
+  m_bRunning(false),
+  m_bAllowJump(false),
+  m_bExpectingStartPos(true),
+  m_bRespawn(false),
+  m_nFrags(0)
 {
-  m_nHealth = 100;
-  m_pObj = PGENULL;
-  m_pWpn = NULL;
-  pGFX = NULL;
-  m_fGravity = 0.0;
-  m_bJumping = false;
-  b_mCanFall = true;
-  m_bRunning = false;
-  m_bAllowJump = false;
-  m_bExpectingStartPos = true;
-  m_fPlayerAngleY = 0.f;
-  m_fOldPlayerAngleY = 0.f;
-  m_bRespawn = false;
 }
 
 void CPlayer::ShutDown()
@@ -246,6 +248,11 @@ bool& CPlayer::getRespawnFlag()
     return m_bRespawn;
 }
 
+int& CPlayer::getFrags()
+{
+    return m_nFrags;
+}
+
 
 PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
@@ -262,22 +269,22 @@ PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 */
 PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
-    m_maps(getPRRE())
+    m_maps(getPRRE()),
+    m_fps(0),
+    m_fps_counter(0),
+    m_fps_lastmeasure(0),
+    m_fps_ms(0),
+    m_pObjXHair(NULL),
+    m_bSpaceReleased(true),
+    m_bBackSpaceReleased(true),
+    m_bCtrlReleased(true),
+    m_bShiftReleased(true),
+    m_enterreleased(true),
+    m_bWon(false),
+    m_fCameraMinY(0.0f),
+    m_bShowGuiDemo(false)
 {
-    m_fps = 0;
-    m_fps_counter = 0;
-    m_fps_lastmeasure = 0;
-    m_fps_ms = 0;
-
-    m_bSpaceReleased = true;
-    m_bBackSpaceReleased = true;
-    m_bCtrlReleased = true;
-    m_bShiftReleased = true;
-    m_enterreleased = true;
-
-    m_bWon = false;
-    m_fCameraMinY = 0.0f;
-    m_bShowGuiDemo = false;
+    
 }
 
 PRooFPSddPGE::~PRooFPSddPGE()
@@ -1280,6 +1287,20 @@ void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup
     } while (found);
 }
 
+std::map<std::string, Player_t>::iterator PRooFPSddPGE::getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide)
+{
+    auto playerIt = m_mapPlayers.begin();
+    while (playerIt != m_mapPlayers.end())
+    {
+        if (playerIt->second.m_connHandleServerSide == connHandleServerSide)
+        {
+            break;
+        }
+        playerIt++;
+    }
+    return playerIt;
+}
+
 void PRooFPSddPGE::WritePlayerList()
 {
     getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
@@ -1459,16 +1480,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
 void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
 {
-    auto playerIt = m_mapPlayers.begin();
-    while (playerIt != m_mapPlayers.end())
-    {
-        if (playerIt->second.m_connHandleServerSide == connHandleServerSide)
-        {
-            break;
-        }
-        playerIt++;
-    }
-
+    const auto playerIt = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -1517,16 +1529,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         return;
     }
 
-    auto it = m_mapPlayers.begin();
-    while (it != m_mapPlayers.end())
-    {
-        if (it->second.m_connHandleServerSide == connHandleServerSide)
-        {
-            break;
-        }
-        it++;
-    }
-
+    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -1633,16 +1636,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
 void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
 {
-    auto it = m_mapPlayers.begin();
-    while (it != m_mapPlayers.end())
-    {
-        if (it->second.m_connHandleServerSide == connHandleServerSide)
-        {
-            break;
-        }
-        it++;
-    }
-
+    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -1752,3 +1746,4 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
 
     pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }
+
