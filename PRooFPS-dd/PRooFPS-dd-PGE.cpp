@@ -12,7 +12,9 @@
 
 #include "PRooFPS-dd-PGE.h"
 
+#include <algorithm>
 #include <cassert>
+#include <functional>
 
 #include "../../../PGE/PGE/PRRE/include/external/PRREuiManager.h"
 #include "../../../PGE/PGE/PRRE/include/external/Display/PRREWindow.h"
@@ -539,6 +541,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
         getPRRE().getWindow().Close();
     }
 
+    if (keybd.isKeyPressed(VK_TAB))
+    {
+        ShowFragTable();
+    }
+
     if (keybd.isKeyPressed(VK_BACK))
     {
         if (m_bBackSpaceReleased)
@@ -878,6 +885,48 @@ void PRooFPSddPGE::FrameLimiter(int fps_ms)
         Sleep(1);
     }
   }
+}
+
+void PRooFPSddPGE::ShowFragTable() const
+{
+    const int nXPosPlayerName = 20;
+    const int nXPosFrags = 200;
+    const int nXPosDeaths = 250;
+    const int nYPosStart = getPRRE().getWindow().getClientHeight() - 20;
+
+    getPRRE().getUImanager().text("Player Name", nXPosPlayerName, nYPosStart);
+    getPRRE().getUImanager().text("Frags", nXPosFrags, nYPosStart);
+    getPRRE().getUImanager().text("Deaths", nXPosDeaths, nYPosStart);
+    getPRRE().getUImanager().text("========================================================",
+        20, nYPosStart - getPRRE().getUImanager().getDefaultFontSize());
+
+    struct FragTableRow
+    {
+        std::string m_sName;
+        int m_nFrags;
+        int m_nDeaths;
+    };
+    std::vector<FragTableRow> mapPlayersOrderedByFrags;
+    for (const auto& player : m_mapPlayers)
+    {
+        const FragTableRow fragTableRow = { player.first, player.second.m_legacyPlayer.getFrags(), player.second.m_legacyPlayer.getDeaths() };
+        mapPlayersOrderedByFrags.push_back(fragTableRow);
+    }
+
+    std::sort(
+        mapPlayersOrderedByFrags.begin(), mapPlayersOrderedByFrags.end(), [](const FragTableRow& a, const FragTableRow& b)
+        { return (a.m_nFrags > b.m_nFrags) || ((a.m_nFrags == b.m_nFrags) && (a.m_nDeaths < b.m_nDeaths)); }
+    );
+
+    int i = 0;
+    for (const auto& player : mapPlayersOrderedByFrags)
+    {
+        i++;
+        const int nThisRowY = nYPosStart - (i + 1) * getPRRE().getUImanager().getDefaultFontSize();
+        getPRRE().getUImanager().text(player.m_sName, nXPosPlayerName, nThisRowY);
+        getPRRE().getUImanager().text(std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
+        getPRRE().getUImanager().text(std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+    }
 }
 
 void PRooFPSddPGE::UpdateBullets()
@@ -1718,6 +1767,9 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, it->second.m_legacyPlayer.getHealth(), it->second.m_legacyPlayer.getOldHealth());
+
+    it->second.m_legacyPlayer.getFrags() = msg.m_nFrags;
+    it->second.m_legacyPlayer.getDeaths() = msg.m_nDeaths;
 
     it->second.m_legacyPlayer.SetHealth(msg.m_nHealth);
 
