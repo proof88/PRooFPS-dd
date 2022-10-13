@@ -870,7 +870,7 @@ void PRooFPSddPGE::Gravity(int fps)
         }
         legacyPlayer.getPos1().SetY(legacyPlayer.getPos1().getY() + legacyPlayer.getGravity());
         
-        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsMinY() - 5.0f) )
+        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsMin().getY() - 5.0f))
         {
             getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
             legacyPlayer.SetHealth(0);

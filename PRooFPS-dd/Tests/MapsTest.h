@@ -86,10 +86,21 @@ private:
     bool test_initially_empty()
     {
         Maps maps(*engine);
-        bool b = assertFalse(maps.loaded(), "loaded 1") & assertEquals(0u, maps.width(), "width 1") & assertEquals(0u, maps.height(), "height 1") & assertTrue(maps.getVars().empty(), "getVars 1");
+        bool b = assertFalse(maps.loaded(), "loaded 1") &
+            assertEquals(0u, maps.width(), "width 1") &
+            assertEquals(0u, maps.height(), "height 1") &
+            assertTrue(maps.getVars().empty(), "getVars 1") &
+            assertEquals(PRREVector(0,0,0), maps.getObjectsMin(), "objects Min 1") &
+            assertEquals(PRREVector(0,0,0), maps.getObjectsMax(), "objects Max 1");
+        
         b &= assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 2") & assertEquals(0u, maps.width(), "width 2") & assertEquals(0u, maps.height(), "height 2") & assertTrue(maps.getVars().empty(), "getVars 2") &
-            assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+        b &= assertFalse(maps.loaded(), "loaded 2") &
+            assertEquals(0u, maps.width(), "width 2") &
+            assertEquals(0u, maps.height(), "height 2") &
+            assertTrue(maps.getVars().empty(), "getVars 2") &
+            assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints") &
+            assertEquals(PRREVector(0, 0, 0), maps.getObjectsMin(), "objects Min 2") &
+            assertEquals(PRREVector(0, 0, 0), maps.getObjectsMax(), "objects Max 2");
         return b;
     }
 
@@ -101,6 +112,8 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMax(), "objects Max");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
@@ -114,6 +127,8 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMax(), "objects Max");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
@@ -127,6 +142,8 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMax(), "objects Max");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
         return b;
@@ -137,10 +154,12 @@ private:
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
-        b &= assertTrue(maps.loaded(), "loaded 2");
-        b &= assertEquals(MAP_TEST_W, maps.width(), "width 2");
-        b &= assertEquals(MAP_TEST_H, maps.height(), "height 2");
-        b &= assertEquals(2u, maps.getVars().size(), "getVars 2");
+        b &= assertTrue(maps.loaded(), "loade");
+        b &= assertEquals(MAP_TEST_W, maps.width(), "width");
+        b &= assertEquals(MAP_TEST_H, maps.height(), "height");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H)/2, -1), maps.getObjectsMin(), "objects Min");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H/2-1, 0), maps.getObjectsMax(), "objects Max");
+        b &= assertEquals(2u, maps.getVars().size(), "getVars");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2a");
@@ -159,6 +178,8 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 1");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsMin(), "objects Min 1");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getObjectsMax(), "objects Max 1");
         b &= assertEquals(2u, maps.getVars().size(), "getVars 1");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
         try {
@@ -171,6 +192,8 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMin(), "objects Min 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsMax(), "objects Max 2");
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints 2");
 
@@ -178,6 +201,8 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsMin(), "objects Min 3");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getObjectsMax(), "objects Max 3");
         b &= assertEquals(2u, maps.getVars().size(), "getVars 3");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
         try {

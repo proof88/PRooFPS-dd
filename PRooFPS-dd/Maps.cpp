@@ -27,7 +27,6 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     m_objects_h  = 0;
     m_objects    = NULL;
     m_texRed     = PGENULL;
-    m_objectsMinY = 0.0f;
     m_width = 0;
     m_height = 0;
 
@@ -132,13 +131,38 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    m_objectsMinY = m_objects[0]->getPosVec().getY();
+    m_posMin = m_objects[0]->getPosVec();
+    m_posMax = m_objects[0]->getPosVec();
     for (int i = 0; i < m_objects_h; i++)
     {
         if ( m_objects[i] != PGENULL )
         {
-            if ( m_objects[i]->getPosVec().getY() < m_objectsMinY )
-                m_objectsMinY = m_objects[i]->getPosVec().getY();
+            if (m_objects[i]->getPosVec().getX() < m_posMin.getX())
+            {
+                m_posMin.SetX(m_objects[i]->getPosVec().getX());
+            }
+            else if (m_objects[i]->getPosVec().getX() > m_posMax.getX())
+            {
+                m_posMax.SetX(m_objects[i]->getPosVec().getX());
+            }
+
+            if (m_objects[i]->getPosVec().getY() < m_posMin.getY())
+            {
+                m_posMin.SetY(m_objects[i]->getPosVec().getY());
+            }
+            else if (m_objects[i]->getPosVec().getY() > m_posMax.getY())
+            {
+                m_posMax.SetY(m_objects[i]->getPosVec().getY());
+            }
+
+            if (m_objects[i]->getPosVec().getZ() < m_posMin.getZ())
+            {
+                m_posMin.SetZ(m_objects[i]->getPosVec().getZ());
+            }
+            else if (m_objects[i]->getPosVec().getZ() > m_posMax.getZ())
+            {
+                m_posMax.SetZ(m_objects[i]->getPosVec().getZ());
+            }
         }
     }
 
@@ -163,6 +187,8 @@ void Maps::unload()
     }
     m_width = 0;
     m_height = 0;
+    m_posMin.SetZero();
+    m_posMax.SetZero();
     m_vars.clear();
     m_spawnpoints.clear();
     getConsole().OOOLn("Maps::unload() done!");
@@ -238,9 +264,14 @@ const PRREVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
-float Maps::getObjectsMinY() const
+const PRREVector& Maps::getObjectsMin() const
 {
-    return m_objectsMinY;
+    return m_posMin;
+}
+
+const PRREVector& Maps::getObjectsMax() const
+{
+    return m_posMax;
 }
 
 std::vector<PRREVector>& Maps::getCandleLights()
