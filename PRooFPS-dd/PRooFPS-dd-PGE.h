@@ -172,8 +172,12 @@ private:
     void CameraMovement(int fps);
     void Gravity(int fps);
     bool Colliding(const PRREObject3D& a, const PRREObject3D& b);
-    bool Colliding2(float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
+    bool Colliding2(
+        float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
         float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz);
+    bool Colliding3(
+        const PRREVector& vecPosMin, const PRREVector& vecPosMax,
+        const PRREVector& vecObjPos, const PRREVector& vecObjSize);
     void Collision(bool& won);
     void FrameLimiter(int fps_ms);
     void ShowFragTable() const;

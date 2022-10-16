@@ -165,6 +165,8 @@ bool Maps::load(const char* fname)
             }
         }
     }
+    m_min.Set(m_posMin.getX() - GAME_BLOCK_SIZE_X / 2.f, m_posMin.getY() - GAME_BLOCK_SIZE_Y / 2.f, m_posMin.getZ() - GAME_BLOCK_SIZE_Z / 2.f);
+    m_max.Set(m_posMax.getX() + GAME_BLOCK_SIZE_X / 2.f, m_posMax.getY() + GAME_BLOCK_SIZE_Y / 2.f, m_posMax.getZ() + GAME_BLOCK_SIZE_Z / 2.f);
 
     getConsole().SOLnOO("Map loaded with width %d and height %d!", m_width, m_height);
     return true;
@@ -189,6 +191,8 @@ void Maps::unload()
     m_height = 0;
     m_posMin.SetZero();
     m_posMax.SetZero();
+    m_min.SetZero();
+    m_max.SetZero();
     m_vars.clear();
     m_spawnpoints.clear();
     getConsole().OOOLn("Maps::unload() done!");
@@ -264,14 +268,24 @@ const PRREVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
-const PRREVector& Maps::getObjectsMin() const
+const PRREVector& Maps::getObjectsPosMin() const
 {
     return m_posMin;
 }
 
-const PRREVector& Maps::getObjectsMax() const
+const PRREVector& Maps::getObjectsPosMax() const
 {
     return m_posMax;
+}
+
+const PRREVector& Maps::getObjectsVertexPosMin() const
+{
+    return m_min;
+}
+
+const PRREVector& Maps::getObjectsVertexPosMax() const
+{
+    return m_max;
 }
 
 std::vector<PRREVector>& Maps::getCandleLights()

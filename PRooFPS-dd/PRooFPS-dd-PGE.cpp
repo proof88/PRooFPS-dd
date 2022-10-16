@@ -684,63 +684,67 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
 
 bool PRooFPSddPGE::Colliding(const PRREObject3D& a, const PRREObject3D& b)
 {
-  if (
-       ( 
-         (a.getPosVec().getX() - a.getSizeVec().getX()/2 <= b.getPosVec().getX() + b.getSizeVec().getX()/2)
-           &&
-         (a.getPosVec().getX() + a.getSizeVec().getX()/2 >= b.getPosVec().getX() - b.getSizeVec().getX()/2)
-       )
-         &&
-       ( 
-         (a.getPosVec().getY() - a.getSizeVec().getY()/2 <= b.getPosVec().getY() + b.getSizeVec().getY()/2)
-           &&
-         (a.getPosVec().getY() + a.getSizeVec().getY()/2 >= b.getPosVec().getY() - b.getSizeVec().getY()/2)
-       )
-         &&
-       ( 
-         (a.getPosVec().getZ() - a.getSizeVec().getZ()/2 <= b.getPosVec().getZ() + b.getSizeVec().getZ()/2)
-           &&
-         (a.getPosVec().getZ() + a.getSizeVec().getZ()/2 >= b.getPosVec().getZ() - b.getSizeVec().getZ()/2)
-       )
-     )
-     {
-       return true;
-     }
-    else
-     {
-       return false; 
-     }
+    return Colliding2(
+        a.getPosVec().getX(),  a.getPosVec().getY(),  a.getPosVec().getZ(),
+        a.getSizeVec().getX(), a.getSizeVec().getY(), a.getSizeVec().getZ(),
+        b.getPosVec().getX(),  b.getPosVec().getY(),  b.getPosVec().getZ(),
+        b.getSizeVec().getX(), b.getSizeVec().getY(), b.getSizeVec().getZ()
+    );
 }       
 
-bool PRooFPSddPGE::Colliding2( float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
-                      float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
+bool PRooFPSddPGE::Colliding2(
+    float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
+    float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
 {
-  if (
-       ( 
-         (o1px - o1sx/2 <= o2px + o2sx/2)
-           &&
-         (o1px + o1sx/2 >= o2px - o2sx/2)
-       )
-         &&
-       ( 
-         (o1py - o1sy/2 <= o2py + o2sy/2)
-           &&
-         (o1py + o1sy/2 >= o2py - o2sy/2)
-       )
-         &&
-       ( 
-         (o1pz - o1sz/2 <= o2pz + o2sz/2)
-           &&
-         (o1pz + o1sz/2 >= o2pz - o2sz/2)
-       )
-     )
-     {
-       return true;
-     }
+    if (
+        ( 
+            (o1px - o1sx/2 <= o2px + o2sx/2)
+            &&
+            (o1px + o1sx/2 >= o2px - o2sx/2)
+        )
+        &&
+        ( 
+            (o1py - o1sy/2 <= o2py + o2sy/2)
+            &&
+            (o1py + o1sy/2 >= o2py - o2sy/2)
+        )
+        &&
+        ( 
+            (o1pz - o1sz/2 <= o2pz + o2sz/2)
+            &&
+            (o1pz + o1sz/2 >= o2pz - o2sz/2)
+        )
+    )
+    {
+      return true;
+    }
     else
-     {
-       return false; 
-     }              
+    {
+      return false; 
+    }              
+}
+
+bool PRooFPSddPGE::Colliding3(
+    const PRREVector& vecPosMin, const PRREVector& vecPosMax,
+    const PRREVector& vecObjPos, const PRREVector& vecObjSize)
+{
+    const PRREVector vecSize(
+        vecPosMax.getX() - vecPosMin.getX(),
+        vecPosMax.getY() - vecPosMin.getY(),
+        vecPosMax.getZ() - vecPosMin.getZ()
+    );
+    const PRREVector vecPos(
+        vecPosMin.getX() + vecSize.getX() / 2.f,
+        vecPosMin.getY() + vecSize.getY() / 2.f,
+        vecPosMin.getZ() + vecSize.getZ() / 2.f
+    );
+
+    return Colliding2(
+        vecPos.getX(),  vecPos.getY(),  vecPos.getZ(),
+        vecSize.getX(), vecSize.getY(), vecSize.getZ(),
+        vecObjPos.getX(),  vecObjPos.getY(),  vecObjPos.getZ(),
+        vecObjSize.getX(), vecObjSize.getY(), vecObjSize.getZ()
+    );
 }
 
 void PRooFPSddPGE::Collision(bool& /*won*/)
@@ -870,7 +874,7 @@ void PRooFPSddPGE::Gravity(int fps)
         }
         legacyPlayer.getPos1().SetY(legacyPlayer.getPos1().getY() + legacyPlayer.getGravity());
         
-        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsMin().getY() - 5.0f))
+        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsPosMin().getY() - 5.0f))
         {
             getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
             legacyPlayer.SetHealth(0);
@@ -995,6 +999,24 @@ void PRooFPSddPGE::UpdateBullets()
                     HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
                 }
                 break; // we can stop since 1 bullet can touch 1 player only at a time
+            }
+        }
+
+        if (!bDeleteBullet)
+        {
+            // check if bullet is out of map bounds
+            // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
+            const PRREVector vRelaxedMapMinBounds(
+                m_maps.getObjectsVertexPosMin().getX() - GAME_BLOCK_SIZE_X*4,
+                m_maps.getObjectsVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
+                m_maps.getObjectsVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+            const PRREVector vRelaxedMapMaxBounds(
+                m_maps.getObjectsVertexPosMax().getX() + GAME_BLOCK_SIZE_X*4,
+                m_maps.getObjectsVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
+                m_maps.getObjectsVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
+            if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
+            {
+                bDeleteBullet = true;
             }
         }
 

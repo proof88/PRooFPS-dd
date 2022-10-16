@@ -41,8 +41,10 @@ public:
     void updateVisibilitiesForRenderer();
     const std::set<PRREVector>& getSpawnpoints() const;
     const PRREVector& getRandomSpawnpoint() const;
-    const PRREVector& getObjectsMin() const;
-    const PRREVector& getObjectsMax() const;
+    const PRREVector& getObjectsPosMin() const;
+    const PRREVector& getObjectsPosMax() const;
+    const PRREVector& getObjectsVertexPosMin() const;
+    const PRREVector& getObjectsVertexPosMax() const;
     std::vector<PRREVector>& getCandleLights();
     const std::map<std::string, PGEcfgVariable>& getVars() const;
 
@@ -68,6 +70,7 @@ private:
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
     std::set<PRREVector> m_spawnpoints;
+    PRREVector m_min, m_max;
     PRREVector m_posMin, m_posMax;
     unsigned int m_width, m_height;
 
