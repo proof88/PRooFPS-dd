@@ -1,16 +1,11 @@
 // TODO: this is just temporal file until all consts go to their final location
 
-static const TPRREfloat RENDERER_MIN_X = 7.0f;
-static const TPRREfloat RENDERER_MAX_X = 7.0f; 
 static const int     GAME_FPS_INTERVAL = 200;
 static const int     GAME_MAXFPS = 100;
 static const TPRREfloat GAME_BLOCK_SIZE_X = 1.0f;
 static const TPRREfloat GAME_BLOCK_SIZE_Y = 1.0f;
 static const TPRREfloat GAME_BLOCK_SIZE_Z = 1.0f;
-static const TPRREfloat GAME_BUILD_START = 4.0f;
 static const TPRREfloat GAME_CAM_Z = -5.0f;
-static const TPRREfloat GAME_CAM_MIN_Y = -1.0f;
-static const TPRREfloat GAME_CAM_MAX_Y = 0.3f;
 static const TPRREfloat GAME_CAM_SPEED = 1500.0f;
 static const TPRREfloat GAME_PLAYER_W = 0.95f;
 static const TPRREfloat GAME_PLAYER_H = 1.88f;
@@ -23,19 +18,3 @@ static const TPRREfloat GAME_GRAVITY_MIN = -0.3f;
 static const TPRREfloat GAME_GRAVITY_MAX = 0.4f;
 static const TPRREfloat GAME_FALLING_SPEED = 0.8f;
 static const TPRREfloat GAME_JUMPING_SPEED = 2.0f;
-static const unsigned int GAME_SMOKEMANAGER_BASIC_LIFETIME = 2000;
-static const unsigned int GAME_SMOKEMANAGER_BASIC_INTERVAL = 200;
-static const unsigned int GAME_SMOKEMANAGER_BIRTH_LIFETIME = 700;
-static const unsigned int GAME_SMOKEMANAGER_BIRTH_INTERVAL = 200;
-static const TPRREfloat GAME_SMOKEMANAGER_BASIC_SIZE = 0.3f;
-static const TPRREfloat GAME_SMOKEMANAGER_BASIC_POS_Z = -0.7f;
-static const TPRREfloat GAME_SMOKES_SPEED = 1.0f;
-static const TPRREfloat GAME_BULLET_SIZE = 0.1f;
-static const TPRREfloat GAME_BULLET_SPEED = 5.0f;
-static const TPRREfloat GAME_ENEMY_SIZE = 0.5f;
-static const TPRREfloat GAME_ENEMY_SHOOT_INTERVAL = 1000;
-static const int GAME_BULLET_DMG = 25;
-static const bool GAME_MAP_OPTIMIZATION = true;
-static const char GAME_FAILED_TTL[] = ":/";
-static const char GAME_FAILED_TXT[] = "Nem sikerült idõben a pálya végéhez érni. :(\nPróbáld meg újra! :)";
-static const char GAME_DEATH_TXT[] = "Az életerõd nullára csökkent. :(\nPróbálkozz újra! :)";

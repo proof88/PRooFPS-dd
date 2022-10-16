@@ -218,33 +218,33 @@ unsigned int Maps::height() const
     return m_height;
 }
 
-void Maps::updateVisibilitiesForRenderer()
-{
-    const PRREVector campos = m_gfx.getCamera().getPosVec();
-
-    for (int i = 0; i < m_objects_h; i++)
-    {
-        PRREObject3D* obj = m_objects[i];
-        if ( obj != PGENULL )
-        {
-            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX()-RENDERER_MIN_X )
-            {
-                obj->SetRenderingAllowed(false);
-            }
-            else
-            {
-                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX()+RENDERER_MAX_X )
-                {
-                    obj->SetRenderingAllowed(false);
-                }
-                else
-                {
-                    obj->SetRenderingAllowed(true);
-                }
-            }
-        }
-    }
-}
+//void Maps::updateVisibilitiesForRenderer()
+//{
+//    const PRREVector campos = m_gfx.getCamera().getPosVec();
+//
+//    for (int i = 0; i < m_objects_h; i++)
+//    {
+//        PRREObject3D* obj = m_objects[i];
+//        if ( obj != PGENULL )
+//        {
+//            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX()-RENDERER_MIN_X )
+//            {
+//                obj->SetRenderingAllowed(false);
+//            }
+//            else
+//            {
+//                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX()+RENDERER_MAX_X )
+//                {
+//                    obj->SetRenderingAllowed(false);
+//                }
+//                else
+//                {
+//                    obj->SetRenderingAllowed(true);
+//                }
+//            }
+//        }
+//    }
+//}
 
 const std::set<PRREVector>& Maps::getSpawnpoints() const
 {
