@@ -16,6 +16,7 @@
 #include "../../../PGE/PGE/PRRE/include/external/Object3D/PRREObject3DManager.h"
 
 #include "Consts.h"
+#include "GameMode.h"
 #include "Maps.h"
 #include "PRooFPS-dd-packet.h"
 
@@ -121,10 +122,14 @@ public:
 protected:
 
     PRooFPSddPGE() :
+        m_gameMode(nullptr),
+        m_deathMatchMode(nullptr),
         m_maps(getPRRE())
     {}
 
     PRooFPSddPGE(const PRooFPSddPGE&) :
+        m_gameMode(nullptr),
+        m_deathMatchMode(nullptr),
         m_maps(getPRRE())
     {}
 
@@ -147,6 +152,8 @@ protected:
 
 private:
 
+    proofps_dd::GameMode* m_gameMode;
+    proofps_dd::DeathMatchMode* m_deathMatchMode;
     Maps m_maps;
 
     int m_fps, m_fps_counter;                 /* fps méréséhez segédváltozók */
@@ -187,6 +194,7 @@ private:
     void HandlePlayerDied(bool bMe, CPlayer& player);
     void HandlePlayerRespawned(bool bMe, CPlayer& player);
     void UpdateRespawnTimers();
+    void UpdateGameMode();
     void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
     std::map<std::string, Player_t>::iterator getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide);
     void WritePlayerList();

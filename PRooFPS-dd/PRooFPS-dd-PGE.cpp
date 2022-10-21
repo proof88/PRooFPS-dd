@@ -21,9 +21,6 @@
 #include "../../../PGE/PGE/PRRE/include/external/PRRECamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
-#include "GameMode.h"
-
-
 static const std::string GAME_NAME    = "PRooFPS-dd";
 static const std::string GAME_VERSION = "0.1.0.0 Alpha";
 
@@ -384,6 +381,12 @@ void PRooFPSddPGE::onGameInitialized()
     getPRRE().getCamera().SetFarPlane(100.0f);
     getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
     getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
+
+    m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
+    assert(m_gameMode);
+
+    m_deathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_gameMode);
+    assert(m_deathMatchMode);
 
     m_maps.initialize();
     const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
@@ -910,26 +913,8 @@ void PRooFPSddPGE::ShowFragTable() const
     getPRRE().getUImanager().text("========================================================",
         20, nYPosStart - getPRRE().getUImanager().getDefaultFontSize());
 
-    struct FragTableRow
-    {
-        std::string m_sName;
-        int m_nFrags;
-        int m_nDeaths;
-    };
-    std::vector<FragTableRow> mapPlayersOrderedByFrags;
-    for (const auto& player : m_mapPlayers)
-    {
-        const FragTableRow fragTableRow = { player.first, player.second.m_legacyPlayer.getFrags(), player.second.m_legacyPlayer.getDeaths() };
-        mapPlayersOrderedByFrags.push_back(fragTableRow);
-    }
-
-    std::sort(
-        mapPlayersOrderedByFrags.begin(), mapPlayersOrderedByFrags.end(), [](const FragTableRow& a, const FragTableRow& b)
-        { return (a.m_nFrags > b.m_nFrags) || ((a.m_nFrags == b.m_nFrags) && (a.m_nDeaths < b.m_nDeaths)); }
-    );
-
     int i = 0;
-    for (const auto& player : mapPlayersOrderedByFrags)
+    for (const auto& player : m_deathMatchMode->getPlayerData())
     {
         i++;
         const int nThisRowY = nYPosStart - (i + 1) * getPRRE().getUImanager().getDefaultFontSize();
@@ -1128,6 +1113,22 @@ void PRooFPSddPGE::UpdateRespawnTimers()
     }
 }
 
+void PRooFPSddPGE::UpdateGameMode()
+{
+    std::vector<proofps_dd::FragTableRow> players;
+    for (const auto& player : m_mapPlayers)
+    {
+        const proofps_dd::FragTableRow fragTableRow = { player.first, player.second.m_legacyPlayer.getFrags(), player.second.m_legacyPlayer.getDeaths() };
+        players.push_back(fragTableRow);
+    }
+    m_deathMatchMode->UpdatePlayerData(players);
+
+    if (m_deathMatchMode->checkWinningConditions())
+    {
+        // TODO ...
+    }
+}
+
 void PRooFPSddPGE::SendUserUpdates()
 {
     if (!getNetwork().isServer())
@@ -1317,6 +1318,8 @@ void PRooFPSddPGE::onGameRunning()
             UpdateRespawnTimers();
             SendUserUpdates();
         }
+
+        UpdateGameMode();
 
         //map.UpdateVisibilitiesForRenderer();
     }

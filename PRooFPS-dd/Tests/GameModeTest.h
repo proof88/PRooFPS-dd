@@ -37,6 +37,8 @@ protected:
         AddSubTest("test_reset_updates_reset_time", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_reset_time);
         AddSubTest("test_deathmatch_time_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
+        AddSubTest("test_deathmatch_update_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_players);
+        AddSubTest("test_deathmatch_reset", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_reset);
         AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
         AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
         AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
@@ -95,6 +97,7 @@ private:
         b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch), "tdm null");
         b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamRoundGame), "trg null");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
+        b &= assertTrue(dm->getPlayerData().empty(), "playerdata");
 
         return b;
     }
@@ -138,6 +141,72 @@ private:
         return b;
     }
 
+    bool test_deathmatch_update_players()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        const std::vector<proofps_dd::FragTableRow> players = {
+            { "Adam", 10, 0 },
+            { "Apple", 5, 2 },
+            { "Joe", 8, 2 },
+            { "Banana", 8, 0 }
+        };
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            { "Adam", 10, 0 },
+            { "Banana", 8, 0 },
+            { "Joe", 8, 2 },
+            { "Apple", 5, 2 }
+        };
+
+        dm->UpdatePlayerData(players);
+
+        bool b = assertEquals(players.size(), dm->getPlayerData().size(), "size");
+        if (b)
+        {
+            auto itPlayerData = dm->getPlayerData().begin();
+            auto itExpectedPlayers = expectedPlayers.begin();
+            int i = 0;
+            while ((itPlayerData != dm->getPlayerData().end()) && (itExpectedPlayers != expectedPlayers.end()))
+            {
+                i++;
+                b &= assertEquals(itExpectedPlayers->m_sName, itPlayerData->m_sName, ("Names in row " + std::to_string(i)).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nFrags, itPlayerData->m_nFrags, ("Frags in row " + std::to_string(i)).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nDeaths, itPlayerData->m_nDeaths, ("Death in row " + std::to_string(i)).c_str());
+                itPlayerData++;
+                itExpectedPlayers++;
+            }
+        }
+
+        return b;
+    }
+
+    bool test_deathmatch_reset()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->SetTimeLimitSecs(25u);
+        dm->SetFragLimit(30u);
+        const std::vector<proofps_dd::FragTableRow> players = {
+            { "Adam", 10, 0 },
+            { "Apple", 5, 2 }
+        };
+        dm->UpdatePlayerData(players);
+        dm->Reset();
+
+        bool b = assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
+        b &= assertEquals(30u, dm->getFragLimit(), "frag limit");
+        b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
+        b &= assertTrue(dm->getPlayerData().empty(), "players empty");
+
+        return b;
+    }
+
     bool test_deathmatch_winning_cond_defaults_to_false()
     {
         if (!testInitDeathmatch())
@@ -177,6 +246,7 @@ private:
         }
 
         // TODO
+        std::vector<proofps_dd::FragTableRow> players;
         return false;
     }
 

@@ -11,6 +11,8 @@
 */
 
 #include <chrono>
+#include <string>
+#include <vector>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
@@ -67,6 +69,13 @@ namespace proofps_dd
 
     }; // class GameMode
 
+    struct FragTableRow
+    {
+        std::string m_sName;
+        int m_nFrags;
+        int m_nDeaths;
+    };
+
     class DeathMatchMode : public GameMode
     {
     public:
@@ -82,6 +91,9 @@ namespace proofps_dd
 
         unsigned int getFragLimit() const;
         void SetFragLimit(unsigned int limit);
+
+        const std::vector<FragTableRow>& getPlayerData() const;
+        void UpdatePlayerData(const std::vector<FragTableRow>& players);
 
     protected:
 
@@ -100,6 +112,7 @@ namespace proofps_dd
 
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nFragLimit;
+        std::vector<FragTableRow> m_players;
 
     }; // class DeathMatchMode
 

@@ -100,6 +100,7 @@ DeathMatchMode::~DeathMatchMode()
 void DeathMatchMode::Reset()
 {
     GameMode::Reset();
+    m_players.clear();
 }
 
 bool DeathMatchMode::checkWinningConditions() const
@@ -143,6 +144,21 @@ unsigned int DeathMatchMode::getFragLimit() const
 void DeathMatchMode::SetFragLimit(unsigned int limit)
 {
     m_nFragLimit = limit;
+}
+
+const std::vector<FragTableRow>& proofps_dd::DeathMatchMode::getPlayerData() const
+{
+    return m_players;
+}
+
+void proofps_dd::DeathMatchMode::UpdatePlayerData(const std::vector<FragTableRow>& players)
+{
+    m_players = players;
+
+    std::sort(
+        m_players.begin(), m_players.end(), [](const FragTableRow& a, const FragTableRow& b)
+        { return (a.m_nFrags > b.m_nFrags) || ((a.m_nFrags == b.m_nFrags) && (a.m_nDeaths < b.m_nDeaths)); }
+    );
 }
 
 
