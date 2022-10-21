@@ -22,7 +22,7 @@ public:
         UnitTest( __FILE__ )
     {
         engine = NULL;
-    } // PGEcfgVariableTest()
+    }
 
 protected:
 

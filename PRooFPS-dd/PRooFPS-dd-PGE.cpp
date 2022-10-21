@@ -21,6 +21,8 @@
 #include "../../../PGE/PGE/PRRE/include/external/PRRECamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
+#include "GameMode.h"
+
 
 static const std::string GAME_NAME    = "PRooFPS-dd";
 static const std::string GAME_VERSION = "0.1.0.0 Alpha";
