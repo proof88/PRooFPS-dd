@@ -42,6 +42,7 @@ protected:
         AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
         AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
         AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
+        AddSubTest("test_deathmatch_winning_cond_time_and_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit);
     }
 
     virtual void Finalize() override
@@ -231,9 +232,9 @@ private:
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-        const auto duration = std::chrono::steady_clock::now() - dm->getResetTime();
+        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         bool b = assertTrue(dm->checkWinningConditions(), "winning");
-        b &= assertLequals(dm->getTimeLimitSecs(), duration.count(), "time limit elapsed");
+        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
 
         return b;
     }
@@ -245,9 +246,68 @@ private:
             return false;
         }
 
-        // TODO
-        std::vector<proofps_dd::FragTableRow> players;
-        return false;
+        std::vector<proofps_dd::FragTableRow> players = {
+            { "Apple", 0, 0 },
+            { "Adam", 2, 0 }
+        };
+
+        dm->SetFragLimit(5);
+        dm->Reset();
+        dm->UpdatePlayerData(players);
+
+        unsigned int i = 0;
+        while (!dm->checkWinningConditions() && (i++ < 5))
+        {
+            players[0].m_nFrags++;
+            dm->UpdatePlayerData(players);
+        }
+        bool b = assertTrue(dm->checkWinningConditions(), "winning");
+        b &= assertEquals(dm->getFragLimit(), i, "frags collected");
+
+        return b;
+    }
+
+    bool test_deathmatch_winning_cond_time_and_frag_limit()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        std::vector<proofps_dd::FragTableRow> players = {
+            { "Apple", 0, 0 },
+            { "Adam", 2, 0 }
+        };
+
+        dm->SetFragLimit(5);
+        dm->SetTimeLimitSecs(2);
+        dm->Reset();
+        dm->UpdatePlayerData(players);
+
+        // time limit elapse also means winning even if frag limit not reached
+        int iSleep = 0;
+        while ((iSleep++ < 5) && !dm->checkWinningConditions())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
+        bool b = assertTrue(dm->checkWinningConditions(), "winning due to time");
+        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+
+        // frag limit reach also means winning even if time limit not reached
+        dm->SetTimeLimitSecs(100);
+        dm->Reset();
+        dm->UpdatePlayerData(players);
+        unsigned int i = 0;
+        while (!dm->checkWinningConditions() && (i++ < 5))
+        {
+            players[0].m_nFrags++;
+            dm->UpdatePlayerData(players);
+        }
+        b &= assertTrue(dm->checkWinningConditions(), "winning due to frags");
+        b &= assertEquals(dm->getFragLimit(), i, "frags collected");
+
+        return b;
     }
 
 };

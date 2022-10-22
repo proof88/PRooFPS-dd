@@ -105,25 +105,30 @@ void DeathMatchMode::Reset()
 
 bool DeathMatchMode::checkWinningConditions() const
 {
-    bool bRetVal = false;
-    
     if ((getTimeLimitSecs() == 0) && (getFragLimit() == 0))
     {
-        return bRetVal;
+        return false;
     }
     
     if (getTimeLimitSecs() > 0)
     {
-        const unsigned int nSecsElapsedSinceReset = static_cast<unsigned int>((std::chrono::steady_clock::now() - getResetTime()).count());
-        bRetVal = nSecsElapsedSinceReset >= getTimeLimitSecs();
+        const auto durationSecsSinceReset = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime());
+        if (durationSecsSinceReset.count() >= getTimeLimitSecs())
+        {
+            return true;
+        }
     }
 
     if (getFragLimit() > 0)
     {
-        // TODO
+        if (m_players.size() > 0)
+        {
+            // assume m_players is sorted, since UpdatePlayerData() sorts it
+            return ( m_players[0].m_nFrags >= static_cast<int>(getFragLimit()) );
+        }
     }
 
-    return bRetVal;
+    return false;
 }
 
 unsigned int DeathMatchMode::getTimeLimitSecs() const

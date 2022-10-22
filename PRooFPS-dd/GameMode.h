@@ -72,8 +72,8 @@ namespace proofps_dd
     struct FragTableRow
     {
         std::string m_sName;
-        int m_nFrags;
-        int m_nDeaths;
+        int m_nFrags;    // frags allowed to be negative due to player doing suicides decreases fragcount
+        int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
     };
 
     class DeathMatchMode : public GameMode
