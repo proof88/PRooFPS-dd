@@ -476,6 +476,10 @@ void PRooFPSddPGE::onGameInitialized()
         getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
         getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
     getPRRE().getWindow().SetCursorVisible(false);
+
+    m_deathMatchMode->SetFragLimit(3);
+    //m_deathMatchMode->SetTimeLimitSecs(5);
+    m_deathMatchMode->Reset();
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = 0;
@@ -548,6 +552,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     if ( keybd.isKeyPressed(VK_ESCAPE) )
     {
         getPRRE().getWindow().Close();
+    }
+
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
     }
 
     if (keybd.isKeyPressed(VK_TAB))
@@ -644,6 +653,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 
 bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
+    if (m_gameMode->checkWinningConditions())
+    {
+        return false;
+    }
+
     if (m_bShowGuiDemo)
     {
         return false;
@@ -934,7 +948,16 @@ void PRooFPSddPGE::UpdateBullets()
     while (it != bullets.end())
     {
         auto& bullet = *it;
-        bullet.Update();
+
+        bool bDeleteBullet = false;
+        if (m_gameMode->checkWinningConditions())
+        {
+            bDeleteBullet = true;
+        }
+        else
+        {
+            bullet.Update();
+        }
 
         proofps_dd::MsgBulletUpdate::initPkt(
             newPktBulletUpdate,
@@ -950,75 +973,76 @@ void PRooFPSddPGE::UpdateBullets()
             bullet.getObject3D().getSizeVec().getY(),
             bullet.getObject3D().getSizeVec().getZ());
 
-        bool bDeleteBullet = false;
-
-        // check if bullet is hitting a player
-        for (auto& player : m_mapPlayers)
-        {
-            if (bullet.getOwner() == player.second.m_connHandleServerSide)
-            {
-                // bullet cannot hit the owner, at least for now ...
-                // in the future, when bullets start in proper position, we won't need this check ...
-                // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
-                continue;
-            }
-
-            if ((player.second.m_legacyPlayer.getHealth() > 0) &&
-                Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
-            {
-                bDeleteBullet = true;
-                player.second.m_legacyPlayer.DoDamage(bullet.getDamageHp());
-                if (player.second.m_legacyPlayer.getHealth() == 0)
-                {
-                    const auto itKiller = getPlayerMapItByConnectionHandle(bullet.getOwner());
-                    if (itKiller == m_mapPlayers.end())
-                    {
-                        getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by a player already left!",
-                            __func__, player.first.c_str());
-                    }
-                    else
-                    {
-                        itKiller->second.m_legacyPlayer.getFrags()++;
-                        getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
-                            __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
-                    }
-                    
-                    HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
-                }
-                break; // we can stop since 1 bullet can touch 1 player only at a time
-            }
-        }
-
         if (!bDeleteBullet)
         {
-            // check if bullet is out of map bounds
-            // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
-            const PRREVector vRelaxedMapMinBounds(
-                m_maps.getObjectsVertexPosMin().getX() - GAME_BLOCK_SIZE_X*4,
-                m_maps.getObjectsVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
-                m_maps.getObjectsVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
-            const PRREVector vRelaxedMapMaxBounds(
-                m_maps.getObjectsVertexPosMax().getX() + GAME_BLOCK_SIZE_X*4,
-                m_maps.getObjectsVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
-                m_maps.getObjectsVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
-            if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
+            // check if bullet is hitting a player
+            for (auto& player : m_mapPlayers)
             {
-                bDeleteBullet = true;
-            }
-        }
-
-        if ( !bDeleteBullet )
-        {
-            // check if bullet is hitting a map element
-            for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
-            {
-                PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
-                if ((obj != PGENULL) && (obj != &(bullet.getObject3D())) && (obj->isColliding_TO_BE_REMOVED()))
+                if (bullet.getOwner() == player.second.m_connHandleServerSide)
                 {
-                    if (Colliding(*obj, bullet.getObject3D()))
+                    // bullet cannot hit the owner, at least for now ...
+                    // in the future, when bullets start in proper position, we won't need this check ...
+                    // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
+                    continue;
+                }
+
+                if ((player.second.m_legacyPlayer.getHealth() > 0) &&
+                    Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
+                {
+                    bDeleteBullet = true;
+                    player.second.m_legacyPlayer.DoDamage(bullet.getDamageHp());
+                    if (player.second.m_legacyPlayer.getHealth() == 0)
                     {
-                        bDeleteBullet = true;
-                        break; // we can stop since 1 bullet can touch 1 map element
+                        const auto itKiller = getPlayerMapItByConnectionHandle(bullet.getOwner());
+                        if (itKiller == m_mapPlayers.end())
+                        {
+                            getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by a player already left!",
+                                __func__, player.first.c_str());
+                        }
+                        else
+                        {
+                            itKiller->second.m_legacyPlayer.getFrags()++;
+                            getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
+                                __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
+                        }
+
+                        HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
+                    }
+                    break; // we can stop since 1 bullet can touch 1 player only at a time
+                }
+            }
+
+            if (!bDeleteBullet)
+            {
+                // check if bullet is out of map bounds
+                // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
+                const PRREVector vRelaxedMapMinBounds(
+                    m_maps.getObjectsVertexPosMin().getX() - GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getObjectsVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
+                    m_maps.getObjectsVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+                const PRREVector vRelaxedMapMaxBounds(
+                    m_maps.getObjectsVertexPosMax().getX() + GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getObjectsVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
+                    m_maps.getObjectsVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
+                if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
+                {
+                    bDeleteBullet = true;
+                }
+            }
+
+            if (!bDeleteBullet)
+            {
+                // check if bullet is hitting a map element
+                for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
+                {
+                    PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
+                    if ((obj != PGENULL) && (obj != &(bullet.getObject3D())) && (obj->isColliding_TO_BE_REMOVED()))
+                    {
+                        if (Colliding(*obj, bullet.getObject3D()))
+                        {
+                            bDeleteBullet = true;
+                            break; // we can stop since 1 bullet can touch 1 map element
+                        }
                     }
                 }
             }
@@ -1095,6 +1119,11 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
 
 void PRooFPSddPGE::UpdateRespawnTimers()
 {
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
+    }
+
     for (auto& player : m_mapPlayers)
     {
         if (player.second.m_legacyPlayer.getHealth() > 0)
@@ -1115,6 +1144,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
 void PRooFPSddPGE::UpdateGameMode()
 {
+    // not nice, in the future players will be stored in a more general way that could be easily accessed by GameMode
     std::vector<proofps_dd::FragTableRow> players;
     for (const auto& player : m_mapPlayers)
     {
@@ -1125,7 +1155,7 @@ void PRooFPSddPGE::UpdateGameMode()
 
     if (m_deathMatchMode->checkWinningConditions())
     {
-        // TODO ...
+        ShowFragTable();
     }
 }
 
@@ -1238,7 +1268,7 @@ void PRooFPSddPGE::onGameRunning()
     {
         if (getNetwork().isServer())
         {
-            if (!m_bWon)
+            if (!m_gameMode->checkWinningConditions())
             {
                 Gravity(m_fps);
                 Collision(m_bWon);
