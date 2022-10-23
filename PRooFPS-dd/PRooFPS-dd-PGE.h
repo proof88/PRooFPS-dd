@@ -187,7 +187,7 @@ private:
         const PRREVector& vecObjPos, const PRREVector& vecObjSize);
     void Collision(bool& won);
     void FrameLimiter(int fps_ms);
-    void ShowFragTable() const;
+    void ShowFragTable(bool bWin) const;
     void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();

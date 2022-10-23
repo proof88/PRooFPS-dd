@@ -34,7 +34,7 @@ protected:
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), true);
 
         AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
-        AddSubTest("test_reset_updates_reset_time", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_reset_time);
+        AddSubTest("test_reset_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_times);
         AddSubTest("test_deathmatch_time_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
         AddSubTest("test_deathmatch_update_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_players);
@@ -98,12 +98,13 @@ private:
         b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch), "tdm null");
         b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamRoundGame), "trg null");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertTrue(dm->getPlayerData().empty(), "playerdata");
 
         return b;
     }
 
-    bool test_reset_updates_reset_time()
+    bool test_reset_updates_times()
     {
         if (!testInitDeathmatch())
         {
@@ -111,7 +112,8 @@ private:
         }
 
         gm->Reset();
-        return assertLess(0, gm->getResetTime().time_since_epoch().count());
+        return assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time") &
+            assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
     }
 
     bool test_deathmatch_time_limit_get_set()
@@ -203,6 +205,7 @@ private:
         bool b = assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
         b &= assertEquals(30u, dm->getFragLimit(), "frag limit");
         b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertTrue(dm->getPlayerData().empty(), "players empty");
 
         return b;
@@ -234,6 +237,7 @@ private:
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         bool b = assertTrue(dm->checkWinningConditions(), "winning");
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
 
         return b;
@@ -262,6 +266,7 @@ private:
             dm->UpdatePlayerData(players);
         }
         bool b = assertTrue(dm->checkWinningConditions(), "winning");
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
         return b;
@@ -292,11 +297,13 @@ private:
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         bool b = assertTrue(dm->checkWinningConditions(), "winning due to time");
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
 
         // frag limit reach also means winning even if time limit not reached
         dm->SetTimeLimitSecs(100);
         dm->Reset();
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
         dm->UpdatePlayerData(players);
         unsigned int i = 0;
         while (!dm->checkWinningConditions() && (i++ < 5))
@@ -305,6 +312,7 @@ private:
             dm->UpdatePlayerData(players);
         }
         b &= assertTrue(dm->checkWinningConditions(), "winning due to frags");
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
         return b;

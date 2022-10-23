@@ -63,6 +63,11 @@ void GameMode::Reset()
     m_timeReset = std::chrono::steady_clock::now();
 }
 
+const std::chrono::time_point<std::chrono::steady_clock>& GameMode::getWinTime() const
+{
+    return m_timeWin;
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -101,9 +106,10 @@ void DeathMatchMode::Reset()
 {
     GameMode::Reset();
     m_players.clear();
+    m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
 }
 
-bool DeathMatchMode::checkWinningConditions() const
+bool DeathMatchMode::checkWinningConditions()
 {
     if ((getTimeLimitSecs() == 0) && (getFragLimit() == 0))
     {
@@ -115,6 +121,10 @@ bool DeathMatchMode::checkWinningConditions() const
         const auto durationSecsSinceReset = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime());
         if (durationSecsSinceReset.count() >= getTimeLimitSecs())
         {
+            if (m_timeWin.time_since_epoch().count() == 0)
+            {
+                m_timeWin = std::chrono::steady_clock::now();
+            }
             return true;
         }
     }
@@ -124,7 +134,14 @@ bool DeathMatchMode::checkWinningConditions() const
         if (m_players.size() > 0)
         {
             // assume m_players is sorted, since UpdatePlayerData() sorts it
-            return ( m_players[0].m_nFrags >= static_cast<int>(getFragLimit()) );
+            if (m_players[0].m_nFrags >= static_cast<int>(getFragLimit()))
+            {
+                if (m_timeWin.time_since_epoch().count() == 0)
+                {
+                    m_timeWin = std::chrono::steady_clock::now();
+                }
+                return true;
+            }
         }
     }
 

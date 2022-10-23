@@ -479,7 +479,7 @@ void PRooFPSddPGE::onGameInitialized()
 
     m_deathMatchMode->SetFragLimit(3);
     //m_deathMatchMode->SetTimeLimitSecs(5);
-    m_deathMatchMode->Reset();
+    m_gameMode->Reset();
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = 0;
@@ -561,7 +561,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 
     if (keybd.isKeyPressed(VK_TAB))
     {
-        ShowFragTable();
+        ShowFragTable(false);
     }
 
     if (keybd.isKeyPressed(VK_BACK))
@@ -914,12 +914,17 @@ void PRooFPSddPGE::FrameLimiter(int fps_ms)
   }
 }
 
-void PRooFPSddPGE::ShowFragTable() const
+void PRooFPSddPGE::ShowFragTable(bool bWin) const
 {
     const int nXPosPlayerName = 20;
     const int nXPosFrags = 200;
     const int nXPosDeaths = 250;
-    const int nYPosStart = getPRRE().getWindow().getClientHeight() - 20;
+    int nYPosStart = getPRRE().getWindow().getClientHeight() - 20;
+    if (bWin)
+    {
+        getPRRE().getUImanager().text("Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        nYPosStart -= 2 * getPRRE().getUImanager().getDefaultFontSize();
+    }
 
     getPRRE().getUImanager().text("Player Name", nXPosPlayerName, nYPosStart);
     getPRRE().getUImanager().text("Frags", nXPosFrags, nYPosStart);
@@ -1144,6 +1149,8 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
 void PRooFPSddPGE::UpdateGameMode()
 {
+    const bool bPrevWinningConditions = m_gameMode->checkWinningConditions();
+
     // not nice, in the future players will be stored in a more general way that could be easily accessed by GameMode
     std::vector<proofps_dd::FragTableRow> players;
     for (const auto& player : m_mapPlayers)
@@ -1153,9 +1160,39 @@ void PRooFPSddPGE::UpdateGameMode()
     }
     m_deathMatchMode->UpdatePlayerData(players);
 
-    if (m_deathMatchMode->checkWinningConditions())
+    const bool bNewWinningConditions = m_gameMode->checkWinningConditions();
+    if (bNewWinningConditions)
     {
-        ShowFragTable();
+        const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
+        if (nSecsSinceWin >= 2)
+        {
+            if (getNetwork().isServer())
+            {
+                for (auto& player : m_mapPlayers)
+                {
+                    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
+                    player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
+                    player.second.m_legacyPlayer.SetHealth(100);
+                    player.second.m_legacyPlayer.getFrags() = 0;
+                    player.second.m_legacyPlayer.getDeaths() = 0;
+                    player.second.m_legacyPlayer.getRespawnFlag() = true;
+                }
+            }
+            m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
+        }
+        else
+        {
+            ShowFragTable(true);
+            if (bPrevWinningConditions != bNewWinningConditions)
+            {
+                m_pObjXHair->Hide();
+                for (auto& player : m_mapPlayers)
+                {
+                    player.second.m_legacyPlayer.getAttachedObject()->Hide();
+                    player.second.m_legacyPlayer.getWeapon()->getObject3D().Hide();
+                }
+            }
+        }
     }
 }
 
@@ -1346,10 +1383,14 @@ void PRooFPSddPGE::onGameRunning()
             UpdateWeapons();
             UpdateBullets();
             UpdateRespawnTimers();
-            SendUserUpdates();
         }
 
-        UpdateGameMode();
+        UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
+
+        if (getNetwork().isServer())
+        {
+            SendUserUpdates();
+        }
 
         //map.UpdateVisibilitiesForRenderer();
     }

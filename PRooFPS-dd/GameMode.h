@@ -45,9 +45,12 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
 
         virtual void Reset();
-        virtual bool checkWinningConditions() const = 0;
+        virtual bool checkWinningConditions() = 0;
+        
+        const std::chrono::time_point<std::chrono::steady_clock>& getWinTime() const;
 
     protected:
+        std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
 
         GameMode(GameModeType gm);
 
@@ -84,7 +87,7 @@ namespace proofps_dd
         virtual ~DeathMatchMode();
 
         virtual void Reset() override;
-        virtual bool checkWinningConditions() const override;
+        virtual bool checkWinningConditions() override;
 
         unsigned int getTimeLimitSecs() const;
         void SetTimeLimitSecs(unsigned int secs);
