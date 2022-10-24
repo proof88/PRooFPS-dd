@@ -87,6 +87,7 @@ public:
     int& getDeaths();
     const int& getDeaths() const;
     int& getOldDeaths();
+    void UpdateFragsDeaths();
 };
 
 struct Player_t

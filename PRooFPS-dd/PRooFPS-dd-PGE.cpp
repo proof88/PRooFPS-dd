@@ -282,6 +282,12 @@ int& CPlayer::getOldDeaths()
     return m_nOldDeaths;
 }
 
+void CPlayer::UpdateFragsDeaths()
+{
+    m_nOldFrags = m_nFrags;
+    m_nOldDeaths = m_nDeaths;
+}
+
 
 PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
@@ -1010,7 +1016,7 @@ void PRooFPSddPGE::UpdateBullets()
                             getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
                         }
-
+                        // server handles death here, clients will handle it when they receive MsgUserUpdate
                         HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
                     }
                     break; // we can stop since 1 bullet can touch 1 player only at a time
@@ -1279,6 +1285,7 @@ void PRooFPSddPGE::onGameFrameBegin()
         {
             legacyPlayer.UpdateOldPos();
             legacyPlayer.UpdateOldHealth();
+            legacyPlayer.UpdateFragsDeaths();
         }
     }
 }
@@ -1880,7 +1887,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     {
         if ((it->second.m_legacyPlayer.getOldHealth() > 0) && (it->second.m_legacyPlayer.getHealth() == 0))
         {
-            // only clients fall here, since server already set oldhealth to 0 in this frame
+            // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
             HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
