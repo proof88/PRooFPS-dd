@@ -395,7 +395,8 @@ void PRooFPSddPGE::onGameInitialized()
     assert(m_deathMatchMode);
 
     m_maps.initialize();
-    const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
+    //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
+    const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
     assert( mapLoaded );
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
