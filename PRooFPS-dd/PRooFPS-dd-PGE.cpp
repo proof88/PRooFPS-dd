@@ -1150,6 +1150,13 @@ void PRooFPSddPGE::UpdateRespawnTimers()
             player.second.m_legacyPlayer.SetHealth(100);
             player.second.m_legacyPlayer.getRespawnFlag() = true;
         }
+        else
+        {
+            if (player.first == m_sUserName)
+            {
+                getPRRE().getUImanager().text("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+            }
+        }
     }
 }
 
