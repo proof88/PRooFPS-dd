@@ -420,8 +420,8 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
     // So the idea is to copy the previous _neighbor_ background block to be used behind the item, but
     // only if there is a neighbor block created previously, otherwise we should not put any
     // background block behind the item.
-    // So iObjectToBeCopied is > -1 only if there is neighbor background block created previously.
-    int iObjectToBeCopied = -1;
+    // So iObjectBgToBeCopied is > -1 only if there is neighbor background block created previously.
+    int iObjectBgToBeCopied = -1;
 
     while ( iLinePos != sLine.length() )
     {
@@ -438,8 +438,14 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         
         if ( !bForeground && !bBackground )
         {
-            iObjectToBeCopied = -1;
+            iObjectBgToBeCopied = -1;
             continue;
+        }
+
+        if (bForeground && bBackground)
+        {
+            assert(false);
+            return false;
         }
 
         // special background block handling
@@ -450,17 +456,17 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         case '+':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
             break;
         case 'M':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
             break;
         case 'P':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
             break;
         case 'S':
             // spawnpoint is background block by default
@@ -473,7 +479,10 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBlock))
         {
             m_objects_h++;
-            iObjectToBeCopied = m_objects_h - 1;
+            if (!bSpecialBlock && bBackground)
+            {
+                iObjectBgToBeCopied = m_objects_h - 1;
+            }
             // TODO: handle memory allocation error
             m_objects = (PRREObject3D**)realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
             pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
@@ -489,7 +498,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         PRRETexture* tex = PGENULL;
         if (bSpecialBlock && bCopyPreviousBlock)
         {
-            tex = m_objects[iObjectToBeCopied]->getMaterial().getTexture();
+            tex = m_objects[iObjectBgToBeCopied]->getMaterial().getTexture();
         }
         else
         {
@@ -518,7 +527,12 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         }
 
         pNewBlockObj->getMaterial().setTexture(tex);
-        pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
+
+        if (bForeground)
+        {
+            // only foreground blocks should be checked for collision
+            pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
+        }
 
         pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
     }
