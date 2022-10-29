@@ -68,7 +68,7 @@ protected:
 
 private:
 
-    static const unsigned int MAP_TEST_W = 40u;
+    static const unsigned int MAP_TEST_W = 44u;
     static const unsigned int MAP_TEST_H = 10u;
 
     PR00FsReducedRenderingEngine* engine;
@@ -113,15 +113,23 @@ private:
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/egsdghsdghsdghdsghgds.txt"), "load");
-        b &= assertFalse(maps.loaded(), "loaded 2");
-        b &= assertEquals(0u, maps.width(), "width 2");
-        b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertFalse(maps.loaded(), "loaded");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
-        b &= assertTrue(maps.getVars().empty(), "getVars 2");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+
         return b;
     }
 
@@ -130,15 +138,23 @@ private:
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_assignment.txt"), "load");
-        b &= assertFalse(maps.loaded(), "loaded 2");
-        b &= assertEquals(0u, maps.width(), "width 2");
-        b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertFalse(maps.loaded(), "loaded");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
-        b &= assertTrue(maps.getVars().empty(), "getVars 2");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+
         return b;
     }
 
@@ -147,15 +163,23 @@ private:
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_order.txt"), "load");
-        b &= assertFalse(maps.loaded(), "loaded 2");
-        b &= assertEquals(0u, maps.width(), "width 2");
-        b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertFalse(maps.loaded(), "loaded");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
-        b &= assertTrue(maps.getVars().empty(), "getVars 2");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+
         return b;
     }
 
@@ -164,7 +188,9 @@ private:
         Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
-        b &= assertTrue(maps.loaded(), "loade");
+        b &= assertTrue(maps.loaded(), "loaded");
+
+        // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height");
         b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H)/2, -1), maps.getObjectsPosMin(), "objects Min");
@@ -181,6 +207,8 @@ private:
                 maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
                 maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
             maps.getObjectsVertexPosMax(), "vertex Max");
+        
+        // variables
         b &= assertEquals(2u, maps.getVars().size(), "getVars");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         try {
@@ -189,15 +217,40 @@ private:
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
+        // items
+        b &= assertEquals(5u, maps.getItems().size(), "item count");
+        if (b)
+        {
+            b &= assertNotNull(maps.getItems()[0], "item 1") &&
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, maps.getItems()[0]->getType(), "item 1 type") &&
+                assertNotNull(maps.getItems()[0]->getObject3D().getMaterial().getTexture(), "item 1 tex");
+            b &= assertNotNull(maps.getItems()[1], "item 2") &&
+                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, maps.getItems()[1]->getType(), "item 2 type") &&
+                assertNotNull(maps.getItems()[1]->getObject3D().getMaterial().getTexture(), "item 2 tex");
+            b &= assertNotNull(maps.getItems()[2], "item 3") &&
+                assertEquals(MapItemType::ITEM_HEALTH, maps.getItems()[2]->getType(), "item 3 type") &&
+                assertNotNull(maps.getItems()[2]->getObject3D().getMaterial().getTexture(), "item 3 tex");
+            b &= assertNotNull(maps.getItems()[3], "item 4") &&
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, maps.getItems()[3]->getType(), "item 4 type") &&
+                assertNotNull(maps.getItems()[3]->getObject3D().getMaterial().getTexture(), "item 4 tex");
+            b &= assertNotNull(maps.getItems()[4], "item 5") &&
+                assertEquals(MapItemType::ITEM_HEALTH, maps.getItems()[4]->getType(), "item 5 type") &&
+                assertNotNull(maps.getItems()[4]->getObject3D().getMaterial().getTexture(), "item 5 tex");
+        }
+
         return b;
     }
 
     bool test_map_unload_and_load_again()
     {
         Maps maps(*engine);
+
+        // ###################################### LOAD 1 ######################################
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
+
+        // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
         b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsPosMin(), "objects Min 1");
@@ -214,6 +267,8 @@ private:
                 maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
                 maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
             maps.getObjectsVertexPosMax(), "vertex Max 1");
+
+        // variables
         b &= assertEquals(2u, maps.getVars().size(), "getVars 1");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
         try {
@@ -221,22 +276,36 @@ private:
             b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 1b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
+
+        // items
+        b &= assertEquals(5u, maps.getItems().size(), "item count 1");
         
+        // ###################################### UNLOAD ######################################
         maps.unload();
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+
+        // block and map boundaries
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min 2");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max 2");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min 2");
         b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max 2");
+
+        // variables
         b &= assertTrue(maps.getVars().empty(), "getVars 2");
         b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints 2");
 
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count 2");
+
+        // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
+
+        // block and map boundaries
         b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsPosMin(), "objects Min 3");
         b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getObjectsPosMax(), "objects Max 3");
         b &= assertEquals(
@@ -251,6 +320,8 @@ private:
                 maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
                 maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
             maps.getObjectsVertexPosMax(), "vertex Max 3");
+
+        // variables
         b &= assertEquals(2u, maps.getVars().size(), "getVars 3");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
         try {
@@ -258,6 +329,9 @@ private:
             b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 3b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
+
+        // items
+        b &= assertEquals(5u, maps.getItems().size(), "item count 3");
 
         return b;
     }

@@ -18,6 +18,8 @@
 #include "../../../PGE/PGE/PGEcfgVariable.h"
 #include "../../../PGE/PGE/PRRE/include/external/PR00FsReducedRenderingEngine.h"
 
+#include "MapItem.h"
+
 class Maps
 {
 public:
@@ -45,7 +47,7 @@ public:
     const PRREVector& getObjectsPosMax() const;
     const PRREVector& getObjectsVertexPosMin() const;
     const PRREVector& getObjectsVertexPosMax() const;
-    std::vector<PRREVector>& getCandleLights();
+    const std::vector<MapItem*>& getItems() const;
     const std::map<std::string, PGEcfgVariable>& getVars() const;
 
 protected:
@@ -63,8 +65,6 @@ private:
     PRREObject3D** m_objects;
     int m_objects_h;
 
-    std::vector<PRREVector> m_candleLights;
-
     std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;
     std::map<char, std::string> m_Block2Texture;
@@ -73,6 +73,7 @@ private:
     PRREVector m_min, m_max;
     PRREVector m_posMin, m_posMax;
     unsigned int m_width, m_height;
+    std::vector<MapItem*> m_items;
 
     // ---------------------------------------------------------------------------
 

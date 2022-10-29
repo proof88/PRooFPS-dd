@@ -204,6 +204,12 @@
     <ClInclude Include="Tests\GameModeTest.h">
       <Filter>Source Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="MapItem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MapItemTest.h">
+      <Filter>Source Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -222,6 +228,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameMode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

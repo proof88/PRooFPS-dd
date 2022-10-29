@@ -18,14 +18,14 @@ Gravity = 2.0
 
 # The following chars are used for defining foreground blocks:
 # BDFGHIJ
-# Remaining chars to be used as foreground blocks: KLPQT
+# Remaining chars to be used as foreground blocks: KLQT
 
 # Background blocks are 1 depth away from the players towards
 # the background, they can be used as background walls.
 
 # The following chars are used for defining background blocks:
-# acemnor
-# Remaining chars to be used as background blocks: suvwxyz
+# acenorv
+# Remaining chars to be used as background blocks: suwxyz
 
 # Textures for each map block/element
 # Not defining texture for a specific block does not cause error,
@@ -41,10 +41,10 @@ J = crate.bmp
 a = brick1.bmp
 c = brick2.bmp
 e = brick3.bmp
-m = brick4.bmp
 n = aztec01.bmp
 o = brick1.bmp
 r = brick1.bmp
+v = brick4.bmp
 
 # 'S' char represents spawn/start point. Multiple 'S' chars can be placed.
 # Number of spawn points defines the max allowed players on the map.
@@ -52,6 +52,10 @@ r = brick1.bmp
 # assigned the same way as to other blocks.
 
 S = brick1_s.bmp
+
+# 'P' char represents pistol.
+# 'M' char represents machine gun.
+# '+' char represents health/medkit.
 
 # If not '=' char and not ignored line, it is treated as
 # layout definition. 
@@ -63,12 +67,12 @@ S = brick1_s.bmp
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeee  eeeeeeee
-mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm  mmmmmmmm
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  vvvvvvvv
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnn  nnnnnnnn
 oSoooooooooJoooooSoooooooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrrrrrrrrrrrr  rrrrrrrr
-aaa##aaaaJJJJaaaaaaaaaaaaaaaaa  aaaaaaaa
-BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
+aaa##aaaaJJJJaaaaaaaPaMa+aaaaa  aaaaaaaa P +
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD B B  
 BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
 
 # After or in between the map layout lines, we do not accept anything else.

@@ -21,6 +21,7 @@
 #include "../../../../CConsole/CConsole/src/CConsole.h"
 
 #include "GameModeTest.h"
+#include "MapItemTest.h"
 #include "MapsTest.h"
 
 #define CON_TITLE "Unit tests for PRooFPS-dd"
@@ -58,11 +59,13 @@ int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, con
     getConsole().OLn("");
 
     GameModeTest gameModeTest;
+    MapItemTest mapItemTest;
     MapsTest mapsTest;
 
     vector<UnitTest*> tests;
     tests.push_back(&gameModeTest);
-    //tests.push_back(&mapsTest);
+    tests.push_back(&mapItemTest);
+    tests.push_back(&mapsTest);
 
     vector<UnitTest*>::size_type nSucceededTests = 0;
     vector<UnitTest*>::size_type nTotalSubTests = 0;

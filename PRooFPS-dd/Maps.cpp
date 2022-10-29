@@ -9,7 +9,10 @@
 */
 
 #include "stdafx.h"  // PCH
+
 #include "Maps.h"
+
+#include <cassert>
 
 #include "Consts.h"
 
@@ -42,10 +45,16 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     backgroundBlocks.insert('a');
     backgroundBlocks.insert('c');
     backgroundBlocks.insert('e');
-    backgroundBlocks.insert('m');
+    backgroundBlocks.insert('n');
     backgroundBlocks.insert('n');
     backgroundBlocks.insert('o');
     backgroundBlocks.insert('r');
+    backgroundBlocks.insert('v');
+    
+    // the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout()
+    backgroundBlocks.insert('+');
+    backgroundBlocks.insert('M');
+    backgroundBlocks.insert('P');
     backgroundBlocks.insert('S');
 }
 
@@ -176,7 +185,6 @@ void Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
     m_Block2Texture.clear();
-    m_candleLights.clear();
     if ( m_objects )
     {
         for (int i = 0; i < m_objects_h; i++)
@@ -187,6 +195,11 @@ void Maps::unload()
         m_objects = NULL;
         m_objects_h = 0;
     }
+    for (auto pMi : m_items)
+    {
+        delete pMi;
+    }
+    m_items.clear();
     m_width = 0;
     m_height = 0;
     m_posMin.SetZero();
@@ -288,9 +301,9 @@ const PRREVector& Maps::getObjectsVertexPosMax() const
     return m_max;
 }
 
-std::vector<PRREVector>& Maps::getCandleLights()
+const std::vector<MapItem*>& Maps::getItems() const
 {
-    return m_candleLights;
+    return m_items;
 }
 
 const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
@@ -401,12 +414,19 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
 
     TPRREfloat x = 0.0f;
     TPRREfloat maxx = x;
-    std::string::size_type i = 0;
+    std::string::size_type iLinePos = 0;
+    
+    // Item character specifies the item type, but not the background behind the item.
+    // So the idea is to copy the previous _neighbor_ background block to be used behind the item, but
+    // only if there is a neighbor block created previously, otherwise we should not put any
+    // background block behind the item.
+    // So iObjectToBeCopied is > -1 only if there is neighbor background block created previously.
+    int iObjectToBeCopied = -1;
 
-    while ( i != sLine.length() )
+    while ( iLinePos != sLine.length() )
     {
-        const char c = sLine[i];
-        i++;
+        const char c = sLine[iLinePos];
+        iLinePos++;
         const bool bForeground = foregroundBlocks.find(c) != foregroundBlocks.end();
         const bool bBackground = backgroundBlocks.find(c) != backgroundBlocks.end();
 
@@ -418,49 +438,89 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         
         if ( !bForeground && !bBackground )
         {
+            iObjectToBeCopied = -1;
             continue;
         }
 
-        m_objects_h++;
-        m_objects = (PRREObject3D**) realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
-        m_objects[m_objects_h-1] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
-        m_objects[m_objects_h-1]->SetLit(true);
+        // special background block handling
+        bool bCopyPreviousBlock = false;
+        bool bSpecialBlock = false;
+        switch (c)
+        {
+        case '+':
+            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            bSpecialBlock = true;
+            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            break;
+        case 'M':
+            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            bSpecialBlock = true;
+            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            break;
+        case 'P':
+            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            bSpecialBlock = true;
+            bCopyPreviousBlock = iObjectToBeCopied > -1;
+            break;
+        case 'S':
+            // spawnpoint is background block by default
+            m_spawnpoints.insert(PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            break;
+        default: /* NOP */;
+        }
+
+        PRREObject3D* pNewBlockObj = nullptr;
+        if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBlock))
+        {
+            m_objects_h++;
+            iObjectToBeCopied = m_objects_h - 1;
+            // TODO: handle memory allocation error
+            m_objects = (PRREObject3D**)realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
+            pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+            m_objects[m_objects_h - 1] = pNewBlockObj;
+            m_objects[m_objects_h - 1]->SetLit(true);
+        }
+
+        if (!pNewBlockObj)
+        {
+            continue;
+        }
 
         PRRETexture* tex = PGENULL;
-        if ( m_Block2Texture.find(c) == m_Block2Texture.end() )
+        if (bSpecialBlock && bCopyPreviousBlock)
         {
-            const std::string sc(1,c); // WA for CConsole lack support of %c
-            getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
-            tex = m_texRed;
+            tex = m_objects[iObjectToBeCopied]->getMaterial().getTexture();
         }
         else
         {
-            const std::string sTexName = "gamedata\\textures\\" + m_Block2Texture[c];
-            tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
-            if ( !tex )
+            if (m_Block2Texture.find(c) == m_Block2Texture.end())
             {
-                getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                const std::string sc(1, c); // WA for CConsole lack support of %c
+                getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
                 tex = m_texRed;
             }
-        }
-        if ( !tex )
-        {
-            // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
-            const std::string sc(1,c); // WA for CConsole lack support of %c
-            getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+            else
+            {
+                const std::string sTexName = "gamedata\\textures\\" + m_Block2Texture[c];
+                tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
+                if (!tex)
+                {
+                    getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                    tex = m_texRed;
+                }
+            }
+            if (!tex)
+            {
+                // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
+                const std::string sc(1, c); // WA for CConsole lack support of %c
+                getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+            }
         }
 
-        m_objects[m_objects_h-1]->getMaterial().setTexture(tex);
-        m_objects[m_objects_h-1]->SetColliding_TO_BE_REMOVED(true);
+        pNewBlockObj->getMaterial().setTexture(tex);
+        pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
 
-        m_objects[m_objects_h-1]->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
-
-        switch (c)
-        {
-        case 'S': m_spawnpoints.insert(PRREVector(x, y, GAME_PLAYERS_POS_Z));
-                  break;
-        default: /* NOP */;
-        }
+        pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
     }
     y = y - GAME_BLOCK_SIZE_Y;
     return true;
