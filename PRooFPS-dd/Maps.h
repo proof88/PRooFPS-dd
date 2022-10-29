@@ -49,6 +49,7 @@ public:
     const PRREVector& getObjectsVertexPosMax() const;
     const std::vector<MapItem*>& getItems() const;
     const std::map<std::string, PGEcfgVariable>& getVars() const;
+    void Update();
 
 protected:
 

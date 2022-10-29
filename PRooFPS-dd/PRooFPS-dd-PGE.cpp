@@ -1392,6 +1392,8 @@ void PRooFPSddPGE::onGameRunning()
             UpdateRespawnTimers();
         }
 
+        m_maps.Update();
+
         UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
 
         if (getNetwork().isServer())

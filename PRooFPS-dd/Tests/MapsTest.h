@@ -42,6 +42,7 @@ protected:
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
     }
 
     virtual bool setUp()
@@ -358,6 +359,34 @@ private:
                 b = assertTrue(originalSpawnpoints.empty(), "original empty");
             }
             catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    
+    bool test_map_update()
+    {
+        Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertLess(0u, maps.getItems().size(), "items");
+
+        if (b)
+        {
+            std::vector<float> vOriginalItemPosY;
+            for (size_t i = 0; i < maps.getItems().size(); i++)
+            {
+                vOriginalItemPosY.push_back(maps.getItems()[i]->getPos().getY());
+            }
+
+            maps.Update();
+
+            for (size_t i = 0; i < maps.getItems().size(); i++)
+            {
+                assertNotEquals(vOriginalItemPosY[i], maps.getItems()[i]->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
+            }
         }
 
         return b;

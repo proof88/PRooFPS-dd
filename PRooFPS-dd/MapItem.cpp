@@ -34,8 +34,10 @@ std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
 MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos) :
     m_gfx(gfx),
     m_obj(nullptr),
+    m_fObjPosOriginalY(pos.getY()),
     m_itemType(itemType),
-    m_bTaken(false)
+    m_bTaken(false),
+    m_fSinusMotionDegrees(0.f)
 {
     // TODO: throw when createPlane() fails
     m_obj = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
@@ -111,6 +113,16 @@ void MapItem::Take()
 const std::chrono::time_point<std::chrono::steady_clock>& MapItem::getTimeTaken() const
 {
     return m_timeTaken;
+}
+
+void MapItem::Update(float factor)
+{
+    m_fSinusMotionDegrees += factor;
+    if (m_fSinusMotionDegrees >= 359.9f)
+    {
+        m_fSinusMotionDegrees = 0.f;
+    }
+    m_obj->getPosVec().SetY(m_fObjPosOriginalY + sin(PFL::degToRad(m_fSinusMotionDegrees)) * 0.2f);
 }
 
 

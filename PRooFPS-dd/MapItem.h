@@ -41,6 +41,7 @@ public:
     bool isTaken() const;
     void Take();
     const std::chrono::time_point<std::chrono::steady_clock>& getTimeTaken() const;
+    void Update(float factor);
 
 protected:
 
@@ -48,9 +49,11 @@ private:
 
     PR00FsReducedRenderingEngine&                      m_gfx;
     PRREObject3D*                                      m_obj;
+    float                                              m_fObjPosOriginalY;
     MapItemType                                        m_itemType;
     bool                                               m_bTaken;
     std::chrono::time_point<std::chrono::steady_clock> m_timeTaken;
+    float                                              m_fSinusMotionDegrees;
 
     // ---------------------------------------------------------------------------
 

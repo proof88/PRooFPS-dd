@@ -311,6 +311,17 @@ const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
     return m_vars;
 }
 
+void Maps::Update()
+{
+    for (auto& pItem : getItems())
+    {
+        if (pItem)
+        {
+            pItem->Update(8.f);
+        }
+    }
+}
+
 
 // ############################## PROTECTED ##############################
 

@@ -34,6 +34,7 @@ protected:
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
         AddSubTest("test_take", (PFNUNITSUBTEST)&MapItemTest::test_take);
+        AddSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
     }
 
     virtual bool setUp()
@@ -91,6 +92,15 @@ private:
         return assertTrue(mi.isTaken(), "taken") &
             assertLess(0, mi.getTimeTaken().time_since_epoch().count(), "time taken") &
             assertFalse(mi.getObject3D().isRenderingAllowed(), "not visible");
+    }
+
+    bool test_update()
+    {
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        const float fOriginalObjPosY = mi.getPos().getY();
+        mi.Update(4.f);
+
+        return assertNotEquals(fOriginalObjPosY, mi.getPos().getY());
     }
 
 };
