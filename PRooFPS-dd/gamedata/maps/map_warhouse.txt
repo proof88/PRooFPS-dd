@@ -12,31 +12,30 @@ Gravity = 2.0
 # Preview Image is not needed to be explicitly defined here, as
 # image file with same name is to be used implicitly as preview.
 
+# Textures for each map block/element
+# Not defining texture for a specific block does not cause error,
+# but the block will be automatically assigned a dummy red texture.
+
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
 # the players will collide with them.
-
 # The following chars are used for defining foreground blocks:
 # BDFGHIJ
 # Remaining chars to be used as foreground blocks: KLQT
 
-# Background blocks are 1 depth away from the players towards
-# the background, they can be used as background walls.
-
-# The following chars are used for defining background blocks:
-# acenorv
-# Remaining chars to be used as background blocks: suwxyz
-
-# Textures for each map block/element
-# Not defining texture for a specific block does not cause error,
-# but the block will be automatically assigned a dummy red texture.
 B = asphalt01.bmp
 D = crate.bmp
 F = brick2.bmp
-#G = floor.bmp
-#H = floor.bmp
+G = crate02.bmp
+H = conc02.bmp
 #I = floor.bmp
 #J = crate.bmp
+
+# Background blocks are 1 depth away from the players towards
+# the background, they can be used as background walls.
+# The following chars are used for defining background blocks:
+# acenorvu
+# Remaining chars to be used as background blocks: wxyz
 
 a = conc02.bmp
 c = brick2.bmp
@@ -45,6 +44,7 @@ n = conc02_door_topright.bmp
 o = conc02_door_bottomleft.bmp
 r = conc02_door_bottomright.bmp
 v = crate.bmp
+u = crate02.bmp
 
 # 'S' char represents spawn/start point. Multiple 'S' chars can be placed.
 # Number of spawn points defines the max allowed players on the map.
@@ -64,15 +64,22 @@ S = conc02.bmp
 # of the map in multiple lines.
 # Space chars represent empty block.
 
-FaaaaaaaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaaaaaaaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaaaaaaaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaaaaaaaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaaaaaaaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaSaaenaavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-FaaaaoraavvvaaaaaavvvaaaaaaaaaaaaaaaaaaB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
+FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
+FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
+FFFFaaaaaaaaavvvaaaaaauuuaaaaaaaaaaaaaaaaaaccccFFFF
+FFFFaaaaaaaaavvvaaaaaauuuaaaaaaaaaaaaaaaaaaccccFFFF
+FFFFa  SaaaaavDvaaaaaaGGGaaaaaaaaaaaaaGGGGGFFccFFFF
+FFFFGaaaaaaaaDDDaaaaaaGGGaaaaaaaaaaaGGGGGGGFFccFFFF
+FFFFHHHHaaaaaHHHaaaaaaHHHaaaaaaHHHHHHHHHHHHFFccFFFF
+FFFFaaaaaaaaaaaaaaaaaauuuaaaaaaaaaaaaaaaaaaFFccFFFF
+FFFFa S aenaavvvaaaaaauuuaaaaaaaaaaa  SenaaFFccFFFF
+FFFFaaaaaoraDvDvaaaaaGGuuaaaaaaaaaaaaaaoraaFFccFFFF
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBaaaBBBBBBBBBBBBBBccBBBB
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBaaaBBBBBBBBBBBBBccBBBB
+BBBBBBBBBBBBBBaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBBB
+BBBBBBBBBBBBBBaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBBB
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 
 # After or in between the map layout lines, we do not accept anything else.

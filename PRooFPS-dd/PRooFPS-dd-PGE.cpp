@@ -326,6 +326,7 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bCtrlReleased(true),
     m_bShiftReleased(true),
     m_enterreleased(true),
+    m_bTeleportReleased(true),
     m_bWon(false),
     m_fCameraMinY(0.0f),
     m_bShowGuiDemo(false)
@@ -598,6 +599,24 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
       
     if ( !won )
     {
+        if (getNetwork().isServer() )
+        {
+            if (keybd.isKeyPressed((unsigned char)VkKeyScan('t')))
+            {
+                if (m_bTeleportReleased)
+                {
+                    // for testing purpose only, we can teleport server player to random spawn point
+                    m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
+                    m_mapPlayers[m_sUserName].m_legacyPlayer.getRespawnFlag() = true;
+                    m_bTeleportReleased = false;
+                }
+            }
+            else
+            {
+                m_bTeleportReleased = true;
+            }
+        }
+
         proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
         if (keybd.isKeyPressed(VK_LEFT) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')))
         {

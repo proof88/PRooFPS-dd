@@ -41,6 +41,10 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     foregroundBlocks.insert('H');
     foregroundBlocks.insert('I');
     foregroundBlocks.insert('J');
+    foregroundBlocks.insert('K');
+    foregroundBlocks.insert('L');
+    foregroundBlocks.insert('Q');
+    foregroundBlocks.insert('T');
 
     backgroundBlocks.insert('a');
     backgroundBlocks.insert('c');
@@ -50,6 +54,11 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     backgroundBlocks.insert('o');
     backgroundBlocks.insert('r');
     backgroundBlocks.insert('v');
+    backgroundBlocks.insert('u');
+    backgroundBlocks.insert('w');
+    backgroundBlocks.insert('x');
+    backgroundBlocks.insert('y');
+    backgroundBlocks.insert('z');
     
     // the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout()
     backgroundBlocks.insert('+');
