@@ -1213,7 +1213,7 @@ void PRooFPSddPGE::UpdateGameMode()
     if (bNewWinningConditions)
     {
         const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
-        if (nSecsSinceWin >= 2)
+        if (nSecsSinceWin >= 15)
         {
             if (getNetwork().isServer())
             {
