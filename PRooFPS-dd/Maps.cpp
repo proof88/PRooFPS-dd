@@ -469,34 +469,36 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         }
 
         // special background block handling
-        bool bCopyPreviousBlock = false;
+        bool bCopyPreviousBgBlock = false;
         bool bSpecialBlock = false;
         switch (c)
         {
         case '+':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'M':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'P':
             m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
             bSpecialBlock = true;
-            bCopyPreviousBlock = iObjectBgToBeCopied > -1;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'S':
             // spawnpoint is background block by default
             m_spawnpoints.insert(PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            bSpecialBlock = true;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         default: /* NOP */;
         }
 
         PRREObject3D* pNewBlockObj = nullptr;
-        if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBlock))
+        if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBgBlock))
         {
             m_objects_h++;
             if (!bSpecialBlock && bBackground)
@@ -516,7 +518,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         }
 
         PRRETexture* tex = PGENULL;
-        if (bSpecialBlock && bCopyPreviousBlock)
+        if (bSpecialBlock && bCopyPreviousBgBlock)
         {
             tex = m_objects[iObjectBgToBeCopied]->getMaterial().getTexture();
         }

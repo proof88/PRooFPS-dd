@@ -45,16 +45,20 @@ o = brick1.bmp
 r = brick1.bmp
 v = brick4.bmp
 
-# 'S' char represents spawn/start point. Multiple 'S' chars can be placed.
-# Number of spawn points defines the max allowed players on the map.
-# A spawn point is basically a background block to which texture can be
-# assigned the same way as to other blocks.
-
-S = brick1_s.bmp
-
+# Pickupable items:
 # 'P' char represents pistol.
 # 'M' char represents machine gun.
 # '+' char represents health/medkit.
+# Since these items are in the foreground, a background block might be implicitly
+# created behind them, if there is a previously created NEIGHBOR background block
+# next to them. In such case, that previous background block's texture will be
+# applied, otherwise NO background block will be created behind the item.
+
+# 'S' char represents spawn/start point. Multiple 'S' chars can be placed on the map.
+# Number of spawn points might define the max allowed players on the map in the future but
+# now players don't collide, so it is not yet a hard limit.
+# A spawn point is similar to pickupable items but it is not visible.
+# Background block might be implicitly created with the same rule as with pickupable items.
 
 # If not '=' char and not ignored line, it is treated as
 # layout definition. 

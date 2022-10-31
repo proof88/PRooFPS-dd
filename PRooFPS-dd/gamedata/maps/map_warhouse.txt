@@ -49,16 +49,20 @@ w = asphalt01.bmp
 x = dirt2.bmp
 y = paperboxes.bmp
 
-# 'S' char represents spawn/start point. Multiple 'S' chars can be placed.
-# Number of spawn points defines the max allowed players on the map.
-# A spawn point is basically a background block to which texture can be
-# assigned the same way as to other blocks.
-
-S = conc02.bmp
-
+# Pickupable items:
 # 'P' char represents pistol.
 # 'M' char represents machine gun.
 # '+' char represents health/medkit.
+# Since these items are in the foreground, a background block might be implicitly
+# created behind them, if there is a previously created NEIGHBOR background block
+# next to them. In such case, that previous background block's texture will be
+# applied, otherwise NO background block will be created behind the item.
+
+# 'S' char represents spawn/start point. Multiple 'S' chars can be placed on the map.
+# Number of spawn points might define the max allowed players on the map in the future but
+# now players don't collide, so it is not yet a hard limit.
+# A spawn point is similar to pickupable items but it is not visible.
+# Background block might be implicitly created with the same rule as with pickupable items.
 
 # If not '=' char and not ignored line, it is treated as
 # layout definition. 
@@ -76,14 +80,16 @@ FFFFccccFFFFa  SaaMaavDvaa+aaauuuaaaPMaaaaaaaaGGGGGFFcccFFFFFFF
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaaMaaaGGGGGGGFFc+ccFFFFFF
 FFFFccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHcccccMcFFFFF
 FFFFcccccFFFaaaaaaaaavvvaaPaaauuuaaMaaaaaaaaaaaaaaaccccccPcFFFF
-FFFFFccccFFF+ S aenaavvvaaaaaauuuaaaaaaaaaaa  SenaacFccccccFFFF
-FFFFFFcccFFFyaaPaoraDvDvaPaaMGGuuaPaaaaaaGPaaaaorayFFFcc+cPFFFF
+FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF
+FFFFFFcccFFFyDaPaoraDvDvaPaaMGGuuaPaaaaaaGPaaaaorDyFFFcc+cPFFFF
 BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB
-BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBwwwwwBBBBB
+BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB
 IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII
 IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII
 IIIIIIIIIIIxxxxxxxxMIIIIIMxIIIIIMxxPIIIIIIII+xxIIIIIIIxIIIIIIII
 IIIIIIIIIIIxxxxMIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # After or in between the map layout lines, we do not accept anything else.
