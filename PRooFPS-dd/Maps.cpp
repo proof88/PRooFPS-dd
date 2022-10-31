@@ -518,6 +518,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
             pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
             m_objects[m_objects_h - 1] = pNewBlockObj;
             m_objects[m_objects_h - 1]->SetLit(true);
+            //m_objects[m_objects_h - 1]->Hide();
         }
 
         if (!pNewBlockObj)

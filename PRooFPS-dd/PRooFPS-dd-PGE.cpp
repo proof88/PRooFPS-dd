@@ -16,6 +16,7 @@
 #include <cassert>
 #include <functional>
 
+#include "../../../PGE/PGE/PRRE/include/external/Render/PRRERendererHWfixedPipe.h"  // for rendering hints
 #include "../../../PGE/PGE/PRRE/include/external/PRREuiManager.h"
 #include "../../../PGE/PGE/PRRE/include/external/Display/PRREWindow.h"
 #include "../../../PGE/PGE/PRRE/include/external/PRRECamera.h"
@@ -382,6 +383,17 @@ void PRooFPSddPGE::onGameInitialized()
 
     getConsole().SetLoggingState("4LLM0DUL3S", false);
 
+    // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way
+    // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
+    // for ~1000 cubes, since PRRE still doesn't implement hierarchical occlusion culling ...
+    // And a normal map like Warhouse already contains ~1000 cubes.
+    getPRRE().getRenderer()->SetRenderHints(
+        BITF_PREP(PRRE_RH_RP_LEGACY_PR00FPS, PRRE_RH_RENDER_PATH_BITS, 3) |
+        BITF_PREP(PRRE_RH_OQ_METHOD_ASYNC, PRRE_RH_OQ_METHOD_BITS, 2) |
+        PRRE_RH_OQ_DRAW_BOUNDING_BOXES_OFF |
+        PRRE_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
+        PRRE_RH_ORDERING_BY_DISTANCE_OFF);
+    
     getPRRE().getScreen().SetVSyncEnabled(true);
 
     getPRRE().getCamera().SetNearPlane(0.1f);
@@ -397,8 +409,8 @@ void PRooFPSddPGE::onGameInitialized()
 
     m_maps.initialize();
     //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-    //const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
-    const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
+    const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
+    //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
     assert( mapLoaded );
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
