@@ -1143,6 +1143,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     {
         getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         m_pObjXHair->Hide();
+        getPRRE().getUImanager().addText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
     }
     else
     {
@@ -1164,6 +1165,9 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
     if (bMe)
     {
         m_pObjXHair->Show();
+        // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
+        getPRRE().getUImanager().RemoveText(
+            "Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2, getPRRE().getUImanager().getDefaultFontSize());
     }
 }
 
@@ -1188,13 +1192,6 @@ void PRooFPSddPGE::UpdateRespawnTimers()
             player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
             player.second.m_legacyPlayer.SetHealth(100);
             player.second.m_legacyPlayer.getRespawnFlag() = true;
-        }
-        else
-        {
-            if (player.first == m_sUserName)
-            {
-                getPRRE().getUImanager().text("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
-            }
         }
     }
 }
