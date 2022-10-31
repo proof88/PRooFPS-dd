@@ -318,6 +318,16 @@ const PRREVector& Maps::getObjectsVertexPosMax() const
     return m_max;
 }
 
+PRREObject3D** Maps::getBlocks()
+{
+    return m_objects;
+}
+
+int Maps::getBlockCount() const
+{
+    return m_objects_h;
+}
+
 const std::vector<MapItem*>& Maps::getItems() const
 {
     return m_items;

@@ -754,32 +754,25 @@ bool PRooFPSddPGE::Colliding2(
     float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
     float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
 {
-    if (
-        ( 
-            (o1px - o1sx/2 <= o2px + o2sx/2)
+    return (
+        (
+            (o1px - o1sx / 2 <= o2px + o2sx / 2)
             &&
-            (o1px + o1sx/2 >= o2px - o2sx/2)
+            (o1px + o1sx / 2 >= o2px - o2sx / 2)
         )
         &&
-        ( 
-            (o1py - o1sy/2 <= o2py + o2sy/2)
+        (
+            (o1py - o1sy / 2 <= o2py + o2sy / 2)
             &&
-            (o1py + o1sy/2 >= o2py - o2sy/2)
+            (o1py + o1sy / 2 >= o2py - o2sy / 2)
         )
         &&
-        ( 
-            (o1pz - o1sz/2 <= o2pz + o2sz/2)
+        (
+            (o1pz - o1sz / 2 <= o2pz + o2sz / 2)
             &&
-            (o1pz + o1sz/2 >= o2pz - o2sz/2)
+            (o1pz + o1sz / 2 >= o2pz - o2sz / 2)
         )
-    )
-    {
-      return true;
-    }
-    else
-    {
-      return false; 
-    }              
+    );            
 }
 
 bool PRooFPSddPGE::Colliding3(
@@ -1077,11 +1070,24 @@ void PRooFPSddPGE::UpdateBullets()
             if (!bDeleteBullet)
             {
                 // check if bullet is hitting a map element
-                for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
+                // 
+                // TODO: this part slows the game down in debug mode with a few bullets.
+                // Originally with only 6 bullets, with VSync FPS went down from 60 to 45 on main dev machine, so
+                // I recommend using spatial hierarchy to effectively reduce the number of collision checks ...
+                // For now with the small bullet direction optimization in the loop I managed to keep FPS around 45-50
+                // with 10-15 bullets.
+                for (int i = 0; i < m_maps.getBlockCount(); i++)
                 {
-                    PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
-                    if ((obj != PGENULL) && (obj != &(bullet.getObject3D())) && (obj->isColliding_TO_BE_REMOVED()))
+                    PRREObject3D* const obj = m_maps.getBlocks()[i];
+                    if (obj->isColliding_TO_BE_REMOVED())
                     {
+                        const bool bGoingLeft = bullet.getObject3D().getAngleVec().getY() == 0.f; // otherwise it would be 180.f
+                        if ((bGoingLeft && (obj->getPosVec().getX() > bullet.getObject3D().getPosVec().getX())) ||
+                            (!bGoingLeft && (obj->getPosVec().getX() < bullet.getObject3D().getPosVec().getX())))
+                        {
+                            // optimization: rule out those blocks which are not in bullet's direction
+                            continue;
+                        }
                         if (Colliding(*obj, bullet.getObject3D()))
                         {
                             bDeleteBullet = true;
@@ -1457,7 +1463,7 @@ void PRooFPSddPGE::onGameRunning()
     } 
 
     std::stringstream str;
-    //str << GAME_NAME << " " << GAME_VERSION << " :: " << wpn.getMagBulletCount() << " / " << wpn.getUnmagBulletCount() << " :: FPS: " << m_fps << " :: angleZ: " << wpn.getObject3D().getAngleVec().getZ();
+    str << GAME_NAME << " " << GAME_VERSION << " :: FPS: " << m_fps;
     window.SetCaption(str.str());
 }
 
