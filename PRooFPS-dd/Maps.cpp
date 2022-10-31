@@ -96,9 +96,16 @@ bool Maps::loaded() const
 bool Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
-    std::ifstream f;
 
-    f.open (fname, std::ifstream::in);
+    m_sRawName = PFL::changeExtension(PFL::getFilename(fname).c_str(), "");
+    if (m_sRawName.empty())
+    {
+        getConsole().EOLnOO("ERROR: empty raw name!");
+        return false;
+    }
+
+    std::ifstream f;
+    f.open(fname, std::ifstream::in);
     if ( !f.good() )
     {
         getConsole().EOLnOO("ERROR: failed to open file!");
@@ -193,6 +200,7 @@ bool Maps::load(const char* fname)
 void Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
+    m_sRawName.clear();
     m_Block2Texture.clear();
     if ( m_objects )
     {
@@ -532,7 +540,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
             }
             else
             {
-                const std::string sTexName = "gamedata\\textures\\" + m_Block2Texture[c];
+                const std::string sTexName = "gamedata\\textures\\" + m_sRawName + "\\" + m_Block2Texture[c];
                 tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
                 if (!tex)
                 {

@@ -68,6 +68,7 @@ private:
 
     std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;
+    std::string m_sRawName;
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
     std::set<PRREVector> m_spawnpoints;
