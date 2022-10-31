@@ -33,13 +33,15 @@ namespace proofps_dd
     {
         static const ElteFailMsgId id = ElteFailMsgId::USER_SETUP;
         static const uint8_t nUserNameMaxLength = 64;
+        static const uint8_t nMapFilenameMaxLength = 64;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             bool bCurrentClient,
             const std::string& sUserName,
-            const std::string& sIpAddress)
+            const std::string& sIpAddress,
+            const std::string& sMapFilename)
         {
             assert(sizeof(MsgUserSetup) <= pge_network::MsgApp::nMessageMaxLength);
             memset(&pkt, 0, sizeof(pkt));
@@ -51,6 +53,7 @@ namespace proofps_dd
             msgUserSetup.m_bCurrentClient = bCurrentClient;
             strncpy_s(msgUserSetup.m_szUserName, nUserNameMaxLength, sUserName.c_str(), sUserName.length());
             strncpy_s(msgUserSetup.m_szIpAddress, sizeof(msgUserSetup.m_szIpAddress), sIpAddress.c_str(), sIpAddress.length());
+            strncpy_s(msgUserSetup.m_szMapFilename, sizeof(msgUserSetup.m_szMapFilename), sMapFilename.c_str(), sMapFilename.length());
 
             return true;
         }
@@ -58,6 +61,7 @@ namespace proofps_dd
         bool m_bCurrentClient;
         char m_szUserName[nUserNameMaxLength];
         char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
+        char m_szMapFilename[nMapFilenameMaxLength];
     };
 
     enum class Strafe : std::uint8_t

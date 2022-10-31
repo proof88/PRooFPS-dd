@@ -407,11 +407,8 @@ void PRooFPSddPGE::onGameInitialized()
     m_deathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_gameMode);
     assert(m_deathMatchMode);
 
-    m_maps.initialize();
-    //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-    const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
-    //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
-    assert( mapLoaded );
+    const bool bMapsInited = m_maps.initialize();
+    assert(bMapsInited);
 
     m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -1574,18 +1571,23 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
     if (msg.m_bCurrentClient)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): this is me, my name is %s, connHandleServerSide: %u, my IP: %s",
-            __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress);
+        getConsole().OLn("PRooFPSddPGE::%s(): this is me, my name is %s, connHandleServerSide: %u, my IP: %s, map: %s",
+            __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress, msg.m_szMapFilename);
         // store our username so we can refer to it anytime later
         m_sUserName = msg.m_szUserName;
 
         if (getNetwork().isServer())
         {
             getPRRE().getUImanager().addText("Server, User name: " + m_sUserName, 10, 30);
+            // server is not loading map here, it already loaded earlier for itself
         }
         else
         {
             getPRRE().getUImanager().addText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
+
+            const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
+            //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
+            assert(mapLoaded);
         }
     }
     else
@@ -1629,17 +1631,19 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
     }
 
     const char* szConnectedUserName = nullptr;
-
-    const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
     pge_network::PgePacket newPktUserUpdate;
-    proofps_dd::MsgUserUpdate::initPkt(
-        newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
     if (msg.bCurrentClient)
     {
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
+            // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
+            //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
+            const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
+            //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
+            assert(mapLoaded);
+
             char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
             genUniqueUserName(szNewUserName);
             getConsole().OLn("PRooFPSddPGE::%s(): first (local) user %s connected and I'm server, so this is me (connHandleServerSide: %u)",
@@ -1648,7 +1652,11 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             szConnectedUserName = szNewUserName;
 
             pge_network::PgePacket newPktSetup;
-            proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress);
+            proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
+
+            const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
+            proofps_dd::MsgUserUpdate::initPkt(
+                newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
             getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
@@ -1683,7 +1691,11 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             __func__, szConnectedUserName, connHandleServerSide, msg.szIpAddress);
 
         pge_network::PgePacket newPktSetup;
-        proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress);
+        proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
+
+        const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
+        proofps_dd::MsgUserUpdate::initPkt(
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
         getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
@@ -1708,7 +1720,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 newPktSetup,
                 it.second.m_connHandleServerSide,
                 false,
-                it.first, it.second.m_sIpAddress);
+                it.first, it.second.m_sIpAddress,
+                "" /* here mapFilename is irrelevant */);
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
 
             proofps_dd::MsgUserUpdate::initPkt(
