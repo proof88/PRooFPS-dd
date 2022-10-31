@@ -97,10 +97,12 @@ bool Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
-    m_sRawName = PFL::changeExtension(PFL::getFilename(fname).c_str(), "");
+    m_sFileName = PFL::getFilename(fname);
+    m_sRawName = PFL::changeExtension(m_sFileName.c_str(), "");
     if (m_sRawName.empty())
     {
         getConsole().EOLnOO("ERROR: empty raw name!");
+        unload();
         return false;
     }
 
@@ -109,6 +111,7 @@ bool Maps::load(const char* fname)
     if ( !f.good() )
     {
         getConsole().EOLnOO("ERROR: failed to open file!");
+        unload();
         return false;
     }
 
@@ -201,6 +204,7 @@ void Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
     m_sRawName.clear();
+    m_sFileName.clear();
     m_Block2Texture.clear();
     if ( m_blocks )
     {
@@ -275,6 +279,11 @@ unsigned int Maps::height() const
 //        }
 //    }
 //}
+
+const std::string& Maps::getFilename() const
+{
+    return m_sFileName;
+}
 
 const std::set<PRREVector>& Maps::getSpawnpoints() const
 {

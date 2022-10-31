@@ -41,6 +41,7 @@ public:
     unsigned int width() const;
     unsigned int height() const;
     //void updateVisibilitiesForRenderer();
+    const std::string& getFilename() const;
     const std::set<PRREVector>& getSpawnpoints() const;
     const PRREVector& getRandomSpawnpoint() const;
     const PRREVector& getBlockPosMin() const;
@@ -71,6 +72,7 @@ private:
     std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;
     std::string m_sRawName;
+    std::string m_sFileName;
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
     std::set<PRREVector> m_spawnpoints;

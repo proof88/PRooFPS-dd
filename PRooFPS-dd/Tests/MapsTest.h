@@ -88,6 +88,7 @@ private:
     {
         Maps maps(*engine);
         bool b = assertFalse(maps.loaded(), "loaded 1") &
+            assertTrue(maps.getFilename().empty(), "filename 1") &
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
             assertTrue(maps.getVars().empty(), "getVars 1") &
@@ -100,6 +101,7 @@ private:
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.loaded(), "loaded 2") &
+            assertTrue(maps.getFilename().empty(), "filename 2") &
             assertEquals(0u, maps.width(), "width 2") &
             assertEquals(0u, maps.height(), "height 2") &
             assertTrue(maps.getVars().empty(), "getVars 2") &
@@ -119,6 +121,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/egsdghsdghsdghdsghgds.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
@@ -146,6 +149,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_assignment.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
@@ -173,6 +177,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_order.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
@@ -200,6 +205,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename");
 
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width");
@@ -262,6 +268,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
+        b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 1");
 
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
@@ -300,6 +307,7 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
+        b &= assertTrue(maps.getFilename().empty(), "filename 2");
 
         // block and map boundaries
         b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2");
@@ -321,6 +329,7 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
+        b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 3");
 
         // block and map boundaries
         b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getBlockPosMin(), "objects Min 3");
