@@ -5,7 +5,7 @@
 # Variable name are case-sensitive!
 
 # Name of the map is that will be displayed in map select submenu
-Name = Warhouse
+Name = WARena
 
 Gravity = 2.0
 
@@ -18,7 +18,7 @@ Gravity = 2.0
 # Textures should be placed in a separate directory specific to this map,
 # within gamedata/textures directory. The specific directory name should be
 # the same as the map file name without the extension part.
-# In this case the directory is: gamedata/textures/map_warhouse/
+# In this case the directory is: gamedata/textures/map_test_good/
 
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
@@ -27,31 +27,25 @@ Gravity = 2.0
 # BDFGHIJ
 # Remaining chars to be used as foreground blocks: KLQT
 
-B = asphalt01light.bmp
-D = cratelight.bmp
-F = brick2light.bmp
-G = crate02light.bmp
-H = conc02light.bmp
-I = dirt2light.bmp
+B = brick1light.bmp
+D = dirt2light.bmp
+#F = brick1.bmp
+#G = floor.bmp
+#H = floor.bmp
+#I = floor.bmp
 #J = crate.bmp
 
 # Background blocks are 1 depth away from the players towards
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
-# acenorvu
-# Remaining chars to be used as background blocks: z
+# acnor
+# Remaining chars to be used as background blocks: esuvwxyz
 
-a = conc02.bmp
-c = brick2.bmp
-e = conc02_door_topleft.bmp
-n = conc02_door_topright.bmp
-o = conc02_door_bottomleft.bmp
-r = conc02_door_bottomright.bmp
-v = crate.bmp
-u = crate02.bmp
-w = asphalt01.bmp
-x = dirt2.bmp
-y = paperboxes.bmp
+a = brick1.bmp
+c = dirt2.bmp
+#n = aztec01.bmp
+#o = brick1.bmp
+#r = brick1.bmp
 
 # Pickupable items:
 # 'P' char represents pistol.
@@ -77,27 +71,18 @@ y = paperboxes.bmp
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   P            +       S    M           P          S c+cccc
-FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFFFF
-FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFFFFF
-FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFFFFF
-FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFFFFF
-cFFF+cccccccaaaaaaaaavPvaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFFFFFF
-FFFFccScMcccaaaaaaaaavvvaaaMaauSuaaaaaaaaaaaSaaaPaaccccFFFFFFFF
-FFFFccccFFFFa  SaaMaavDvaa+aaauuuaaaPMaaaaPaaaGGGGGFFcccFFFFFFF
-FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaaMaaaGGGGGGGFFc+ccFFFFFF
-FFFFccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHcccccMcFFFFF
-FFFFccc+cFFFaaaaaaaaavvvaaPaaauuuaaMaaaaaaaaaaaaaaaccccccPcFFFF
-FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF
-FFFFFFcccFFFyDaPaoraDvDvaPaaMGGuuaPaaaaaaGPaaaaorDyFFFcc+cPFFFF
-BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB
-BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB
-IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII
-IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII
-IIIIIIIIIIIxxxxxxxxMIIIIIMxIIIIIMxxPIIIIIIII+xxIIIIIIIxIIIIIIII
-IIIIIIIIIIIxxxxMIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BBBB                                            SMSMSMSMS                                            BBBB
+BBBB                                            aMMMMMMMa                                            BBBB
+BBBB                                           aBBBBBBBBBa                                           BBBB
+BBBB    SSSSSS                                aMaaaaaaaaaMa                                SSSSSS    BBBB
+BBBBaMaaMMMMMMa                               a  aaaaaaa  a                               aMMMMMMaaMaBBBB
+BBBBaaaaBBBBBBa                              aa   aa aa   aa                              aBBBBBBaaaaBBBB
+BBBBBaPaaaBaaaa                              aa   aa aa   aa                              aaaaBaaaPaBBBBB
+BBBBBBaaaaaaaaa          cccccccccc          aa  aaaaaaa  aa          cccccccccc          aaaaaaaaaBBBBBB
+BBBBBBBaaSSSaaa        cccDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDccc        aaaSSSaaBBBBBBB
+BBBBBBBBa++++BaccccccM+cDDDDDDDDDDDDcccccccaaaaaaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+MccccccaB++++aBBBBBBBB
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 
 # After or in between the map layout lines, we do not accept anything else.

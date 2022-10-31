@@ -68,6 +68,8 @@ r = brick1.bmp
 # '=' chars. The map layout contains the blocks a.k.a. the elements
 # of the map in multiple lines.
 # Space chars represent empty block.
+# Since all lines are trimmed before being processed, starting layout definition with whitespaces
+# are strictly not recommended.
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
