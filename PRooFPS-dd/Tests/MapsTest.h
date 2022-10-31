@@ -91,10 +91,10 @@ private:
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
             assertTrue(maps.getVars().empty(), "getVars 1") &
-            assertEquals(PRREVector(0,0,0), maps.getObjectsPosMin(), "objects Min 1") &
-            assertEquals(PRREVector(0,0,0), maps.getObjectsPosMax(), "objects Max 1") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min 1") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max 1") &
+            assertEquals(PRREVector(0,0,0), maps.getBlockPosMin(), "objects Min 1") &
+            assertEquals(PRREVector(0,0,0), maps.getBlockPosMax(), "objects Max 1") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 1") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 1") &
             assertNull(maps.getBlocks(), "blocks 1") &
             assertEquals(0, maps.getBlockCount(), "block count 1");
         
@@ -104,10 +104,10 @@ private:
             assertEquals(0u, maps.height(), "height 2") &
             assertTrue(maps.getVars().empty(), "getVars 2") &
             assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min 2") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max 2") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min 2") &
-            assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max 2") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 2") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 2") &
+            assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 2") &
             assertNull(maps.getBlocks(), "blocks 2") &
             assertEquals(0, maps.getBlockCount(), "block count 2");
         return b;
@@ -123,10 +123,10 @@ private:
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
         b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
         b &= assertNull(maps.getBlocks(), "blocks");
         b &= assertEquals(0, maps.getBlockCount(), "block count");
 
@@ -150,10 +150,10 @@ private:
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
         b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
         b &= assertNull(maps.getBlocks(), "blocks");
         b &= assertEquals(0, maps.getBlockCount(), "block count");
 
@@ -177,10 +177,10 @@ private:
         // block and map boundaries
         b &= assertEquals(0u, maps.width(), "width");
         b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
         b &= assertNull(maps.getBlocks(), "blocks");
         b &= assertEquals(0, maps.getBlockCount(), "block count");
 
@@ -204,20 +204,20 @@ private:
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height");
-        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H)/2, -1), maps.getObjectsPosMin(), "objects Min");
-        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H/2-1, 0), maps.getObjectsPosMax(), "objects Max");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H)/2, -1), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H/2-1, 0), maps.getBlockPosMax(), "objects Max");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMin().getX() - 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMin(), "vertex Min");
+                maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMin(), "vertex Min");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMax().getX() + 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMax(), "vertex Max");
+                maps.getBlockPosMax().getX() + 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMax(), "vertex Max");
         b &= assertNotNull(maps.getBlocks(), "blocks");
         b &= assertLess(0, maps.getBlockCount(), "block count");
         
@@ -266,20 +266,20 @@ private:
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
-        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsPosMin(), "objects Min 1");
-        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getObjectsPosMax(), "objects Max 1");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getBlockPosMin(), "objects Min 1");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getBlockPosMax(), "objects Max 1");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMin().getX() - 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMin(), "vertex Min 1");
+                maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMin(), "vertex Min 1");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMax().getX() + 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMax(), "vertex Max 1");
+                maps.getBlockPosMax().getX() + 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMax(), "vertex Max 1");
         b &= assertNotNull(maps.getBlocks(), "blocks 1");
         b &= assertLess(0, maps.getBlockCount(), "block count 1");
 
@@ -302,10 +302,10 @@ private:
         b &= assertEquals(0u, maps.height(), "height 2");
 
         // block and map boundaries
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMin(), "objects Min 2");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsPosMax(), "objects Max 2");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMin(), "vertex Min 2");
-        b &= assertEquals(PRREVector(0, 0, 0), maps.getObjectsVertexPosMax(), "vertex Max 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 2");
+        b &= assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 2");
         b &= assertNull(maps.getBlocks(), "blocks 2");
         b &= assertEquals(0, maps.getBlockCount(), "block count 2");
 
@@ -323,20 +323,20 @@ private:
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
 
         // block and map boundaries
-        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getObjectsPosMin(), "objects Min 3");
-        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getObjectsPosMax(), "objects Max 3");
+        b &= assertEquals(PRREVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getBlockPosMin(), "objects Min 3");
+        b &= assertEquals(PRREVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getBlockPosMax(), "objects Max 3");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMin().getX() - 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMin(), "vertex Min 3");
+                maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMin().getY() - 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMin().getZ() - 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMin(), "vertex Min 3");
         b &= assertEquals(
             PRREVector(
-                maps.getObjectsPosMax().getX() + 1/*blocksize_X*/ / 2.f,
-                maps.getObjectsPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
-                maps.getObjectsPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
-            maps.getObjectsVertexPosMax(), "vertex Max 3");
+                maps.getBlockPosMax().getX() + 1/*blocksize_X*/ / 2.f,
+                maps.getBlockPosMax().getY() + 1/*blocksize_Y*/ / 2.f,
+                maps.getBlockPosMax().getZ() + 1/*blocksize_Z*/ / 2.f),
+            maps.getBlocksVertexPosMax(), "vertex Max 3");
         b &= assertNotNull(maps.getBlocks(), "blocks 3");
         b &= assertLess(0, maps.getBlockCount(), "block count 3");
 

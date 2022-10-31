@@ -43,10 +43,10 @@ public:
     //void updateVisibilitiesForRenderer();
     const std::set<PRREVector>& getSpawnpoints() const;
     const PRREVector& getRandomSpawnpoint() const;
-    const PRREVector& getObjectsPosMin() const;
-    const PRREVector& getObjectsPosMax() const;
-    const PRREVector& getObjectsVertexPosMin() const;
-    const PRREVector& getObjectsVertexPosMax() const;
+    const PRREVector& getBlockPosMin() const;
+    const PRREVector& getBlockPosMax() const;
+    const PRREVector& getBlocksVertexPosMin() const;
+    const PRREVector& getBlocksVertexPosMax() const;
     PRREObject3D** getBlocks(); // TODO: not nice access
     int getBlockCount() const;
     const std::vector<MapItem*>& getItems() const;
@@ -65,8 +65,8 @@ protected:
     }
 
 private:
-    PRREObject3D** m_objects; // TODO: not nice, in future we switch to cpp container
-    int m_objects_h;
+    PRREObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
+    int m_blocks_h;
 
     std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;
@@ -74,8 +74,8 @@ private:
     std::map<char, std::string> m_Block2Texture;
     PRRETexture* m_texRed;
     std::set<PRREVector> m_spawnpoints;
-    PRREVector m_min, m_max;
-    PRREVector m_posMin, m_posMax;
+    PRREVector m_blocksVertexPosMin, m_blocksVertexPosMax;
+    PRREVector m_blockPosMin, m_blockPosMax;
     unsigned int m_width, m_height;
     std::vector<MapItem*> m_items;
 

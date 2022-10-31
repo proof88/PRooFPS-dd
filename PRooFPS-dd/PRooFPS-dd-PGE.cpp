@@ -925,7 +925,7 @@ void PRooFPSddPGE::Gravity(int fps)
         }
         legacyPlayer.getPos1().SetY(legacyPlayer.getPos1().getY() + legacyPlayer.getGravity());
         
-        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getObjectsPosMin().getY() - 5.0f))
+        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
             legacyPlayer.SetHealth(0);
@@ -1054,13 +1054,13 @@ void PRooFPSddPGE::UpdateBullets()
                 // check if bullet is out of map bounds
                 // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
                 const PRREVector vRelaxedMapMinBounds(
-                    m_maps.getObjectsVertexPosMin().getX() - GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getObjectsVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
-                    m_maps.getObjectsVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+                    m_maps.getBlocksVertexPosMin().getX() - GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getBlocksVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
+                    m_maps.getBlocksVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
                 const PRREVector vRelaxedMapMaxBounds(
-                    m_maps.getObjectsVertexPosMax().getX() + GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getObjectsVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
-                    m_maps.getObjectsVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
+                    m_maps.getBlocksVertexPosMax().getX() + GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getBlocksVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
+                    m_maps.getBlocksVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
                 if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
                 {
                     bDeleteBullet = true;

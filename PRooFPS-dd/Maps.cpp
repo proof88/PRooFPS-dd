@@ -27,8 +27,8 @@ static std::set<char> backgroundBlocks;
 Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     m_gfx(gfx)
 {
-    m_objects_h  = 0;
-    m_objects    = NULL;
+    m_blocks_h  = 0;
+    m_blocks     = NULL;
     m_texRed     = PGENULL;
     m_width = 0;
     m_height = 0;
@@ -90,7 +90,7 @@ bool Maps::initialize()
 
 bool Maps::loaded() const
 {
-    return ( m_objects != NULL );
+    return ( m_blocks != NULL );
 }
 
 bool Maps::load(const char* fname)
@@ -156,42 +156,42 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    m_posMin = m_objects[0]->getPosVec();
-    m_posMax = m_objects[0]->getPosVec();
-    for (int i = 0; i < m_objects_h; i++)
+    m_blockPosMin = m_blocks[0]->getPosVec();
+    m_blockPosMax = m_blocks[0]->getPosVec();
+    for (int i = 0; i < m_blocks_h; i++)
     {
-        if ( m_objects[i] != PGENULL )
+        if ( m_blocks[i] != PGENULL )
         {
-            if (m_objects[i]->getPosVec().getX() < m_posMin.getX())
+            if (m_blocks[i]->getPosVec().getX() < m_blockPosMin.getX())
             {
-                m_posMin.SetX(m_objects[i]->getPosVec().getX());
+                m_blockPosMin.SetX(m_blocks[i]->getPosVec().getX());
             }
-            else if (m_objects[i]->getPosVec().getX() > m_posMax.getX())
+            else if (m_blocks[i]->getPosVec().getX() > m_blockPosMax.getX())
             {
-                m_posMax.SetX(m_objects[i]->getPosVec().getX());
-            }
-
-            if (m_objects[i]->getPosVec().getY() < m_posMin.getY())
-            {
-                m_posMin.SetY(m_objects[i]->getPosVec().getY());
-            }
-            else if (m_objects[i]->getPosVec().getY() > m_posMax.getY())
-            {
-                m_posMax.SetY(m_objects[i]->getPosVec().getY());
+                m_blockPosMax.SetX(m_blocks[i]->getPosVec().getX());
             }
 
-            if (m_objects[i]->getPosVec().getZ() < m_posMin.getZ())
+            if (m_blocks[i]->getPosVec().getY() < m_blockPosMin.getY())
             {
-                m_posMin.SetZ(m_objects[i]->getPosVec().getZ());
+                m_blockPosMin.SetY(m_blocks[i]->getPosVec().getY());
             }
-            else if (m_objects[i]->getPosVec().getZ() > m_posMax.getZ())
+            else if (m_blocks[i]->getPosVec().getY() > m_blockPosMax.getY())
             {
-                m_posMax.SetZ(m_objects[i]->getPosVec().getZ());
+                m_blockPosMax.SetY(m_blocks[i]->getPosVec().getY());
+            }
+
+            if (m_blocks[i]->getPosVec().getZ() < m_blockPosMin.getZ())
+            {
+                m_blockPosMin.SetZ(m_blocks[i]->getPosVec().getZ());
+            }
+            else if (m_blocks[i]->getPosVec().getZ() > m_blockPosMax.getZ())
+            {
+                m_blockPosMax.SetZ(m_blocks[i]->getPosVec().getZ());
             }
         }
     }
-    m_min.Set(m_posMin.getX() - GAME_BLOCK_SIZE_X / 2.f, m_posMin.getY() - GAME_BLOCK_SIZE_Y / 2.f, m_posMin.getZ() - GAME_BLOCK_SIZE_Z / 2.f);
-    m_max.Set(m_posMax.getX() + GAME_BLOCK_SIZE_X / 2.f, m_posMax.getY() + GAME_BLOCK_SIZE_Y / 2.f, m_posMax.getZ() + GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMin.Set(m_blockPosMin.getX() - GAME_BLOCK_SIZE_X / 2.f, m_blockPosMin.getY() - GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMin.getZ() - GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMax.Set(m_blockPosMax.getX() + GAME_BLOCK_SIZE_X / 2.f, m_blockPosMax.getY() + GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMax.getZ() + GAME_BLOCK_SIZE_Z / 2.f);
 
     getConsole().SOLnOO("Map loaded with width %d and height %d!", m_width, m_height);
     return true;
@@ -202,15 +202,15 @@ void Maps::unload()
     getConsole().OLnOI("Maps::unload() ...");
     m_sRawName.clear();
     m_Block2Texture.clear();
-    if ( m_objects )
+    if ( m_blocks )
     {
-        for (int i = 0; i < m_objects_h; i++)
+        for (int i = 0; i < m_blocks_h; i++)
         {
-            m_gfx.getObject3DManager().DeleteAttachedInstance( *(m_objects[i]) );
+            m_gfx.getObject3DManager().DeleteAttachedInstance( *(m_blocks[i]) );
         }
-        free( m_objects );
-        m_objects = NULL;
-        m_objects_h = 0;
+        free( m_blocks );
+        m_blocks = NULL;
+        m_blocks_h = 0;
     }
     for (auto pMi : m_items)
     {
@@ -219,10 +219,10 @@ void Maps::unload()
     m_items.clear();
     m_width = 0;
     m_height = 0;
-    m_posMin.SetZero();
-    m_posMax.SetZero();
-    m_min.SetZero();
-    m_max.SetZero();
+    m_blockPosMin.SetZero();
+    m_blockPosMax.SetZero();
+    m_blocksVertexPosMin.SetZero();
+    m_blocksVertexPosMax.SetZero();
     m_vars.clear();
     m_spawnpoints.clear();
     getConsole().OOOLn("Maps::unload() done!");
@@ -252,9 +252,9 @@ unsigned int Maps::height() const
 //{
 //    const PRREVector campos = m_gfx.getCamera().getPosVec();
 //
-//    for (int i = 0; i < m_objects_h; i++)
+//    for (int i = 0; i < m_blocks_h; i++)
 //    {
-//        PRREObject3D* obj = m_objects[i];
+//        PRREObject3D* obj = m_blocks[i];
 //        if ( obj != PGENULL )
 //        {
 //            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX()-RENDERER_MIN_X )
@@ -298,34 +298,34 @@ const PRREVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
-const PRREVector& Maps::getObjectsPosMin() const
+const PRREVector& Maps::getBlockPosMin() const
 {
-    return m_posMin;
+    return m_blockPosMin;
 }
 
-const PRREVector& Maps::getObjectsPosMax() const
+const PRREVector& Maps::getBlockPosMax() const
 {
-    return m_posMax;
+    return m_blockPosMax;
 }
 
-const PRREVector& Maps::getObjectsVertexPosMin() const
+const PRREVector& Maps::getBlocksVertexPosMin() const
 {
-    return m_min;
+    return m_blocksVertexPosMin;
 }
 
-const PRREVector& Maps::getObjectsVertexPosMax() const
+const PRREVector& Maps::getBlocksVertexPosMax() const
 {
-    return m_max;
+    return m_blocksVertexPosMax;
 }
 
 PRREObject3D** Maps::getBlocks()
 {
-    return m_objects;
+    return m_blocks;
 }
 
 int Maps::getBlockCount() const
 {
-    return m_objects_h;
+    return m_blocks_h;
 }
 
 const std::vector<MapItem*>& Maps::getItems() const
@@ -518,17 +518,17 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         PRREObject3D* pNewBlockObj = nullptr;
         if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBgBlock))
         {
-            m_objects_h++;
+            m_blocks_h++;
             if (!bSpecialBlock && bBackground)
             {
-                iObjectBgToBeCopied = m_objects_h - 1;
+                iObjectBgToBeCopied = m_blocks_h - 1;
             }
             // TODO: handle memory allocation error
-            m_objects = (PRREObject3D**)realloc(m_objects, m_objects_h * sizeof(PRREObject3D*));
+            m_blocks = (PRREObject3D**)realloc(m_blocks, m_blocks_h * sizeof(PRREObject3D*));
             pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
-            m_objects[m_objects_h - 1] = pNewBlockObj;
-            m_objects[m_objects_h - 1]->SetLit(true);
-            //m_objects[m_objects_h - 1]->Hide();
+            m_blocks[m_blocks_h - 1] = pNewBlockObj;
+            m_blocks[m_blocks_h - 1]->SetLit(true);
+            //m_blocks[m_blocks_h - 1]->Hide();
         }
 
         if (!pNewBlockObj)
@@ -539,7 +539,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         PRRETexture* tex = PGENULL;
         if (bSpecialBlock && bCopyPreviousBgBlock)
         {
-            tex = m_objects[iObjectBgToBeCopied]->getMaterial().getTexture();
+            tex = m_blocks[iObjectBgToBeCopied]->getMaterial().getTexture();
         }
         else
         {
