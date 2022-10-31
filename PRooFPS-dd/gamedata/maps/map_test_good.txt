@@ -34,16 +34,14 @@ J = crate.bmp
 # Background blocks are 1 depth away from the players towards
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
-# acenorv
-# Remaining chars to be used as background blocks: suwxyz
+# acnor
+# Remaining chars to be used as background blocks: esuvwxyz
 
 a = brick1.bmp
 c = brick2.bmp
-e = brick3.bmp
 n = aztec01.bmp
 o = brick1.bmp
 r = brick1.bmp
-v = brick4.bmp
 
 # Pickupable items:
 # 'P' char represents pistol.
@@ -69,8 +67,8 @@ v = brick4.bmp
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeee  eeeeeeee
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  vvvvvvvv
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+ooooacnooooooooooooooooooooooo  oooooooo
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnn  nnnnnnnn
 oSoooooooooJoooooSoooooooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrrrrrrrrrrrr  rrrrrrrr
