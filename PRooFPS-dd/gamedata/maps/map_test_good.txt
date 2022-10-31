@@ -12,24 +12,17 @@ Gravity = 2.0
 # Preview Image is not needed to be explicitly defined here, as
 # image file with same name is to be used implicitly as preview.
 
+# Textures for each map block/element
+# Not defining texture for a specific block does not cause error,
+# but the block will be automatically assigned a dummy red texture.
+
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
 # the players will collide with them.
-
 # The following chars are used for defining foreground blocks:
 # BDFGHIJ
 # Remaining chars to be used as foreground blocks: KLQT
 
-# Background blocks are 1 depth away from the players towards
-# the background, they can be used as background walls.
-
-# The following chars are used for defining background blocks:
-# acenorv
-# Remaining chars to be used as background blocks: suwxyz
-
-# Textures for each map block/element
-# Not defining texture for a specific block does not cause error,
-# but the block will be automatically assigned a dummy red texture.
 #B = floor.bmp # intentionally commented to test if B blocks really assigned red texture
 D = floor.bmp
 F = floor.bmp
@@ -37,6 +30,12 @@ G = floor.bmp
 H = floor.bmp
 I = floor.bmp
 J = crate.bmp
+
+# Background blocks are 1 depth away from the players towards
+# the background, they can be used as background walls.
+# The following chars are used for defining background blocks:
+# acenorv
+# Remaining chars to be used as background blocks: suwxyz
 
 a = brick1.bmp
 c = brick2.bmp

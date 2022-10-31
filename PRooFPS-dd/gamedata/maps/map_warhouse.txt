@@ -23,19 +23,19 @@ Gravity = 2.0
 # BDFGHIJ
 # Remaining chars to be used as foreground blocks: KLQT
 
-B = asphalt01.bmp
-D = crate.bmp
-F = brick2.bmp
-G = crate02.bmp
-H = conc02.bmp
-#I = floor.bmp
+B = asphalt01light.bmp
+D = cratelight.bmp
+F = brick2light.bmp
+G = crate02light.bmp
+H = conc02light.bmp
+I = dirt2light.bmp
 #J = crate.bmp
 
 # Background blocks are 1 depth away from the players towards
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
 # acenorvu
-# Remaining chars to be used as background blocks: wxyz
+# Remaining chars to be used as background blocks: z
 
 a = conc02.bmp
 c = brick2.bmp
@@ -45,6 +45,9 @@ o = conc02_door_bottomleft.bmp
 r = conc02_door_bottomright.bmp
 v = crate.bmp
 u = crate02.bmp
+w = asphalt01.bmp
+x = dirt2.bmp
+y = paperboxes.bmp
 
 # 'S' char represents spawn/start point. Multiple 'S' chars can be placed.
 # Number of spawn points defines the max allowed players on the map.
@@ -64,22 +67,23 @@ S = conc02.bmp
 # of the map in multiple lines.
 # Space chars represent empty block.
 
-FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
-FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
-FFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFF
-FFFFaaaaaaaaavvvaaaaaauuuaaaaaaaaaaaaaaaaaaccccFFFF
-FFFFaaaaaaaaavvvaaaaaauuuaaaaaaaaaaaaaaaaaaccccFFFF
-FFFFa  SaaaaavDvaaaaaaGGGaaaaaaaaaaaaaGGGGGFFccFFFF
-FFFFGaaaaaaaaDDDaaaaaaGGGaaaaaaaaaaaGGGGGGGFFccFFFF
-FFFFHHHHaaaaaHHHaaaaaaHHHaaaaaaHHHHHHHHHHHHFFccFFFF
-FFFFaaaaaaaaaaaaaaaaaauuuaaaaaaaaaaaaaaaaaaFFccFFFF
-FFFFa S aenaavvvaaaaaauuuaaaaaaaaaaa  SenaaFFccFFFF
-FFFFaaaaaoraDvDvaaaaaGGuuaaaaaaaaaaaaaaoraaFFccFFFF
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBaaaBBBBBBBBBBBBBBccBBBB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBaaaBBBBBBBBBBBBBccBBBB
-BBBBBBBBBBBBBBaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBBB
-BBBBBBBBBBBBBBaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBBB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFFFFFF
+FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFFFFFF
+FFFFFFFFFFFFHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFFFFFFFFFFFF
+FFFFccccccccaaaaaaaaavvvaaaaaauuuaaaaaaaaaaaaaaaaaaccccFFFFFFFF
+FFFFccScMcccaaaaaaaaavvvaaaaaauSuaaaaaaaaaaaSaaaaaaccccFFFFFFFF
+FFFFccccFFFFa  SaaMaavDvaa+aaauuuaaaPMaaaaaaaaGGGGGFFcccFFFFFFF
+FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaaMaaaGGGGGGGFFc+ccFFFFFF
+FFFFccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHcccccMcFFFFF
+FFFFcccccFFFaaaaaaaaavvvaaPaaauuuaaMaaaaaaaaaaaaaaaccccccPcFFFF
+FFFFFccccFFF+ S aenaavvvaaaaaauuuaaaaaaaaaaa  SenaacFccccccFFFF
+FFFFFFcccFFFyaaPaoraDvDvaPaaMGGuuaPaaaaaaGPaaaaorayFFFcc+cPFFFF
+BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB
+BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBwwwwwBBBBB
+IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII
+IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII
+IIIIIIIIIIIxxxxxxxxMIIIIIMxIIIIIMxxPIIIIIIII+xxIIIIIIIxIIIIIIII
+IIIIIIIIIIIxxxxMIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 
 # After or in between the map layout lines, we do not accept anything else.
