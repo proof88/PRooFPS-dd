@@ -23,7 +23,7 @@
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
 static const std::string GAME_NAME    = "PRooFPS-dd";
-static const std::string GAME_VERSION = "0.1.0.0 Alpha";
+static const std::string GAME_VERSION = "0.1.0.0 Private Beta";
 
 
 // ############################### PUBLIC ################################
@@ -395,6 +395,7 @@ void PRooFPSddPGE::onGameInitialized()
         PRRE_RH_ORDERING_BY_DISTANCE_OFF);
     
     getPRRE().getScreen().SetVSyncEnabled(true);
+    setGameRunningFrequency(GAME_MAXFPS);
 
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
@@ -618,6 +619,11 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                     // for testing purpose only, we can teleport server player to random spawn point
                     m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
                     m_mapPlayers[m_sUserName].m_legacyPlayer.getRespawnFlag() = true;
+                    // log some stats too
+                    getConsole().SetLoggingState("PRRERendererHWfixedPipe", true);
+                    getPRRE().getRenderer()->ResetStatistics();
+                    getConsole().SetLoggingState("PRRERendererHWfixedPipe", false);
+
                     m_bTeleportReleased = false;
                 }
             }
@@ -929,18 +935,6 @@ void PRooFPSddPGE::Gravity(int fps)
             HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
         }
     }
-}
-
-void PRooFPSddPGE::FrameLimiter(int fps_ms)
-{
-  //if ( GAME_MAXFPS > 0 )
-  {
-    if ( (1000/(float)GAME_MAXFPS) - fps_ms > 0.0f )
-        Sleep(PFL::roundi((1000/(float)GAME_MAXFPS) - fps_ms));
-    else {
-        Sleep(1);
-    }
-  }
 }
 
 void PRooFPSddPGE::ShowFragTable(bool bWin) const
@@ -1339,9 +1333,6 @@ void PRooFPSddPGE::onGameRunning()
 {
     PRREWindow& window = getPRRE().getWindow();
 
-    if ( m_fps == 0 ) {
-        m_fps = 60;
-    }
     m_fps_ms = GetTickCount();
 
     // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
@@ -1444,10 +1435,8 @@ void PRooFPSddPGE::onGameRunning()
         //map.UpdateVisibilitiesForRenderer();
     }
 
-    // képkockaszám limitáló (akkor kell, ha nincs vsync)
     m_fps_ms = GetTickCount() - m_fps_ms;
-    //FrameLimiter(m_fps_ms);
-    // fps mérõ frissítése 
+    // this is horrible that FPS measuring is still not available from outside of PRRE .........
     m_fps_counter++;
     if ( GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure )
     {
