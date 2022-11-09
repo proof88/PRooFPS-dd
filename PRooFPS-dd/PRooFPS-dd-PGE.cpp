@@ -443,6 +443,47 @@ void PRooFPSddPGE::onGameInitialized()
             PGE::showErrorDialog("Server has FAILED to start listening!");
             assert(false);
         }
+
+        std::ifstream f;
+        f.open("server.txt", std::ifstream::in);
+        if (!f.good())
+        {
+            getConsole().OLn("No server.txt found!");
+            m_sServerMapFilenameToLoad = "map_warena.txt";
+        }
+        else
+        {
+            getConsole().OLn("Found server.txt");
+            const std::streamsize nBuffSize = 1024;
+            char cLine[nBuffSize];
+            int i = 0;
+            while (!f.eof())
+            {
+                f.getline(cLine, nBuffSize);
+                // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
+                PFL::strClrLeads(cLine);
+                const std::string sTrimmedLine(cLine);
+                switch (i)
+                {
+                case 0:
+                    m_sServerMapFilenameToLoad = sTrimmedLine;
+                    getConsole().OLn("Server map override: %s", m_sServerMapFilenameToLoad.c_str());
+                    break;
+                case 1:
+                    if (sTrimmedLine == "vsync_off")
+                    {
+                        getConsole().OLn("VSync override: off");
+                        getPRRE().getScreen().SetVSyncEnabled(false);
+                    }
+                    break;
+                default:
+                    getConsole().OLn("Logging override: %s", sTrimmedLine.c_str());
+                    getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
+                } // switch
+                i++;
+            };
+            f.close();
+        }
     }
     else
     {
@@ -467,16 +508,23 @@ void PRooFPSddPGE::onGameInitialized()
                 // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
                 PFL::strClrLeads(cLine);
                 const std::string sTrimmedLine(cLine);
-                if (i == 0)
+                switch (i)
                 {
+                case 0:
                     sIp = sTrimmedLine;
                     getConsole().OLn("IP override: %s", sIp.c_str());
-                }
-                else
-                {
+                    break;
+                case 1:
+                    if (sTrimmedLine == "vsync_off")
+                    {
+                        getConsole().OLn("VSync override: off");
+                        getPRRE().getScreen().SetVSyncEnabled(false);
+                    }
+                    break;
+                default:
                     getConsole().OLn("Logging override: %s", sTrimmedLine.c_str());
                     getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
-                }
+                } // switch
                 i++;
             };
             f.close();
@@ -1497,6 +1545,7 @@ void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
     m_maps.shutdown();
+    m_sServerMapFilenameToLoad.clear();
     getPRRE().getObject3DManager().DeleteAll();
     getPRRE().getWindow().SetCursorVisible(true);
 
@@ -1575,7 +1624,6 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             getPRRE().getUImanager().addText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
 
             const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
-            //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
             assert(mapLoaded);
         }
     }
@@ -1629,8 +1677,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         {
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            const bool mapLoaded = m_maps.load("gamedata/maps/map_warhouse.txt");
-            //const bool mapLoaded = m_maps.load("gamedata/maps/map_warena.txt");
+            const bool mapLoaded = m_maps.load((std::string("gamedata/maps/") + m_sServerMapFilenameToLoad).c_str());
             assert(mapLoaded);
 
             char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];

@@ -110,7 +110,7 @@ bool Maps::load(const char* fname)
     f.open(fname, std::ifstream::in);
     if ( !f.good() )
     {
-        getConsole().EOLnOO("ERROR: failed to open file!");
+        getConsole().EOLnOO("ERROR: failed to open file %s!", fname);
         unload();
         return false;
     }

@@ -155,6 +155,7 @@ private:
 
     proofps_dd::GameMode* m_gameMode;
     proofps_dd::DeathMatchMode* m_deathMatchMode;
+    std::string m_sServerMapFilenameToLoad;
     Maps m_maps;
 
     int m_fps, m_fps_counter;                 /* fps méréséhez segédváltozók */

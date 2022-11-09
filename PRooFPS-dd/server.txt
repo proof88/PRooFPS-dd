@@ -1,0 +1,2 @@
+map_test_good.txt
+vsync_on
