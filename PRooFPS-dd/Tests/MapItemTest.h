@@ -75,9 +75,13 @@ private:
 
     bool test_initially_empty()
     {
+        const MapItem::MapItemId iLastMapItemId = MapItem::getGlobalMapItemId();
+
         MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
 
-        return assertEquals(static_cast<int>(MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
+        return assertEquals(mi.getId(), iLastMapItemId, "item id") &
+            assertEquals(MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
+            assertEquals(static_cast<int>(MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
             assertEquals(PRREVector(1, 2, 3), mi.getPos(), "pos") &
             assertEquals(mi.getPos(), mi.getObject3D().getPosVec(), "obj pos") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "visible") &

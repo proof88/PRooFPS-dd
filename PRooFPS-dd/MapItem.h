@@ -28,15 +28,20 @@ class MapItem
 {
 public:
 
+    typedef uint32_t MapItemId;
+
+    static const MapItemId& getGlobalMapItemId();
+
     // ---------------------------------------------------------------------------
 
     MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos);
     ~MapItem();
 
+    const MapItemId& getId() const;
     const MapItemType& getType() const;
     const PRREVector& getPos() const;
     const PRREObject3D& getObject3D() const;
-    PRREObject3D& getObject3D();
+    //PRREObject3D& getObject3D();
 
     bool isTaken() const;
     void Take();
@@ -47,6 +52,10 @@ public:
 protected:
 
 private:
+
+    static MapItemId m_globalMapItemId;  /**< Next unique id for identifying. Used by server and client instances. */
+
+    MapItemId m_id;                      /**< Unique id for identifying. Used by server and client instances. */
 
     PR00FsReducedRenderingEngine&                      m_gfx;
     PRREObject3D*                                      m_obj;

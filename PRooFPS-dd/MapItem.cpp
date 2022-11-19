@@ -31,7 +31,13 @@ std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
     return (s << "Unknown Item");
 }
 
+const MapItem::MapItemId& MapItem::getGlobalMapItemId()
+{
+    return m_globalMapItemId;
+}
+
 MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos) :
+    m_id(m_globalMapItemId++),
     m_gfx(gfx),
     m_obj(nullptr),
     m_fObjPosOriginalY(pos.getY()),
@@ -55,6 +61,7 @@ MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType,
         tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
         break;
     default:
+        // TODO: throw for unhandled type
         break;
     }
     
@@ -73,6 +80,11 @@ MapItem::~MapItem()
     }
 }
 
+const MapItem::MapItemId& MapItem::getId() const
+{
+    return m_id;
+}
+
 const MapItemType& MapItem::getType() const
 {
     return m_itemType;
@@ -88,10 +100,10 @@ const PRREObject3D& MapItem::getObject3D() const
     return *m_obj;
 }
 
-PRREObject3D& MapItem::getObject3D()
-{
-    return *m_obj;
-}
+//PRREObject3D& MapItem::getObject3D()
+//{
+//    return *m_obj;
+//}
 
 bool MapItem::isTaken() const
 {
@@ -141,3 +153,6 @@ void MapItem::Update(float factor)
 
 
 // ############################### PRIVATE ###############################
+
+
+MapItem::MapItemId MapItem::m_globalMapItemId = 0;
