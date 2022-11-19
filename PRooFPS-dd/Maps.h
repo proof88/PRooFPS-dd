@@ -50,7 +50,7 @@ public:
     const PRREVector& getBlocksVertexPosMax() const;
     PRREObject3D** getBlocks(); // TODO: not nice access
     int getBlockCount() const;
-    const std::vector<MapItem*>& getItems() const;
+    const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
     const std::map<std::string, PGEcfgVariable>& getVars() const;
     void Update();
 
@@ -79,7 +79,7 @@ private:
     PRREVector m_blocksVertexPosMin, m_blocksVertexPosMax;
     PRREVector m_blockPosMin, m_blockPosMax;
     unsigned int m_width, m_height;
-    std::vector<MapItem*> m_items;
+    std::map<MapItem::MapItemId, MapItem*> m_items;
 
     // ---------------------------------------------------------------------------
 

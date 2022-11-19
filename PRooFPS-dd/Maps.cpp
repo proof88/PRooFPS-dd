@@ -216,9 +216,9 @@ void Maps::unload()
         m_blocks = NULL;
         m_blocks_h = 0;
     }
-    for (auto pMi : m_items)
+    for (auto& itemPair : m_items)
     {
-        delete pMi;
+        delete itemPair.second;
     }
     m_items.clear();
     m_width = 0;
@@ -337,7 +337,7 @@ int Maps::getBlockCount() const
     return m_blocks_h;
 }
 
-const std::vector<MapItem*>& Maps::getItems() const
+const std::map<MapItem::MapItemId, MapItem*>& Maps::getItems() const
 {
     return m_items;
 }
@@ -349,11 +349,11 @@ const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
 
 void Maps::Update()
 {
-    for (auto& pItem : getItems())
+    for (auto& itemPair : getItems())
     {
-        if (pItem)
+        if (itemPair.second)
         {
-            pItem->Update(8.f);
+            itemPair.second->Update(8.f);
         }
     }
 }
@@ -498,20 +498,24 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         // special background block handling
         bool bCopyPreviousBgBlock = false;
         bool bSpecialBlock = false;
+        MapItem* pMapItem;
         switch (c)
         {
         case '+':
-            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            m_items.insert({pMapItem->getId(), pMapItem});
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'M':
-            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            m_items.insert({ pMapItem->getId(), pMapItem });
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'P':
-            m_items.push_back(new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z)));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            m_items.insert({ pMapItem->getId(), pMapItem });
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;

@@ -1285,23 +1285,23 @@ void PRooFPSddPGE::PickupItems()
         auto& legacyPlayer = player.second.m_legacyPlayer;
         const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
 
-        for (auto& pItem : m_maps.getItems())
+        for (auto& itemPair : m_maps.getItems())
         {
-            if (!pItem)
+            if (!itemPair.second)
             {
                 continue;
             }
 
-            if (pItem->isTaken())
+            if (itemPair.second->isTaken())
             {
                 continue;
             }
 
-            if (Colliding(*plobj, pItem->getObject3D()))
+            if (Colliding(*plobj, itemPair.second->getObject3D()))
             {
-                if (legacyPlayer.canTakeItem(*pItem))
+                if (legacyPlayer.canTakeItem(*itemPair.second))
                 {
-                    legacyPlayer.TakeItem(*pItem);
+                    legacyPlayer.TakeItem(*itemPair.second);
                 }
                 break; // a player can collide with only one item at a time since there are no overlapping items
             }

@@ -240,21 +240,30 @@ private:
         b &= assertEquals(5u, maps.getItems().size(), "item count");
         if (b)
         {
-            b &= assertNotNull(maps.getItems()[0], "item 1") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, maps.getItems()[0]->getType(), "item 1 type") &&
-                assertNotNull(maps.getItems()[0]->getObject3D().getMaterial().getTexture(), "item 1 tex");
-            b &= assertNotNull(maps.getItems()[1], "item 2") &&
-                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, maps.getItems()[1]->getType(), "item 2 type") &&
-                assertNotNull(maps.getItems()[1]->getObject3D().getMaterial().getTexture(), "item 2 tex");
-            b &= assertNotNull(maps.getItems()[2], "item 3") &&
-                assertEquals(MapItemType::ITEM_HEALTH, maps.getItems()[2]->getType(), "item 3 type") &&
-                assertNotNull(maps.getItems()[2]->getObject3D().getMaterial().getTexture(), "item 3 tex");
-            b &= assertNotNull(maps.getItems()[3], "item 4") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, maps.getItems()[3]->getType(), "item 4 type") &&
-                assertNotNull(maps.getItems()[3]->getObject3D().getMaterial().getTexture(), "item 4 tex");
-            b &= assertNotNull(maps.getItems()[4], "item 5") &&
-                assertEquals(MapItemType::ITEM_HEALTH, maps.getItems()[4]->getType(), "item 5 type") &&
-                assertNotNull(maps.getItems()[4]->getObject3D().getMaterial().getTexture(), "item 5 tex");
+            auto it = maps.getItems().begin();
+            b &= assertNotNull(it->second, "item 1") &&
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type") &&
+                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 1 tex");
+
+            it++;
+            b &= assertNotNull(it->second, "item 2") &&
+                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type") &&
+                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 2 tex");
+            
+            it++;
+            b &= assertNotNull(it->second, "item 3") &&
+                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type") &&
+                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 3 tex");
+            
+            it++;
+            b &= assertNotNull(it->second, "item 4") &&
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 4 type") &&
+                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 4 tex");
+            
+            it++;
+            b &= assertNotNull(it->second, "item 5") &&
+                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 5 type") &&
+                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 5 tex");
         }
 
         return b;
@@ -391,7 +400,6 @@ private:
         return b;
     }
 
-    
     bool test_map_update()
     {
         Maps maps(*engine);
@@ -403,16 +411,18 @@ private:
         if (b)
         {
             std::vector<float> vOriginalItemPosY;
-            for (size_t i = 0; i < maps.getItems().size(); i++)
+            for (const auto& itemPair : maps.getItems())
             {
-                vOriginalItemPosY.push_back(maps.getItems()[i]->getPos().getY());
+                vOriginalItemPosY.push_back(itemPair.second->getPos().getY());
             }
 
             maps.Update();
 
-            for (size_t i = 0; i < maps.getItems().size(); i++)
+            int i = 0;
+            for (const auto& itemPair : maps.getItems())
             {
-                assertNotEquals(vOriginalItemPosY[i], maps.getItems()[i]->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
+                assertNotEquals(vOriginalItemPosY[i], itemPair.second->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
+                i++;
             }
         }
 
