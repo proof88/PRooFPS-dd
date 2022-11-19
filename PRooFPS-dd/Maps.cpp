@@ -99,6 +99,7 @@ bool Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
+    // this wont be needed after we require unload() before consecutive load()
     MapItem::ResetGlobalMapItemId();
 
     m_sFileName = PFL::getFilename(fname);
