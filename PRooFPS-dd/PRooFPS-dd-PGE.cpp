@@ -1863,7 +1863,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
-        // we also send MsgUserUpdate about each player so new client will immediately have their positions updated.
+        // we also send MsgUserUpdate about each player so new client will immediately have their positions and other data updated.
         for (const auto& it : m_mapPlayers)
         {
             proofps_dd::MsgUserSetup::initPkt(
@@ -1888,6 +1888,23 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 it.second.m_legacyPlayer.getFrags(),
                 it.second.m_legacyPlayer.getDeaths());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
+        }
+
+        // we also send the state of all map items
+        pge_network::PgePacket newPktMapItemUpdate;
+        for (auto& itemPair : m_maps.getItems())
+        {
+            if (!itemPair.second)
+            {
+                continue;
+            }
+
+            proofps_dd::MsgMapItemUpdate::initPkt(
+                newPktMapItemUpdate,
+                0,
+                itemPair.first,
+                itemPair.second->isTaken());
+            getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktMapItemUpdate);
         }
     }
 }
