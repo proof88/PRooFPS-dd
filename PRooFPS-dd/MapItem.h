@@ -37,11 +37,11 @@ public:
     MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos);
     ~MapItem();
 
-    const MapItemId& getId() const;
-    const MapItemType& getType() const;
-    const PRREVector& getPos() const;
+    const MapItemId&    getId() const;
+    const MapItemType&  getType() const;
+    const PRREVector&   getPos() const;
     const PRREObject3D& getObject3D() const;
-    //PRREObject3D& getObject3D();
+    //PRREObject3D&     getObject3D();
 
     bool isTaken() const;
     void Take();
@@ -55,15 +55,16 @@ private:
 
     static MapItemId m_globalMapItemId;  /**< Next unique id for identifying. Used by server and client instances. */
 
-    MapItemId m_id;                      /**< Unique id for identifying. Used by server and client instances. */
+    MapItemId m_id;                      /**< Unique id for identifying. Used by server and client instances.
+                                              Must be equal for same item across server and clients, used in packets too. */
 
     PR00FsReducedRenderingEngine&                      m_gfx;
     PRREObject3D*                                      m_obj;
-    float                                              m_fObjPosOriginalY;
+    float                                              m_fObjPosOriginalY;     /**< The vertical floating movement is relative to this coord. */
     MapItemType                                        m_itemType;
     bool                                               m_bTaken;
     std::chrono::time_point<std::chrono::steady_clock> m_timeTaken;
-    float                                              m_fSinusMotionDegrees;
+    float                                              m_fSinusMotionDegrees;  /**< For iterating the vertical floating movement. */
 
     // ---------------------------------------------------------------------------
 

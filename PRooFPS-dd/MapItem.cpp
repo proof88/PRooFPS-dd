@@ -112,6 +112,7 @@ bool MapItem::isTaken() const
 
 void MapItem::Take()
 {
+    // executed by both server and clients, only when server says so, however only server is responsible for checking m_timeTaken
     if (isTaken())
     {
         return;
@@ -124,6 +125,7 @@ void MapItem::Take()
 
 void MapItem::UnTake()
 {
+    // executed by both server and clients, only when server says so
     if (!isTaken())
     {
         return;
@@ -140,6 +142,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& MapItem::getTimeTaken(
 
 void MapItem::Update(float factor)
 {
+    // executed by both server and clients, always, and this is not synchronized between players
     m_fSinusMotionDegrees += factor;
     if (m_fSinusMotionDegrees >= 359.9f)
     {

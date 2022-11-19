@@ -319,12 +319,7 @@ void CPlayer::TakeItem(MapItem& item)
             "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
         break;
     case MapItemType::ITEM_HEALTH:
-        
-        //item.Take();
-        // TODO: a new PktItemUpdate should be created, which sets the taken state of the item on server and clients!
-        // processing that packet should invoke either Take() or UnTake()
-        // TODO: add UT for UnTake()
-        // TODO: add item id or something which we can use for addressing a specific item in pkt
+        item.Take();
         SetHealth(getHealth() + 20);
         break;
     default:
@@ -480,6 +475,7 @@ void PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
 
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
 
         if (!getNetwork().getServer().startListening())
         {
@@ -1280,9 +1276,16 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
 void PRooFPSddPGE::PickupItems()
 {
+    pge_network::PgePacket newPktMapItemUpdate;
+
     for (auto& player : m_mapPlayers)
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
+        if (legacyPlayer.getHealth() <= 0)
+        {
+            continue;
+        }
+
         const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
 
         for (auto& itemPair : m_maps.getItems())
@@ -1297,11 +1300,27 @@ void PRooFPSddPGE::PickupItems()
                 continue;
             }
 
+            // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
+            // decision than collision check ...
             if (Colliding(*plobj, itemPair.second->getObject3D()))
             {
                 if (legacyPlayer.canTakeItem(*itemPair.second))
                 {
                     legacyPlayer.TakeItem(*itemPair.second);
+
+                    proofps_dd::MsgMapItemUpdate::initPkt(
+                        newPktMapItemUpdate,
+                        0,
+                        itemPair.first,
+                        itemPair.second->isTaken());
+                    
+                    for (const auto& sendToThisPlayer : m_mapPlayers)
+                    {
+                        if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+                        {   // player.TakeItem() already makes the item taken, so server doesn't send this to itself
+                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
+                        }
+                    }
                 }
                 break; // a player can collide with only one item at a time since there are no overlapping items
             }
@@ -1618,6 +1637,9 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
             break;
         case proofps_dd::MsgBulletUpdate::id:
             HandleBulletUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
+            break;
+        case proofps_dd::MsgMapItemUpdate::id:
+            HandleMapItemUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
             break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
@@ -2142,3 +2164,31 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
     pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 }
 
+void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
+{
+    if (getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received MsgMapItemUpdate, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+    const auto it = m_maps.getItems().find(msg.m_mapItemId);
+    if (it == m_maps.getItems().end())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): unknown map item id %u, CANNOT HAPPEN!", __func__, msg.m_mapItemId);
+        assert(false);
+        return;
+    }
+
+    MapItem* const pMapItem = it->second;
+
+    if (msg.m_bTaken)
+    {
+        pMapItem->Take();
+    }
+    else
+    {
+        pMapItem->UnTake();
+    }
+}

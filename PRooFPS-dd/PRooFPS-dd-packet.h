@@ -25,7 +25,8 @@ namespace proofps_dd
         USER_CMD_TARGET,
         USER_UPDATE,
         USER_UPDATE_2,
-        BULLET_UPDATE
+        BULLET_UPDATE,
+        MAP_ITEM_UPDATE
     };
 
     // server -> self (inject) and clients
@@ -256,5 +257,34 @@ namespace proofps_dd
         TXYZ m_size;
         bool m_bDelete;
     };
+
+    // server -> clients
+    struct MsgMapItemUpdate
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::MAP_ITEM_UPDATE;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const MapItem::MapItemId mapItemId,
+            const bool bTaken)
+        {
+            assert(sizeof(MsgMapItemUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id);
+
+            proofps_dd::MsgMapItemUpdate& msgMapItemUpdate = reinterpret_cast<proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData);
+            msgMapItemUpdate.m_mapItemId = mapItemId;
+            msgMapItemUpdate.m_bTaken = bTaken;
+
+            return true;
+        }
+
+        MapItem::MapItemId m_mapItemId;
+        bool m_bTaken;
+    };
+
 
 } // namespace proofps_dd
