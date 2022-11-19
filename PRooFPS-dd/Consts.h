@@ -1,6 +1,6 @@
 // TODO: this is just temporal file until all consts go to their final location
 
-static const int   GAME_FPS_INTERVAL = 500;
+static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
 static const int   GAME_MAXFPS = 60;
 static const float GAME_BLOCK_SIZE_X = 1.0f;
 static const float GAME_BLOCK_SIZE_Y = 1.0f;

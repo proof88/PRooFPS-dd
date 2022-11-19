@@ -1471,7 +1471,24 @@ void PRooFPSddPGE::onGameRunning()
                 Collision(m_bWon);
             }
         }
-        
+        else
+        {
+            getPRRE().getUImanager().text(
+                "Ping: " + std::to_string(getNetwork().getClient().getPing(true)) + " ms",
+                10, 50);
+            getPRRE().getUImanager().text(
+                "Quality: local: " + std::to_string(getNetwork().getClient().getQualityLocal(false)) +
+                "; remote: " + std::to_string(getNetwork().getClient().getQualityRemote(false)),
+                10, 70);
+            getPRRE().getUImanager().text(
+                "Tx Speed: " + std::to_string(getNetwork().getClient().getTxByteRate(false)) +
+                " Bps; Rx Speed: " + std::to_string(getNetwork().getClient().getRxByteRate(false)) + " Bps",
+                10, 90);
+            getPRRE().getUImanager().text(
+                "Internal Queue Time: " + std::to_string(getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us",
+                10, 110);
+        }  
+
         if (window.isActive())
         {
             pge_network::PgePacket pkt;
@@ -1556,7 +1573,7 @@ void PRooFPSddPGE::onGameRunning()
         }
 
         //map.UpdateVisibilitiesForRenderer();
-    }
+    } // endif validConnection
 
     m_fps_ms = GetTickCount() - m_fps_ms;
     // this is horrible that FPS measuring is still not available from outside of PRRE .........
@@ -1566,11 +1583,11 @@ void PRooFPSddPGE::onGameRunning()
         m_fps = m_fps_counter * (1000/GAME_FPS_INTERVAL);
         m_fps_counter = 0;
         m_fps_lastmeasure = GetTickCount();
-    } 
 
-    std::stringstream str;
-    str << GAME_NAME << " " << GAME_VERSION << " :: FPS: " << m_fps;
-    window.SetCaption(str.str());
+        std::stringstream str;
+        str << GAME_NAME << " " << GAME_VERSION << " :: FPS: " << m_fps;
+        window.SetCaption(str.str());
+    } 
 }
 
 /**
