@@ -89,6 +89,14 @@ private:
             assertEquals(0, mi.getTimeTaken().time_since_epoch().count(), "time taken");
     }
 
+    bool test_reset_global_item_id()
+    {
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem::ResetGlobalMapItemId();
+
+        return assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+    }
+
     bool test_take()
     {
         MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));

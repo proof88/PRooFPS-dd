@@ -65,6 +65,8 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
     backgroundBlocks.insert('M');
     backgroundBlocks.insert('P');
     backgroundBlocks.insert('S');
+
+    MapItem::ResetGlobalMapItemId();
 }
 
 Maps::~Maps()
@@ -96,6 +98,8 @@ bool Maps::loaded() const
 bool Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
+
+    MapItem::ResetGlobalMapItemId();
 
     m_sFileName = PFL::getFilename(fname);
     m_sRawName = PFL::changeExtension(m_sFileName.c_str(), "");
@@ -229,6 +233,9 @@ void Maps::unload()
     m_blocksVertexPosMax.SetZero();
     m_vars.clear();
     m_spawnpoints.clear();
+
+    MapItem::ResetGlobalMapItemId();
+
     getConsole().OOOLn("Maps::unload() done!");
 }
 

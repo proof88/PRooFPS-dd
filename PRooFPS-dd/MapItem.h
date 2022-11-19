@@ -31,6 +31,7 @@ public:
     typedef uint32_t MapItemId;
 
     static const MapItemId& getGlobalMapItemId();
+    static void ResetGlobalMapItemId();
 
     // ---------------------------------------------------------------------------
 

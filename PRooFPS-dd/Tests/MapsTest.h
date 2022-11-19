@@ -97,7 +97,9 @@ private:
             assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 1") &
             assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 1") &
             assertNull(maps.getBlocks(), "blocks 1") &
-            assertEquals(0, maps.getBlockCount(), "block count 1");
+            assertEquals(0, maps.getBlockCount(), "block count 1") &
+            assertEquals(0u, maps.getItems().size(), "item count 1") &
+            assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 1");
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.loaded(), "loaded 2") &
@@ -111,7 +113,9 @@ private:
             assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 2") &
             assertEquals(PRREVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 2") &
             assertNull(maps.getBlocks(), "blocks 2") &
-            assertEquals(0, maps.getBlockCount(), "block count 2");
+            assertEquals(0, maps.getBlockCount(), "block count 2") &
+            assertEquals(0u, maps.getItems().size(), "item count 2") &
+            assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 2");
         return b;
     }
 
@@ -139,6 +143,7 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
@@ -167,6 +172,7 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
@@ -195,6 +201,7 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
@@ -238,6 +245,7 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count");
+        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id");
         if (b)
         {
             auto it = maps.getItems().begin();
@@ -310,6 +318,7 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count 1");
+        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id 1");
         
         // ###################################### UNLOAD ######################################
         maps.unload();
@@ -332,6 +341,7 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count 2");
+        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 2");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
@@ -369,6 +379,7 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count 3");
+        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id 3");
 
         return b;
     }

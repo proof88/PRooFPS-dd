@@ -36,6 +36,11 @@ const MapItem::MapItemId& MapItem::getGlobalMapItemId()
     return m_globalMapItemId;
 }
 
+void MapItem::ResetGlobalMapItemId()
+{
+    m_globalMapItemId = 0;
+}
+
 MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
