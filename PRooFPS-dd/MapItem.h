@@ -40,6 +40,7 @@ public:
 
     bool isTaken() const;
     void Take();
+    void UnTake();
     const std::chrono::time_point<std::chrono::steady_clock>& getTimeTaken() const;
     void Update(float factor);
 

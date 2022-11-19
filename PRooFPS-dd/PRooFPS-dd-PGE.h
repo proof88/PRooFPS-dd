@@ -88,6 +88,8 @@ public:
     const int& getDeaths() const;
     int& getOldDeaths();
     void UpdateFragsDeaths();
+    bool canTakeItem(const MapItem& item) const;
+    void TakeItem(MapItem& item);
 };
 
 struct Player_t
@@ -197,6 +199,7 @@ private:
     void HandlePlayerRespawned(bool bMe, CPlayer& player);
     void UpdateRespawnTimers();
     void UpdateGameMode();
+    void PickupItems();
     void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
     std::map<std::string, Player_t>::iterator getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide);
     void WritePlayerList();

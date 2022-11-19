@@ -34,6 +34,7 @@ protected:
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
         AddSubTest("test_take", (PFNUNITSUBTEST)&MapItemTest::test_take);
+        AddSubTest("test_untake", (PFNUNITSUBTEST)&MapItemTest::test_untake);
         AddSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
     }
 
@@ -92,6 +93,22 @@ private:
         return assertTrue(mi.isTaken(), "taken") &
             assertLess(0, mi.getTimeTaken().time_since_epoch().count(), "time taken") &
             assertFalse(mi.getObject3D().isRenderingAllowed(), "not visible");
+    }
+
+    bool test_untake()
+    {
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        mi.UnTake();
+
+        bool b = assertFalse(mi.isTaken(), "not taken") &
+            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible");
+
+        mi.Take();
+        mi.UnTake();
+        b &= assertFalse(mi.isTaken(), "not taken") &
+            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible");
+
+        return b;
     }
 
     bool test_update()

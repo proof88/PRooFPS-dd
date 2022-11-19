@@ -110,6 +110,17 @@ void MapItem::Take()
     m_obj->Hide();
 }
 
+void MapItem::UnTake()
+{
+    if (!isTaken())
+    {
+        return;
+    }
+
+    m_bTaken = false;
+    m_obj->Show();
+}
+
 const std::chrono::time_point<std::chrono::steady_clock>& MapItem::getTimeTaken() const
 {
     return m_timeTaken;

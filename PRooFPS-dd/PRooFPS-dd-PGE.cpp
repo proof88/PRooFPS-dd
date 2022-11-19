@@ -129,7 +129,7 @@ void CPlayer::UpdateOldPos() {
 }
 
 void CPlayer::SetHealth(int value) {
-  m_nHealth = value;
+    m_nHealth = min(value, 100);
 }
 
 void CPlayer::UpdateOldHealth()
@@ -289,6 +289,49 @@ void CPlayer::UpdateFragsDeaths()
     m_nOldDeaths = m_nDeaths;
 }
 
+bool CPlayer::canTakeItem(const MapItem& item) const
+{
+    switch (item.getType())
+    {
+    case MapItemType::ITEM_WPN_PISTOL:
+        return false;
+    case MapItemType::ITEM_WPN_MACHINEGUN:
+        return false;
+    case MapItemType::ITEM_HEALTH:
+        return (getHealth() < 100);
+    default:
+        ;
+    }
+    return false;
+}
+
+void CPlayer::TakeItem(MapItem& item)
+{
+    // invoked only on server
+    switch (item.getType())
+    {
+    case MapItemType::ITEM_WPN_PISTOL:
+        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+            "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
+        break;
+    case MapItemType::ITEM_WPN_MACHINEGUN:
+        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+            "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
+        break;
+    case MapItemType::ITEM_HEALTH:
+        
+        //item.Take();
+        // TODO: a new PktItemUpdate should be created, which sets the taken state of the item on server and clients!
+        // processing that packet should invoke either Take() or UnTake()
+        // TODO: add UT for UnTake()
+        // TODO: add item id or something which we can use for addressing a specific item in pkt
+        SetHealth(getHealth() + 20);
+        break;
+    default:
+        ;
+    }
+}
+
 
 PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
@@ -383,7 +426,7 @@ void PRooFPSddPGE::onGameInitialized()
 
     getConsole().SetLoggingState("4LLM0DUL3S", false);
 
-    // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way
+    // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way;
     // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
     // for ~1000 cubes, since PRRE still doesn't implement hierarchical occlusion culling ...
     // And a normal map like Warhouse already contains ~1000 cubes.
@@ -1235,6 +1278,37 @@ void PRooFPSddPGE::UpdateRespawnTimers()
     }
 }
 
+void PRooFPSddPGE::PickupItems()
+{
+    for (auto& player : m_mapPlayers)
+    {
+        auto& legacyPlayer = player.second.m_legacyPlayer;
+        const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
+
+        for (auto& pItem : m_maps.getItems())
+        {
+            if (!pItem)
+            {
+                continue;
+            }
+
+            if (pItem->isTaken())
+            {
+                continue;
+            }
+
+            if (Colliding(*plobj, pItem->getObject3D()))
+            {
+                if (legacyPlayer.canTakeItem(*pItem))
+                {
+                    legacyPlayer.TakeItem(*pItem);
+                }
+                break; // a player can collide with only one item at a time since there are no overlapping items
+            }
+        } // for pItem
+    } // for player
+}
+
 void PRooFPSddPGE::UpdateGameMode()
 {
     const bool bPrevWinningConditions = m_gameMode->checkWinningConditions();
@@ -1469,6 +1543,7 @@ void PRooFPSddPGE::onGameRunning()
             UpdateWeapons();
             UpdateBullets();
             UpdateRespawnTimers();
+            PickupItems();
         }
 
         m_maps.Update();
