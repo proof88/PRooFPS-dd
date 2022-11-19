@@ -30,6 +30,8 @@ public:
 
     typedef uint32_t MapItemId;
 
+    static const uint32_t ITEM_HEALTH_HP_INC = 20;
+
     static const MapItemId& getGlobalMapItemId();
     static void ResetGlobalMapItemId();
 

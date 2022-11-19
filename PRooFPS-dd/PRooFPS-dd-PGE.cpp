@@ -320,7 +320,7 @@ void CPlayer::TakeItem(MapItem& item)
         break;
     case MapItemType::ITEM_HEALTH:
         item.Take();
-        SetHealth(getHealth() + 20);
+        SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
         break;
     default:
         ;

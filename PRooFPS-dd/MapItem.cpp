@@ -31,6 +31,8 @@ std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
     return (s << "Unknown Item");
 }
 
+const uint32_t MapItem::ITEM_HEALTH_HP_INC;
+
 const MapItem::MapItemId& MapItem::getGlobalMapItemId()
 {
     return m_globalMapItemId;
