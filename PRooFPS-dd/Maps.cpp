@@ -357,12 +357,21 @@ const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
 
 void Maps::Update()
 {
+    // invoked by both server and client
     for (auto& itemPair : getItems())
     {
-        if (itemPair.second)
+        if (!itemPair.second)
         {
-            itemPair.second->Update(8.f);
+            continue;
         }
+
+        MapItem& mapItem = *(itemPair.second);
+        if (mapItem.isTaken())
+        {
+            continue;
+        }
+
+        mapItem.Update(8.f);
     }
 }
 

@@ -323,6 +323,8 @@ void CPlayer::TakeItem(MapItem& item)
         SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
         break;
     default:
+        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+            "CPlayer::%s(): unknown item type %d!", __func__, item.getType());
         ;
     }
 }
@@ -1278,54 +1280,70 @@ void PRooFPSddPGE::PickupItems()
 {
     pge_network::PgePacket newPktMapItemUpdate;
 
-    for (auto& player : m_mapPlayers)
+    for (auto& itemPair : m_maps.getItems())
     {
-        auto& legacyPlayer = player.second.m_legacyPlayer;
-        if (legacyPlayer.getHealth() <= 0)
+        if (!itemPair.second)
         {
             continue;
         }
 
-        const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
+        MapItem& mapItem = *(itemPair.second);
+        bool bSendItemUpdate = false;
 
-        for (auto& itemPair : m_maps.getItems())
+        if (mapItem.isTaken())
         {
-            if (!itemPair.second)
+            const auto nSecsSinceTake = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mapItem.getTimeTaken()).count();
+            if (nSecsSinceTake < MapItem::ITEM_HEALTH_RESPAWN_SECS)
             {
                 continue;
             }
 
-            if (itemPair.second->isTaken())
+            mapItem.UnTake();
+            bSendItemUpdate = true;
+        }
+        else
+        {
+            for (auto& player : m_mapPlayers)
             {
-                continue;
-            }
-
-            // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
-            // decision than collision check ...
-            if (Colliding(*plobj, itemPair.second->getObject3D()))
-            {
-                if (legacyPlayer.canTakeItem(*itemPair.second))
+                auto& legacyPlayer = player.second.m_legacyPlayer;
+                if (legacyPlayer.getHealth() <= 0)
                 {
-                    legacyPlayer.TakeItem(*itemPair.second);
-
-                    proofps_dd::MsgMapItemUpdate::initPkt(
-                        newPktMapItemUpdate,
-                        0,
-                        itemPair.first,
-                        itemPair.second->isTaken());
-                    
-                    for (const auto& sendToThisPlayer : m_mapPlayers)
-                    {
-                        if (sendToThisPlayer.second.m_connHandleServerSide != 0)
-                        {   // player.TakeItem() already makes the item taken, so server doesn't send this to itself
-                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
-                        }
-                    }
+                    continue;
                 }
-                break; // a player can collide with only one item at a time since there are no overlapping items
+
+                const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
+
+                // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
+                // decision than collision check ...
+                if (Colliding(*plobj, mapItem.getObject3D()))
+                {
+                    if (legacyPlayer.canTakeItem(mapItem))
+                    {
+                        legacyPlayer.TakeItem(mapItem);  // this also invokes mapItem.Take()
+                        bSendItemUpdate = true;
+                        break; // a player can collide with only one item at a time since there are no overlapping items
+                    }
+                } // colliding
+            } // for player
+        }
+
+        if (bSendItemUpdate)
+        {
+            proofps_dd::MsgMapItemUpdate::initPkt(
+                newPktMapItemUpdate,
+                0,
+                mapItem.getId(),
+                mapItem.isTaken());
+
+            for (const auto& sendToThisPlayer : m_mapPlayers)
+            {
+                if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+                { 
+                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
+                }
             }
-        } // for pItem
-    } // for player
+        }
+    } // for item
 }
 
 void PRooFPSddPGE::UpdateGameMode()
