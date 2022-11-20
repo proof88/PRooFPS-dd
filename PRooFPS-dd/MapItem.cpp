@@ -32,6 +32,11 @@ std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
 }
 
 const uint32_t MapItem::ITEM_HEALTH_HP_INC;
+const uint32_t MapItem::ITEM_HEALTH_RESPAWN_SECS;
+
+const uint32_t MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
+
+const uint32_t MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
 
 const MapItem::MapItemId& MapItem::getGlobalMapItemId()
 {
@@ -41,6 +46,21 @@ const MapItem::MapItemId& MapItem::getGlobalMapItemId()
 void MapItem::ResetGlobalMapItemId()
 {
     m_globalMapItemId = 0;
+}
+
+uint32_t MapItem::getItemRespawnTimeSecs(const MapItem& mapItem)
+{
+    switch (mapItem.getType())
+    {
+    case MapItemType::ITEM_WPN_PISTOL:
+        return ITEM_WPN_PISTOL_RESPAWN_SECS;
+    case MapItemType::ITEM_WPN_MACHINEGUN:
+        return ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
+    case MapItemType::ITEM_HEALTH:
+        return ITEM_HEALTH_RESPAWN_SECS;
+    default:
+        return 10000;  // dont let unhandled item respawn soon, so we will see there must be a problem
+    }
 }
 
 MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos) :

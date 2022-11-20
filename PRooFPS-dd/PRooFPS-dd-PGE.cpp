@@ -1293,7 +1293,7 @@ void PRooFPSddPGE::PickupItems()
         if (mapItem.isTaken())
         {
             const auto nSecsSinceTake = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mapItem.getTimeTaken()).count();
-            if (nSecsSinceTake < MapItem::ITEM_HEALTH_RESPAWN_SECS)
+            if (nSecsSinceTake < MapItem::getItemRespawnTimeSecs(mapItem))
             {
                 continue;
             }

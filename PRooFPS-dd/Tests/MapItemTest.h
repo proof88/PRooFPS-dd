@@ -33,6 +33,8 @@ protected:
         engine->initialize(PRRE_RENDERER_HW_FP, 800, 600, PRRE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
+        AddSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
+        AddSubTest("test_get_item_respawn_time_secs", (PFNUNITSUBTEST)&MapItemTest::test_get_item_respawn_time_secs);
         AddSubTest("test_take", (PFNUNITSUBTEST)&MapItemTest::test_take);
         AddSubTest("test_untake", (PFNUNITSUBTEST)&MapItemTest::test_untake);
         AddSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
@@ -95,6 +97,17 @@ private:
         MapItem::ResetGlobalMapItemId();
 
         return assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+    }
+
+    bool test_get_item_respawn_time_secs()
+    {
+        MapItem miHealth(*engine, MapItemType::ITEM_HEALTH, PRREVector(1, 2, 3));
+        MapItem miWpnPistol(*engine, MapItemType::ITEM_WPN_PISTOL, PRREVector(1, 2, 3));
+        MapItem miWpnMchGun(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        
+        return assertEquals(MapItem::ITEM_HEALTH_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miHealth), "health") &
+            assertEquals(MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
+            assertEquals(MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miWpnMchGun), "mchgun");
     }
 
     bool test_take()

@@ -31,10 +31,16 @@ public:
     typedef uint32_t MapItemId;
 
     static const uint32_t ITEM_HEALTH_HP_INC = 20;
-    static const uint32_t ITEM_HEALTH_RESPAWN_SECS = 5;
+    static const uint32_t ITEM_HEALTH_RESPAWN_SECS = 10;
+
+    static const uint32_t ITEM_WPN_PISTOL_RESPAWN_SECS = 20;
+
+    static const uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 30;
 
     static const MapItemId& getGlobalMapItemId();
     static void ResetGlobalMapItemId();
+
+    static uint32_t getItemRespawnTimeSecs(const MapItem& mapItem);
 
     // ---------------------------------------------------------------------------
 
