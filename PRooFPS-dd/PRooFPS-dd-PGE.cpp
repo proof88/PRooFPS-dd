@@ -1287,7 +1287,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
     }
 }
 
-void PRooFPSddPGE::PickupItems()
+void PRooFPSddPGE::PickupAndRespawnItems()
 {
     pge_network::PgePacket newPktMapItemUpdate;
 
@@ -1378,7 +1378,6 @@ void PRooFPSddPGE::UpdateGameMode()
         {
             if (getNetwork().isServer())
             {
-                
                 for (auto& player : m_mapPlayers)
                 {
                     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
@@ -1388,7 +1387,39 @@ void PRooFPSddPGE::UpdateGameMode()
                     player.second.m_legacyPlayer.getDeaths() = 0;
                     player.second.m_legacyPlayer.getRespawnFlag() = true;
                 }
-            }
+
+                // respawn all map items
+                pge_network::PgePacket newPktMapItemUpdate;
+                for (auto& itemPair : m_maps.getItems())
+                {
+                    if (!itemPair.second)
+                    {
+                        continue;
+                    }
+
+                    MapItem& mapItem = *(itemPair.second);
+                    if (!mapItem.isTaken())
+                    {
+                        continue;
+                    }
+
+                    mapItem.UnTake();
+
+                    proofps_dd::MsgMapItemUpdate::initPkt(
+                        newPktMapItemUpdate,
+                        0,
+                        mapItem.getId(),
+                        mapItem.isTaken());
+
+                    for (const auto& sendToThisPlayer : m_mapPlayers)
+                    {
+                        if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+                        {
+                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
+                        }
+                    }
+                } // end for items
+            } // end server
             m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
         }
         else
@@ -1609,7 +1640,7 @@ void PRooFPSddPGE::onGameRunning()
             UpdateWeapons();
             UpdateBullets();
             UpdateRespawnTimers();
-            PickupItems();
+            PickupAndRespawnItems();
         }
 
         m_maps.Update();

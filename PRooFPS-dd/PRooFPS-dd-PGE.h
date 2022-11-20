@@ -199,7 +199,7 @@ private:
     void HandlePlayerRespawned(bool bMe, CPlayer& player);
     void UpdateRespawnTimers();
     void UpdateGameMode();
-    void PickupItems();
+    void PickupAndRespawnItems();
     void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
     std::map<std::string, Player_t>::iterator getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide);
     void WritePlayerList();
