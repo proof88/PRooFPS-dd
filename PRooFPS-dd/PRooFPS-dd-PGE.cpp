@@ -1177,7 +1177,7 @@ void PRooFPSddPGE::UpdateBullets()
                         if (Colliding(*obj, bullet.getObject3D()))
                         {
                             bDeleteBullet = true;
-                            break; // we can stop since 1 bullet can touch 1 map element
+                            break; // we can stop since 1 bullet can touch only 1 map element
                         }
                     }
                 }
@@ -1203,6 +1203,11 @@ void PRooFPSddPGE::UpdateBullets()
                 getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktBulletUpdate);
             }
         }
+    }
+
+    if (m_gameMode->checkWinningConditions() && (Bullet::getGlobalBulletId() > 0))
+    {
+        Bullet::ResetGlobalBulletId();
     }
 }
 
@@ -1373,6 +1378,7 @@ void PRooFPSddPGE::UpdateGameMode()
         {
             if (getNetwork().isServer())
             {
+                
                 for (auto& player : m_mapPlayers)
                 {
                     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
@@ -1818,6 +1824,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         {
             getPRRE().getUImanager().text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
             getPRRE().getRenderer()->RenderScene();
+
+            Bullet::ResetGlobalBulletId();
 
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
