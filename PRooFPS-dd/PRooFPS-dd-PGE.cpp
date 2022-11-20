@@ -479,6 +479,9 @@ void PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
 
+        getPRRE().getUImanager().text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        getPRRE().getRenderer()->RenderScene();
+
         if (!getNetwork().getServer().startListening())
         {
             PGE::showErrorDialog("Server has FAILED to start listening!");
@@ -570,6 +573,9 @@ void PRooFPSddPGE::onGameInitialized()
             };
             f.close();
         }
+
+        getPRRE().getUImanager().text("Connecting to " + sIp + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        getPRRE().getRenderer()->RenderScene();
 
         if (!getNetwork().getClient().connectToServer(sIp))
         {
@@ -1755,6 +1761,9 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         {
             getPRRE().getUImanager().addText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
 
+            getPRRE().getUImanager().text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+            getPRRE().getRenderer()->RenderScene();
+
             const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
             assert(mapLoaded);
         }
@@ -1807,6 +1816,9 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
+            getPRRE().getUImanager().text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+            getPRRE().getRenderer()->RenderScene();
+
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
             const bool mapLoaded = m_maps.load((std::string("gamedata/maps/") + m_sServerMapFilenameToLoad).c_str());
