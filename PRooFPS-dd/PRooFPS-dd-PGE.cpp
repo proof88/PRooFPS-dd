@@ -1830,6 +1830,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
     const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt", connHandleServerSide);
     assert(bWpnLoaded);
+    const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeapon("machinegun");
+    assert(bWpnDefaultSet);
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]);
 
     getNetwork().WriteList();
