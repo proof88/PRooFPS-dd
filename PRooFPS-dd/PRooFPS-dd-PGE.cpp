@@ -321,7 +321,7 @@ bool CPlayer::canTakeItem(const MapItem& item) const
     switch (item.getType())
     {
     case MapItemType::ITEM_WPN_PISTOL:
-        return false;
+        return true;
     case MapItemType::ITEM_WPN_MACHINEGUN:
         return true;
     case MapItemType::ITEM_HEALTH:
@@ -338,9 +338,6 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
     switch (item.getType())
     {
     case MapItemType::ITEM_WPN_PISTOL:
-        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-            "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
-        break;
     case MapItemType::ITEM_WPN_MACHINEGUN:
     {
         const auto it = mapItemTypeToWeaponName.find(item.getType());
