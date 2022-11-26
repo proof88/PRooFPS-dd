@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <filesystem>  // requires cpp17
 #include <functional>
 
 #include "../../../PGE/PGE/PRRE/include/external/Render/PRRERendererHWfixedPipe.h"  // for rendering hints
@@ -1898,11 +1899,17 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     plane->getMaterial().setTexture(pTexPlayer);
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves
-    // TODO: here will be a loop loading all files under gamedata/weapons
     if (msg.m_bCurrentClient)
     {
-        const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt", connHandleServerSide);
-        assert(bWpnLoaded);
+        for (const auto& entry : std::filesystem::directory_iterator("gamedata/weapons/"))
+        {
+            if (entry.path().extension().string() == ".txt")
+            {
+                const bool bWpnLoaded = getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide);
+                assert(bWpnLoaded);
+            }
+        }
+
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...

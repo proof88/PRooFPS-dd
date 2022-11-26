@@ -105,6 +105,7 @@ recoil_m = 1.1
 
 # Time needed for recoil to disappear after 1 shot, in millisecs.
 # No effect when recoil_m is 1.0.
+# Must be greater or equal to firing_cooldown if recoil is enabled (see above).
 recoil_cooldown = 500
 
 # If available, recoil control can improve the accuracy degradation
