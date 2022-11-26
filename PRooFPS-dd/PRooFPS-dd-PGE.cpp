@@ -233,6 +233,16 @@ void CPlayer::SetWeapon(Weapon* wpn)
     m_pWpn = wpn;
 }
 
+std::vector<Weapon*>& CPlayer::getWeapons()
+{
+    return m_weapons;
+}
+
+const std::vector<Weapon*>& CPlayer::getWeapons() const
+{
+    return m_weapons;
+}
+
 PRREVector& CPlayer::getOldWeaponAngle()
 {
     return m_vOldWpnAngle;
@@ -1828,11 +1838,64 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
-    const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt", connHandleServerSide);
-    assert(bWpnLoaded);
-    const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeapon("machinegun");
-    assert(bWpnDefaultSet);
-    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(getWeaponManager().getWeapons()[getWeaponManager().getWeapons().size() - 1]);
+    // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves
+    // TODO: here will be a loop loading all files under gamedata/weapons
+    if (msg.m_bCurrentClient)
+    {
+        const bool bWpnLoaded = getWeaponManager().load("gamedata/weapons/machinegun.txt", connHandleServerSide);
+        assert(bWpnLoaded);
+        // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
+        // value on both side ... cheating is not possible anyway, since on server side server will always know what is
+        // the default weapon for the player, so there is no use of overriding it on client side ...
+        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeapon("machinegun");
+        assert(bWpnDefaultSet);
+        
+        for (const auto pWpn : getWeaponManager().getWeapons())
+        {
+            if (!pWpn)
+            {
+                continue;
+            }
+
+            // these will be the reference weapons, never visible, never moving, just to be copied!
+            pWpn->getObject3D().Hide();
+        }
+    }
+
+    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByName(getWeaponManager().getDefaultAvailableWeapon());
+    assert(wpnDefaultAvailable);
+
+    // and here the actual weapons for the specific player, these can be visible when active, moving with player, etc.
+    // client doesnt do anything else with these, server also uses these to track and validate player weapons and related actions.
+    for (const auto pWpn : getWeaponManager().getWeapons())
+    {
+        if (!pWpn)
+        {
+            continue;
+        }
+
+        Weapon* const pNewWeapon = new Weapon(*pWpn);
+        m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getWeapons().push_back(pNewWeapon);
+        pNewWeapon->SetOwner(connHandleServerSide);
+        if (pNewWeapon->getFilename() == wpnDefaultAvailable->getFilename())
+        {
+            pNewWeapon->getObject3D().Show();
+            pNewWeapon->SetAvailable(true);
+            m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(pNewWeapon);
+        }
+        else
+        {
+            pNewWeapon->getObject3D().Hide();
+        }
+    }
+
+    // Note that this is a waste of resources this way.
+    // Because clients also store the full weapon instances for themselves, even though they dont use weapon cvars at all!
+    // Task: On the long run, there should be a WeaponProxy or WeaponClient or something for the clients which are basically
+    // just the image for their current weapon.
+    // Task: And I also think that each CPlayer should have a WeaponManager instance, so player's weapons would be loaded there.
+    // Task: the only problem here would be that the bullets list should be extracted into separate entity, so all WeaponManager
+    // instances would refer to the same bullets list. And some functions may be enough to be static, but thats all!
 
     getNetwork().WriteList();
     WritePlayerList();

@@ -29,6 +29,7 @@ private:
     PRREVector m_vWpnAngle, m_vOldWpnAngle;
     PRREVector m_vecForce;
     PRREObject3D* m_pObj;
+    std::vector<Weapon*> m_weapons;
     Weapon* m_pWpn;
     PR00FsReducedRenderingEngine* pGFX;
     float m_fGravity;
@@ -77,6 +78,8 @@ public:
     Weapon* getWeapon();
     const Weapon* getWeapon() const;
     void SetWeapon(Weapon* wpn);
+    std::vector<Weapon*>& getWeapons();
+    const std::vector<Weapon*>& getWeapons() const;
     PRREVector& getOldWeaponAngle();
     PRREVector& getWeaponAngle();
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
