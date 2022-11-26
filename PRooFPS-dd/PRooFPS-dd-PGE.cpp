@@ -380,7 +380,6 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
     default:
         CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
             "CPlayer::%s(): unknown item type %d!", __func__, item.getType());
-        ;
     }
 }
 
@@ -533,6 +532,7 @@ void PRooFPSddPGE::onGameInitialized()
 
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
 
         getPRRE().getUImanager().text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
         getPRRE().getRenderer()->RenderScene();
@@ -1769,6 +1769,9 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
         case proofps_dd::MsgMapItemUpdate::id:
             HandleMapItemUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
             break;
+        case proofps_dd::MsgWpnUpdate::id:
+            HandleWpnUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
+            break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
         }
@@ -1968,7 +1971,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 {
     if (!getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgUserConnected, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
         return;
     }
@@ -2152,7 +2155,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 {
     if (!getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): client received MsgUserCmdMove, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
         return;
     }
@@ -2321,7 +2324,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
 {
     if (getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): server received MsgBulletUpdate, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
         return;
     }
@@ -2382,7 +2385,7 @@ void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
 {
     if (getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): server received MsgMapItemUpdate, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
         return;
     }
@@ -2405,4 +2408,16 @@ void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
     {
         pMapItem->UnTake();
     }
+}
+
+void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdate& msg)
+{
+    if (getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+
 }

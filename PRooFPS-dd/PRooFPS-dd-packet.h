@@ -26,7 +26,8 @@ namespace proofps_dd
         USER_UPDATE,
         USER_UPDATE_2,
         BULLET_UPDATE,
-        MAP_ITEM_UPDATE
+        MAP_ITEM_UPDATE,
+        WPN_UPDATE
     };
 
     // server -> self (inject) and clients
@@ -284,6 +285,41 @@ namespace proofps_dd
 
         MapItem::MapItemId m_mapItemId;
         bool m_bTaken;
+    };
+
+    // server -> clients
+    struct MsgWpnUpdate
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::WPN_UPDATE;
+        static const uint8_t nWpnNameNameMaxLength = 64; // TODO: max file name length should be forced too
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const std::string& sWpnName,
+            bool bAvailable,
+            unsigned int nMagBulletCount,
+            unsigned int nUnmagBulletCount)
+        {
+            assert(sizeof(MsgWpnUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id);
+
+            proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData);
+            strncpy_s(msgWpnUpdate.m_szWpnName, nWpnNameNameMaxLength, sWpnName.c_str(), sWpnName.length());
+            msgWpnUpdate.m_bAvailable = bAvailable;
+            msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
+            msgWpnUpdate.m_nUnmagBulletCount = nUnmagBulletCount;
+
+            return true;
+        }
+
+        char m_szWpnName[nWpnNameNameMaxLength];
+        bool m_bAvailable;
+        unsigned int m_nMagBulletCount;
+        unsigned int m_nUnmagBulletCount;
     };
 
 
