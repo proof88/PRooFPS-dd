@@ -243,6 +243,22 @@ const std::vector<Weapon*>& CPlayer::getWeapons() const
     return m_weapons;
 }
 
+Weapon* CPlayer::getWeaponByName(const std::string& wpnName)
+{
+    for (const auto pWpn : m_weapons)
+    {
+        if (pWpn)
+        {
+            if (pWpn->getFilename() == wpnName)
+            {
+                return pWpn;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 PRREVector& CPlayer::getOldWeaponAngle()
 {
     return m_vOldWpnAngle;
@@ -306,7 +322,7 @@ bool CPlayer::canTakeItem(const MapItem& item) const
     case MapItemType::ITEM_WPN_PISTOL:
         return false;
     case MapItemType::ITEM_WPN_MACHINEGUN:
-        return false;
+        return true;
     case MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
     default:
@@ -315,7 +331,7 @@ bool CPlayer::canTakeItem(const MapItem& item) const
     return false;
 }
 
-void CPlayer::TakeItem(MapItem& item)
+void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName)
 {
     // invoked only on server
     switch (item.getType())
@@ -325,9 +341,40 @@ void CPlayer::TakeItem(MapItem& item)
             "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
         break;
     case MapItemType::ITEM_WPN_MACHINEGUN:
-        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-            "CPlayer::%s(): not implemented for item type %d!", __func__, item.getType());
+    {
+        const auto it = mapItemTypeToWeaponName.find(item.getType());
+        if (it == mapItemTypeToWeaponName.end())
+        {
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+                "CPlayer::%s(): failed to find weapon by item type %d!", __func__, item.getType());
+            return;
+        }
+        const std::string& sWeaponBecomingAvailable = it->second;
+        Weapon* const pWpnBecomingAvailable = getWeaponByName(sWeaponBecomingAvailable);
+        if (!pWpnBecomingAvailable)
+        {
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+                "CPlayer::%s(): failed to find weapon by name %s for item type %d!", __func__, sWeaponBecomingAvailable.c_str(), item.getType());
+            return;
+        }
+
+        item.Take();
+        if (pWpnBecomingAvailable->isAvailable())
+        {
+            // just increase mag/unmag count
+            // TODO
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
+                "CPlayer::%s(): weapon %s pickup, already available, just inc stuff", __func__, sWeaponBecomingAvailable.c_str());
+        }
+        else
+        {
+            // becoming available with default mag/unmag count
+            pWpnBecomingAvailable->SetAvailable(true);
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
+                "CPlayer::%s(): weapon %s pickup, becomes available", __func__, sWeaponBecomingAvailable.c_str());
+        }
         break;
+    }
     case MapItemType::ITEM_HEALTH:
         item.Take();
         SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
@@ -668,6 +715,15 @@ void PRooFPSddPGE::onGameInitialized()
 
 // ############################### PRIVATE ###############################
 
+
+// The game engine's Weapon system and the game's Map system are 2 independent subsystems.
+// This map provides the logical connection between pickupable MapItems and actual weapons.
+// So when player picks up a specific MapItem, we know which weapon should become available for the player.
+// I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
+const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponName = {
+    {MapItemType::ITEM_WPN_PISTOL, "pistol"},
+    {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun"}
+};
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 {
@@ -1300,6 +1356,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 void PRooFPSddPGE::PickupAndRespawnItems()
 {
     pge_network::PgePacket newPktMapItemUpdate;
+    // TODO: MSGWPNUPD add another packet definition here when we have pkt for weapon update that we cen send to client
 
     for (auto& itemPair : m_maps.getItems())
     {
@@ -1340,7 +1397,8 @@ void PRooFPSddPGE::PickupAndRespawnItems()
                 {
                     if (legacyPlayer.canTakeItem(mapItem))
                     {
-                        legacyPlayer.TakeItem(mapItem);  // this also invokes mapItem.Take()
+                        // TODO: MSGWPNUPD we can pass that msg to TakeItem because it knows how to update it
+                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponName);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         break; // a player can collide with only one item at a time since there are no overlapping items
                     }
@@ -1350,6 +1408,7 @@ void PRooFPSddPGE::PickupAndRespawnItems()
 
         if (bSendItemUpdate)
         {
+            // TODO: MSGWPNUPD and here we can check if that pkt should be sent, and send that to that specific client only
             proofps_dd::MsgMapItemUpdate::initPkt(
                 newPktMapItemUpdate,
                 0,

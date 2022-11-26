@@ -80,6 +80,7 @@ public:
     void SetWeapon(Weapon* wpn);
     std::vector<Weapon*>& getWeapons();
     const std::vector<Weapon*>& getWeapons() const;
+    Weapon* getWeaponByName(const std::string& wpnName);
     PRREVector& getOldWeaponAngle();
     PRREVector& getWeaponAngle();
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
@@ -92,7 +93,7 @@ public:
     int& getOldDeaths();
     void UpdateFragsDeaths();
     bool canTakeItem(const MapItem& item) const;
-    void TakeItem(MapItem& item);
+    void TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName);
 };
 
 struct Player_t
@@ -157,6 +158,8 @@ protected:
     virtual void onGameDestroying() override;                 /**< Freeing up game content here. */
 
 private:
+
+    static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponName;
 
     proofps_dd::GameMode* m_gameMode;
     proofps_dd::DeathMatchMode* m_deathMatchMode;
