@@ -2433,5 +2433,17 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return;
     }
 
-    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s!", __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no");
+    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
+        __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+
+    Weapon* const wpn = getWeaponManager().getWeaponByName(msg.m_szWpnName);
+    if (!wpn)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnName);
+        return;
+    }
+
+    wpn->SetAvailable(msg.m_bAvailable);
+    wpn->SetMagBulletCount(msg.m_nMagBulletCount);
+    wpn->SetUnmagBulletCount(msg.m_nUnmagBulletCount);
 }
