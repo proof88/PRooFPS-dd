@@ -16,12 +16,15 @@ Name = Machine Gun
 #          #
 ############
 
-# Max number of bullets player can have for this weapon
+# Max number of bullets player can have for this weapon.
+# For reloadable weapons, this is max unmag count, which is the max number of bullets held outside of the weapon (e.g. in extra magazines).
+# For non-reloadable weapons, this is max mag count (e.g. rail gun).
 cap_max = 999
 
 # Max number of bullets the weapon can hold at a time.
 # This can be also understood as magazine capacity.
 # If 0, it is not reloadable (e.g. rail gun).
+# Cannot be bigger than cap_max.
 reloadable = 30
 
 # By default we have this amount of bullets with this weapon

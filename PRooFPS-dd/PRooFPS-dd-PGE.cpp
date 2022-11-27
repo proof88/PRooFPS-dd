@@ -359,15 +359,17 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
         item.Take();
         if (pWpnBecomingAvailable->isAvailable())
         {
-            // just increase mag/unmag count
-            pWpnBecomingAvailable->SetUnmagBulletCount(pWpnBecomingAvailable->getUnmagBulletCount() + pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
+            // just increase bullet count
+            // TODO: this will be a problem for non-reloadable wpns such as rail gun, because there this value will be 0,
+            // but we will think about it later then ... probably in such case bullets_default will be used
+            pWpnBecomingAvailable->IncBulletCount(pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
                 "CPlayer::%s(): weapon %s pickup, already available, just inc unmag to: %u",
                 __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
         else
         {
-            // becoming available with default mag/unmag count
+            // becoming available with default bullet count
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
                 "CPlayer::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
                 __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
