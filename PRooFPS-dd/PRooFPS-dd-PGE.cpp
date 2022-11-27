@@ -54,16 +54,19 @@ CPlayer::CPlayer() :
 
 void CPlayer::ShutDown()
 {
-    if (m_pObj != PGENULL )
+    if (getAttachedObject())
     {
-        delete m_pObj;
-        m_pObj = PGENULL;
+        delete getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
     }
 
-    // do not delete m_pWpn, WeaponManager will take care of it
-    m_pWpn = NULL;
-
-    pGFX = NULL;
+    for (auto pWpn : getWeapons())
+    {
+        if (pWpn)
+        {
+            delete pWpn;
+        }
+    }
+    getWeapons().clear();
 }
 
 /* beállítja a megjelenítõ objektumot */
@@ -1805,8 +1808,15 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
 void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
+    for (auto& playerPair : m_mapPlayers)
+    {
+        playerPair.second.m_legacyPlayer.ShutDown();
+    }
+    m_mapPlayers.clear();
     m_maps.shutdown();
     m_sServerMapFilenameToLoad.clear();
+    delete m_pObjXHair;
+    delete m_gameMode;
     getPRRE().getObject3DManager().DeleteAll();
     getPRRE().getWindow().SetCursorVisible(true);
 
@@ -2145,22 +2155,7 @@ void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
     }
 
-    if (playerIt->second.m_legacyPlayer.getAttachedObject())
-    {
-        delete playerIt->second.m_legacyPlayer.getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
-    }
-
-    Weapon* const wpn = playerIt->second.m_legacyPlayer.getWeapon();
-    if (wpn)
-    {
-        const auto wpnIt = std::find(getWeaponManager().getWeapons().begin(), getWeaponManager().getWeapons().end(), wpn);
-        if (wpnIt != getWeaponManager().getWeapons().end())
-        {
-            getWeaponManager().getWeapons().erase(wpnIt);
-        }
-        delete wpn;
-    }
-
+    playerIt->second.m_legacyPlayer.ShutDown();
     m_mapPlayers.erase(playerIt);
 
     getNetwork().WriteList();
