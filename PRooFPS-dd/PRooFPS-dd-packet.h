@@ -316,6 +316,12 @@ namespace proofps_dd
             return true;
         }
 
+        static bool& getAvailable(pge_network::PgePacket& pkt)
+        {
+            proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData);
+            return msgWpnUpdate.m_bAvailable;
+        }
+
         char m_szWpnName[nWpnNameNameMaxLength];
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;

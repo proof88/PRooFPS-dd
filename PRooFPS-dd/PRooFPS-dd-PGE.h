@@ -93,7 +93,7 @@ public:
     int& getOldDeaths();
     void UpdateFragsDeaths();
     bool canTakeItem(const MapItem& item) const;
-    void TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName);
+    void TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName, pge_network::PgePacket& pktWpnUpdate);
 };
 
 struct Player_t

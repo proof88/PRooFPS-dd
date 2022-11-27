@@ -332,7 +332,7 @@ bool CPlayer::canTakeItem(const MapItem& item) const
     return false;
 }
 
-void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName)
+void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName, pge_network::PgePacket& pktWpnUpdate)
 {
     // invoked only on server
     switch (item.getType())
@@ -360,17 +360,26 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
         if (pWpnBecomingAvailable->isAvailable())
         {
             // just increase mag/unmag count
-            // TODO
+            pWpnBecomingAvailable->SetUnmagBulletCount(pWpnBecomingAvailable->getUnmagBulletCount() + pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-                "CPlayer::%s(): weapon %s pickup, already available, just inc stuff", __func__, sWeaponBecomingAvailable.c_str());
+                "CPlayer::%s(): weapon %s pickup, already available, just inc unmag to: %u",
+                __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
         else
         {
             // becoming available with default mag/unmag count
-            pWpnBecomingAvailable->SetAvailable(true);
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-                "CPlayer::%s(): weapon %s pickup, becomes available", __func__, sWeaponBecomingAvailable.c_str());
+                "CPlayer::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
+                __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
+        pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
+        proofps_dd::MsgWpnUpdate::initPkt(
+            pktWpnUpdate,
+            0 /* ignored by client anyway */,
+            sWeaponBecomingAvailable,
+            pWpnBecomingAvailable->isAvailable(),
+            pWpnBecomingAvailable->getMagBulletCount(),
+            pWpnBecomingAvailable->getUnmagBulletCount());  // becomes available on client side (after pkt being sent)
         break;
     }
     case MapItemType::ITEM_HEALTH:
@@ -1354,7 +1363,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 void PRooFPSddPGE::PickupAndRespawnItems()
 {
     pge_network::PgePacket newPktMapItemUpdate;
-    // TODO: MSGWPNUPD add another packet definition here when we have pkt for weapon update that we cen send to client
+    pge_network::PgePacket newPktWpnUpdate;
 
     for (auto& itemPair : m_maps.getItems())
     {
@@ -1393,11 +1402,17 @@ void PRooFPSddPGE::PickupAndRespawnItems()
                 // decision than collision check ...
                 if (Colliding(*plobj, mapItem.getObject3D()))
                 {
+                    proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
                     if (legacyPlayer.canTakeItem(mapItem))
                     {
-                        // TODO: MSGWPNUPD we can pass that msg to TakeItem because it knows how to update it
-                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponName);  // this also invokes mapItem.Take()
+                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponName, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
+                        // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
+                        // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
+                        if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
+                        {
+                            getNetwork().getServer().SendPacketToClient(player.second.m_connHandleServerSide, newPktWpnUpdate);
+                        }
                         break; // a player can collide with only one item at a time since there are no overlapping items
                     }
                 } // colliding
@@ -1406,7 +1421,6 @@ void PRooFPSddPGE::PickupAndRespawnItems()
 
         if (bSendItemUpdate)
         {
-            // TODO: MSGWPNUPD and here we can check if that pkt should be sent, and send that to that specific client only
             proofps_dd::MsgMapItemUpdate::initPkt(
                 newPktMapItemUpdate,
                 0,
@@ -2410,7 +2424,7 @@ void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
     }
 }
 
-void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdate& msg)
+void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgWpnUpdate& msg)
 {
     if (getNetwork().isServer())
     {
@@ -2419,5 +2433,5 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle connH
         return;
     }
 
-
+    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s!", __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no");
 }
