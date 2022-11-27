@@ -1929,6 +1929,13 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     {
         for (const auto& entry : std::filesystem::directory_iterator("gamedata/weapons/"))
         {
+            getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
+            if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): skip wpn due to long filename: %s!", __func__, entry.path().string().c_str());
+                continue; // otherwise multiple weapons with same first nWpnNameNameMaxLength-1 chars would be mixed up in pkts
+            }
+
             if (entry.path().extension().string() == ".txt")
             {
                 const bool bWpnLoaded = getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide);
