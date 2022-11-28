@@ -1687,6 +1687,16 @@ void PRooFPSddPGE::onGameRunning()
                 10, 110);
         }  
 
+        CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
+        if (legacyPlayer.getWeapon())
+        {
+            getPRRE().getUImanager().text(
+                legacyPlayer.getWeapon()->getVars()["name"].getAsString() + ": " +
+                std::to_string(legacyPlayer.getWeapon()->getMagBulletCount()) + " / " +
+                std::to_string(legacyPlayer.getWeapon()->getUnmagBulletCount()),
+                10, 150);
+        }
+
         if (window.isActive())
         {
             pge_network::PgePacket pkt;
@@ -1694,8 +1704,6 @@ void PRooFPSddPGE::onGameRunning()
 
             KeyBoard(m_fps, m_bWon, pkt);
             Mouse(m_fps, m_bWon, pkt);
-
-            CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
 
             legacyPlayer.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
             legacyPlayer.getAttachedObject()->getAngleVec().SetY(legacyPlayer.getAngleY());
