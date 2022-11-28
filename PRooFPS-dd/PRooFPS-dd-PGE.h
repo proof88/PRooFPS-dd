@@ -80,8 +80,8 @@ public:
     void SetWeapon(Weapon* wpn);
     std::vector<Weapon*>& getWeapons();
     const std::vector<Weapon*>& getWeapons() const;
-    const Weapon* getWeaponByName(const std::string& wpnName) const;
-    Weapon* getWeaponByName(const std::string& wpnName);
+    const Weapon* getWeaponByFilename(const std::string& sFilename) const;
+    Weapon* getWeaponByFilename(const std::string& sFilename);
     PRREVector& getOldWeaponAngle();
     PRREVector& getWeaponAngle();
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
@@ -160,7 +160,7 @@ protected:
 
 private:
 
-    static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponName;
+    static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
 
     proofps_dd::GameMode* m_gameMode;
     proofps_dd::DeathMatchMode* m_deathMatchMode;

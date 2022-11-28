@@ -247,13 +247,13 @@ const std::vector<Weapon*>& CPlayer::getWeapons() const
     return m_weapons;
 }
 
-const Weapon* CPlayer::getWeaponByName(const std::string& wpnName) const
+const Weapon* CPlayer::getWeaponByFilename(const std::string& sFilename) const
 {
     for (const auto pWpn : m_weapons)
     {
         if (pWpn)
         {
-            if (pWpn->getFilename() == wpnName)
+            if (pWpn->getFilename() == sFilename)
             {
                 return pWpn;
             }
@@ -263,13 +263,13 @@ const Weapon* CPlayer::getWeaponByName(const std::string& wpnName) const
     return nullptr;
 }
 
-Weapon* CPlayer::getWeaponByName(const std::string& wpnName)
+Weapon* CPlayer::getWeaponByFilename(const std::string& sFilename)
 {
     for (const auto pWpn : m_weapons)
     {
         if (pWpn)
         {
-            if (pWpn->getFilename() == wpnName)
+            if (pWpn->getFilename() == sFilename)
             {
                 return pWpn;
             }
@@ -350,7 +350,7 @@ bool CPlayer::canTakeItem(const MapItem& item, const std::map<MapItemType, std::
             return false;
         }
         const std::string& sWeaponName = it->second;
-        const Weapon* const pWpn = getWeaponByName(sWeaponName);
+        const Weapon* const pWpn = getWeaponByFilename(sWeaponName);
         if (!pWpn)
         {
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
@@ -383,7 +383,7 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
             return;
         }
         const std::string& sWeaponBecomingAvailable = it->second;
-        Weapon* const pWpnBecomingAvailable = getWeaponByName(sWeaponBecomingAvailable);
+        Weapon* const pWpnBecomingAvailable = getWeaponByFilename(sWeaponBecomingAvailable);
         if (!pWpnBecomingAvailable)
         {
             CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
@@ -764,9 +764,9 @@ void PRooFPSddPGE::onGameInitialized()
 // This map provides the logical connection between pickupable MapItems and actual weapons.
 // So when player picks up a specific MapItem, we know which weapon should become available for the player.
 // I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
-const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponName = {
-    {MapItemType::ITEM_WPN_PISTOL, "pistol"},
-    {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun"}
+const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponFilename = {
+    {MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
+    {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
 };
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
@@ -1362,7 +1362,7 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
 {
     player.getAttachedObject()->Show();
 
-    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByName(getWeaponManager().getDefaultAvailableWeapon());
+    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);
 
     for (auto pWpn : player.getWeapons())
@@ -1462,9 +1462,9 @@ void PRooFPSddPGE::PickupAndRespawnItems()
                 if (Colliding(*plobj, mapItem.getObject3D()))
                 {
                     proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
-                    if (legacyPlayer.canTakeItem(mapItem, m_mapItemTypeToWeaponName))
+                    if (legacyPlayer.canTakeItem(mapItem, m_mapItemTypeToWeaponFilename))
                     {
-                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponName, newPktWpnUpdate);  // this also invokes mapItem.Take()
+                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponFilename, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
                         // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
@@ -2008,7 +2008,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...
-        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeapon("machinegun");
+        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename("machinegun.txt");
         assert(bWpnDefaultSet);
         
         for (const auto pWpn : getWeaponManager().getWeapons())
@@ -2023,7 +2023,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         }
     }
 
-    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByName(getWeaponManager().getDefaultAvailableWeapon());
+    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);
 
     // and here the actual weapons for the specific player, these can be visible when active, moving with player, etc.
@@ -2339,7 +2339,17 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             {
                 // server will have the new bullet, clients will learn about the new bullet when server is sending out
                 // the regular bullet updates
-                wpn->shoot();
+                if (wpn->shoot())
+                {
+                    //pge_network::PgePacket pktWpnUpdate;
+                    //proofps_dd::MsgWpnUpdate::initPkt(
+                    //    pktWpnUpdate,
+                    //    0 /* ignored by client anyway */,
+                    //    wpn->getFilename(),
+                    //    pWpnBecomingAvailable->isAvailable(),
+                    //    pWpnBecomingAvailable->getMagBulletCount(),
+                    //    pWpnBecomingAvailable->getUnmagBulletCount());
+                }
             }
         }
     }
@@ -2509,7 +2519,7 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return;
     }
 
-    Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByName(msg.m_szWpnName);
+    Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnName);
