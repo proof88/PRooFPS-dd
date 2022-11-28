@@ -80,6 +80,7 @@ public:
     void SetWeapon(Weapon* wpn);
     std::vector<Weapon*>& getWeapons();
     const std::vector<Weapon*>& getWeapons() const;
+    const Weapon* getWeaponByName(const std::string& wpnName) const;
     Weapon* getWeaponByName(const std::string& wpnName);
     PRREVector& getOldWeaponAngle();
     PRREVector& getWeaponAngle();
@@ -92,7 +93,7 @@ public:
     const int& getDeaths() const;
     int& getOldDeaths();
     void UpdateFragsDeaths();
-    bool canTakeItem(const MapItem& item) const;
+    bool canTakeItem(const MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName) const;
     void TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName, pge_network::PgePacket& pktWpnUpdate);
 };
 

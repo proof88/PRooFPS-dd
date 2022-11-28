@@ -247,6 +247,22 @@ const std::vector<Weapon*>& CPlayer::getWeapons() const
     return m_weapons;
 }
 
+const Weapon* CPlayer::getWeaponByName(const std::string& wpnName) const
+{
+    for (const auto pWpn : m_weapons)
+    {
+        if (pWpn)
+        {
+            if (pWpn->getFilename() == wpnName)
+            {
+                return pWpn;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 Weapon* CPlayer::getWeaponByName(const std::string& wpnName)
 {
     for (const auto pWpn : m_weapons)
@@ -319,14 +335,30 @@ void CPlayer::UpdateFragsDeaths()
     m_nOldDeaths = m_nDeaths;
 }
 
-bool CPlayer::canTakeItem(const MapItem& item) const
+bool CPlayer::canTakeItem(const MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName) const
 {
     switch (item.getType())
     {
     case MapItemType::ITEM_WPN_PISTOL:
-        return true;
     case MapItemType::ITEM_WPN_MACHINEGUN:
-        return true;
+    {
+        const auto it = mapItemTypeToWeaponName.find(item.getType());
+        if (it == mapItemTypeToWeaponName.end())
+        {
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+                "CPlayer::%s(): failed to find weapon by item type %d!", __func__, item.getType());
+            return false;
+        }
+        const std::string& sWeaponName = it->second;
+        const Weapon* const pWpn = getWeaponByName(sWeaponName);
+        if (!pWpn)
+        {
+            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+                "CPlayer::%s(): failed to find weapon by name %s for item type %d!", __func__, sWeaponName.c_str(), item.getType());
+            return false;
+        }
+        return pWpn->canIncBulletCount();
+    }
     case MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
     default:
@@ -1408,7 +1440,7 @@ void PRooFPSddPGE::PickupAndRespawnItems()
                 if (Colliding(*plobj, mapItem.getObject3D()))
                 {
                     proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
-                    if (legacyPlayer.canTakeItem(mapItem))
+                    if (legacyPlayer.canTakeItem(mapItem, m_mapItemTypeToWeaponName))
                     {
                         legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponName, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
