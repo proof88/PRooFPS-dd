@@ -1361,8 +1361,30 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
 void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
 {
     player.getAttachedObject()->Show();
-    player.getWeapon()->getObject3D().Show();
-    player.getWeapon()->Reset();
+
+    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByName(getWeaponManager().getDefaultAvailableWeapon());
+    assert(wpnDefaultAvailable);
+
+    for (auto pWpn : player.getWeapons())
+    {
+        if (!pWpn)
+        {
+            continue;
+        }
+
+        pWpn->Reset();
+        if (pWpn->getFilename() == wpnDefaultAvailable->getFilename())
+        {
+            pWpn->getObject3D().Show();
+            pWpn->SetAvailable(true);
+            player.SetWeapon(pWpn);
+        }
+        else
+        {
+            pWpn->getObject3D().Hide();
+        }
+    }
+
     if (bMe)
     {
         m_pObjXHair->Show();
