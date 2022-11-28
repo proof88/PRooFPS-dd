@@ -2338,17 +2338,22 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             if (getNetwork().isServer())
             {
                 // server will have the new bullet, clients will learn about the new bullet when server is sending out
-                // the regular bullet updates
+                // the regular bullet updates;
                 if (wpn->shoot())
                 {
-                    //pge_network::PgePacket pktWpnUpdate;
-                    //proofps_dd::MsgWpnUpdate::initPkt(
-                    //    pktWpnUpdate,
-                    //    0 /* ignored by client anyway */,
-                    //    wpn->getFilename(),
-                    //    pWpnBecomingAvailable->isAvailable(),
-                    //    pWpnBecomingAvailable->getMagBulletCount(),
-                    //    pWpnBecomingAvailable->getUnmagBulletCount());
+                    // but we send out the wpn update for bullet count change here for that single client
+                    if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
+                    {
+                        pge_network::PgePacket pktWpnUpdate;
+                        proofps_dd::MsgWpnUpdate::initPkt(
+                            pktWpnUpdate,
+                            0 /* ignored by client anyway */,
+                            wpn->getFilename(),
+                            wpn->isAvailable(),
+                            wpn->getMagBulletCount(),
+                            wpn->getUnmagBulletCount());
+                        getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
+                    }
                 }
             }
         }
