@@ -162,6 +162,13 @@ private:
 
     static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
 
+    struct KeyReleasedAndWeaponFilenamePair
+    {
+        bool m_bReleased;
+        std::string m_sWpnFilename;
+    };
+    static std::map<unsigned char, KeyReleasedAndWeaponFilenamePair> m_mapKeypressToWeapon;
+
     proofps_dd::GameMode* m_gameMode;
     proofps_dd::DeathMatchMode* m_deathMatchMode;
     std::string m_sServerMapFilenameToLoad;

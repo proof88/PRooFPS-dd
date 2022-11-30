@@ -100,13 +100,15 @@ namespace proofps_dd
             pge_network::PgePacket& pkt,
             const Strafe& strafe,
             bool bJump,
-            bool bSwitchToRunning)
+            bool bSwitchToRunning,
+            unsigned char cWeaponSwitch)
         {
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bJumpAction = bJump;
             msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
+            msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
         }
 
         static void setMouse(
@@ -149,6 +151,7 @@ namespace proofps_dd
         Strafe m_strafe;
         bool m_bJumpAction;
         bool m_bSendSwitchToRunning;
+        unsigned char m_cWeaponSwitch;
         bool m_bShootAction;
         TPRREfloat m_fPlayerAngleY;
         TPRREfloat m_fWpnAngleY;

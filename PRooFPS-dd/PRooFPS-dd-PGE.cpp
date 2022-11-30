@@ -764,9 +764,17 @@ void PRooFPSddPGE::onGameInitialized()
 // This map provides the logical connection between pickupable MapItems and actual weapons.
 // So when player picks up a specific MapItem, we know which weapon should become available for the player.
 // I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
-const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponFilename = {
+const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponFilename =
+{
     {MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
     {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
+};
+
+// Which key should switch to which weapon
+std::map<unsigned char, PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> PRooFPSddPGE::m_mapKeypressToWeapon =
+{
+    {'2', {true, "pistol.txt"}},
+    {'3', {true, "machinegun.txt"}}
 };
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
@@ -875,10 +883,33 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
         {
             m_bShiftReleased = true;
         }
-    
-        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk)
+
+        unsigned char cWeaponSwitch = '\0';
+        for (auto& key : m_mapKeypressToWeapon)
         {
-            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk);
+            if (keybd.isKeyPressed(key.first))
+            {
+                if (key.second.m_bReleased)
+                {
+                    const Weapon* const pTargetWpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(key.second.m_sWpnFilename);
+                    if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
+                    {
+                        cWeaponSwitch = key.first;
+                    }
+
+                    key.second.m_bReleased = false;
+                }
+                break;
+            }
+            else
+            {
+                key.second.m_bReleased = true;
+            }
+        }
+    
+        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk || (cWeaponSwitch != '\0'))
+        {
+            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, cWeaponSwitch);
         }
     }
     else
@@ -2327,33 +2358,65 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     }
 
     Weapon* const wpn = legacyPlayer.getWeapon();
-    if (wpn)
+    if (!wpn)
     {
-        legacyPlayer.getWeaponAngle().Set(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ);
-        wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
-        wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+        return;
+    }
 
-        if (pktUserCmdMove.m_bShootAction)
+    if (pktUserCmdMove.m_cWeaponSwitch != '\0')
+    {
+        const auto itTargetWpn = m_mapKeypressToWeapon.find(pktUserCmdMove.m_cWeaponSwitch);
+        if (itTargetWpn == m_mapKeypressToWeapon.end())
         {
-            if (getNetwork().isServer())
+            const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
+            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for char %s!", __func__, sc.c_str());
+            return;
+        }
+
+        Weapon* const pTargetWpn = legacyPlayer.getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
+        if (pTargetWpn != legacyPlayer.getWeapon())
+        {
+            legacyPlayer.SetWeapon(pTargetWpn);
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
+                __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+        }
+        else
+        {
+            // should not happen because client should NOT send message in such case
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
+                __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+        }
+    }
+
+    legacyPlayer.getWeaponAngle().Set(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ);
+    wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
+    wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+
+    if (pktUserCmdMove.m_cWeaponSwitch != '\0')
+    {
+        return; // cannot do anything else with the weapon if switch has been initiated
+    }
+
+    if (pktUserCmdMove.m_bShootAction)
+    {
+        if (getNetwork().isServer())
+        {
+            // server will have the new bullet, clients will learn about the new bullet when server is sending out
+            // the regular bullet updates;
+            if (wpn->shoot())
             {
-                // server will have the new bullet, clients will learn about the new bullet when server is sending out
-                // the regular bullet updates;
-                if (wpn->shoot())
+                // but we send out the wpn update for bullet count change here for that single client
+                if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
                 {
-                    // but we send out the wpn update for bullet count change here for that single client
-                    if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
-                    {
-                        pge_network::PgePacket pktWpnUpdate;
-                        proofps_dd::MsgWpnUpdate::initPkt(
-                            pktWpnUpdate,
-                            0 /* ignored by client anyway */,
-                            wpn->getFilename(),
-                            wpn->isAvailable(),
-                            wpn->getMagBulletCount(),
-                            wpn->getUnmagBulletCount());
-                        getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
-                    }
+                    pge_network::PgePacket pktWpnUpdate;
+                    proofps_dd::MsgWpnUpdate::initPkt(
+                        pktWpnUpdate,
+                        0 /* ignored by client anyway */,
+                        wpn->getFilename(),
+                        wpn->isAvailable(),
+                        wpn->getMagBulletCount(),
+                        wpn->getUnmagBulletCount());
+                    getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
                 }
             }
         }
