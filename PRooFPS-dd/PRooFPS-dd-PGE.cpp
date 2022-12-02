@@ -579,6 +579,7 @@ void PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
+        getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
 
         getPRRE().getUImanager().text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
         getPRRE().getRenderer()->RenderScene();
@@ -891,13 +892,25 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
             {
                 if (key.second.m_bReleased)
                 {
+                    key.second.m_bReleased = false;
+                    
                     const Weapon* const pTargetWpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(key.second.m_sWpnFilename);
+                    if (!pTargetWpn)
+                    {
+                        getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
+                            __func__, key.second.m_sWpnFilename.c_str());
+                        break;
+                    }
+                    if (!pTargetWpn->isAvailable())
+                    {
+                        getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
+                            __func__, key.second.m_sWpnFilename.c_str());
+                        break;
+                    }
                     if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
                     {
                         cWeaponSwitch = key.first;
                     }
-
-                    key.second.m_bReleased = false;
                 }
                 break;
             }
@@ -1884,6 +1897,9 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
         case proofps_dd::MsgWpnUpdate::id:
             HandleWpnUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
             break;
+        case proofps_dd::MsgWpnUpdateCurrent::id:
+            HandleWpnUpdateCurrent(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
+            break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
         }
@@ -2370,15 +2386,44 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         {
             const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for char %s!", __func__, sc.c_str());
+            assert(false);
             return;
         }
 
         Weapon* const pTargetWpn = legacyPlayer.getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
+        if (!pTargetWpn)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
+            assert(false);
+            return;
+        }
+
+        if (!pTargetWpn->isAvailable())
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
+            assert(false);  // must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
+            return;
+        }
+
         if (pTargetWpn != legacyPlayer.getWeapon())
         {
+            pTargetWpn->getObject3D().getAngleVec() = legacyPlayer.getWeapon()->getObject3D().getAngleVec();
+            legacyPlayer.getWeapon()->getObject3D().Hide();  // TODO: this should be done by SetWeapon() I guess
             legacyPlayer.SetWeapon(pTargetWpn);
+            legacyPlayer.getWeapon()->getObject3D().Show();
             getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
                 __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+
+            // all clients must be updated about this player's weapon switch
+            for (const auto& client : m_mapPlayers)
+            {
+                pge_network::PgePacket pktWpnUpdateCurrent;
+                proofps_dd::MsgWpnUpdateCurrent::initPkt(
+                    pktWpnUpdateCurrent,
+                    it->second.m_connHandleServerSide,
+                    pTargetWpn->getFilename());
+                getNetwork().getServer().SendPacketToClient(client.second.m_connHandleServerSide, pktWpnUpdateCurrent);
+            }
         }
         else
         {
@@ -2597,4 +2642,40 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
     wpn->SetAvailable(msg.m_bAvailable);
     wpn->SetMagBulletCount(msg.m_nMagBulletCount);
     wpn->SetUnmagBulletCount(msg.m_nUnmagBulletCount);
+}
+
+void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
+{
+    if (getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return;
+    }
+
+    getConsole().OLn("PRooFPSddPGE::%s(): received: %s",  __func__, msg.m_szWpnCurrentName);
+
+    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return;
+    }
+
+    if (it->first == m_sUserName)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
+    }
+
+    Weapon* const wpn = it->second.m_legacyPlayer.getWeaponByFilename(msg.m_szWpnCurrentName);
+    if (!wpn)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
+        return;
+    }
+
+    it->second.m_legacyPlayer.getWeapon()->getObject3D().Hide();  // TODO: this should be done by SetWeapon() I guess
+    wpn->getObject3D().getAngleVec() = it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec();
+    it->second.m_legacyPlayer.SetWeapon(wpn);
+    wpn->getObject3D().Show();
 }

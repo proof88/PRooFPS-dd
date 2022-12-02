@@ -27,10 +27,12 @@ namespace proofps_dd
         USER_UPDATE_2,
         BULLET_UPDATE,
         MAP_ITEM_UPDATE,
-        WPN_UPDATE
+        WPN_UPDATE,
+        WPN_UPDATE_CURRENT
     };
 
     // server -> self (inject) and clients
+    // sent to all clients after the connecting client has been accepted by server
     struct MsgUserSetup
     {
         static const ElteFailMsgId id = ElteFailMsgId::USER_SETUP;
@@ -159,6 +161,7 @@ namespace proofps_dd
     };
 
     // server -> self (inject) and clients
+    // sent regularly to all clients
     struct MsgUserUpdate
     {
         static const ElteFailMsgId id = ElteFailMsgId::USER_UPDATE;
@@ -209,6 +212,7 @@ namespace proofps_dd
     };
 
     // server -> clients
+    // sent to all clients
     struct MsgBulletUpdate
     {
         static const ElteFailMsgId id = ElteFailMsgId::BULLET_UPDATE;
@@ -263,6 +267,7 @@ namespace proofps_dd
     };
 
     // server -> clients
+    // sent to all clients after specific event, e.g. picking up an item
     struct MsgMapItemUpdate
     {
         static const ElteFailMsgId id = ElteFailMsgId::MAP_ITEM_UPDATE;
@@ -291,10 +296,11 @@ namespace proofps_dd
     };
 
     // server -> clients
+    // availability and bullet counts update to a single client after specific events, e.g. shoot
     struct MsgWpnUpdate
     {
         static const ElteFailMsgId id = ElteFailMsgId::WPN_UPDATE;
-        static const uint8_t nWpnNameNameMaxLength = 64; // TODO: max file name length should be forced too
+        static const uint8_t nWpnNameNameMaxLength = 64;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -329,6 +335,32 @@ namespace proofps_dd
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
+    };
+
+    // server -> clients
+    // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch
+    struct MsgWpnUpdateCurrent
+    {
+        static const ElteFailMsgId id = ElteFailMsgId::WPN_UPDATE_CURRENT;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const std::string& sWpnCurrentName)
+        {
+            assert(sizeof(MsgWpnUpdateCurrent) <= pge_network::MsgApp::nMessageMaxLength);
+            memset(&pkt, 0, sizeof(pkt));
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id);
+
+            proofps_dd::MsgWpnUpdateCurrent& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData);
+            strncpy_s(msgWpnUpdate.m_szWpnCurrentName, MsgWpnUpdate::nWpnNameNameMaxLength, sWpnCurrentName.c_str(), sWpnCurrentName.length());
+
+            return true;
+        }
+
+        char m_szWpnCurrentName[MsgWpnUpdate::nWpnNameNameMaxLength];
     };
 
 
