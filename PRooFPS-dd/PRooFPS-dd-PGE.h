@@ -31,6 +31,7 @@ private:
     PRREObject3D* m_pObj;
     std::vector<Weapon*> m_weapons;
     Weapon* m_pWpn;
+    std::chrono::time_point<std::chrono::steady_clock> m_timeLastWeaponSwitch;
     PR00FsReducedRenderingEngine* pGFX;
     float m_fGravity;
     bool m_bJumping;
@@ -77,7 +78,8 @@ public:
     void SetExpectingStartPos(bool b);
     Weapon* getWeapon();
     const Weapon* getWeapon() const;
-    void SetWeapon(Weapon* wpn);
+    void SetWeapon(Weapon* wpn, bool bRecordSwitchTime);
+    std::chrono::time_point<std::chrono::steady_clock>& getTimeLastWeaponSwitch();
     std::vector<Weapon*>& getWeapons();
     const std::vector<Weapon*>& getWeapons() const;
     const Weapon* getWeaponByFilename(const std::string& sFilename) const;
@@ -162,6 +164,8 @@ private:
 
     static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
 
+    static const unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
+
     struct KeyReleasedAndWeaponFilenamePair
     {
         bool m_bReleased;
@@ -174,7 +178,7 @@ private:
     std::string m_sServerMapFilenameToLoad;
     Maps m_maps;
 
-    int m_fps, m_fps_counter;                 /* fps méréséhez segédváltozók */
+    int m_fps, m_fps_counter;               /* fps méréséhez segédváltozók */
     unsigned int m_fps_lastmeasure;         /* - || - */
     unsigned int m_fps_ms;                  /* - || - */
 

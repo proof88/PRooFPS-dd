@@ -232,7 +232,7 @@ const Weapon* CPlayer::getWeapon() const
     return m_pWpn;
 }
 
-void CPlayer::SetWeapon(Weapon* wpn)
+void CPlayer::SetWeapon(Weapon* wpn, bool bRecordSwitchTime)
 {
     if (!wpn)
     {
@@ -247,13 +247,24 @@ void CPlayer::SetWeapon(Weapon* wpn)
         return;
     }
 
-    if (m_pWpn)
+    if (m_pWpn && (m_pWpn != wpn))
     {
+        // we already have a current different weapon, so this will be a weapon switch
         m_pWpn->getObject3D().Hide();
         wpn->getObject3D().getAngleVec() = m_pWpn->getObject3D().getAngleVec();
+
+        if (bRecordSwitchTime)
+        {
+            getTimeLastWeaponSwitch() = std::chrono::steady_clock::now();
+        }
     }
     wpn->getObject3D().Show();
     m_pWpn = wpn;
+}
+
+std::chrono::time_point<std::chrono::steady_clock>& CPlayer::getTimeLastWeaponSwitch()
+{
+    return m_timeLastWeaponSwitch;
 }
 
 std::vector<Weapon*>& CPlayer::getWeapons()
@@ -790,6 +801,8 @@ const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponFile
     {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
 };
 
+const unsigned int PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
+
 // Which key should switch to which weapon
 std::map<unsigned char, PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> PRooFPSddPGE::m_mapKeypressToWeapon =
 {
@@ -979,7 +992,19 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     {
         // sending mouse action is still allowed when player is dead, since server will treat that
         // as respawn request
-        proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+
+        const auto nSecsSinceLastWeaponSwitch =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - m_mapPlayers[m_sUserName].m_legacyPlayer.getTimeLastWeaponSwitch()
+                ).count();
+        if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
+        {
+            getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
+        }
+        else
+        {
+            proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+        }
     }
 
     if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
@@ -1439,7 +1464,7 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
         if (pWpn->getFilename() == wpnDefaultAvailable->getFilename())
         {
             pWpn->SetAvailable(true);
-            player.SetWeapon(pWpn);
+            player.SetWeapon(pWpn, false);
         }
     }
 
@@ -2092,7 +2117,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         if (pNewWeapon->getFilename() == wpnDefaultAvailable->getFilename())
         {
             pNewWeapon->SetAvailable(true);
-            m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(pNewWeapon);
+            m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(pNewWeapon, false);
         }
     }
 
@@ -2411,7 +2436,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         if (pTargetWpn != legacyPlayer.getWeapon())
         {
-            legacyPlayer.SetWeapon(pTargetWpn);
+            legacyPlayer.SetWeapon(pTargetWpn, true);
             getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
                 __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
 
@@ -2445,25 +2470,32 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if (pktUserCmdMove.m_bShootAction)
     {
-        if (getNetwork().isServer())
+        const auto nSecsSinceLastWeaponSwitch =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - legacyPlayer.getTimeLastWeaponSwitch()
+                ).count();
+        if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            // server will have the new bullet, clients will learn about the new bullet when server is sending out
-            // the regular bullet updates;
-            if (wpn->shoot())
+            getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
+            return;
+        }
+
+        // server will have the new bullet, clients will learn about the new bullet when server is sending out
+        // the regular bullet updates;
+        if (wpn->shoot())
+        {
+            // but we send out the wpn update for bullet count change here for that single client
+            if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
             {
-                // but we send out the wpn update for bullet count change here for that single client
-                if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
-                {
-                    pge_network::PgePacket pktWpnUpdate;
-                    proofps_dd::MsgWpnUpdate::initPkt(
-                        pktWpnUpdate,
-                        0 /* ignored by client anyway */,
-                        wpn->getFilename(),
-                        wpn->isAvailable(),
-                        wpn->getMagBulletCount(),
-                        wpn->getUnmagBulletCount());
-                    getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
-                }
+                pge_network::PgePacket pktWpnUpdate;
+                proofps_dd::MsgWpnUpdate::initPkt(
+                    pktWpnUpdate,
+                    0 /* ignored by client anyway */,
+                    wpn->getFilename(),
+                    wpn->isAvailable(),
+                    wpn->getMagBulletCount(),
+                    wpn->getUnmagBulletCount());
+                getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
             }
         }
     }
@@ -2675,5 +2707,5 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return;
     }
 
-    it->second.m_legacyPlayer.SetWeapon(wpn);
+    it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
 }
