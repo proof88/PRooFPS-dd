@@ -234,6 +234,25 @@ const Weapon* CPlayer::getWeapon() const
 
 void CPlayer::SetWeapon(Weapon* wpn)
 {
+    if (!wpn)
+    {
+        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn("CPlayer::%s(): CANNOT set nullptr!", __func__);
+        return;
+    }
+
+    if (!wpn->isAvailable())
+    {
+        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+            "CPlayer::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
+        return;
+    }
+
+    if (m_pWpn)
+    {
+        m_pWpn->getObject3D().Hide();
+        wpn->getObject3D().getAngleVec() = m_pWpn->getObject3D().getAngleVec();
+    }
+    wpn->getObject3D().Show();
     m_pWpn = wpn;
 }
 
@@ -1419,13 +1438,8 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
         pWpn->Reset();
         if (pWpn->getFilename() == wpnDefaultAvailable->getFilename())
         {
-            pWpn->getObject3D().Show();
             pWpn->SetAvailable(true);
             player.SetWeapon(pWpn);
-        }
-        else
-        {
-            pWpn->getObject3D().Hide();
         }
     }
 
@@ -2033,7 +2047,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
-    // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves
+    // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
+    // these will be the reference weapons, never visible, never moving, just to be copied!
     if (msg.m_bCurrentClient)
     {
         for (const auto& entry : std::filesystem::directory_iterator("gamedata/weapons/"))
@@ -2057,17 +2072,6 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         // the default weapon for the player, so there is no use of overriding it on client side ...
         const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename("machinegun.txt");
         assert(bWpnDefaultSet);
-        
-        for (const auto pWpn : getWeaponManager().getWeapons())
-        {
-            if (!pWpn)
-            {
-                continue;
-            }
-
-            // these will be the reference weapons, never visible, never moving, just to be copied!
-            pWpn->getObject3D().Hide();
-        }
     }
 
     Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
@@ -2087,14 +2091,14 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         pNewWeapon->SetOwner(connHandleServerSide);
         if (pNewWeapon->getFilename() == wpnDefaultAvailable->getFilename())
         {
-            pNewWeapon->getObject3D().Show();
             pNewWeapon->SetAvailable(true);
             m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(pNewWeapon);
         }
-        else
-        {
-            pNewWeapon->getObject3D().Hide();
-        }
+    }
+
+    if (!m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getWeapon())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): no default weapon selected for user %s!", __func__, msg.m_szUserName);
     }
 
     // Note that this is a waste of resources this way.
@@ -2407,10 +2411,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         if (pTargetWpn != legacyPlayer.getWeapon())
         {
-            pTargetWpn->getObject3D().getAngleVec() = legacyPlayer.getWeapon()->getObject3D().getAngleVec();
-            legacyPlayer.getWeapon()->getObject3D().Hide();  // TODO: this should be done by SetWeapon() I guess
             legacyPlayer.SetWeapon(pTargetWpn);
-            legacyPlayer.getWeapon()->getObject3D().Show();
             getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
                 __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
 
@@ -2674,8 +2675,5 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return;
     }
 
-    it->second.m_legacyPlayer.getWeapon()->getObject3D().Hide();  // TODO: this should be done by SetWeapon() I guess
-    wpn->getObject3D().getAngleVec() = it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec();
     it->second.m_legacyPlayer.SetWeapon(wpn);
-    wpn->getObject3D().Show();
 }
