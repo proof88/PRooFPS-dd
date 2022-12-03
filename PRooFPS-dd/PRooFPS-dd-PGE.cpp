@@ -1411,6 +1411,11 @@ void PRooFPSddPGE::UpdateBullets()
 
 void PRooFPSddPGE::UpdateWeapons()
 {
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
+    }
+
     for (auto& player : m_mapPlayers)
     {
         Weapon* const wpn = player.second.m_legacyPlayer.getWeapon();
@@ -1504,6 +1509,11 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
 void PRooFPSddPGE::PickupAndRespawnItems()
 {
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
+    }
+
     pge_network::PgePacket newPktMapItemUpdate;
     pge_network::PgePacket newPktWpnUpdate;
 
