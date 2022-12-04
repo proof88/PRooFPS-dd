@@ -199,6 +199,7 @@ private:
 
     void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt);
     bool Mouse(int fps, bool& won, pge_network::PgePacket& pkt);
+    void MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt);
     void CameraMovement(int fps);
     void Gravity(int fps);
     bool Colliding(const PRREObject3D& a, const PRREObject3D& b);

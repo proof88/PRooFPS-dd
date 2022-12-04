@@ -35,7 +35,7 @@ public:
 
     static const uint32_t ITEM_WPN_PISTOL_RESPAWN_SECS = 20;
 
-    static const uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 30;
+    static const uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 20;
 
     static const MapItemId& getGlobalMapItemId();
     static void ResetGlobalMapItemId();

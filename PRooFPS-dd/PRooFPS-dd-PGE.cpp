@@ -976,6 +976,12 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 
 bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
+    PGEInputMouse& mouse = getInput().getMouse();
+
+    // we should always read the wheel data as often as possible, because this way we can avoid
+    // the amount of wheel rotation accumulating too much
+    const short int nMouseWheelChange = mouse.getWheel();
+    
     if (m_gameMode->checkWinningConditions())
     {
         return false;
@@ -986,8 +992,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         return false;
     }
 
-    PGEInputMouse& mouse = getInput().getMouse();
-
+    bool bShootActionBeingSent = false;
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         // sending mouse action is still allowed when player is dead, since server will treat that
@@ -1004,12 +1009,18 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         else
         {
             proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+            bShootActionBeingSent = true;
         }
     }
 
     if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
     {
         return false;
+    }
+
+    if (!bShootActionBeingSent)
+    {
+        MouseWheel(nMouseWheelChange, pkt);
     }
 
     const int oldmx = mouse.getCursorPosX();
@@ -1033,6 +1044,145 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         0.f);
 
     return true;
+}
+
+void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt)
+{
+    if (proofps_dd::MsgUserCmdMove::getWeaponSwitch(pkt) != '\0')
+    {
+        return;
+    }
+
+    if (nMouseWheelChange == 0)
+    {
+        return;
+    }
+    
+    // if we dont shoot, and weapon switch not yet initiated by keyboard, we
+    // are allowed to process mousewheel event for changing weapon
+        
+    getConsole().OLn("PRooFPSddPGE::%s(): mousewheel: %d!", __func__, nMouseWheelChange);
+
+    // not nice but we have to search by value in the map now ...
+    // TODO: btw in the future the weapon switch forward/backward functionality will be implemented in WeaponManager
+    const Weapon* const pMyCurrentWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon();
+    if (!pMyCurrentWeapon)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): pMyCurrentWeapon null, CANNOT HAPPEN!", __func__);
+        return;
+    }
+                
+    // TODO: rewrite this search to use lambda, then cCurrentWeaponKeyChar can be const
+    unsigned char cCurrentWeaponKeyChar = '\0';
+    auto it = m_mapKeypressToWeapon.begin();
+    while (it != m_mapKeypressToWeapon.end())
+    {
+        if (it->second.m_sWpnFilename == pMyCurrentWeapon->getFilename())
+        {
+            cCurrentWeaponKeyChar = it->first;
+            break;
+        }
+        ++it;
+    }
+    if (cCurrentWeaponKeyChar == '\0')
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): could not set cCurrentWeaponKeyChar based on %s!",
+            __func__, pMyCurrentWeapon->getFilename().c_str());
+        return;
+    }
+
+    // Now we have to increment or decrement 'it' until:
+    // - we find an available weapon;
+    // - we reach back to the current weapon.
+    // I dont know if it is a good approach to just check only the sign of the change, and based on that,
+    // move 1 step forward or backward in weapons list ... or maybe I should move n steps based on the exact amount ...
+    
+    // This is very ugly as I have to iterate in a map either back or forth ... on the long run I will need
+    // a double linked list or similar, so it is easier to go in the list until we end up at the starting element or find an available wpn.
+    
+    unsigned char cTargetWeapon = cCurrentWeaponKeyChar;
+    if (nMouseWheelChange > 0)
+    {
+        // wheel rotated forward, in CS it means going forward in the list;
+        it++;
+        while (it != m_mapKeypressToWeapon.end())
+        {
+            const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+            if (pTargetWeapon && pTargetWeapon->isAvailable())
+            {
+                // we dont care about if bullets are loaded, if available then let it be the target!
+                cTargetWeapon = it->first;
+                break;
+            }
+            ++it;
+        }
+        if (it == m_mapKeypressToWeapon.end())
+        {
+            // try it from the beginning ...
+            it = m_mapKeypressToWeapon.begin();
+            while (it->first != cCurrentWeaponKeyChar)
+            {
+                const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+                if (pTargetWeapon && pTargetWeapon->isAvailable())
+                {
+                    // we dont care about if bullets are loaded, if available then let it be the target!
+                    cTargetWeapon = it->first;
+                    break;
+                }
+                ++it;
+            }
+        }
+    }
+    else
+    {
+        // wheel rotated backward, in CS it means going backward in the list;
+        do
+        {
+            if (it != m_mapKeypressToWeapon.begin())
+            {
+                --it;
+            }
+            else
+            {
+                break;
+            }
+            const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+            if (pTargetWeapon && pTargetWeapon->isAvailable())
+            {
+                // we dont care about if bullets are loaded, if available then let it be the target!
+                cTargetWeapon = it->first;
+                break;
+            }
+        } while (true);
+        if (cTargetWeapon == cCurrentWeaponKeyChar)
+        {
+            // try it from the end ...
+            it = m_mapKeypressToWeapon.end();
+            --it;
+            while (it->first != cCurrentWeaponKeyChar)
+            {
+                const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+                if (pTargetWeapon && pTargetWeapon->isAvailable())
+                {
+                    // we dont care about if bullets are loaded, if available then let it be the target!
+                    cTargetWeapon = it->first;
+                    break;
+                }
+                --it;
+            }
+        }
+    }
+
+    if (cTargetWeapon == cCurrentWeaponKeyChar)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
+    }
+    else
+    {
+        proofps_dd::MsgUserCmdMove::SetWeaponSwitch(pkt, cTargetWeapon);
+        std::string scTargetWeapon = std::to_string(cTargetWeapon);
+        getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, scTargetWeapon.c_str());
+    }            
 }
 
 
@@ -1191,7 +1341,6 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getZ() );
 
 } // CameraMovement()
-
 
 void PRooFPSddPGE::Gravity(int fps)
 {

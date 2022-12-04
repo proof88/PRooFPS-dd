@@ -113,6 +113,19 @@ namespace proofps_dd
             msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
         }
 
+        static unsigned char getWeaponSwitch(const pge_network::PgePacket& pkt)
+        {
+            const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            return msgUserCmdMove.m_cWeaponSwitch;
+        }
+
+        static void SetWeaponSwitch(pge_network::PgePacket& pkt, unsigned char cTargetWpnKey)
+        {
+            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            msgUserCmdMove.m_bShouldSend = true;
+            msgUserCmdMove.m_cWeaponSwitch = cTargetWpnKey;
+        }
+
         static void setMouse(
             pge_network::PgePacket& pkt,
             bool bShootAction)
