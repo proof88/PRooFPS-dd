@@ -2254,7 +2254,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...
-        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename("machinegun.txt");
+        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt");
         assert(bWpnDefaultSet);
     }
 
