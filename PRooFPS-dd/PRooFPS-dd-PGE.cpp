@@ -1466,14 +1466,14 @@ void PRooFPSddPGE::UpdateBullets()
                         const auto itKiller = getPlayerMapItByConnectionHandle(bullet.getOwner());
                         if (itKiller == m_mapPlayers.end())
                         {
-                            getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by a player already left!",
-                                __func__, player.first.c_str());
+                            //getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by a player already left!",
+                            //    __func__, player.first.c_str());
                         }
                         else
                         {
                             itKiller->second.m_legacyPlayer.getFrags()++;
-                            getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
-                                __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
+                            //getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
+                            //    __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
                         }
                         // server handles death here, clients will handle it when they receive MsgUserUpdate
                         HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
@@ -1619,6 +1619,7 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
         {
             pWpn->SetAvailable(true);
             player.SetWeapon(pWpn, false);
+            pWpn->UpdatePosition(player.getAttachedObject()->getPosVec());
         }
     }
 
