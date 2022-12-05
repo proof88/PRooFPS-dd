@@ -242,8 +242,8 @@ void CPlayer::SetWeapon(Weapon* wpn, bool bRecordSwitchTime)
 
     if (!wpn->isAvailable())
     {
-        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-            "CPlayer::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
+        //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
+        //    "CPlayer::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
         return;
     }
 
@@ -428,16 +428,16 @@ void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& 
             // TODO: this will be a problem for non-reloadable wpns such as rail gun, because there this value will be 0,
             // but we will think about it later then ... probably in such case bullets_default will be used
             pWpnBecomingAvailable->IncBulletCount(pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-                "CPlayer::%s(): weapon %s pickup, already available, just inc unmag to: %u",
-                __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
+            //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
+            //    "CPlayer::%s(): weapon %s pickup, already available, just inc unmag to: %u",
+            //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
         else
         {
             // becoming available with default bullet count
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-                "CPlayer::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
-                __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
+            //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
+            //    "CPlayer::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
+            //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
         proofps_dd::MsgWpnUpdate::initPkt(
@@ -935,8 +935,8 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                     }
                     if (!pTargetWpn->isAvailable())
                     {
-                        getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
-                            __func__, key.second.m_sWpnFilename.c_str());
+                        //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
+                        //    __func__, key.second.m_sWpnFilename.c_str());
                         break;
                     }
                     if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
@@ -1004,7 +1004,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
                 ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
+            //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
         }
         else
         {
@@ -1061,7 +1061,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
     // if we dont shoot, and weapon switch not yet initiated by keyboard, we
     // are allowed to process mousewheel event for changing weapon
         
-    getConsole().OLn("PRooFPSddPGE::%s(): mousewheel: %d!", __func__, nMouseWheelChange);
+    //getConsole().OLn("PRooFPSddPGE::%s(): mousewheel: %d!", __func__, nMouseWheelChange);
 
     // not nice but we have to search by value in the map now ...
     // TODO: btw in the future the weapon switch forward/backward functionality will be implemented in WeaponManager
@@ -1175,13 +1175,13 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
 
     if (cTargetWeapon == cCurrentWeaponKeyChar)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
+        //getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
     }
     else
     {
         proofps_dd::MsgUserCmdMove::SetWeaponSwitch(pkt, cTargetWeapon);
-        std::string scTargetWeapon = std::to_string(cTargetWeapon);
-        getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, scTargetWeapon.c_str());
+        //const std::string scTargetWeapon = std::to_string(cTargetWeapon);
+        //getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, scTargetWeapon.c_str());
     }            
 }
 
@@ -1372,7 +1372,7 @@ void PRooFPSddPGE::Gravity(int fps)
         
         if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
             legacyPlayer.SetHealth(0);
             HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
         }
@@ -1584,19 +1584,19 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
 
     if (bMe)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
+        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         m_pObjXHair->Hide();
         getPRRE().getUImanager().addText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
     }
     else
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
+        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
     }
 
     if (getNetwork().isServer())
     {
         player.getDeaths()++;
-        getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, player.getDeaths());
+        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, player.getDeaths());
     }
 }
 
@@ -2504,7 +2504,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         }
 
         // for dead player, only the shoot action is allowed which is treated as respawn request
-        getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
+        //getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
         return;
     }
 
@@ -2596,8 +2596,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         if (pTargetWpn != legacyPlayer.getWeapon())
         {
             legacyPlayer.SetWeapon(pTargetWpn, true);
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
-                __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
+            //    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
 
             // all clients must be updated about this player's weapon switch
             for (const auto& client : m_mapPlayers)
@@ -2635,7 +2635,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
                 ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
+            //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
             return;
         }
 
@@ -2700,7 +2700,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     if (msg.m_bRespawn)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
+        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
         HandlePlayerRespawned(it->first == m_sUserName, it->second.m_legacyPlayer);
     }
     else
@@ -2709,7 +2709,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
             HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
         }
     }
@@ -2814,8 +2814,8 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return;
     }
 
-    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
-        __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+    //getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
+    //    __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
 
     if (m_sUserName.empty())
     {
@@ -2845,7 +2845,7 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return;
     }
 
-    getConsole().OLn("PRooFPSddPGE::%s(): received: %s",  __func__, msg.m_szWpnCurrentName);
+    //getConsole().OLn("PRooFPSddPGE::%s(): received: %s",  __func__, msg.m_szWpnCurrentName);
 
     const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == it)
@@ -2856,7 +2856,7 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
 
     if (it->first == m_sUserName)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
+        //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
     }
 
     Weapon* const wpn = it->second.m_legacyPlayer.getWeaponByFilename(msg.m_szWpnCurrentName);
