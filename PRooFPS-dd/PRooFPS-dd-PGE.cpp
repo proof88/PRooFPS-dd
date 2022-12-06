@@ -992,9 +992,12 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         return false;
     }
 
+    static bool bPrevLeftButtonPressed = false;
     bool bShootActionBeingSent = false;
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
+        bPrevLeftButtonPressed = true;
+
         // sending mouse action is still allowed when player is dead, since server will treat that
         // as respawn request
 
@@ -1010,6 +1013,14 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         {
             proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
             bShootActionBeingSent = true;
+        }
+    }
+    else
+    {
+        if (bPrevLeftButtonPressed)
+        {
+            bPrevLeftButtonPressed = false;
+            proofps_dd::MsgUserCmdMove::setMouse(pkt, false);
         }
     }
 
@@ -2487,8 +2498,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
         (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
-        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend) &&
-        (!pktUserCmdMove.m_bShootAction))
+        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
@@ -2568,6 +2578,16 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         return;
     }
 
+    if (!pktUserCmdMove.m_bShootAction)
+    {
+        if (!wpn->isTriggerReleased())
+        {
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s released trigger!", 
+                __func__, sClientUserName.c_str());
+        }
+        wpn->releaseTrigger();
+    }
+
     if (pktUserCmdMove.m_cWeaponSwitch != '\0')
     {
         const auto itTargetWpn = m_mapKeypressToWeapon.find(pktUserCmdMove.m_cWeaponSwitch);
@@ -2642,10 +2662,10 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         // server will have the new bullet, clients will learn about the new bullet when server is sending out
         // the regular bullet updates;
-        if (wpn->shoot())
+        if (wpn->pullTrigger())
         {
             // but we send out the wpn update for bullet count change here for that single client
-            if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by shoot()
+            if (sClientUserName != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
             {
                 pge_network::PgePacket pktWpnUpdate;
                 proofps_dd::MsgWpnUpdate::initPkt(
