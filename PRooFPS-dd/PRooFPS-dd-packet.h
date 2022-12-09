@@ -103,6 +103,7 @@ namespace proofps_dd
             const Strafe& strafe,
             bool bJump,
             bool bSwitchToRunning,
+            bool bRequestReload,
             unsigned char cWeaponSwitch)
         {
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
@@ -110,6 +111,7 @@ namespace proofps_dd
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bJumpAction = bJump;
             msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
+            msgUserCmdMove.m_bRequestReload = bRequestReload;
             msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
         }
 
@@ -124,6 +126,12 @@ namespace proofps_dd
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_cWeaponSwitch = cTargetWpnKey;
+        }
+
+        static bool getReloadRequest(const pge_network::PgePacket& pkt)
+        {
+            const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
+            return msgUserCmdMove.m_bRequestReload;
         }
 
         static void setMouse(
@@ -166,6 +174,7 @@ namespace proofps_dd
         Strafe m_strafe;
         bool m_bJumpAction;
         bool m_bSendSwitchToRunning;
+        bool m_bRequestReload;
         unsigned char m_cWeaponSwitch;
         bool m_bShootAction;
         TPRREfloat m_fPlayerAngleY;

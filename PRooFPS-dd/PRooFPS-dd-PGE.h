@@ -186,6 +186,7 @@ private:
     bool m_bSpaceReleased, m_bBackSpaceReleased, m_bCtrlReleased;
     bool m_bShiftReleased, m_enterreleased;
     bool m_bTeleportReleased;
+    bool m_bReloadReleased;
     bool m_bWon;
     float m_fCameraMinY;
     bool m_bShowGuiDemo;

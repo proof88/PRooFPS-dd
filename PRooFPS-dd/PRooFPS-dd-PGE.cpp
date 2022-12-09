@@ -498,6 +498,7 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bShiftReleased(true),
     m_enterreleased(true),
     m_bTeleportReleased(true),
+    m_bReloadReleased(true),
     m_bWon(false),
     m_fCameraMinY(0.0f),
     m_bShowGuiDemo(false)
@@ -917,44 +918,61 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
             m_bShiftReleased = true;
         }
 
-        unsigned char cWeaponSwitch = '\0';
-        for (auto& key : m_mapKeypressToWeapon)
+        bool bRequestReload = false;
+        if (keybd.isKeyPressed((unsigned char)VkKeyScan('r')))
         {
-            if (keybd.isKeyPressed(key.first))
+            if (m_bReloadReleased)
             {
-                if (key.second.m_bReleased)
-                {
-                    key.second.m_bReleased = false;
-                    
-                    const Weapon* const pTargetWpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(key.second.m_sWpnFilename);
-                    if (!pTargetWpn)
-                    {
-                        getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
-                            __func__, key.second.m_sWpnFilename.c_str());
-                        break;
-                    }
-                    if (!pTargetWpn->isAvailable())
-                    {
-                        //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
-                        //    __func__, key.second.m_sWpnFilename.c_str());
-                        break;
-                    }
-                    if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
-                    {
-                        cWeaponSwitch = key.first;
-                    }
-                }
-                break;
+                bRequestReload = true;
+                m_bReloadReleased = false;
             }
-            else
+        }
+        else
+        {
+            m_bReloadReleased = true;
+        }
+
+        unsigned char cWeaponSwitch = '\0';
+        if (!bRequestReload)
+        {   // we dont care about wpn switch if reload is requested
+            for (auto& key : m_mapKeypressToWeapon)
             {
-                key.second.m_bReleased = true;
+                if (keybd.isKeyPressed(key.first))
+                {
+                    if (key.second.m_bReleased)
+                    {
+                        key.second.m_bReleased = false;
+
+                        const Weapon* const pTargetWpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(key.second.m_sWpnFilename);
+                        if (!pTargetWpn)
+                        {
+                            getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
+                                __func__, key.second.m_sWpnFilename.c_str());
+                            break;
+                        }
+                        if (!pTargetWpn->isAvailable())
+                        {
+                            //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
+                            //    __func__, key.second.m_sWpnFilename.c_str());
+                            break;
+                        }
+                        if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
+                        {
+                            cWeaponSwitch = key.first;
+                        }
+                    }
+                    break;
+                }
+                else
+                {
+                    key.second.m_bReleased = true;
+                }
             }
         }
     
-        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk || (cWeaponSwitch != '\0'))
+        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
         {
-            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, cWeaponSwitch);
+            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
         }
     }
     else
@@ -1017,7 +1035,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     }
     else
     {
-        if (bPrevLeftButtonPressed)
+        if (!proofps_dd::MsgUserCmdMove::getReloadRequest(pkt) && bPrevLeftButtonPressed)
         {
             bPrevLeftButtonPressed = false;
             proofps_dd::MsgUserCmdMove::setMouse(pkt, false);
@@ -1029,10 +1047,13 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         return false;
     }
 
-    if (!bShootActionBeingSent)
+    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdMove::getReloadRequest(pkt))
     {
         MouseWheel(nMouseWheelChange, pkt);
     }
+
+    // TODO: I think xhair update should happen earlier somewhere above, and click/wheel handling should
+    // happen after that, so returning from function is an easier thing then ...
 
     const int oldmx = mouse.getCursorPosX();
     const int oldmy = mouse.getCursorPosY();
@@ -1583,7 +1604,21 @@ void PRooFPSddPGE::UpdateWeapons()
         {
             continue;
         }
-        wpn->Update();
+        if (wpn->update())
+        {
+            if (player.first != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
+            {
+                pge_network::PgePacket pktWpnUpdate;
+                proofps_dd::MsgWpnUpdate::initPkt(
+                    pktWpnUpdate,
+                    0 /* ignored by client anyway */,
+                    wpn->getFilename(),
+                    wpn->isAvailable(),
+                    wpn->getMagBulletCount(),
+                    wpn->getUnmagBulletCount());
+                getNetwork().getServer().SendPacketToClient(player.second.m_connHandleServerSide, pktWpnUpdate);
+            }
+        }
     }
 }
 
@@ -2498,7 +2533,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
         (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
-        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bShouldSend))
+        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
         return;
@@ -2588,7 +2623,21 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         wpn->releaseTrigger();
     }
 
-    if (pktUserCmdMove.m_cWeaponSwitch != '\0')
+    if (pktUserCmdMove.m_bRequestReload)
+    {
+        if (wpn->reload())
+        {
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s reloading the weapon!",
+                __func__, sClientUserName.c_str());
+        }
+        else
+        {
+            getConsole().OLn("PRooFPSddPGE::%s(): player %s requested reload but we ignore it!",
+                __func__, sClientUserName.c_str());
+        }
+    }
+
+    if (!pktUserCmdMove.m_bRequestReload && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
         const auto itTargetWpn = m_mapKeypressToWeapon.find(pktUserCmdMove.m_cWeaponSwitch);
         if (itTargetWpn == m_mapKeypressToWeapon.end())
@@ -2639,13 +2688,14 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         }
     }
 
+    // TODO: this should be moved up, so returning from function is easier for rest of action handling code
     legacyPlayer.getWeaponAngle().Set(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ);
     wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
     wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
 
-    if (pktUserCmdMove.m_cWeaponSwitch != '\0')
+    if (pktUserCmdMove.m_bRequestReload || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
-        return; // cannot do anything else with the weapon if switch has been initiated
+        return; // don't check anything related to shooting in case of either of these actions
     }
 
     if (pktUserCmdMove.m_bShootAction)
@@ -2835,8 +2885,8 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return;
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
-    //    __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
+        __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
 
     if (m_sUserName.empty())
     {
