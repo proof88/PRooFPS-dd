@@ -2637,7 +2637,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         }
     }
 
-    if (!pktUserCmdMove.m_bRequestReload && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
+    if (!pktUserCmdMove.m_bRequestReload && (wpn->getState() == Weapon::State::WPN_READY) && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
         const auto itTargetWpn = m_mapKeypressToWeapon.find(pktUserCmdMove.m_cWeaponSwitch);
         if (itTargetWpn == m_mapKeypressToWeapon.end())
@@ -2693,7 +2693,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
     wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
 
-    if (pktUserCmdMove.m_bRequestReload || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
+    if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
         return; // don't check anything related to shooting in case of either of these actions
     }
