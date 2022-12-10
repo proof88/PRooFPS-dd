@@ -724,7 +724,7 @@ void PRooFPSddPGE::onGameInitialized()
         getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
     getPRRE().getWindow().SetCursorVisible(false);
 
-    m_deathMatchMode->SetFragLimit(3);
+    m_deathMatchMode->SetFragLimit(10);
     //m_deathMatchMode->SetTimeLimitSecs(5);
     m_gameMode->Reset();
     
