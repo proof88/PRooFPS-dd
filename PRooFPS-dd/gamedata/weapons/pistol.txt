@@ -57,9 +57,9 @@ reload_time = 1500
 
 # Firing mode defines how bullets are fired by pulling the trigger.
 # Accepted values (from lowest to highest available):
-#  - semi : trigger needs to be pulled as many times as many bullets we want to fire;
+#  - semi : trigger needs to be pulled-and-released as many times as many bullets we want to fire;
 #  - burst: similar to semi, but 1 trigger pull shots some (limited amount) bullets after each other;
-#  - proj : 1 trigger pull shots some (limited amount) of projectiles at once, e.g. shotguns;
+#  - proj : similar to burst, but 1 trigger pull shots some (limited amount) of projectiles AT ONCE, e.g. shotguns;
 #  - auto : trigger needs to be pulled only once to fire continuously until we have bullet.
 
 # Default firing mode
