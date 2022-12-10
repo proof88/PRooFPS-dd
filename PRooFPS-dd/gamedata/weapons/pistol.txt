@@ -80,7 +80,7 @@ firing_mode_max = burst
 
 # Time needed to elapse between 2 shots, in millisecs.
 # Cannot be 0.
-firing_cooldown = 1000
+firing_cooldown = 500
 
 #####################
 #                   #
@@ -109,7 +109,7 @@ recoil_m = 1.1
 # Time needed for recoil to disappear after 1 shot, in millisecs.
 # No effect when recoil_m is 1.0.
 # Must be greater or equal to firing_cooldown if recoil is enabled (see above).
-recoil_cooldown = 1500
+recoil_cooldown = 1000
 
 # If available, recoil control can improve the accuracy degradation
 # caused by accumulating recoil across multiple shots.
@@ -134,7 +134,7 @@ bullet_size_y = 0.05
 bullet_size_z = 0.0
 
 # Max speed is 1000, it means instant hit, e.g. rail gun
-bullet_speed = 0.1
+bullet_speed = 0.2
 
 # Gravity affecting the travel path of the bullet.
 # 0 means no effect of gravity.
@@ -159,7 +159,7 @@ bullet_fragile = true
 
 # Damage to health when hit directly.
 # If firing mode is "proj" or "burst", each hitting bullet or projectile takes this amount of damage.
-damage_hp = 20
+damage_hp = 40
 
 # Damage to armor when hit directly.
 # If firing mode is "proj" or "burst", each hitting bullet or projectile takes this amount of damage.
