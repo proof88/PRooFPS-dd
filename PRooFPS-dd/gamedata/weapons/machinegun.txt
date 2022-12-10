@@ -66,7 +66,7 @@ reload_time = 1500
 # For pistols, this is usually "semi".
 # For shotguns, this is usually "proj".
 # For rifles, this is usually "auto".
-firing_mode_def = semi
+firing_mode_def = auto
 
 # Maximum supported firing mode.
 # User can loop from default to max firing mode using a mode selector.
@@ -76,7 +76,7 @@ firing_mode_def = semi
 # The user is able to select "auto" though even if "proj" is the default, in that case
 # weapon will shot projectiles in automatic mode (e.g. XM1014/Leone YG1265 Auto Shotgun in CS 1.6).
 # Max cannot be less than the default.
-firing_mode_max = burst
+firing_mode_max = auto
 
 # Time needed to elapse between 2 shots, in millisecs.
 # Cannot be 0.

@@ -2617,8 +2617,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     {
         if (!wpn->isTriggerReleased())
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s released trigger!", 
-                __func__, sClientUserName.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s released trigger!", 
+            //    __func__, sClientUserName.c_str());
         }
         wpn->releaseTrigger();
     }
@@ -2627,13 +2627,13 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     {
         if (wpn->reload())
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s reloading the weapon!",
-                __func__, sClientUserName.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s reloading the weapon!",
+            //    __func__, sClientUserName.c_str());
         }
         else
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s requested reload but we ignore it!",
-                __func__, sClientUserName.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s requested reload but we ignore it!",
+            //    __func__, sClientUserName.c_str());
         }
     }
 
@@ -2885,8 +2885,8 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return;
     }
 
-    getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
-        __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+    //getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
+    //    __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
 
     if (m_sUserName.empty())
     {
