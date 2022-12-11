@@ -73,7 +73,6 @@ public:
     bool isRunning() const;
     void SetRun(bool state);
     PRREVector& getForce();
-    void UpdateForce(float x, float y, float z);
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
     Weapon* getWeapon();

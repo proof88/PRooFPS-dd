@@ -205,13 +205,6 @@ PRREVector& CPlayer::getForce()
     return m_vecForce;
 }
 
-void CPlayer::UpdateForce(float x, float y, float z)
-{
-    m_vecForce.SetX(x);
-    m_vecForce.SetY(y);
-    m_vecForce.SetZ(z);
-}
-
 bool CPlayer::isExpectingStartPos() const
 {
     return m_bExpectingStartPos;
@@ -1304,12 +1297,14 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                         {
                             // we fell from above
                             legacyPlayer.SetCanFall(false);
-                            legacyPlayer.UpdateForce(0.0f, 0.0f, 0.0f);
+                            legacyPlayer.getForce().Set(0.f, 0.f, 0.f);
                         }
                         else
                         {
                             // we hit ceiling with our head during jumping
                             legacyPlayer.SetCanFall(true);
+                            legacyPlayer.StopJumping();
+                            legacyPlayer.SetGravity(0.f);
                         }
                         break;
                     }
@@ -1390,9 +1385,8 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
         if (legacyPlayer.isJumping())
         {
             legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_JUMPING_SPEED / 60.f/*(float)fps*/);
-            if (legacyPlayer.getGravity() < 0.0)
+            if (legacyPlayer.getGravity() < 0.0f)
             {
-                legacyPlayer.SetGravity(0.0);
                 legacyPlayer.StopJumping();
             }
         }
