@@ -197,6 +197,8 @@ private:
 
     // ---------------------------------------------------------------------------
 
+    void Text(const std::string& s, int x, int y) const;
+    void AddText(const std::string& s, int x, int y) const;
     void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt);
     bool Mouse(int fps, bool& won, pge_network::PgePacket& pkt);
     void MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt);

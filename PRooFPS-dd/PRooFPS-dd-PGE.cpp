@@ -12,8 +12,6 @@
 
 #include "PRooFPS-dd-PGE.h"
 
-#include <algorithm>
-#include <cassert>
 #include <filesystem>  // requires cpp17
 #include <functional>
 
@@ -561,6 +559,8 @@ void PRooFPSddPGE::onGameInitialized()
     getPRRE().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
 
+    getPRRE().getUImanager().SetDefaultFontSize(16);
+
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
     getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
@@ -605,7 +605,7 @@ void PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
 
-        getPRRE().getUImanager().text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        Text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
         getPRRE().getRenderer()->RenderScene();
 
         if (!getNetwork().getServer().startListening())
@@ -700,7 +700,7 @@ void PRooFPSddPGE::onGameInitialized()
             f.close();
         }
 
-        getPRRE().getUImanager().text("Connecting to " + sIp + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        Text("Connecting to " + sIp + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
         getPRRE().getRenderer()->RenderScene();
 
         if (!getNetwork().getClient().connectToServer(sIp))
@@ -725,62 +725,6 @@ void PRooFPSddPGE::onGameInitialized()
     m_fps = 0;
 }
 
-//function bulletProc() {
-//	this._x += this.xMove * _root.BULLETSPEED;
-//	this._y += this.yMove * _root.BULLETSPEED;
-//	for (obj in _root.mc_map) {
-//		if (typeof(_root.mc_map[obj])=="movieclip"){
-//			if ( _root.collides(this._x, this._y, this._width, this._height,
-//								_root.mc_map[obj]._x, _root.mc_map[obj]._y, _root.mc_map[obj]._width, _root.mc_map[obj]._height)
-//				)
-//			{
-//				if ( _root.mc_map[obj]._name.substr(0,8) == "mc_snail" ) {
-//					if ( _root.mc_map[obj].m_nHealth > 0 ) {
-//						_root.mc_map[obj].m_nHealth -= _root.BULLETDAMAGE;
-//						//trace(_root.mc_map[obj]._name);
-//						if ( _root.mc_map[obj].m_nHealth <= 0 ) {
-//							
-//							_root.killedSnails++;
-//							//trace(_root.killedSnails);
-//							_root.gameEnds += 4000;
-//							if ( _root.mc_map[obj]._currentframe == 1 ) { _root.mc_map[obj].gotoAndPlay(11); }
-//							else if ( _root.mc_map[obj]._currentframe == 2 ) { _root.mc_map[obj].gotoAndPlay(3); }
-//						}
-//						_root.mc_map.attachMovie("lnk_mc_blood", "mc_blood"+_root.bloodCount, _root.mc_map.getNextHighestDepth());
-//						eval("_root.mc_map.mc_blood"+_root.bloodCount)._x = this._x;
-//						eval("_root.mc_map.mc_blood"+_root.bloodCount)._y = this._y;
-//						_root.bloodCount++;
-//						this.onEnterFrame = null;
-//						removeMovieClip( this );
-//						break;
-//					}
-//				}
-//				if ( _root.mc_map[obj]._name.substr(0,4) == "inst" ) {
-//					this.onEnterFrame = null;
-//					removeMovieClip( this );
-//					break;
-//				}
-//			}
-//		}
-//	}
-//}
-
-//function Shoot() {
-//		_root.mc_bulletpacer.play();
-//		var aimShit:Number = _root.randRange(-_root.AIMDIFFICULTY, _root.AIMDIFFICULTY);
-//		_root.mc_map.attachMovie("lnk_mc_bullet", "mc_bullet"+_root.bulletCount, _root.mc_map.getNextHighestDepth());
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._rotation = this.mc_player_arm1._rotation + aimShit;
-//		var neg:Number = 1;
-//		if ( this._currentframe == 2 ) { neg = -1 };
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).xMove = Math.cos((this.mc_player_arm1._rotation+aimShit)*Math.PI/180.0) * neg;
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).yMove = Math.sin((this.mc_player_arm1._rotation+aimShit)*Math.PI/180.0) * neg;
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._x = this.newX + eval("_root.mc_map.mc_bullet"+_root.bulletCount).xMove*this.mc_player_arm1._width;
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount)._y = this.newY+150 + eval("_root.mc_map.mc_bullet"+_root.bulletCount).yMove*this.mc_player_arm1._width;
-//		eval("_root.mc_map.mc_bullet"+_root.bulletCount).onEnterFrame = _root.bulletProc;
-//		_root.bulletCount++;
-//		this.ammo--;
-//	}
-
 
 // ############################### PRIVATE ###############################
 
@@ -803,6 +747,16 @@ std::map<unsigned char, PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> PRooFPSd
     {'2', {true, "pistol.txt"}},
     {'3', {true, "machinegun.txt"}}
 };
+
+void PRooFPSddPGE::Text(const std::string& s, int x, int y) const
+{
+    getPRRE().getUImanager().text(s, x, y)->SetDropShadow(true);
+}
+
+void PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
+{
+    getPRRE().getUImanager().addText(s, x, y)->SetDropShadow(true);
+}
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
 {
@@ -983,7 +937,6 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
         }
     } // won
 }
-
 
 bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
 {
@@ -1420,24 +1373,47 @@ void PRooFPSddPGE::ShowFragTable(bool bWin) const
     int nYPosStart = getPRRE().getWindow().getClientHeight() - 20;
     if (bWin)
     {
-        getPRRE().getUImanager().text("Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        Text("Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * getPRRE().getUImanager().getDefaultFontSize();
     }
 
-    getPRRE().getUImanager().text("Player Name", nXPosPlayerName, nYPosStart);
-    getPRRE().getUImanager().text("Frags", nXPosFrags, nYPosStart);
-    getPRRE().getUImanager().text("Deaths", nXPosDeaths, nYPosStart);
-    getPRRE().getUImanager().text("========================================================",
-        20, nYPosStart - getPRRE().getUImanager().getDefaultFontSize());
+    int nThisRowY = nYPosStart;
+    Text("Player Name", nXPosPlayerName, nThisRowY);
+    Text("Frags", nXPosFrags, nThisRowY);
+    Text("Deaths", nXPosDeaths, nThisRowY);
+
+    nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+    Text("========================================================", nXPosPlayerName, nThisRowY);
 
     int i = 0;
     for (const auto& player : m_deathMatchMode->getPlayerData())
     {
         i++;
-        const int nThisRowY = nYPosStart - (i + 1) * getPRRE().getUImanager().getDefaultFontSize();
-        getPRRE().getUImanager().text(player.m_sName, nXPosPlayerName, nThisRowY);
-        getPRRE().getUImanager().text(std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
-        getPRRE().getUImanager().text(std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+        nThisRowY = nYPosStart - (i + 1) * getPRRE().getUImanager().getDefaultFontSize();
+        Text(player.m_sName, nXPosPlayerName, nThisRowY);
+        Text(std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
+        Text(std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+    }
+
+    if (!getNetwork().isServer())
+    {
+        nThisRowY -= 2 * getPRRE().getUImanager().getDefaultFontSize();
+        Text("Ping: " + std::to_string(getNetwork().getClient().getPing(true)) + " ms",
+            nXPosPlayerName, nThisRowY);
+        
+        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        Text("Quality: local: " + std::to_string(getNetwork().getClient().getQualityLocal(false)) +
+            "; remote: " + std::to_string(getNetwork().getClient().getQualityRemote(false)),
+            nXPosPlayerName, nThisRowY);
+        
+        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        Text("Tx Speed: " + std::to_string(std::lround(getNetwork().getClient().getTxByteRate(false))) +
+            " Bps; Rx Speed: " + std::to_string(std::lround(getNetwork().getClient().getRxByteRate(false))) + " Bps",
+            nXPosPlayerName, nThisRowY);
+        
+        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        Text("Internal Queue Time: " + std::to_string(getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us",
+            nXPosPlayerName, nThisRowY);
     }
 }
 
@@ -1633,7 +1609,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         m_pObjXHair->Hide();
-        getPRRE().getUImanager().addText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        AddText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
     }
     else
     {
@@ -1981,28 +1957,11 @@ void PRooFPSddPGE::onGameRunning()
                 Collision(m_bWon);
             }
         }
-        else
-        {
-            getPRRE().getUImanager().text(
-                "Ping: " + std::to_string(getNetwork().getClient().getPing(true)) + " ms",
-                10, 50);
-            getPRRE().getUImanager().text(
-                "Quality: local: " + std::to_string(getNetwork().getClient().getQualityLocal(false)) +
-                "; remote: " + std::to_string(getNetwork().getClient().getQualityRemote(false)),
-                10, 70);
-            getPRRE().getUImanager().text(
-                "Tx Speed: " + std::to_string(getNetwork().getClient().getTxByteRate(false)) +
-                " Bps; Rx Speed: " + std::to_string(getNetwork().getClient().getRxByteRate(false)) + " Bps",
-                10, 90);
-            getPRRE().getUImanager().text(
-                "Internal Queue Time: " + std::to_string(getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us",
-                10, 110);
-        }  
 
         CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
         if (legacyPlayer.getWeapon())
         {
-            getPRRE().getUImanager().text(
+            Text(
                 legacyPlayer.getWeapon()->getVars()["name"].getAsString() + ": " +
                 std::to_string(legacyPlayer.getWeapon()->getMagBulletCount()) + " / " +
                 std::to_string(legacyPlayer.getWeapon()->getUnmagBulletCount()),
@@ -2242,14 +2201,14 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
         if (getNetwork().isServer())
         {
-            getPRRE().getUImanager().addText("Server, User name: " + m_sUserName, 10, 30);
+            AddText("Server, User name: " + m_sUserName, 10, 30);
             // server is not loading map here, it already loaded earlier for itself
         }
         else
         {
-            getPRRE().getUImanager().addText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
+            AddText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
 
-            getPRRE().getUImanager().text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+            Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
             getPRRE().getRenderer()->RenderScene();
 
             const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
@@ -2362,7 +2321,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
-            getPRRE().getUImanager().text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+            Text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
             getPRRE().getRenderer()->RenderScene();
 
             Bullet::ResetGlobalBulletId();
