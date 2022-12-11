@@ -1296,18 +1296,20 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                         legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
-                        legacyPlayer.getPos1().SetY(legacyPlayer.getOPos1().getY());
-                        // in case of vertical collision, we should not reposition to previous position, but align closely above or below the wall/block
-                        if (obj->getPosVec().getY() + obj->getSizeVec().getY() / 2 <= legacyPlayer.getPos1().getY() - GAME_PLAYER_H / 2.0f + 0.01f)
+                        const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < legacyPlayer.getOPos1().getY() ? 1 : -1;
+                        const float fAlignCloseToWall = nAlignUnderOrAboveWall * (obj->getSizeVec().getY() / 2 + GAME_PLAYER_H / 2.0f + 0.01f);
+                        legacyPlayer.getPos1().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
+
+                        if (nAlignUnderOrAboveWall == 1)
                         {
+                            // we fell from above
                             legacyPlayer.SetCanFall(false);
-                            legacyPlayer.getPos1().SetY(obj->getPosVec().getY() + obj->getSizeVec().getY() / 2 + GAME_PLAYER_H / 2.0f + 0.01f);
                             legacyPlayer.UpdateForce(0.0f, 0.0f, 0.0f);
                         }
                         else
                         {
+                            // we hit ceiling with our head during jumping
                             legacyPlayer.SetCanFall(true);
-
                         }
                         break;
                     }
@@ -1379,7 +1381,7 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
 
 } // CameraMovement()
 
-void PRooFPSddPGE::Gravity(int fps)
+void PRooFPSddPGE::Gravity(int /*fps*/)
 {
     for (auto& player : m_mapPlayers)
     {
@@ -1387,7 +1389,7 @@ void PRooFPSddPGE::Gravity(int fps)
 
         if (legacyPlayer.isJumping())
         {
-            legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_JUMPING_SPEED / (float)fps);
+            legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_JUMPING_SPEED / 60.f/*(float)fps*/);
             if (legacyPlayer.getGravity() < 0.0)
             {
                 legacyPlayer.SetGravity(0.0);
@@ -1398,7 +1400,7 @@ void PRooFPSddPGE::Gravity(int fps)
         {
             if (legacyPlayer.getGravity() > GAME_GRAVITY_MIN)
             {
-                legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_FALLING_SPEED / (float)fps);
+                legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_FALLING_SPEED / 60.f/*(float)fps*/);
                 if (legacyPlayer.getGravity() < GAME_GRAVITY_MIN)
                 {
                     legacyPlayer.SetGravity(GAME_GRAVITY_MIN);
