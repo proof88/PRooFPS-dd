@@ -1284,8 +1284,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
 
         const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
 
-        legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + legacyPlayer.getForce().getX());
-
+        // at this point, legacyPlayer.getPos1().getY() is already updated by Gravity()
         if (legacyPlayer.getOPos1().getY() != legacyPlayer.getPos1().getY())
         {
             for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
@@ -1298,6 +1297,7 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                         )
                     {
                         legacyPlayer.getPos1().SetY(legacyPlayer.getOPos1().getY());
+                        // in case of vertical collision, we should not reposition to previous position, but align closely above or below the wall/block
                         if (obj->getPosVec().getY() + obj->getSizeVec().getY() / 2 <= legacyPlayer.getPos1().getY() - GAME_PLAYER_H / 2.0f + 0.01f)
                         {
                             legacyPlayer.SetCanFall(false);
@@ -1315,6 +1315,8 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
             }
         }
 
+        legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + legacyPlayer.getForce().getX());
+
         if (legacyPlayer.getOPos1().getX() != legacyPlayer.getPos1().getX())
         {
             for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
@@ -1326,7 +1328,10 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
                         legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
                         )
                     {
-                        legacyPlayer.getPos1().SetX(legacyPlayer.getOPos1().getX());
+                        // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
+                        const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < legacyPlayer.getOPos1().getX() ? 1 : -1;
+                        const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + GAME_PLAYER_W / 2.0f + 0.01f);
+                        legacyPlayer.getPos1().SetX(obj->getPosVec().getX() + fAlignNextToWall);
                         break;
                     }
                 }
