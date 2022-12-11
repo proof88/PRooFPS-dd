@@ -120,6 +120,12 @@ bool Maps::load(const char* fname)
         return false;
     }
 
+    const TPRRE_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
+    const TPRRE_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
+    m_gfx.getTextureManager().setDefaultIsoFilteringMode(
+        TPRRE_ISO_TEX_FILTERING::PRRE_ISO_LINEAR_MIPMAP_LINEAR,
+        TPRRE_ISO_TEX_FILTERING::PRRE_ISO_LINEAR);
+
     bool bParseError = false;
     bool bMapLayoutReached = false;
     const std::streamsize nBuffSize = 1024;
@@ -156,6 +162,10 @@ bool Maps::load(const char* fname)
         }
     };
     f.close();
+
+    m_gfx.getTextureManager().setDefaultIsoFilteringMode(
+        texFilterMinOriginal,
+        texFilterMagOriginal);
 
     if ( bParseError )
     {

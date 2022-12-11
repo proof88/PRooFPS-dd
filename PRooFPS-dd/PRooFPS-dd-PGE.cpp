@@ -559,7 +559,7 @@ void PRooFPSddPGE::onGameInitialized()
     getPRRE().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
 
-    getPRRE().getUImanager().SetDefaultFontSize(16);
+    getPRRE().getUImanager().SetDefaultFontSize(20);
 
     getPRRE().getCamera().SetNearPlane(0.1f);
     getPRRE().getCamera().SetFarPlane(100.0f);
@@ -1961,12 +1961,15 @@ void PRooFPSddPGE::onGameRunning()
         CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
         if (legacyPlayer.getWeapon())
         {
+            // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
             Text(
                 legacyPlayer.getWeapon()->getVars()["name"].getAsString() + ": " +
                 std::to_string(legacyPlayer.getWeapon()->getMagBulletCount()) + " / " +
                 std::to_string(legacyPlayer.getWeapon()->getUnmagBulletCount()),
                 10, 150);
         }
+
+        Text(std::to_string(m_fps), getPRRE().getWindow().getClientWidth() - 50, getPRRE().getWindow().getClientHeight() - 2 * getPRRE().getUImanager().getDefaultFontSize());
 
         if (window.isActive())
         {
