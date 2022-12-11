@@ -1,2 +1,2 @@
-map_test_good.txt
+map_warhouse.txt
 vsync_on
