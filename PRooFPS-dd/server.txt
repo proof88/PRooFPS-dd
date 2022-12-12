@@ -1,2 +1,2 @@
 map_warhouse.txt
-vsync_on
+vsync_off

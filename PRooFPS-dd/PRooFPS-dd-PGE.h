@@ -195,6 +195,21 @@ private:
     // TODO: originally username was planned to be the key for above map, however if we see that we can always use connHandleServerSide to
     // find proper player, then let's change the key to that instead of user name!
 
+    unsigned int m_nFramesElapsedSinceLastDurationsReset;
+    long long m_nGravityCollisionDurationUSecs;
+    long long m_nActiveWindowStuffDurationUSecs;
+    long long m_nUpdateWeaponsDurationUSecs;
+    long long m_nUpdateBulletsDurationUSecs;
+    long long m_nUpdateRespawnTimersDurationUSecs;
+    long long m_nPickupAndRespawnItemsDurationUSecs;
+    long long m_nUpdateGameModeDurationUSecs;
+    long long m_nSendUserUpdatesDurationUSecs;
+    long long m_nFullOnGameRunningDurationUSecs;
+    long long m_nHandleUserCmdMoveDurationUSecs;
+    long long m_nFullOnPacketReceivedDurationUSecs;
+    long long m_nFullRoundtripDurationUSecs;
+    std::chrono::time_point<std::chrono::steady_clock> m_timeFullRoundtripStart;
+
     // ---------------------------------------------------------------------------
 
     void Text(const std::string& s, int x, int y) const;

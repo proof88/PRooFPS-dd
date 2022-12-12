@@ -1,2 +1,2 @@
 127.0.0.1
-vsync_on
+vsync_off

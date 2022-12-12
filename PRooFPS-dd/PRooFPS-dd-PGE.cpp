@@ -492,7 +492,20 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bReloadReleased(true),
     m_bWon(false),
     m_fCameraMinY(0.0f),
-    m_bShowGuiDemo(false)
+    m_bShowGuiDemo(false),
+    m_nFramesElapsedSinceLastDurationsReset(0),
+    m_nGravityCollisionDurationUSecs(0),
+    m_nActiveWindowStuffDurationUSecs(0),
+    m_nUpdateWeaponsDurationUSecs(0),
+    m_nUpdateBulletsDurationUSecs(0),
+    m_nUpdateRespawnTimersDurationUSecs(0),
+    m_nPickupAndRespawnItemsDurationUSecs(0),
+    m_nUpdateGameModeDurationUSecs(0),
+    m_nSendUserUpdatesDurationUSecs(0),
+    m_nFullOnGameRunningDurationUSecs(0),
+    m_nHandleUserCmdMoveDurationUSecs(0),
+    m_nFullOnPacketReceivedDurationUSecs(0),
+    m_nFullRoundtripDurationUSecs(0)
 {
     
 }
@@ -801,14 +814,17 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     {
         return;
     }
-      
+
     if ( !won )
     {
-        if (getNetwork().isServer() )
+
+        if (keybd.isKeyPressed((unsigned char)VkKeyScan('t')))
         {
-            if (keybd.isKeyPressed((unsigned char)VkKeyScan('t')))
+            if (m_bTeleportReleased)
             {
-                if (m_bTeleportReleased)
+                m_bTeleportReleased = false;
+                
+                if (getNetwork().isServer())
                 {
                     // for testing purpose only, we can teleport server player to random spawn point
                     m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
@@ -817,14 +833,43 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                     getConsole().SetLoggingState("PRRERendererHWfixedPipe", true);
                     getPRRE().getRenderer()->ResetStatistics();
                     getConsole().SetLoggingState("PRRERendererHWfixedPipe", false);
-
-                    m_bTeleportReleased = false;
                 }
+
+                getConsole().OLn("");
+                getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
+                getConsole().OLn("Avg Durations per Frame:");
+                getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_nFullRoundtripDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_nGravityCollisionDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_nUpdateBulletsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_nUpdateGameModeDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+                getConsole().OLn("");
+
+                m_nFramesElapsedSinceLastDurationsReset = 0;
+                m_nFullRoundtripDurationUSecs = 0;
+                m_nFullOnGameRunningDurationUSecs = 0;
+                m_nGravityCollisionDurationUSecs = 0;
+                m_nActiveWindowStuffDurationUSecs = 0;
+                m_nUpdateWeaponsDurationUSecs = 0;
+                m_nUpdateBulletsDurationUSecs = 0;
+                m_nUpdateRespawnTimersDurationUSecs = 0;
+                m_nPickupAndRespawnItemsDurationUSecs = 0;
+                m_nUpdateGameModeDurationUSecs = 0;
+                m_nSendUserUpdatesDurationUSecs = 0;
+                m_nFullOnPacketReceivedDurationUSecs = 0;
+                m_nHandleUserCmdMoveDurationUSecs = 0;
             }
-            else
-            {
-                m_bTeleportReleased = true;
-            }
+        }
+        else
+        {
+            m_bTeleportReleased = true;
         }
 
         proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
@@ -1419,6 +1464,8 @@ void PRooFPSddPGE::ShowFragTable(bool bWin) const
 
 void PRooFPSddPGE::UpdateBullets()
 {
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
@@ -1565,6 +1612,8 @@ void PRooFPSddPGE::UpdateBullets()
     {
         Bullet::ResetGlobalBulletId();
     }
+
+    m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::UpdateWeapons()
@@ -1573,6 +1622,8 @@ void PRooFPSddPGE::UpdateWeapons()
     {
         return;
     }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     for (auto& player : m_mapPlayers)
     {
@@ -1597,6 +1648,8 @@ void PRooFPSddPGE::UpdateWeapons()
             }
         }
     }
+
+    m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
@@ -1662,6 +1715,8 @@ void PRooFPSddPGE::UpdateRespawnTimers()
         return;
     }
 
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     for (auto& player : m_mapPlayers)
     {
         if (player.second.m_legacyPlayer.getHealth() > 0)
@@ -1678,6 +1733,8 @@ void PRooFPSddPGE::UpdateRespawnTimers()
             player.second.m_legacyPlayer.getRespawnFlag() = true;
         }
     }
+
+    m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::PickupAndRespawnItems()
@@ -1686,6 +1743,8 @@ void PRooFPSddPGE::PickupAndRespawnItems()
     {
         return;
     }
+
+    std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     pge_network::PgePacket newPktMapItemUpdate;
     pge_network::PgePacket newPktWpnUpdate;
@@ -1761,10 +1820,14 @@ void PRooFPSddPGE::PickupAndRespawnItems()
             }
         }
     } // for item
+
+    m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::UpdateGameMode()
 {
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     const bool bPrevWinningConditions = m_gameMode->checkWinningConditions();
 
     // not nice, in the future players will be stored in a more general way that could be easily accessed by GameMode
@@ -1842,6 +1905,8 @@ void PRooFPSddPGE::UpdateGameMode()
             }
         }
     }
+
+    m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::SendUserUpdates()
@@ -1852,6 +1917,8 @@ void PRooFPSddPGE::SendUserUpdates()
         getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
         return;
     }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     for (auto& player : m_mapPlayers)
     {
@@ -1898,6 +1965,8 @@ void PRooFPSddPGE::SendUserUpdates()
             }
         }
     }
+
+    m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 /**
@@ -1939,9 +2008,18 @@ void PRooFPSddPGE::onGameFrameBegin()
 */
 void PRooFPSddPGE::onGameRunning()
 {
+    const std::chrono::time_point<std::chrono::steady_clock> timeOnGameRunningStart = std::chrono::steady_clock::now();
+
+    if (m_timeFullRoundtripStart.time_since_epoch().count() != 0)
+    {
+        m_nFullRoundtripDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(timeOnGameRunningStart - m_timeFullRoundtripStart).count();
+    }
+    m_timeFullRoundtripStart = timeOnGameRunningStart;
+
     PRREWindow& window = getPRRE().getWindow();
 
     m_fps_ms = GetTickCount();
+    m_nFramesElapsedSinceLastDurationsReset++;
 
     // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
     // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
@@ -1949,13 +2027,17 @@ void PRooFPSddPGE::onGameRunning()
 
     if (bValidConnection)
     {
+        std::chrono::time_point<std::chrono::steady_clock> timeStart;
+
         if (getNetwork().isServer())
         {
+            timeStart = std::chrono::steady_clock::now();
             if (!m_gameMode->checkWinningConditions())
             {
                 Gravity(m_fps);
                 Collision(m_bWon);
             }
+            m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
 
         CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
@@ -1971,6 +2053,7 @@ void PRooFPSddPGE::onGameRunning()
 
         Text(std::to_string(m_fps), getPRRE().getWindow().getClientWidth() - 50, getPRRE().getWindow().getClientHeight() - 2 * getPRRE().getUImanager().getDefaultFontSize());
 
+        timeStart = std::chrono::steady_clock::now();
         if (window.isActive())
         {
             pge_network::PgePacket pkt;
@@ -2013,7 +2096,8 @@ void PRooFPSddPGE::onGameRunning()
                     getNetwork().getClient().SendToServer(pkt);
                 }
             }
-        }
+        } // window is active
+        m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
         CameraMovement(m_fps);
 
@@ -2027,7 +2111,7 @@ void PRooFPSddPGE::onGameRunning()
 
             if (m_sUserName == player.first)
             {
-                
+                // this should be done for ourselves too, but it is done only when window is active with different logic
             }
             else
             {
@@ -2052,7 +2136,7 @@ void PRooFPSddPGE::onGameRunning()
             SendUserUpdates();
         }
 
-        //map.UpdateVisibilitiesForRenderer();
+        //m_maps.UpdateVisibilitiesForRenderer();
     } // endif validConnection
 
     m_fps_ms = GetTickCount() - m_fps_ms;
@@ -2068,6 +2152,8 @@ void PRooFPSddPGE::onGameRunning()
         str << GAME_NAME << " " << GAME_VERSION << " :: FPS: " << m_fps;
         window.SetCaption(str.str());
     } 
+
+    m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
 }
 
 /**
@@ -2075,6 +2161,8 @@ void PRooFPSddPGE::onGameRunning()
 */
 void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_connHandleServerSide, const pge_network::PgePacket& pkt)
 {
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     switch (pkt.pktId)
     {
     case pge_network::MsgUserConnected::id:
@@ -2116,6 +2204,8 @@ void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_co
     default:
         getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pkt.pktId);
     }
+
+    m_nFullOnPacketReceivedDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 /**
@@ -2576,6 +2666,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         return;
     }
 
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     if (!pktUserCmdMove.m_bShootAction)
     {
         if (!wpn->isTriggerReleased())
@@ -2658,6 +2750,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
+        // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
+        m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         return; // don't check anything related to shooting in case of either of these actions
     }
 
@@ -2670,6 +2764,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
             //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
+            // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
+            m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             return;
         }
 
@@ -2692,6 +2788,8 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             }
         }
     }
+    // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
+    m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
