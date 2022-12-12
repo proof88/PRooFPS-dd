@@ -270,22 +270,22 @@ unsigned int Maps::height() const
     return m_height;
 }
 
-void Maps::updateVisibilitiesForRenderer()
+void Maps::UpdateVisibilitiesForRenderer()
 {
     const PRREVector campos = m_gfx.getCamera().getPosVec();
 
     for (int i = 0; i < m_blocks_h; i++)
     {
-        PRREObject3D* obj = m_blocks[i];
+        PRREObject3D* const obj = m_blocks[i];
         if ( obj != PGENULL )
         {
-            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX() - 7.f )
+            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX() - 9.f )
             {
                 obj->SetRenderingAllowed(false);
             }
             else
             {
-                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX() + 7.f )
+                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX() + 9.f )
                 {
                     obj->SetRenderingAllowed(false);
                 }

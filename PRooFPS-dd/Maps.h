@@ -40,7 +40,7 @@ public:
     void shutdown();
     unsigned int width() const;
     unsigned int height() const;
-    void updateVisibilitiesForRenderer();
+    void UpdateVisibilitiesForRenderer();
     const std::string& getFilename() const;
     const std::set<PRREVector>& getSpawnpoints() const;
     const PRREVector& getRandomSpawnpoint() const;

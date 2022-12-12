@@ -829,11 +829,12 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                     // for testing purpose only, we can teleport server player to random spawn point
                     m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
                     m_mapPlayers[m_sUserName].m_legacyPlayer.getRespawnFlag() = true;
-                    // log some stats too
-                    getConsole().SetLoggingState("PRRERendererHWfixedPipe", true);
-                    getPRRE().getRenderer()->ResetStatistics();
-                    getConsole().SetLoggingState("PRRERendererHWfixedPipe", false);
                 }
+
+                // log some stats
+                getConsole().SetLoggingState("PRRERendererHWfixedPipe", true);
+                getPRRE().getRenderer()->ResetStatistics();
+                getConsole().SetLoggingState("PRRERendererHWfixedPipe", false);
 
                 getConsole().OLn("");
                 getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
@@ -2136,7 +2137,7 @@ void PRooFPSddPGE::onGameRunning()
             SendUserUpdates();
         }
 
-        //m_maps.UpdateVisibilitiesForRenderer();
+        m_maps.UpdateVisibilitiesForRenderer();
     } // endif validConnection
 
     m_fps_ms = GetTickCount() - m_fps_ms;
