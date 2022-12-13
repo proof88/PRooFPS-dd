@@ -39,7 +39,7 @@ CPlayer::CPlayer() :
   m_fGravity(0.f),
   m_bJumping(false),
   b_mCanFall(true),
-  m_bRunning(false),
+  m_bRunning(true),
   m_bAllowJump(false),
   m_bExpectingStartPos(true),
   m_bRespawn(false),
@@ -2680,14 +2680,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
     if (pktUserCmdMove.m_bSendSwitchToRunning)
     {
-        if (legacyPlayer.isRunning())
-        {
-            legacyPlayer.SetRun(false);
-        }
-        else
-        {
-            legacyPlayer.SetRun(true);
-        }
+        legacyPlayer.SetRun(!legacyPlayer.isRunning());
     }
 
     float fSpeed;
