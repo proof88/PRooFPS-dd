@@ -49,7 +49,9 @@ public:
     const PRREVector& getBlocksVertexPosMin() const;
     const PRREVector& getBlocksVertexPosMax() const;
     PRREObject3D** getBlocks(); // TODO: not nice access
+    PRREObject3D** getForegroundBlocks(); // TODO: not nice access
     int getBlockCount() const;
+    int getForegroundBlockCount() const;
     const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
     const std::map<std::string, PGEcfgVariable>& getVars() const;
     void Update();
@@ -68,6 +70,9 @@ protected:
 private:
     PRREObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
     int m_blocks_h;
+
+    PRREObject3D** m_foregroundBlocks;
+    int m_foregroundBlocks_h;
 
     std::map<std::string, PGEcfgVariable> m_vars;
     PR00FsReducedRenderingEngine& m_gfx;

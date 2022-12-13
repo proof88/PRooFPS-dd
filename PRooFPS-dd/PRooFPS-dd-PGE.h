@@ -223,10 +223,13 @@ private:
     bool Colliding2(
         float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
         float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz);
+    bool Colliding2_NoZ(
+        float o1px, float o1py, float o1sx, float o1sy,
+        float o2px, float o2py, float o2sx, float o2sy);
     bool Colliding3(
         const PRREVector& vecPosMin, const PRREVector& vecPosMax,
         const PRREVector& vecObjPos, const PRREVector& vecObjSize);
-    void Collision(bool& won);
+    void PlayerCollisionWithWalls(bool& won);
     void ShowFragTable(bool bWin) const;
     void UpdateWeapons();
     void UpdateBullets();

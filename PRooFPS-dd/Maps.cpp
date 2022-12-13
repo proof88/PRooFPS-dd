@@ -29,6 +29,8 @@ Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
 {
     m_blocks_h  = 0;
     m_blocks     = NULL;
+    m_foregroundBlocks_h = 0;
+    m_foregroundBlocks = NULL;
     m_texRed     = PGENULL;
     m_width = 0;
     m_height = 0;
@@ -230,6 +232,10 @@ void Maps::unload()
         free( m_blocks );
         m_blocks = NULL;
         m_blocks_h = 0;
+
+        free(m_foregroundBlocks);
+        m_foregroundBlocks = NULL;
+        m_foregroundBlocks_h = 0;
     }
     for (auto& itemPair : m_items)
     {
@@ -350,9 +356,19 @@ PRREObject3D** Maps::getBlocks()
     return m_blocks;
 }
 
+PRREObject3D** Maps::getForegroundBlocks()
+{
+    return m_foregroundBlocks;
+}
+
 int Maps::getBlockCount() const
 {
     return m_blocks_h;
+}
+
+int Maps::getForegroundBlockCount() const
+{
+    return m_foregroundBlocks_h;
 }
 
 const std::map<MapItem::MapItemId, MapItem*>& Maps::getItems() const
@@ -569,6 +585,13 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
             m_blocks[m_blocks_h - 1] = pNewBlockObj;
             m_blocks[m_blocks_h - 1]->SetLit(true);
             //m_blocks[m_blocks_h - 1]->Hide();
+
+            if (bForeground)
+            {
+                m_foregroundBlocks_h++;
+                m_foregroundBlocks = (PRREObject3D**)realloc(m_foregroundBlocks, m_foregroundBlocks_h * sizeof(PRREObject3D*));
+                m_foregroundBlocks[m_foregroundBlocks_h - 1] = pNewBlockObj;
+            }
         }
 
         if (!pNewBlockObj)

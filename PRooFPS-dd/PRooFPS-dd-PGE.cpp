@@ -1245,6 +1245,25 @@ bool PRooFPSddPGE::Colliding2(
     );            
 }
 
+bool PRooFPSddPGE::Colliding2_NoZ(
+    float o1px, float o1py, float o1sx, float o1sy,
+    float o2px, float o2py, float o2sx, float o2sy)
+{
+    return (
+        (
+            (o1px - o1sx / 2 <= o2px + o2sx / 2)
+            &&
+            (o1px + o1sx / 2 >= o2px - o2sx / 2)
+            )
+        &&
+        (
+            (o1py - o1sy / 2 <= o2py + o2sy / 2)
+            &&
+            (o1py + o1sy / 2 >= o2py - o2sy / 2)
+            )
+        );
+}
+
 bool PRooFPSddPGE::Colliding3(
     const PRREVector& vecPosMin, const PRREVector& vecPosMax,
     const PRREVector& vecObjPos, const PRREVector& vecObjSize)
@@ -1268,7 +1287,7 @@ bool PRooFPSddPGE::Colliding3(
     );
 }
 
-void PRooFPSddPGE::Collision(bool& /*won*/)
+void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
 { 
     for (auto& player : m_mapPlayers)
     {
@@ -1276,61 +1295,89 @@ void PRooFPSddPGE::Collision(bool& /*won*/)
 
         const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
 
+        // how to make collision detection even faster:
+        // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
+        // and based on player's position it is very easy to know which few map elements around matrix[i][j] should be checked ...
+        // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
+        // could be fetched into cache for even faster iteration on its elements ...
+
         // at this point, legacyPlayer.getPos1().getY() is already updated by Gravity()
+        const float fBlockSizeXhalf = GAME_BLOCK_SIZE_X / 2.f;
+        const float fBlockSizeYhalf = GAME_BLOCK_SIZE_Y / 2.f;
+
+        const float fPlayerOPos1XMinusHalf = legacyPlayer.getOPos1().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = legacyPlayer.getOPos1().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf = legacyPlayer.getPos1().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf = legacyPlayer.getPos1().getY() + plobj->getSizeVec().getY() / 2.f;
         if (legacyPlayer.getOPos1().getY() != legacyPlayer.getPos1().getY())
         {
-            for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
+            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
-                PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
-                if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
-                {
-                    if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getOPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
-                        )
-                    {
-                        const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < legacyPlayer.getOPos1().getY() ? 1 : -1;
-                        const float fAlignCloseToWall = nAlignUnderOrAboveWall * (obj->getSizeVec().getY() / 2 + GAME_PLAYER_H / 2.0f + 0.01f);
-                        legacyPlayer.getPos1().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
+                const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                assert(obj);  // we dont store nulls there
 
-                        if (nAlignUnderOrAboveWall == 1)
-                        {
-                            // we fell from above
-                            legacyPlayer.SetCanFall(false);
-                            legacyPlayer.getForce().Set(0.f, 0.f, 0.f);
-                        }
-                        else
-                        {
-                            // we hit ceiling with our head during jumping
-                            legacyPlayer.SetCanFall(true);
-                            legacyPlayer.StopJumping();
-                            legacyPlayer.SetGravity(0.f);
-                        }
-                        break;
-                    }
+                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+                {
+                    continue;
                 }
+
+                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
+                {
+                    continue;
+                }
+
+                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < legacyPlayer.getOPos1().getY() ? 1 : -1;
+                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + GAME_PLAYER_H / 2.0f + 0.01f);
+                legacyPlayer.getPos1().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
+
+                if (nAlignUnderOrAboveWall == 1)
+                {
+                    // we fell from above
+                    legacyPlayer.SetCanFall(false);
+                    legacyPlayer.getForce().Set(0.f, 0.f, 0.f);
+                }
+                else
+                {
+                    // we hit ceiling with our head during jumping
+                    legacyPlayer.SetCanFall(true);
+                    legacyPlayer.StopJumping();
+                    legacyPlayer.SetGravity(0.f);
+                }
+
+                break;
             }
         }
 
         legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + legacyPlayer.getForce().getX());
 
+        const float fPlayerPos1XMinusHalf = legacyPlayer.getPos1().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1XPlusHalf = legacyPlayer.getPos1().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf_2 = legacyPlayer.getPos1().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf_2 = legacyPlayer.getPos1().getY() + plobj->getSizeVec().getY() / 2.f;
+
         if (legacyPlayer.getOPos1().getX() != legacyPlayer.getPos1().getX())
         {
-            for (int i = 0; i < getPRRE().getObject3DManager().getSize(); i++)
+            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
-                PRREObject3D* obj = (PRREObject3D*)getPRRE().getObject3DManager().getAttachedAt(i);
-                if ((obj != PGENULL) && (obj != plobj) && (obj->isColliding_TO_BE_REMOVED()))
+                const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                assert(obj);  // we dont store nulls there
+
+                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerPos1XPlusHalf))
                 {
-                    if (Colliding2(obj->getPosVec().getX(), obj->getPosVec().getY(), obj->getPosVec().getZ(), obj->getSizeVec().getX(), obj->getSizeVec().getY(), obj->getSizeVec().getZ(),
-                        legacyPlayer.getPos1().getX(), legacyPlayer.getPos1().getY(), legacyPlayer.getOPos1().getZ(), plobj->getSizeVec().getX(), plobj->getSizeVec().getY(), plobj->getSizeVec().getZ())
-                        )
-                    {
-                        // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                        const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < legacyPlayer.getOPos1().getX() ? 1 : -1;
-                        const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + GAME_PLAYER_W / 2.0f + 0.01f);
-                        legacyPlayer.getPos1().SetX(obj->getPosVec().getX() + fAlignNextToWall);
-                        break;
-                    }
+                    continue;
                 }
+
+                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
+                {
+                    continue;
+                }
+
+                // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
+                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < legacyPlayer.getOPos1().getX() ? 1 : -1;
+                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + GAME_PLAYER_W / 2.0f + 0.01f);
+                legacyPlayer.getPos1().SetX(obj->getPosVec().getX() + fAlignNextToWall);
+
+                break;
             }
         }
     }
@@ -2036,7 +2083,7 @@ void PRooFPSddPGE::onGameRunning()
             if (!m_gameMode->checkWinningConditions())
             {
                 Gravity(m_fps);
-                Collision(m_bWon);
+                PlayerCollisionWithWalls(m_bWon);
             }
             m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }

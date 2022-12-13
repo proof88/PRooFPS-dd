@@ -1,0 +1,101 @@
+GravityCollisionDuration optimization.
+
+
+Debug 1 player: T lentre, majd jobb szélre futás, és onnantól 10 mp
+
+Before:                                                             After:
+FramesElapsedSinceLastDurationsReset: 850                           FramesElapsedSinceLastDurationsReset: 837
+  Avg Durations per Frame:                                            Avg Durations per Frame:
+   - FullRoundtripDuration: 16772.5547 usecs                           - FullRoundtripDuration: 16775.8652 usecs
+   - FullOnPacketReceivedDuration: 2.1541 usecs                        - FullOnPacketReceivedDuration: 2.8471 usecs
+     - HandleUserCmdMoveDuration: 0.1294 usecs                           - HandleUserCmdMoveDuration: 0.2139 usecs
+   - FullOnGameRunningDuration: 1637.5494 usecs                        - FullOnGameRunningDuration: 836.282 usecs
+     - GravityCollisionDuration: 845.8282 usecs                          - GravityCollisionDuration: 99.3381 usecs             -> 8.5x FASTER!
+     - ActiveWindowStuffDuration: 154.8847 usecs                         - ActiveWindowStuffDuration: 151.1254 usecs
+     - UpdateWeaponDuration: 0.1553 usecs                                - UpdateWeaponDuration: 0.0908 usecs
+     - UpdateBulletsDuration: 1.96 usecs                                 - UpdateBulletsDuration: 2.0024 usecs
+     - UpdateRespawnTimersDuration: 0.0506 usecs                         - UpdateRespawnTimersDuration: 0.0382 usecs
+     - PickupAndRespawnItemsDuration: 59.4812 usecs                      - PickupAndRespawnItemsDuration: 56.1493 usecs
+     - UpdateGameModeDuration: 11.8494 usecs                             - UpdateGameModeDuration: 10.5603 usecs
+     - SendUserUpdatesDuration: 1.5612 usecs                             - SendUserUpdatesDuration: 1.3238 usecs
+
+
+
+Debug 2 playerrel: T lentre, majd jobb szélre futás, és onnantól 10 mp
+
+Before:                                                             After:
+FramesElapsedSinceLastDurationsReset: 787                           FramesElapsedSinceLastDurationsReset: 791
+  Avg Durations per Frame:                                            Avg Durations per Frame:
+   - FullRoundtripDuration: 16774.7578 usecs                           - FullRoundtripDuration: 16772.9551 usecs
+   - FullOnPacketReceivedDuration: 2.2884 usecs                        - FullOnPacketReceivedDuration: 3.0683 usecs
+     - HandleUserCmdMoveDuration: 0.1296 usecs                           - HandleUserCmdMoveDuration: 0.2377 usecs
+   - FullOnGameRunningDuration: 1995.7242 usecs                        - FullOnGameRunningDuration: 931.8774 usecs
+     - GravityCollisionDuration: 1215.7344 usecs                         - GravityCollisionDuration: 134.7838 usecs            -> 9x FASTER!
+     - ActiveWindowStuffDuration: 150.7611 usecs                         - ActiveWindowStuffDuration: 146.67 usecs
+     - UpdateWeaponDuration: 0.0559 usecs                                - UpdateWeaponDuration: 0.0961 usecs
+     - UpdateBulletsDuration: 2.0203 usecs                               - UpdateBulletsDuration: 1.7181 usecs
+     - UpdateRespawnTimersDuration: 0. usecs                             - UpdateRespawnTimersDuration: 0.0139 usecs
+     - PickupAndRespawnItemsDuration: 94.4003 usecs                      - PickupAndRespawnItemsDuration: 90.8521 usecs
+     - UpdateGameModeDuration: 17.2097 usecs                             - UpdateGameModeDuration: 17.7484 usecs
+     - SendUserUpdatesDuration: 4.0686 usecs                             - SendUserUpdatesDuration: 4.8887 usecs
+	 
+
+
+Release 2 playerrel: T lentre, majd jobb szélre futás, és onnantól 10 mp
+
+Before:                                                             After:
+ FramesElapsedSinceLastDurationsReset: 816                          FramesElapsedSinceLastDurationsReset: 790
+  Avg Durations per Frame:                                            Avg Durations per Frame:
+   - FullRoundtripDuration: 16751.1406 usecs                           - FullRoundtripDuration: 16752.334 usecs
+   - FullOnPacketReceivedDuration: 0.2255 usecs                        - FullOnPacketReceivedDuration: 0.2722 usecs
+     - HandleUserCmdMoveDuration: 0. usecs                               - HandleUserCmdMoveDuration: 0. usecs
+   - FullOnGameRunningDuration: 409.0184 usecs                         - FullOnGameRunningDuration: 284.5721 usecs
+     - GravityCollisionDuration: 175.1238 usecs                          - GravityCollisionDuration: 30.0392 usecs             -> 6x FASTER!
+     - ActiveWindowStuffDuration: 122.4179 usecs                         - ActiveWindowStuffDuration: 123.9342 usecs
+     - UpdateWeaponDuration: 0. usecs                                    - UpdateWeaponDuration: 0.0114 usecs
+     - UpdateBulletsDuration: 0. usecs                                   - UpdateBulletsDuration: 0.0127 usecs
+     - UpdateRespawnTimersDuration: 0.0123 usecs                         - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 15.2316 usecs                      - PickupAndRespawnItemsDuration: 17.2987 usecs
+     - UpdateGameModeDuration: 1.1863 usecs                              - UpdateGameModeDuration: 1.2152 usecs
+     - SendUserUpdatesDuration: 1.8983 usecs                             - SendUserUpdatesDuration: 2.2949 usecs
+	 
+	 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
