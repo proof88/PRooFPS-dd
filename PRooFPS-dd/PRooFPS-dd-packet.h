@@ -254,7 +254,7 @@ namespace proofps_dd
             const TPRREfloat sz)
         {
             assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
-            memset(&pkt, 0, sizeof(pkt));
+            //memset(&pkt, 0, sizeof(pkt));  // TODO: what is the use of memset anyway if we initialize all the members properly?!
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
             pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id);
@@ -271,6 +271,24 @@ namespace proofps_dd
             msgBulletUpdate.m_size.y = sy;
             msgBulletUpdate.m_size.z = sz;
             msgBulletUpdate.m_bDelete = false;
+
+            return true;
+        }
+
+        // this version doesnt call memset, so other properties left as garbage values
+        static bool initPktForDeleting_WithGarbageValues(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const Bullet::BulletId bulletId)
+        {
+            assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            pkt.m_connHandleServerSide = connHandleServerSide;
+            pkt.pktId = pge_network::PgePktId::APP;
+            pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id);
+
+            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData);
+            msgBulletUpdate.m_bulletId = bulletId;
+            msgBulletUpdate.m_bDelete = true;
 
             return true;
         }

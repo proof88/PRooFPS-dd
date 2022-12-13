@@ -80,7 +80,7 @@ firing_mode_max = auto
 
 # Time needed to elapse between 2 shots, in millisecs.
 # Cannot be 0.
-firing_cooldown = 200
+firing_cooldown = 150
 
 #####################
 #                   #

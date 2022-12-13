@@ -1,6 +1,5 @@
 GravityCollisionDuration optimization.
 
-
 Debug 1 player: T lentre, majd jobb szélre futás, és onnantól 10 mp
 
 Before:                                                             After:
@@ -60,6 +59,55 @@ Before:                                                             After:
      - SendUserUpdatesDuration: 1.8983 usecs                             - SendUserUpdatesDuration: 2.2949 usecs
 	 
 	 
+
+
+
+UpdateBulletsDuration optimization.
+
+Debug 1 player: T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+
+Before:                                                             After:
+ FramesElapsedSinceLastDurationsReset: 830                           FramesElapsedSinceLastDurationsReset: 853
+  Avg Durations per Frame:                                             Avg Durations per Frame:
+   - FullRoundtripDuration: 17229.5273 usecs                            - FullRoundtripDuration: 16965.9844 usecs
+   - FullOnPacketReceivedDuration: 338.0048 usecs                       - FullOnPacketReceivedDuration: 335.9554 usecs
+     - HandleUserCmdMoveDuration: 333.4976 usecs                          - HandleUserCmdMoveDuration: 331.8535 usecs
+   - FullOnGameRunningDuration: 4460.4312 usecs                         - FullOnGameRunningDuration: 2970.9155 usecs
+     - GravityCollisionDuration: 54.8952 usecs                            - GravityCollisionDuration: 56.4537 usecs
+     - ActiveWindowStuffDuration: 151.1506 usecs                          - ActiveWindowStuffDuration: 138.4537 usecs
+     - UpdateWeaponDuration: 3.6892 usecs                                 - UpdateWeaponDuration: 3.6354 usecs
+     - UpdateBulletsDuration: 3571.6519 usecs                             - UpdateBulletsDuration: 2039.809 usecs              -> 1.75x FASTER!
+     - UpdateRespawnTimersDuration: 0.0651 usecs                          - UpdateRespawnTimersDuration: 0.0586 usecs
+     - PickupAndRespawnItemsDuration: 55.4036 usecs                       - PickupAndRespawnItemsDuration: 58.2227 usecs
+     - UpdateGameModeDuration: 11.9518 usecs                              - UpdateGameModeDuration: 11.8077 usecs
+     - SendUserUpdatesDuration: 1.4241 usecs                              - SendUserUpdatesDuration: 1.3294 usecs
+
+
+
+Release 1 player: T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+
+Before:                                                             After:
+ FramesElapsedSinceLastDurationsReset: 675                           FramesElapsedSinceLastDurationsReset: 783
+  Avg Durations per Frame:                                             Avg Durations per Frame:
+   - FullRoundtripDuration: 16766.3965 usecs                            - FullRoundtripDuration: 16752.8555 usecs
+   - FullOnPacketReceivedDuration: 204.4074 usecs                       - FullOnPacketReceivedDuration: 187.5747 usecs
+     - HandleUserCmdMoveDuration: 203.6104 usecs                          - HandleUserCmdMoveDuration: 186.9195 usecs
+   - FullOnGameRunningDuration: 764.2785 usecs                          - FullOnGameRunningDuration: 524.9821 usecs
+     - GravityCollisionDuration: 13.8163 usecs                            - GravityCollisionDuration: 15.6833 usecs
+     - ActiveWindowStuffDuration: 141.0563 usecs                          - ActiveWindowStuffDuration: 126.9757 usecs
+     - UpdateWeaponDuration: 2.7333 usecs                                 - UpdateWeaponDuration: 1.2733 usecs
+     - UpdateBulletsDuration: 483.3615 usecs                              - UpdateBulletsDuration: 244.567 usecs                -> 2x FASTER!
+     - UpdateRespawnTimersDuration: 0. usecs                              - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 13.32 usecs                         - PickupAndRespawnItemsDuration: 12.9157 usecs
+     - UpdateGameModeDuration: 1.0726 usecs                               - UpdateGameModeDuration: 0.7203 usecs
+     - SendUserUpdatesDuration: 0.0148 usecs                              - SendUserUpdatesDuration: 0. usecs
+
+
+
+
+
+
+
 
 
 

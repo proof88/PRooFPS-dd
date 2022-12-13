@@ -1517,6 +1517,9 @@ void PRooFPSddPGE::UpdateBullets()
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
+    const float fBlockSizeXhalf = GAME_BLOCK_SIZE_X / 2.f;
+    const float fBlockSizeYhalf = GAME_BLOCK_SIZE_Y / 2.f;
+    bool bEndGame = m_gameMode->checkWinningConditions();
     std::list<Bullet>& bullets = getWeaponManager().getBullets();
     auto it = bullets.begin();
     while (it != bullets.end())
@@ -1524,7 +1527,7 @@ void PRooFPSddPGE::UpdateBullets()
         auto& bullet = *it;
 
         bool bDeleteBullet = false;
-        if (m_gameMode->checkWinningConditions())
+        if (bEndGame)
         {
             bDeleteBullet = true;
         }
@@ -1533,19 +1536,8 @@ void PRooFPSddPGE::UpdateBullets()
             bullet.Update();
         }
 
-        proofps_dd::MsgBulletUpdate::initPkt(
-            newPktBulletUpdate,
-            0,
-            bullet.getId(),
-            bullet.getObject3D().getPosVec().getX(),
-            bullet.getObject3D().getPosVec().getY(),
-            bullet.getObject3D().getPosVec().getZ(),
-            bullet.getObject3D().getAngleVec().getX(),
-            bullet.getObject3D().getAngleVec().getY(),
-            bullet.getObject3D().getAngleVec().getZ(),
-            bullet.getObject3D().getSizeVec().getX(),
-            bullet.getObject3D().getSizeVec().getY(),
-            bullet.getObject3D().getSizeVec().getZ());
+        const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
+        const float fBulletPosY = bullet.getObject3D().getPosVec().getY();
 
         if (!bDeleteBullet)
         {
@@ -1576,6 +1568,7 @@ void PRooFPSddPGE::UpdateBullets()
                         else
                         {
                             itKiller->second.m_legacyPlayer.getFrags()++;
+                            bEndGame = m_gameMode->checkWinningConditions();
                             //getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
                             //    __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
                         }
@@ -1613,35 +1606,65 @@ void PRooFPSddPGE::UpdateBullets()
                 // I recommend using spatial hierarchy to effectively reduce the number of collision checks ...
                 // For now with the small bullet direction optimization in the loop I managed to keep FPS around 45-50
                 // with 10-15 bullets.
-                for (int i = 0; i < m_maps.getBlockCount(); i++)
+                for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
                 {
-                    PRREObject3D* const obj = m_maps.getBlocks()[i];
-                    if (obj->isColliding_TO_BE_REMOVED())
+                    const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                    const bool bGoingLeft = bullet.getObject3D().getAngleVec().getY() == 0.f; // otherwise it would be 180.f
+                    const float fMapObjPosX = obj->getPosVec().getX();
+                    const float fMapObjPosY = obj->getPosVec().getY();
+
+                    if ((bGoingLeft && (fMapObjPosX - fBlockSizeXhalf > fBulletPosX)) ||
+                        (!bGoingLeft && (fMapObjPosX + fBlockSizeXhalf < fBulletPosX)))
                     {
-                        const bool bGoingLeft = bullet.getObject3D().getAngleVec().getY() == 0.f; // otherwise it would be 180.f
-                        if ((bGoingLeft && (obj->getPosVec().getX() > bullet.getObject3D().getPosVec().getX())) ||
-                            (!bGoingLeft && (obj->getPosVec().getX() < bullet.getObject3D().getPosVec().getX())))
-                        {
-                            // optimization: rule out those blocks which are not in bullet's direction
-                            continue;
-                        }
-                        if (Colliding(*obj, bullet.getObject3D()))
-                        {
-                            bDeleteBullet = true;
-                            break; // we can stop since 1 bullet can touch only 1 map element
-                        }
+                        // optimization: rule out those blocks which are not in bullet's direction
+                        continue;
                     }
+
+                    const float fBulletPosXMinusHalf = fBulletPosX - bullet.getObject3D().getSizeVec().getX() / 2.f;
+                    const float fBulletPosXPlusHalf = fBulletPosX - bullet.getObject3D().getSizeVec().getX() / 2.f;
+                    const float fBulletPosYMinusHalf = fBulletPosY - bullet.getObject3D().getSizeVec().getY() / 2.f;
+                    const float fBulletPosYPlusHalf = fBulletPosY - bullet.getObject3D().getSizeVec().getY() / 2.f;
+
+                    if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
+                    {
+                        continue;
+                    }
+
+                    if ((fMapObjPosY + fBlockSizeYhalf < fBulletPosYMinusHalf) || (fMapObjPosY - fBlockSizeYhalf > fBulletPosYPlusHalf))
+                    {
+                        continue;
+                    }
+
+                    bDeleteBullet = true;
+                    break; // we can stop since 1 bullet can touch only 1 map element
                 }
             }
         }
 
         if ( bDeleteBullet )
         {
+            proofps_dd::MsgBulletUpdate::initPktForDeleting_WithGarbageValues(
+                newPktBulletUpdate,
+                0,
+                bullet.getId()); // clients will also delete this bullet on their side because we set pkt's delete flag here
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
-            proofps_dd::MsgBulletUpdate::getDelete(newPktBulletUpdate) = true; // clients will also delete this bullet on their side
         }
         else
         {
+            proofps_dd::MsgBulletUpdate::initPkt(
+                newPktBulletUpdate,
+                0,
+                bullet.getId(),
+                fBulletPosX,
+                fBulletPosY,
+                bullet.getObject3D().getPosVec().getZ(),
+                bullet.getObject3D().getAngleVec().getX(),
+                bullet.getObject3D().getAngleVec().getY(),
+                bullet.getObject3D().getAngleVec().getZ(),
+                bullet.getObject3D().getSizeVec().getX(),
+                bullet.getObject3D().getSizeVec().getY(),
+                bullet.getObject3D().getSizeVec().getZ());
+
             // bullet didn't touch anything, go to next
             it++;
         }
@@ -1656,7 +1679,7 @@ void PRooFPSddPGE::UpdateBullets()
         }
     }
 
-    if (m_gameMode->checkWinningConditions() && (Bullet::getGlobalBulletId() > 0))
+    if (bEndGame && (Bullet::getGlobalBulletId() > 0))
     {
         Bullet::ResetGlobalBulletId();
     }
