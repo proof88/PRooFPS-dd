@@ -723,6 +723,16 @@ void PRooFPSddPGE::onGameInitialized()
         }
     }
 
+    LoadSound(m_sndLetsgo,         "gamedata/audio/radio/locknload.wav");
+    LoadSound(m_sndReloadStart,    "gamedata/audio/radio/de_clipout.wav");
+    LoadSound(m_sndReloadFinish,   "gamedata/audio/radio/de_clipin.wav");
+    LoadSound(m_sndShootPistol,    "gamedata/audio/radio/deagle-1.wav");
+    LoadSound(m_sndShootMchgun,    "gamedata/audio/radio/m4a1_unsil-1.wav");
+    LoadSound(m_sndShootDryPistol, "gamedata/audio/radio/dryfire_pistol.wav");
+    LoadSound(m_sndShootDryMchgun, "gamedata/audio/radio/dryfire_rifle.wav");
+    LoadSound(m_sndChangeWeapon,   "gamedata/audio/radio/m4a1_deploy.wav");
+    LoadSound(m_sndPlayerDie,      "gamedata/audio/radio/die1.wav");
+
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
     getInput().getMouse().SetCursorPos(
@@ -1732,6 +1742,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     if (bMe)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
+        getAudio().play(m_sndPlayerDie);
         m_pObjXHair->Hide();
         AddText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
     }
@@ -1776,6 +1787,19 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
         // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
         getPRRE().getUImanager().RemoveText(
             "Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2, getPRRE().getUImanager().getDefaultFontSize());
+    }
+}
+
+void PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
+{
+    const SoLoud::result resSoloud = snd.load(fname);
+    if (resSoloud == SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
+    {
+        getConsole().OLn("%s: %s loaded, length: %f secs!", __func__, fname, snd.getLength());
+    }
+    else
+    {
+        getConsole().EOLn("%s: %s load error: %d!", __func__, fname, resSoloud);
     }
 }
 
@@ -2378,6 +2402,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
             assert(mapLoaded);
         }
+
+        getAudio().play(m_sndLetsgo);
     }
     else
     {
@@ -2784,6 +2810,10 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         if (pTargetWpn != legacyPlayer.getWeapon())
         {
+            if (sClientUserName == m_sUserName)
+            {   // server plays for itself
+                getAudio().play(m_sndChangeWeapon);
+            }
             legacyPlayer.SetWeapon(pTargetWpn, true);
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
             //    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
@@ -2791,12 +2821,15 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             // all clients must be updated about this player's weapon switch
             for (const auto& client : m_mapPlayers)
             {
-                pge_network::PgePacket pktWpnUpdateCurrent;
-                proofps_dd::MsgWpnUpdateCurrent::initPkt(
-                    pktWpnUpdateCurrent,
-                    it->second.m_connHandleServerSide,
-                    pTargetWpn->getFilename());
-                getNetwork().getServer().SendPacketToClient(client.second.m_connHandleServerSide, pktWpnUpdateCurrent);
+                if (client.first != m_sUserName)
+                {   // server doesn't need to send this msg to itself, it already executed weapon change by SetWeapon()
+                    pge_network::PgePacket pktWpnUpdateCurrent;
+                    proofps_dd::MsgWpnUpdateCurrent::initPkt(
+                        pktWpnUpdateCurrent,
+                        it->second.m_connHandleServerSide,
+                        pTargetWpn->getFilename());
+                    getNetwork().getServer().SendPacketToClient(client.second.m_connHandleServerSide, pktWpnUpdateCurrent);
+                }
             }
         }
         else
@@ -3050,16 +3083,17 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return;
     }
 
-    if (it->first == m_sUserName)
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
-    }
-
     Weapon* const wpn = it->second.m_legacyPlayer.getWeaponByFilename(msg.m_szWpnCurrentName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
         return;
+    }
+
+    if (it->first == m_sUserName)
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
+        getAudio().play(m_sndChangeWeapon);
     }
 
     it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);

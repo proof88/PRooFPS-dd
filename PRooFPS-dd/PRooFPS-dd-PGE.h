@@ -195,6 +195,16 @@ private:
     // TODO: originally username was planned to be the key for above map, however if we see that we can always use connHandleServerSide to
     // find proper player, then let's change the key to that instead of user name!
 
+    SoLoud::Wav m_sndLetsgo;
+    SoLoud::Wav m_sndReloadStart;
+    SoLoud::Wav m_sndReloadFinish;
+    SoLoud::Wav m_sndShootPistol;
+    SoLoud::Wav m_sndShootMchgun;
+    SoLoud::Wav m_sndShootDryPistol;
+    SoLoud::Wav m_sndShootDryMchgun;
+    SoLoud::Wav m_sndChangeWeapon;
+    SoLoud::Wav m_sndPlayerDie;
+
     unsigned int m_nFramesElapsedSinceLastDurationsReset;
     long long m_nGravityCollisionDurationUSecs;
     long long m_nActiveWindowStuffDurationUSecs;
@@ -212,6 +222,7 @@ private:
 
     // ---------------------------------------------------------------------------
 
+    void LoadSound(SoLoud::Wav& snd, const char* fname);
     void Text(const std::string& s, int x, int y) const;
     void AddText(const std::string& s, int x, int y) const;
     void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt);

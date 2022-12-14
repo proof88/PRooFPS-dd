@@ -133,6 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
+    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgePacket.h" />

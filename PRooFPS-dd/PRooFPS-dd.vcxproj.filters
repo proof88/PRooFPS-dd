@@ -43,6 +43,12 @@
     <Filter Include="Header Files\PGE\PRRE\Object3D">
       <UniqueIdentifier>{d01050dc-770c-4805-bafa-7267b8a55ed1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PGE\Audio">
+      <UniqueIdentifier>{fe7d9b13-25be-4854-a4d5-6bbd30dae63a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\PGE\Audio\SoLoud">
+      <UniqueIdentifier>{e98ecd74-3e1b-4ad5-bdf0-d167131dc2a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -209,6 +215,12 @@
     </ClInclude>
     <ClInclude Include="Tests\MapItemTest.h">
       <Filter>Source Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h">
+      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h">
+      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
