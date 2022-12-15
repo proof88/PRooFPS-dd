@@ -1663,7 +1663,7 @@ void PRooFPSddPGE::UpdateBullets()
         {
             proofps_dd::MsgBulletUpdate::initPkt(
                 newPktBulletUpdate,
-                0,
+                bullet.getOwner(),
                 bullet.getId(),
                 fBulletPosX,
                 fBulletPosY,
@@ -2883,6 +2883,23 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
                     wpn->getUnmagBulletCount());
                 getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
             }
+            else
+            {
+                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
+                // not nice, but this is just some temporal solution for private beta
+                if (wpn->getFilename() == "pistol.txt")
+                {
+                    getAudio().play(m_sndShootPistol);
+                }
+                else if (wpn->getFilename() == "machinegun.txt")
+                {
+                    getAudio().play(m_sndShootMchgun);
+                }
+                else
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                }
+            }
         }
     }
     // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
@@ -2944,7 +2961,7 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     }
 }
 
-void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgBulletUpdate& msg)
+void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
 {
     if (getNetwork().isServer())
     {
@@ -2976,6 +2993,34 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle /*
         }
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+
+        if (m_mapPlayers[m_sUserName].m_connHandleServerSide == connHandleServerSide)
+        {
+            // this is my newborn bullet
+            // I'm playing the sound associated to my current weapon, although it might happen that with BIG latency, when I receive this update from server,
+            // I have already switched to another weapon ... but I think this cannot happen since my inputs are processed and responded by server in order.
+            const Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon();
+            if (!wpn)
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn!", __func__);
+            }
+            else
+            {
+                // not nice, but this is just some temporal solution for private beta
+                if (wpn->getFilename() == "pistol.txt")
+                {
+                    getAudio().play(m_sndShootPistol);
+                }
+                else if (wpn->getFilename() == "machinegun.txt")
+                {
+                    getAudio().play(m_sndShootMchgun);
+                }
+                else
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                }
+            }
+        }
 
         // TODO: here it is okay to get all the properties of the bullet, but if it is not a new bullet, it is not nice to
         // send every property in all BulletUpdate, this should be improved in future ...
