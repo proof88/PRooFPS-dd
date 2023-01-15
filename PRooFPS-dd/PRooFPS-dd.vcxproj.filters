@@ -222,6 +222,12 @@
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h">
       <Filter>Header Files\PGE\Audio\SoLoud</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\RegTestBasicServerClient2Players.h">
+      <Filter>Source Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\Process.h">
+      <Filter>Source Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

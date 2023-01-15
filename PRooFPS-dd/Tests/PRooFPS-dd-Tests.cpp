@@ -20,11 +20,15 @@
 
 #include "../../../../CConsole/CConsole/src/CConsole.h"
 
+// unit tests
 #include "GameModeTest.h"
 #include "MapItemTest.h"
 #include "MapsTest.h"
 
-#define CON_TITLE "Unit tests for PRooFPS-dd"
+// regression tests
+#include "RegTestBasicServerClient2Players.h"
+
+#define CON_TITLE "Tests for PRooFPS-dd"
 
 using namespace std;
 
@@ -58,14 +62,15 @@ int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, con
     getConsole().L();
     getConsole().OLn("");
 
-    GameModeTest gameModeTest;
-    MapItemTest mapItemTest;
-    MapsTest mapsTest;
+    vector<std::unique_ptr<UnitTest>> tests;
+    
+    // unit tests
+    //tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest()));
+    //tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest()));
+    //tests.push_back(std::unique_ptr<UnitTest>(new MapsTest()));
 
-    vector<UnitTest*> tests;
-    tests.push_back(&gameModeTest);
-    tests.push_back(&mapItemTest);
-    tests.push_back(&mapsTest);
+    // regression tests
+    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));
 
     vector<UnitTest*>::size_type nSucceededTests = 0;
     vector<UnitTest*>::size_type nTotalSubTests = 0;

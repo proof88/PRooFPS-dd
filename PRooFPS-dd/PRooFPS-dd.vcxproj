@@ -188,6 +188,8 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
+    <ClInclude Include="Tests\Process.h" />
+    <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
     <ClInclude Include="Tests\MapItemTest.h" />
     <ClInclude Include="Tests\MapsTest.h" />
   </ItemGroup>
