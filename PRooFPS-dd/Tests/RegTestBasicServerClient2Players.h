@@ -37,35 +37,58 @@ public:
 
 protected:
 
-    virtual void Initialize() override
+    virtual bool setUp() override
     {
         try
         {
             StartGame(true /* server */);
             StartGame(false /* client */);
+
+            // make sure the game windows are at the top, not the console windows
+            BringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            BringWindowToFront(hClientMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
         catch (const std::exception& e)
         {
             CConsole::getConsoleInstance().EOLn("Exception: %s", e.what());
+            return false;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        return true;
     }
 
-    virtual void Finalize() override
+    virtual void TearDown() override
     {
         // will change these ungraceful stops to sending ESCAPE key
         process_stackoverflow_42531::Process::stopProcess(procInfoClient);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         process_stackoverflow_42531::Process::stopProcess(procInfoServer);
     }
 
     bool testMethod() override
     {
-        return false;
+        return true;
     }
 
 private:
+
+    void BringWindowToFront(HWND hTargetWindow)
+    {
+        // technique copied from: https://stackoverflow.com/questions/916259/win32-bring-a-window-to-top
+        HWND hCurWnd = GetForegroundWindow();
+        DWORD dwMyID = GetCurrentThreadId();
+        DWORD dwCurID = GetWindowThreadProcessId(hCurWnd, NULL);
+        AttachThreadInput(dwCurID, dwMyID, TRUE);
+        SetWindowPos(hTargetWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        SetWindowPos(hTargetWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
+        SetForegroundWindow(hTargetWindow);
+        SetFocus(hTargetWindow);
+        SetActiveWindow(hTargetWindow);
+        AttachThreadInput(dwCurID, dwMyID, FALSE);
+    }
 
     void StartGame(bool bServer) noexcept(false)
     {
@@ -87,7 +110,7 @@ private:
             hDialogWndServerOrClient = FindWindow(NULL, ":)");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         SetActiveWindow(hDialogWndServerOrClient);
 
         // select server or client button
@@ -101,12 +124,12 @@ private:
 
         // fullscreen dialog
         HWND hDialogWndFullscreen = 0;
-        while (hDialogWndFullscreen == 0)
+        do
         {
-            hDialogWndFullscreen = FindWindow(NULL, ":)");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            hDialogWndFullscreen = FindWindow(NULL, ":)");
+        } while (hDialogWndFullscreen == 0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         SetActiveWindow(hDialogWndFullscreen);
 
         // select no fullscreen
@@ -118,18 +141,34 @@ private:
         // main game window
         HWND& hMainGameWindow = bServer ? hServerMainGameWindow : hClientMainGameWindow;
         hMainGameWindow = 0;
-        while (hMainGameWindow == 0)
+        do
         {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
             // FindWindow() is case-insensitive and searches only top-level windows
             hMainGameWindow = FindWindow(NULL, "PRooFPS-dd 0.1.0.0 Private Beta");
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        } while (hMainGameWindow == 0);
+
+        RECT rectGameWindow;
+        if (TRUE == GetWindowRect(hMainGameWindow, &rectGameWindow))
+        {
+            SetWindowPos(
+                hMainGameWindow,
+                NULL,
+                bServer ? 0 : 1000,
+                rectGameWindow.top,
+                0, 0,
+                SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+        }
+        else
+        {
+            CConsole::getConsoleInstance().EOLn("GetWindowRect() failed (%d).", GetLastError());
         }
 
         // now wait until we CANNOT find this window anymore - it is when the title text changes because
         // the game loaded and its main loop is refreshing the title bar with additional FPS data.
         while (FindWindow(NULL, "PRooFPS-dd 0.1.0.0 Private Beta") != 0)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
