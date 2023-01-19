@@ -62,10 +62,31 @@ protected:
 
     virtual void TearDown() override
     {
-        // will change these ungraceful stops to sending ESCAPE key
-        process_stackoverflow_42531::Process::stopProcess(procInfoClient);
+        //process_stackoverflow_42531::Process::stopProcess(procInfoClient);
+        BringWindowToFront(hClientMainGameWindow);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        process_stackoverflow_42531::Process::stopProcess(procInfoServer);
+        keybd_event(VK_ESCAPE, 0, 0, 0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        //process_stackoverflow_42531::Process::stopProcess(procInfoServer);
+        BringWindowToFront(hServerMainGameWindow);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        keybd_event(VK_ESCAPE, 0, 0, 0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        } while (process_stackoverflow_42531::Process::checkIfProcessIsActive(procInfoClient));
+
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        } while (process_stackoverflow_42531::Process::checkIfProcessIsActive(procInfoServer));
     }
 
     bool testMethod() override
@@ -154,7 +175,7 @@ private:
             SetWindowPos(
                 hMainGameWindow,
                 NULL,
-                bServer ? 0 : 1000,
+                bServer ? 0 : 900,
                 rectGameWindow.top,
                 0, 0,
                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
