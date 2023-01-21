@@ -49,6 +49,9 @@
     <Filter Include="Header Files\PGE\Audio\SoLoud">
       <UniqueIdentifier>{e98ecd74-3e1b-4ad5-bdf0-d167131dc2a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PGE\Config">
+      <UniqueIdentifier>{638600f3-db0b-4fcb-a8b8-fac4f0a7435a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -79,9 +82,6 @@
       <Filter>Header Files\PGE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\PGEallHeaders.h">
-      <Filter>Header Files\PGE</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\PGEcfgFile.h">
       <Filter>Header Files\PGE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\PGEInputHandler.h">
@@ -227,6 +227,12 @@
     </ClInclude>
     <ClInclude Include="Tests\Process.h">
       <Filter>Source Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h">
+      <Filter>Header Files\PGE\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgFile.h">
+      <Filter>Header Files\PGE\Config</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

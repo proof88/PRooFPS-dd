@@ -135,13 +135,14 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgFile.h" />
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgePacket.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeServer.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGE.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEallHeaders.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\PGEcfgFile.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEInputHandler.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEWorld.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEWorldTime.h" />

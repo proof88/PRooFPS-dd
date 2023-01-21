@@ -15,7 +15,7 @@
 #include <string>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
-#include "../../../PGE/PGE/PGEcfgVariable.h"
+#include "../../../PGE/PGE/Config/PGEcfgVariable.h"
 #include "../../../PGE/PGE/PRRE/include/external/PR00FsReducedRenderingEngine.h"
 
 #include "MapItem.h"
