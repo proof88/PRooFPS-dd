@@ -13,7 +13,7 @@
 #include <chrono>
 
 #include "../../../PGE/PGE/PGE.h"
-#include "../../../PGE/PGE/PRRE/include/external/Object3D/PRREObject3DManager.h"
+#include "../../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
 
 #include "Consts.h"
 #include "GameMode.h"
@@ -24,11 +24,11 @@ class CPlayer
 {
 private:       
     int m_nHealth, m_nOldHealth;
-    PRREVector m_vecPos, m_vecOldPos;
-    TPRREfloat m_fPlayerAngleY, m_fOldPlayerAngleY;
-    PRREVector m_vWpnAngle, m_vOldWpnAngle;
-    PRREVector m_vecForce;
-    PRREObject3D* m_pObj;
+    PureVector m_vecPos, m_vecOldPos;
+    TPurefloat m_fPlayerAngleY, m_fOldPlayerAngleY;
+    PureVector m_vWpnAngle, m_vOldWpnAngle;
+    PureVector m_vecForce;
+    PureObject3D* m_pObj;
     std::vector<Weapon*> m_weapons;
     Weapon* m_pWpn;
     std::chrono::time_point<std::chrono::steady_clock> m_timeLastWeaponSwitch;
@@ -49,11 +49,11 @@ public:
     void ShutDown();
     void SetRendererObject(PR00FsReducedRenderingEngine* gfx);
     int getHealth() const;
-    PRREVector& getPos1();
-    PRREVector& getOPos1();
-    TPRREfloat& getAngleY();
-    TPRREfloat& getOldAngleY();
-    PRREObject3D* getAttachedObject() const;
+    PureVector& getPos1();
+    PureVector& getOPos1();
+    TPurefloat& getAngleY();
+    TPurefloat& getOldAngleY();
+    PureObject3D* getAttachedObject() const;
     float getGravity() const;
     bool isJumping() const;
     bool isFalling() const;
@@ -62,7 +62,7 @@ public:
     void SetHealth(int value);
     void UpdateOldHealth();
     int getOldHealth() const;
-    void AttachObject(PRREObject3D* value, bool blend);
+    void AttachObject(PureObject3D* value, bool blend);
     void SetGravity(float value);
     bool jumpAllowed() const;
     void SetJumpAllowed(bool b);
@@ -72,7 +72,7 @@ public:
     void SetCanFall(bool state);
     bool isRunning() const;
     void SetRun(bool state);
-    PRREVector& getForce();
+    PureVector& getForce();
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
     Weapon* getWeapon();
@@ -83,8 +83,8 @@ public:
     const std::vector<Weapon*>& getWeapons() const;
     const Weapon* getWeaponByFilename(const std::string& sFilename) const;
     Weapon* getWeaponByFilename(const std::string& sFilename);
-    PRREVector& getOldWeaponAngle();
-    PRREVector& getWeaponAngle();
+    PureVector& getOldWeaponAngle();
+    PureVector& getWeaponAngle();
     std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
     bool& getRespawnFlag();
     int& getFrags();
@@ -133,13 +133,13 @@ protected:
     PRooFPSddPGE() :
         m_gameMode(nullptr),
         m_deathMatchMode(nullptr),
-        m_maps(getPRRE())
+        m_maps(getPure())
     {}
 
     PRooFPSddPGE(const PRooFPSddPGE&) :
         m_gameMode(nullptr),
         m_deathMatchMode(nullptr),
-        m_maps(getPRRE())
+        m_maps(getPure())
     {}
 
     PRooFPSddPGE& operator=(const PRooFPSddPGE&)
@@ -181,7 +181,7 @@ private:
     unsigned int m_fps_lastmeasure;         /* - || - */
     unsigned int m_fps_ms;                  /* - || - */
 
-    PRREObject3D* m_pObjXHair;
+    PureObject3D* m_pObjXHair;
     bool m_bSpaceReleased, m_bBackSpaceReleased, m_bCtrlReleased;
     bool m_bShiftReleased, m_enterreleased;
     bool m_bTeleportReleased;
@@ -230,7 +230,7 @@ private:
     void MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt);
     void CameraMovement(int fps);
     void Gravity(int fps);
-    bool Colliding(const PRREObject3D& a, const PRREObject3D& b);
+    bool Colliding(const PureObject3D& a, const PureObject3D& b);
     bool Colliding2(
         float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
         float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz);
@@ -238,8 +238,8 @@ private:
         float o1px, float o1py, float o1sx, float o1sy,
         float o2px, float o2py, float o2sx, float o2sy);
     bool Colliding3(
-        const PRREVector& vecPosMin, const PRREVector& vecPosMax,
-        const PRREVector& vecObjPos, const PRREVector& vecObjSize);
+        const PureVector& vecPosMin, const PureVector& vecPosMax,
+        const PureVector& vecObjPos, const PureVector& vecObjSize);
     void PlayerCollisionWithWalls(bool& won);
     void ShowFragTable(bool bWin) const;
     void UpdateWeapons();

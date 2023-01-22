@@ -12,8 +12,8 @@
 
 #include <chrono>
 
-#include "../../../PGE/PGE/PRRE/include/external/Math/PRREVector.h"
-#include "../../../PGE/PGE/PRRE/include/external/PR00FsReducedRenderingEngine.h"
+#include "../../../PGE/PGE/Pure/include/external/Math/PureVector.h"
+#include "../../../PGE/PGE/Pure/include/external/PR00FsReducedRenderingEngine.h"
 
 enum class MapItemType
 {
@@ -44,14 +44,14 @@ public:
 
     // ---------------------------------------------------------------------------
 
-    MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos);
+    MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos);
     ~MapItem();
 
     const MapItemId&    getId() const;
     const MapItemType&  getType() const;
-    const PRREVector&   getPos() const;
-    const PRREObject3D& getObject3D() const;
-    //PRREObject3D&     getObject3D();
+    const PureVector&   getPos() const;
+    const PureObject3D& getObject3D() const;
+    //PureObject3D&     getObject3D();
 
     bool isTaken() const;
     void Take();
@@ -69,7 +69,7 @@ private:
                                               Must be equal for same item across server and clients, used in packets too. */
 
     PR00FsReducedRenderingEngine&                      m_gfx;
-    PRREObject3D*                                      m_obj;
+    PureObject3D*                                      m_obj;
     float                                              m_fObjPosOriginalY;     /**< The vertical floating movement is relative to this coord. */
     MapItemType                                        m_itemType;
     bool                                               m_bTaken;

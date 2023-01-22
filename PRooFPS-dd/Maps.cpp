@@ -122,17 +122,17 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    const TPRRE_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
-    const TPRRE_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
+    const TPure_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
+    const TPure_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
-        TPRRE_ISO_TEX_FILTERING::PRRE_ISO_LINEAR_MIPMAP_LINEAR,
-        TPRRE_ISO_TEX_FILTERING::PRRE_ISO_LINEAR);
+        TPure_ISO_TEX_FILTERING::Pure_ISO_LINEAR_MIPMAP_LINEAR,
+        TPure_ISO_TEX_FILTERING::Pure_ISO_LINEAR);
 
     bool bParseError = false;
     bool bMapLayoutReached = false;
     const std::streamsize nBuffSize = 1024;
     char cLine[nBuffSize];
-    TPRREfloat y = 4.0f;
+    TPurefloat y = 4.0f;
     while ( !bParseError && !f.eof() )
     {
         f.getline(cLine, nBuffSize);
@@ -278,11 +278,11 @@ unsigned int Maps::height() const
 
 void Maps::UpdateVisibilitiesForRenderer()
 {
-    const PRREVector campos = m_gfx.getCamera().getPosVec();
+    const PureVector campos = m_gfx.getCamera().getPosVec();
 
     for (int i = 0; i < m_blocks_h; i++)
     {
-        PRREObject3D* const obj = m_blocks[i];
+        PureObject3D* const obj = m_blocks[i];
         if ( obj != PGENULL )
         {
             if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX() - 9.f )
@@ -309,12 +309,12 @@ const std::string& Maps::getFilename() const
     return m_sFileName;
 }
 
-const std::set<PRREVector>& Maps::getSpawnpoints() const
+const std::set<PureVector>& Maps::getSpawnpoints() const
 {
     return m_spawnpoints;
 }
 
-const PRREVector& Maps::getRandomSpawnpoint() const
+const PureVector& Maps::getRandomSpawnpoint() const
 {
     if ( m_spawnpoints.empty() )
     {
@@ -331,32 +331,32 @@ const PRREVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
-const PRREVector& Maps::getBlockPosMin() const
+const PureVector& Maps::getBlockPosMin() const
 {
     return m_blockPosMin;
 }
 
-const PRREVector& Maps::getBlockPosMax() const
+const PureVector& Maps::getBlockPosMax() const
 {
     return m_blockPosMax;
 }
 
-const PRREVector& Maps::getBlocksVertexPosMin() const
+const PureVector& Maps::getBlocksVertexPosMin() const
 {
     return m_blocksVertexPosMin;
 }
 
-const PRREVector& Maps::getBlocksVertexPosMax() const
+const PureVector& Maps::getBlocksVertexPosMax() const
 {
     return m_blocksVertexPosMax;
 }
 
-PRREObject3D** Maps::getBlocks()
+PureObject3D** Maps::getBlocks()
 {
     return m_blocks;
 }
 
-PRREObject3D** Maps::getForegroundBlocks()
+PureObject3D** Maps::getForegroundBlocks()
 {
     return m_foregroundBlocks;
 }
@@ -494,7 +494,7 @@ void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
     m_vars[sVar] = sValue.c_str();
 }
 
-bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
+bool Maps::lineHandleLayout(const std::string& sLine, TPurefloat& y)
 {
     m_height++;
     if ( m_width < sLine.length() )
@@ -502,8 +502,8 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         m_width = sLine.length();
     }
 
-    TPRREfloat x = 0.0f;
-    TPRREfloat maxx = x;
+    TPurefloat x = 0.0f;
+    TPurefloat maxx = x;
     std::string::size_type iLinePos = 0;
     
     // Item character specifies the item type, but not the background behind the item.
@@ -545,33 +545,33 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
         switch (c)
         {
         case '+':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
             m_items.insert({pMapItem->getId(), pMapItem});
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'M':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
             m_items.insert({ pMapItem->getId(), pMapItem });
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'P':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
             m_items.insert({ pMapItem->getId(), pMapItem });
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'S':
             // spawnpoint is background block by default
-            m_spawnpoints.insert(PRREVector(x, y, GAME_PLAYERS_POS_Z));
+            m_spawnpoints.insert(PureVector(x, y, GAME_PLAYERS_POS_Z));
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         default: /* NOP */;
         }
 
-        PRREObject3D* pNewBlockObj = nullptr;
+        PureObject3D* pNewBlockObj = nullptr;
         if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBgBlock))
         {
             m_blocks_h++;
@@ -580,7 +580,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
                 iObjectBgToBeCopied = m_blocks_h - 1;
             }
             // TODO: handle memory allocation error
-            m_blocks = (PRREObject3D**)realloc(m_blocks, m_blocks_h * sizeof(PRREObject3D*));
+            m_blocks = (PureObject3D**)realloc(m_blocks, m_blocks_h * sizeof(PureObject3D*));
             pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
             m_blocks[m_blocks_h - 1] = pNewBlockObj;
             m_blocks[m_blocks_h - 1]->SetLit(true);
@@ -589,7 +589,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
             if (bForeground)
             {
                 m_foregroundBlocks_h++;
-                m_foregroundBlocks = (PRREObject3D**)realloc(m_foregroundBlocks, m_foregroundBlocks_h * sizeof(PRREObject3D*));
+                m_foregroundBlocks = (PureObject3D**)realloc(m_foregroundBlocks, m_foregroundBlocks_h * sizeof(PureObject3D*));
                 m_foregroundBlocks[m_foregroundBlocks_h - 1] = pNewBlockObj;
             }
         }
@@ -599,7 +599,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPRREfloat& y)
             continue;
         }
 
-        PRRETexture* tex = PGENULL;
+        PureTexture* tex = PGENULL;
         if (bSpecialBlock && bCopyPreviousBgBlock)
         {
             tex = m_blocks[iObjectBgToBeCopied]->getMaterial().getTexture();

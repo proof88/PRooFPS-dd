@@ -15,10 +15,10 @@
 #include <filesystem>  // requires cpp17
 #include <functional>
 
-#include "../../../PGE/PGE/PRRE/include/external/Render/PRRERendererHWfixedPipe.h"  // for rendering hints
-#include "../../../PGE/PGE/PRRE/include/external/PRREuiManager.h"
-#include "../../../PGE/PGE/PRRE/include/external/Display/PRREWindow.h"
-#include "../../../PGE/PGE/PRRE/include/external/PRRECamera.h"
+#include "../../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
+#include "../../../PGE/PGE/Pure/include/external/PureUiManager.h"
+#include "../../../PGE/PGE/Pure/include/external/Display/PureWindow.h"
+#include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
 static const std::string GAME_NAME    = "PRooFPS-dd";
@@ -79,27 +79,27 @@ int CPlayer::getHealth() const
   return m_nHealth;
 }
 
-PRREVector& CPlayer::getPos1()
+PureVector& CPlayer::getPos1()
 {
   return m_vecPos;
 }
 
-PRREVector& CPlayer::getOPos1()
+PureVector& CPlayer::getOPos1()
 {
   return m_vecOldPos;
 }
 
-TPRREfloat& CPlayer::getAngleY()
+TPurefloat& CPlayer::getAngleY()
 {
     return m_fPlayerAngleY;
 }
 
-TPRREfloat& CPlayer::getOldAngleY()
+TPurefloat& CPlayer::getOldAngleY()
 {
     return m_fOldPlayerAngleY;
 }
 
-PRREObject3D* CPlayer::getAttachedObject() const
+PureObject3D* CPlayer::getAttachedObject() const
 {
   return m_pObj;
 }
@@ -144,13 +144,13 @@ int CPlayer::getOldHealth() const
     return m_nOldHealth;
 }
 
-void CPlayer::AttachObject(PRREObject3D* value, bool blend) {
+void CPlayer::AttachObject(PureObject3D* value, bool blend) {
   m_pObj = value;
   if ( m_pObj != PGENULL )
   {  
       m_pObj->SetDoubleSided(true);
       if ( blend )
-          m_pObj->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA);
+          m_pObj->getMaterial(false).setBlendFuncs(Pure_SRC_ALPHA, Pure_ONE_MINUS_SRC_ALPHA);
       m_pObj->SetLit(false);
   }
 }
@@ -198,7 +198,7 @@ void CPlayer::SetRun(bool state)
     m_bRunning = state;
 }
 
-PRREVector& CPlayer::getForce()
+PureVector& CPlayer::getForce()
 {
     return m_vecForce;
 }
@@ -300,12 +300,12 @@ Weapon* CPlayer::getWeaponByFilename(const std::string& sFilename)
     return nullptr;
 }
 
-PRREVector& CPlayer::getOldWeaponAngle()
+PureVector& CPlayer::getOldWeaponAngle()
 {
     return m_vOldWpnAngle;
 }
 
-PRREVector& CPlayer::getWeaponAngle()
+PureVector& CPlayer::getWeaponAngle()
 {
     return m_vWpnAngle;
 }
@@ -477,7 +477,7 @@ const char* PRooFPSddPGE::getLoggerModuleName()
 */
 PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
-    m_maps(getPRRE()),
+    m_maps(getPure()),
     m_fps(0),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -540,7 +540,7 @@ void PRooFPSddPGE::onGameInitializing()
     getConsole().SetLoggingState(getNetwork().getClient().getLoggerModuleName(), true);
 
     // Misc engine logs
-    getConsole().SetLoggingState("PRREWindow", true);
+    getConsole().SetLoggingState("PureWindow", true);
 
     // Turn everything on for development only
     getConsole().SetLoggingState("4LLM0DUL3S", true);
@@ -560,24 +560,24 @@ void PRooFPSddPGE::onGameInitialized()
 
     // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way;
     // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
-    // for ~1000 cubes, since PRRE still doesn't implement hierarchical occlusion culling ...
+    // for ~1000 cubes, since Pure still doesn't implement hierarchical occlusion culling ...
     // And a normal map like Warhouse already contains ~1000 cubes.
-    getPRRE().getRenderer()->SetRenderHints(
-        BITF_PREP(PRRE_RH_RP_LEGACY_PR00FPS, PRRE_RH_RENDER_PATH_BITS, 3) |
-        BITF_PREP(PRRE_RH_OQ_METHOD_ASYNC, PRRE_RH_OQ_METHOD_BITS, 2) |
-        PRRE_RH_OQ_DRAW_BOUNDING_BOXES_OFF |
-        PRRE_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
-        PRRE_RH_ORDERING_BY_DISTANCE_OFF);
+    getPure().getRenderer()->SetRenderHints(
+        BITF_PREP(Pure_RH_RP_LEGACY_PR00FPS, Pure_RH_RENDER_PATH_BITS, 3) |
+        BITF_PREP(Pure_RH_OQ_METHOD_ASYNC, Pure_RH_OQ_METHOD_BITS, 2) |
+        Pure_RH_OQ_DRAW_BOUNDING_BOXES_OFF |
+        Pure_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
+        Pure_RH_ORDERING_BY_DISTANCE_OFF);
     
-    getPRRE().getScreen().SetVSyncEnabled(true);
+    getPure().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
 
-    getPRRE().getUImanager().SetDefaultFontSize(20);
+    getPure().getUImanager().SetDefaultFontSize(20);
 
-    getPRRE().getCamera().SetNearPlane(0.1f);
-    getPRRE().getCamera().SetFarPlane(100.0f);
-    getPRRE().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
-    getPRRE().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
+    getPure().getCamera().SetNearPlane(0.1f);
+    getPure().getCamera().SetFarPlane(100.0f);
+    getPure().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
+    getPure().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
     m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
     assert(m_gameMode);
@@ -588,18 +588,18 @@ void PRooFPSddPGE::onGameInitialized()
     const bool bMapsInited = m_maps.initialize();
     assert(bMapsInited);
 
-    m_pObjXHair = getPRRE().getObject3DManager().createPlane(32.f, 32.f);
+    m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
     m_pObjXHair->SetDoubleSided(true);
     m_pObjXHair->SetTestingAgainstZBuffer(false);
     m_pObjXHair->SetLit(false);
-    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PRRE_SRC_ALPHA, PRRE_ONE)
-    // otherwise (bitmaps saved by Flash) just use (PRRE_SRC_ALPHA, PRRE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
-    m_pObjXHair->getMaterial(false).setBlendFuncs(PRRE_SRC_ALPHA, PRRE_ONE);
-    PRRETexture* xhairtex = getPRRE().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (Pure_SRC_ALPHA, Pure_ONE)
+    // otherwise (bitmaps saved by Flash) just use (Pure_SRC_ALPHA, Pure_ONE_MINUS_SRC_ALPHA) to utilize real alpha
+    m_pObjXHair->getMaterial(false).setBlendFuncs(Pure_SRC_ALPHA, Pure_ONE);
+    PureTexture* xhairtex = getPure().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
     m_pObjXHair->getMaterial().setTexture( xhairtex );
 
-    getPRRE().WriteList();
+    getPure().WriteList();
 
     if (getNetwork().isServer())
     {
@@ -618,8 +618,8 @@ void PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
         getNetwork().getServer().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
 
-        Text("Starting Server ...", 200, getPRRE().getWindow().getClientHeight() / 2);
-        getPRRE().getRenderer()->RenderScene();
+        Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
+        getPure().getRenderer()->RenderScene();
 
         if (!getNetwork().getServer().startListening())
         {
@@ -656,7 +656,7 @@ void PRooFPSddPGE::onGameInitialized()
                     if (sTrimmedLine == "vsync_off")
                     {
                         getConsole().OLn("VSync override: off");
-                        getPRRE().getScreen().SetVSyncEnabled(false);
+                        getPure().getScreen().SetVSyncEnabled(false);
                     }
                     break;
                 default:
@@ -701,7 +701,7 @@ void PRooFPSddPGE::onGameInitialized()
                     if (sTrimmedLine == "vsync_off")
                     {
                         getConsole().OLn("VSync override: off");
-                        getPRRE().getScreen().SetVSyncEnabled(false);
+                        getPure().getScreen().SetVSyncEnabled(false);
                     }
                     break;
                 default:
@@ -713,8 +713,8 @@ void PRooFPSddPGE::onGameInitialized()
             f.close();
         }
 
-        Text("Connecting to " + sIp + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
-        getPRRE().getRenderer()->RenderScene();
+        Text("Connecting to " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+        getPure().getRenderer()->RenderScene();
 
         if (!getNetwork().getClient().connectToServer(sIp))
         {
@@ -736,9 +736,9 @@ void PRooFPSddPGE::onGameInitialized()
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
     getInput().getMouse().SetCursorPos(
-        getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
-        getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
-    getPRRE().getWindow().SetCursorVisible(false);
+        getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
+        getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
+    getPure().getWindow().SetCursorVisible(false);
 
     m_deathMatchMode->SetFragLimit(10);
     //m_deathMatchMode->SetTimeLimitSecs(5);
@@ -773,12 +773,12 @@ std::map<unsigned char, PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> PRooFPSd
 
 void PRooFPSddPGE::Text(const std::string& s, int x, int y) const
 {
-    getPRRE().getUImanager().text(s, x, y)->SetDropShadow(true);
+    getPure().getUImanager().text(s, x, y)->SetDropShadow(true);
 }
 
 void PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
 {
-    getPRRE().getUImanager().addText(s, x, y)->SetDropShadow(true);
+    getPure().getUImanager().addText(s, x, y)->SetDropShadow(true);
 }
 
 void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
@@ -787,7 +787,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
   
     if ( keybd.isKeyPressed(VK_ESCAPE) )
     {
-        getPRRE().getWindow().Close();
+        getPure().getWindow().Close();
     }
 
     if (m_gameMode->checkWinningConditions())
@@ -805,8 +805,8 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
         if (m_bBackSpaceReleased)
         {
             m_bShowGuiDemo = !m_bShowGuiDemo;
-            getPRRE().ShowGuiDemo(m_bShowGuiDemo);
-            getPRRE().getWindow().SetCursorVisible(m_bShowGuiDemo);
+            getPure().ShowGuiDemo(m_bShowGuiDemo);
+            getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
             m_bBackSpaceReleased = false;
         }
     }
@@ -842,9 +842,9 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                 }
 
                 // log some stats
-                getConsole().SetLoggingState("PRRERendererHWfixedPipe", true);
-                getPRRE().getRenderer()->ResetStatistics();
-                getConsole().SetLoggingState("PRRERendererHWfixedPipe", false);
+                getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
+                getPure().getRenderer()->ResetStatistics();
+                getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
 
                 getConsole().OLn("");
                 getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
@@ -1061,8 +1061,8 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     const int oldmy = mouse.getCursorPosY();
 
     mouse.SetCursorPos(
-        getPRRE().getWindow().getX() + getPRRE().getWindow().getWidth()/2,
-        getPRRE().getWindow().getY() + getPRRE().getWindow().getHeight()/2);
+        getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
+        getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
 
     const int dx = oldmx - mouse.getCursorPosX();
     const int dy = oldmy - mouse.getCursorPosY();
@@ -1220,7 +1220,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
 }
 
 
-bool PRooFPSddPGE::Colliding(const PRREObject3D& a, const PRREObject3D& b)
+bool PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
 {
     return Colliding2(
         a.getPosVec().getX(),  a.getPosVec().getY(),  a.getPosVec().getZ(),
@@ -1275,15 +1275,15 @@ bool PRooFPSddPGE::Colliding2_NoZ(
 }
 
 bool PRooFPSddPGE::Colliding3(
-    const PRREVector& vecPosMin, const PRREVector& vecPosMax,
-    const PRREVector& vecObjPos, const PRREVector& vecObjSize)
+    const PureVector& vecPosMin, const PureVector& vecPosMax,
+    const PureVector& vecObjPos, const PureVector& vecObjSize)
 {
-    const PRREVector vecSize(
+    const PureVector vecSize(
         vecPosMax.getX() - vecPosMin.getX(),
         vecPosMax.getY() - vecPosMin.getY(),
         vecPosMax.getZ() - vecPosMin.getZ()
     );
-    const PRREVector vecPos(
+    const PureVector vecPos(
         vecPosMin.getX() + vecSize.getX() / 2.f,
         vecPosMin.getY() + vecSize.getY() / 2.f,
         vecPosMin.getZ() + vecSize.getZ() / 2.f
@@ -1303,7 +1303,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
     {
         auto& legacyPlayer = player.second.m_legacyPlayer;
 
-        const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
+        const PureObject3D* const plobj = legacyPlayer.getAttachedObject();
 
         // how to make collision detection even faster:
         // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
@@ -1323,7 +1323,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
-                const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                 assert(obj);  // we dont store nulls there
 
                 if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
@@ -1369,7 +1369,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
-                const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                 assert(obj);  // we dont store nulls there
 
                 if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerPos1XPlusHalf))
@@ -1395,7 +1395,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
 
 void PRooFPSddPGE::CameraMovement(int /*fps*/)
 {
-    PRREVector campos = getPRRE().getCamera().getPosVec();
+    PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
     float speed = GAME_CAM_SPEED / 60.0f;
 
@@ -1427,8 +1427,8 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
         campos.SetY(campos.getY() + ((cely - campos.getY())/speed) );
     }
 
-    getPRRE().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPRRE().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getZ() );
+    getPure().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
+    getPure().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getZ() );
 
 } // CameraMovement()
 
@@ -1473,11 +1473,11 @@ void PRooFPSddPGE::ShowFragTable(bool bWin) const
     const int nXPosPlayerName = 20;
     const int nXPosFrags = 200;
     const int nXPosDeaths = 250;
-    int nYPosStart = getPRRE().getWindow().getClientHeight() - 20;
+    int nYPosStart = getPure().getWindow().getClientHeight() - 20;
     if (bWin)
     {
         Text("Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * getPRRE().getUImanager().getDefaultFontSize();
+        nYPosStart -= 2 * getPure().getUImanager().getDefaultFontSize();
     }
 
     int nThisRowY = nYPosStart;
@@ -1485,14 +1485,14 @@ void PRooFPSddPGE::ShowFragTable(bool bWin) const
     Text("Frags", nXPosFrags, nThisRowY);
     Text("Deaths", nXPosDeaths, nThisRowY);
 
-    nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+    nThisRowY -= getPure().getUImanager().getDefaultFontSize();
     Text("========================================================", nXPosPlayerName, nThisRowY);
 
     int i = 0;
     for (const auto& player : m_deathMatchMode->getPlayerData())
     {
         i++;
-        nThisRowY = nYPosStart - (i + 1) * getPRRE().getUImanager().getDefaultFontSize();
+        nThisRowY = nYPosStart - (i + 1) * getPure().getUImanager().getDefaultFontSize();
         Text(player.m_sName, nXPosPlayerName, nThisRowY);
         Text(std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
         Text(std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
@@ -1500,21 +1500,21 @@ void PRooFPSddPGE::ShowFragTable(bool bWin) const
 
     if (!getNetwork().isServer())
     {
-        nThisRowY -= 2 * getPRRE().getUImanager().getDefaultFontSize();
+        nThisRowY -= 2 * getPure().getUImanager().getDefaultFontSize();
         Text("Ping: " + std::to_string(getNetwork().getClient().getPing(true)) + " ms",
             nXPosPlayerName, nThisRowY);
         
-        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
         Text("Quality: local: " + std::to_string(getNetwork().getClient().getQualityLocal(false)) +
             "; remote: " + std::to_string(getNetwork().getClient().getQualityRemote(false)),
             nXPosPlayerName, nThisRowY);
         
-        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
         Text("Tx Speed: " + std::to_string(std::lround(getNetwork().getClient().getTxByteRate(false))) +
             " Bps; Rx Speed: " + std::to_string(std::lround(getNetwork().getClient().getRxByteRate(false))) + " Bps",
             nXPosPlayerName, nThisRowY);
         
-        nThisRowY -= getPRRE().getUImanager().getDefaultFontSize();
+        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
         Text("Internal Queue Time: " + std::to_string(getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us",
             nXPosPlayerName, nThisRowY);
     }
@@ -1593,11 +1593,11 @@ void PRooFPSddPGE::UpdateBullets()
             {
                 // check if bullet is out of map bounds
                 // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
-                const PRREVector vRelaxedMapMinBounds(
+                const PureVector vRelaxedMapMinBounds(
                     m_maps.getBlocksVertexPosMin().getX() - GAME_BLOCK_SIZE_X * 4,
                     m_maps.getBlocksVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
                     m_maps.getBlocksVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
-                const PRREVector vRelaxedMapMaxBounds(
+                const PureVector vRelaxedMapMaxBounds(
                     m_maps.getBlocksVertexPosMax().getX() + GAME_BLOCK_SIZE_X * 4,
                     m_maps.getBlocksVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
                     m_maps.getBlocksVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
@@ -1618,7 +1618,7 @@ void PRooFPSddPGE::UpdateBullets()
                 // with 10-15 bullets.
                 for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
                 {
-                    const PRREObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                    const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                     const bool bGoingLeft = bullet.getObject3D().getAngleVec().getY() == 0.f; // otherwise it would be 180.f
                     const float fMapObjPosX = obj->getPosVec().getX();
                     const float fMapObjPosY = obj->getPosVec().getY();
@@ -1744,7 +1744,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         getAudio().play(m_sndPlayerDie);
         m_pObjXHair->Hide();
-        AddText("Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2);
+        AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
     }
     else
     {
@@ -1785,8 +1785,8 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
     {
         m_pObjXHair->Show();
         // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
-        getPRRE().getUImanager().RemoveText(
-            "Waiting to respawn ...", 200, getPRRE().getWindow().getClientHeight() / 2, getPRRE().getUImanager().getDefaultFontSize());
+        getPure().getUImanager().RemoveText(
+            "Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2, getPure().getUImanager().getDefaultFontSize());
     }
 }
 
@@ -1875,7 +1875,7 @@ void PRooFPSddPGE::PickupAndRespawnItems()
                     continue;
                 }
 
-                const PRREObject3D* const plobj = legacyPlayer.getAttachedObject();
+                const PureObject3D* const plobj = legacyPlayer.getAttachedObject();
 
                 // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
                 // decision than collision check ...
@@ -2111,7 +2111,7 @@ void PRooFPSddPGE::onGameRunning()
     }
     m_timeFullRoundtripStart = timeOnGameRunningStart;
 
-    PRREWindow& window = getPRRE().getWindow();
+    PureWindow& window = getPure().getWindow();
 
     m_fps_ms = GetTickCount();
     m_nFramesElapsedSinceLastDurationsReset++;
@@ -2146,7 +2146,7 @@ void PRooFPSddPGE::onGameRunning()
                 10, 150);
         }
 
-        Text(std::to_string(m_fps), getPRRE().getWindow().getClientWidth() - 50, getPRRE().getWindow().getClientHeight() - 2 * getPRRE().getUImanager().getDefaultFontSize());
+        Text(std::to_string(m_fps), getPure().getWindow().getClientWidth() - 50, getPure().getWindow().getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
 
         timeStart = std::chrono::steady_clock::now();
         if (window.isActive())
@@ -2235,7 +2235,7 @@ void PRooFPSddPGE::onGameRunning()
     } // endif validConnection
 
     m_fps_ms = GetTickCount() - m_fps_ms;
-    // this is horrible that FPS measuring is still not available from outside of PRRE .........
+    // this is horrible that FPS measuring is still not available from outside of Pure .........
     m_fps_counter++;
     if ( GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure )
     {
@@ -2319,8 +2319,8 @@ void PRooFPSddPGE::onGameDestroying()
     m_sServerMapFilenameToLoad.clear();
     delete m_pObjXHair;
     delete m_gameMode;
-    getPRRE().getObject3DManager().DeleteAll();
-    getPRRE().getWindow().SetCursorVisible(true);
+    getPure().getObject3DManager().DeleteAll();
+    getPure().getWindow().SetCursorVisible(true);
 
     getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
@@ -2396,8 +2396,8 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         {
             AddText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
 
-            Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
-            getPRRE().getRenderer()->RenderScene();
+            Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+            getPure().getRenderer()->RenderScene();
 
             const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
             assert(mapLoaded);
@@ -2416,7 +2416,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     m_mapPlayers[msg.m_szUserName].m_connHandleServerSide = connHandleServerSide;
     m_mapPlayers[msg.m_szUserName].m_sIpAddress = msg.m_szIpAddress;
 
-    PRREObject3D* const plane = getPRRE().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);
+    PureObject3D* const plane = getPure().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);
     if (!plane)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
@@ -2425,7 +2425,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     }
 
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
-    PRRETexture* pTexPlayer = getPRRE().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
+    PureTexture* pTexPlayer = getPure().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
     plane->getMaterial().setTexture(pTexPlayer);
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
@@ -2511,8 +2511,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
-            Text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPRRE().getWindow().getClientHeight() / 2);
-            getPRRE().getRenderer()->RenderScene();
+            Text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+            getPure().getRenderer()->RenderScene();
 
             Bullet::ResetGlobalBulletId();
 
@@ -2531,7 +2531,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             pge_network::PgePacket newPktSetup;
             proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
-            const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
+            const PureVector& vecStartPos = m_maps.getRandomSpawnpoint();
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
@@ -2570,7 +2570,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         pge_network::PgePacket newPktSetup;
         proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
-        const PRREVector& vecStartPos = m_maps.getRandomSpawnpoint();
+        const PureVector& vecStartPos = m_maps.getRandomSpawnpoint();
         proofps_dd::MsgUserUpdate::initPkt(
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
@@ -3026,7 +3026,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
         // send every property in all BulletUpdate, this should be improved in future ...
         getWeaponManager().getBullets().push_back(
             Bullet(
-                getPRRE(),
+                getPure(),
                 msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,

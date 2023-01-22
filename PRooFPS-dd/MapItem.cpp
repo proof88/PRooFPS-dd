@@ -63,7 +63,7 @@ uint32_t MapItem::getItemRespawnTimeSecs(const MapItem& mapItem)
     }
 }
 
-MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PRREVector& pos) :
+MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
     m_obj(nullptr),
@@ -75,7 +75,7 @@ MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType,
     // TODO: throw when createPlane() fails
     m_obj = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
     m_obj->getPosVec() = pos;
-    PRRETexture* tex = nullptr;
+    PureTexture* tex = nullptr;
     switch (itemType)
     {
     case MapItemType::ITEM_WPN_PISTOL:
@@ -117,17 +117,17 @@ const MapItemType& MapItem::getType() const
     return m_itemType;
 }
 
-const PRREVector& MapItem::getPos() const
+const PureVector& MapItem::getPos() const
 {
     return m_obj->getPosVec();
 }
 
-const PRREObject3D& MapItem::getObject3D() const
+const PureObject3D& MapItem::getObject3D() const
 {
     return *m_obj;
 }
 
-//PRREObject3D& MapItem::getObject3D()
+//PureObject3D& MapItem::getObject3D()
 //{
 //    return *m_obj;
 //}

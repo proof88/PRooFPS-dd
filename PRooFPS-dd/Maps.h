@@ -16,7 +16,7 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 #include "../../../PGE/PGE/Config/PGEcfgVariable.h"
-#include "../../../PGE/PGE/PRRE/include/external/PR00FsReducedRenderingEngine.h"
+#include "../../../PGE/PGE/Pure/include/external/PR00FsReducedRenderingEngine.h"
 
 #include "MapItem.h"
 
@@ -42,14 +42,14 @@ public:
     unsigned int height() const;
     void UpdateVisibilitiesForRenderer();
     const std::string& getFilename() const;
-    const std::set<PRREVector>& getSpawnpoints() const;
-    const PRREVector& getRandomSpawnpoint() const;
-    const PRREVector& getBlockPosMin() const;
-    const PRREVector& getBlockPosMax() const;
-    const PRREVector& getBlocksVertexPosMin() const;
-    const PRREVector& getBlocksVertexPosMax() const;
-    PRREObject3D** getBlocks(); // TODO: not nice access
-    PRREObject3D** getForegroundBlocks(); // TODO: not nice access
+    const std::set<PureVector>& getSpawnpoints() const;
+    const PureVector& getRandomSpawnpoint() const;
+    const PureVector& getBlockPosMin() const;
+    const PureVector& getBlockPosMax() const;
+    const PureVector& getBlocksVertexPosMin() const;
+    const PureVector& getBlocksVertexPosMax() const;
+    PureObject3D** getBlocks(); // TODO: not nice access
+    PureObject3D** getForegroundBlocks(); // TODO: not nice access
     int getBlockCount() const;
     int getForegroundBlockCount() const;
     const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
@@ -68,10 +68,10 @@ protected:
     }
 
 private:
-    PRREObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
+    PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
     int m_blocks_h;
 
-    PRREObject3D** m_foregroundBlocks;
+    PureObject3D** m_foregroundBlocks;
     int m_foregroundBlocks_h;
 
     std::map<std::string, PGEcfgVariable> m_vars;
@@ -79,10 +79,10 @@ private:
     std::string m_sRawName;
     std::string m_sFileName;
     std::map<char, std::string> m_Block2Texture;
-    PRRETexture* m_texRed;
-    std::set<PRREVector> m_spawnpoints;
-    PRREVector m_blocksVertexPosMin, m_blocksVertexPosMax;
-    PRREVector m_blockPosMin, m_blockPosMax;
+    PureTexture* m_texRed;
+    std::set<PureVector> m_spawnpoints;
+    PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;
+    PureVector m_blockPosMin, m_blockPosMax;
     unsigned int m_width, m_height;
     std::map<MapItem::MapItemId, MapItem*> m_items;
 
@@ -92,6 +92,6 @@ private:
     static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
     void lineHandleAssignment(std::string& sVar, std::string& sValue);
-    bool lineHandleLayout(const std::string& sLine, TPRREfloat& y);
+    bool lineHandleLayout(const std::string& sLine, TPurefloat& y);
 
 }; // class Maps

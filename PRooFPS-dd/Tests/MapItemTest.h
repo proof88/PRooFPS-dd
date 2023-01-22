@@ -26,11 +26,11 @@ protected:
 
     virtual void Initialize()
     {
-        //CConsole::getConsoleInstance().SetLoggingState(PRRETexture::getLoggerModuleName(), true);
-        //CConsole::getConsoleInstance().SetLoggingState(PRRETextureManager::getLoggerModuleName(), true);
+        //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
+        //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
 
         engine = &PR00FsReducedRenderingEngine::createAndGet();
-        engine->initialize(PRRE_RENDERER_HW_FP, 800, 600, PRRE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
+        engine->initialize(Pure_RENDERER_HW_FP, 800, 600, Pure_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
         AddSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
@@ -57,8 +57,8 @@ protected:
             engine = NULL;
         }
 
-        CConsole::getConsoleInstance().SetLoggingState(PRRETexture::getLoggerModuleName(), false);
-        CConsole::getConsoleInstance().SetLoggingState(PRRETextureManager::getLoggerModuleName(), false);
+        CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), false);
+        CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), false);
     }
 
 private:
@@ -79,12 +79,12 @@ private:
     {
         const MapItem::MapItemId iLastMapItemId = MapItem::getGlobalMapItemId();
 
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
 
         return assertEquals(mi.getId(), iLastMapItemId, "item id") &
             assertEquals(MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
             assertEquals(static_cast<int>(MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
-            assertEquals(PRREVector(1, 2, 3), mi.getPos(), "pos") &
+            assertEquals(PureVector(1, 2, 3), mi.getPos(), "pos") &
             assertEquals(mi.getPos(), mi.getObject3D().getPosVec(), "obj pos") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "visible") &
             assertFalse(mi.isTaken(), "taken") &
@@ -93,7 +93,7 @@ private:
 
     bool test_reset_global_item_id()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         MapItem::ResetGlobalMapItemId();
 
         return assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
@@ -101,9 +101,9 @@ private:
 
     bool test_get_item_respawn_time_secs()
     {
-        MapItem miHealth(*engine, MapItemType::ITEM_HEALTH, PRREVector(1, 2, 3));
-        MapItem miWpnPistol(*engine, MapItemType::ITEM_WPN_PISTOL, PRREVector(1, 2, 3));
-        MapItem miWpnMchGun(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem miHealth(*engine, MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
+        MapItem miWpnPistol(*engine, MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
+        MapItem miWpnMchGun(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         
         return assertEquals(MapItem::ITEM_HEALTH_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miHealth), "health") &
             assertEquals(MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
@@ -112,7 +112,7 @@ private:
 
     bool test_take()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.Take();
 
         return assertTrue(mi.isTaken(), "taken") &
@@ -122,7 +122,7 @@ private:
 
     bool test_untake()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.UnTake();
 
         bool b = assertFalse(mi.isTaken(), "not taken") &
@@ -138,7 +138,7 @@ private:
 
     bool test_update()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PRREVector(1, 2, 3));
+        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const float fOriginalObjPosY = mi.getPos().getY();
         mi.Update(4.f);
 
