@@ -24,7 +24,7 @@ static std::set<char> backgroundBlocks;
 // ############################### PUBLIC ################################
 
 
-Maps::Maps(PR00FsReducedRenderingEngine& gfx) :
+Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
     m_gfx(gfx)
 {
     m_blocks_h  = 0;

@@ -16,7 +16,7 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 #include "../../../PGE/PGE/Config/PGEcfgVariable.h"
-#include "../../../PGE/PGE/Pure/include/external/PR00FsReducedRenderingEngine.h"
+#include "../../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
 #include "MapItem.h"
 
@@ -30,7 +30,7 @@ public:
 
     CConsole& getConsole() const;
    
-    Maps(PR00FsReducedRenderingEngine& gfx);
+    Maps(PR00FsUltimateRenderingEngine& gfx);
     virtual ~Maps();
 
     bool initialize();
@@ -75,7 +75,7 @@ private:
     int m_foregroundBlocks_h;
 
     std::map<std::string, PGEcfgVariable> m_vars;
-    PR00FsReducedRenderingEngine& m_gfx;
+    PR00FsUltimateRenderingEngine& m_gfx;
     std::string m_sRawName;
     std::string m_sFileName;
     std::map<char, std::string> m_Block2Texture;

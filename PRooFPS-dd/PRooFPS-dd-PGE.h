@@ -32,7 +32,7 @@ private:
     std::vector<Weapon*> m_weapons;
     Weapon* m_pWpn;
     std::chrono::time_point<std::chrono::steady_clock> m_timeLastWeaponSwitch;
-    PR00FsReducedRenderingEngine* pGFX;
+    PR00FsUltimateRenderingEngine* pGFX;
     float m_fGravity;
     bool m_bJumping;
     bool b_mCanFall;
@@ -47,7 +47,7 @@ private:
 public:
     CPlayer();
     void ShutDown();
-    void SetRendererObject(PR00FsReducedRenderingEngine* gfx);
+    void SetRendererObject(PR00FsUltimateRenderingEngine* gfx);
     int getHealth() const;
     PureVector& getPos1();
     PureVector& getOPos1();

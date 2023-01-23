@@ -63,7 +63,7 @@ uint32_t MapItem::getItemRespawnTimeSecs(const MapItem& mapItem)
     }
 }
 
-MapItem::MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos) :
+MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
     m_obj(nullptr),

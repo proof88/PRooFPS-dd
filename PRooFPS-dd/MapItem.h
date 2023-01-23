@@ -13,7 +13,7 @@
 #include <chrono>
 
 #include "../../../PGE/PGE/Pure/include/external/Math/PureVector.h"
-#include "../../../PGE/PGE/Pure/include/external/PR00FsReducedRenderingEngine.h"
+#include "../../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
 enum class MapItemType
 {
@@ -44,7 +44,7 @@ public:
 
     // ---------------------------------------------------------------------------
 
-    MapItem(PR00FsReducedRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos);
+    MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos);
     ~MapItem();
 
     const MapItemId&    getId() const;
@@ -68,7 +68,7 @@ private:
     MapItemId m_id;                      /**< Unique id for identifying. Used by server and client instances.
                                               Must be equal for same item across server and clients, used in packets too. */
 
-    PR00FsReducedRenderingEngine&                      m_gfx;
+    PR00FsUltimateRenderingEngine&                      m_gfx;
     PureObject3D*                                      m_obj;
     float                                              m_fObjPosOriginalY;     /**< The vertical floating movement is relative to this coord. */
     MapItemType                                        m_itemType;

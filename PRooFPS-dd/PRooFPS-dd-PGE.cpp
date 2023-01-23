@@ -68,7 +68,7 @@ void CPlayer::ShutDown()
 }
 
 /* beállítja a megjelenítõ objektumot */
-void CPlayer::SetRendererObject(PR00FsReducedRenderingEngine* gfx)
+void CPlayer::SetRendererObject(PR00FsUltimateRenderingEngine* gfx)
 {
   pGFX = gfx;
 }

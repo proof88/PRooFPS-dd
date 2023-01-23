@@ -32,7 +32,7 @@ protected:
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
         CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), true);
         
-        engine = &PR00FsReducedRenderingEngine::createAndGet();
+        engine = &PR00FsUltimateRenderingEngine::createAndGet();
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
@@ -72,7 +72,7 @@ private:
     static const unsigned int MAP_TEST_W = 44u;
     static const unsigned int MAP_TEST_H = 10u;
 
-    PR00FsReducedRenderingEngine* engine;
+    PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
 
