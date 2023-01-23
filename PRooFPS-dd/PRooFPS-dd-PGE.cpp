@@ -89,12 +89,12 @@ PureVector& CPlayer::getOPos1()
   return m_vecOldPos;
 }
 
-TPurefloat& CPlayer::getAngleY()
+TPureFloat& CPlayer::getAngleY()
 {
     return m_fPlayerAngleY;
 }
 
-TPurefloat& CPlayer::getOldAngleY()
+TPureFloat& CPlayer::getOldAngleY()
 {
     return m_fOldPlayerAngleY;
 }
@@ -150,7 +150,7 @@ void CPlayer::AttachObject(PureObject3D* value, bool blend) {
   {  
       m_pObj->SetDoubleSided(true);
       if ( blend )
-          m_pObj->getMaterial(false).setBlendFuncs(Pure_SRC_ALPHA, Pure_ONE_MINUS_SRC_ALPHA);
+          m_pObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
       m_pObj->SetLit(false);
   }
 }
@@ -563,11 +563,11 @@ void PRooFPSddPGE::onGameInitialized()
     // for ~1000 cubes, since Pure still doesn't implement hierarchical occlusion culling ...
     // And a normal map like Warhouse already contains ~1000 cubes.
     getPure().getRenderer()->SetRenderHints(
-        BITF_PREP(Pure_RH_RP_LEGACY_PR00FPS, Pure_RH_RENDER_PATH_BITS, 3) |
-        BITF_PREP(Pure_RH_OQ_METHOD_ASYNC, Pure_RH_OQ_METHOD_BITS, 2) |
-        Pure_RH_OQ_DRAW_BOUNDING_BOXES_OFF |
-        Pure_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
-        Pure_RH_ORDERING_BY_DISTANCE_OFF);
+        BITF_PREP(PURE_RH_RP_LEGACY_PR00FPS, PURE_RH_RENDER_PATH_BITS, 3) |
+        BITF_PREP(PURE_RH_OQ_METHOD_ASYNC, PURE_RH_OQ_METHOD_BITS, 2) |
+        PURE_RH_OQ_DRAW_BOUNDING_BOXES_OFF |
+        PURE_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
+        PURE_RH_ORDERING_BY_DISTANCE_OFF);
     
     getPure().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
@@ -593,9 +593,9 @@ void PRooFPSddPGE::onGameInitialized()
     m_pObjXHair->SetDoubleSided(true);
     m_pObjXHair->SetTestingAgainstZBuffer(false);
     m_pObjXHair->SetLit(false);
-    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (Pure_SRC_ALPHA, Pure_ONE)
-    // otherwise (bitmaps saved by Flash) just use (Pure_SRC_ALPHA, Pure_ONE_MINUS_SRC_ALPHA) to utilize real alpha
-    m_pObjXHair->getMaterial(false).setBlendFuncs(Pure_SRC_ALPHA, Pure_ONE);
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
+    // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
+    m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
     PureTexture* xhairtex = getPure().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
     m_pObjXHair->getMaterial().setTexture( xhairtex );
 

@@ -25,7 +25,7 @@ class CPlayer
 private:       
     int m_nHealth, m_nOldHealth;
     PureVector m_vecPos, m_vecOldPos;
-    TPurefloat m_fPlayerAngleY, m_fOldPlayerAngleY;
+    TPureFloat m_fPlayerAngleY, m_fOldPlayerAngleY;
     PureVector m_vWpnAngle, m_vOldWpnAngle;
     PureVector m_vecForce;
     PureObject3D* m_pObj;
@@ -51,8 +51,8 @@ public:
     int getHealth() const;
     PureVector& getPos1();
     PureVector& getOPos1();
-    TPurefloat& getAngleY();
-    TPurefloat& getOldAngleY();
+    TPureFloat& getAngleY();
+    TPureFloat& getOldAngleY();
     PureObject3D* getAttachedObject() const;
     float getGravity() const;
     bool isJumping() const;

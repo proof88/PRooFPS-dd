@@ -122,17 +122,17 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    const TPure_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
-    const TPure_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
+    const TPURE_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
+    const TPURE_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
-        TPure_ISO_TEX_FILTERING::Pure_ISO_LINEAR_MIPMAP_LINEAR,
-        TPure_ISO_TEX_FILTERING::Pure_ISO_LINEAR);
+        TPURE_ISO_TEX_FILTERING::PURE_ISO_LINEAR_MIPMAP_LINEAR,
+        TPURE_ISO_TEX_FILTERING::PURE_ISO_LINEAR);
 
     bool bParseError = false;
     bool bMapLayoutReached = false;
     const std::streamsize nBuffSize = 1024;
     char cLine[nBuffSize];
-    TPurefloat y = 4.0f;
+    TPureFloat y = 4.0f;
     while ( !bParseError && !f.eof() )
     {
         f.getline(cLine, nBuffSize);
@@ -494,7 +494,7 @@ void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
     m_vars[sVar] = sValue.c_str();
 }
 
-bool Maps::lineHandleLayout(const std::string& sLine, TPurefloat& y)
+bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
 {
     m_height++;
     if ( m_width < sLine.length() )
@@ -502,8 +502,8 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPurefloat& y)
         m_width = sLine.length();
     }
 
-    TPurefloat x = 0.0f;
-    TPurefloat maxx = x;
+    TPureFloat x = 0.0f;
+    TPureFloat maxx = x;
     std::string::size_type iLinePos = 0;
     
     // Item character specifies the item type, but not the background behind the item.

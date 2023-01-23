@@ -145,7 +145,7 @@ namespace proofps_dd
 
         static void setAngleY(
             pge_network::PgePacket& pkt,
-            TPurefloat fPlayerAngleY)
+            TPureFloat fPlayerAngleY)
         {
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
             msgUserCmdMove.m_bShouldSend = true;
@@ -154,8 +154,8 @@ namespace proofps_dd
 
         static void setWpnAngles(
             pge_network::PgePacket& pkt,
-            TPurefloat fWpnAngleY,
-            TPurefloat fWpnAngleZ)
+            TPureFloat fWpnAngleY,
+            TPureFloat fWpnAngleZ)
         {
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData);
             msgUserCmdMove.m_bShouldSend = true;
@@ -177,9 +177,9 @@ namespace proofps_dd
         bool m_bRequestReload;
         unsigned char m_cWeaponSwitch;
         bool m_bShootAction;
-        TPurefloat m_fPlayerAngleY;
-        TPurefloat m_fWpnAngleY;
-        TPurefloat m_fWpnAngleZ;
+        TPureFloat m_fPlayerAngleY;
+        TPureFloat m_fWpnAngleY;
+        TPureFloat m_fWpnAngleZ;
     };
 
     // server -> self (inject) and clients
@@ -191,12 +191,12 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
-            const TPurefloat x,
-            const TPurefloat y,
-            const TPurefloat z,
-            TPurefloat fPlayerAngleY,
-            TPurefloat fWpnAngleY,
-            TPurefloat fWpnAngleZ,
+            const TPureFloat x,
+            const TPureFloat y,
+            const TPureFloat z,
+            TPureFloat fPlayerAngleY,
+            TPureFloat fWpnAngleY,
+            TPureFloat fWpnAngleZ,
             int nHealth,
             bool bRespawn,
             int nFrags,
@@ -224,9 +224,9 @@ namespace proofps_dd
         }
 
         TXYZ m_pos;
-        TPurefloat m_fPlayerAngleY;
-        TPurefloat m_fWpnAngleY;
-        TPurefloat m_fWpnAngleZ;
+        TPureFloat m_fPlayerAngleY;
+        TPureFloat m_fWpnAngleY;
+        TPureFloat m_fWpnAngleZ;
         int m_nHealth;
         bool m_bRespawn;
         int m_nFrags;
@@ -243,15 +243,15 @@ namespace proofps_dd
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const Bullet::BulletId bulletId,
-            const TPurefloat px,
-            const TPurefloat py,
-            const TPurefloat pz,
-            const TPurefloat ax,
-            const TPurefloat ay,
-            const TPurefloat az,
-            const TPurefloat sx,
-            const TPurefloat sy,
-            const TPurefloat sz)
+            const TPureFloat px,
+            const TPureFloat py,
+            const TPureFloat pz,
+            const TPureFloat ax,
+            const TPureFloat ay,
+            const TPureFloat az,
+            const TPureFloat sx,
+            const TPureFloat sy,
+            const TPureFloat sz)
         {
             assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
             //memset(&pkt, 0, sizeof(pkt));  // TODO: what is the use of memset anyway if we initialize all the members properly?!
