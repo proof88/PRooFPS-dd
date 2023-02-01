@@ -231,9 +231,6 @@
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\PureUiManager.h">
       <Filter>Header Files\PGE\PURE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\PR00FsReducedRenderingEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\PR00FsUltimateRenderingEngine.h">
       <Filter>Header Files\PGE\PURE</Filter>
     </ClInclude>
