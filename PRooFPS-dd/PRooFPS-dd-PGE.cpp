@@ -24,6 +24,9 @@
 static const std::string GAME_NAME    = "PRooFPS-dd";
 static const std::string GAME_VERSION = "0.1.0.0 Private Beta";
 
+static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
+static constexpr char* CVAR_SV_MAP = "sv_map";
+
 
 // ############################### PUBLIC ################################
 
@@ -627,91 +630,29 @@ void PRooFPSddPGE::onGameInitialized()
             assert(false);
         }
 
-        std::ifstream f;
-        f.open("server.txt", std::ifstream::in);
-        if (!f.good())
+        if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
         {
-            getConsole().OLn("No server.txt found!");
             m_sServerMapFilenameToLoad = "map_warena.txt";
+            getConsole().OLn("Map default: %s", m_sServerMapFilenameToLoad.c_str());
         }
         else
         {
-            getConsole().OLn("Found server.txt");
-            const std::streamsize nBuffSize = 1024;
-            char cLine[nBuffSize];
-            int i = 0;
-            while (!f.eof())
-            {
-                f.getline(cLine, nBuffSize);
-                // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
-                PFL::strClrLeads(cLine);
-                const std::string sTrimmedLine(cLine);
-                switch (i)
-                {
-                case 0:
-                    m_sServerMapFilenameToLoad = sTrimmedLine;
-                    getConsole().OLn("Server map override: %s", m_sServerMapFilenameToLoad.c_str());
-                    break;
-                case 1:
-                    if (sTrimmedLine == "vsync_off")
-                    {
-                        getConsole().OLn("VSync override: off");
-                        getPure().getScreen().SetVSyncEnabled(false);
-                    }
-                    break;
-                default:
-                    getConsole().OLn("Logging override: %s", sTrimmedLine.c_str());
-                    getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
-                } // switch
-                i++;
-            };
-            f.close();
+            m_sServerMapFilenameToLoad = getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString();
+            getConsole().OLn("Map from config: %s", m_sServerMapFilenameToLoad.c_str());
         }
+        // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
     }
     else
     {
         getNetwork().getClient().getBlackListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
 
         std::string sIp = "127.0.0.1";
-        std::ifstream f;
-        f.open("gyorsan.txt", std::ifstream::in);
-        if (!f.good())
+        if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
         {
-            getConsole().OLn("No gyorsan.txt found!");
+            sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
+            getConsole().OLn("IP from config: %s", sIp.c_str());
         }
-        else
-        {
-            getConsole().OLn("Found gyorsan.txt");
-            const std::streamsize nBuffSize = 1024;
-            char cLine[nBuffSize];
-            int i = 0;
-            while (!f.eof())
-            {
-                f.getline(cLine, nBuffSize);
-                // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
-                PFL::strClrLeads(cLine);
-                const std::string sTrimmedLine(cLine);
-                switch (i)
-                {
-                case 0:
-                    sIp = sTrimmedLine;
-                    getConsole().OLn("IP override: %s", sIp.c_str());
-                    break;
-                case 1:
-                    if (sTrimmedLine == "vsync_off")
-                    {
-                        getConsole().OLn("VSync override: off");
-                        getPure().getScreen().SetVSyncEnabled(false);
-                    }
-                    break;
-                default:
-                    getConsole().OLn("Logging override: %s", sTrimmedLine.c_str());
-                    getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
-                } // switch
-                i++;
-            };
-            f.close();
-        }
+        // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
 
         Text("Connecting to " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
