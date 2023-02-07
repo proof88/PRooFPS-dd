@@ -117,47 +117,49 @@ private:
         // is manually put there: either the release or debug version can be put there.
         if (bServer)
         {
-            procInfoServer = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "");
+            procInfoServer = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=true");
         }
         else
         {
-            procInfoClient = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "");
+            procInfoClient = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=false");
         }
 
-        // server or client dialog
-        HWND hDialogWndServerOrClient = 0;
-        while (hDialogWndServerOrClient == 0)
-        {
-            hDialogWndServerOrClient = FindWindow(NULL, ":)");
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        SetActiveWindow(hDialogWndServerOrClient);
-
-        // select server or client button
-        if (!bServer)
-        {
-            keybd_event(VK_RIGHT, 0, 0, 0);
-            keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
-        }
-        keybd_event(VK_RETURN, 0, 0, 0);
-        keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
-
-        // fullscreen dialog
-        HWND hDialogWndFullscreen = 0;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            hDialogWndFullscreen = FindWindow(NULL, ":)");
-        } while (hDialogWndFullscreen == 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        SetActiveWindow(hDialogWndFullscreen);
-
-        // select no fullscreen
-        keybd_event(VK_RIGHT, 0, 0, 0);
-        keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
-        keybd_event(VK_RETURN, 0, 0, 0);
-        keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+        // Following commented code is only for the old case when app showed dialoge box about server and fullscreen.
+        //
+        //// server or client dialog
+        //HWND hDialogWndServerOrClient = 0;
+        //while (hDialogWndServerOrClient == 0)
+        //{
+        //    hDialogWndServerOrClient = FindWindow(NULL, ":)");
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        //}
+        //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        //SetActiveWindow(hDialogWndServerOrClient);
+        //
+        //// select server or client button
+        //if (!bServer)
+        //{
+        //    keybd_event(VK_RIGHT, 0, 0, 0);
+        //    keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
+        //}
+        //keybd_event(VK_RETURN, 0, 0, 0);
+        //keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+        //
+        //// fullscreen dialog
+        //HWND hDialogWndFullscreen = 0;
+        //do
+        //{
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        //    hDialogWndFullscreen = FindWindow(NULL, ":)");
+        //} while (hDialogWndFullscreen == 0);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        //SetActiveWindow(hDialogWndFullscreen);
+        //
+        //// select no fullscreen
+        //keybd_event(VK_RIGHT, 0, 0, 0);
+        //keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
+        //keybd_event(VK_RETURN, 0, 0, 0);
+        //keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
 
         // main game window
         HWND& hMainGameWindow = bServer ? hServerMainGameWindow : hClientMainGameWindow;

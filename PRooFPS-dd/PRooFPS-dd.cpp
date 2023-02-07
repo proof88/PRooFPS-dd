@@ -84,7 +84,7 @@ int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, con
     PRooFPSddPGE* const gameEngine = PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
     
     // Initializing the game engine.
-    int nResult = gameEngine->initializeGame();
+    int nResult = gameEngine->initializeGame(lpCmdLine);
     
     switch ( nResult )
     {
