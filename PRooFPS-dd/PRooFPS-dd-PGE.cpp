@@ -2330,12 +2330,16 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
         if (getNetwork().isServer())
         {
-            AddText("Server, User name: " + m_sUserName, 10, 30);
+            AddText("Server, User name: " + m_sUserName +
+                (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
+                10, 30);
             // server is not loading map here, it already loaded earlier for itself
         }
         else
         {
-            AddText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress, 10, 30);
+            AddText("Client, User name: " + m_sUserName + "; IP: " + msg.m_szIpAddress +
+                (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
+                10, 30);
 
             Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
@@ -2472,7 +2476,10 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             pge_network::PgePacket newPktSetup;
             proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
-            const PureVector& vecStartPos = m_maps.getRandomSpawnpoint();
+            const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
+                m_maps.getLeftMostSpawnpoint() :
+                m_maps.getRandomSpawnpoint();
+
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
@@ -2511,7 +2518,10 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         pge_network::PgePacket newPktSetup;
         proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
-        const PureVector& vecStartPos = m_maps.getRandomSpawnpoint();
+        const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
+            m_maps.getRightMostSpawnpoint() :
+            m_maps.getRandomSpawnpoint();
+
         proofps_dd::MsgUserUpdate::initPkt(
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 

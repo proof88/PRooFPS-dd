@@ -331,6 +331,26 @@ const PureVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
+const PureVector& Maps::getLeftMostSpawnpoint() const
+{
+    if (m_spawnpoints.empty())
+    {
+        throw std::runtime_error("No spawnpoints!");
+    }
+
+    return m_spawnpointLeftMost;
+}
+
+const PureVector& Maps::getRightMostSpawnpoint() const
+{
+    if (m_spawnpoints.empty())
+    {
+        throw std::runtime_error("No spawnpoints!");
+    }
+
+    return m_spawnpointRightMost;
+}
+
 const PureVector& Maps::getBlockPosMin() const
 {
     return m_blockPosMin;
@@ -563,11 +583,30 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         case 'S':
+        {
             // spawnpoint is background block by default
-            m_spawnpoints.insert(PureVector(x, y, GAME_PLAYERS_POS_Z));
+            const PureVector vecSpawnPointPos(x, y, GAME_PLAYERS_POS_Z);
+            if (m_spawnpoints.empty())
+            {
+                m_spawnpointLeftMost = vecSpawnPointPos;
+                m_spawnpointRightMost = vecSpawnPointPos;
+            }
+            else
+            {
+                if (x < m_spawnpointLeftMost.getX())
+                {
+                    m_spawnpointLeftMost = vecSpawnPointPos;
+                }
+                if (x > m_spawnpointRightMost.getX())
+                {
+                    m_spawnpointRightMost = vecSpawnPointPos;
+                }
+            }
+            m_spawnpoints.insert(vecSpawnPointPos);
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
+        }
         default: /* NOP */;
         }
 

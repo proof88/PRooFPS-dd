@@ -45,6 +45,8 @@ protected:
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
+        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
         AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
     }
 
@@ -425,6 +427,64 @@ private:
                     i++;
                 }
                 b = assertTrue(originalSpawnpoints.empty(), "original empty");
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    bool test_map_get_leftmost_spawnpoint()
+    {
+        Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        if (b)
+        {
+            try {
+                const PureVector& spChecked = maps.getLeftMostSpawnpoint();
+
+                PureVector spExpected = maps.getBlockPosMax();
+                for (const auto& sp : maps.getSpawnpoints())
+                {
+                    if (sp.getX() < spExpected.getX())
+                    {
+                        spExpected = sp;
+                    }
+                }
+                b = assertEquals(spExpected, spChecked, "vec");
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    bool test_map_get_rightmost_spawnpoint()
+    {
+        Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        if (b)
+        {
+            try {
+                const PureVector& spChecked = maps.getRightMostSpawnpoint();
+
+                PureVector spExpected = maps.getBlockPosMin();
+                for (const auto& sp : maps.getSpawnpoints())
+                {
+                    if (sp.getX() > spExpected.getX())
+                    {
+                        spExpected = sp;
+                    }
+                }
+                b = assertEquals(spExpected, spChecked, "vec");
             }
             catch (const std::exception& e) { b = assertTrue(false, e.what()); }
         }

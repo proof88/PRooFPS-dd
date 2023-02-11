@@ -117,14 +117,16 @@ private:
         // is manually put there: either the release or debug version can be put there.
         if (bServer)
         {
-            procInfoServer = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=true");
+            procInfoServer = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true");
         }
         else
         {
-            procInfoClient = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=false");
+            procInfoClient = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=false --testing=true");
         }
 
-        // Following commented code is only for the old case when app showed dialoge box about server and fullscreen.
+        // Following commented code is only for the old case when app showed dialog box about server and fullscreen.
+        // But this is not needed anymore, since we pass the required config in command line now.
+        // However, in the future we may use this code for other code, testing if dialog boxes correctly appear without passing config!
         //
         //// server or client dialog
         //HWND hDialogWndServerOrClient = 0;

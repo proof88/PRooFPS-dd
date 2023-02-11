@@ -44,6 +44,8 @@ public:
     const std::string& getFilename() const;
     const std::set<PureVector>& getSpawnpoints() const;
     const PureVector& getRandomSpawnpoint() const;
+    const PureVector& getLeftMostSpawnpoint() const;
+    const PureVector& getRightMostSpawnpoint() const;
     const PureVector& getBlockPosMin() const;
     const PureVector& getBlockPosMax() const;
     const PureVector& getBlocksVertexPosMin() const;
@@ -83,6 +85,7 @@ private:
     std::set<PureVector> m_spawnpoints;
     PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;
     PureVector m_blockPosMin, m_blockPosMax;
+    PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
     unsigned int m_width, m_height;
     std::map<MapItem::MapItemId, MapItem*> m_items;
 
