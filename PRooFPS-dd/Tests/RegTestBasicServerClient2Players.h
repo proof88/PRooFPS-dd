@@ -15,6 +15,7 @@
 #include <Windows.h>
 
 #include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "Input.h"
 #include "Process.h"
 
 class RegTestBasicServerClient2Players :
@@ -29,6 +30,9 @@ public:
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
         memset(&procInfoClient, 0, sizeof(procInfoClient));
+        memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
+        memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
+        
     }
 
     ~RegTestBasicServerClient2Players()
@@ -65,18 +69,13 @@ protected:
         //process_stackoverflow_42531::Process::stopProcess(procInfoClient);
         BringWindowToFront(hClientMainGameWindow);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        keybd_event(VK_ESCAPE, 0, 0, 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
-
+        input::keybdPress(VK_ESCAPE, 100);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         //process_stackoverflow_42531::Process::stopProcess(procInfoServer);
         BringWindowToFront(hServerMainGameWindow);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        keybd_event(VK_ESCAPE, 0, 0, 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+        input::keybdPress(VK_ESCAPE, 100);
 
         do
         {
@@ -91,6 +90,12 @@ protected:
 
     bool testMethod() override
     {
+        BringWindowToFront(hServerMainGameWindow);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        
+        // Game instances reposition the mouse cursor into the center of the window in every frame, keep that in mind when specifying relative coords!
+        // By default, in testing mode, server points xhair to the right, client points xhair to the left.
+
         return true;
     }
 
@@ -117,11 +122,15 @@ private:
         // is manually put there: either the release or debug version can be put there.
         if (bServer)
         {
-            procInfoServer = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true");
+            procInfoServer = process_stackoverflow_42531::Process::launchProcess(
+                "PRooFPS-dd.exe",
+                "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true");
         }
         else
         {
-            procInfoClient = process_stackoverflow_42531::Process::launchProcess("PRooFPS-dd.exe", "--gfx_windowed=true --net_server=false --testing=true");
+            procInfoClient = process_stackoverflow_42531::Process::launchProcess(
+                "PRooFPS-dd.exe",
+                "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true");
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.
@@ -173,7 +182,7 @@ private:
             hMainGameWindow = FindWindow(NULL, "PRooFPS-dd 0.1.0.0 Private Beta");
         } while (hMainGameWindow == 0);
 
-        RECT rectGameWindow;
+        RECT& rectGameWindow = bServer ? rectServerGameWindow : rectClientGameWindow;
         if (TRUE == GetWindowRect(hMainGameWindow, &rectGameWindow))
         {
             SetWindowPos(
@@ -189,6 +198,12 @@ private:
             CConsole::getConsoleInstance().EOLn("GetWindowRect() failed (%d).", GetLastError());
         }
 
+        // fetch again the new rect, we will use this data later
+        if (FALSE == GetWindowRect(hMainGameWindow, &rectGameWindow))
+        {
+            CConsole::getConsoleInstance().EOLn("GetWindowRect() 2nd failed (%d).", GetLastError());
+        }
+
         // now wait until we CANNOT find this window anymore - it is when the title text changes because
         // the game loaded and its main loop is refreshing the title bar with additional FPS data.
         while (FindWindow(NULL, "PRooFPS-dd 0.1.0.0 Private Beta") != 0)
@@ -201,6 +216,8 @@ private:
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
     HWND hClientMainGameWindow;
+    RECT rectServerGameWindow;  // screen coordinates
+    RECT rectClientGameWindow;  // screen coordinates
 
     // ---------------------------------------------------------------------------
 

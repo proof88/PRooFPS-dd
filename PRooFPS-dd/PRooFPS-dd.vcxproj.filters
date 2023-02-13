@@ -52,6 +52,9 @@
     <Filter Include="Header Files\PGE\PURE\Object3D">
       <UniqueIdentifier>{d01050dc-770c-4805-bafa-7267b8a55ed1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Tests">
+      <UniqueIdentifier>{9cee923d-908d-4fb4-803c-55f7c80aa543}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -68,9 +71,6 @@
     </ClInclude>
     <ClInclude Include="PRooFPS-dd-PGE.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\MapsTest.h">
-      <Filter>Source Files\Tests</Filter>
     </ClInclude>
     <ClInclude Include="Maps.h">
       <Filter>Header Files</Filter>
@@ -114,26 +114,14 @@
     <ClInclude Include="GameMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\GameModeTest.h">
-      <Filter>Source Files\Tests</Filter>
-    </ClInclude>
     <ClInclude Include="MapItem.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\MapItemTest.h">
-      <Filter>Source Files\Tests</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h">
       <Filter>Header Files\PGE\Audio\SoLoud</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h">
       <Filter>Header Files\PGE\Audio\SoLoud</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\RegTestBasicServerClient2Players.h">
-      <Filter>Source Files\Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\Process.h">
-      <Filter>Source Files\Tests</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h">
       <Filter>Header Files\PGE\Config</Filter>
@@ -234,6 +222,24 @@
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\PR00FsUltimateRenderingEngine.h">
       <Filter>Header Files\PGE\PURE</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\GameModeTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\Input.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MapItemTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MapsTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\Process.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\RegTestBasicServerClient2Players.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -256,6 +262,9 @@
     </ClCompile>
     <ClCompile Include="MapItem.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\Input.cpp">
+      <Filter>Source Files\Tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

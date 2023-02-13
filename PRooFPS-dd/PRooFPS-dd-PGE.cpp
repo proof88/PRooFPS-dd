@@ -1013,10 +1013,27 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         return false;
     }
     
-    m_pObjXHair->getPosVec().Set(
-        m_pObjXHair->getPosVec().getX() + dx,
-        m_pObjXHair->getPosVec().getY() - dy,
-        0.f);
+    static bool bInitialXHairPosForTestingApplied = false;
+    if (!bInitialXHairPosForTestingApplied && getConfigProfiles().getVars()["testing"].getAsBool())
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
+        bInitialXHairPosForTestingApplied = true;
+        if (getNetwork().isServer())
+        {
+            m_pObjXHair->getPosVec().Set(100.f, 0.f, m_pObjXHair->getPosVec().getZ());
+        }
+        else
+        {
+            m_pObjXHair->getPosVec().Set(-100.f, 0.f, m_pObjXHair->getPosVec().getZ());
+        }
+    }
+    else
+    {
+        m_pObjXHair->getPosVec().Set(
+            m_pObjXHair->getPosVec().getX() + dx,
+            m_pObjXHair->getPosVec().getY() - dy,
+            0.f);
+    }
 
     return true;
 }
