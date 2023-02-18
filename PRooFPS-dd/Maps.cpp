@@ -10,64 +10,25 @@
 
 #include "stdafx.h"  // PCH
 
-#include "Maps.h"
-
 #include <cassert>
 
 #include "Consts.h"
-
-// TODO cpp11 initializer list, and then it can be moved into the function too
-static std::set<char> foregroundBlocks;
-static std::set<char> backgroundBlocks;
+#include "Maps.h"
 
 
 // ############################### PUBLIC ################################
 
 
 Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
-    m_gfx(gfx)
+    m_gfx(gfx),
+    m_blocks(NULL),
+    m_blocks_h(0),
+    m_foregroundBlocks(NULL),
+    m_foregroundBlocks_h(0),
+    m_texRed(PGENULL),
+    m_width(0),
+    m_height(0)
 {
-    m_blocks_h  = 0;
-    m_blocks     = NULL;
-    m_foregroundBlocks_h = 0;
-    m_foregroundBlocks = NULL;
-    m_texRed     = PGENULL;
-    m_width = 0;
-    m_height = 0;
-
-    // TODO cpp11 initializer list
-    foregroundBlocks.insert('B');
-    foregroundBlocks.insert('D');
-    foregroundBlocks.insert('F');
-    foregroundBlocks.insert('G');
-    foregroundBlocks.insert('H');
-    foregroundBlocks.insert('I');
-    foregroundBlocks.insert('J');
-    foregroundBlocks.insert('K');
-    foregroundBlocks.insert('L');
-    foregroundBlocks.insert('Q');
-    foregroundBlocks.insert('T');
-
-    backgroundBlocks.insert('a');
-    backgroundBlocks.insert('c');
-    backgroundBlocks.insert('e');
-    backgroundBlocks.insert('n');
-    backgroundBlocks.insert('n');
-    backgroundBlocks.insert('o');
-    backgroundBlocks.insert('r');
-    backgroundBlocks.insert('v');
-    backgroundBlocks.insert('u');
-    backgroundBlocks.insert('w');
-    backgroundBlocks.insert('x');
-    backgroundBlocks.insert('y');
-    backgroundBlocks.insert('z');
-    
-    // the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout()
-    backgroundBlocks.insert('+');
-    backgroundBlocks.insert('M');
-    backgroundBlocks.insert('P');
-    backgroundBlocks.insert('S');
-
     MapItem::ResetGlobalMapItemId();
 }
 

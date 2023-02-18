@@ -28,7 +28,7 @@
 // regression tests
 #include "RegTestBasicServerClient2Players.h"
 
-#define CON_TITLE "Tests for PRooFPS-dd"
+constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
 
 using namespace std;
 
@@ -43,9 +43,6 @@ using namespace std;
     @param nCmdShow      How to display the window, ignored.
     @return 0 in success case, positive value in case of initialization or shutdown error.
 */
-
-#pragma warning(disable:4100)  /* unreferenced formal parameter */
-
 // use the DebugTest_PRooFPS-dd project configuration where this TESTING macro is defined!
 #ifdef TESTING
 static CConsole& getConsole()
@@ -53,7 +50,7 @@ static CConsole& getConsole()
     return CConsole::getConsoleInstance();
 }
 
-int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPSTR lpCmdLine, const int nCmdShow)
+int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE /*hPrevInstance*/, const _In_ LPSTR /*lpCmdLine*/, const _In_ int /*nCmdShow*/)
 {
     getConsole().Initialize(CON_TITLE, true);
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
@@ -152,4 +149,3 @@ int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, con
 } // WinMain()
 
 #endif
-

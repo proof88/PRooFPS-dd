@@ -75,11 +75,8 @@
     @param nCmdShow      How to display the window, ignored.
     @return 0 in success case, positive value in case of initialization or shutdown error.
 */
-
-#pragma warning(disable:4100)  /* unreferenced formal parameter */
-
 #ifndef TESTING
-int WINAPI WinMain(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPSTR lpCmdLine, const int nCmdShow)
+int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE /*hPrevInstance*/, const _In_ LPSTR lpCmdLine, const _In_ int /*nCmdShow*/)
 {
     PRooFPSddPGE* const gameEngine = PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
     

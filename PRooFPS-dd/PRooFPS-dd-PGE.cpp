@@ -3,7 +3,7 @@
     PRooFPSddPGE.cpp
     Customized PGE for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
-    2022
+    2022 - 2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
@@ -21,8 +21,18 @@
 #include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
-static const std::string GAME_NAME    = "PRooFPS-dd";
-static const std::string GAME_VERSION = "0.1.0.0 Private Beta";
+static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
+static const int   GAME_MAXFPS = 60;
+static const float GAME_CAM_Z = -5.0f;
+static const float GAME_CAM_SPEED = 1500.0f;
+static const float GAME_PLAYER_W = 0.95f;
+static const float GAME_PLAYER_H = 1.88f;
+static const float GAME_PLAYER_SPEED1 = 2.0f;
+static const float GAME_PLAYER_SPEED2 = 4.0f;
+static const float GAME_GRAVITY_MIN = -0.3f;
+static const float GAME_GRAVITY_MAX = 0.4f;
+static const float GAME_FALLING_SPEED = 0.8f;
+static const float GAME_JUMPING_SPEED = 2.0f;
 
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";

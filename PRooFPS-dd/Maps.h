@@ -70,6 +70,18 @@ protected:
     }
 
 private:
+    const float GAME_PLAYERS_POS_Z = -1.2f;
+
+    const std::set<char> foregroundBlocks = {
+        'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T'
+    };
+
+    const std::set<char> backgroundBlocks = {
+        'a', 'c', 'e', 'n', 'n', 'o', 'r', 'v', 'u', 'w', 'x', 'y', 'z',
+        /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
+        '+', 'M', 'P', 'S'
+    };
+
     PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
     int m_blocks_h;
 
