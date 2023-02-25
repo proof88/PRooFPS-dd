@@ -10,7 +10,7 @@
     ###################################################################################
 */
 
-#include <chrono>
+#include <chrono>  // requires cpp11
 
 #include "../../../PGE/PGE/PGE.h"
 #include "../../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
