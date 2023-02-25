@@ -2019,7 +2019,7 @@ void PRooFPSddPGE::SendUserUpdates()
                 if (sendToThisPlayer.second.m_connHandleServerSide == 0)
                 {
                     // server injects this packet to own queue
-                    getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+                    getNetwork().getServer().InjectPacket(newPktUserUpdate);
                 }
                 else
                 {
@@ -2152,7 +2152,7 @@ void PRooFPSddPGE::onGameRunning()
                 {
                     // inject this packet to server's queue
                     // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
-                    getNetwork().getServer().getPacketQueue().push_back(pkt);
+                    getNetwork().getServer().InjectPacket(pkt);
                 }
                 else
                 {
@@ -2222,42 +2222,42 @@ void PRooFPSddPGE::onGameRunning()
 /**
     Called when a new network packet is received.
 */
-void PRooFPSddPGE::onPacketReceived(pge_network::PgeNetworkConnectionHandle m_connHandleServerSide, const pge_network::PgePacket& pkt)
+void PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     switch (pkt.pktId)
     {
     case pge_network::MsgUserConnected::id:
-        HandleUserConnected(m_connHandleServerSide, pkt.msg.userConnected);
+        HandleUserConnected(pkt.m_connHandleServerSide, pkt.msg.userConnected);
         break;
     case pge_network::MsgUserDisconnected::id:
-        HandleUserDisconnected(m_connHandleServerSide, pkt.msg.userDisconnected);
+        HandleUserDisconnected(pkt.m_connHandleServerSide, pkt.msg.userDisconnected);
         break;
     case pge_network::MsgApp::id:
     {
         switch (static_cast<proofps_dd::ElteFailMsgId>(pkt.msg.app.msgId))
         {
         case proofps_dd::MsgUserSetup::id:
-            HandleUserSetup(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
+            HandleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserCmdMove::id:
-            HandleUserCmdMove(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
+            HandleUserCmdMove(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserUpdate::id:
-            HandleUserUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
+            HandleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgBulletUpdate::id:
-            HandleBulletUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
+            HandleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgMapItemUpdate::id:
-            HandleMapItemUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
+            HandleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgWpnUpdate::id:
-            HandleWpnUpdate(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
+            HandleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgWpnUpdateCurrent::id:
-            HandleWpnUpdateCurrent(m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
+            HandleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
             break;
         default:
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
@@ -2511,8 +2511,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
-            getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
-            getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+            getNetwork().getServer().InjectPacket(newPktSetup);
+            getNetwork().getServer().InjectPacket(newPktUserUpdate);
         }
         else
         {
@@ -2553,8 +2553,8 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
-        getNetwork().getServer().getPacketQueue().push_back(newPktSetup);
-        getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+        getNetwork().getServer().InjectPacket(newPktSetup);
+        getNetwork().getServer().InjectPacket(newPktUserUpdate);
 
         // inform all other clients about this new user
         getNetwork().getServer().SendPacketToAllClients(newPktSetup, connHandleServerSide);
@@ -2564,7 +2564,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
-        getNetwork().getServer().getPacketQueue().push_back(newPktUserUpdate);
+        getNetwork().getServer().InjectPacket(newPktUserUpdate);
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;

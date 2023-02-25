@@ -155,7 +155,6 @@ protected:
     virtual void onGameFrameBegin() override;                 /**< Game logic right before the engine would do anything. */
     virtual void onGameRunning() override;                    /**< Game logic for each frame. */
     virtual void onPacketReceived(
-        pge_network::PgeNetworkConnectionHandle connHandle,
         const pge_network::PgePacket& pkt) override;          /**< Called when a new network packet is received. */
     virtual void onGameDestroying() override;                 /**< Freeing up game content here. */
 
