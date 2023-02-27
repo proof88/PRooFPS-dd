@@ -2278,6 +2278,12 @@ void PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
+
+    if (getConfigProfiles().getVars()["testing"].getAsBool())
+    {
+        RegTestDumpToFile();
+    }
+
     for (auto& playerPair : m_mapPlayers)
     {
         playerPair.second.m_legacyPlayer.ShutDown();
@@ -3120,4 +3126,41 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
     }
 
     it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
+}
+
+void PRooFPSddPGE::RegTestDumpToFile() const
+{
+    std::ofstream fRegTestDump(getNetwork().isServer() ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT);
+    if (fRegTestDump.fail())
+    {
+        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT);
+        return;
+    }
+
+    // ahhh this is nonsense, we should really refactor client and server to have the same ancestor class!
+    if (getNetwork().isServer())
+    {
+        fRegTestDump << "Tx:" << std::endl;
+        fRegTestDump << getNetwork().getServer().getTxPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getServer().getTxPacketPerSecondCount() << std::endl;
+        fRegTestDump << "Rx:" << std::endl;
+        fRegTestDump << getNetwork().getServer().getRxPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getServer().getRxPacketPerSecondCount() << std::endl;
+        fRegTestDump << "Inject:" << std::endl;
+        fRegTestDump << getNetwork().getServer().getInjectPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getServer().getInjectPacketPerSecondCount() << std::endl;
+    }
+    else
+    {
+        fRegTestDump << "Tx:" << std::endl;
+        fRegTestDump << getNetwork().getClient().getTxPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getClient().getTxPacketPerSecondCount() << std::endl;
+        fRegTestDump << "Rx:" << std::endl;
+        fRegTestDump << getNetwork().getClient().getRxPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getClient().getRxPacketPerSecondCount() << std::endl;
+        fRegTestDump << "Inject:" << std::endl;
+        fRegTestDump << getNetwork().getClient().getInjectPacketCount() << std::endl;
+        fRegTestDump << getNetwork().getClient().getInjectPacketPerSecondCount() << std::endl;
+    }
+    fRegTestDump.close();
 }

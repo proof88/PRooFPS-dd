@@ -339,3 +339,5 @@ PRooFPS-dd/libcrypto-3.dll
 PRooFPS-dd/libprotobufd.dll
 *.exe
 PRooFPS-dd/libprotobuf.dll
+PRooFPS-dd/RegTestDumpClient.txt
+PRooFPS-dd/RegTestDumpServer.txt

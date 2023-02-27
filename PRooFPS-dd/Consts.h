@@ -16,3 +16,6 @@ static const std::string GAME_VERSION = "0.1.1.0 Private Beta";
 static const float GAME_BLOCK_SIZE_X = 1.0f;
 static const float GAME_BLOCK_SIZE_Y = 1.0f;
 static const float GAME_BLOCK_SIZE_Z = 1.0f;
+
+static constexpr char* GAME_REG_TEST_DUMP_FILE_SERVER = "RegTestDumpServer.txt";
+static constexpr char* GAME_REG_TEST_DUMP_FILE_CLIENT = "RegTestDumpClient.txt";
