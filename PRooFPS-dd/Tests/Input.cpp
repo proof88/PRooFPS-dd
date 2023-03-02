@@ -10,10 +10,27 @@ void input::keybdPress(BYTE bVk, unsigned long nSleepMillisecs)
     keybd_event(bVk, 0, KEYEVENTF_KEYUP, 0);
 }
 
-void input::mouseClick()
+void input::keybdPressNoRelease(BYTE bVk)
+{
+    keybd_event(bVk, 0, 0, 0);
+}
+
+void input::keybdRelease(BYTE bVk)
+{
+    keybd_event(bVk, 0, KEYEVENTF_KEYUP, 0);
+}
+
+void input::mouseClick(unsigned long nSleepMillisecs)
 {
     mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(nSleepMillisecs));
     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
+void input::mouseScroll(bool bForward)
+{
+    // positive value in dwData is scrolling forward aka away from user aka scrolling up
+    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, bForward ? WHEEL_DELTA : -WHEEL_DELTA, 0);
 }
 
 // To be used with mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, ...)

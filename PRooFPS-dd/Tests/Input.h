@@ -17,6 +17,9 @@
 namespace input
 {
     void keybdPress(BYTE bVk, unsigned long nSleepMillisecs);
-    void mouseClick();
+    void keybdPressNoRelease(BYTE bVk);
+    void keybdRelease(BYTE bVk);
+    void mouseClick(unsigned long nSleepMillisecs);
+    void mouseScroll(bool bForward);
     void mouseMoveRelative(DWORD dx, DWORD dy);
 }; // namespace

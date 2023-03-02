@@ -109,11 +109,84 @@ protected:
 
     bool testMethod() override
     {
-        BringWindowToFront(hServerMainGameWindow);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        
         // Game instances reposition the mouse cursor into the center of the window in every frame, keep that in mind when specifying relative coords!
         // By default, in testing mode, initially the server points xhair to the right, client points xhair to the left.
+
+        // server player moves into position
+        {
+            BringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            input::keybdPressNoRelease(VK_RIGHT);
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                input::keybdPress(VK_SPACE, 100); // jump over the hole
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                input::keybdPress(VK_SPACE, 100); // 1st crate
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                input::keybdPress(VK_SPACE, 100); // 2nd crate
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                input::keybdPress(VK_SPACE, 100); // 3rd crate
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+            input::keybdRelease(VK_RIGHT);
+        }
+
+        // client player moves into position and shoots
+        {
+            BringWindowToFront(hClientMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            input::keybdPressNoRelease(VK_LEFT);
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(850));
+                input::keybdPress(VK_SPACE, 100); // jump over the hole
+                std::this_thread::sleep_for(std::chrono::milliseconds(3500));
+            }
+            input::keybdRelease(VK_LEFT);
+
+            // now server and client player should be just a few blocks from each other
+
+            // client should be able to switch to machinegun using scrolling forward/up
+            input::mouseScroll(true);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+            // shoot 2 bullets
+            input::mouseClick(300);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+
+        // server player also shoots
+        {
+            BringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            // shoot 1 bullet
+            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, pistol should shoot only 1 bullet!
+            input::mouseClick(2000);
+
+            // shoot 1 bullet again
+            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, pistol should shoot only 1 bullet!
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            input::mouseClick(2000);
+        }
+
+        // client player shoots again and kills server player
+        {
+            BringWindowToFront(hClientMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            // shoot 4 bullets
+            input::mouseClick(600);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+
+        // wait for the killed server player to respawn
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+        // TODO: check players' frag and death count
+        // TODO: check weapon bullet counts for players
+        // TODO: check health of players
+        // TODO: check sent and received pkts for both players
 
         return true;
     }
