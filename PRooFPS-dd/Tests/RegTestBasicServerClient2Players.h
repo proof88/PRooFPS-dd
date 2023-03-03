@@ -25,6 +25,12 @@ class RegTestBasicServerClient2Players :
 {
 public:
 
+    enum class InstanceType
+    {
+        SERVER,
+        CLIENT
+    };
+
     RegTestBasicServerClient2Players() :
         UnitTest(__FILE__),
         hServerMainGameWindow(NULL),
@@ -46,8 +52,8 @@ protected:
     {
         try
         {
-            StartGame(true /* server */);
-            StartGame(false /* client */);
+            StartGame(InstanceType::SERVER);
+            StartGame(InstanceType::CLIENT);
 
             // make sure the game windows are at the top, not the console windows
             BringWindowToFront(hServerMainGameWindow);
@@ -226,8 +232,9 @@ private:
     RECT rectServerGameWindow;  // screen coordinates
     RECT rectClientGameWindow;  // screen coordinates
 
-    bool evaluateInstance(bool bServer)
+    bool evaluateInstance(const InstanceType& instType)
     {
+        const bool bServer = instType == InstanceType::SERVER;
         std::ifstream f(bServer ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT, std::ifstream::in);
         if (!f.good())
         {
@@ -349,7 +356,7 @@ private:
 
     bool evaluateTest()
     {
-        return assertTrue(evaluateInstance(true), "evaluateServer") & assertTrue(evaluateInstance(false), "evaluateClient");
+        return assertTrue(evaluateInstance(InstanceType::SERVER), "evaluateServer") & assertTrue(evaluateInstance(InstanceType::CLIENT), "evaluateClient");
 
         // TODO: check weapon bullet counts for players
         // TODO: check health of players
@@ -426,8 +433,9 @@ private:
         }
     } // BringWindowToFront()
 
-    void StartGame(bool bServer) noexcept(false)
+    void StartGame(const InstanceType& instType) noexcept(false)
     {
+        const bool bServer = instType == InstanceType::SERVER;
         CConsole::getConsoleInstance().OLnOI("%s(%b) ...", __func__, bServer);
 
         // exe will be searched in PR00FPS-dd work dir, which means that the tested executable
