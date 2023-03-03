@@ -221,7 +221,7 @@ private:
         uint32_t nRxPktPerSecond;
         uint32_t nInjectPktTotalCount;
         uint32_t nInjectPktPerSecond;
-    } evaluatePktStats;
+    } evaluatePktStatsServer, evaluatePktStatsClient;
 
     std::vector<proofps_dd::FragTableRow> evaluateFragTable;
 
@@ -243,7 +243,8 @@ private:
             );
         }
 
-        memset(&evaluatePktStats, 0, sizeof(evaluatePktStats));
+        EvaluatePktStats& currentPktStats = bServer ? evaluatePktStatsServer : evaluatePktStatsClient;
+        memset(&currentPktStats, 0, sizeof(currentPktStats));
         evaluateFragTable.clear();
 
         const std::streamsize nBuffSize = 1024;
@@ -252,18 +253,18 @@ private:
         // read pkt stats
         {
             f.getline(szLine, nBuffSize);  // Tx: Total Pkt Count, Pkt/Second
-            f >> evaluatePktStats.nTxPktTotalCount;
-            f >> evaluatePktStats.nTxPktPerSecond;
+            f >> currentPktStats.nTxPktTotalCount;
+            f >> currentPktStats.nTxPktPerSecond;
             f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
 
             f.getline(szLine, nBuffSize);  // Rx: Total Pkt Count, Pkt/Second
-            f >> evaluatePktStats.nRxPktTotalCount;
-            f >> evaluatePktStats.nRxPktPerSecond;
+            f >> currentPktStats.nRxPktTotalCount;
+            f >> currentPktStats.nRxPktPerSecond;
             f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
 
             f.getline(szLine, nBuffSize);  // Inject: Total Pkt Count, Pkt/Second
-            f >> evaluatePktStats.nInjectPktTotalCount;
-            f >> evaluatePktStats.nInjectPktPerSecond;
+            f >> currentPktStats.nInjectPktTotalCount;
+            f >> currentPktStats.nInjectPktPerSecond;
             f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
         }
 
@@ -325,12 +326,12 @@ private:
 
     bool evaluateServer(std::ifstream&)
     {
-        bool bRet = assertBetween(500u, 1500u, evaluatePktStats.nTxPktTotalCount, "nTxPktTotalCount") &
-            assertBetween(12u, 50u, evaluatePktStats.nTxPktPerSecond, "nTxPktPerSecond") &
-            assertBetween(100u, 1000u, evaluatePktStats.nRxPktTotalCount, "nRxPktTotalCount") &
-            assertBetween(2u, 35u, evaluatePktStats.nRxPktPerSecond, "nRxPktPerSecond") &
-            assertBetween(1000u, 2000u, evaluatePktStats.nInjectPktTotalCount, "nInjectPktTotalCount") &
-            assertBetween(20u, 70u, evaluatePktStats.nInjectPktPerSecond, "nInjectPktPerSecond");
+        bool bRet = assertBetween(500u, 1500u, evaluatePktStatsServer.nTxPktTotalCount, "server nTxPktTotalCount") &
+            assertBetween(12u, 50u, evaluatePktStatsServer.nTxPktPerSecond, "server nTxPktPerSecond") &
+            assertBetween(100u, 1000u, evaluatePktStatsServer.nRxPktTotalCount, "server nRxPktTotalCount") &
+            assertBetween(2u, 35u, evaluatePktStatsServer.nRxPktPerSecond, "server nRxPktPerSecond") &
+            assertBetween(1000u, 2000u, evaluatePktStatsServer.nInjectPktTotalCount, "server nInjectPktTotalCount") &
+            assertBetween(20u, 70u, evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
         
         bRet &= evaluateFragTableCommon();
 
@@ -339,15 +340,15 @@ private:
 
     bool evaluateClient(std::ifstream&)
     {
-        // TODO: client tx and rx must equal to server rx and tx
-
-        // client never injects packets to its pkt queue
-        bool bRet = assertBetween(100u, 1000u, evaluatePktStats.nTxPktTotalCount, "nTxPktTotalCount") &
-            assertBetween(2u, 35u, evaluatePktStats.nTxPktPerSecond, "nTxPktPerSecond") &
-            assertBetween(500u, 1500u, evaluatePktStats.nRxPktTotalCount, "nRxPktTotalCount") &
-            assertBetween(12u, 50u, evaluatePktStats.nRxPktPerSecond, "nRxPktPerSecond") &
-            assertEquals(evaluatePktStats.nInjectPktTotalCount, 0u, "nInjectPktTotalCount") &
-            assertEquals(evaluatePktStats.nInjectPktPerSecond, 0u, "nInjectPktPerSecond");
+        // when this function is called, server is already evaluated and evaluatePktStatsServer contains valid server data, so
+        // we can also compare client data to server data!
+        bool bRet = assertEquals(evaluatePktStatsServer.nRxPktTotalCount, evaluatePktStatsClient.nTxPktTotalCount, "client nTxPktTotalCount") &
+            assertBetween(2u, 35u, evaluatePktStatsClient.nTxPktPerSecond, "client nTxPktPerSecond") &
+            assertEquals(evaluatePktStatsServer.nTxPktTotalCount, evaluatePktStatsClient.nRxPktTotalCount, "client nRxPktTotalCount") &
+            assertBetween(12u, 50u, evaluatePktStatsClient.nRxPktPerSecond, "client nRxPktPerSecond") &
+            /* client never injects packets to its pkt queue */
+            assertEquals(evaluatePktStatsClient.nInjectPktTotalCount, 0u, "client nInjectPktTotalCount") &
+            assertEquals(evaluatePktStatsClient.nInjectPktPerSecond, 0u, "client nInjectPktPerSecond");
         
         bRet &= evaluateFragTableCommon();
 
@@ -356,7 +357,11 @@ private:
 
     bool evaluateTest()
     {
-        return assertTrue(evaluateInstance(InstanceType::SERVER), "evaluateServer") & assertTrue(evaluateInstance(InstanceType::CLIENT), "evaluateClient");
+        // order is important: evaluate server first, and then the client!
+        bool bRet = assertTrue(evaluateInstance(InstanceType::SERVER), "evaluateServer");
+        bRet &= assertTrue(evaluateInstance(InstanceType::CLIENT), "evaluateClient");
+
+        return bRet;
 
         // TODO: check weapon bullet counts for players
         // TODO: check health of players
