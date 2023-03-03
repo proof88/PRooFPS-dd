@@ -779,6 +779,22 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     if ( !won )
     {
 
+        if (keybd.isKeyPressed(VK_RETURN))
+        {
+            if (m_enterreleased)
+            {
+                m_enterreleased = false;
+                if (getConfigProfiles().getVars()["testing"].getAsBool())
+                {
+                    RegTestDumpToFile();
+                }
+            }
+        }
+        else
+        {
+            m_enterreleased = true;
+        }
+
         if (keybd.isKeyPressed((unsigned char)VkKeyScan('t')))
         {
             if (m_bTeleportReleased)
@@ -931,17 +947,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     }
     else
     {
-        if ( keybd.isKeyPressed( VK_RETURN ) )
-        {
-            if ( m_enterreleased )
-            {
-    
-            }
-        }
-        else
-        {
-            m_enterreleased = true;
-        }
+        
     } // won
 }
 
@@ -2279,11 +2285,6 @@ void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
 
-    if (getConfigProfiles().getVars()["testing"].getAsBool())
-    {
-        RegTestDumpToFile();
-    }
-
     for (auto& playerPair : m_mapPlayers)
     {
         playerPair.second.m_legacyPlayer.ShutDown();
@@ -3142,7 +3143,7 @@ void PRooFPSddPGE::RegTestDumpToFile() const
     {
         fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
         fRegTestDump << "  " << getNetwork().getServer().getTxPacketCount() << std::endl;
-        fRegTestDump << getNetwork().getServer().getTxPacketPerSecondCount() << std::endl;
+        fRegTestDump << "  " << getNetwork().getServer().getTxPacketPerSecondCount() << std::endl;
         fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
         fRegTestDump << "  " << getNetwork().getServer().getRxPacketCount() << std::endl;
         fRegTestDump << "  " << getNetwork().getServer().getRxPacketPerSecondCount() << std::endl;
@@ -3171,5 +3172,6 @@ void PRooFPSddPGE::RegTestDumpToFile() const
         fRegTestDump << "  " << player.m_nDeaths << std::endl;
     }
 
+    fRegTestDump.flush();
     fRegTestDump.close();
 }

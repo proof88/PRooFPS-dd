@@ -16,6 +16,7 @@
 
 #include "../../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Consts.h"
+#include "../GameMode.h"
 #include "Input.h"
 #include "Process.h"
 
@@ -33,7 +34,6 @@ public:
         memset(&procInfoClient, 0, sizeof(procInfoClient));
         memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
         memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
-        
     }
 
     ~RegTestBasicServerClient2Players()
@@ -180,18 +180,180 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
-        // wait for the killed server player to respawn
+        // client player runs to the right and intentionally falls off the map to commit suicide
+        {
+            input::keybdPress(VK_RIGHT, 6000);
+        }
+
+        // wait for the died client player to respawn (in the meantime the killed server player also respawned)
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-        // TODO: check players' frag and death count
-        // TODO: check weapon bullet counts for players
-        // TODO: check health of players
-        // TODO: check sent and received pkts for both players
+        // trigger dump test data to file
+        {
+            // client
+            input::keybdPress(VK_RETURN, 100);
 
-        return true;
+            // server
+            BringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            input::keybdPress(VK_RETURN, 100);
+        }
+
+        // wait for the test data files to be actually written
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+        return evaluateTest();
     }
 
 private:
+
+    struct EvaluatePktStats
+    {
+        uint32_t nTxPktTotalCount;
+        uint32_t nTxPktPerSecond;
+        uint32_t nRxPktTotalCount;
+        uint32_t nRxPktPerSecond;
+        uint32_t nInjectPktTotalCount;
+        uint32_t nInjectPktPerSecond;
+    } evaluatePktStats;
+
+    std::vector<proofps_dd::FragTableRow> evaluateFragTable;
+
+    PROCESS_INFORMATION procInfoServer;
+    PROCESS_INFORMATION procInfoClient;
+    HWND hServerMainGameWindow;
+    HWND hClientMainGameWindow;
+    RECT rectServerGameWindow;  // screen coordinates
+    RECT rectClientGameWindow;  // screen coordinates
+
+    bool evaluateInstance(bool bServer)
+    {
+        std::ifstream f(bServer ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT, std::ifstream::in);
+        if (!f.good())
+        {
+            return assertFalse(true,
+                (std::string("failed to open file: ") + (bServer ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT)).c_str()
+            );
+        }
+
+        memset(&evaluatePktStats, 0, sizeof(evaluatePktStats));
+        evaluateFragTable.clear();
+
+        const std::streamsize nBuffSize = 1024;
+        char szLine[nBuffSize];
+
+        // read pkt stats
+        {
+            f.getline(szLine, nBuffSize);  // Tx: Total Pkt Count, Pkt/Second
+            f >> evaluatePktStats.nTxPktTotalCount;
+            f >> evaluatePktStats.nTxPktPerSecond;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+
+            f.getline(szLine, nBuffSize);  // Rx: Total Pkt Count, Pkt/Second
+            f >> evaluatePktStats.nRxPktTotalCount;
+            f >> evaluatePktStats.nRxPktPerSecond;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+
+            f.getline(szLine, nBuffSize);  // Inject: Total Pkt Count, Pkt/Second
+            f >> evaluatePktStats.nInjectPktTotalCount;
+            f >> evaluatePktStats.nInjectPktPerSecond;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+        }
+
+        bool bRet = assertFalse(f.bad(), "f.bad()") & assertFalse(f.eof(), "f.eof()");
+        if (!bRet)
+        {
+            return bRet;
+        }
+
+        // read frag table
+        {
+            f.getline(szLine, nBuffSize);  // Frag Table: Player Name, Frags, Deaths
+            while (!f.eof())
+            {
+                proofps_dd::FragTableRow ftRow;
+                f >> ftRow.m_sName;
+
+                if (ftRow.m_sName.empty())
+                {
+                    // actually if this is empty, it might be expected scenario because we have an extra empty line after
+                    // the frag table in the file, anyway just stop here, the evaluate functions will verify the read frag table data anyway!
+                    break;
+                }
+
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nFrags;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nDeaths;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                evaluateFragTable.push_back(ftRow);
+            }
+        }
+
+        bRet = bServer ? evaluateServer(f) : evaluateClient(f);
+        
+        f.close();
+        return bRet;
+    }
+
+    bool evaluateFragTableCommon()
+    {
+        // frag table must contain same data for both server and client, that is why we have common function for both
+        bool bRet = assertEquals(2u, evaluateFragTable.size(), "fragtable size");
+        if (!bRet)
+        {
+            return bRet;
+        }
+
+        bRet &= assertEquals("User28467", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
+            assertEquals(1, evaluateFragTable[0].m_nFrags, "fragtable row 1 frags") &
+            assertEquals(1, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths");
+
+        bRet &= assertEquals("User10041", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
+            assertEquals(0, evaluateFragTable[1].m_nFrags, "fragtable row 2 frags") &
+            assertEquals(1, evaluateFragTable[1].m_nDeaths, "fragtable row 2 deaths");
+
+        return bRet;
+    }
+
+    bool evaluateServer(std::ifstream&)
+    {
+        bool bRet = assertBetween(500u, 1500u, evaluatePktStats.nTxPktTotalCount, "nTxPktTotalCount") &
+            assertBetween(12u, 50u, evaluatePktStats.nTxPktPerSecond, "nTxPktPerSecond") &
+            assertBetween(100u, 1000u, evaluatePktStats.nRxPktTotalCount, "nRxPktTotalCount") &
+            assertBetween(2u, 35u, evaluatePktStats.nRxPktPerSecond, "nRxPktPerSecond") &
+            assertBetween(1000u, 2000u, evaluatePktStats.nInjectPktTotalCount, "nInjectPktTotalCount") &
+            assertBetween(20u, 70u, evaluatePktStats.nInjectPktPerSecond, "nInjectPktPerSecond");
+        
+        bRet &= evaluateFragTableCommon();
+
+        return bRet;
+    }
+
+    bool evaluateClient(std::ifstream&)
+    {
+        // TODO: client tx and rx must equal to server rx and tx
+
+        // client never injects packets to its pkt queue
+        bool bRet = assertBetween(100u, 1000u, evaluatePktStats.nTxPktTotalCount, "nTxPktTotalCount") &
+            assertBetween(2u, 35u, evaluatePktStats.nTxPktPerSecond, "nTxPktPerSecond") &
+            assertBetween(500u, 1500u, evaluatePktStats.nRxPktTotalCount, "nRxPktTotalCount") &
+            assertBetween(12u, 50u, evaluatePktStats.nRxPktPerSecond, "nRxPktPerSecond") &
+            assertEquals(evaluatePktStats.nInjectPktTotalCount, 0u, "nInjectPktTotalCount") &
+            assertEquals(evaluatePktStats.nInjectPktPerSecond, 0u, "nInjectPktPerSecond");
+        
+        bRet &= evaluateFragTableCommon();
+
+        return bRet;
+    }
+
+    bool evaluateTest()
+    {
+        return assertTrue(evaluateInstance(true), "evaluateServer") & assertTrue(evaluateInstance(false), "evaluateClient");
+
+        // TODO: check weapon bullet counts for players
+        // TODO: check health of players
+    }
 
     void BringWindowToFront(HWND hTargetWindow) noexcept(false)
     {
@@ -398,13 +560,6 @@ private:
 
         CConsole::getConsoleInstance().SOLnOO("> %s(%b) Successful!", __func__, bServer);
     } // StartGame()
-
-    PROCESS_INFORMATION procInfoServer;
-    PROCESS_INFORMATION procInfoClient;
-    HWND hServerMainGameWindow;
-    HWND hClientMainGameWindow;
-    RECT rectServerGameWindow;  // screen coordinates
-    RECT rectClientGameWindow;  // screen coordinates
 
     // ---------------------------------------------------------------------------
 
