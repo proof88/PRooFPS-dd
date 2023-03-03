@@ -187,6 +187,7 @@ protected:
         }
 
         // client player runs to the right and intentionally falls off the map to commit suicide
+        // TODO: maybe we should do this, instead just do nothing, so we can expect different weapons and health!!!
         {
             input::keybdPress(VK_RIGHT, 6000);
         }
@@ -225,6 +226,16 @@ private:
 
     std::vector<proofps_dd::FragTableRow> evaluateFragTable;
 
+    struct EvaluateWpn
+    {
+        std::string sName;
+        TPureUInt nMagBulletCount;
+        TPureUInt nUnmagBulletCount;
+    };
+    std::vector<EvaluateWpn> evaluateWpnData;
+
+    int nPlayerHealth;
+
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -246,6 +257,8 @@ private:
         EvaluatePktStats& currentPktStats = bServer ? evaluatePktStatsServer : evaluatePktStatsClient;
         memset(&currentPktStats, 0, sizeof(currentPktStats));
         evaluateFragTable.clear();
+        evaluateWpnData.clear();
+        nPlayerHealth = 0;
 
         const std::streamsize nBuffSize = 1024;
         char szLine[nBuffSize];
@@ -281,8 +294,7 @@ private:
             {
                 proofps_dd::FragTableRow ftRow;
                 f >> ftRow.m_sName;
-
-                if (ftRow.m_sName.empty())
+                if (ftRow.m_sName.empty() || (ftRow.m_sName.find("Weapons") != std::string::npos))
                 {
                     // actually if this is empty, it might be expected scenario because we have an extra empty line after
                     // the frag table in the file, anyway just stop here, the evaluate functions will verify the read frag table data anyway!
@@ -296,6 +308,35 @@ private:
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 evaluateFragTable.push_back(ftRow);
             }
+        }
+
+        // read weapon list
+        {
+            f.getline(szLine, nBuffSize);  // Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count
+            while (!f.eof())
+            {
+                EvaluateWpn wpnData;
+                f >> wpnData.sName;
+                if (wpnData.sName.empty() || (wpnData.sName.find("Player") != std::string::npos))
+                {
+                    // actually if this is empty, it might be expected scenario because we have an extra empty line after
+                    // the weapon list in the file, anyway just stop here, the evaluate functions will verify the read weapon data anyway!
+                    break;
+                }
+
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> wpnData.nMagBulletCount;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> wpnData.nUnmagBulletCount;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                evaluateWpnData.push_back(wpnData);
+            }
+        }
+
+        // read player info
+        {
+            f.getline(szLine, nBuffSize);  // Player Info: Health
+            f >> nPlayerHealth;
         }
 
         bRet = bServer ? evaluateServer(f) : evaluateClient(f);
@@ -335,6 +376,17 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
+        bRet &= assertEquals(1u, evaluateWpnData.size(), "server wpn count");
+        if (!bRet)
+        {
+            return bRet;
+        }
+        bRet &= assertEquals("pistol.txt", evaluateWpnData[0].sName, "server wpn 1 name") &
+            assertEquals(12u, evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
+            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "server wpn 1 unmag bullet count");
+
+        bRet &= assertEquals(100, nPlayerHealth, "server player health");
+
         return bRet;
     }
 
@@ -352,6 +404,17 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
+        bRet &= assertEquals(1u, evaluateWpnData.size(), "client wpn count");
+        if (!bRet)
+        {
+            return bRet;
+        }
+        bRet &= assertEquals("pistol.txt", evaluateWpnData[0].sName, "client wpn 1 name") &
+            assertEquals(12u, evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
+            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count");
+
+        bRet &= assertEquals(100, nPlayerHealth, "client player health");
+
         return bRet;
     }
 
@@ -362,9 +425,6 @@ private:
         bRet &= assertTrue(evaluateInstance(InstanceType::CLIENT), "evaluateClient");
 
         return bRet;
-
-        // TODO: check weapon bullet counts for players
-        // TODO: check health of players
     }
 
     void BringWindowToFront(HWND hTargetWindow) noexcept(false)

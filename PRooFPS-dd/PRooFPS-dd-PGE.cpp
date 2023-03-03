@@ -3129,7 +3129,7 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
     it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
 }
 
-void PRooFPSddPGE::RegTestDumpToFile() const
+void PRooFPSddPGE::RegTestDumpToFile() 
 {
     std::ofstream fRegTestDump(getNetwork().isServer() ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT);
     if (fRegTestDump.fail())
@@ -3171,6 +3171,26 @@ void PRooFPSddPGE::RegTestDumpToFile() const
         fRegTestDump << "  " << player.m_nFrags << std::endl;
         fRegTestDump << "  " << player.m_nDeaths << std::endl;
     }
+
+    // add an extra empty line, so the regression test can easily detect end of frag table
+    fRegTestDump << std::endl;
+
+    fRegTestDump << "Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count" << std::endl;
+    for (const auto& wpn : m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapons())
+    {
+        if (wpn->isAvailable())
+        {
+            fRegTestDump << "  " << wpn->getFilename() << std::endl;
+            fRegTestDump << "  " << wpn->getMagBulletCount() << std::endl;
+            fRegTestDump << "  " << wpn->getUnmagBulletCount() << std::endl;
+        }
+    }
+
+    // add an extra empty line, so the regression test can easily detect end of weapon list
+    fRegTestDump << std::endl;
+
+    fRegTestDump << "Player Info: Health" << std::endl;
+    fRegTestDump << "  " << m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() << std::endl;
 
     fRegTestDump.flush();
     fRegTestDump.close();
