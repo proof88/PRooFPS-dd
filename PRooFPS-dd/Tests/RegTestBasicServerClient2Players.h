@@ -34,7 +34,9 @@ public:
     RegTestBasicServerClient2Players() :
         UnitTest(__FILE__),
         hServerMainGameWindow(NULL),
-        hClientMainGameWindow(NULL)
+        hClientMainGameWindow(NULL),
+        cfgWpnPistol(false, false),
+        cfgWpnMachinegun(false, false)
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
         memset(&procInfoClient, 0, sizeof(procInfoClient));
@@ -52,6 +54,12 @@ protected:
     {
         try
         {
+            if ( !(cfgWpnPistol.load((std::string(GAME_WEAPONS_DIR) + "pistol.txt").c_str())) ||
+                !(cfgWpnMachinegun.load((std::string(GAME_WEAPONS_DIR) + "machinegun.txt").c_str())) )
+            {
+                throw std::exception("Weapon file load failed!");
+            }
+
             StartGame(InstanceType::SERVER);
             StartGame(InstanceType::CLIENT);
 
@@ -157,7 +165,7 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             // shoot 2 bullets
-            input::mouseClick(300);
+            input::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 2);
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -167,13 +175,13 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 1 bullet
-            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, but pistol should shoot only 1 bullet!
-            input::mouseClick(2000);
+            // intentionally holding down mouse button for longer than cooldown, just for testing purpose, but pistol should shoot only 1 bullet!
+            input::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
 
             // shoot 1 bullet again
-            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, but pistol should shoot only 1 bullet!
+            // intentionally holding down mouse button for longer than cooldown, just for testing purpose, but pistol should shoot only 1 bullet!
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            input::mouseClick(2000);
+            input::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
         }
 
         // client player shoots again and kills server player
@@ -182,7 +190,7 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 4 bullets
-            input::mouseClick(600);
+            input::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 4);
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -236,6 +244,10 @@ private:
     HWND hClientMainGameWindow;
     RECT rectServerGameWindow;  // screen coordinates
     RECT rectClientGameWindow;  // screen coordinates
+
+    // These should be Weapon instances, however we would need proper gfx engine instance as well, or a stubbed gfx engine instance,
+    // for now I dont want any of these, so I just load them as config files, so I can still use their config values as reference!
+    PGEcfgFile cfgWpnPistol, cfgWpnMachinegun;
 
     bool evaluateInstance(const InstanceType& instType)
     {
@@ -376,7 +388,7 @@ private:
             return bRet;
         }
         bRet &= assertEquals(GAME_WPN_DEFAULT, evaluateWpnData[0].sName, "server wpn 1 name") &
-            assertEquals(12u, evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
             assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "server wpn 1 unmag bullet count");
 
         bRet &= assertEquals(100, nPlayerHealth, "server player health");
@@ -412,13 +424,13 @@ private:
         // On the long run I think we should fix this.
 
         bRet &= /* client shot 2+4 = 6 bullets with machinegun */
-            assertEquals("machinegun.txt", evaluateWpnData[0].sName, "client wpn 1 name") &
-            assertEquals(24u, evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
+            assertEquals(cfgWpnMachinegun.getFilename(), evaluateWpnData[0].sName, "client wpn 1 name") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnMachinegun.getVars()["bullets_default"].getAsInt() - 6), evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
             assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count") &
             /* client picked up extra pistol ammo during walking towards server player */
-            assertEquals(GAME_WPN_DEFAULT, evaluateWpnData[1].sName, "client wpn 2 name") &
-            assertEquals(12u, evaluateWpnData[1].nMagBulletCount, "client wpn 2 mag bullet count") &
-            assertEquals(12u, evaluateWpnData[1].nUnmagBulletCount, "client wpn 2 unmag bullet count");
+            assertEquals(cfgWpnPistol.getFilename(), evaluateWpnData[1].sName, "client wpn 2 name") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[1].nMagBulletCount, "client wpn 2 mag bullet count") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["reloadable"].getAsInt()), evaluateWpnData[1].nUnmagBulletCount, "client wpn 2 unmag bullet count");
 
         // after being shot twice by pistol
         bRet &= assertEquals(20, nPlayerHealth, "client player health");
@@ -644,7 +656,9 @@ private:
 
     // ---------------------------------------------------------------------------
 
-    RegTestBasicServerClient2Players(const RegTestBasicServerClient2Players&)
+    RegTestBasicServerClient2Players(const RegTestBasicServerClient2Players&) :
+        cfgWpnPistol(false, false),
+        cfgWpnMachinegun(false, false)
     {};
 
     RegTestBasicServerClient2Players& operator=(const RegTestBasicServerClient2Players&)
