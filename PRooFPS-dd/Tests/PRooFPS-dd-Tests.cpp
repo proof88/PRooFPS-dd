@@ -62,9 +62,9 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     vector<std::unique_ptr<UnitTest>> tests;
     
     // unit tests
-    //tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest()));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest()));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapsTest()));
+    tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest()));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest()));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapsTest()));
 
     // regression tests
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));

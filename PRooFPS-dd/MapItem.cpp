@@ -43,9 +43,14 @@ const MapItem::MapItemId& MapItem::getGlobalMapItemId()
     return m_globalMapItemId;
 }
 
-void MapItem::ResetGlobalMapItemId()
+void MapItem::ResetGlobalData()
 {
     m_globalMapItemId = 0;
+    for (auto& refPair : m_mapReferenceObjects)
+    {
+        delete refPair.second;
+    }
+    m_mapReferenceObjects.clear();
 }
 
 uint32_t MapItem::getItemRespawnTimeSecs(const MapItem& mapItem)
@@ -72,34 +77,43 @@ MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType
     m_bTaken(false),
     m_fSinusMotionDegrees(0.f)
 {
-    // TODO: throw when createPlane() fails
-    m_obj = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
+    const auto it = m_mapReferenceObjects.find(itemType);
+    if (it == m_mapReferenceObjects.end())
+    {
+        // TODO: throw when createPlane() fails
+        m_mapReferenceObjects[itemType] = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
+        m_mapReferenceObjects[itemType]->Hide();
+        PureTexture* tex = nullptr;
+        switch (itemType)
+        {
+        case MapItemType::ITEM_WPN_PISTOL:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
+            break;
+        case MapItemType::ITEM_WPN_MACHINEGUN:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchgun.bmp");
+            break;
+        case MapItemType::ITEM_HEALTH:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
+            break;
+        default:
+            // TODO: throw for unhandled type
+            break;
+        }
+
+        if (tex)
+        {
+            m_mapReferenceObjects[itemType]->getMaterial().setTexture(tex);
+        }
+    }
+
+    m_obj = gfx.getObject3DManager().createCloned(*m_mapReferenceObjects[itemType]);
+    m_obj->Show();
     m_obj->getPosVec() = pos;
-    PureTexture* tex = nullptr;
-    switch (itemType)
-    {
-    case MapItemType::ITEM_WPN_PISTOL:
-        tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
-        break;
-    case MapItemType::ITEM_WPN_MACHINEGUN:
-        tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchgun.bmp");
-        break;
-    case MapItemType::ITEM_HEALTH:
-        tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
-        break;
-    default:
-        // TODO: throw for unhandled type
-        break;
-    }
-    
-    if (tex)
-    {
-        m_obj->getMaterial().setTexture(tex);
-    }
 }
 
 MapItem::~MapItem()
 {
+    // no need to delete the static objects stored in m_mapReferenceObjects, they can exist until destroying the game, engine takes care of it!
     if (m_obj)
     {
         delete m_obj;
@@ -186,3 +200,4 @@ void MapItem::Update(float factor)
 
 
 MapItem::MapItemId MapItem::m_globalMapItemId = 0;
+std::map<MapItemType, PureObject3D*> MapItem::m_mapReferenceObjects;

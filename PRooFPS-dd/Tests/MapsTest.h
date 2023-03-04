@@ -267,28 +267,48 @@ private:
         {
             auto it = maps.getItems().begin();
             b &= assertNotNull(it->second, "item 1") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type") &&
-                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 1 tex");
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 1 tex");
+            }
 
             it++;
             b &= assertNotNull(it->second, "item 2") &&
-                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type") &&
-                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 2 tex");
+                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 2 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 2 tex");
+            }
             
             it++;
             b &= assertNotNull(it->second, "item 3") &&
-                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type") &&
-                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 3 tex");
+                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 3 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 3 tex");
+            }
             
             it++;
             b &= assertNotNull(it->second, "item 4") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 4 type") &&
-                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 4 tex");
+                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 4 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 4 tex");
+            }
             
             it++;
             b &= assertNotNull(it->second, "item 5") &&
-                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 5 type") &&
-                assertNotNull(it->second->getObject3D().getMaterial().getTexture(), "item 5 tex");
+                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 5 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 5 tex");
+            }
         }
 
         return b;

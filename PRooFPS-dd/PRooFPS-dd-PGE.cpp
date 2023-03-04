@@ -2286,6 +2286,10 @@ void PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
 
+    //getConsole().SetLoggingState("4LLM0DUL3S", true);
+    //getPure().WriteList();
+    //getConsole().SetLoggingState("4LLM0DUL3S", false);
+
     for (auto& playerPair : m_mapPlayers)
     {
         playerPair.second.m_legacyPlayer.ShutDown();

@@ -50,6 +50,7 @@ protected:
 
     virtual void TearDown()
     {
+        MapItem::ResetGlobalData();
     }
 
     virtual void Finalize()
@@ -96,8 +97,10 @@ private:
 
     bool test_reset_global_item_id()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
-        MapItem::ResetGlobalMapItemId();
+        MapItem* mi = new MapItem(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        delete mi;
+
+        MapItem::ResetGlobalData();
 
         return assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
     }

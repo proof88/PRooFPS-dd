@@ -29,7 +29,7 @@ Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
     m_width(0),
     m_height(0)
 {
-    MapItem::ResetGlobalMapItemId();
+    MapItem::ResetGlobalData();
 }
 
 Maps::~Maps()
@@ -63,7 +63,7 @@ bool Maps::load(const char* fname)
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
     // this wont be needed after we require unload() before consecutive load()
-    MapItem::ResetGlobalMapItemId();
+    MapItem::ResetGlobalData();
 
     m_sFileName = PFL::getFilename(fname);
     m_sRawName = PFL::changeExtension(m_sFileName.c_str(), "");
@@ -203,6 +203,8 @@ void Maps::unload()
         delete itemPair.second;
     }
     m_items.clear();
+    MapItem::ResetGlobalData();
+
     m_width = 0;
     m_height = 0;
     m_blockPosMin.SetZero();
@@ -211,8 +213,6 @@ void Maps::unload()
     m_blocksVertexPosMax.SetZero();
     m_vars.clear();
     m_spawnpoints.clear();
-
-    MapItem::ResetGlobalMapItemId();
 
     getConsole().OOOLn("Maps::unload() done!");
 }
