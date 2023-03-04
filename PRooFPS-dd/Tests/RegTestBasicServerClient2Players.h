@@ -186,14 +186,8 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
-        // client player runs to the right and intentionally falls off the map to commit suicide
-        // TODO: maybe we should do this, instead just do nothing, so we can expect different weapons and health!!!
-        {
-            input::keybdPress(VK_RIGHT, 6000);
-        }
-
-        // wait for the died client player to respawn (in the meantime the killed server player also respawned)
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        // wait for the killed server player to respawn
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 
         // trigger dump test data to file
         {
@@ -356,7 +350,7 @@ private:
 
         bRet &= assertEquals("User28467", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
             assertEquals(1, evaluateFragTable[0].m_nFrags, "fragtable row 1 frags") &
-            assertEquals(1, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths");
+            assertEquals(0, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths");
 
         bRet &= assertEquals("User10041", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
             assertEquals(0, evaluateFragTable[1].m_nFrags, "fragtable row 2 frags") &
@@ -367,12 +361,12 @@ private:
 
     bool evaluateServer(std::ifstream&)
     {
-        bool bRet = assertBetween(500u, 1500u, evaluatePktStatsServer.nTxPktTotalCount, "server nTxPktTotalCount") &
-            assertBetween(12u, 50u, evaluatePktStatsServer.nTxPktPerSecond, "server nTxPktPerSecond") &
-            assertBetween(100u, 1000u, evaluatePktStatsServer.nRxPktTotalCount, "server nRxPktTotalCount") &
+        bool bRet = assertBetween(400u, 800u, evaluatePktStatsServer.nTxPktTotalCount, "server nTxPktTotalCount") &
+            assertBetween(12u, 40u, evaluatePktStatsServer.nTxPktPerSecond, "server nTxPktPerSecond") &
+            assertBetween(100u, 500u, evaluatePktStatsServer.nRxPktTotalCount, "server nRxPktTotalCount") &
             assertBetween(2u, 35u, evaluatePktStatsServer.nRxPktPerSecond, "server nRxPktPerSecond") &
-            assertBetween(1000u, 2000u, evaluatePktStatsServer.nInjectPktTotalCount, "server nInjectPktTotalCount") &
-            assertBetween(20u, 70u, evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
+            assertBetween(500u, 1500u, evaluatePktStatsServer.nInjectPktTotalCount, "server nInjectPktTotalCount") &
+            assertBetween(20u, 50u, evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
         
         bRet &= evaluateFragTableCommon();
 
@@ -404,16 +398,30 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
-        bRet &= assertEquals(1u, evaluateWpnData.size(), "client wpn count");
+        bRet &= assertEquals(2u, evaluateWpnData.size(), "client wpn count");
         if (!bRet)
         {
             return bRet;
         }
-        bRet &= assertEquals("pistol.txt", evaluateWpnData[0].sName, "client wpn 1 name") &
-            assertEquals(12u, evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
-            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count");
 
-        bRet &= assertEquals(100, nPlayerHealth, "client player health");
+        // TODO: the order of weapons in player's weapons vector looks to be alphabetic, and it is because
+        // when the weapons are loaded, the files in weapons directory are being iterated over, and that order
+        // looks to be alphabetic. However, the reference of std::filesystem::directory_iterator says that
+        // the "iteration order is unspecified" which means that we are relying now on unspecified behavior if
+        // we expect our vector's 1st element to be machinegun and 2nd element to be pistol.
+        // On the long run I think we should fix this.
+
+        bRet &= /* client shot 2+4 = 6 bullets with machinegun */
+            assertEquals("machinegun.txt", evaluateWpnData[0].sName, "client wpn 1 name") &
+            assertEquals(24u, evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
+            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count") &
+            /* client picked up extra pistol ammo during walking towards server player */
+            assertEquals("pistol.txt", evaluateWpnData[1].sName, "client wpn 2 name") &
+            assertEquals(12u, evaluateWpnData[1].nMagBulletCount, "client wpn 2 mag bullet count") &
+            assertEquals(12u, evaluateWpnData[1].nUnmagBulletCount, "client wpn 2 unmag bullet count");
+
+        // after being shot twice by pistol
+        bRet &= assertEquals(20, nPlayerHealth, "client player health");
 
         return bRet;
     }
