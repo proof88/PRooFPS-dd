@@ -136,6 +136,7 @@
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgFile.h" />
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h" />

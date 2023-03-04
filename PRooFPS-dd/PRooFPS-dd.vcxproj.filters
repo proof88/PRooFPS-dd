@@ -240,6 +240,9 @@
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h">
+      <Filter>Header Files\PGE\Config</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

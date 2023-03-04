@@ -167,11 +167,11 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 1 bullet
-            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, pistol should shoot only 1 bullet!
+            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, but pistol should shoot only 1 bullet!
             input::mouseClick(2000);
 
             // shoot 1 bullet again
-            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, pistol should shoot only 1 bullet!
+            // intentionally holding down mouse button for 2000 msecs, just for testing purpose, but pistol should shoot only 1 bullet!
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             input::mouseClick(2000);
         }
@@ -187,7 +187,7 @@ protected:
         }
 
         // wait for the killed server player to respawn
-        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(GAME_PLAYER_RESPAWN_SECONDS*1000 + 200));
 
         // trigger dump test data to file
         {
@@ -375,7 +375,7 @@ private:
         {
             return bRet;
         }
-        bRet &= assertEquals("pistol.txt", evaluateWpnData[0].sName, "server wpn 1 name") &
+        bRet &= assertEquals(GAME_WPN_DEFAULT, evaluateWpnData[0].sName, "server wpn 1 name") &
             assertEquals(12u, evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
             assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "server wpn 1 unmag bullet count");
 
@@ -416,7 +416,7 @@ private:
             assertEquals(24u, evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
             assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count") &
             /* client picked up extra pistol ammo during walking towards server player */
-            assertEquals("pistol.txt", evaluateWpnData[1].sName, "client wpn 2 name") &
+            assertEquals(GAME_WPN_DEFAULT, evaluateWpnData[1].sName, "client wpn 2 name") &
             assertEquals(12u, evaluateWpnData[1].nMagBulletCount, "client wpn 2 mag bullet count") &
             assertEquals(12u, evaluateWpnData[1].nUnmagBulletCount, "client wpn 2 unmag bullet count");
 

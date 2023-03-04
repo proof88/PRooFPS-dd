@@ -609,7 +609,7 @@ void PRooFPSddPGE::onGameInitialized()
     // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
     // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
     m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    PureTexture* xhairtex = getPure().getTextureManager().createFromFile( "gamedata\\textures\\hud_xhair.bmp" );
+    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(GAME_TEXTURES_DIR)+"hud_xhair.bmp").c_str());
     m_pObjXHair->getMaterial().setTexture( xhairtex );
 
     getPure().WriteList();
@@ -674,15 +674,15 @@ void PRooFPSddPGE::onGameInitialized()
         }
     }
 
-    LoadSound(m_sndLetsgo,         "gamedata/audio/radio/locknload.wav");
-    LoadSound(m_sndReloadStart,    "gamedata/audio/radio/de_clipout.wav");
-    LoadSound(m_sndReloadFinish,   "gamedata/audio/radio/de_clipin.wav");
-    LoadSound(m_sndShootPistol,    "gamedata/audio/radio/deagle-1.wav");
-    LoadSound(m_sndShootMchgun,    "gamedata/audio/radio/m4a1_unsil-1.wav");
-    LoadSound(m_sndShootDryPistol, "gamedata/audio/radio/dryfire_pistol.wav");
-    LoadSound(m_sndShootDryMchgun, "gamedata/audio/radio/dryfire_rifle.wav");
-    LoadSound(m_sndChangeWeapon,   "gamedata/audio/radio/m4a1_deploy.wav");
-    LoadSound(m_sndPlayerDie,      "gamedata/audio/radio/die1.wav");
+    LoadSound(m_sndLetsgo,         (std::string(GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    LoadSound(m_sndReloadStart,    (std::string(GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
+    LoadSound(m_sndReloadFinish,   (std::string(GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
+    LoadSound(m_sndShootPistol,    (std::string(GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
+    LoadSound(m_sndShootMchgun,    (std::string(GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
+    LoadSound(m_sndShootDryPistol, (std::string(GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
+    LoadSound(m_sndShootDryMchgun, (std::string(GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
+    LoadSound(m_sndChangeWeapon,   (std::string(GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
+    LoadSound(m_sndPlayerDie,      (std::string(GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
@@ -1793,8 +1793,9 @@ void PRooFPSddPGE::UpdateRespawnTimers()
             continue;
         }
 
-        const std::chrono::duration<float> timeDiff = std::chrono::steady_clock::now() - player.second.m_legacyPlayer.getTimeDied();
-        if (timeDiff.count() > 3.f)
+        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - player.second.m_legacyPlayer.getTimeDied()).count();
+        if (timeDiffSeconds >= GAME_PLAYER_RESPAWN_SECONDS)
         {
             // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
             player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
@@ -2378,7 +2379,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
 
-            const bool mapLoaded = m_maps.load(("gamedata/maps/" + std::string(msg.m_szMapFilename)).c_str());
+            const bool mapLoaded = m_maps.load((GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str());
             assert(mapLoaded);
         }
 
@@ -2404,14 +2405,14 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     }
 
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
-    PureTexture* pTexPlayer = getPure().getTextureManager().createFromFile("gamedata\\textures\\giraffe1m.bmp");
+    PureTexture* pTexPlayer = getPure().getTextureManager().createFromFile((std::string(GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     plane->getMaterial().setTexture(pTexPlayer);
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
     // these will be the reference weapons, never visible, never moving, just to be copied!
     if (msg.m_bCurrentClient)
     {
-        for (const auto& entry : std::filesystem::directory_iterator("gamedata/weapons/"))
+        for (const auto& entry : std::filesystem::directory_iterator(GAME_WEAPONS_DIR))
         {
             getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
             if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
@@ -2430,7 +2431,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...
-        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt");
+        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename(GAME_WPN_DEFAULT);
         assert(bWpnDefaultSet);
     }
 
@@ -2497,7 +2498,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            const bool mapLoaded = m_maps.load((std::string("gamedata/maps/") + m_sServerMapFilenameToLoad).c_str());
+            const bool mapLoaded = m_maps.load((std::string(GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str());
             assert(mapLoaded);
 
             char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
