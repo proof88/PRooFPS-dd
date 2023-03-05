@@ -311,6 +311,12 @@ private:
             }
         }
 
+        // all visible block objects are just clones of referenc objects
+        for (int i = 0; i < maps.getBlockCount(); i++)
+        {
+            assertNotNull((maps.getBlocks()[i])->getReferredObject(), (std::string("block ") + std::to_string(i) + " is NOT cloned object!").c_str());
+        }
+
         return b;
     }
 

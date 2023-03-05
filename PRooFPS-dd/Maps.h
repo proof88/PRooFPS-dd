@@ -82,6 +82,8 @@ private:
         '+', 'M', 'P', 'S'
     };
 
+    std::map<char, PureObject3D*> m_mapReferenceBlockObject3Ds;
+
     PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
     int m_blocks_h;
 

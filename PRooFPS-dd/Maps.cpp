@@ -49,7 +49,7 @@ const char* Maps::getLoggerModuleName()
 
 bool Maps::initialize()
 {
-    m_texRed = m_gfx.getTextureManager().createFromFile("gamedata\\textures\\red.bmp");
+    m_texRed = m_gfx.getTextureManager().createFromFile( (std::string(GAME_TEXTURES_DIR) + "red.bmp").c_str() );
     return true;
 }
 
@@ -198,6 +198,13 @@ void Maps::unload()
         m_foregroundBlocks = NULL;
         m_foregroundBlocks_h = 0;
     }
+
+    for (auto& pairChar2RefBlockObject3D : m_mapReferenceBlockObject3Ds)
+    {
+        delete pairChar2RefBlockObject3D.second;
+    }
+    m_mapReferenceBlockObject3Ds.clear();
+
     for (auto& itemPair : m_items)
     {
         delete itemPair.second;
@@ -579,12 +586,50 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
             {
                 iObjectBgToBeCopied = m_blocks_h - 1;
             }
-            // TODO: handle memory allocation error
+            // TODO: handle memory allocation errors
             m_blocks = (PureObject3D**)realloc(m_blocks, m_blocks_h * sizeof(PureObject3D*));
-            pNewBlockObj = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+            
+            if (bSpecialBlock && bCopyPreviousBgBlock)
+            {
+                pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectBgToBeCopied]->getReferredObject()));
+            }
+            else
+            {
+                const auto it = m_mapReferenceBlockObject3Ds.find(c);
+                if (it == m_mapReferenceBlockObject3Ds.end())
+                {
+                    m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+                    m_mapReferenceBlockObject3Ds[c]->Hide();
+                    PureTexture* tex = PGENULL;
+                    if (m_Block2Texture.find(c) == m_Block2Texture.end())
+                    {
+                        const std::string sc(1, c); // WA for CConsole lack support of %c
+                        getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
+                        tex = m_texRed;
+                    }
+                    else
+                    {
+                        const std::string sTexName = GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
+                        tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
+                        if (!tex)
+                        {
+                            getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                            tex = m_texRed;
+                        }
+                    }
+                    if (!tex)
+                    {
+                        // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
+                        const std::string sc(1, c); // WA for CConsole lack support of %c
+                        getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+                    }
+                    m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
+                }
+                pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
+            }
+            pNewBlockObj->Show();
             m_blocks[m_blocks_h - 1] = pNewBlockObj;
             m_blocks[m_blocks_h - 1]->SetLit(true);
-            //m_blocks[m_blocks_h - 1]->Hide();
 
             if (bForeground)
             {
@@ -599,39 +644,6 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
             continue;
         }
 
-        PureTexture* tex = PGENULL;
-        if (bSpecialBlock && bCopyPreviousBgBlock)
-        {
-            tex = m_blocks[iObjectBgToBeCopied]->getMaterial().getTexture();
-        }
-        else
-        {
-            if (m_Block2Texture.find(c) == m_Block2Texture.end())
-            {
-                const std::string sc(1, c); // WA for CConsole lack support of %c
-                getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
-                tex = m_texRed;
-            }
-            else
-            {
-                const std::string sTexName = "gamedata\\textures\\" + m_sRawName + "\\" + m_Block2Texture[c];
-                tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
-                if (!tex)
-                {
-                    getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
-                    tex = m_texRed;
-                }
-            }
-            if (!tex)
-            {
-                // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
-                const std::string sc(1, c); // WA for CConsole lack support of %c
-                getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
-            }
-        }
-
-        pNewBlockObj->getMaterial().setTexture(tex);
-
         if (bForeground)
         {
             // only foreground blocks should be checked for collision
@@ -639,7 +651,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
         }
 
         pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
-    }
+    }  // while
     y = y - GAME_BLOCK_SIZE_Y;
     return true;
 }
