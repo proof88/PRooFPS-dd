@@ -109,6 +109,6 @@ private:
     static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
     void lineHandleAssignment(std::string& sVar, std::string& sValue);
-    bool lineHandleLayout(const std::string& sLine, TPureFloat& y);
+    bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
 
 }; // class Maps

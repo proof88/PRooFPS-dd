@@ -94,8 +94,14 @@ bool Maps::load(const char* fname)
     const std::streamsize nBuffSize = 1024;
     char cLine[nBuffSize];
     TPureFloat y = 4.0f;
+    std::streampos fStreamPosMapLayoutStart, fStreamPosPrevLine;
+    // First the map layout handling will be "dry", meaning that the map won't be actually created but
+    // the number of required blocks will be counted. This is useful, because then in the next non-dry run,
+    // we preallocate exactly that array size required for that number of blocks, this way no reallocation of array will be needed.
+    // Since the maps are typed into text file by humans, we cannot expect them to save the exact number of blocks. :)
     while ( !bParseError && !f.eof() )
     {
+        fStreamPosPrevLine = f.tellg();
         f.getline(cLine, nBuffSize);
         // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
         PFL::strClr( cLine );
@@ -107,7 +113,6 @@ bool Maps::load(const char* fname)
         }
         else if ( lineIsValueAssignment(sLine, sVar, sValue, bParseError) )
         {
-            // TODO assign value
             if ( bMapLayoutReached )
             {
                 getConsole().EOLn("ERROR: parse: assignment after map layout block: %s!", sLine.c_str());
@@ -120,10 +125,37 @@ bool Maps::load(const char* fname)
         }
         else if ( !bParseError )
         {
-            bMapLayoutReached = true;
-            bParseError &= lineHandleLayout(sLine, y);
+            if (!bMapLayoutReached)
+            {
+                getConsole().OLn("Just reached map layout ...");
+                bMapLayoutReached = true;
+                fStreamPosMapLayoutStart = fStreamPosPrevLine;
+            }
+            bParseError &= lineHandleLayout(sLine, y, true);
         }
     };
+
+    if (!bParseError)
+    {
+        getConsole().OLn(
+            "Just finished dry run, now building up the map with width %u, height %u, m_blocks_h %d, m_foregroundBlocks_h %d ...",
+            m_width, m_height, m_blocks_h, m_foregroundBlocks_h);
+        f.clear();  // clears error states, including eof bit
+        f.seekg(fStreamPosMapLayoutStart);
+        y = 4.0f; // just reset this to same value as it was before the loop
+        while (!bParseError && !f.eof())
+        {
+            f.getline(cLine, nBuffSize);
+            // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
+            PFL::strClr(cLine);
+            const std::string sLine(cLine);
+            if (lineShouldBeIgnored(sLine))
+            {
+                continue;
+            }
+            bParseError &= lineHandleLayout(sLine, y, false);
+        }
+     }
     f.close();
 
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
@@ -136,6 +168,8 @@ bool Maps::load(const char* fname)
         unload();
         return false;
     }
+
+    getConsole().OLn("Just built up the map with m_blocks_h %d, m_foregroundBlocks_h %d ...", m_blocks_h, m_foregroundBlocks_h);
 
     m_blockPosMin = m_blocks[0]->getPosVec();
     m_blockPosMax = m_blocks[0]->getPosVec();
@@ -192,12 +226,12 @@ void Maps::unload()
         }
         free( m_blocks );
         m_blocks = NULL;
-        m_blocks_h = 0;
 
         free(m_foregroundBlocks);
         m_foregroundBlocks = NULL;
-        m_foregroundBlocks_h = 0;
     }
+    m_blocks_h = 0;
+    m_foregroundBlocks_h = 0;
 
     for (auto& pairChar2RefBlockObject3D : m_mapReferenceBlockObject3Ds)
     {
@@ -482,12 +516,38 @@ void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
     m_vars[sVar] = sValue.c_str();
 }
 
-bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
+/**
+ * This function to be invoked for every single line of the map layout definition.
+ * Map layout definition is the last part of a map file, containing the blocks building up the map (walls, floor, etc.).
+ * @param sLine   The current line of the map layout definition we want to process.
+ * @param y       The current height we are currently placing newly created blocks for this line of the map definition layout.
+ * @param bDryRun If true, blocks are not allocated thus the map is not actually created, however the following
+ *                variables are actually updated: m_width, m_height, m_blocks_h, m_foregroundBlocks_h, m_items, y.
+ *                If we finish processing all lines with bDryRun as true, we will know the actual size of the map and number of
+ *                blocks, thus in the next non-dry run we will have to allocate memory only once for the blocks.
+ *                And yes, dry run actually creates all the items in m_items.
+ */
+bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun)
 {
-    m_height++;
-    if ( m_width < sLine.length() )
+    if (bDryRun)
     {
-        m_width = sLine.length();
+        m_height++;
+        if (m_width < sLine.length())
+        {
+            m_width = sLine.length();
+        }
+    }
+    else
+    {
+        if (m_blocks == nullptr)
+        {
+            // first line in non-dry run, now we can allocate memory for all blocks
+            // TODO: handle memory allocation errors
+            m_blocks = (PureObject3D**)malloc(m_blocks_h * sizeof(PureObject3D*));
+            m_blocks_h = 0; // we are incrementing it again during non-dry run
+            m_foregroundBlocks = (PureObject3D**)malloc(m_foregroundBlocks_h * sizeof(PureObject3D*));
+            m_foregroundBlocks_h = 0; // we are incrementing it again during non-dry run
+        }
     }
 
     TPureFloat x = 0.0f;
@@ -529,48 +589,65 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
         // special background block handling
         bool bCopyPreviousBgBlock = false;
         bool bSpecialBlock = false;
-        MapItem* pMapItem;
         switch (c)
         {
         case '+':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
-            m_items.insert({pMapItem->getId(), pMapItem});
+        {
+            if (bDryRun)
+            {
+                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
+        }
         case 'M':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
-            m_items.insert({ pMapItem->getId(), pMapItem });
+        {
+            if (bDryRun)
+            {
+                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
+        }
         case 'P':
-            pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
-            m_items.insert({ pMapItem->getId(), pMapItem });
+        {
+            if (bDryRun)
+            {
+                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
+        }
         case 'S':
         {
-            // spawnpoint is background block by default
-            const PureVector vecSpawnPointPos(x, y, GAME_PLAYERS_POS_Z);
-            if (m_spawnpoints.empty())
+            if (!bDryRun)
             {
-                m_spawnpointLeftMost = vecSpawnPointPos;
-                m_spawnpointRightMost = vecSpawnPointPos;
-            }
-            else
-            {
-                if (x < m_spawnpointLeftMost.getX())
+                // spawnpoint is background block by default
+                const PureVector vecSpawnPointPos(x, y, GAME_PLAYERS_POS_Z);
+                if (m_spawnpoints.empty())
                 {
                     m_spawnpointLeftMost = vecSpawnPointPos;
-                }
-                if (x > m_spawnpointRightMost.getX())
-                {
                     m_spawnpointRightMost = vecSpawnPointPos;
                 }
+                else
+                {
+                    if (x < m_spawnpointLeftMost.getX())
+                    {
+                        m_spawnpointLeftMost = vecSpawnPointPos;
+                    }
+                    if (x > m_spawnpointRightMost.getX())
+                    {
+                        m_spawnpointRightMost = vecSpawnPointPos;
+                    }
+                }
+                m_spawnpoints.insert(vecSpawnPointPos);
             }
-            m_spawnpoints.insert(vecSpawnPointPos);
             bSpecialBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
@@ -586,56 +663,58 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y)
             {
                 iObjectBgToBeCopied = m_blocks_h - 1;
             }
-            // TODO: handle memory allocation errors
-            m_blocks = (PureObject3D**)realloc(m_blocks, m_blocks_h * sizeof(PureObject3D*));
-            
-            if (bSpecialBlock && bCopyPreviousBgBlock)
+            if (!bDryRun)
             {
-                pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectBgToBeCopied]->getReferredObject()));
-            }
-            else
-            {
-                const auto it = m_mapReferenceBlockObject3Ds.find(c);
-                if (it == m_mapReferenceBlockObject3Ds.end())
+                if (bSpecialBlock && bCopyPreviousBgBlock)
                 {
-                    m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
-                    m_mapReferenceBlockObject3Ds[c]->Hide();
-                    PureTexture* tex = PGENULL;
-                    if (m_Block2Texture.find(c) == m_Block2Texture.end())
+                    pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectBgToBeCopied]->getReferredObject()));
+                }
+                else
+                {
+                    const auto it = m_mapReferenceBlockObject3Ds.find(c);
+                    if (it == m_mapReferenceBlockObject3Ds.end())
                     {
-                        const std::string sc(1, c); // WA for CConsole lack support of %c
-                        getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
-                        tex = m_texRed;
-                    }
-                    else
-                    {
-                        const std::string sTexName = GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
-                        tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
-                        if (!tex)
+                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+                        m_mapReferenceBlockObject3Ds[c]->Hide();
+                        PureTexture* tex = PGENULL;
+                        if (m_Block2Texture.find(c) == m_Block2Texture.end())
                         {
-                            getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                            const std::string sc(1, c); // WA for CConsole lack support of %c
+                            getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
                             tex = m_texRed;
                         }
+                        else
+                        {
+                            const std::string sTexName = GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
+                            tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
+                            if (!tex)
+                            {
+                                getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                                tex = m_texRed;
+                            }
+                        }
+                        if (!tex)
+                        {
+                            // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
+                            const std::string sc(1, c); // WA for CConsole lack support of %c
+                            getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+                        }
+                        m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
                     }
-                    if (!tex)
-                    {
-                        // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
-                        const std::string sc(1, c); // WA for CConsole lack support of %c
-                        getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
-                    }
-                    m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
+                    pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
                 }
-                pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
+                pNewBlockObj->Show();
+                m_blocks[m_blocks_h - 1] = pNewBlockObj;
+                m_blocks[m_blocks_h - 1]->SetLit(true);
             }
-            pNewBlockObj->Show();
-            m_blocks[m_blocks_h - 1] = pNewBlockObj;
-            m_blocks[m_blocks_h - 1]->SetLit(true);
 
             if (bForeground)
             {
                 m_foregroundBlocks_h++;
-                m_foregroundBlocks = (PureObject3D**)realloc(m_foregroundBlocks, m_foregroundBlocks_h * sizeof(PureObject3D*));
-                m_foregroundBlocks[m_foregroundBlocks_h - 1] = pNewBlockObj;
+                if (!bDryRun)
+                {
+                    m_foregroundBlocks[m_foregroundBlocks_h - 1] = pNewBlockObj;
+                }
             }
         }
 
