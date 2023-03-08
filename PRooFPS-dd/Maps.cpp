@@ -131,7 +131,7 @@ bool Maps::load(const char* fname)
                 bMapLayoutReached = true;
                 fStreamPosMapLayoutStart = fStreamPosPrevLine;
             }
-            bParseError &= lineHandleLayout(sLine, y, true);
+            bParseError = !lineHandleLayout(sLine, y, true);
         }
     };
 
@@ -153,7 +153,7 @@ bool Maps::load(const char* fname)
             {
                 continue;
             }
-            bParseError &= lineHandleLayout(sLine, y, false);
+            bParseError = !lineHandleLayout(sLine, y, false);
         }
      }
     f.close();
