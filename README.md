@@ -24,10 +24,7 @@ The following cvars (config variables) are supported so far: cl_name, cl_server_
 Example command line to start up a client: "PRooFPS-dd.exe --net_server=false --cl_server_ip=127.0.0.1"
  - **FTR: regression test**: a simple regression test (https://github.com/proof88/PRooFPS-dd/blob/main/PRooFPS-dd/Tests/RegTestBasicServerClient2Players.h) is added that starts up 2 instances of the game: 1 server and 1 client. User input (running, jumping, shooting) is simulated for both instances, and then some values (player data, frag table data, packet statistics) are checked to decide the result of the test.
  - **FTR: testing mode**: to support regression test, a testing mode has been introduced that can be enabled by setting cvar "testing" to "true". In such case, the game saves data to be evaluated by regression test to either "RegTestDumpServer.txt" or "RegTestDumpClient.txt".
- - **RFR: OPT**: for creating map blocks and items, the PureObject3DManager::createCloned() of the graphics engine is now utilized to clone same-looking objects instead of creating them one by one from scratch. This way the memory usage and loading time decreases in both debug and release modes the following way, using map_warhouse.txt:
-  - system memory usage decreases by 30% (-16 MByte);
-  - video memory usage decreases by 25% (-2 MByte);
-  - map loading time decreases by 40% (-1-2 secs).
+ - **RFR: OPT**: for creating map blocks and items, the PureObject3DManager::createCloned() of the graphics engine is now utilized to clone same-looking objects instead of creating them one by one from scratch. This way the memory usage and loading time decreases in both debug and release modes the following way, using map_warhouse.txt: system memory usage decreases by 30% (-16 MByte), video memory usage decreases by 25% (-2 MByte), map loading time decreases by 40% (-1-2 secs).
 
 ### v0.1 Private Beta
 
