@@ -13,7 +13,7 @@ This game is still **under development**.
 You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
 
-## Keyboard
+## Keyboard, Mouse
 
  - **WASD, LEFT/RIGHT:** walking/running with the player;
  - **SHIFT:** toggles between walking and running;
