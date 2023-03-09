@@ -8,7 +8,7 @@ https://github.com/proof88/PR00FPS
 
 This game is still **under development**.
 
-On Dec 10, 2023, the game reached **v0.1.1 private beta version** that contains no changes to gameplay compared to the previous version:
+On March 10, 2023, the game reached **v0.1.1 private beta version** that contains no changes to gameplay compared to the previous version:
  - **FTR: user profile config support**: each user can have their own config files. Currently the config file of the first found user profile is loaded automatically. With this change, there is no more need for "gyorsan.txt" and "server.txt". The following cvars (config variables) are supported so far: cl_name, cl_server_ip, gfx_windowed, gfx_vsync, net_server, sv_map.
  - **FTR: command line support**: cvars (config variables) can be also defined now in command line arguments. These override values loaded from user profile config file (except cl_name). Example command line to start up a client: "PRooFPS-dd.exe --net_server=false --cl_server_ip=127.0.0.1"
  - **FTR: regression test**: a simple regression test (https://github.com/proof88/PRooFPS-dd/blob/main/PRooFPS-dd/Tests/RegTestBasicServerClient2Players.h) is added that starts up 2 instances of the game: 1 server and 1 client. User input (running, jumping, shooting) is simulated for both instances, and then some values (player data, frag table data, packet statistics) are checked to decide the result of the test.
