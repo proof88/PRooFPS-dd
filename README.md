@@ -15,15 +15,16 @@ https://www.facebook.com/whiskhyll
 
 ## Keyboard
 
- - **TAB:** shows frag table;
- - **BACKSPACE:** shows GUI demo;
- - **ENTER/RETURN:** if "testing=true" is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
- - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window;
  - **WASD, LEFT/RIGHT:** walking/running with the player;
  - **SHIFT:** toggles between walking and running;
  - **R**: reload current weapon;
  - **2,3 / Mouse Wheel**: change to pistol or machine gun;
- - **Mouse Click**: shoot.
+ - **Mouse Click**: shoot;
+ - **TAB:** shows frag table;
+ - **BACKSPACE:** shows GUI demo;
+ - **ENTER/RETURN:** if "testing=true" is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
+ - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
+
 
 ## History
 
