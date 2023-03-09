@@ -13,6 +13,18 @@ This game is still **under development**.
 You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
 
+## Keyboard
+
+ - **TAB:** shows frag table;
+ - **BACKSPACE:** shows GUI demo;
+ - **ENTER/RETURN:** if "testing=true" is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
+ - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window;
+ - **WASD, LEFT/RIGHT:** walking/running with the player;
+ - **SHIFT:** toggles between walking and running;
+ - **R**: reload current weapon;
+ - **2,3 / Mouse Wheel**: change to pistol or machine gun;
+ - **Mouse Click**: shoot.
+
 ## History
 
 ### v0.1.1 Private Beta (March 10, 2023)
@@ -25,7 +37,7 @@ Example command line to start up a client: **"PRooFPS-dd.exe --net_server=false 
  - **FTR: regression test**: a simple [regression test](https://github.com/proof88/PRooFPS-dd/blob/main/PRooFPS-dd/Tests/RegTestBasicServerClient2Players.h) is added that starts up 2 instances of the game: 1 server and 1 client. User input (running, jumping, shooting) is simulated for both instances, and then some values (player data, frag table data, packet statistics) are checked to decide the result of the test.
  - **FTR: testing mode**: to support regression test, a testing mode has been introduced that can be enabled by setting cvar "testing" to "true". In such case, the game saves data to be evaluated by regression test to either "RegTestDumpServer.txt" or "RegTestDumpClient.txt".
  - **RFR: OPT**: for creating map blocks and items, the PureObject3DManager::createCloned() of the graphics engine is now utilized to clone same-looking objects instead of creating them one by one from scratch. This way the memory usage and loading time decreases in both debug and release modes the following way, using map_warhouse.txt: **system memory usage decreases by 30% (-16 MByte), video memory usage decreases by 25% (-2 MByte), map loading time decreases by 40% (-1-2 secs)**.
- - **RFR: OPT**: when loading a map and creating blocks, instead of reallocating array every time we are creating a new block, now we count the number of blocks and allocate array with the proper size only once, before actually creating blocks. This supposed to speed up the loading.
+ - **RFR: OPT**: when loading a map and creating blocks, instead of reallocating array every time we are creating a new block, now we count the number of blocks and allocate array with the proper size only once, before actually creating blocks. This also supposed to speed up the loading.
 
 ### v0.1 Private Beta (Dec 16, 2022)
 
