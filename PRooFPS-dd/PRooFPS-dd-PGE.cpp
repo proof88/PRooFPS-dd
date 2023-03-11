@@ -323,6 +323,48 @@ PureVector& CPlayer::getWeaponAngle()
     return m_vWpnAngle;
 }
 
+void CPlayer::Die(bool bMe, bool bServer)
+{
+    getTimeDied() = std::chrono::steady_clock::now();
+    if (bMe)
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
+    }
+    else
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
+    }
+    SetHealth(0);
+    getAttachedObject()->Hide();
+    getWeapon()->getObject3D().Hide();
+    if (bServer)
+    {
+        getDeaths()++;
+        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, getDeaths());
+    }
+}
+
+void CPlayer::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable)
+{
+    getAttachedObject()->Show();
+
+    for (auto pWpn : getWeapons())
+    {
+        if (!pWpn)
+        {
+            continue;
+        }
+
+        pWpn->Reset();
+        if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
+        {
+            pWpn->SetAvailable(true);
+            SetWeapon(pWpn, false);
+            pWpn->UpdatePosition(getAttachedObject()->getPosVec());
+        }
+    }
+}
+
 std::chrono::time_point<std::chrono::steady_clock>& CPlayer::getTimeDied()
 {
     return m_timeDied;
@@ -1453,7 +1495,6 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
         if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             //getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
-            legacyPlayer.SetHealth(0);
             HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
         }
     }
@@ -1726,51 +1767,20 @@ void PRooFPSddPGE::UpdateWeapons()
 
 void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
 {
-    player.getAttachedObject()->Hide();
-    player.getWeapon()->getObject3D().Hide();
-    player.getTimeDied() = std::chrono::steady_clock::now();
-
+    player.Die(bMe, getNetwork().isServer());
     if (bMe)
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
         getAudio().play(m_sndPlayerDie);
         m_pObjXHair->Hide();
         AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
-    }
-    else
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
-    }
-
-    if (getNetwork().isServer())
-    {
-        player.getDeaths()++;
-        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, player.getDeaths());
     }
 }
 
 void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
 {
-    player.getAttachedObject()->Show();
-
-    Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
+    const Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
-
-    for (auto pWpn : player.getWeapons())
-    {
-        if (!pWpn)
-        {
-            continue;
-        }
-
-        pWpn->Reset();
-        if (pWpn->getFilename() == wpnDefaultAvailable->getFilename())
-        {
-            pWpn->SetAvailable(true);
-            player.SetWeapon(pWpn, false);
-            pWpn->UpdatePosition(player.getAttachedObject()->getPosVec());
-        }
-    }
+    player.Respawn(bMe, *wpnDefaultAvailable);
 
     if (bMe)
     {

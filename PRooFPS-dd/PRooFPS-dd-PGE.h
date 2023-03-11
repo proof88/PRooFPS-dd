@@ -72,6 +72,8 @@ public:
     void SetCanFall(bool state);
     bool isRunning() const;
     void SetRun(bool state);
+    void Die(bool bMe, bool bServer);
+    void Respawn(bool bMe, const Weapon& wpnDefaultAvailable);
     PureVector& getForce();
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
