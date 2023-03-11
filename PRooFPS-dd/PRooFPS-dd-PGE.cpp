@@ -2381,7 +2381,13 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         return false;
     }
 
-    assert(0 != strnlen(msg.m_szUserName, sizeof(msg.m_szUserName)));
+    if (strnlen(msg.m_szUserName, sizeof(msg.m_szUserName) == 0))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: user name empty (connHandleServerSide: %u)!",
+            __func__, connHandleServerSide);
+        assert(false);
+        return false;
+    }
 
     if (msg.m_bCurrentClient)
     {
@@ -2406,8 +2412,12 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
 
-            const bool mapLoaded = m_maps.load((GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str());
-            assert(mapLoaded);
+            if (!m_maps.load((GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
+                assert(false);
+                return false;
+            }
         }
 
         getAudio().play(m_sndLetsgo);
@@ -2427,6 +2437,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     if (!plane)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
+        assert(false);
         return false;
     }
 
@@ -2449,20 +2460,33 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
             if (entry.path().extension().string() == ".txt")
             {
-                const bool bWpnLoaded = getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide);
-                assert(bWpnLoaded);
+                if (!getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): failed to load weapon: %s!", __func__, entry.path().string().c_str());
+                    assert(false);
+                    return false;
+                }
             }
         }
 
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...
-        const bool bWpnDefaultSet = getWeaponManager().setDefaultAvailableWeaponByFilename(GAME_WPN_DEFAULT);
-        assert(bWpnDefaultSet);
+        if (!getWeaponManager().setDefaultAvailableWeaponByFilename(GAME_WPN_DEFAULT))
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): failed to set default weapon: %s!", __func__, GAME_WPN_DEFAULT);
+            assert(false);
+            return false;
+        }
     }
 
     Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
-    assert(wpnDefaultAvailable);
+    if (!wpnDefaultAvailable)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to get default weapon!", __func__);
+        assert(false);
+        return false;
+    }
 
     // and here the actual weapons for the specific player, these can be visible when active, moving with player, etc.
     // client doesnt do anything else with these, server also uses these to track and validate player weapons and related actions.
@@ -2486,6 +2510,8 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     if (!m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getWeapon())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): no default weapon selected for user %s!", __func__, msg.m_szUserName);
+        assert(false);
+        return false;
     }
 
     // Note that this is a waste of resources this way.
@@ -2526,8 +2552,12 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            const bool mapLoaded = m_maps.load((std::string(GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str());
-            assert(mapLoaded);
+            if (!m_maps.load((std::string(GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
+                assert(false);
+                return false;
+            }
 
             char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
             genUniqueUserName(szNewUserName);
@@ -2658,7 +2688,8 @@ bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandl
     if (m_mapPlayers.end() == playerIt)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return false;
+        assert(false); // in debug mode, try to understand this scenario
+        return true; // in release mode, dont terminate
     }
 
     const std::string& sClientUserName = playerIt->first;
@@ -2694,7 +2725,8 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return false;
+        assert(false);  // in debug mode this terminates server
+        return true;    // in release mode, we dont terminate the server, just silently ignore
     }
 
     const std::string& sClientUserName = it->first;
@@ -2704,7 +2736,9 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
-        return false;
+        assert(false);  // in debug mode this terminates server
+        return false;   // in release mode, we dont terminate the server, just silently ignore
+        // TODO: I might disconnect this client!
     }
 
     auto& legacyPlayer = it->second.m_legacyPlayer;
@@ -2771,6 +2805,8 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     Weapon* const wpn = legacyPlayer.getWeapon();
     if (!wpn)
     {
+        getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
+        assert(false);
         return false;
     }
 
@@ -2822,8 +2858,9 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         if (!pTargetWpn->isAvailable())
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
-            assert(false);  // must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
-            return false;
+            assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
+            return true;    // in release mode, dont terminate the server, just silently ignore!
+            // TODO: I might disconnect this client!
         }
 
         if (pTargetWpn != legacyPlayer.getWeapon())
@@ -2855,6 +2892,9 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             // should not happen because client should NOT send message in such case
             getConsole().OLn("PRooFPSddPGE::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
                 __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+            assert(false);  // in debug mode, terminate the game
+            return true;   // in release mode, dont terminate the server, just silently ignore!
+            // TODO: I might disconnect this client!
         }
     }
 
@@ -2916,6 +2956,8 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
                 else
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                    assert(false);
+                    return false;
                 }
             }
         }
@@ -2932,7 +2974,7 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return false;
+        return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
@@ -3024,7 +3066,9 @@ bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
             const Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon();
             if (!wpn)
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn!", __func__);
+                getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
+                assert(false);
+                return false;
             }
             else
             {
@@ -3040,6 +3084,8 @@ bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
                 else
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                    assert(false);
+                    return false;
                 }
             }
         }
