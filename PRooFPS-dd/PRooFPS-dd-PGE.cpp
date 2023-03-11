@@ -595,13 +595,24 @@ bool PRooFPSddPGE::onGameInitialized()
     getPure().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
 
     m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
-    assert(m_gameMode);
+    if (!m_gameMode)
+    {
+        getConsole().EOLnOO("ERROR: createGameMode() failed!");
+        return false;
+    }
 
     m_deathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_gameMode);
-    assert(m_deathMatchMode);
+    if (!m_deathMatchMode)
+    {
+        getConsole().EOLnOO("ERROR: m_deathMatchMode null!");
+        return false;
+    }
 
-    const bool bMapsInited = m_maps.initialize();
-    assert(bMapsInited);
+    if (!m_maps.initialize())
+    {
+        getConsole().EOLnOO("ERROR: m_maps.initialize() failed!");
+        return false;
+    }
 
     m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -639,7 +650,8 @@ bool PRooFPSddPGE::onGameInitialized()
         if (!getNetwork().getServer().startListening())
         {
             PGE::showErrorDialog("Server has FAILED to start listening!");
-            assert(false);
+            getConsole().EOLnOO("ERROR: Server has FAILED to start listening!");
+            return false;
         }
 
         if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
@@ -671,8 +683,9 @@ bool PRooFPSddPGE::onGameInitialized()
 
         if (!getNetwork().getClient().connectToServer(sIp))
         {
+            getConsole().EOLnOO("ERROR: Client has FAILED to establish connection to the server!");
             PGE::showErrorDialog("Client has FAILED to establish connection to the server!");
-            assert(false);
+            return false;
         }
     }
 
@@ -1741,7 +1754,7 @@ void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
     player.getAttachedObject()->Show();
 
     Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
-    assert(wpnDefaultAvailable);
+    assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
 
     for (auto pWpn : player.getWeapons())
     {
@@ -2162,7 +2175,7 @@ void PRooFPSddPGE::onGameRunning()
                 if (getNetwork().isServer())
                 {
                     // inject this packet to server's queue
-                    // server will properly update its own position and send update to all clients too based on current state of HandleUserCmdMove()
+                    // server will properly update its own position and send update to all clients too based on current state of handleUserCmdMove()
                     getNetwork().getServer().InjectPacket(pkt);
                 }
                 else
@@ -2232,54 +2245,60 @@ void PRooFPSddPGE::onGameRunning()
 
 /**
     Called when a new network packet is received.
+
+    @return True on successful packet handling, false on serious error that should result in terminating the application.
 */
-void PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
+bool PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+    bool bRet;
 
     switch (pkt.pktId)
     {
     case pge_network::MsgUserConnected::id:
-        HandleUserConnected(pkt.m_connHandleServerSide, pkt.msg.userConnected);
+        bRet = handleUserConnected(pkt.m_connHandleServerSide, pkt.msg.userConnected);
         break;
     case pge_network::MsgUserDisconnected::id:
-        HandleUserDisconnected(pkt.m_connHandleServerSide, pkt.msg.userDisconnected);
+        bRet = handleUserDisconnected(pkt.m_connHandleServerSide, pkt.msg.userDisconnected);
         break;
     case pge_network::MsgApp::id:
     {
         switch (static_cast<proofps_dd::ElteFailMsgId>(pkt.msg.app.msgId))
         {
         case proofps_dd::MsgUserSetup::id:
-            HandleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
+            bRet = handleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserCmdMove::id:
-            HandleUserCmdMove(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
+            bRet = handleUserCmdMove(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserUpdate::id:
-            HandleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
+            bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgBulletUpdate::id:
-            HandleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
+            bRet = handleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgMapItemUpdate::id:
-            HandleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
+            bRet = handleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgWpnUpdate::id:
-            HandleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
+            bRet = handleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgWpnUpdateCurrent::id:
-            HandleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
+            bRet = handleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
             break;
         default:
+            bRet = false;
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
         }
         break;
     }
     default:
+        bRet = false;
         getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pkt.pktId);
     }
 
     m_nFullOnPacketReceivedDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    return bRet;
 }
 
 /**
@@ -2352,14 +2371,14 @@ void PRooFPSddPGE::WritePlayerList()
     getConsole().OO();
 }
 
-void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
+bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
 {
     if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(msg.m_szUserName)))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: user %s (connHandleServerSide: %u) is already present in players list!",
             __func__, msg.m_szUserName, connHandleServerSide);
         assert(false);
-        return;
+        return false;
     }
 
     assert(0 != strnlen(msg.m_szUserName, sizeof(msg.m_szUserName)));
@@ -2408,8 +2427,7 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     if (!plane)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
-        // TODO: should exit or sg
-        return;
+        return false;
     }
 
     m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
@@ -2480,15 +2498,17 @@ void PRooFPSddPGE::HandleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
     getNetwork().WriteList();
     WritePlayerList();
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
+bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
 {
     if (!getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     const char* szConnectedUserName = nullptr;
@@ -2536,7 +2556,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             getConsole().EOLn("PRooFPSddPGE::%s(): user (connHandleServerSide: %u) connected with bCurrentClient as true but it is not me, CANNOT HAPPEN!",
                 __func__, connHandleServerSide);
             assert(false);
-            return;
+            return false;
         }
     }
     else
@@ -2549,7 +2569,7 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             getConsole().EOLn("PRooFPSddPGE::%s(): non-server user (connHandleServerSide: %u) connected but map of players is still empty, CANNOT HAPPEN!",
                 __func__, connHandleServerSide);
             assert(false);
-            return;
+            return false;
         }
 
         char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
@@ -2628,15 +2648,17 @@ void PRooFPSddPGE::HandleUserConnected(pge_network::PgeNetworkConnectionHandle c
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktMapItemUpdate);
         }
     }
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
+bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
 {
     const auto playerIt = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
+        return false;
     }
 
     const std::string& sClientUserName = playerIt->first;
@@ -2655,22 +2677,24 @@ void PRooFPSddPGE::HandleUserDisconnected(pge_network::PgeNetworkConnectionHandl
 
     getNetwork().WriteList();
     WritePlayerList();
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
+bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
     if (!getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
+        return false;
     }
 
     const std::string& sClientUserName = it->first;
@@ -2680,7 +2704,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
-        return;
+        return false;
     }
 
     auto& legacyPlayer = it->second.m_legacyPlayer;
@@ -2690,12 +2714,12 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         if (pktUserCmdMove.m_bShootAction)
         {
             //getConsole().OLn("PRooFPSddPGE::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
-            return;
+            return true;
         }
 
         // for dead player, only the shoot action is allowed which is treated as respawn request
         //getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
-        return;
+        return true;
     }
 
     if (pktUserCmdMove.m_bSendSwitchToRunning)
@@ -2747,7 +2771,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     Weapon* const wpn = legacyPlayer.getWeapon();
     if (!wpn)
     {
-        return;
+        return false;
     }
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -2784,7 +2808,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for char %s!", __func__, sc.c_str());
             assert(false);
-            return;
+            return false;
         }
 
         Weapon* const pTargetWpn = legacyPlayer.getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
@@ -2792,14 +2816,14 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
             assert(false);
-            return;
+            return false;
         }
 
         if (!pTargetWpn->isAvailable())
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
             assert(false);  // must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
-            return;
+            return false;
         }
 
         if (pTargetWpn != legacyPlayer.getWeapon())
@@ -2843,7 +2867,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     {
         // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
         m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        return; // don't check anything related to shooting in case of either of these actions
+        return true; // don't check anything related to shooting in case of either of these actions
     }
 
     if (pktUserCmdMove.m_bShootAction)
@@ -2857,7 +2881,7 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
             // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
             m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            return;
+            return true;
         }
 
         // server will have the new bullet, clients will learn about the new bullet when server is sending out
@@ -2898,15 +2922,17 @@ void PRooFPSddPGE::HandleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     }
     // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
     m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
+bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
 {
     const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
+        return false;
     }
 
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
@@ -2953,15 +2979,17 @@ void PRooFPSddPGE::HandleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
             HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
         }
     }
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
+bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
 {
     if (getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     Bullet* pBullet = nullptr;
@@ -2983,7 +3011,7 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
             // this is valid scenario: when 2 players are at almost same position (partially overlapping), the bullet will immediately hit the other player
             // when being fired. In such case, we can just ignore doing anything here on client side.
             // TODO: btw why does sender send the message like this anyway to clients?!
-            return;
+            return true;
         }
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
@@ -3038,19 +3066,21 @@ void PRooFPSddPGE::HandleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
     if (msg.m_bDelete)
     {
         getWeaponManager().getBullets().erase(it);
-        return;
+        return true;
     }
 
     pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
+bool PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
 {
     if (getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     const auto it = m_maps.getItems().find(msg.m_mapItemId);
@@ -3058,7 +3088,7 @@ void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): unknown map item id %u, CANNOT HAPPEN!", __func__, msg.m_mapItemId);
         assert(false);
-        return;
+        return false;
     }
 
     MapItem* const pMapItem = it->second;
@@ -3071,15 +3101,17 @@ void PRooFPSddPGE::HandleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
     {
         pMapItem->UnTake();
     }
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgWpnUpdate& msg)
+bool PRooFPSddPGE::handleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgWpnUpdate& msg)
 {
     if (getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     //getConsole().OLn("PRooFPSddPGE::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
@@ -3089,28 +3121,31 @@ void PRooFPSddPGE::HandleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): my username is empty, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnName);
-        return;
+        assert(false);
+        return false;
     }
 
     wpn->SetAvailable(msg.m_bAvailable);
     wpn->SetMagBulletCount(msg.m_nMagBulletCount);
     wpn->SetUnmagBulletCount(msg.m_nUnmagBulletCount);
+
+    return true;
 }
 
-void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
+bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
 {
     if (getNetwork().isServer())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
         assert(false);
-        return;
+        return false;
     }
 
     //getConsole().OLn("PRooFPSddPGE::%s(): received: %s",  __func__, msg.m_szWpnCurrentName);
@@ -3119,14 +3154,16 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return;
+        assert(false);
+        return false;
     }
 
     Weapon* const wpn = it->second.m_legacyPlayer.getWeaponByFilename(msg.m_szWpnCurrentName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
-        return;
+        assert(false);
+        return false;
     }
 
     if (it->first == m_sUserName)
@@ -3136,6 +3173,8 @@ void PRooFPSddPGE::HandleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
     }
 
     it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
+
+    return true;
 }
 
 void PRooFPSddPGE::RegTestDumpToFile() 
