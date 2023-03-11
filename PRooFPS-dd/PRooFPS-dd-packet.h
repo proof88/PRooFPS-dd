@@ -10,8 +10,6 @@
     ###################################################################################
 */
 
-#include <cassert>
-
 #include "../../../PGE/PGE/Network/PgePacket.h"
 #include "../../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
 
@@ -47,7 +45,7 @@ namespace proofps_dd
             const std::string& sIpAddress,
             const std::string& sMapFilename)
         {
-            assert(sizeof(MsgUserSetup) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgUserSetup) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
@@ -84,7 +82,7 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt)
         {
-            assert(sizeof(MsgUserCmdMove) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgUserCmdMove) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             // m_connHandleServerSide is ignored in this message
             //pkt.m_connHandleServerSide = connHandleServerSide;
@@ -202,7 +200,7 @@ namespace proofps_dd
             int nFrags,
             int nDeaths)
         {
-            assert(sizeof(MsgUserUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgUserUpdate) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
@@ -253,7 +251,7 @@ namespace proofps_dd
             const TPureFloat sy,
             const TPureFloat sz)
         {
-            assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             //memset(&pkt, 0, sizeof(pkt));  // TODO: what is the use of memset anyway if we initialize all the members properly?!
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
@@ -281,7 +279,7 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const Bullet::BulletId bulletId)
         {
-            assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
             pkt.msg.app.msgId = static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id);
@@ -318,7 +316,7 @@ namespace proofps_dd
             const MapItem::MapItemId mapItemId,
             const bool bTaken)
         {
-            assert(sizeof(MsgMapItemUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgMapItemUpdate) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
@@ -350,7 +348,7 @@ namespace proofps_dd
             unsigned int nMagBulletCount,
             unsigned int nUnmagBulletCount)
         {
-            assert(sizeof(MsgWpnUpdate) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgWpnUpdate) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
@@ -388,7 +386,7 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const std::string& sWpnCurrentName)
         {
-            assert(sizeof(MsgWpnUpdateCurrent) <= pge_network::MsgApp::nMessageMaxLength);
+            static_assert(sizeof(MsgWpnUpdateCurrent) <= pge_network::MsgApp::nMessageMaxLength, "msg size");
             memset(&pkt, 0, sizeof(pkt));
             pkt.m_connHandleServerSide = connHandleServerSide;
             pkt.pktId = pge_network::PgePktId::APP;
