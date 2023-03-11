@@ -582,6 +582,8 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
 
         if (bForeground && bBackground)
         {
+            const std::string sc(1, c); // WA for CConsole lack support of %c
+            getConsole().EOLn("%s Block defined as both foreground and background: %s!", __FUNCTION__, sc.c_str());
             assert(false);
             return false;
         }

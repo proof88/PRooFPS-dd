@@ -150,8 +150,8 @@ protected:
     explicit PRooFPSddPGE(const char* gametitle);  /**< This is the only usable ctor, this is used by the static createAndGet(). */
     virtual ~PRooFPSddPGE();
 
-    virtual void onGameInitializing() override;               /**< Must-have minimal stuff before loading anything. */
-    virtual void onGameInitialized() override;                /**< Loading game content here. */
+    virtual bool onGameInitializing() override;               /**< Must-have minimal stuff before loading anything. */
+    virtual bool onGameInitialized() override;                /**< Loading game content here. */
     virtual void onGameFrameBegin() override;                 /**< Game logic right before the engine would do anything. */
     virtual void onGameRunning() override;                    /**< Game logic for each frame. */
     virtual void onPacketReceived(

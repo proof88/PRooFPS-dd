@@ -532,7 +532,7 @@ PRooFPSddPGE::~PRooFPSddPGE()
     Must-have minimal stuff before loading anything.
     Game engine calls this before even finishing its own initialization.
 */
-void PRooFPSddPGE::onGameInitializing()
+bool PRooFPSddPGE::onGameInitializing()
 {
     // Earliest we can enable our own logging
     getConsole().Initialize((GAME_NAME + " " + GAME_VERSION + " log").c_str(), true);
@@ -560,12 +560,14 @@ void PRooFPSddPGE::onGameInitializing()
 
     // we need PGE::runGame() invoke EVERYTHING even when window is NOT active, and we will decide in onGameRunning() what NOT to do if window is inactive
     SetInactiveLikeActive(true);
+
+    return true;
 }
 
 /** 
     Loading game content here.
 */
-void PRooFPSddPGE::onGameInitialized()
+bool PRooFPSddPGE::onGameInitialized()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
@@ -697,6 +699,8 @@ void PRooFPSddPGE::onGameInitialized()
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = 0;
+
+    return true;
 }
 
 
