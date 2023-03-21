@@ -182,6 +182,7 @@
     <ClInclude Include="Consts.h" />
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="MapItem.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
     <ClInclude Include="Maps.h" />
@@ -191,6 +192,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
     <ClInclude Include="Tests\Input.h" />
+    <ClInclude Include="Tests\PlayerTest.h" />
     <ClInclude Include="Tests\Process.h" />
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
     <ClInclude Include="Tests\MapItemTest.h" />
@@ -199,6 +201,7 @@
   <ItemGroup>
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="MapItem.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="PRooFPS-dd-PGE.cpp" />
     <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />

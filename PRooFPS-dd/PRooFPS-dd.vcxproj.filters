@@ -243,6 +243,12 @@
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h">
       <Filter>Header Files\PGE\Config</Filter>
     </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\PlayerTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -268,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="Tests\Input.cpp">
       <Filter>Source Files\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

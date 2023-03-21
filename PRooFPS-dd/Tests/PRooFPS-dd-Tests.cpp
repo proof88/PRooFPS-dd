@@ -24,8 +24,9 @@
 #include "GameModeTest.h"
 #include "MapItemTest.h"
 #include "MapsTest.h"
+#include "PlayerTest.h"
 
-// regression tests
+// regression smoke tests
 #include "RegTestBasicServerClient2Players.h"
 
 constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
@@ -59,12 +60,20 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     getConsole().L();
     getConsole().OLn("");
 
+    // this cfgProfiles instance is needed to kept in memory during all unit tests below, because
+    // some unit tests use the graphics engine, which is constructed only when the first relevant unit test
+    // initializes it, and no construction happens in later relevant unit tests by calling createAndGet(), since
+    // the engine instance is static ... so the engine instance will want to use the same cfgProfiles instance
+    // in other tests as well, which is this:
+    PGEcfgProfiles cfgProfiles(""); // TODO: even the engine should be constructed here and passed to test, but now this approach is enough ...
+
     vector<std::unique_ptr<UnitTest>> tests;
     
     // unit tests
     tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest()));
-    tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest()));
-    tests.push_back(std::unique_ptr<UnitTest>(new MapsTest()));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
+    tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
 
     // regression tests
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));

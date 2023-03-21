@@ -25,12 +25,8 @@ static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
 static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 1500.0f;
-static const float GAME_PLAYER_W = 0.95f;
-static const float GAME_PLAYER_H = 1.88f;
 static const float GAME_PLAYER_SPEED1 = 2.0f;
 static const float GAME_PLAYER_SPEED2 = 4.0f;
-static const float GAME_GRAVITY_MIN = -0.3f;
-static const float GAME_GRAVITY_MAX = 0.4f;
 static const float GAME_FALLING_SPEED = 0.8f;
 static const float GAME_JUMPING_SPEED = 2.0f;
 
@@ -39,471 +35,6 @@ static constexpr char* CVAR_SV_MAP = "sv_map";
 
 
 // ############################### PUBLIC ################################
-
-
-CPlayer::CPlayer() :
-  m_nHealth(100),
-  m_nOldHealth(100),
-  m_fPlayerAngleY(0.f),
-  m_fOldPlayerAngleY(0.f),
-  m_pObj(PGENULL),
-  m_pWpn(NULL),
-  pGFX(NULL),
-  m_fGravity(0.f),
-  m_bJumping(false),
-  b_mCanFall(true),
-  m_bRunning(true),
-  m_bAllowJump(false),
-  m_bExpectingStartPos(true),
-  m_bRespawn(false),
-  m_nFrags(0),
-  m_nOldFrags(0),
-  m_nDeaths(0),
-  m_nOldDeaths(0)
-{
-}
-
-void CPlayer::ShutDown()
-{
-    if (getAttachedObject())
-    {
-        delete getAttachedObject();  // yes, dtor will remove this from its Object3DManager too!
-    }
-
-    for (auto pWpn : getWeapons())
-    {
-        if (pWpn)
-        {
-            delete pWpn;
-        }
-    }
-    getWeapons().clear();
-}
-
-/* beállítja a megjelenítõ objektumot */
-void CPlayer::SetRendererObject(PR00FsUltimateRenderingEngine* gfx)
-{
-  pGFX = gfx;
-}
-
-/* visszaadja a játékos életerejét */
-int CPlayer::getHealth() const
-{
-  return m_nHealth;
-}
-
-PureVector& CPlayer::getPos1()
-{
-  return m_vecPos;
-}
-
-PureVector& CPlayer::getOPos1()
-{
-  return m_vecOldPos;
-}
-
-TPureFloat& CPlayer::getAngleY()
-{
-    return m_fPlayerAngleY;
-}
-
-TPureFloat& CPlayer::getOldAngleY()
-{
-    return m_fOldPlayerAngleY;
-}
-
-PureObject3D* CPlayer::getAttachedObject() const
-{
-  return m_pObj;
-}
-
-float CPlayer::getGravity() const
-{
-  return m_fGravity;
-}
-
-bool CPlayer::isJumping() const
-{
-  return m_bJumping;
-}
-
-bool CPlayer::isFalling() const
-{
-  return ( m_fGravity == 0.0f );
-}
-
-bool CPlayer::canFall() const
-{
-  return b_mCanFall;
-}
-
-void CPlayer::UpdateOldPos() {
-    m_vecOldPos = m_vecPos;
-    m_fOldPlayerAngleY = m_fPlayerAngleY;
-    m_vOldWpnAngle = m_vWpnAngle;
-}
-
-void CPlayer::SetHealth(int value) {
-    m_nHealth = min(value, 100);
-}
-
-void CPlayer::UpdateOldHealth()
-{
-    m_nOldHealth = m_nHealth;
-}
-
-int CPlayer::getOldHealth() const
-{
-    return m_nOldHealth;
-}
-
-void CPlayer::AttachObject(PureObject3D* value, bool blend) {
-  m_pObj = value;
-  if ( m_pObj != PGENULL )
-  {  
-      m_pObj->SetDoubleSided(true);
-      if ( blend )
-          m_pObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
-      m_pObj->SetLit(false);
-  }
-}
-
-void CPlayer::SetGravity(float value) {
-  m_fGravity = value;
-}
-
-bool CPlayer::jumpAllowed() const {
-    return m_bAllowJump;
-}
-
-void CPlayer::SetJumpAllowed(bool b) {
-    m_bAllowJump = b;
-}
-
-void CPlayer::Jump() {
-  m_bJumping = true;
-  m_fGravity = GAME_GRAVITY_MAX;
-  m_vecForce.SetX(m_vecPos.getX() - m_vecOldPos.getX() );
-  m_vecForce.SetY(m_vecPos.getY() - m_vecOldPos.getY() );
-  m_vecForce.SetZ(m_vecPos.getZ() - m_vecOldPos.getZ() );
-}
-
-void CPlayer::StopJumping() {
-  m_bJumping = false;
-}
-
-void CPlayer::DoDamage(int dmg) {
-  m_nHealth = m_nHealth - dmg;
-  if ( m_nHealth < 0 ) m_nHealth = 0;
-}
-
-void CPlayer::SetCanFall(bool state) {
-  b_mCanFall = state;
-}
-
-bool CPlayer::isRunning() const
-{
-    return m_bRunning;
-}
-
-void CPlayer::SetRun(bool state)
-{
-    m_bRunning = state;
-}
-
-PureVector& CPlayer::getForce()
-{
-    return m_vecForce;
-}
-
-bool CPlayer::isExpectingStartPos() const
-{
-    return m_bExpectingStartPos;
-}
-
-void CPlayer::SetExpectingStartPos(bool b)
-{
-    m_bExpectingStartPos = b;
-}
-
-Weapon* CPlayer::getWeapon()
-{
-    return m_pWpn;
-}
-
-const Weapon* CPlayer::getWeapon() const
-{
-    return m_pWpn;
-}
-
-void CPlayer::SetWeapon(Weapon* wpn, bool bRecordSwitchTime)
-{
-    if (!wpn)
-    {
-        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn("CPlayer::%s(): CANNOT set nullptr!", __func__);
-        return;
-    }
-
-    if (!wpn->isAvailable())
-    {
-        //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-        //    "CPlayer::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
-        return;
-    }
-
-    if (m_pWpn && (m_pWpn != wpn))
-    {
-        // we already have a current different weapon, so this will be a weapon switch
-        m_pWpn->getObject3D().Hide();
-        wpn->getObject3D().getAngleVec() = m_pWpn->getObject3D().getAngleVec();
-
-        if (bRecordSwitchTime)
-        {
-            getTimeLastWeaponSwitch() = std::chrono::steady_clock::now();
-        }
-    }
-    wpn->getObject3D().Show();
-    m_pWpn = wpn;
-}
-
-std::chrono::time_point<std::chrono::steady_clock>& CPlayer::getTimeLastWeaponSwitch()
-{
-    return m_timeLastWeaponSwitch;
-}
-
-std::vector<Weapon*>& CPlayer::getWeapons()
-{
-    return m_weapons;
-}
-
-const std::vector<Weapon*>& CPlayer::getWeapons() const
-{
-    return m_weapons;
-}
-
-const Weapon* CPlayer::getWeaponByFilename(const std::string& sFilename) const
-{
-    for (const auto pWpn : m_weapons)
-    {
-        if (pWpn)
-        {
-            if (pWpn->getFilename() == sFilename)
-            {
-                return pWpn;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-Weapon* CPlayer::getWeaponByFilename(const std::string& sFilename)
-{
-    for (const auto pWpn : m_weapons)
-    {
-        if (pWpn)
-        {
-            if (pWpn->getFilename() == sFilename)
-            {
-                return pWpn;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-PureVector& CPlayer::getOldWeaponAngle()
-{
-    return m_vOldWpnAngle;
-}
-
-PureVector& CPlayer::getWeaponAngle()
-{
-    return m_vWpnAngle;
-}
-
-void CPlayer::Die(bool bMe, bool bServer)
-{
-    getTimeDied() = std::chrono::steady_clock::now();
-    if (bMe)
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
-    }
-    else
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
-    }
-    SetHealth(0);
-    getAttachedObject()->Hide();
-    getWeapon()->getObject3D().Hide();
-    if (bServer)
-    {
-        getDeaths()++;
-        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, getDeaths());
-    }
-}
-
-void CPlayer::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable)
-{
-    getAttachedObject()->Show();
-
-    for (auto pWpn : getWeapons())
-    {
-        if (!pWpn)
-        {
-            continue;
-        }
-
-        pWpn->Reset();
-        if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
-        {
-            pWpn->SetAvailable(true);
-            SetWeapon(pWpn, false);
-            pWpn->UpdatePosition(getAttachedObject()->getPosVec());
-        }
-    }
-}
-
-std::chrono::time_point<std::chrono::steady_clock>& CPlayer::getTimeDied()
-{
-    return m_timeDied;
-}
-
-bool& CPlayer::getRespawnFlag()
-{
-    return m_bRespawn;
-}
-
-int& CPlayer::getFrags()
-{
-    return m_nFrags;
-}
-
-const int& CPlayer::getFrags() const
-{
-    return m_nFrags;
-}
-
-int& CPlayer::getOldFrags()
-{
-    return m_nOldFrags;
-}
-
-int& CPlayer::getDeaths()
-{
-    return m_nDeaths;
-}
-
-const int& CPlayer::getDeaths() const
-{
-    return m_nDeaths;
-}
-
-int& CPlayer::getOldDeaths()
-{
-    return m_nOldDeaths;
-}
-
-void CPlayer::UpdateFragsDeaths()
-{
-    m_nOldFrags = m_nFrags;
-    m_nOldDeaths = m_nDeaths;
-}
-
-bool CPlayer::canTakeItem(const MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName) const
-{
-    switch (item.getType())
-    {
-    case MapItemType::ITEM_WPN_PISTOL:
-    case MapItemType::ITEM_WPN_MACHINEGUN:
-    {
-        const auto it = mapItemTypeToWeaponName.find(item.getType());
-        if (it == mapItemTypeToWeaponName.end())
-        {
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-                "CPlayer::%s(): failed to find weapon by item type %d!", __func__, item.getType());
-            return false;
-        }
-        const std::string& sWeaponName = it->second;
-        const Weapon* const pWpn = getWeaponByFilename(sWeaponName);
-        if (!pWpn)
-        {
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-                "CPlayer::%s(): failed to find weapon by name %s for item type %d!", __func__, sWeaponName.c_str(), item.getType());
-            return false;
-        }
-        return pWpn->canIncBulletCount();
-    }
-    case MapItemType::ITEM_HEALTH:
-        return (getHealth() < 100);
-    default:
-        ;
-    }
-    return false;
-}
-
-void CPlayer::TakeItem(MapItem& item, const std::map<MapItemType, std::string>& mapItemTypeToWeaponName, pge_network::PgePacket& pktWpnUpdate)
-{
-    // invoked only on server
-    switch (item.getType())
-    {
-    case MapItemType::ITEM_WPN_PISTOL:
-    case MapItemType::ITEM_WPN_MACHINEGUN:
-    {
-        const auto it = mapItemTypeToWeaponName.find(item.getType());
-        if (it == mapItemTypeToWeaponName.end())
-        {
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-                "CPlayer::%s(): failed to find weapon by item type %d!", __func__, item.getType());
-            return;
-        }
-        const std::string& sWeaponBecomingAvailable = it->second;
-        Weapon* const pWpnBecomingAvailable = getWeaponByFilename(sWeaponBecomingAvailable);
-        if (!pWpnBecomingAvailable)
-        {
-            CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-                "CPlayer::%s(): failed to find weapon by name %s for item type %d!", __func__, sWeaponBecomingAvailable.c_str(), item.getType());
-            return;
-        }
-
-        item.Take();
-        if (pWpnBecomingAvailable->isAvailable())
-        {
-            // just increase bullet count
-            // TODO: this will be a problem for non-reloadable wpns such as rail gun, because there this value will be 0,
-            // but we will think about it later then ... probably in such case bullets_default will be used
-            pWpnBecomingAvailable->IncBulletCount(pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
-            //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-            //    "CPlayer::%s(): weapon %s pickup, already available, just inc unmag to: %u",
-            //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
-        }
-        else
-        {
-            // becoming available with default bullet count
-            //CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).OLn(
-            //    "CPlayer::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
-            //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
-        }
-        pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
-        proofps_dd::MsgWpnUpdate::initPkt(
-            pktWpnUpdate,
-            0 /* ignored by client anyway */,
-            sWeaponBecomingAvailable,
-            pWpnBecomingAvailable->isAvailable(),
-            pWpnBecomingAvailable->getMagBulletCount(),
-            pWpnBecomingAvailable->getUnmagBulletCount());  // becomes available on client side (after pkt being sent)
-        break;
-    }
-    case MapItemType::ITEM_HEALTH:
-        item.Take();
-        SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
-        break;
-    default:
-        CConsole::getConsoleInstance(PRooFPSddPGE::getLoggerModuleName()).EOLn(
-            "CPlayer::%s(): unknown item type %d!", __func__, item.getType());
-    }
-}
 
 
 PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
@@ -762,16 +293,6 @@ bool PRooFPSddPGE::onGameInitialized()
 // ############################### PRIVATE ###############################
 
 
-// The game engine's Weapon system and the game's Map system are 2 independent subsystems.
-// This map provides the logical connection between pickupable MapItems and actual weapons.
-// So when player picks up a specific MapItem, we know which weapon should become available for the player.
-// I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
-const std::map<MapItemType, std::string> PRooFPSddPGE::m_mapItemTypeToWeaponFilename =
-{
-    {MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
-    {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
-};
-
 const unsigned int PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
 
 // Which key should switch to which weapon
@@ -791,7 +312,7 @@ void PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
     getPure().getUImanager().addText(s, x, y)->SetDropShadow(true);
 }
 
-void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
+void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt, Player& player)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   
@@ -830,7 +351,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
         return;
     }
 
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
+    if (player.getHealth() == 0)
     {
         return;
     }
@@ -863,8 +384,8 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                 if (getNetwork().isServer())
                 {
                     // for testing purpose only, we can teleport server player to random spawn point
-                    m_mapPlayers[m_sUserName].m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
-                    m_mapPlayers[m_sUserName].m_legacyPlayer.getRespawnFlag() = true;
+                    player.getPos() = m_maps.getRandomSpawnpoint();
+                    player.getRespawnFlag() = true;
                 }
 
                 // log some stats
@@ -972,7 +493,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                     {
                         key.second.m_bReleased = false;
 
-                        const Weapon* const pTargetWpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(key.second.m_sWpnFilename);
+                        const Weapon* const pTargetWpn = player.getWeaponByFilename(key.second.m_sWpnFilename);
                         if (!pTargetWpn)
                         {
                             getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
@@ -985,7 +506,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
                             //    __func__, key.second.m_sWpnFilename.c_str());
                             break;
                         }
-                        if (pTargetWpn != m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon())
+                        if (pTargetWpn != player.getWeapon())
                         {
                             cWeaponSwitch = key.first;
                         }
@@ -1010,7 +531,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt)
     } // won
 }
 
-bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt)
+bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt, Player& player)
 {
     PGEInputMouse& mouse = getInput().getMouse();
 
@@ -1039,7 +560,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
 
         const auto nSecsSinceLastWeaponSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - m_mapPlayers[m_sUserName].m_legacyPlayer.getTimeLastWeaponSwitch()
+                std::chrono::steady_clock::now() - player.getTimeLastWeaponSwitch()
                 ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
@@ -1060,14 +581,14 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
         }
     }
 
-    if (m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() == 0)
+    if (player.getHealth() == 0)
     {
         return false;
     }
 
     if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdMove::getReloadRequest(pkt))
     {
-        MouseWheel(nMouseWheelChange, pkt);
+        MouseWheel(nMouseWheelChange, pkt, player);
     }
 
     // TODO: I think xhair update should happen earlier somewhere above, and click/wheel handling should
@@ -1113,7 +634,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     return true;
 }
 
-void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt)
+void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt, Player& player)
 {
     if (proofps_dd::MsgUserCmdMove::getWeaponSwitch(pkt) != '\0')
     {
@@ -1132,7 +653,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
 
     // not nice but we have to search by value in the map now ...
     // TODO: btw in the future the weapon switch forward/backward functionality will be implemented in WeaponManager
-    const Weapon* const pMyCurrentWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon();
+    const Weapon* const pMyCurrentWeapon = player.getWeapon();
     if (!pMyCurrentWeapon)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): pMyCurrentWeapon null, CANNOT HAPPEN!", __func__);
@@ -1174,7 +695,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
         it++;
         while (it != m_mapKeypressToWeapon.end())
         {
-            const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -1189,7 +710,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
             it = m_mapKeypressToWeapon.begin();
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -1213,7 +734,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
             {
                 break;
             }
-            const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -1228,7 +749,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
             --it;
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -1334,9 +855,9 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
 { 
     for (auto& player : m_mapPlayers)
     {
-        auto& legacyPlayer = player.second.m_legacyPlayer;
+        auto& legacyPlayer = player.second;
 
-        const PureObject3D* const plobj = legacyPlayer.getAttachedObject();
+        const PureObject3D* const plobj = legacyPlayer.getObject3D();
 
         // how to make collision detection even faster:
         // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
@@ -1344,15 +865,15 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
         // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
         // could be fetched into cache for even faster iteration on its elements ...
 
-        // at this point, legacyPlayer.getPos1().getY() is already updated by Gravity()
+        // at this point, legacyPlayer.getPos().getY() is already updated by Gravity()
         const float fBlockSizeXhalf = GAME_BLOCK_SIZE_X / 2.f;
         const float fBlockSizeYhalf = GAME_BLOCK_SIZE_Y / 2.f;
 
-        const float fPlayerOPos1XMinusHalf = legacyPlayer.getOPos1().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = legacyPlayer.getOPos1().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = legacyPlayer.getPos1().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf = legacyPlayer.getPos1().getY() + plobj->getSizeVec().getY() / 2.f;
-        if (legacyPlayer.getOPos1().getY() != legacyPlayer.getPos1().getY())
+        const float fPlayerOPos1XMinusHalf = legacyPlayer.getOPos().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = legacyPlayer.getOPos().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf = legacyPlayer.getPos().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf = legacyPlayer.getPos().getY() + plobj->getSizeVec().getY() / 2.f;
+        if (legacyPlayer.getOPos().getY() != legacyPlayer.getPos().getY())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
@@ -1369,9 +890,9 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                     continue;
                 }
 
-                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < legacyPlayer.getOPos1().getY() ? 1 : -1;
+                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < legacyPlayer.getOPos().getY() ? 1 : -1;
                 const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + GAME_PLAYER_H / 2.0f + 0.01f);
-                legacyPlayer.getPos1().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
+                legacyPlayer.getPos().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
 
                 if (nAlignUnderOrAboveWall == 1)
                 {
@@ -1391,14 +912,14 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
             }
         }
 
-        legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + legacyPlayer.getForce().getX());
+        legacyPlayer.getPos().SetX(legacyPlayer.getPos().getX() + legacyPlayer.getForce().getX());
 
-        const float fPlayerPos1XMinusHalf = legacyPlayer.getPos1().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1XPlusHalf = legacyPlayer.getPos1().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf_2 = legacyPlayer.getPos1().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf_2 = legacyPlayer.getPos1().getY() + plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1XMinusHalf = legacyPlayer.getPos().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1XPlusHalf = legacyPlayer.getPos().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf_2 = legacyPlayer.getPos().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf_2 = legacyPlayer.getPos().getY() + plobj->getSizeVec().getY() / 2.f;
 
-        if (legacyPlayer.getOPos1().getX() != legacyPlayer.getPos1().getX())
+        if (legacyPlayer.getOPos().getX() != legacyPlayer.getPos().getX())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
@@ -1416,9 +937,9 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                 }
 
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < legacyPlayer.getOPos1().getX() ? 1 : -1;
+                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < legacyPlayer.getOPos().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + GAME_PLAYER_W / 2.0f + 0.01f);
-                legacyPlayer.getPos1().SetX(obj->getPosVec().getX() + fAlignNextToWall);
+                legacyPlayer.getPos().SetX(obj->getPosVec().getX() + fAlignNextToWall);
 
                 break;
             }
@@ -1426,29 +947,29 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
     }
 }
 
-void PRooFPSddPGE::CameraMovement(int /*fps*/)
+void PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
     float speed = GAME_CAM_SPEED / 60.0f;
 
     /* ne mehessen túlságosan balra vagy jobbra a kamera */
-    //if ( m_player.getPos1().getX() < m_maps.getStartPos().getX() )
+    //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )
     //    celx = m_maps.getStartPos().getX();
     //else
-    //    if ( m_player.getPos1().getX() > m_maps.getEndPos().getX() )
+    //    if ( m_player.getPos().getX() > m_maps.getEndPos().getX() )
     //        celx = m_maps.getEndPos().getX();
     //     else
-            celx = m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getX();
+            celx = player.getObject3D()->getPosVec().getX();
 
     /* ne mehessen túlságosan le és fel a kamera */
-    //if ( m_player.getPos1().getY() < m_fCameraMinY )
+    //if ( m_player.getPos().getY() < m_fCameraMinY )
     //    cely = m_fCameraMinY;
     //else
-    //    if ( m_player.getPos1().getY() > GAME_CAM_MAX_Y )
+    //    if ( m_player.getPos().getY() > GAME_CAM_MAX_Y )
     //        cely = GAME_CAM_MAX_Y;
     //    else
-            cely = m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getY();
+            cely = player.getObject3D()->getPosVec().getY();
 
     /* a játékoshoz igazítjuk a kamerát */
     if (celx != campos.getX() )
@@ -1461,7 +982,7 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/)
     }
 
     getPure().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPure().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), m_mapPlayers[m_sUserName].m_legacyPlayer.getAttachedObject()->getPosVec().getZ() );
+    getPure().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), player.getObject3D()->getPosVec().getZ() );
 
 } // CameraMovement()
 
@@ -1469,7 +990,7 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
 {
     for (auto& player : m_mapPlayers)
     {
-        auto& legacyPlayer = player.second.m_legacyPlayer;
+        auto& legacyPlayer = player.second;
 
         if (legacyPlayer.isJumping())
         {
@@ -1490,12 +1011,12 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
                 }
             }
         }
-        legacyPlayer.getPos1().SetY(legacyPlayer.getPos1().getY() + legacyPlayer.getGravity());
+        legacyPlayer.getPos().SetY(legacyPlayer.getPos().getY() + legacyPlayer.getGravity());
         
-        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos1().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             //getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
-            HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
+            HandlePlayerDied(player.first == m_sUserName, player.second);
         }
     }
 }
@@ -1586,7 +1107,7 @@ void PRooFPSddPGE::UpdateBullets()
             // check if bullet is hitting a player
             for (auto& player : m_mapPlayers)
             {
-                if (bullet.getOwner() == player.second.m_connHandleServerSide)
+                if (bullet.getOwner() == player.second.getServerSideConnectionHandle())
                 {
                     // bullet cannot hit the owner, at least for now ...
                     // in the future, when bullets start in proper position, we won't need this check ...
@@ -1594,12 +1115,12 @@ void PRooFPSddPGE::UpdateBullets()
                     continue;
                 }
 
-                if ((player.second.m_legacyPlayer.getHealth() > 0) &&
-                    Colliding(*(player.second.m_legacyPlayer.getAttachedObject()), bullet.getObject3D()))
+                if ((player.second.getHealth() > 0) &&
+                    Colliding(*(player.second.getObject3D()), bullet.getObject3D()))
                 {
                     bDeleteBullet = true;
-                    player.second.m_legacyPlayer.DoDamage(bullet.getDamageHp());
-                    if (player.second.m_legacyPlayer.getHealth() == 0)
+                    player.second.DoDamage(bullet.getDamageHp());
+                    if (player.second.getHealth() == 0)
                     {
                         const auto itKiller = getPlayerMapItByConnectionHandle(bullet.getOwner());
                         if (itKiller == m_mapPlayers.end())
@@ -1609,13 +1130,13 @@ void PRooFPSddPGE::UpdateBullets()
                         }
                         else
                         {
-                            itKiller->second.m_legacyPlayer.getFrags()++;
+                            itKiller->second.getFrags()++;
                             bEndGame = m_gameMode->checkWinningConditions();
                             //getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by %s, who now has %d frags!",
-                            //    __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.m_legacyPlayer.getFrags());
+                            //    __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                         }
                         // server handles death here, clients will handle it when they receive MsgUserUpdate
-                        HandlePlayerDied(player.first == m_sUserName, player.second.m_legacyPlayer);
+                        HandlePlayerDied(player.first == m_sUserName, player.second);
                     }
                     break; // we can stop since 1 bullet can touch 1 player only at a time
                 }
@@ -1714,9 +1235,9 @@ void PRooFPSddPGE::UpdateBullets()
         // 'it' is referring to next bullet, don't use it from here!
         for (const auto& sendToThisPlayer : m_mapPlayers)
         {
-            if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+            if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
             {   // since bullet.Update() updates the bullet position already, server doesn't send this to itself
-                getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktBulletUpdate);
+                getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktBulletUpdate);
             }
         }
     }
@@ -1740,7 +1261,7 @@ void PRooFPSddPGE::UpdateWeapons()
 
     for (auto& player : m_mapPlayers)
     {
-        Weapon* const wpn = player.second.m_legacyPlayer.getWeapon();
+        Weapon* const wpn = player.second.getWeapon();
         if (!wpn)
         {
             continue;
@@ -1757,7 +1278,7 @@ void PRooFPSddPGE::UpdateWeapons()
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
                     wpn->getUnmagBulletCount());
-                getNetwork().getServer().SendPacketToClient(player.second.m_connHandleServerSide, pktWpnUpdate);
+                getNetwork().getServer().SendPacketToClient(player.second.getServerSideConnectionHandle(), pktWpnUpdate);
             }
         }
     }
@@ -1765,7 +1286,7 @@ void PRooFPSddPGE::UpdateWeapons()
     m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
+void PRooFPSddPGE::HandlePlayerDied(bool bMe, Player& player)
 {
     player.Die(bMe, getNetwork().isServer());
     if (bMe)
@@ -1776,7 +1297,7 @@ void PRooFPSddPGE::HandlePlayerDied(bool bMe, CPlayer& player)
     }
 }
 
-void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, CPlayer& player)
+void PRooFPSddPGE::HandlePlayerRespawned(bool bMe, Player& player)
 {
     const Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
@@ -1815,19 +1336,19 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
     for (auto& player : m_mapPlayers)
     {
-        if (player.second.m_legacyPlayer.getHealth() > 0)
+        if (player.second.getHealth() > 0)
         {
             continue;
         }
 
         const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - player.second.m_legacyPlayer.getTimeDied()).count();
+            std::chrono::steady_clock::now() - player.second.getTimeDied()).count();
         if (timeDiffSeconds >= GAME_PLAYER_RESPAWN_SECONDS)
         {
             // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-            player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
-            player.second.m_legacyPlayer.SetHealth(100);
-            player.second.m_legacyPlayer.getRespawnFlag() = true;
+            player.second.getPos() = m_maps.getRandomSpawnpoint();
+            player.second.SetHealth(100);
+            player.second.getRespawnFlag() = true;
         }
     }
 
@@ -1871,28 +1392,28 @@ void PRooFPSddPGE::PickupAndRespawnItems()
         {
             for (auto& player : m_mapPlayers)
             {
-                auto& legacyPlayer = player.second.m_legacyPlayer;
+                auto& legacyPlayer = player.second;
                 if (legacyPlayer.getHealth() <= 0)
                 {
                     continue;
                 }
 
-                const PureObject3D* const plobj = legacyPlayer.getAttachedObject();
+                const PureObject3D* const plobj = legacyPlayer.getObject3D();
 
                 // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
                 // decision than collision check ...
                 if (Colliding(*plobj, mapItem.getObject3D()))
                 {
                     proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
-                    if (legacyPlayer.canTakeItem(mapItem, m_mapItemTypeToWeaponFilename))
+                    if (legacyPlayer.canTakeItem(mapItem))
                     {
-                        legacyPlayer.TakeItem(mapItem, m_mapItemTypeToWeaponFilename, newPktWpnUpdate);  // this also invokes mapItem.Take()
+                        legacyPlayer.TakeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
                         // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
                         if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
                         {
-                            getNetwork().getServer().SendPacketToClient(player.second.m_connHandleServerSide, newPktWpnUpdate);
+                            getNetwork().getServer().SendPacketToClient(player.second.getServerSideConnectionHandle(), newPktWpnUpdate);
                         }
                         break; // a player can collide with only one item at a time since there are no overlapping items
                     }
@@ -1910,9 +1431,9 @@ void PRooFPSddPGE::PickupAndRespawnItems()
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+                if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
                 { 
-                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
+                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktMapItemUpdate);
                 }
             }
         }
@@ -1931,7 +1452,7 @@ void PRooFPSddPGE::UpdateGameMode()
     std::vector<proofps_dd::FragTableRow> players;
     for (const auto& player : m_mapPlayers)
     {
-        const proofps_dd::FragTableRow fragTableRow = { player.first, player.second.m_legacyPlayer.getFrags(), player.second.m_legacyPlayer.getDeaths() };
+        const proofps_dd::FragTableRow fragTableRow = { player.first, player.second.getFrags(), player.second.getDeaths() };
         players.push_back(fragTableRow);
     }
     m_deathMatchMode->UpdatePlayerData(players);
@@ -1947,11 +1468,11 @@ void PRooFPSddPGE::UpdateGameMode()
                 for (auto& player : m_mapPlayers)
                 {
                     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-                    player.second.m_legacyPlayer.getPos1() = m_maps.getRandomSpawnpoint();
-                    player.second.m_legacyPlayer.SetHealth(100);
-                    player.second.m_legacyPlayer.getFrags() = 0;
-                    player.second.m_legacyPlayer.getDeaths() = 0;
-                    player.second.m_legacyPlayer.getRespawnFlag() = true;
+                    player.second.getPos() = m_maps.getRandomSpawnpoint();
+                    player.second.SetHealth(100);
+                    player.second.getFrags() = 0;
+                    player.second.getDeaths() = 0;
+                    player.second.getRespawnFlag() = true;
                 }
 
                 // respawn all map items
@@ -1979,9 +1500,9 @@ void PRooFPSddPGE::UpdateGameMode()
 
                     for (const auto& sendToThisPlayer : m_mapPlayers)
                     {
-                        if (sendToThisPlayer.second.m_connHandleServerSide != 0)
+                        if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
                         {
-                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktMapItemUpdate);
+                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktMapItemUpdate);
                         }
                     }
                 } // end for items
@@ -1996,8 +1517,8 @@ void PRooFPSddPGE::UpdateGameMode()
                 m_pObjXHair->Hide();
                 for (auto& player : m_mapPlayers)
                 {
-                    player.second.m_legacyPlayer.getAttachedObject()->Hide();
-                    player.second.m_legacyPlayer.getWeapon()->getObject3D().Hide();
+                    player.second.getObject3D()->Hide();
+                    player.second.getWeapon()->getObject3D().Hide();
                 }
             }
         }
@@ -2019,9 +1540,9 @@ void PRooFPSddPGE::SendUserUpdates()
 
     for (auto& player : m_mapPlayers)
     {
-        auto& legacyPlayer = player.second.m_legacyPlayer;
+        auto& legacyPlayer = player.second;
 
-        if ((legacyPlayer.getPos1() != legacyPlayer.getOPos1()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
+        if ((legacyPlayer.getPos() != legacyPlayer.getOPos()) || (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY())
             || (legacyPlayer.getWeaponAngle() != legacyPlayer.getOldWeaponAngle())
             || (legacyPlayer.getHealth() != legacyPlayer.getOldHealth())
             || (legacyPlayer.getFrags() != legacyPlayer.getOldFrags())
@@ -2030,10 +1551,10 @@ void PRooFPSddPGE::SendUserUpdates()
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
-                player.second.m_connHandleServerSide,
-                legacyPlayer.getPos1().getX(),
-                legacyPlayer.getPos1().getY(),
-                legacyPlayer.getPos1().getZ(),
+                player.second.getServerSideConnectionHandle(),
+                legacyPlayer.getPos().getX(),
+                legacyPlayer.getPos().getY(),
+                legacyPlayer.getPos().getZ(),
                 legacyPlayer.getAngleY(),
                 legacyPlayer.getWeaponAngle().getY(),
                 legacyPlayer.getWeaponAngle().getZ(),
@@ -2043,21 +1564,21 @@ void PRooFPSddPGE::SendUserUpdates()
                 legacyPlayer.getDeaths());
 
             // we always reset respawn flag here
-            player.second.m_legacyPlayer.getRespawnFlag() = false;
+            player.second.getRespawnFlag() = false;
 
             // Note that health is not needed by server since it already has the updated health, but for convenience
             // we put that into MsgUserUpdate and send anyway like all the other stuff.
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                if (sendToThisPlayer.second.m_connHandleServerSide == 0)
+                if (sendToThisPlayer.second.getServerSideConnectionHandle() == 0)
                 {
                     // server injects this packet to own queue
                     getNetwork().getServer().InjectPacket(newPktUserUpdate);
                 }
                 else
                 {
-                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.m_connHandleServerSide, newPktUserUpdate);
+                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktUserUpdate);
                 }
             }
         }
@@ -2074,10 +1595,10 @@ void PRooFPSddPGE::onGameFrameBegin()
 {
     for (auto& player : m_mapPlayers)
     {
-        auto& legacyPlayer = player.second.m_legacyPlayer;
+        auto& legacyPlayer = player.second;
         if (getNetwork().isServer())
         {
-            if (legacyPlayer.getPos1().getY() != legacyPlayer.getOPos1().getY())
+            if (legacyPlayer.getPos().getY() != legacyPlayer.getOPos().getY())
             { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
                 legacyPlayer.SetJumpAllowed(false);
             }
@@ -2120,7 +1641,7 @@ void PRooFPSddPGE::onGameRunning()
 
     // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
     // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
-    const bool bValidConnection = !m_sUserName.empty();
+    const bool bValidConnection = !m_sUserName.empty() && (m_mapPlayers.find(m_sUserName) != m_mapPlayers.end());
 
     if (bValidConnection)
     {
@@ -2137,7 +1658,8 @@ void PRooFPSddPGE::onGameRunning()
             m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
 
-        CPlayer& legacyPlayer = m_mapPlayers[m_sUserName].m_legacyPlayer;
+        Player& legacyPlayer = m_mapPlayers.at(m_sUserName); // cannot throw, because of bValidConnection
+
         if (legacyPlayer.getWeapon())
         {
             // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
@@ -2156,11 +1678,11 @@ void PRooFPSddPGE::onGameRunning()
             pge_network::PgePacket pkt;
             proofps_dd::MsgUserCmdMove::initPkt(pkt);
 
-            KeyBoard(m_fps, m_bWon, pkt);
-            Mouse(m_fps, m_bWon, pkt);
+            KeyBoard(m_fps, m_bWon, pkt, legacyPlayer);
+            Mouse(m_fps, m_bWon, pkt, legacyPlayer);
 
             legacyPlayer.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
-            legacyPlayer.getAttachedObject()->getAngleVec().SetY(legacyPlayer.getAngleY());
+            legacyPlayer.getObject3D()->getAngleVec().SetY(legacyPlayer.getAngleY());
             if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) ||
                 (legacyPlayer.getOldAngleY() != legacyPlayer.getAngleY()))
             {
@@ -2171,7 +1693,7 @@ void PRooFPSddPGE::onGameRunning()
             if (wpn)
             {
                 // my xhair is used to update weapon angle
-                wpn->UpdatePositions(legacyPlayer.getAttachedObject()->getPosVec(), m_pObjXHair->getPosVec());
+                wpn->UpdatePositions(legacyPlayer.getObject3D()->getPosVec(), m_pObjXHair->getPosVec());
                 legacyPlayer.getWeaponAngle().Set(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ());
 
                 if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || (legacyPlayer.getOldWeaponAngle() != legacyPlayer.getWeaponAngle()))
@@ -2196,11 +1718,11 @@ void PRooFPSddPGE::onGameRunning()
         } // window is active
         m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-        CameraMovement(m_fps);
+        CameraMovement(m_fps, legacyPlayer);
 
         for (auto& player : m_mapPlayers)
         {
-            Weapon* const wpn = player.second.m_legacyPlayer.getWeapon();
+            Weapon* const wpn = player.second.getWeapon();
             if (!wpn)
             {
                 continue;
@@ -2212,7 +1734,7 @@ void PRooFPSddPGE::onGameRunning()
             }
             else
             {
-                wpn->UpdatePosition(player.second.m_legacyPlayer.getAttachedObject()->getPosVec());
+                wpn->UpdatePosition(player.second.getObject3D()->getPosVec());
             }
         }
         
@@ -2323,11 +1845,7 @@ void PRooFPSddPGE::onGameDestroying()
     //getPure().WriteList();
     //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
-    for (auto& playerPair : m_mapPlayers)
-    {
-        playerPair.second.m_legacyPlayer.ShutDown();
-    }
-    m_mapPlayers.clear();
+    m_mapPlayers.clear(); // Dtors of Player instances will be implicitly called
     m_maps.shutdown();
     m_sServerMapFilenameToLoad.clear();
     delete m_pObjXHair;
@@ -2356,12 +1874,12 @@ void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup
     } while (found);
 }
 
-std::map<std::string, Player_t>::iterator PRooFPSddPGE::getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide)
+std::map<std::string, Player>::iterator PRooFPSddPGE::getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide)
 {
     auto playerIt = m_mapPlayers.begin();
     while (playerIt != m_mapPlayers.end())
     {
-        if (playerIt->second.m_connHandleServerSide == connHandleServerSide)
+        if (playerIt->second.getServerSideConnectionHandle() == connHandleServerSide)
         {
             break;
         }
@@ -2376,7 +1894,7 @@ void PRooFPSddPGE::WritePlayerList()
     for (const auto& player : m_mapPlayers)
     {
         getConsole().OLn("Username: %s; connHandleServerSide: %u; address: %s",
-            player.first.c_str(), player.second.m_connHandleServerSide, player.second.m_sIpAddress.c_str());
+            player.first.c_str(), player.second.getServerSideConnectionHandle(), player.second.getIpAddress().c_str());
     }
     getConsole().OO();
 }
@@ -2438,22 +1956,18 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress);
     }
 
-    // insert user into map using wacky syntax
-    m_mapPlayers[msg.m_szUserName];
-    m_mapPlayers[msg.m_szUserName].m_connHandleServerSide = connHandleServerSide;
-    m_mapPlayers[msg.m_szUserName].m_sIpAddress = msg.m_szIpAddress;
-
-    PureObject3D* const plane = getPure().getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);
-    if (!plane)
+    const auto insertRes = m_mapPlayers.insert(
+        {
+            std::string(msg.m_szUserName),
+            Player(getPure(), connHandleServerSide, msg.m_szIpAddress)
+        }); // TODO: emplace_back()
+    if (!insertRes.second)
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to create object for user %s!", __func__, msg.m_szUserName);
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert user %s into map!", __func__, msg.m_szUserName);
         assert(false);
         return false;
     }
-
-    m_mapPlayers[msg.m_szUserName].m_legacyPlayer.AttachObject(plane, true);
-    PureTexture* pTexPlayer = getPure().getTextureManager().createFromFile((std::string(GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
-    plane->getMaterial().setTexture(pTexPlayer);
+    Player& insertedPlayer = insertRes.first->second;
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
     // these will be the reference weapons, never visible, never moving, just to be copied!
@@ -2508,16 +2022,17 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         }
 
         Weapon* const pNewWeapon = new Weapon(*pWpn);
-        m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getWeapons().push_back(pNewWeapon);
+        insertedPlayer.getWeapons().push_back(pNewWeapon);
         pNewWeapon->SetOwner(connHandleServerSide);
+        pNewWeapon->getObject3D().SetName(pNewWeapon->getObject3D().getName() + " (copied Weapon for user " + msg.m_szUserName + ")");
         if (pNewWeapon->getFilename() == wpnDefaultAvailable->getFilename())
         {
             pNewWeapon->SetAvailable(true);
-            m_mapPlayers[msg.m_szUserName].m_legacyPlayer.SetWeapon(pNewWeapon, false);
+            insertedPlayer.SetWeapon(pNewWeapon, false);
         }
     }
 
-    if (!m_mapPlayers[msg.m_szUserName].m_legacyPlayer.getWeapon())
+    if (!insertedPlayer.getWeapon())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): no default weapon selected for user %s!", __func__, msg.m_szUserName);
         assert(false);
@@ -2528,7 +2043,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     // Because clients also store the full weapon instances for themselves, even though they dont use weapon cvars at all!
     // Task: On the long run, there should be a WeaponProxy or WeaponClient or something for the clients which are basically
     // just the image for their current weapon.
-    // Task: And I also think that each CPlayer should have a WeaponManager instance, so player's weapons would be loaded there.
+    // Task: And I also think that each Player should have a WeaponManager instance, so player's weapons would be loaded there.
     // Task: the only problem here would be that the bullets list should be extracted into separate entity, so all WeaponManager
     // instances would refer to the same bullets list. And some functions may be enough to be static, but thats all!
 
@@ -2649,25 +2164,25 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
         {
             proofps_dd::MsgUserSetup::initPkt(
                 newPktSetup,
-                it.second.m_connHandleServerSide,
+                it.second.getServerSideConnectionHandle(),
                 false,
-                it.first, it.second.m_sIpAddress,
+                it.first, it.second.getIpAddress(),
                 "" /* here mapFilename is irrelevant */);
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
 
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
-                it.second.m_connHandleServerSide,
-                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getX(),
-                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getY(),
-                it.second.m_legacyPlayer.getAttachedObject()->getPosVec().getZ(),
-                it.second.m_legacyPlayer.getAttachedObject()->getAngleVec().getY(),
-                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getY(),
-                it.second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().getZ(),
-                it.second.m_legacyPlayer.getHealth(),
+                it.second.getServerSideConnectionHandle(),
+                it.second.getObject3D()->getPosVec().getX(),
+                it.second.getObject3D()->getPosVec().getY(),
+                it.second.getObject3D()->getPosVec().getZ(),
+                it.second.getObject3D()->getAngleVec().getY(),
+                it.second.getWeapon()->getObject3D().getAngleVec().getY(),
+                it.second.getWeapon()->getObject3D().getAngleVec().getZ(),
+                it.second.getHealth(),
                 false,
-                it.second.m_legacyPlayer.getFrags(),
-                it.second.m_legacyPlayer.getDeaths());
+                it.second.getFrags(),
+                it.second.getDeaths());
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktUserUpdate);
         }
 
@@ -2713,7 +2228,6 @@ bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
     }
 
-    playerIt->second.m_legacyPlayer.ShutDown();
     m_mapPlayers.erase(playerIt);
 
     getNetwork().WriteList();
@@ -2751,7 +2265,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         // TODO: I might disconnect this client!
     }
 
-    auto& legacyPlayer = it->second.m_legacyPlayer;
+    auto& legacyPlayer = it->second;
 
     if (legacyPlayer.getHealth() == 0)
     {
@@ -2785,21 +2299,20 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     {
         if (!legacyPlayer.isJumping() && !legacyPlayer.isFalling() && legacyPlayer.jumpAllowed())
         {
-            legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() - fSpeed);
+            legacyPlayer.getPos().SetX(legacyPlayer.getPos().getX() - fSpeed);
         }
     }
     if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::RIGHT )
     {
         if (!legacyPlayer.isJumping() && !legacyPlayer.isFalling() && legacyPlayer.jumpAllowed())
         {
-            legacyPlayer.getPos1().SetX(legacyPlayer.getPos1().getX() + fSpeed);
+            legacyPlayer.getPos().SetX(legacyPlayer.getPos().getX() + fSpeed);
         }
     }
 
     if (pktUserCmdMove.m_bJumpAction)
     {
         if (!legacyPlayer.isJumping() &&
-            legacyPlayer.jumpAllowed() &&
             !legacyPlayer.isFalling())
         {
             legacyPlayer.Jump();
@@ -2809,7 +2322,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     if (pktUserCmdMove.m_fPlayerAngleY != -1.f)
     {
         legacyPlayer.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
-        legacyPlayer.getAttachedObject()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
+        legacyPlayer.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
     Weapon* const wpn = legacyPlayer.getWeapon();
@@ -2891,9 +2404,9 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
                     pge_network::PgePacket pktWpnUpdateCurrent;
                     proofps_dd::MsgWpnUpdateCurrent::initPkt(
                         pktWpnUpdateCurrent,
-                        it->second.m_connHandleServerSide,
+                        it->second.getServerSideConnectionHandle(),
                         pTargetWpn->getFilename());
-                    getNetwork().getServer().SendPacketToClient(client.second.m_connHandleServerSide, pktWpnUpdateCurrent);
+                    getNetwork().getServer().SendPacketToClient(client.second.getServerSideConnectionHandle(), pktWpnUpdateCurrent);
                 }
             }
         }
@@ -2949,7 +2462,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
                     wpn->getUnmagBulletCount());
-                getNetwork().getServer().SendPacketToClient(it->second.m_connHandleServerSide, pktWpnUpdate);
+                getNetwork().getServer().SendPacketToClient(it->second.getServerSideConnectionHandle(), pktWpnUpdate);
             }
             else
             {
@@ -2989,46 +2502,46 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
 
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
-    if (it->second.m_legacyPlayer.isExpectingStartPos())
+    if (it->second.isExpectingStartPos())
     {
-        it->second.m_legacyPlayer.SetExpectingStartPos(false);
-        it->second.m_legacyPlayer.getPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-        it->second.m_legacyPlayer.getOPos1().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+        it->second.SetExpectingStartPos(false);
+        it->second.getPos().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+        it->second.getOPos().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
     }
 
-    it->second.m_legacyPlayer.getAttachedObject()->getPosVec().Set(
+    it->second.getObject3D()->getPosVec().Set(
         msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
-        //it->second.m_legacyPlayer.getAngleY() = msg.m_fPlayerAngleY;
-        it->second.m_legacyPlayer.getAttachedObject()->getAngleVec().SetY(msg.m_fPlayerAngleY);
+        //it->second.getAngleY() = msg.m_fPlayerAngleY;
+        it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
 
-    it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
-    it->second.m_legacyPlayer.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+    it->second.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
+    it->second.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, it->second.m_legacyPlayer.getHealth(), it->second.m_legacyPlayer.getOldHealth());
+    //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getOldHealth());
 
-    it->second.m_legacyPlayer.getFrags() = msg.m_nFrags;
-    it->second.m_legacyPlayer.getDeaths() = msg.m_nDeaths;
+    it->second.getFrags() = msg.m_nFrags;
+    it->second.getDeaths() = msg.m_nDeaths;
 
-    it->second.m_legacyPlayer.SetHealth(msg.m_nHealth);
+    it->second.SetHealth(msg.m_nHealth);
 
     if (msg.m_bRespawn)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
-        HandlePlayerRespawned(it->first == m_sUserName, it->second.m_legacyPlayer);
+        HandlePlayerRespawned(it->first == m_sUserName, it->second);
     }
     else
     {
-        if ((it->second.m_legacyPlayer.getOldHealth() > 0) && (it->second.m_legacyPlayer.getHealth() == 0))
+        if ((it->second.getOldHealth() > 0) && (it->second.getHealth() == 0))
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
-            HandlePlayerDied(it->first == m_sUserName, it->second.m_legacyPlayer);
+            HandlePlayerDied(it->first == m_sUserName, it->second);
         }
     }
 
@@ -3068,12 +2581,20 @@ bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
 
-        if (m_mapPlayers[m_sUserName].m_connHandleServerSide == connHandleServerSide)
+        const auto playerIt = m_mapPlayers.find(m_sUserName);
+        if (playerIt == m_mapPlayers.end())
+        {
+            // must always find self player
+            return false;
+        }
+
+        Player& player = playerIt->second;
+        if (player.getServerSideConnectionHandle() == connHandleServerSide)
         {
             // this is my newborn bullet
             // I'm playing the sound associated to my current weapon, although it might happen that with BIG latency, when I receive this update from server,
             // I have already switched to another weapon ... but I think this cannot happen since my inputs are processed and responded by server in order.
-            const Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapon();
+            const Weapon* const wpn = player.getWeapon();
             if (!wpn)
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
@@ -3180,7 +2701,16 @@ bool PRooFPSddPGE::handleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return false;
     }
 
-    Weapon* const wpn = m_mapPlayers[m_sUserName].m_legacyPlayer.getWeaponByFilename(msg.m_szWpnName);
+    const auto playerIt = m_mapPlayers.find(m_sUserName);
+    if (playerIt == m_mapPlayers.end())
+    {
+        // must always find self player
+        return false;
+    }
+
+    Player& player = playerIt->second;
+
+    Weapon* const wpn = player.getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnName);
@@ -3214,7 +2744,7 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return false;
     }
 
-    Weapon* const wpn = it->second.m_legacyPlayer.getWeaponByFilename(msg.m_szWpnCurrentName);
+    Weapon* const wpn = it->second.getWeaponByFilename(msg.m_szWpnCurrentName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
@@ -3228,7 +2758,7 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         getAudio().play(m_sndChangeWeapon);
     }
 
-    it->second.m_legacyPlayer.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
+    it->second.SetWeapon(wpn, true /* even client should record last switch time to be able to check it on client side too */);
 
     return true;
 }
@@ -3279,8 +2809,17 @@ void PRooFPSddPGE::RegTestDumpToFile()
     // add an extra empty line, so the regression test can easily detect end of frag table
     fRegTestDump << std::endl;
 
+    const auto selfPlayerIt = m_mapPlayers.find(m_sUserName);
+    if (selfPlayerIt == m_mapPlayers.end())
+    {
+        // must always find self player
+        return;
+    }
+
+    Player& selfPlayer = selfPlayerIt->second;
+
     fRegTestDump << "Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count" << std::endl;
-    for (const auto& wpn : m_mapPlayers[m_sUserName].m_legacyPlayer.getWeapons())
+    for (const auto& wpn : selfPlayer.getWeapons())
     {
         if (wpn->isAvailable())
         {
@@ -3294,7 +2833,7 @@ void PRooFPSddPGE::RegTestDumpToFile()
     fRegTestDump << std::endl;
 
     fRegTestDump << "Player Info: Health" << std::endl;
-    fRegTestDump << "  " << m_mapPlayers[m_sUserName].m_legacyPlayer.getHealth() << std::endl;
+    fRegTestDump << "  " << selfPlayer.getHealth() << std::endl;
 
     fRegTestDump.flush();
     fRegTestDump.close();

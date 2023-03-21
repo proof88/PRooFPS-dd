@@ -18,8 +18,9 @@ class MapItemTest :
 {
 public:
 
-    MapItemTest() :
-        UnitTest(__FILE__)
+    MapItemTest(PGEcfgProfiles& cfgProfiles) :
+        UnitTest(__FILE__),
+        m_cfgProfiles(cfgProfiles)
     {}
 
 protected:
@@ -29,10 +30,9 @@ protected:
         //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
 
-        PGEcfgProfiles cfgProfiles("");
-        PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(cfgProfiles);
+        PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(m_cfgProfiles);
 
-        engine = &PR00FsUltimateRenderingEngine::createAndGet(cfgProfiles, inputHandler);
+        engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
@@ -67,11 +67,13 @@ protected:
 
 private:
 
+    PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
 
-    MapItemTest(const MapItemTest&)
+    MapItemTest(const MapItemTest&) :
+        m_cfgProfiles(m_cfgProfiles)
     {};
 
     MapItemTest& operator=(const MapItemTest&)
