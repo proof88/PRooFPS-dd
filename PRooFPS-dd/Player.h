@@ -46,6 +46,8 @@ public:
 
     const pge_network::PgeNetworkConnectionHandle& getServerSideConnectionHandle() const;
     const std::string& getIpAddress() const;
+    const std::string& getName() const;
+    void setName(const std::string& sName);
 
     int getHealth() const;
     PureVector& getPos();
@@ -100,6 +102,7 @@ public:
 private:
 
     static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
+    static uint32_t m_nPlayerInstanceCntr;
 
     pge_network::PgeNetworkConnectionHandle m_connHandleServerSide;   /**< Used by both server and clients to identify the connection.
                                                                        Clients don't use it for direct communication.
@@ -108,10 +111,8 @@ private:
                                                                        towards the server, those connection handles are not related
                                                                        to each other! */
 
-    
-
     std::string m_sIpAddress; // TODO: this should be either in the engine, or wait until we move this class to the engine
-
+    std::string m_sName;
     int m_nHealth, m_nOldHealth;
     PureVector m_vecPos, m_vecOldPos;
     TPureFloat m_fPlayerAngleY, m_fOldPlayerAngleY;

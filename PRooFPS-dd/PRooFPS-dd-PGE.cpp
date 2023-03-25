@@ -1968,6 +1968,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         return false;
     }
     Player& insertedPlayer = insertRes.first->second;
+    insertedPlayer.setName(msg.m_szUserName);
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
     // these will be the reference weapons, never visible, never moving, just to be copied!

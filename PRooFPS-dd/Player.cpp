@@ -23,6 +23,7 @@ Player::Player(
     const std::string& sIpAddress) :
     m_connHandleServerSide(connHandle),
     m_sIpAddress(sIpAddress),
+    m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
     m_nHealth(100),
     m_nOldHealth(100),
     m_fPlayerAngleY(0.f),
@@ -48,6 +49,7 @@ Player::Player(
 Player::Player(const Player& other) :
     m_connHandleServerSide(other.m_connHandleServerSide),
     m_sIpAddress(other.m_sIpAddress),
+    m_sName(other.m_sName),
     m_nHealth(other.m_nHealth),
     m_nOldHealth(other.m_nOldHealth),
     m_vecPos(other.m_vecPos),
@@ -81,6 +83,7 @@ Player& Player::operator=(const Player& other)
 {
     m_connHandleServerSide = other.m_connHandleServerSide;
     m_sIpAddress = other.m_sIpAddress;
+    m_sName = other.m_sName;
     m_nHealth = other.m_nHealth;
     m_nOldHealth = other.m_nOldHealth;
     m_vecPos = other.m_vecPos;
@@ -135,6 +138,16 @@ const pge_network::PgeNetworkConnectionHandle& Player::getServerSideConnectionHa
 const std::string& Player::getIpAddress() const
 {
     return m_sIpAddress;
+}
+
+const std::string& Player::getName() const
+{
+    return m_sName;
+}
+
+void Player::setName(const std::string& sName)
+{
+    m_sName = sName;
 }
 
 CConsole& Player::getConsole() const
@@ -577,6 +590,8 @@ const std::map<MapItemType, std::string> Player::m_mapItemTypeToWeaponFilename =
     {MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
     {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
 };
+
+uint32_t Player::m_nPlayerInstanceCntr = 0;
 
 void Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);

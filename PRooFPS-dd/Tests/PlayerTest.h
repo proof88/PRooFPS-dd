@@ -49,6 +49,8 @@ protected:
             assertTrue(wm->load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun"))
         {
             AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
+            AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
+            AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
             AddSubTest("test_update_frags_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_frags_deaths);
             AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
             AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
@@ -151,6 +153,7 @@ private:
 
         return assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
+            assertFalse(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
             assertEquals(100, player.getOldHealth(), "old health") &
             assertEquals(100, player.getHealth(), "health") &
@@ -177,6 +180,42 @@ private:
             assertEquals(0.f, player.getGravity(), "gravity") &
             assertNull(player.getWeapon(), "current weapon") &
             assertTrue(player.getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
+    }
+
+    bool test_number_in_name_monotonically_increasing()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        const std::string sIpAddr = "192.168.1.12";
+
+        Player player1(*engine, connHandleExpected, sIpAddr);
+        {
+            Player player2(*engine, connHandleExpected, sIpAddr);
+            // implicit call to dtor
+        }
+        Player player3(*engine, connHandleExpected, sIpAddr);
+
+        const std::size_t nSpacePos1 = player1.getName().find(' ');
+        const uint32_t nPlayer1cntr = (nSpacePos1 < player1.getName().length()-1) ?
+            std::stoul(player1.getName().substr(nSpacePos1 + 1)) : 0;
+
+        const std::size_t nSpacePos3 = player3.getName().find(' ');
+        const uint32_t nPlayer3cntr = (nSpacePos3 < player3.getName().length() - 1) ?
+            std::stoul(player3.getName().substr(nSpacePos3 + 1)) : 0;
+
+        return assertGreater(nPlayer1cntr, 0u, "nPlayer1cntr") &
+            assertGreater(nPlayer3cntr, nPlayer1cntr + 1, "nPlayer3cntr");
+    }
+
+    bool test_set_name()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        const std::string sIpAddr = "192.168.1.12";
+
+        Player player(*engine, connHandleExpected, sIpAddr);
+        player.setName("apple");
+        bool b = assertEquals("apple", player.getName(), "apple");
+
+        return b;
     }
 
     bool test_update_frags_deaths()
