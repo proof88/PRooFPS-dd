@@ -79,6 +79,7 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bWon(false),
     m_fCameraMinY(0.0f),
     m_bShowGuiDemo(false),
+    m_nServerSideConnectionHandle(0),
     m_nFramesElapsedSinceLastDurationsReset(0),
     m_nGravityCollisionDurationUSecs(0),
     m_nActiveWindowStuffDurationUSecs(0),
@@ -988,35 +989,35 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
 
 void PRooFPSddPGE::Gravity(int /*fps*/)
 {
-    for (auto& player : m_mapPlayers)
+    for (auto& playerPair : m_mapPlayers)
     {
-        auto& legacyPlayer = player.second;
+        auto& player = playerPair.second;
 
-        if (legacyPlayer.isJumping())
+        if (player.isJumping())
         {
-            legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_JUMPING_SPEED / 60.f/*(float)fps*/);
-            if (legacyPlayer.getGravity() < 0.0f)
+            player.SetGravity(player.getGravity() - GAME_JUMPING_SPEED / 60.f/*(float)fps*/);
+            if (player.getGravity() < 0.0f)
             {
-                legacyPlayer.StopJumping();
+                player.StopJumping();
             }
         }
         else
         {
-            if (legacyPlayer.getGravity() > GAME_GRAVITY_MIN)
+            if (player.getGravity() > GAME_GRAVITY_MIN)
             {
-                legacyPlayer.SetGravity(legacyPlayer.getGravity() - GAME_FALLING_SPEED / 60.f/*(float)fps*/);
-                if (legacyPlayer.getGravity() < GAME_GRAVITY_MIN)
+                player.SetGravity(player.getGravity() - GAME_FALLING_SPEED / 60.f/*(float)fps*/);
+                if (player.getGravity() < GAME_GRAVITY_MIN)
                 {
-                    legacyPlayer.SetGravity(GAME_GRAVITY_MIN);
+                    player.SetGravity(GAME_GRAVITY_MIN);
                 }
             }
         }
-        legacyPlayer.getPos().SetY(legacyPlayer.getPos().getY() + legacyPlayer.getGravity());
+        player.getPos().SetY(player.getPos().getY() + player.getGravity());
         
-        if ( (legacyPlayer.getHealth() > 0) && (legacyPlayer.getPos().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        if ( (player.getHealth() > 0) && (player.getPos().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
-            //getConsole().OLn("PRooFPSddPGE::%s(): Player %s out of map low bound!", __func__, player.first.c_str());
-            HandlePlayerDied(player.first == m_sUserName, player.second);
+            // need to die, out of map lower bound
+            HandlePlayerDied(playerPair.first == m_nServerSideConnectionHandle, player);
         }
     }
 }
@@ -1122,7 +1123,7 @@ void PRooFPSddPGE::UpdateBullets()
                     player.second.DoDamage(bullet.getDamageHp());
                     if (player.second.getHealth() == 0)
                     {
-                        const auto itKiller = getPlayerMapItByConnectionHandle(bullet.getOwner());
+                        const auto itKiller = m_mapPlayers.find(bullet.getOwner());
                         if (itKiller == m_mapPlayers.end())
                         {
                             //getConsole().OLn("PRooFPSddPGE::%s(): Player %s has been killed by a player already left!",
@@ -1136,7 +1137,7 @@ void PRooFPSddPGE::UpdateBullets()
                             //    __func__, player.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                         }
                         // server handles death here, clients will handle it when they receive MsgUserUpdate
-                        HandlePlayerDied(player.first == m_sUserName, player.second);
+                        HandlePlayerDied(player.first == m_nServerSideConnectionHandle, player.second);
                     }
                     break; // we can stop since 1 bullet can touch 1 player only at a time
                 }
@@ -1268,7 +1269,7 @@ void PRooFPSddPGE::UpdateWeapons()
         }
         if (wpn->update())
         {
-            if (player.first != m_sUserName) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
+            if (player.first != m_nServerSideConnectionHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
             {
                 pge_network::PgePacket pktWpnUpdate;
                 proofps_dd::MsgWpnUpdate::initPkt(
@@ -1452,7 +1453,7 @@ void PRooFPSddPGE::UpdateGameMode()
     std::vector<proofps_dd::FragTableRow> players;
     for (const auto& player : m_mapPlayers)
     {
-        const proofps_dd::FragTableRow fragTableRow = { player.first, player.second.getFrags(), player.second.getDeaths() };
+        const proofps_dd::FragTableRow fragTableRow = { player.second.getName(), player.second.getFrags(), player.second.getDeaths()};
         players.push_back(fragTableRow);
     }
     m_deathMatchMode->UpdatePlayerData(players);
@@ -1641,7 +1642,7 @@ void PRooFPSddPGE::onGameRunning()
 
     // having a username means that server accepted the connection and sent us a username, for which we have initialized our player;
     // otherwise m_mapPlayers[m_sUserName] is dangerous as it implicitly creates entry even with empty username ...
-    const bool bValidConnection = !m_sUserName.empty() && (m_mapPlayers.find(m_sUserName) != m_mapPlayers.end());
+    const bool bValidConnection = !m_sUserName.empty() && (m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end());
 
     if (bValidConnection)
     {
@@ -1658,7 +1659,7 @@ void PRooFPSddPGE::onGameRunning()
             m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
 
-        Player& legacyPlayer = m_mapPlayers.at(m_sUserName); // cannot throw, because of bValidConnection
+        Player& legacyPlayer = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
 
         if (legacyPlayer.getWeapon())
         {
@@ -1728,7 +1729,7 @@ void PRooFPSddPGE::onGameRunning()
                 continue;
             }
 
-            if (m_sUserName == player.first)
+            if (m_sUserName == player.second.getName())
             {
                 // this should be done for ourselves too, but it is done only when window is active with different logic
             }
@@ -1865,7 +1866,7 @@ void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup
         sprintf_s(szNewUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength, "User%d", 10000 + (rand() % 100000));
         for (const auto& client : m_mapPlayers)
         {
-            found = (client.first == szNewUserName);
+            found = (client.second.getName() == szNewUserName);
             if (found)
             {
                 break;
@@ -1874,37 +1875,23 @@ void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup
     } while (found);
 }
 
-std::map<std::string, Player>::iterator PRooFPSddPGE::getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide)
-{
-    auto playerIt = m_mapPlayers.begin();
-    while (playerIt != m_mapPlayers.end())
-    {
-        if (playerIt->second.getServerSideConnectionHandle() == connHandleServerSide)
-        {
-            break;
-        }
-        playerIt++;
-    }
-    return playerIt;
-}
-
 void PRooFPSddPGE::WritePlayerList()
 {
     getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
     for (const auto& player : m_mapPlayers)
     {
         getConsole().OLn("Username: %s; connHandleServerSide: %u; address: %s",
-            player.first.c_str(), player.second.getServerSideConnectionHandle(), player.second.getIpAddress().c_str());
+            player.second.getName().c_str(), player.second.getServerSideConnectionHandle(), player.second.getIpAddress().c_str());
     }
     getConsole().OO();
 }
 
 bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
 {
-    if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(msg.m_szUserName)))
+    if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: user %s (connHandleServerSide: %u) is already present in players list!",
-            __func__, msg.m_szUserName, connHandleServerSide);
+        getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u (rcvd user name: %s) is already present in players list!",
+            __func__, connHandleServerSide, msg.m_szUserName);
         assert(false);
         return false;
     }
@@ -1921,7 +1908,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     {
         getConsole().OLn("PRooFPSddPGE::%s(): this is me, my name is %s, connHandleServerSide: %u, my IP: %s, map: %s",
             __func__, msg.m_szUserName, connHandleServerSide, msg.m_szIpAddress, msg.m_szMapFilename);
-        // store our username so we can refer to it anytime later
+        m_nServerSideConnectionHandle = connHandleServerSide;
         m_sUserName = msg.m_szUserName;
 
         if (getNetwork().isServer())
@@ -1958,7 +1945,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
 
     const auto insertRes = m_mapPlayers.insert(
         {
-            std::string(msg.m_szUserName),
+            connHandleServerSide,
             Player(getPure(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)
@@ -2167,7 +2154,7 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
                 newPktSetup,
                 it.second.getServerSideConnectionHandle(),
                 false,
-                it.first, it.second.getIpAddress(),
+                it.second.getName(), it.second.getIpAddress(),
                 "" /* here mapFilename is irrelevant */);
             getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
 
@@ -2210,7 +2197,7 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
 bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
 {
-    const auto playerIt = getPlayerMapItByConnectionHandle(connHandleServerSide);
+    const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -2218,15 +2205,13 @@ bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         return true; // in release mode, dont terminate
     }
 
-    const std::string& sClientUserName = playerIt->first;
-
     if (getNetwork().isServer())
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm server", __func__, sClientUserName.c_str());
+        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm server", __func__, playerIt->second.getName().c_str());
     }
     else
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, sClientUserName.c_str());
+        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, playerIt->second.getName().c_str());
     }
 
     m_mapPlayers.erase(playerIt);
@@ -2246,7 +2231,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         return false;
     }
 
-    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
+    const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -2254,7 +2239,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
         return true;    // in release mode, we dont terminate the server, just silently ignore
     }
 
-    const std::string& sClientUserName = it->first;
+    const std::string& sClientUserName = it->second.getName();
 
     if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
         (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
@@ -2400,7 +2385,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
             // all clients must be updated about this player's weapon switch
             for (const auto& client : m_mapPlayers)
             {
-                if (client.first != m_sUserName)
+                if (client.second.getName() != m_sUserName)
                 {   // server doesn't need to send this msg to itself, it already executed weapon change by SetWeapon()
                     pge_network::PgePacket pktWpnUpdateCurrent;
                     proofps_dd::MsgWpnUpdateCurrent::initPkt(
@@ -2494,7 +2479,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
 bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
 {
-    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
+    const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -2533,7 +2518,7 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     if (msg.m_bRespawn)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
-        HandlePlayerRespawned(it->first == m_sUserName, it->second);
+        HandlePlayerRespawned(it->second.getName() == m_sUserName, it->second);
     }
     else
     {
@@ -2542,7 +2527,7 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
-            HandlePlayerDied(it->first == m_sUserName, it->second);
+            HandlePlayerDied(it->second.getName() == m_sUserName, it->second);
         }
     }
 
@@ -2582,7 +2567,7 @@ bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
         // need to create this new bullet first on our side
         //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
 
-        const auto playerIt = m_mapPlayers.find(m_sUserName);
+        const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
         if (playerIt == m_mapPlayers.end())
         {
             // must always find self player
@@ -2702,7 +2687,7 @@ bool PRooFPSddPGE::handleWpnUpdate(pge_network::PgeNetworkConnectionHandle /*con
         return false;
     }
 
-    const auto playerIt = m_mapPlayers.find(m_sUserName);
+    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
     {
         // must always find self player
@@ -2737,7 +2722,7 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
 
     //getConsole().OLn("PRooFPSddPGE::%s(): received: %s",  __func__, msg.m_szWpnCurrentName);
 
-    const auto it = getPlayerMapItByConnectionHandle(connHandleServerSide);
+    const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
@@ -2753,7 +2738,7 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return false;
     }
 
-    if (it->first == m_sUserName)
+    if (it->first == m_nServerSideConnectionHandle)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
         getAudio().play(m_sndChangeWeapon);
@@ -2810,7 +2795,7 @@ void PRooFPSddPGE::RegTestDumpToFile()
     // add an extra empty line, so the regression test can easily detect end of frag table
     fRegTestDump << std::endl;
 
-    const auto selfPlayerIt = m_mapPlayers.find(m_sUserName);
+    const auto selfPlayerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (selfPlayerIt == m_mapPlayers.end())
     {
         // must always find self player

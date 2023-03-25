@@ -98,9 +98,11 @@ private:
     bool m_bShowGuiDemo;
 
     std::string m_sUserName;   /**< User name received from server in PgePktUserConnected (server instance also receives this from itself). */
-    std::map<std::string, Player> m_mapPlayers;  /**< Connected players. Used by both server and clients. Key is user name. */
-    // TODO: originally username was planned to be the key for above map, however if we see that we can always use connHandleServerSide to
-    // find proper player, then let's change the key to that instead of user name!
+
+    pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
+                                                                                  (server instance also receives this from itself). */
+    std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
+                                                                                  Key is server-side connection handle. */
 
     SoLoud::Wav m_sndLetsgo;
     SoLoud::Wav m_sndReloadStart;
@@ -158,7 +160,6 @@ private:
     void UpdateGameMode();
     void PickupAndRespawnItems();
     void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
-    std::map<std::string, Player>::iterator getPlayerMapItByConnectionHandle(pge_network::PgeNetworkConnectionHandle connHandleServerSide);
     void WritePlayerList();
     bool handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg);
     bool handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);
