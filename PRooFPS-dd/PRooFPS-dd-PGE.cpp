@@ -1735,7 +1735,7 @@ void PRooFPSddPGE::onGameRunning()
                 continue;
             }
 
-            if (m_nServerSideConnectionHandle == otherPlayerPair.first)
+            if (isMyConnection(otherPlayerPair.first))
             {
                 // this should be done for ourselves too, but it is done only when window is active with different logic
             }
@@ -2379,7 +2379,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
 
         if (pTargetWpn != player.getWeapon())
         {
-            if (connHandleServerSide == m_nServerSideConnectionHandle)
+            if (isMyConnection(connHandleServerSide))
             {   // server plays for itself
                 getAudio().play(m_sndChangeWeapon);
             }
@@ -2745,7 +2745,7 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
         return false;
     }
 
-    if (it->first == m_nServerSideConnectionHandle)
+    if (isMyConnection(it->first))
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
         getAudio().play(m_sndChangeWeapon);
