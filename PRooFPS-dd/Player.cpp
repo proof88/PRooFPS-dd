@@ -304,7 +304,7 @@ const Weapon* Player::getWeapon() const
     return m_pWpn;
 }
 
-void Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime)
+void Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer)
 {
     if (!wpn)
     {
@@ -312,7 +312,8 @@ void Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime)
         return;
     }
 
-    if (!wpn->isAvailable())
+    if (bServer /* client should not do availability check since it is not aware of wpn availability of the players */ &&
+        !wpn->isAvailable())
     {
         //getConsole().EOLn(
         //    "Player::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
@@ -413,7 +414,7 @@ void Player::Die(bool bMe, bool bServer)
     }
 }
 
-void Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable)
+void Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
     getObject3D()->Show();
 
@@ -428,7 +429,7 @@ void Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable)
         if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
         {
             pWpn->SetAvailable(true);
-            SetWeapon(pWpn, false);
+            SetWeapon(pWpn, false, bServer);
             pWpn->UpdatePosition(getObject3D()->getPosVec());
         }
     }

@@ -139,7 +139,7 @@ private:
             pNewWpn->SetOwner(player.getServerSideConnectionHandle());
         }
         player.getWeapons()[0]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[0], false);
+        player.SetWeapon(player.getWeapons()[0], false, true);
 
         return true;
     }
@@ -334,6 +334,7 @@ private:
 
     bool test_die_server()
     {
+        const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         Player player(*engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
@@ -341,7 +342,7 @@ private:
             return false;
         };
 
-        player.Die(true, true);
+        player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getOldHealth(), "old health 1") &
@@ -352,9 +353,9 @@ private:
             assertEquals(0, player.getOldDeaths(), "old deaths 1");
         
         player.SetHealth(100);
-        player.Respawn(true, *(player.getWeapons()[0]));
+        player.Respawn(true, *(player.getWeapons()[0]), bServer);
         
-        player.Die(true, true);
+        player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         b &= assertEquals(0, player.getHealth(), "health 2") &
             assertEquals(100, player.getOldHealth(), "old health 2") &
@@ -370,6 +371,7 @@ private:
 
     bool test_die_client()
     {
+        const bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         Player player(*engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
@@ -377,7 +379,7 @@ private:
             return false;
         };
 
-        player.Die(true, false);
+        player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getOldHealth(), "old health 1") &
@@ -388,9 +390,9 @@ private:
             assertEquals(0, player.getOldDeaths(), "old deaths 1");
 
         player.SetHealth(100);
-        player.Respawn(true, *(player.getWeapons()[0]));
+        player.Respawn(true, *(player.getWeapons()[0]), bServer);
 
-        player.Die(true, false);
+        player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         b &= assertEquals(0, player.getHealth(), "health 2") &
             assertEquals(100, player.getOldHealth(), "old health 2") &
@@ -406,6 +408,7 @@ private:
 
     bool test_respawn()
     {
+        const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         Player player(*engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
@@ -413,10 +416,10 @@ private:
             return false;
         };
         player.getWeapons()[1]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[1], false);
+        player.SetWeapon(player.getWeapons()[1], false, bServer);
 
-        player.Die(true, true);
-        player.Respawn(true, *(player.getWeapons()[0]));
+        player.Die(true, bServer);
+        player.Respawn(true, *(player.getWeapons()[0]), bServer);
 
         return assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
@@ -496,6 +499,7 @@ private:
 
     bool test_set_weapon()
     {
+        const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         Player player(*engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
@@ -503,11 +507,11 @@ private:
             return false;
         };
         
-        player.SetWeapon(player.getWeapons()[1], false);
+        player.SetWeapon(player.getWeapons()[1], false, bServer);
         bool b = assertEquals(player.getWeapons()[0], player.getWeapon(), "current wpn 1");
 
         player.getWeapons()[1]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[1], false);
+        player.SetWeapon(player.getWeapons()[1], false, bServer);
         b &= assertEquals(player.getWeapons()[1], player.getWeapon(), "current wpn 2");
 
         return b;

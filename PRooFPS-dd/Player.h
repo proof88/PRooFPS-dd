@@ -73,13 +73,13 @@ public:
     bool isRunning() const;
     void SetRun(bool state);
     void Die(bool bMe, bool bServer);
-    void Respawn(bool bMe, const Weapon& wpnDefaultAvailable);
+    void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
     PureVector& getForce();
     bool isExpectingStartPos() const;
     void SetExpectingStartPos(bool b);
     Weapon* getWeapon();
     const Weapon* getWeapon() const;
-    void SetWeapon(Weapon* wpn, bool bRecordSwitchTime);
+    void SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer);
     std::chrono::time_point<std::chrono::steady_clock>& getTimeLastWeaponSwitch();
     std::vector<Weapon*>& getWeapons(); // TODO: this will be get rid of after Player will have its own WeaponManager instance
     const std::vector<Weapon*>& getWeapons() const; // TODO: this will be get rid of after Player will have its own WeaponManager instance

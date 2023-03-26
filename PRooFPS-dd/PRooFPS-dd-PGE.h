@@ -97,10 +97,9 @@ private:
     float m_fCameraMinY;
     bool m_bShowGuiDemo;
 
-    std::string m_sUserName;   /**< User name received from server in PgePktUserConnected (server instance also receives this from itself). */
-
     pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
-                                                                                  (server instance also receives this from itself). */
+                                                                                  (server instance also receives this from itself). 
+                                                                                  Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
     std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                   Key is server-side connection handle. */
 
@@ -131,6 +130,9 @@ private:
 
     // ---------------------------------------------------------------------------
 
+    bool hasValidConnection() const;
+    bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
+
     void LoadSound(SoLoud::Wav& snd, const char* fname);
     void Text(const std::string& s, int x, int y) const;
     void AddText(const std::string& s, int x, int y) const;
@@ -154,8 +156,8 @@ private:
     void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();
-    void HandlePlayerDied(bool bMe, Player& player);
-    void HandlePlayerRespawned(bool bMe, Player& player);
+    void HandlePlayerDied(Player& player);
+    void HandlePlayerRespawned(Player& player);
     void UpdateRespawnTimers();
     void UpdateGameMode();
     void PickupAndRespawnItems();
