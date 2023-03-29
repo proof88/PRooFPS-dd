@@ -329,7 +329,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt,
 
     if (keybd.isKeyPressed(VK_TAB))
     {
-        ShowFragTable(false);
+        m_gameMode->ShowObjectives(getPure(), getNetwork());
     }
 
     if (keybd.isKeyPressed(VK_BACK))
@@ -1022,58 +1022,6 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
     }
 }
 
-void PRooFPSddPGE::ShowFragTable(bool bWin) const
-{
-    const int nXPosPlayerName = 20;
-    const int nXPosFrags = 200;
-    const int nXPosDeaths = 250;
-    int nYPosStart = getPure().getWindow().getClientHeight() - 20;
-    if (bWin)
-    {
-        Text("Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * getPure().getUImanager().getDefaultFontSize();
-    }
-
-    int nThisRowY = nYPosStart;
-    Text("Player Name", nXPosPlayerName, nThisRowY);
-    Text("Frags", nXPosFrags, nThisRowY);
-    Text("Deaths", nXPosDeaths, nThisRowY);
-
-    nThisRowY -= getPure().getUImanager().getDefaultFontSize();
-    Text("========================================================", nXPosPlayerName, nThisRowY);
-
-    int i = 0;
-    for (const auto& player : m_deathMatchMode->getPlayerData())
-    {
-        i++;
-        nThisRowY = nYPosStart - (i + 1) * getPure().getUImanager().getDefaultFontSize();
-        Text(player.m_sName, nXPosPlayerName, nThisRowY);
-        Text(std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
-        Text(std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
-    }
-
-    if (!getNetwork().isServer())
-    {
-        nThisRowY -= 2 * getPure().getUImanager().getDefaultFontSize();
-        Text("Ping: " + std::to_string(getNetwork().getClient().getPing(true)) + " ms",
-            nXPosPlayerName, nThisRowY);
-        
-        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
-        Text("Quality: local: " + std::to_string(getNetwork().getClient().getQualityLocal(false)) +
-            "; remote: " + std::to_string(getNetwork().getClient().getQualityRemote(false)),
-            nXPosPlayerName, nThisRowY);
-        
-        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
-        Text("Tx Speed: " + std::to_string(std::lround(getNetwork().getClient().getTxByteRate(false))) +
-            " Bps; Rx Speed: " + std::to_string(std::lround(getNetwork().getClient().getRxByteRate(false))) + " Bps",
-            nXPosPlayerName, nThisRowY);
-        
-        nThisRowY -= getPure().getUImanager().getDefaultFontSize();
-        Text("Internal Queue Time: " + std::to_string(getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us",
-            nXPosPlayerName, nThisRowY);
-    }
-}
-
 void PRooFPSddPGE::UpdateBullets()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -1522,7 +1470,7 @@ void PRooFPSddPGE::UpdateGameMode()
         }
         else
         {
-            ShowFragTable(true);
+            m_gameMode->ShowObjectives(getPure(), getNetwork());
             if (bPrevWinningConditions != bNewWinningConditions)
             {
                 m_pObjXHair->Hide();

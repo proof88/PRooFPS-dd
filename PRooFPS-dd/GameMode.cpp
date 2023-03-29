@@ -68,6 +68,68 @@ const std::chrono::time_point<std::chrono::steady_clock>& GameMode::getWinTime()
     return m_timeWin;
 }
 
+const std::vector<FragTableRow>& GameMode::getPlayerData() const
+{
+    return m_players;
+}
+
+void GameMode::Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
+{
+    pure.getUImanager().text(s, x, y)->SetDropShadow(true);
+}
+
+void GameMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
+{
+    const int nXPosPlayerName = 20;
+    const int nXPosFrags = 200;
+    const int nXPosDeaths = 250;
+    int nYPosStart = pure.getWindow().getClientHeight() - 20;
+    if (checkWinningConditions())
+    {
+        Text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
+    }
+
+    int nThisRowY = nYPosStart;
+    Text(pure, "Player Name", nXPosPlayerName, nThisRowY);
+    Text(pure, "Frags", nXPosFrags, nThisRowY);
+    Text(pure, "Deaths", nXPosDeaths, nThisRowY);
+
+    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    Text(pure, "========================================================", nXPosPlayerName, nThisRowY);
+
+    int i = 0;
+    for (const auto& player : getPlayerData())
+    {
+        i++;
+        nThisRowY = nYPosStart - (i + 1) * pure.getUImanager().getDefaultFontSize();
+        Text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
+        Text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
+        Text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+    }
+
+    if (!network.isServer())
+    {
+        nThisRowY -= 2 * pure.getUImanager().getDefaultFontSize();
+        Text(pure, "Ping: " + std::to_string(network.getClient().getPing(true)) + " ms",
+            nXPosPlayerName, nThisRowY);
+
+        nThisRowY -= pure.getUImanager().getDefaultFontSize();
+        Text(pure, "Quality: local: " + std::to_string(network.getClient().getQualityLocal(false)) +
+            "; remote: " + std::to_string(network.getClient().getQualityRemote(false)),
+            nXPosPlayerName, nThisRowY);
+
+        nThisRowY -= pure.getUImanager().getDefaultFontSize();
+        Text(pure, "Tx Speed: " + std::to_string(std::lround(network.getClient().getTxByteRate(false))) +
+            " Bps; Rx Speed: " + std::to_string(std::lround(network.getClient().getRxByteRate(false))) + " Bps",
+            nXPosPlayerName, nThisRowY);
+
+        nThisRowY -= pure.getUImanager().getDefaultFontSize();
+        Text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
+            nXPosPlayerName, nThisRowY);
+    }
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -168,12 +230,7 @@ void DeathMatchMode::SetFragLimit(unsigned int limit)
     m_nFragLimit = limit;
 }
 
-const std::vector<FragTableRow>& proofps_dd::DeathMatchMode::getPlayerData() const
-{
-    return m_players;
-}
-
-void proofps_dd::DeathMatchMode::UpdatePlayerData(const std::vector<FragTableRow>& players)
+void DeathMatchMode::UpdatePlayerData(const std::vector<FragTableRow>& players)
 {
     m_players = players;
 

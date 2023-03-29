@@ -16,6 +16,9 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
+#include "../../../PGE/PGE/Network/PgeNetwork.h"
+#include "../../../PGE/PGE/PURE/include/external/PR00FsUltimateRenderingEngine.h"
+
 namespace proofps_dd
 {
 
@@ -24,6 +27,13 @@ namespace proofps_dd
         DeathMatch,
         TeamDeathMatch,
         TeamRoundGame
+    };
+
+    struct FragTableRow
+    {
+        std::string m_sName;
+        int m_nFrags;    // frags allowed to be negative due to player doing suicides decreases fragcount
+        int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
     };
 
     class GameMode
@@ -49,8 +59,15 @@ namespace proofps_dd
         
         const std::chrono::time_point<std::chrono::steady_clock>& getWinTime() const;
 
+        const std::vector<FragTableRow>& getPlayerData() const;
+        virtual void UpdatePlayerData(const std::vector<FragTableRow>& players) = 0;
+
+        void Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
+        void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network);
+
     protected:
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
+        std::vector<FragTableRow> m_players;
 
         GameMode(GameModeType gm);
 
@@ -72,13 +89,6 @@ namespace proofps_dd
 
     }; // class GameMode
 
-    struct FragTableRow
-    {
-        std::string m_sName;
-        int m_nFrags;    // frags allowed to be negative due to player doing suicides decreases fragcount
-        int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
-    };
-
     class DeathMatchMode : public GameMode
     {
     public:
@@ -95,8 +105,7 @@ namespace proofps_dd
         unsigned int getFragLimit() const;
         void SetFragLimit(unsigned int limit);
 
-        const std::vector<FragTableRow>& getPlayerData() const;
-        void UpdatePlayerData(const std::vector<FragTableRow>& players);
+        virtual void UpdatePlayerData(const std::vector<FragTableRow>& players) override;
 
     protected:
 
@@ -115,7 +124,6 @@ namespace proofps_dd
 
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nFragLimit;
-        std::vector<FragTableRow> m_players;
 
     }; // class DeathMatchMode
 

@@ -152,7 +152,7 @@ private:
         const PureVector& vecPosMin, const PureVector& vecPosMax,
         const PureVector& vecObjPos, const PureVector& vecObjSize);
     void PlayerCollisionWithWalls(bool& won);
-    void ShowFragTable(bool bWin) const;
+    void ShowObjectives(bool bWin) const;
     void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();
