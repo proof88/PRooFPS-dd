@@ -20,10 +20,12 @@ class GameModeTest :
 {
 public:
 
-    GameModeTest() :
+    GameModeTest(PGEcfgProfiles& cfgProfiles) :
         UnitTest(__FILE__),
         gm(nullptr),
-        dm(nullptr)
+        dm(nullptr),
+        m_cfgProfiles(cfgProfiles),
+        m_engine(nullptr)
     {
     }
 
@@ -33,21 +35,26 @@ protected:
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), true);
 
+        PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(m_cfgProfiles);
+
+        m_engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
+        m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
+
         AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
         AddSubTest("test_reset_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_times);
         AddSubTest("test_deathmatch_time_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
-        AddSubTest("test_deathmatch_update_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_players);
+        AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
+        AddSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
+        AddSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
+        AddSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
+        AddSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
+        AddSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
         AddSubTest("test_deathmatch_reset", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_reset);
         AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
         AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
         AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
         AddSubTest("test_deathmatch_winning_cond_time_and_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit);
-    }
-
-    virtual void Finalize() override
-    {
-        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), false);
     }
 
     virtual void TearDown() override
@@ -58,6 +65,17 @@ protected:
             gm = nullptr;
             dm = nullptr;
         }
+    }
+
+    virtual void Finalize() override
+    {
+        if (m_engine)
+        {
+            m_engine->shutdown();
+            m_engine = NULL;
+        }
+
+        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), false);
     }
 
     bool testInitDeathmatch()
@@ -76,16 +94,46 @@ private:
 
     proofps_dd::GameMode* gm;
     proofps_dd::DeathMatchMode* dm;
+    PGEcfgProfiles& m_cfgProfiles;
+    PR00FsUltimateRenderingEngine* m_engine;
 
     // ---------------------------------------------------------------------------
 
-    GameModeTest(const GameModeTest&)
+    GameModeTest(const GameModeTest&) :
+        gm(nullptr),
+        dm(nullptr),
+        m_cfgProfiles(m_cfgProfiles),
+        m_engine(nullptr)
     {};
 
     GameModeTest& operator=(const GameModeTest&)
     {
         return *this;
     };
+
+    bool assertFragTableEquals(
+        const std::vector<proofps_dd::FragTableRow>& expectedPlayers,
+        const std::list<proofps_dd::FragTableRow>& fragTable,
+        const std::string& sLogText = "")
+    {
+        bool b = assertEquals(expectedPlayers.size(), fragTable.size(), ("size " + sLogText).c_str());
+        if (b)
+        {
+            auto itFragTable = fragTable.begin();
+            auto itExpectedPlayers = expectedPlayers.begin();
+            int i = 0;
+            while ((itFragTable != fragTable.end()) && (itExpectedPlayers != expectedPlayers.end()))
+            {
+                i++;
+                b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Names in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nFrags, itFragTable->m_nFrags, ("Frags in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Death in row " + std::to_string(i) + " " + sLogText).c_str());
+                itFragTable++;
+                itExpectedPlayers++;
+            }
+        }
+        return b;
+    }
 
     bool test_factory_creates_deathmatch_only()
     {
@@ -99,7 +147,7 @@ private:
         b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamRoundGame), "trg null");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
-        b &= assertTrue(dm->getPlayerData().empty(), "playerdata");
+        b &= assertTrue(dm->getFragTable().empty(), "playerdata");
 
         return b;
     }
@@ -144,19 +192,86 @@ private:
         return b;
     }
 
-    bool test_deathmatch_update_players()
+    bool test_deathmatch_add_player_zero_values_maintains_adding_order()
     {
         if (!testInitDeathmatch())
         {
             return false;
         }
 
-        const std::vector<proofps_dd::FragTableRow> players = {
-            { "Adam", 10, 0 },
-            { "Apple", 5, 2 },
-            { "Joe", 8, 2 },
-            { "Banana", 8, 0 }
+        dm->SetFragLimit(11);
+
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 0;
+        player2.getDeaths() = 0;
+
+        Player player3(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setName("Joe");
+        player3.getFrags() = 0;
+        player3.getDeaths() = 0;
+
+        Player player4(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+        player4.setName("Banana");
+        player4.getFrags() = 0;
+        player4.getDeaths() = 0;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+        b &= assertTrue(dm->addPlayer(player3), "add player 3");
+        b &= assertTrue(dm->addPlayer(player4), "add player 4");
+
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            { "Adam", 0, 0 },
+            { "Apple", 0, 0 },
+            { "Joe", 0, 0 },
+            { "Banana", 0, 0 }
         };
+
+        b &= assertFragTableEquals(expectedPlayers, dm->getFragTable());
+
+        return b;
+    }
+
+    bool test_deathmatch_add_player_random_values()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->SetFragLimit(11);
+
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 10;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 5;
+        player2.getDeaths() = 2;
+
+        Player player3(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setName("Joe");
+        player3.getFrags() = 8;
+        player3.getDeaths() = 2;
+
+        Player player4(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+        player4.setName("Banana");
+        player4.getFrags() = 8;
+        player4.getDeaths() = 0;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+        b &= assertTrue(dm->addPlayer(player3), "add player 3");
+        b &= assertTrue(dm->addPlayer(player4), "add player 4");
+
         const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
             { "Adam", 10, 0 },
             { "Banana", 8, 0 },
@@ -164,24 +279,202 @@ private:
             { "Apple", 5, 2 }
         };
 
-        dm->UpdatePlayerData(players);
+        b &= assertFragTableEquals(expectedPlayers, dm->getFragTable());
 
-        bool b = assertEquals(players.size(), dm->getPlayerData().size(), "size");
-        if (b)
+        return b;
+    }
+
+    bool test_deathmatch_add_player_already_existing_fails()
+    {
+        if (!testInitDeathmatch())
         {
-            auto itPlayerData = dm->getPlayerData().begin();
-            auto itExpectedPlayers = expectedPlayers.begin();
-            int i = 0;
-            while ((itPlayerData != dm->getPlayerData().end()) && (itExpectedPlayers != expectedPlayers.end()))
-            {
-                i++;
-                b &= assertEquals(itExpectedPlayers->m_sName, itPlayerData->m_sName, ("Names in row " + std::to_string(i)).c_str());
-                b &= assertEquals(itExpectedPlayers->m_nFrags, itPlayerData->m_nFrags, ("Frags in row " + std::to_string(i)).c_str());
-                b &= assertEquals(itExpectedPlayers->m_nDeaths, itPlayerData->m_nDeaths, ("Death in row " + std::to_string(i)).c_str());
-                itPlayerData++;
-                itExpectedPlayers++;
-            }
+            return false;
         }
+
+        dm->SetFragLimit(11);
+
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 10;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 5;
+        player2.getDeaths() = 2;
+
+        Player player3(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setName("Joe");
+        player3.getFrags() = 8;
+        player3.getDeaths() = 2;
+
+        Player player4(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+        player4.setName("Banana");
+        player4.getFrags() = 8;
+        player4.getDeaths() = 0;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+        b &= assertTrue(dm->addPlayer(player3), "add player 3");
+        b &= assertTrue(dm->addPlayer(player4), "add player 4");
+
+        player3.setName("Joe");
+        player3.getFrags() = 12;
+        player3.getDeaths() = 0;
+        b &= assertFalse(dm->addPlayer(player3), "add player 3 again");
+
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            { "Adam", 10, 0 },
+            { "Banana", 8, 0 },
+            { "Joe", 8, 2 },
+            { "Apple", 5, 2 }
+        };
+
+        b &= assertFragTableEquals(expectedPlayers, dm->getFragTable());
+
+        return b;
+    }
+
+    bool test_deathmatch_update_player()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->SetFragLimit(11);
+
+        Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        playerAdam.setName("Adam");
+        playerAdam.getFrags() = 10;
+        playerAdam.getDeaths() = 0;
+
+        Player playerApple(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        playerApple.setName("Apple");
+        playerApple.getFrags() = 5;
+        playerApple.getDeaths() = 2;
+
+        Player playerJoe(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        playerJoe.setName("Joe");
+        playerJoe.getFrags() = 4;
+        playerJoe.getDeaths() = 2;
+
+        bool b = assertTrue(dm->addPlayer(playerAdam), "add player Adam");
+        b &= assertTrue(dm->addPlayer(playerApple), "add player Apple");
+        b &= assertTrue(dm->addPlayer(playerJoe), "add player Joe");
+
+        playerJoe.getFrags()++;
+        b &= assertTrue(dm->updatePlayer(playerJoe), "update player Joe 1");
+        // since Joe got same number of frags _later_ than Apple, Joe must stay behind Apple
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers1 = {
+            { "Adam", 10, 0 },
+            { "Apple", 5, 2 },
+            { "Joe", 5, 2 }
+        };      
+        b &= assertFragTableEquals(expectedPlayers1, dm->getFragTable(), "table 1");
+
+        playerApple.getDeaths()++;
+        b &= assertTrue(dm->updatePlayer(playerApple), "update player Apple 1");
+        // since Apple now has more deaths than Joe, it must goe behind Joe
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            { "Adam", 10, 0 },
+            { "Joe", 5, 2 },
+            { "Apple", 5, 3 }
+        };
+        b &= assertFragTableEquals(expectedPlayers2, dm->getFragTable(), "table 2");
+
+        playerJoe.getDeaths()++;
+        b &= assertTrue(dm->updatePlayer(playerJoe), "update player Joe 2");
+        // since Joe got same number of frags _earlier_ than Apple, and got same number for deaths _later_ than Apple, it must stay in front of Apple
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers3 = {
+            { "Adam", 10, 0 },
+            { "Joe", 5, 3 },
+            { "Apple", 5, 3 }
+        };
+        b &= assertFragTableEquals(expectedPlayers3, dm->getFragTable(), "table 3");
+
+        playerAdam.getFrags()++;
+        b &= assertTrue(dm->updatePlayer(playerAdam), "update player Adam 1");
+        // game won, win time is already updated by updatePlayer() even before explicit call to checkWinningConditions()
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning");
+
+        return b;
+    }
+
+    bool test_deathmatch_update_player_non_existing_fails()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->SetFragLimit(10);
+
+        Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        playerAdam.setName("Adam");
+        playerAdam.getFrags() = 10;
+        playerAdam.getDeaths() = 0;
+
+        bool b = assertFalse(dm->updatePlayer(playerAdam), "update player Adam 1");
+        b &= assertFalse(dm->checkWinningConditions(), "winning");
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers1;
+        b &= assertFragTableEquals(expectedPlayers1, dm->getFragTable(), "table 1");
+
+        b &= assertTrue(dm->addPlayer(playerAdam), "add player Adam");
+
+        Player playerJoe(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        playerJoe.setName("Joe");
+        playerJoe.getFrags() = 4;
+        playerJoe.getDeaths() = 2;
+        b &= assertFalse(dm->updatePlayer(playerJoe), "update player Joe 1");
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            { "Adam", 10, 0 }
+        };
+        b &= assertFragTableEquals(expectedPlayers2, dm->getFragTable(), "table 2");
+
+        return b;
+    }
+
+    bool test_deathmatch_remove_player()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->SetFragLimit(10);
+
+        Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        playerAdam.setName("Adam");
+        playerAdam.getFrags() = 10;
+        playerAdam.getDeaths() = 0;
+
+        bool b = assertFalse(dm->removePlayer(playerAdam), "remove player Adam 1");
+
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers1;
+        b &= assertFragTableEquals(expectedPlayers1, dm->getFragTable(), "table 1");
+
+        b &= assertTrue(dm->addPlayer(playerAdam), "add player Adam");
+
+        Player playerJoe(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        playerJoe.setName("Joe");
+        playerJoe.getFrags() = 4;
+        playerJoe.getDeaths() = 2;
+        b &= assertFalse(dm->removePlayer(playerJoe), "remove player Joe 1");
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            { "Adam", 10, 0 }
+        };
+        b &= assertFragTableEquals(expectedPlayers2, dm->getFragTable(), "table 2");
+
+        b &= assertTrue(dm->removePlayer(playerAdam), "remove player Adam 1");
+        b &= assertFragTableEquals(expectedPlayers1, dm->getFragTable(), "table 2");
+
+        // even though winner player is removed, winning condition stays true, win time is still valid, an explicit reset() would be needed to clear them!
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning");
 
         return b;
     }
@@ -194,19 +487,33 @@ private:
         }
 
         dm->SetTimeLimitSecs(25u);
-        dm->SetFragLimit(30u);
-        const std::vector<proofps_dd::FragTableRow> players = {
-            { "Adam", 10, 0 },
-            { "Apple", 5, 2 }
-        };
-        dm->UpdatePlayerData(players);
+        dm->SetFragLimit(15u);
+        
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 15;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 5;
+        player2.getDeaths() = 2;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning 1");
+
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+
         dm->Reset();
 
-        bool b = assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
-        b &= assertEquals(30u, dm->getFragLimit(), "frag limit");
-        b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
+        b &= assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
+        b &= assertEquals(15u, dm->getFragLimit(), "frag limit");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
-        b &= assertTrue(dm->getPlayerData().empty(), "players empty");
+        b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
+        b &= assertFalse(dm->checkWinningConditions(), "winning 2");
+        b &= assertTrue(dm->getFragTable().empty(), "players empty");
 
         return b;
     }
@@ -236,8 +543,8 @@ private:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
-        bool b = assertTrue(dm->checkWinningConditions(), "winning");
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        bool b = assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
 
         return b;
@@ -250,23 +557,31 @@ private:
             return false;
         }
 
-        std::vector<proofps_dd::FragTableRow> players = {
-            { "Apple", 0, 0 },
-            { "Adam", 2, 0 }
-        };
-
         dm->SetFragLimit(5);
         dm->Reset();
-        dm->UpdatePlayerData(players);
+
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Apple");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Adam");
+        player2.getFrags() = 2;
+        player2.getDeaths() = 0;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
 
         unsigned int i = 0;
         while (!dm->checkWinningConditions() && (i++ < 5))
         {
-            players[0].m_nFrags++;
-            dm->UpdatePlayerData(players);
+            player1.getFrags()++;
+            b &= assertTrue(dm->updatePlayer(player1), "update player");
         }
-        bool b = assertTrue(dm->checkWinningConditions(), "winning");
+
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
         return b;
@@ -279,15 +594,22 @@ private:
             return false;
         }
 
-        std::vector<proofps_dd::FragTableRow> players = {
-            { "Apple", 0, 0 },
-            { "Adam", 2, 0 }
-        };
+        Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+
+        Player player2(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 2;
+        player2.getDeaths() = 0;
 
         dm->SetFragLimit(5);
         dm->SetTimeLimitSecs(2);
         dm->Reset();
-        dm->UpdatePlayerData(players);
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
 
         // time limit elapse also means winning even if frag limit not reached
         int iSleep = 0;
@@ -296,23 +618,25 @@ private:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
-        bool b = assertTrue(dm->checkWinningConditions(), "winning due to time");
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
+        b &= assertTrue(dm->checkWinningConditions(), "winning due to time");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
 
         // frag limit reach also means winning even if time limit not reached
         dm->SetTimeLimitSecs(100);
         dm->Reset();
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
-        dm->UpdatePlayerData(players);
+        b &= assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+
         unsigned int i = 0;
         while (!dm->checkWinningConditions() && (i++ < 5))
         {
-            players[0].m_nFrags++;
-            dm->UpdatePlayerData(players);
+            player1.getFrags()++;
+            b &= assertTrue(dm->updatePlayer(player1), "update player");
         }
-        b &= assertTrue(dm->checkWinningConditions(), "winning due to frags");
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
+        b &= assertTrue(dm->checkWinningConditions(), "winning due to frags");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
         return b;

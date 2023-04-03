@@ -11,13 +11,15 @@
 */
 
 #include <chrono>
+#include <list>
 #include <string>
-#include <vector>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
 #include "../../../PGE/PGE/Network/PgeNetwork.h"
 #include "../../../PGE/PGE/PURE/include/external/PR00FsUltimateRenderingEngine.h"
+
+#include "Player.h"
 
 namespace proofps_dd
 {
@@ -54,20 +56,58 @@ namespace proofps_dd
 
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
 
+        /**
+        * Removes all added players, resets winning time and winning condition.
+        */
         virtual void Reset();
+
+        /**
+        * Evaluates conditions to see if game is won or not.
+        * Since conditions depend on game mode, the actual implementation must be in the specific derived game mode class.
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to Reset().
+        * 
+        * @return True if game is won, false otherwise.
+        */
         virtual bool checkWinningConditions() = 0;
         
         const std::chrono::time_point<std::chrono::steady_clock>& getWinTime() const;
 
-        const std::vector<FragTableRow>& getPlayerData() const;
-        virtual void UpdatePlayerData(const std::vector<FragTableRow>& players) = 0;
+        const std::list<FragTableRow>& getFragTable() const;
+        
+        /**
+        * Adds the specified player.
+        * Automatically evaluates winning condition, in case of winning it also updates winning time.
+        * Fails if a player with same name is already added.
+        * 
+        * @return True if added the new player, false otherwise.
+        */
+        virtual bool addPlayer(const Player& player) = 0;
+
+        /**
+        * Updates data for the specified player.
+        * Automatically evaluates winning condition, in case of winning it also updates winning time.
+        * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to Reset().
+        * Fails if player with same cannot be found.
+        *
+        * @return True if updated the existing player, false otherwise.
+        */
+        virtual bool updatePlayer(const Player& player) = 0;
+
+        /**
+        * Removes data for the specified player.
+        * Fails if player with same cannot be found.
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to Reset().
+        *
+        * @return True if removed the existing player, false otherwise.
+        */
+        virtual bool removePlayer(const Player& player) = 0;
 
         void Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
-        void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network);
+        virtual void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) = 0;
 
     protected:
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
-        std::vector<FragTableRow> m_players;
+        std::list<FragTableRow> m_players;
 
         GameMode(GameModeType gm);
 
@@ -105,7 +145,10 @@ namespace proofps_dd
         unsigned int getFragLimit() const;
         void SetFragLimit(unsigned int limit);
 
-        virtual void UpdatePlayerData(const std::vector<FragTableRow>& players) override;
+        virtual bool addPlayer(const Player& player) override;
+        virtual bool updatePlayer(const Player& player) override;
+        virtual bool removePlayer(const Player& player) override;
+        virtual void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) override;
 
     protected:
 
@@ -120,10 +163,13 @@ namespace proofps_dd
 
     private:
 
+        static int comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths);
+        
         // ---------------------------------------------------------------------------
 
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nFragLimit;
+        bool m_bWon;
 
     }; // class DeathMatchMode
 

@@ -1405,19 +1405,7 @@ void PRooFPSddPGE::UpdateGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    const bool bPrevWinningConditions = m_gameMode->checkWinningConditions();
-
-    // not nice, in the future players will be stored in a more general way that could be easily accessed by GameMode
-    std::vector<proofps_dd::FragTableRow> players;
-    for (const auto& playerPair : m_mapPlayers)
-    {
-        const proofps_dd::FragTableRow fragTableRow = { playerPair.second.getName(), playerPair.second.getFrags(), playerPair.second.getDeaths()};
-        players.push_back(fragTableRow);
-    }
-    m_deathMatchMode->UpdatePlayerData(players);
-
-    const bool bNewWinningConditions = m_gameMode->checkWinningConditions();
-    if (bNewWinningConditions)
+    if (m_gameMode->checkWinningConditions())
     {
         const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
         if (nSecsSinceWin >= 15)
@@ -1470,15 +1458,13 @@ void PRooFPSddPGE::UpdateGameMode()
         }
         else
         {
+            // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
             m_gameMode->ShowObjectives(getPure(), getNetwork());
-            if (bPrevWinningConditions != bNewWinningConditions)
+            m_pObjXHair->Hide();
+            for (auto& playerPair : m_mapPlayers)
             {
-                m_pObjXHair->Hide();
-                for (auto& playerPair : m_mapPlayers)
-                {
-                    playerPair.second.getObject3D()->Hide();
-                    playerPair.second.getWeapon()->getObject3D().Hide();
-                }
+                playerPair.second.getObject3D()->Hide();
+                playerPair.second.getWeapon()->getObject3D().Hide();
             }
         }
     }
@@ -1558,7 +1544,7 @@ void PRooFPSddPGE::onGameFrameBegin()
         if (getNetwork().isServer())
         {
             if (player.getPos().getY() != player.getOPos().getY())
-            { // elõzõ frame-ben még tudott zuhanni, tehát egyelõre nem ugorhatunk
+            {   // still could fall in previous frame, so jumping is still disallowed ...
                 player.SetJumpAllowed(false);
             }
             else
@@ -1909,6 +1895,13 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     }
     Player& insertedPlayer = insertRes.first->second;
     insertedPlayer.setName(msg.m_szUserName);
+    
+    if (!m_gameMode->addPlayer(insertedPlayer))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert player %s into GameMode!", __func__, msg.m_szUserName);
+        assert(false);
+        return false;
+    }
 
     // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
     // these will be the reference weapons, never visible, never moving, just to be copied!
@@ -2167,6 +2160,7 @@ bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandl
         getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, playerIt->second.getName().c_str());
     }
 
+    m_gameMode->removePlayer(playerIt->second);
     m_mapPlayers.erase(playerIt);
 
     getNetwork().WriteList();
@@ -2485,6 +2479,11 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
         }
     }
 
+    if (!m_gameMode->updatePlayer(it->second))
+    {
+        getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, it->second.getName().c_str());
+    }
+
     return true;
 }
 
@@ -2743,7 +2742,7 @@ void PRooFPSddPGE::RegTestDumpToFile()
     }
 
     fRegTestDump << "Frag Table: Player Name, Frags, Deaths" << std::endl;
-    for (const auto& player : m_deathMatchMode->getPlayerData())
+    for (const auto& player : m_deathMatchMode->getFragTable())
     {
         fRegTestDump << "  " << player.m_sName << std::endl;
         fRegTestDump << "  " << player.m_nFrags << std::endl;
