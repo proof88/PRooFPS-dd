@@ -142,6 +142,8 @@ namespace proofps_dd
         unsigned int getTimeLimitSecs() const;
         void SetTimeLimitSecs(unsigned int secs);
 
+        unsigned int getTimeRemainingSecs() const;
+
         unsigned int getFragLimit() const;
         void SetFragLimit(unsigned int limit);
 

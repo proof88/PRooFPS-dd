@@ -281,7 +281,7 @@ bool PRooFPSddPGE::onGameInitialized()
     getPure().getWindow().SetCursorVisible(false);
 
     m_deathMatchMode->SetFragLimit(10);
-    //m_deathMatchMode->SetTimeLimitSecs(5);
+    //m_deathMatchMode->SetTimeLimitSecs(500);
     m_gameMode->Reset();
     
     m_fps_lastmeasure = GetTickCount();

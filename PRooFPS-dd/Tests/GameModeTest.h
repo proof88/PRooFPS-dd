@@ -42,7 +42,7 @@ protected:
 
         AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
         AddSubTest("test_reset_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_times);
-        AddSubTest("test_deathmatch_time_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set);
+        AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
         AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
         AddSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
@@ -164,16 +164,20 @@ private:
             assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
     }
 
-    bool test_deathmatch_time_limit_get_set()
+    bool test_deathmatch_time_limit_get_set_and_remaining_time_get()
     {
         if (!testInitDeathmatch())
         {
             return false;
         }
 
-        bool b = assertEquals(0u, dm->getTimeLimitSecs(), "default");
+        bool b = assertEquals(0u, dm->getTimeLimitSecs(), "default time limit") &
+            assertEquals(0u, dm->getTimeRemainingSecs(), "remaining default");
+
         dm->SetTimeLimitSecs(25u);
-        b &= assertEquals(25u, dm->getTimeLimitSecs(), "new");
+        dm->Reset();  // Reset() is needed to have correct value for remaining time
+        b &= assertEquals(25u, dm->getTimeLimitSecs(), "new time limit") &
+            assertEquals(25u, dm->getTimeRemainingSecs(), "new remaining");
 
         return b;
     }
@@ -537,15 +541,18 @@ private:
 
         dm->SetTimeLimitSecs(2);
         dm->Reset();
+        std::set<unsigned int> setRemainingSecs = {0, 1};
         int iSleep = 0;
         while ((iSleep++ < 5) && !dm->checkWinningConditions())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            setRemainingSecs.erase( dm->getTimeRemainingSecs() );
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         bool b = assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertTrue(dm->checkWinningConditions(), "winning");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         return b;
     }
@@ -612,15 +619,18 @@ private:
         b &= assertTrue(dm->addPlayer(player2), "add player 2");
 
         // time limit elapse also means winning even if frag limit not reached
+        std::set<unsigned int> setRemainingSecs = { 0, 1 };
         int iSleep = 0;
         while ((iSleep++ < 5) && !dm->checkWinningConditions())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            setRemainingSecs.erase(dm->getTimeRemainingSecs());
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertTrue(dm->checkWinningConditions(), "winning due to time");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         // frag limit reach also means winning even if time limit not reached
         dm->SetTimeLimitSecs(100);

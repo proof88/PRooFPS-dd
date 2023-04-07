@@ -131,8 +131,7 @@ bool DeathMatchMode::checkWinningConditions()
     
     if (getTimeLimitSecs() > 0)
     {
-        const auto durationSecsSinceReset = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime());
-        if (durationSecsSinceReset.count() >= getTimeLimitSecs())
+        if (getTimeRemainingSecs() == 0)
         {
             m_bWon = true;
             m_timeWin = std::chrono::steady_clock::now();
@@ -162,6 +161,15 @@ unsigned int DeathMatchMode::getTimeLimitSecs() const
 void DeathMatchMode::SetTimeLimitSecs(unsigned int secs)
 {
     m_nTimeLimitSecs = secs;
+}
+
+unsigned int proofps_dd::DeathMatchMode::getTimeRemainingSecs() const
+{
+    if (m_bWon || (getResetTime().time_since_epoch().count() == 0) || (getTimeLimitSecs() == 0))
+    {
+        return 0;
+    }
+    return getTimeLimitSecs() - static_cast<unsigned int>((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime())).count());
 }
 
 unsigned int DeathMatchMode::getFragLimit() const
@@ -284,6 +292,27 @@ void DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_net
     {
         Text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
+    }
+    else
+    {
+        std::string sLimits;
+        if (getFragLimit() > 0)
+        {
+            sLimits = "Frag Limit: " + std::to_string(getFragLimit());
+        }
+        if (getTimeLimitSecs() > 0)
+        {
+            if (!sLimits.empty())
+            {
+                sLimits += ", ";
+            }
+            sLimits += "Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingSecs()) + " s";
+        }
+        if (!sLimits.empty())
+        {
+            Text(pure, sLimits, nXPosPlayerName, nYPosStart);
+            nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
+        }
     }
 
     int nThisRowY = nYPosStart;
