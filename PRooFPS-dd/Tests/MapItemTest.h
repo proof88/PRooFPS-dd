@@ -50,7 +50,7 @@ protected:
 
     virtual void TearDown()
     {
-        MapItem::ResetGlobalData();
+        proofps_dd::MapItem::ResetGlobalData();
     }
 
     virtual void Finalize()
@@ -83,13 +83,13 @@ private:
 
     bool test_initially_empty()
     {
-        const MapItem::MapItemId iLastMapItemId = MapItem::getGlobalMapItemId();
+        const proofps_dd::MapItem::MapItemId iLastMapItemId = proofps_dd::MapItem::getGlobalMapItemId();
 
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
 
         return assertEquals(mi.getId(), iLastMapItemId, "item id") &
-            assertEquals(MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
-            assertEquals(static_cast<int>(MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
+            assertEquals(proofps_dd::MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
+            assertEquals(static_cast<int>(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
             assertEquals(PureVector(1, 2, 3), mi.getPos(), "pos") &
             assertEquals(mi.getPos(), mi.getObject3D().getPosVec(), "obj pos") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "visible") &
@@ -99,28 +99,28 @@ private:
 
     bool test_reset_global_item_id()
     {
-        MapItem* mi = new MapItem(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem* mi = new proofps_dd::MapItem(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         delete mi;
 
-        MapItem::ResetGlobalData();
+        proofps_dd::MapItem::ResetGlobalData();
 
-        return assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+        return assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
     }
 
     bool test_get_item_respawn_time_secs()
     {
-        MapItem miHealth(*engine, MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
-        MapItem miWpnPistol(*engine, MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
-        MapItem miWpnMchGun(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem miHealth(*engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
+        proofps_dd::MapItem miWpnPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
+        proofps_dd::MapItem miWpnMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         
-        return assertEquals(MapItem::ITEM_HEALTH_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miHealth), "health") &
-            assertEquals(MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
-            assertEquals(MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS, MapItem::getItemRespawnTimeSecs(miWpnMchGun), "mchgun");
+        return assertEquals(proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miHealth), "health") &
+            assertEquals(proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
+            assertEquals(proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnMchGun), "mchgun");
     }
 
     bool test_take()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.Take();
 
         return assertTrue(mi.isTaken(), "taken") &
@@ -130,7 +130,7 @@ private:
 
     bool test_untake()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.UnTake();
 
         bool b = assertFalse(mi.isTaken(), "not taken") &
@@ -146,7 +146,7 @@ private:
 
     bool test_update()
     {
-        MapItem mi(*engine, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const float fOriginalObjPosY = mi.getPos().getY();
         mi.Update(4.f);
 

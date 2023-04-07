@@ -11,11 +11,10 @@
 #include "stdafx.h"  // PCH
 #include "GameMode.h"
 
-using namespace proofps_dd;
 
 /*
    ###########################################################################
-   GameMode
+   proofps_dd::GameMode
    ###########################################################################
 */
 
@@ -23,57 +22,57 @@ using namespace proofps_dd;
 // ############################### PUBLIC ################################
 
 
-const char* GameMode::getLoggerModuleName()
+const char* proofps_dd::GameMode::getLoggerModuleName()
 {
     return "GameMode";
 }
 
-GameMode* GameMode::createGameMode(GameModeType gm)
+proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType gm)
 {
-    if (gm != GameModeType::DeathMatch)
+    if (gm != proofps_dd::GameModeType::DeathMatch)
     {
         // currently we dont support other game mode type
         return nullptr;
     }
 
-    return new DeathMatchMode();
+    return new proofps_dd::DeathMatchMode();
 }
 
-CConsole& GameMode::getConsole() const
+CConsole& proofps_dd::GameMode::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-GameMode::~GameMode()
+proofps_dd::GameMode::~GameMode()
 {
 }
 
-GameModeType GameMode::getGameModeType() const
+proofps_dd::GameModeType proofps_dd::GameMode::getGameModeType() const
 {
     return m_gameModeType;
 }
 
-const std::chrono::time_point<std::chrono::steady_clock>& GameMode::getResetTime() const
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getResetTime() const
 {
     return m_timeReset;
 }
 
-void GameMode::Reset()
+void proofps_dd::GameMode::Reset()
 {
     m_timeReset = std::chrono::steady_clock::now();
 }
 
-const std::chrono::time_point<std::chrono::steady_clock>& GameMode::getWinTime() const
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getWinTime() const
 {
     return m_timeWin;
 }
 
-const std::list<FragTableRow>& GameMode::getFragTable() const
+const std::list<proofps_dd::FragTableRow>& proofps_dd::GameMode::getFragTable() const
 {
     return m_players;
 }
 
-void GameMode::Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
+void proofps_dd::GameMode::Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
     pure.getUImanager().text(s, x, y)->SetDropShadow(true);
 }
@@ -82,7 +81,7 @@ void GameMode::Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, i
 // ############################## PROTECTED ##############################
 
 
-GameMode::GameMode(GameModeType gm) :
+proofps_dd::GameMode::GameMode(proofps_dd::GameModeType gm) :
     m_gameModeType(gm)
 {
 }
@@ -93,7 +92,7 @@ GameMode::GameMode(GameModeType gm) :
 
 /*
    ###########################################################################
-   DeathMatchMode
+   proofps_dd::DeathMatchMode
    ###########################################################################
 */
 
@@ -101,27 +100,27 @@ GameMode::GameMode(GameModeType gm) :
 // ############################### PUBLIC ################################
 
 
-DeathMatchMode::DeathMatchMode() :
-    GameMode(GameModeType::DeathMatch),
+proofps_dd::DeathMatchMode::DeathMatchMode() :
+    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch),
     m_nTimeLimitSecs(0),
     m_nFragLimit(0),
     m_bWon(false)
 {
 }
 
-DeathMatchMode::~DeathMatchMode()
+proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
-void DeathMatchMode::Reset()
+void proofps_dd::DeathMatchMode::Reset()
 {
-    GameMode::Reset();
+    proofps_dd::GameMode::Reset();
     m_players.clear();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
 }
 
-bool DeathMatchMode::checkWinningConditions()
+bool proofps_dd::DeathMatchMode::checkWinningConditions()
 {
     if (m_bWon)
     {
@@ -153,12 +152,12 @@ bool DeathMatchMode::checkWinningConditions()
     return false;
 }
 
-unsigned int DeathMatchMode::getTimeLimitSecs() const
+unsigned int proofps_dd::DeathMatchMode::getTimeLimitSecs() const
 {
     return m_nTimeLimitSecs;
 }
 
-void DeathMatchMode::SetTimeLimitSecs(unsigned int secs)
+void proofps_dd::DeathMatchMode::SetTimeLimitSecs(unsigned int secs)
 {
     m_nTimeLimitSecs = secs;
 }
@@ -172,17 +171,17 @@ unsigned int proofps_dd::DeathMatchMode::getTimeRemainingSecs() const
     return getTimeLimitSecs() - static_cast<unsigned int>((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime())).count());
 }
 
-unsigned int DeathMatchMode::getFragLimit() const
+unsigned int proofps_dd::DeathMatchMode::getFragLimit() const
 {
     return m_nFragLimit;
 }
 
-void DeathMatchMode::SetFragLimit(unsigned int limit)
+void proofps_dd::DeathMatchMode::SetFragLimit(unsigned int limit)
 {
     m_nFragLimit = limit;
 }
 
-bool DeathMatchMode::addPlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::addPlayer(const Player& player)
 {
     bool bRet = true;
     auto it = m_players.cbegin();
@@ -205,14 +204,14 @@ bool DeathMatchMode::addPlayer(const Player& player)
 
     if (bRet)
     {
-        m_players.insert(it, FragTableRow{ player.getName(), player.getFrags(), player.getDeaths() });
+        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths() });
     }
 
     checkWinningConditions();  // to make sure winning time is updated if game has just been won!
     return bRet;
 }
 
-bool DeathMatchMode::updatePlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player)
 {
     const auto itFound = std::find_if(
         std::begin(m_players),
@@ -255,7 +254,7 @@ bool DeathMatchMode::updatePlayer(const Player& player)
 
     if (itFound != it)
     {
-        // move 'itFound' before 'it' (FragTableRow is not copied, only internal pointers are updated)
+        // move 'itFound' before 'it' (proofps_dd::FragTableRow is not copied, only internal pointers are updated)
         m_players.splice(it, m_players, itFound);
     }
     itFound->m_nFrags = player.getFrags();
@@ -265,7 +264,7 @@ bool DeathMatchMode::updatePlayer(const Player& player)
     return true;
 }
 
-bool DeathMatchMode::removePlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
 {
     const auto itFound = std::find_if(
         std::begin(m_players),
@@ -282,7 +281,7 @@ bool DeathMatchMode::removePlayer(const Player& player)
     return true;
 }
 
-void DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
+void proofps_dd::DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
 {
     const int nXPosPlayerName = 20;
     const int nXPosFrags = 200;
@@ -349,7 +348,7 @@ void DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_net
     }
 }
 
-int DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
+int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
 {
     if (p1frags == p2frags)
     {

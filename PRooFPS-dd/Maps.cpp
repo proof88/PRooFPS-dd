@@ -19,7 +19,7 @@
 // ############################### PUBLIC ################################
 
 
-Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
+proofps_dd::Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
     m_gfx(gfx),
     m_blocks(NULL),
     m_blocks_h(0),
@@ -29,41 +29,41 @@ Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
     m_width(0),
     m_height(0)
 {
-    MapItem::ResetGlobalData();
+    proofps_dd::MapItem::ResetGlobalData();
 }
 
-Maps::~Maps()
+proofps_dd::Maps::~Maps()
 {
     shutdown();
 }
 
-CConsole& Maps::getConsole() const
+CConsole& proofps_dd::Maps::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-const char* Maps::getLoggerModuleName()
+const char* proofps_dd::Maps::getLoggerModuleName()
 {
     return "Maps";
 }
 
-bool Maps::initialize()
+bool proofps_dd::Maps::initialize()
 {
-    m_texRed = m_gfx.getTextureManager().createFromFile( (std::string(GAME_TEXTURES_DIR) + "red.bmp").c_str() );
+    m_texRed = m_gfx.getTextureManager().createFromFile( (std::string(proofps_dd::GAME_TEXTURES_DIR) + "red.bmp").c_str() );
     return true;
 }
 
-bool Maps::loaded() const
+bool proofps_dd::Maps::loaded() const
 {
     return ( m_blocks != NULL );
 }
 
-bool Maps::load(const char* fname)
+bool proofps_dd::Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
     // this wont be needed after we require unload() before consecutive load()
-    MapItem::ResetGlobalData();
+    proofps_dd::MapItem::ResetGlobalData();
 
     m_sFileName = PFL::getFilename(fname);
     m_sRawName = PFL::changeExtension(m_sFileName.c_str(), "");
@@ -74,7 +74,7 @@ bool Maps::load(const char* fname)
         return false;
     }
 
-    std::ifstream f;
+    std::ifstream f;                                                                   
     f.open(fname, std::ifstream::in);
     if ( !f.good() )
     {
@@ -205,14 +205,14 @@ bool Maps::load(const char* fname)
             }
         }
     }
-    m_blocksVertexPosMin.Set(m_blockPosMin.getX() - GAME_BLOCK_SIZE_X / 2.f, m_blockPosMin.getY() - GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMin.getZ() - GAME_BLOCK_SIZE_Z / 2.f);
-    m_blocksVertexPosMax.Set(m_blockPosMax.getX() + GAME_BLOCK_SIZE_X / 2.f, m_blockPosMax.getY() + GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMax.getZ() + GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMin.Set(m_blockPosMin.getX() - proofps_dd::GAME_BLOCK_SIZE_X / 2.f, m_blockPosMin.getY() - proofps_dd::GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMin.getZ() - proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMax.Set(m_blockPosMax.getX() + proofps_dd::GAME_BLOCK_SIZE_X / 2.f, m_blockPosMax.getY() + proofps_dd::GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMax.getZ() + proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
 
     getConsole().SOLnOO("Map loaded with width %d and height %d!", m_width, m_height);
     return true;
 }
 
-void Maps::unload()
+void proofps_dd::Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
     m_sRawName.clear();
@@ -244,7 +244,7 @@ void Maps::unload()
         delete itemPair.second;
     }
     m_items.clear();
-    MapItem::ResetGlobalData();
+    proofps_dd::MapItem::ResetGlobalData();
 
     m_width = 0;
     m_height = 0;
@@ -258,7 +258,7 @@ void Maps::unload()
     getConsole().OOOLn("Maps::unload() done!");
 }
 
-void Maps::shutdown()
+void proofps_dd::Maps::shutdown()
 {
     getConsole().OLnOI("Maps::shutdown() ...");
     if ( m_gfx.isInitialized() )
@@ -268,17 +268,17 @@ void Maps::shutdown()
     getConsole().OOOLn("Maps::shutdown() done!");
 }
 
-unsigned int Maps::width() const
+unsigned int proofps_dd::Maps::width() const
 {
     return m_width;
 }
 
-unsigned int Maps::height() const
+unsigned int proofps_dd::Maps::height() const
 {
     return m_height;
 }
 
-void Maps::UpdateVisibilitiesForRenderer()
+void proofps_dd::Maps::UpdateVisibilitiesForRenderer()
 {
     const PureVector campos = m_gfx.getCamera().getPosVec();
 
@@ -306,17 +306,17 @@ void Maps::UpdateVisibilitiesForRenderer()
     }
 }
 
-const std::string& Maps::getFilename() const
+const std::string& proofps_dd::Maps::getFilename() const
 {
     return m_sFileName;
 }
 
-const std::set<PureVector>& Maps::getSpawnpoints() const
+const std::set<PureVector>& proofps_dd::Maps::getSpawnpoints() const
 {
     return m_spawnpoints;
 }
 
-const PureVector& Maps::getRandomSpawnpoint() const
+const PureVector& proofps_dd::Maps::getRandomSpawnpoint() const
 {
     if ( m_spawnpoints.empty() )
     {
@@ -333,7 +333,7 @@ const PureVector& Maps::getRandomSpawnpoint() const
     return *it;
 }
 
-const PureVector& Maps::getLeftMostSpawnpoint() const
+const PureVector& proofps_dd::Maps::getLeftMostSpawnpoint() const
 {
     if (m_spawnpoints.empty())
     {
@@ -343,7 +343,7 @@ const PureVector& Maps::getLeftMostSpawnpoint() const
     return m_spawnpointLeftMost;
 }
 
-const PureVector& Maps::getRightMostSpawnpoint() const
+const PureVector& proofps_dd::Maps::getRightMostSpawnpoint() const
 {
     if (m_spawnpoints.empty())
     {
@@ -353,57 +353,57 @@ const PureVector& Maps::getRightMostSpawnpoint() const
     return m_spawnpointRightMost;
 }
 
-const PureVector& Maps::getBlockPosMin() const
+const PureVector& proofps_dd::Maps::getBlockPosMin() const
 {
     return m_blockPosMin;
 }
 
-const PureVector& Maps::getBlockPosMax() const
+const PureVector& proofps_dd::Maps::getBlockPosMax() const
 {
     return m_blockPosMax;
 }
 
-const PureVector& Maps::getBlocksVertexPosMin() const
+const PureVector& proofps_dd::Maps::getBlocksVertexPosMin() const
 {
     return m_blocksVertexPosMin;
 }
 
-const PureVector& Maps::getBlocksVertexPosMax() const
+const PureVector& proofps_dd::Maps::getBlocksVertexPosMax() const
 {
     return m_blocksVertexPosMax;
 }
 
-PureObject3D** Maps::getBlocks()
+PureObject3D** proofps_dd::Maps::getBlocks()
 {
     return m_blocks;
 }
 
-PureObject3D** Maps::getForegroundBlocks()
+PureObject3D** proofps_dd::Maps::getForegroundBlocks()
 {
     return m_foregroundBlocks;
 }
 
-int Maps::getBlockCount() const
+int proofps_dd::Maps::getBlockCount() const
 {
     return m_blocks_h;
 }
 
-int Maps::getForegroundBlockCount() const
+int proofps_dd::Maps::getForegroundBlockCount() const
 {
     return m_foregroundBlocks_h;
 }
 
-const std::map<MapItem::MapItemId, MapItem*>& Maps::getItems() const
+const std::map<proofps_dd::MapItem::MapItemId, proofps_dd::MapItem*>& proofps_dd::Maps::getItems() const
 {
     return m_items;
 }
 
-const std::map<std::string, PGEcfgVariable>& Maps::getVars() const
+const std::map<std::string, PGEcfgVariable>& proofps_dd::Maps::getVars() const
 {
     return m_vars;
 }
 
-void Maps::Update()
+void proofps_dd::Maps::Update()
 {
     // invoked by both server and client
     for (auto& itemPair : getItems())
@@ -413,7 +413,7 @@ void Maps::Update()
             continue;
         }
 
-        MapItem& mapItem = *(itemPair.second);
+        proofps_dd::MapItem& mapItem = *(itemPair.second);
         if (mapItem.isTaken())
         {
             continue;
@@ -430,12 +430,12 @@ void Maps::Update()
 // ############################### PRIVATE ###############################
 
 
-bool Maps::lineShouldBeIgnored(const std::string& sLine)
+bool proofps_dd::Maps::lineShouldBeIgnored(const std::string& sLine)
 {
     return sLine.empty() || (sLine[0] == '#');
 }
 
-bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError)
+bool proofps_dd::Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError)
 {
     const std::string::size_type nAssignmentPos = sLine.find('=');
     if ( nAssignmentPos == std::string::npos )
@@ -502,7 +502,7 @@ bool Maps::lineIsValueAssignment(const std::string& sLine, std::string& sVar, st
     return true;
 }
 
-void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
+void proofps_dd::Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
 {
     if ( sVar.length() == 1 )
     {
@@ -527,7 +527,7 @@ void Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
  *                blocks, thus in the next non-dry run we will have to allocate memory only once for the blocks.
  *                And yes, dry run actually creates all the items in m_items.
  */
-bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun)
+bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun)
 {
     if (bDryRun)
     {
@@ -568,7 +568,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
         const bool bForeground = foregroundBlocks.find(c) != foregroundBlocks.end();
         const bool bBackground = backgroundBlocks.find(c) != backgroundBlocks.end();
 
-        x = x + GAME_BLOCK_SIZE_X;
+        x = x + proofps_dd::GAME_BLOCK_SIZE_X;
         if ( x > maxx )
         {
             maxx = x;
@@ -597,7 +597,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
         {
             if (bDryRun)
             {
-                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;
@@ -608,7 +608,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
         {
             if (bDryRun)
             {
-                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;
@@ -619,7 +619,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
         {
             if (bDryRun)
             {
-                MapItem* pMapItem = new MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;
@@ -676,7 +676,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
                     const auto it = m_mapReferenceBlockObject3Ds.find(c);
                     if (it == m_mapReferenceBlockObject3Ds.end())
                     {
-                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X, GAME_BLOCK_SIZE_X);
+                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(proofps_dd::GAME_BLOCK_SIZE_X, proofps_dd::GAME_BLOCK_SIZE_X, proofps_dd::GAME_BLOCK_SIZE_X);
                         m_mapReferenceBlockObject3Ds[c]->Hide();
                         PureTexture* tex = PGENULL;
                         if (m_Block2Texture.find(c) == m_Block2Texture.end())
@@ -687,7 +687,7 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
                         }
                         else
                         {
-                            const std::string sTexName = GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
+                            const std::string sTexName = proofps_dd::GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
                             tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
                             if (!tex)
                             {
@@ -731,8 +731,8 @@ bool Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRu
             pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
         }
 
-        pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -GAME_BLOCK_SIZE_Z);
+        pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::GAME_BLOCK_SIZE_Z);
     }  // while
-    y = y - GAME_BLOCK_SIZE_Y;
+    y = y - proofps_dd::GAME_BLOCK_SIZE_Y;
     return true;
 }

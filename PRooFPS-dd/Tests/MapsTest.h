@@ -31,7 +31,7 @@ protected:
     {
         //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
-        CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), true);
+        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Maps::getLoggerModuleName(), true);
 
         PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(m_cfgProfiles);
         
@@ -69,7 +69,7 @@ protected:
 
         CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), false);
         CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), false);
-        CConsole::getConsoleInstance().SetLoggingState(Maps::getLoggerModuleName(), false);
+        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Maps::getLoggerModuleName(), false);
     }
 
 private:
@@ -93,7 +93,7 @@ private:
 
     bool test_initially_empty()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertFalse(maps.loaded(), "loaded 1") &
             assertTrue(maps.getFilename().empty(), "filename 1") &
             assertEquals(0u, maps.width(), "width 1") &
@@ -108,7 +108,7 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 1") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
             assertEquals(0u, maps.getItems().size(), "item count 1") &
-            assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 1");
+            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.loaded(), "loaded 2") &
@@ -126,13 +126,13 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 2") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
             assertEquals(0u, maps.getItems().size(), "item count 2") &
-            assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 2");
+            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
         return b;
     }
 
     bool test_map_load_bad_filename()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/egsdghsdghsdghdsghgds.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -156,14 +156,14 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
 
     bool test_map_load_bad_assignment()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_assignment.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -187,14 +187,14 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
 
     bool test_map_load_bad_order()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("gamedata/maps/map_test_bad_order.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -218,14 +218,14 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
         return b;
     }
 
     bool test_map_load_good()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -264,12 +264,12 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count");
-        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         if (b)
         {
             auto it = maps.getItems().begin();
             b &= assertNotNull(it->second, "item 1") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
             if (b)
             {
@@ -278,7 +278,7 @@ private:
 
             it++;
             b &= assertNotNull(it->second, "item 2") &&
-                assertEquals(MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 2 referred obj");
             if (b)
             {
@@ -287,7 +287,7 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 3") &&
-                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 3 referred obj");
             if (b)
             {
@@ -296,7 +296,7 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 4") &&
-                assertEquals(MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 4 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 4 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
             if (b)
             {
@@ -305,7 +305,7 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 5") &&
-                assertEquals(MapItemType::ITEM_HEALTH, it->second->getType(), "item 5 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 5 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
             if (b)
             {
@@ -324,7 +324,7 @@ private:
 
     bool test_map_unload_and_load_again()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
 
         // ###################################### LOAD 1 ######################################
         bool b = assertTrue(maps.initialize(), "init");
@@ -365,7 +365,7 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count 1");
-        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id 1");
+        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         
         // ###################################### UNLOAD ######################################
         maps.unload();
@@ -390,7 +390,7 @@ private:
 
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count 2");
-        b &= assertEquals(0u, MapItem::getGlobalMapItemId(), "global item id 2");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
@@ -430,14 +430,14 @@ private:
 
         // items
         b &= assertEquals(5u, maps.getItems().size(), "item count 3");
-        b &= assertEquals(5u, MapItem::getGlobalMapItemId(), "global item id 3");
+        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
 
         return b;
     }
 
     bool test_map_get_random_spawnpoint()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -464,7 +464,7 @@ private:
 
     bool test_map_get_leftmost_spawnpoint()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -493,7 +493,7 @@ private:
 
     bool test_map_get_rightmost_spawnpoint()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -522,7 +522,7 @@ private:
 
     bool test_map_update()
     {
-        Maps maps(*engine);
+        proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");

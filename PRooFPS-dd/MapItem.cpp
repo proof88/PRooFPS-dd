@@ -15,15 +15,15 @@
 // ############################### PUBLIC ################################
 
 
-std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
+std::ostream& proofps_dd::operator<< (std::ostream& s, const proofps_dd::MapItemType& mit)
 {
     switch (mit)
     {
-    case MapItemType::ITEM_WPN_PISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
         return (s << "WpnPistol");
-    case MapItemType::ITEM_WPN_MACHINEGUN:
+    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
         return (s << "WpnMchgun");
-    case MapItemType::ITEM_HEALTH:
+    case proofps_dd::MapItemType::ITEM_HEALTH:
         return (s << "Health");
     default:
         break;
@@ -31,19 +31,19 @@ std::ostream& operator<< (std::ostream& s, const MapItemType& mit)
     return (s << "Unknown Item");
 }
 
-const uint32_t MapItem::ITEM_HEALTH_HP_INC;
-const uint32_t MapItem::ITEM_HEALTH_RESPAWN_SECS;
+const uint32_t proofps_dd::MapItem::ITEM_HEALTH_HP_INC;
+const uint32_t proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS;
 
-const uint32_t MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
+const uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
 
-const uint32_t MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
+const uint32_t proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
 
-const MapItem::MapItemId& MapItem::getGlobalMapItemId()
+const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getGlobalMapItemId()
 {
     return m_globalMapItemId;
 }
 
-void MapItem::ResetGlobalData()
+void proofps_dd::MapItem::ResetGlobalData()
 {
     m_globalMapItemId = 0;
     for (auto& refPair : m_mapReferenceObjects)
@@ -53,22 +53,22 @@ void MapItem::ResetGlobalData()
     m_mapReferenceObjects.clear();
 }
 
-uint32_t MapItem::getItemRespawnTimeSecs(const MapItem& mapItem)
+uint32_t proofps_dd::MapItem::getItemRespawnTimeSecs(const proofps_dd::MapItem& mapItem)
 {
     switch (mapItem.getType())
     {
-    case MapItemType::ITEM_WPN_PISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
         return ITEM_WPN_PISTOL_RESPAWN_SECS;
-    case MapItemType::ITEM_WPN_MACHINEGUN:
+    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
         return ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
-    case MapItemType::ITEM_HEALTH:
+    case proofps_dd::MapItemType::ITEM_HEALTH:
         return ITEM_HEALTH_RESPAWN_SECS;
     default:
         return 10000;  // dont let unhandled item respawn soon, so we will see there must be a problem
     }
 }
 
-MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos) :
+proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_dd::MapItemType& itemType, const PureVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
     m_obj(nullptr),
@@ -86,13 +86,13 @@ MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType
         PureTexture* tex = nullptr;
         switch (itemType)
         {
-        case MapItemType::ITEM_WPN_PISTOL:
+        case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
             break;
-        case MapItemType::ITEM_WPN_MACHINEGUN:
+        case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchgun.bmp");
             break;
-        case MapItemType::ITEM_HEALTH:
+        case proofps_dd::MapItemType::ITEM_HEALTH:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
             break;
         default:
@@ -111,7 +111,7 @@ MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType
     m_obj->getPosVec() = pos;
 }
 
-MapItem::~MapItem()
+proofps_dd::MapItem::~MapItem()
 {
     // no need to delete the static objects stored in m_mapReferenceObjects, they can exist until destroying the game, engine takes care of it!
     if (m_obj)
@@ -121,37 +121,37 @@ MapItem::~MapItem()
     }
 }
 
-const MapItem::MapItemId& MapItem::getId() const
+const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getId() const
 {
     return m_id;
 }
 
-const MapItemType& MapItem::getType() const
+const proofps_dd::MapItemType& proofps_dd::MapItem::getType() const
 {
     return m_itemType;
 }
 
-const PureVector& MapItem::getPos() const
+const PureVector& proofps_dd::MapItem::getPos() const
 {
     return m_obj->getPosVec();
 }
 
-const PureObject3D& MapItem::getObject3D() const
+const PureObject3D& proofps_dd::MapItem::getObject3D() const
 {
     return *m_obj;
 }
 
-//PureObject3D& MapItem::getObject3D()
+//PureObject3D& proofps_dd::MapItem::getObject3D()
 //{
 //    return *m_obj;
 //}
 
-bool MapItem::isTaken() const
+bool proofps_dd::MapItem::isTaken() const
 {
     return m_bTaken;
 }
 
-void MapItem::Take()
+void proofps_dd::MapItem::Take()
 {
     // executed by both server and clients, only when server says so, however only server is responsible for checking m_timeTaken
     if (isTaken())
@@ -164,7 +164,7 @@ void MapItem::Take()
     m_obj->Hide();
 }
 
-void MapItem::UnTake()
+void proofps_dd::MapItem::UnTake()
 {
     // executed by both server and clients, only when server says so
     if (!isTaken())
@@ -176,12 +176,12 @@ void MapItem::UnTake()
     m_obj->Show();
 }
 
-const std::chrono::time_point<std::chrono::steady_clock>& MapItem::getTimeTaken() const
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::MapItem::getTimeTaken() const
 {
     return m_timeTaken;
 }
 
-void MapItem::Update(float factor)
+void proofps_dd::MapItem::Update(float factor)
 {
     // executed by both server and clients, always, and this is not synchronized between players
     m_fSinusMotionDegrees += factor;
@@ -199,5 +199,5 @@ void MapItem::Update(float factor)
 // ############################### PRIVATE ###############################
 
 
-MapItem::MapItemId MapItem::m_globalMapItemId = 0;
-std::map<MapItemType, PureObject3D*> MapItem::m_mapReferenceObjects;
+proofps_dd::MapItem::MapItemId proofps_dd::MapItem::m_globalMapItemId = 0;
+std::map<proofps_dd::MapItemType, PureObject3D*> proofps_dd::MapItem::m_mapReferenceObjects;

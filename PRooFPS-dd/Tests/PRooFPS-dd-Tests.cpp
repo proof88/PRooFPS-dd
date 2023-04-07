@@ -29,9 +29,7 @@
 // regression smoke tests
 #include "RegTestBasicServerClient2Players.h"
 
-constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
-
-using namespace std;
+static constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
 
 /**
     Entry point of our application.
@@ -67,21 +65,21 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     // in other tests as well, which is this:
     PGEcfgProfiles cfgProfiles(""); // TODO: even the engine should be constructed here and passed to test, but now this approach is enough ...
 
-    vector<std::unique_ptr<UnitTest>> tests;
+    std::vector<std::unique_ptr<UnitTest>> tests;
     
     // unit tests
     tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
-    //
-    // regression tests
-    //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
+    tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
+    tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
 
-    vector<UnitTest*>::size_type nSucceededTests = 0;
-    vector<UnitTest*>::size_type nTotalSubTests = 0;
-    vector<UnitTest*>::size_type nTotalPassedSubTests = 0;
-    for (vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
+    // regression tests
+    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));
+
+    std::vector<UnitTest*>::size_type nSucceededTests = 0;
+    std::vector<UnitTest*>::size_type nTotalSubTests = 0;
+    std::vector<UnitTest*>::size_type nTotalPassedSubTests = 0;
+    for (std::vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
     {
         getConsole().OLn("Running test %d / %d ... ", i+1, tests.size());
         tests[i]->run();
@@ -89,7 +87,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
 
     // summarizing
     getConsole().OLn("");
-    for (vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
+    for (std::vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
     {
         if ( tests[i]->isPassed() )
         {
@@ -125,7 +123,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
                 getConsole().OLn("Test failed: %s in %s", tests[i]->getName().c_str(), tests[i]->getFile().c_str());
             }
             getConsole().Indent();
-            for (vector<string>::size_type j = 0; j < tests[i]->getMessages().size(); ++j)
+            for (std::vector<std::string>::size_type j = 0; j < tests[i]->getMessages().size(); ++j)
             {
                 getConsole().OLn("%s", tests[i]->getMessages()[j].c_str());
             }

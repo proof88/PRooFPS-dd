@@ -17,7 +17,7 @@
 // ############################### PUBLIC ################################
 
 
-Player::Player(
+proofps_dd::Player::Player(
     PR00FsUltimateRenderingEngine& gfx,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const std::string& sIpAddress) :
@@ -46,7 +46,7 @@ Player::Player(
     BuildPlayerObject(true);
 }
 
-Player::Player(const Player& other) :
+proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_connHandleServerSide(other.m_connHandleServerSide),
     m_sIpAddress(other.m_sIpAddress),
     m_sName(other.m_sName),
@@ -79,7 +79,7 @@ Player::Player(const Player& other) :
     BuildPlayerObject(true);
 }
 
-Player& Player::operator=(const Player& other)
+proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& other)
 {
     m_connHandleServerSide = other.m_connHandleServerSide;
     m_sIpAddress = other.m_sIpAddress;
@@ -113,7 +113,7 @@ Player& Player::operator=(const Player& other)
     return *this;
 }
 
-Player::~Player()
+proofps_dd::Player::~Player()
 {
     if (m_pObj)
     {
@@ -130,119 +130,119 @@ Player::~Player()
     getWeapons().clear();
 }
 
-const pge_network::PgeNetworkConnectionHandle& Player::getServerSideConnectionHandle() const
+const pge_network::PgeNetworkConnectionHandle& proofps_dd::Player::getServerSideConnectionHandle() const
 {
     return m_connHandleServerSide;
 }
 
-const std::string& Player::getIpAddress() const
+const std::string& proofps_dd::Player::getIpAddress() const
 {
     return m_sIpAddress;
 }
 
-const std::string& Player::getName() const
+const std::string& proofps_dd::Player::getName() const
 {
     return m_sName;
 }
 
-void Player::setName(const std::string& sName)
+void proofps_dd::Player::setName(const std::string& sName)
 {
     m_sName = sName;
 }
 
-CConsole& Player::getConsole() const
+CConsole& proofps_dd::Player::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-const char* Player::getLoggerModuleName()
+const char* proofps_dd::Player::getLoggerModuleName()
 {
     return "Player";
 }
 
-int Player::getHealth() const
+int proofps_dd::Player::getHealth() const
 {
     return m_nHealth;
 }
 
-PureVector& Player::getPos()
+PureVector& proofps_dd::Player::getPos()
 {
     return m_vecPos;
 }
 
-PureVector& Player::getOPos()
+PureVector& proofps_dd::Player::getOPos()
 {
     return m_vecOldPos;
 }
 
-TPureFloat& Player::getAngleY()
+TPureFloat& proofps_dd::Player::getAngleY()
 {
     return m_fPlayerAngleY;
 }
 
-TPureFloat& Player::getOldAngleY()
+TPureFloat& proofps_dd::Player::getOldAngleY()
 {
     return m_fOldPlayerAngleY;
 }
 
-PureObject3D* Player::getObject3D() const
+PureObject3D* proofps_dd::Player::getObject3D() const
 {
     return m_pObj;
 }
 
-float Player::getGravity() const
+float proofps_dd::Player::getGravity() const
 {
     return m_fGravity;
 }
 
-bool Player::isJumping() const
+bool proofps_dd::Player::isJumping() const
 {
     return m_bJumping;
 }
 
-bool Player::isFalling() const
+bool proofps_dd::Player::isFalling() const
 {
     return (m_fGravity == 0.0f);
 }
 
-bool Player::canFall() const
+bool proofps_dd::Player::canFall() const
 {
     return b_mCanFall;
 }
 
-void Player::UpdateOldPos() {
+void proofps_dd::Player::UpdateOldPos() {
     m_vecOldPos = m_vecPos;
     m_fOldPlayerAngleY = m_fPlayerAngleY;
     m_vOldWpnAngle = m_vWpnAngle;
 }
 
-void Player::SetHealth(int value) {
+void proofps_dd::Player::SetHealth(int value) {
     m_nHealth = max(0, min(value, 100));
 }
 
-void Player::UpdateOldHealth()
+void proofps_dd::Player::UpdateOldHealth()
 {
     m_nOldHealth = m_nHealth;
 }
 
-int Player::getOldHealth() const
+int proofps_dd::Player::getOldHealth() const
 {
     return m_nOldHealth;
 }
 
-void Player::SetGravity(float value) {
+void proofps_dd::Player::SetGravity(float value) {
     m_fGravity = value;
 }
 
-bool Player::jumpAllowed() const {
+bool proofps_dd::Player::jumpAllowed() const {
     return m_bAllowJump;
 }
 
-void Player::SetJumpAllowed(bool b) {
+void proofps_dd::Player::SetJumpAllowed(bool b) {
     m_bAllowJump = b;
 }
 
-void Player::Jump() {
+void proofps_dd::Player::Jump() {
     if (!jumpAllowed())
     {
         return;
@@ -250,61 +250,61 @@ void Player::Jump() {
 
     m_bAllowJump = false;
     m_bJumping = true;
-    m_fGravity = GAME_GRAVITY_MAX;
+    m_fGravity = proofps_dd::GAME_GRAVITY_MAX;
     m_vecForce.SetX(m_vecPos.getX() - m_vecOldPos.getX());
     m_vecForce.SetY(m_vecPos.getY() - m_vecOldPos.getY());
     m_vecForce.SetZ(m_vecPos.getZ() - m_vecOldPos.getZ());
 }
 
-void Player::StopJumping() {
+void proofps_dd::Player::StopJumping() {
     m_bJumping = false;
 }
 
-void Player::DoDamage(int dmg) {
+void proofps_dd::Player::DoDamage(int dmg) {
     m_nHealth = m_nHealth - dmg;
     if (m_nHealth < 0) m_nHealth = 0;
 }
 
-void Player::SetCanFall(bool state) {
+void proofps_dd::Player::SetCanFall(bool state) {
     b_mCanFall = state;
 }
 
-bool Player::isRunning() const
+bool proofps_dd::Player::isRunning() const
 {
     return m_bRunning;
 }
 
-void Player::SetRun(bool state)
+void proofps_dd::Player::SetRun(bool state)
 {
     m_bRunning = state;
 }
 
-PureVector& Player::getForce()
+PureVector& proofps_dd::Player::getForce()
 {
     return m_vecForce;
 }
 
-bool Player::isExpectingStartPos() const
+bool proofps_dd::Player::isExpectingStartPos() const
 {
     return m_bExpectingStartPos;
 }
 
-void Player::SetExpectingStartPos(bool b)
+void proofps_dd::Player::SetExpectingStartPos(bool b)
 {
     m_bExpectingStartPos = b;
 }
 
-Weapon* Player::getWeapon()
+Weapon* proofps_dd::Player::getWeapon()
 {
     return m_pWpn;
 }
 
-const Weapon* Player::getWeapon() const
+const Weapon* proofps_dd::Player::getWeapon() const
 {
     return m_pWpn;
 }
 
-void Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer)
+void proofps_dd::Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer)
 {
     if (!wpn)
     {
@@ -335,22 +335,22 @@ void Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer)
     m_pWpn = wpn;
 }
 
-std::chrono::time_point<std::chrono::steady_clock>& Player::getTimeLastWeaponSwitch()
+std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastWeaponSwitch()
 {
     return m_timeLastWeaponSwitch;
 }
 
-std::vector<Weapon*>& Player::getWeapons()
+std::vector<Weapon*>& proofps_dd::Player::getWeapons()
 {
     return m_weapons;
 }
 
-const std::vector<Weapon*>& Player::getWeapons() const
+const std::vector<Weapon*>& proofps_dd::Player::getWeapons() const
 {
     return m_weapons;
 }
 
-const Weapon* Player::getWeaponByFilename(const std::string& sFilename) const
+const Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename) const
 {
     for (const auto pWpn : m_weapons)
     {
@@ -366,7 +366,7 @@ const Weapon* Player::getWeaponByFilename(const std::string& sFilename) const
     return nullptr;
 }
 
-Weapon* Player::getWeaponByFilename(const std::string& sFilename)
+Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename)
 {
     for (const auto pWpn : m_weapons)
     {
@@ -382,17 +382,17 @@ Weapon* Player::getWeaponByFilename(const std::string& sFilename)
     return nullptr;
 }
 
-PureVector& Player::getOldWeaponAngle()
+PureVector& proofps_dd::Player::getOldWeaponAngle()
 {
     return m_vOldWpnAngle;
 }
 
-PureVector& Player::getWeaponAngle()
+PureVector& proofps_dd::Player::getWeaponAngle()
 {
     return m_vWpnAngle;
 }
 
-void Player::Die(bool bMe, bool bServer)
+void proofps_dd::Player::Die(bool bMe, bool bServer)
 {
     getTimeDied() = std::chrono::steady_clock::now();
     if (bMe)
@@ -414,7 +414,7 @@ void Player::Die(bool bMe, bool bServer)
     }
 }
 
-void Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
+void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
     getObject3D()->Show();
 
@@ -435,58 +435,58 @@ void Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServ
     }
 }
 
-std::chrono::time_point<std::chrono::steady_clock>& Player::getTimeDied()
+std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeDied()
 {
     return m_timeDied;
 }
 
-bool& Player::getRespawnFlag()
+bool& proofps_dd::Player::getRespawnFlag()
 {
     return m_bRespawn;
 }
 
-int& Player::getFrags()
+int& proofps_dd::Player::getFrags()
 {
     return m_nFrags;
 }
 
-const int& Player::getFrags() const
+const int& proofps_dd::Player::getFrags() const
 {
     return m_nFrags;
 }
 
-int& Player::getOldFrags()
+int& proofps_dd::Player::getOldFrags()
 {
     return m_nOldFrags;
 }
 
-int& Player::getDeaths()
+int& proofps_dd::Player::getDeaths()
 {
     return m_nDeaths;
 }
 
-const int& Player::getDeaths() const
+const int& proofps_dd::Player::getDeaths() const
 {
     return m_nDeaths;
 }
 
-int& Player::getOldDeaths()
+int& proofps_dd::Player::getOldDeaths()
 {
     return m_nOldDeaths;
 }
 
-void Player::UpdateFragsDeaths()
+void proofps_dd::Player::UpdateFragsDeaths()
 {
     m_nOldFrags = m_nFrags;
     m_nOldDeaths = m_nDeaths;
 }
 
-bool Player::canTakeItem(const MapItem& item) const
+bool proofps_dd::Player::canTakeItem(const MapItem& item) const
 {
     switch (item.getType())
     {
-    case MapItemType::ITEM_WPN_PISTOL:
-    case MapItemType::ITEM_WPN_MACHINEGUN:
+    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
     {
         const auto it = m_mapItemTypeToWeaponFilename.find(item.getType());
         if (it == m_mapItemTypeToWeaponFilename.end())
@@ -505,7 +505,7 @@ bool Player::canTakeItem(const MapItem& item) const
         }
         return pWpn->canIncBulletCount();
     }
-    case MapItemType::ITEM_HEALTH:
+    case proofps_dd::MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
     default:
         ;
@@ -513,13 +513,13 @@ bool Player::canTakeItem(const MapItem& item) const
     return false;
 }
 
-void Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
+void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
 {
     // invoked only on server
     switch (item.getType())
     {
-    case MapItemType::ITEM_WPN_PISTOL:
-    case MapItemType::ITEM_WPN_MACHINEGUN:
+    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
     {
         const auto it = m_mapItemTypeToWeaponFilename.find(item.getType());
         if (it == m_mapItemTypeToWeaponFilename.end())
@@ -565,7 +565,7 @@ void Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
             pWpnBecomingAvailable->getUnmagBulletCount());  // becomes available on client side (after pkt being sent)
         break;
     }
-    case MapItemType::ITEM_HEALTH:
+    case proofps_dd::MapItemType::ITEM_HEALTH:
         item.Take();
         SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
         break;
@@ -586,22 +586,22 @@ void Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
 // This map provides the logical connection between pickupable MapItems and actual weapons.
 // So when player picks up a specific MapItem, we know which weapon should become available for the player.
 // I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
-const std::map<MapItemType, std::string> Player::m_mapItemTypeToWeaponFilename =
+const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapItemTypeToWeaponFilename =
 {
-    {MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
-    {MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
+    {proofps_dd::MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
+    {proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"}
 };
 
-uint32_t Player::m_nPlayerInstanceCntr = 0;
+uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 
-void Player::BuildPlayerObject(bool blend) {
-    m_pObj = m_gfx.getObject3DManager().createPlane(GAME_PLAYER_W, GAME_PLAYER_H);
+void proofps_dd::Player::BuildPlayerObject(bool blend) {
+    m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::GAME_PLAYER_W, proofps_dd::GAME_PLAYER_H);
     if (!m_pObj)
     {
         throw std::runtime_error("Failed to create object for new player!");
     }
 
-    m_pObj->SetName(m_pObj->getName() + " (for Player w connHandle " + std::to_string(static_cast<uint32_t>(m_connHandleServerSide)) + ")");
+    m_pObj->SetName(m_pObj->getName() + " (for proofps_dd::Player w connHandle " + std::to_string(static_cast<uint32_t>(m_connHandleServerSide)) + ")");
     m_pObj->SetDoubleSided(true);
     if (blend)
     {
@@ -609,6 +609,6 @@ void Player::BuildPlayerObject(bool blend) {
     }
     m_pObj->SetLit(false);
 
-    PureTexture* pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
+    PureTexture* pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pObj->getMaterial().setTexture(pTexPlayer);
 }

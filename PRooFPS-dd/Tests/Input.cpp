@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "stdafx.h" // PCH
 #include "Input.h"
 
 #include <thread>

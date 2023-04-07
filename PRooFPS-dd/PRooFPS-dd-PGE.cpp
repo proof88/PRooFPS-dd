@@ -37,19 +37,19 @@ static constexpr char* CVAR_SV_MAP = "sv_map";
 // ############################### PUBLIC ################################
 
 
-PRooFPSddPGE* PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
+proofps_dd::PRooFPSddPGE* proofps_dd::PRooFPSddPGE::createAndGetPRooFPSddPGEinstance()
 {
-    static PRooFPSddPGE pgeInstance((GAME_NAME + " " + GAME_VERSION).c_str());
+    static proofps_dd::PRooFPSddPGE pgeInstance((proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION).c_str());
     return &pgeInstance;
 }
 
-CConsole& PRooFPSddPGE::getConsole() const
+CConsole& proofps_dd::PRooFPSddPGE::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
 
-const char* PRooFPSddPGE::getLoggerModuleName()
+const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 {
     return "PRooFPSddPGE";
 }
@@ -61,7 +61,7 @@ const char* PRooFPSddPGE::getLoggerModuleName()
 /**
     This is the only usable ctor, this is used by the static createAndGet().
 */
-PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
+proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     m_maps(getPure()),
     m_fps(0),
@@ -97,7 +97,7 @@ PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     
 }
 
-PRooFPSddPGE::~PRooFPSddPGE()
+proofps_dd::PRooFPSddPGE::~PRooFPSddPGE()
 {
 
 }
@@ -106,10 +106,10 @@ PRooFPSddPGE::~PRooFPSddPGE()
     Must-have minimal stuff before loading anything.
     Game engine calls this before even finishing its own initialization.
 */
-bool PRooFPSddPGE::onGameInitializing()
+bool proofps_dd::PRooFPSddPGE::onGameInitializing()
 {
     // Earliest we can enable our own logging
-    getConsole().Initialize((GAME_NAME + " " + GAME_VERSION + " log").c_str(), true);
+    getConsole().Initialize((proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION + " log").c_str(), true);
     getConsole().SetLoggingState(getLoggerModuleName(), true);
     getConsole().SetFGColor( FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, "999999" );
     getConsole().SetIntsColor( FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "FFFF00" );
@@ -117,7 +117,7 @@ bool PRooFPSddPGE::onGameInitializing()
     getConsole().SetFloatsColor( FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "FFFF00" );
     getConsole().SetBoolsColor( FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY, "00FFFF" );
 
-    // PRooFPSddPGE (game) logs
+    // proofps_dd::PRooFPSddPGE (game) logs
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 
     // Network logs
@@ -141,7 +141,7 @@ bool PRooFPSddPGE::onGameInitializing()
 /** 
     Loading game content here.
 */
-bool PRooFPSddPGE::onGameInitialized()
+bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
@@ -166,7 +166,7 @@ bool PRooFPSddPGE::onGameInitialized()
     getPure().getCamera().SetNearPlane(0.1f);
     getPure().getCamera().SetFarPlane(100.0f);
     getPure().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
-    getPure().getCamera().getTargetVec().Set( 0, 0, -GAME_BLOCK_SIZE_Z );
+    getPure().getCamera().getTargetVec().Set( 0, 0, -proofps_dd::GAME_BLOCK_SIZE_Z );
 
     m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
     if (!m_gameMode)
@@ -196,7 +196,7 @@ bool PRooFPSddPGE::onGameInitialized()
     // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
     // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
     m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(GAME_TEXTURES_DIR)+"hud_xhair.bmp").c_str());
+    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR)+"hud_xhair.bmp").c_str());
     m_pObjXHair->getMaterial().setTexture( xhairtex );
 
     getPure().WriteList();
@@ -263,15 +263,15 @@ bool PRooFPSddPGE::onGameInitialized()
         }
     }
 
-    LoadSound(m_sndLetsgo,         (std::string(GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
-    LoadSound(m_sndReloadStart,    (std::string(GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
-    LoadSound(m_sndReloadFinish,   (std::string(GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
-    LoadSound(m_sndShootPistol,    (std::string(GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
-    LoadSound(m_sndShootMchgun,    (std::string(GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
-    LoadSound(m_sndShootDryPistol, (std::string(GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
-    LoadSound(m_sndShootDryMchgun, (std::string(GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
-    LoadSound(m_sndChangeWeapon,   (std::string(GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
-    LoadSound(m_sndPlayerDie,      (std::string(GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
+    LoadSound(m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    LoadSound(m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
+    LoadSound(m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
+    LoadSound(m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
+    LoadSound(m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
+    LoadSound(m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
+    LoadSound(m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
+    LoadSound(m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
+    LoadSound(m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
@@ -294,26 +294,26 @@ bool PRooFPSddPGE::onGameInitialized()
 // ############################### PRIVATE ###############################
 
 
-const unsigned int PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
+const unsigned int proofps_dd::PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
 
 // Which key should switch to which weapon
-std::map<unsigned char, PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> PRooFPSddPGE::m_mapKeypressToWeapon =
+std::map<unsigned char, proofps_dd::PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> proofps_dd::PRooFPSddPGE::m_mapKeypressToWeapon =
 {
     {'2', {true, "pistol.txt"}},
     {'3', {true, "machinegun.txt"}}
 };
 
-void PRooFPSddPGE::Text(const std::string& s, int x, int y) const
+void proofps_dd::PRooFPSddPGE::Text(const std::string& s, int x, int y) const
 {
     getPure().getUImanager().text(s, x, y)->SetDropShadow(true);
 }
 
-void PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
+void proofps_dd::PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
 {
     getPure().getUImanager().addText(s, x, y)->SetDropShadow(true);
 }
 
-void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt, Player& player)
+void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt, Player& player)
 {
     const PGEInputKeyboard& keybd = getInput().getKeyboard();
   
@@ -532,7 +532,7 @@ void PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt,
     } // won
 }
 
-bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt, Player& player)
+bool proofps_dd::PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt, Player& player)
 {
     PGEInputMouse& mouse = getInput().getMouse();
 
@@ -635,7 +635,7 @@ bool PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt
     return true;
 }
 
-void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt, Player& player)
+void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt, Player& player)
 {
     if (proofps_dd::MsgUserCmdMove::getWeaponSwitch(pkt) != '\0')
     {
@@ -775,7 +775,7 @@ void PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::P
 }
 
 
-bool PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
+bool proofps_dd::PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
 {
     return Colliding2(
         a.getPosVec().getX(),  a.getPosVec().getY(),  a.getPosVec().getZ(),
@@ -785,7 +785,7 @@ bool PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
     );
 }       
 
-bool PRooFPSddPGE::Colliding2(
+bool proofps_dd::PRooFPSddPGE::Colliding2(
     float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
     float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
 {
@@ -810,7 +810,7 @@ bool PRooFPSddPGE::Colliding2(
     );            
 }
 
-bool PRooFPSddPGE::Colliding2_NoZ(
+bool proofps_dd::PRooFPSddPGE::Colliding2_NoZ(
     float o1px, float o1py, float o1sx, float o1sy,
     float o2px, float o2py, float o2sx, float o2sy)
 {
@@ -829,7 +829,7 @@ bool PRooFPSddPGE::Colliding2_NoZ(
         );
 }
 
-bool PRooFPSddPGE::Colliding3(
+bool proofps_dd::PRooFPSddPGE::Colliding3(
     const PureVector& vecPosMin, const PureVector& vecPosMax,
     const PureVector& vecObjPos, const PureVector& vecObjSize)
 {
@@ -852,7 +852,7 @@ bool PRooFPSddPGE::Colliding3(
     );
 }
 
-void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
+void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
 { 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -867,8 +867,8 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
         // could be fetched into cache for even faster iteration on its elements ...
 
         // at this point, player.getPos().getY() is already updated by Gravity()
-        const float fBlockSizeXhalf = GAME_BLOCK_SIZE_X / 2.f;
-        const float fBlockSizeYhalf = GAME_BLOCK_SIZE_Y / 2.f;
+        const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
+        const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
 
         const float fPlayerOPos1XMinusHalf = player.getOPos().getX() - plobj->getSizeVec().getX() / 2.f;
         const float fPlayerOPos1XPlusHalf = player.getOPos().getX() + plobj->getSizeVec().getX() / 2.f;
@@ -892,7 +892,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                 }
 
                 const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getOPos().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + GAME_PLAYER_H / 2.0f + 0.01f);
+                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
                 player.getPos().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
 
                 if (nAlignUnderOrAboveWall == 1)
@@ -939,7 +939,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
 
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getOPos().getX() ? 1 : -1;
-                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + GAME_PLAYER_W / 2.0f + 0.01f);
+                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
                 player.getPos().SetX(obj->getPosVec().getX() + fAlignNextToWall);
 
                 break;
@@ -948,7 +948,7 @@ void PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
     }
 }
 
-void PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
+void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
@@ -987,7 +987,7 @@ void PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
 
 } // CameraMovement()
 
-void PRooFPSddPGE::Gravity(int /*fps*/)
+void proofps_dd::PRooFPSddPGE::Gravity(int /*fps*/)
 {
     for (auto& playerPair : m_mapPlayers)
     {
@@ -1003,12 +1003,12 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
         }
         else
         {
-            if (player.getGravity() > GAME_GRAVITY_MIN)
+            if (player.getGravity() > proofps_dd::GAME_GRAVITY_MIN)
             {
                 player.SetGravity(player.getGravity() - GAME_FALLING_SPEED / 60.f/*(float)fps*/);
-                if (player.getGravity() < GAME_GRAVITY_MIN)
+                if (player.getGravity() < proofps_dd::GAME_GRAVITY_MIN)
                 {
-                    player.SetGravity(GAME_GRAVITY_MIN);
+                    player.SetGravity(proofps_dd::GAME_GRAVITY_MIN);
                 }
             }
         }
@@ -1022,15 +1022,15 @@ void PRooFPSddPGE::Gravity(int /*fps*/)
     }
 }
 
-void PRooFPSddPGE::UpdateBullets()
+void proofps_dd::PRooFPSddPGE::UpdateBullets()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
-    const float fBlockSizeXhalf = GAME_BLOCK_SIZE_X / 2.f;
-    const float fBlockSizeYhalf = GAME_BLOCK_SIZE_Y / 2.f;
+    const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
+    const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
     bool bEndGame = m_gameMode->checkWinningConditions();
     std::list<Bullet>& bullets = getWeaponManager().getBullets();
     auto it = bullets.begin();
@@ -1096,13 +1096,13 @@ void PRooFPSddPGE::UpdateBullets()
                 // check if bullet is out of map bounds
                 // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
                 const PureVector vRelaxedMapMinBounds(
-                    m_maps.getBlocksVertexPosMin().getX() - GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getBlocksVertexPosMin().getY() - GAME_BLOCK_SIZE_Y,
-                    m_maps.getBlocksVertexPosMin().getZ() - GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+                    m_maps.getBlocksVertexPosMin().getX() - proofps_dd::GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getBlocksVertexPosMin().getY() - proofps_dd::GAME_BLOCK_SIZE_Y,
+                    m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
                 const PureVector vRelaxedMapMaxBounds(
-                    m_maps.getBlocksVertexPosMax().getX() + GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getBlocksVertexPosMax().getY() + GAME_BLOCK_SIZE_Y,
-                    m_maps.getBlocksVertexPosMax().getZ() + GAME_BLOCK_SIZE_Z);
+                    m_maps.getBlocksVertexPosMax().getX() + proofps_dd::GAME_BLOCK_SIZE_X * 4,
+                    m_maps.getBlocksVertexPosMax().getY() + proofps_dd::GAME_BLOCK_SIZE_Y,
+                    m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::GAME_BLOCK_SIZE_Z);
                 if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
                 {
                     bDeleteBullet = true;
@@ -1199,7 +1199,7 @@ void PRooFPSddPGE::UpdateBullets()
     m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::UpdateWeapons()
+void proofps_dd::PRooFPSddPGE::UpdateWeapons()
 {
     if (m_gameMode->checkWinningConditions())
     {
@@ -1235,7 +1235,7 @@ void PRooFPSddPGE::UpdateWeapons()
     m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::HandlePlayerDied(Player& player)
+void proofps_dd::PRooFPSddPGE::HandlePlayerDied(Player& player)
 {
     player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
@@ -1246,7 +1246,7 @@ void PRooFPSddPGE::HandlePlayerDied(Player& player)
     }
 }
 
-void PRooFPSddPGE::HandlePlayerRespawned(Player& player)
+void proofps_dd::PRooFPSddPGE::HandlePlayerRespawned(Player& player)
 {
     const Weapon* const wpnDefaultAvailable = getWeaponManager().getWeaponByFilename(getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
@@ -1261,7 +1261,7 @@ void PRooFPSddPGE::HandlePlayerRespawned(Player& player)
     }
 }
 
-void PRooFPSddPGE::ServerRespawnPlayer(Player& player, bool restartGame)
+void proofps_dd::PRooFPSddPGE::ServerRespawnPlayer(Player& player, bool restartGame)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint();
@@ -1274,7 +1274,7 @@ void PRooFPSddPGE::ServerRespawnPlayer(Player& player, bool restartGame)
     }
 }
 
-void PRooFPSddPGE::RestartGame()
+void proofps_dd::PRooFPSddPGE::RestartGame()
 {
     if (getNetwork().isServer())
     {
@@ -1319,17 +1319,17 @@ void PRooFPSddPGE::RestartGame()
     m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
-bool PRooFPSddPGE::hasValidConnection() const
+bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 {
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
 }
 
-bool PRooFPSddPGE::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
+bool proofps_dd::PRooFPSddPGE::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
 {
     return m_nServerSideConnectionHandle == connHandleServerSide;
 }
 
-void PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
+void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
 {
     const SoLoud::result resSoloud = snd.load(fname);
     if (resSoloud == SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
@@ -1342,7 +1342,7 @@ void PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
     }
 }
 
-void PRooFPSddPGE::UpdateRespawnTimers()
+void proofps_dd::PRooFPSddPGE::UpdateRespawnTimers()
 {
     if (m_gameMode->checkWinningConditions())
     {
@@ -1360,7 +1360,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
 
         const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
-        if (timeDiffSeconds >= GAME_PLAYER_RESPAWN_SECONDS)
+        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
         {
             ServerRespawnPlayer(playerPair.second, false);
         }
@@ -1369,7 +1369,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
     m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::PickupAndRespawnItems()
+void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
 {
     if (m_gameMode->checkWinningConditions())
     {
@@ -1456,7 +1456,7 @@ void PRooFPSddPGE::PickupAndRespawnItems()
     m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::UpdateGameMode()
+void proofps_dd::PRooFPSddPGE::UpdateGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -1483,7 +1483,7 @@ void PRooFPSddPGE::UpdateGameMode()
     m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void PRooFPSddPGE::SendUserUpdates()
+void proofps_dd::PRooFPSddPGE::SendUserUpdates()
 {
     if (!getNetwork().isServer())
     {
@@ -1547,7 +1547,7 @@ void PRooFPSddPGE::SendUserUpdates()
     Game logic right before the engine would do anything.
     This is invoked at the very beginning of the main game loop, before processing window messages and incoming network packets.
 */
-void PRooFPSddPGE::onGameFrameBegin()
+void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
 {
     for (auto& playerPair : m_mapPlayers)
     {
@@ -1578,7 +1578,7 @@ void PRooFPSddPGE::onGameFrameBegin()
     Game engine invokes this in every frame.
     DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
 */
-void PRooFPSddPGE::onGameRunning()
+void proofps_dd::PRooFPSddPGE::onGameRunning()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeOnGameRunningStart = std::chrono::steady_clock::now();
 
@@ -1720,7 +1720,7 @@ void PRooFPSddPGE::onGameRunning()
         m_fps_lastmeasure = GetTickCount();
 
         std::stringstream str;
-        str << GAME_NAME << " " << GAME_VERSION << " :: FPS: " << m_fps;
+        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << m_fps;
         window.SetCaption(str.str());
     } 
 
@@ -1732,7 +1732,7 @@ void PRooFPSddPGE::onGameRunning()
 
     @return True on successful packet handling, false on serious error that should result in terminating the application.
 */
-bool PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
+bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     bool bRet;
@@ -1789,9 +1789,9 @@ bool PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
     Freeing up game content here.
     Free up everything that has been allocated in onGameInitialized() and onGameRunning().
 */
-void PRooFPSddPGE::onGameDestroying()
+void proofps_dd::PRooFPSddPGE::onGameDestroying()
 {
-    getConsole().OLnOI("PRooFPSddPGE::onGameDestroying() ...");
+    getConsole().OLnOI("proofps_dd::PRooFPSddPGE::onGameDestroying() ...");
 
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
     //getPure().WriteList();
@@ -1805,11 +1805,11 @@ void PRooFPSddPGE::onGameDestroying()
     getPure().getObject3DManager().DeleteAll();
     getPure().getWindow().SetCursorVisible(true);
 
-    getConsole().OOOLn("PRooFPSddPGE::onGameDestroying() done!");
+    getConsole().OOOLn("proofps_dd::PRooFPSddPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
 }
 
-void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
+void proofps_dd::PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
 {
     bool found = false;
     do
@@ -1826,7 +1826,7 @@ void PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup
     } while (found);
 }
 
-void PRooFPSddPGE::WritePlayerList()
+void proofps_dd::PRooFPSddPGE::WritePlayerList()
 {
     getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
     for (const auto& playerPair : m_mapPlayers)
@@ -1837,7 +1837,7 @@ void PRooFPSddPGE::WritePlayerList()
     getConsole().OO();
 }
 
-bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
 {
     if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
     {
@@ -1877,7 +1877,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
             Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
 
-            if (!m_maps.load((GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str()))
+            if (!m_maps.load((proofps_dd::GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
                 assert(false);
@@ -1918,7 +1918,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     // these will be the reference weapons, never visible, never moving, just to be copied!
     if (msg.m_bCurrentClient)
     {
-        for (const auto& entry : std::filesystem::directory_iterator(GAME_WEAPONS_DIR))
+        for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
         {
             getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
             if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
@@ -1941,9 +1941,9 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
         // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
         // value on both side ... cheating is not possible anyway, since on server side server will always know what is
         // the default weapon for the player, so there is no use of overriding it on client side ...
-        if (!getWeaponManager().setDefaultAvailableWeaponByFilename(GAME_WPN_DEFAULT))
+        if (!getWeaponManager().setDefaultAvailableWeaponByFilename(proofps_dd::GAME_WPN_DEFAULT))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to set default weapon: %s!", __func__, GAME_WPN_DEFAULT);
+            getConsole().EOLn("PRooFPSddPGE::%s(): failed to set default weapon: %s!", __func__, proofps_dd::GAME_WPN_DEFAULT);
             assert(false);
             return false;
         }
@@ -1998,7 +1998,7 @@ bool PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connH
     return true;
 }
 
-bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
 {
     if (!getNetwork().isServer())
     {
@@ -2022,7 +2022,7 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
 
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            if (!m_maps.load((std::string(GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str()))
+            if (!m_maps.load((std::string(proofps_dd::GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
                 assert(false);
@@ -2152,7 +2152,7 @@ bool PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle c
     return true;
 }
 
-bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
+bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
 {
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
@@ -2180,7 +2180,7 @@ bool PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandl
     return true;
 }
 
-bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
+bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
     if (!getNetwork().isServer())
     {
@@ -2436,7 +2436,7 @@ bool PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle con
     return true;
 }
 
-bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
@@ -2498,7 +2498,7 @@ bool PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle conn
     return true;
 }
 
-bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
+bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
 {
     if (getNetwork().isServer())
     {
@@ -2601,7 +2601,7 @@ bool PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle co
     return true;
 }
 
-bool PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
+bool proofps_dd::PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
 {
     if (getNetwork().isServer())
     {
@@ -2632,7 +2632,7 @@ bool PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /
     return true;
 }
 
-bool PRooFPSddPGE::handleWpnUpdate(
+bool proofps_dd::PRooFPSddPGE::handleWpnUpdate(
     pge_network::PgeNetworkConnectionHandle /* connHandleServerSide, not filled properly by server so we ignore it */,
     const proofps_dd::MsgWpnUpdate& msg)
 {
@@ -2676,7 +2676,7 @@ bool PRooFPSddPGE::handleWpnUpdate(
     return true;
 }
 
-bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
+bool proofps_dd::PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
 {
     if (getNetwork().isServer())
     {
@@ -2717,12 +2717,12 @@ bool PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandl
     return true;
 }
 
-void PRooFPSddPGE::RegTestDumpToFile() 
+void proofps_dd::PRooFPSddPGE::RegTestDumpToFile() 
 {
-    std::ofstream fRegTestDump(getNetwork().isServer() ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT);
+    std::ofstream fRegTestDump(getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
     if (fRegTestDump.fail())
     {
-        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT);
+        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
         return;
     }
 

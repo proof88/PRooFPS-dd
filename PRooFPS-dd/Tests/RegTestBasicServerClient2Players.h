@@ -54,8 +54,8 @@ protected:
     {
         try
         {
-            if ( !(cfgWpnPistol.load((std::string(GAME_WEAPONS_DIR) + "pistol.txt").c_str())) ||
-                !(cfgWpnMachinegun.load((std::string(GAME_WEAPONS_DIR) + "machinegun.txt").c_str())) )
+            if ( !(cfgWpnPistol.load((std::string(proofps_dd::GAME_WEAPONS_DIR) + "pistol.txt").c_str())) ||
+                !(cfgWpnMachinegun.load((std::string(proofps_dd::GAME_WEAPONS_DIR) + "machinegun.txt").c_str())) )
             {
                 throw std::exception("Weapon file load failed!");
             }
@@ -195,7 +195,7 @@ protected:
         }
 
         // wait for the killed server player to respawn
-        std::this_thread::sleep_for(std::chrono::milliseconds(GAME_PLAYER_RESPAWN_SECONDS*1000 + 200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(proofps_dd::GAME_PLAYER_RESPAWN_SECONDS*1000 + 200));
 
         // trigger dump test data to file
         {
@@ -252,11 +252,11 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        std::ifstream f(bServer ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT, std::ifstream::in);
+        std::ifstream f(bServer ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT, std::ifstream::in);
         if (!f.good())
         {
             return assertFalse(true,
-                (std::string("failed to open file: ") + (bServer ? GAME_REG_TEST_DUMP_FILE_SERVER : GAME_REG_TEST_DUMP_FILE_CLIENT)).c_str()
+                (std::string("failed to open file: ") + (bServer ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT)).c_str()
             );
         }
 
@@ -387,7 +387,7 @@ private:
         {
             return bRet;
         }
-        bRet &= assertEquals(GAME_WPN_DEFAULT, evaluateWpnData[0].sName, "server wpn 1 name") &
+        bRet &= assertEquals(proofps_dd::GAME_WPN_DEFAULT, evaluateWpnData[0].sName, "server wpn 1 name") &
             assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
             assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "server wpn 1 unmag bullet count");
 
@@ -586,7 +586,7 @@ private:
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             // FindWindow() is case-insensitive and searches only top-level windows
-            hMainGameWindow = FindWindow(NULL, std::string(GAME_NAME + " " + GAME_VERSION).c_str());
+            hMainGameWindow = FindWindow(NULL, std::string(proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION).c_str());
             iWaitCntr++;
         } while ((hMainGameWindow == 0) && (iWaitCntr < 10));
         if (hMainGameWindow == 0)
@@ -639,7 +639,7 @@ private:
         while ((hTmpGameWindow != 0) && (iWaitCntr < 10))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            hTmpGameWindow = FindWindow(NULL, std::string(GAME_NAME + " " + GAME_VERSION).c_str());
+            hTmpGameWindow = FindWindow(NULL, std::string(proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION).c_str());
             iWaitCntr++;
         }
         if (hTmpGameWindow != 0)

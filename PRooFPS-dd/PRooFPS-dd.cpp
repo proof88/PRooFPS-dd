@@ -78,7 +78,7 @@
 #ifndef TESTING
 int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE /*hPrevInstance*/, const _In_ LPSTR lpCmdLine, const _In_ int /*nCmdShow*/)
 {
-    PRooFPSddPGE* const gameEngine = PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
+    proofps_dd::PRooFPSddPGE* const gameEngine = proofps_dd::PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
     
     // Initializing the game engine.
     int nResult = gameEngine->initializeGame(lpCmdLine);

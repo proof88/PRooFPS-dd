@@ -401,5 +401,4 @@ namespace proofps_dd
         char m_szWpnCurrentName[MsgWpnUpdate::nWpnNameNameMaxLength];
     };
 
-
 } // namespace proofps_dd
