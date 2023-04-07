@@ -1261,6 +1261,64 @@ void PRooFPSddPGE::HandlePlayerRespawned(Player& player)
     }
 }
 
+void PRooFPSddPGE::ServerRespawnPlayer(Player& player, bool restartGame)
+{
+    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
+    player.getPos() = m_maps.getRandomSpawnpoint();
+    player.SetHealth(100);
+    player.getRespawnFlag() = true;
+    if (restartGame)
+    {
+        player.getFrags() = 0;
+        player.getDeaths() = 0;
+    }
+}
+
+void PRooFPSddPGE::RestartGame()
+{
+    if (getNetwork().isServer())
+    {
+        for (auto& playerPair : m_mapPlayers)
+        {
+            ServerRespawnPlayer(playerPair.second, true);
+        }
+
+        // respawn all map items
+        pge_network::PgePacket newPktMapItemUpdate;
+        for (auto& itemPair : m_maps.getItems())
+        {
+            if (!itemPair.second)
+            {
+                continue;
+            }
+
+            MapItem& mapItem = *(itemPair.second);
+            if (!mapItem.isTaken())
+            {
+                continue;
+            }
+
+            mapItem.UnTake();
+
+            proofps_dd::MsgMapItemUpdate::initPkt(
+                newPktMapItemUpdate,
+                0,
+                mapItem.getId(),
+                mapItem.isTaken());
+
+            for (const auto& sendToThisPlayer : m_mapPlayers)
+            {
+                if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
+                {
+                    getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktMapItemUpdate);
+                }
+            }
+        } // end for items
+    } // end server
+
+    m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
+}
+
 bool PRooFPSddPGE::hasValidConnection() const
 {
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
@@ -1304,10 +1362,7 @@ void PRooFPSddPGE::UpdateRespawnTimers()
             std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
         if (timeDiffSeconds >= GAME_PLAYER_RESPAWN_SECONDS)
         {
-            // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-            playerPair.second.getPos() = m_maps.getRandomSpawnpoint();
-            playerPair.second.SetHealth(100);
-            playerPair.second.getRespawnFlag() = true;
+            ServerRespawnPlayer(playerPair.second, false);
         }
     }
 
@@ -1410,51 +1465,7 @@ void PRooFPSddPGE::UpdateGameMode()
         const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
         if (nSecsSinceWin >= 15)
         {
-            if (getNetwork().isServer())
-            {
-                for (auto& playerPair : m_mapPlayers)
-                {
-                    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-                    playerPair.second.getPos() = m_maps.getRandomSpawnpoint();
-                    playerPair.second.SetHealth(100);
-                    playerPair.second.getFrags() = 0;
-                    playerPair.second.getDeaths() = 0;
-                    playerPair.second.getRespawnFlag() = true;
-                }
-
-                // respawn all map items
-                pge_network::PgePacket newPktMapItemUpdate;
-                for (auto& itemPair : m_maps.getItems())
-                {
-                    if (!itemPair.second)
-                    {
-                        continue;
-                    }
-
-                    MapItem& mapItem = *(itemPair.second);
-                    if (!mapItem.isTaken())
-                    {
-                        continue;
-                    }
-
-                    mapItem.UnTake();
-
-                    proofps_dd::MsgMapItemUpdate::initPkt(
-                        newPktMapItemUpdate,
-                        0,
-                        mapItem.getId(),
-                        mapItem.isTaken());
-
-                    for (const auto& sendToThisPlayer : m_mapPlayers)
-                    {
-                        if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
-                        {
-                            getNetwork().getServer().SendPacketToClient(sendToThisPlayer.second.getServerSideConnectionHandle(), newPktMapItemUpdate);
-                        }
-                    }
-                } // end for items
-            } // end server
-            m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
+            RestartGame();
         }
         else
         {

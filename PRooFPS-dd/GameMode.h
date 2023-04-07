@@ -57,7 +57,7 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
 
         /**
-        * Removes all added players, resets winning time and winning condition.
+        * Resets winning time and winning condition.
         */
         virtual void Reset();
 
@@ -70,8 +70,14 @@ namespace proofps_dd
         */
         virtual bool checkWinningConditions() = 0;
         
+        /**
+        * @return Timestamp of moment when current game was won by a player. It is Epoch time 0 if the game is not yet won.
+        */
         const std::chrono::time_point<std::chrono::steady_clock>& getWinTime() const;
 
+        /**
+        * @return List of frag table entries, which is basically a list of added players with some statistics.
+        */
         const std::list<FragTableRow>& getFragTable() const;
         
         /**
@@ -103,6 +109,11 @@ namespace proofps_dd
         virtual bool removePlayer(const Player& player) = 0;
 
         void Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
+
+        /**
+        * Shows the objectives of the current game mode.
+        * For example, in a deathmatch game, it might show a frag table, or in a single player game it might show mission objectives.
+        */
         virtual void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) = 0;
 
     protected:
@@ -129,6 +140,11 @@ namespace proofps_dd
 
     }; // class GameMode
 
+    /**
+    * In DeathMatch a.k.a. FFA (Free For All) game mode, everyone is shooting everyone, and the winner is
+    * whoever has the most frags when either the frag limit or time limit is reached.
+    * Note: it is also valid to not to have either frag limit or time limit set, but in such case the game never ends.
+    */
     class DeathMatchMode : public GameMode
     {
     public:
@@ -139,12 +155,37 @@ namespace proofps_dd
         virtual void Reset() override;
         virtual bool checkWinningConditions() override;
 
+        /**
+        * @return Configured time limit previously set by SetTimeLimitSecs(). 0 means no time limit.
+        */
         unsigned int getTimeLimitSecs() const;
+        
+        /**
+        * Set the time limit for the game.
+        * If time limit expires, the winner is the player with most frags, even if frag limit is not set or not reached.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call Reset() explicitly.
+        *
+        * @param secs The time limit in seconds. If 0, there is no time limit.
+        */
         void SetTimeLimitSecs(unsigned int secs);
 
+        /**
+        * @return Seconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
+        *         0 if there is no time limit set, or the game was not yet reset or when the time limit has been reached or the game has been won.
+        */
         unsigned int getTimeRemainingSecs() const;
 
+        /**
+        * @return Configured frag limit previously set by SetFragLimit(). 0 means no frag limit.
+        */
         unsigned int getFragLimit() const;
+
+        /**
+        * Set the frag limit for the game.
+        * If the frag limit is reached, the winner is the player with most frags, even if time limit is not yet reached or there is no time limit set.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call Reset() explicitly.
+        * @param limit The frag limit. If 0, there is no frag limit.
+        */
         void SetFragLimit(unsigned int limit);
 
         virtual bool addPlayer(const Player& player) override;

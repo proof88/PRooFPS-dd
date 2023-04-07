@@ -152,12 +152,13 @@ private:
         const PureVector& vecPosMin, const PureVector& vecPosMax,
         const PureVector& vecObjPos, const PureVector& vecObjSize);
     void PlayerCollisionWithWalls(bool& won);
-    void ShowObjectives(bool bWin) const;
     void UpdateWeapons();
     void UpdateBullets();
     void SendUserUpdates();
     void HandlePlayerDied(Player& player);
     void HandlePlayerRespawned(Player& player);
+    void ServerRespawnPlayer(Player& player, bool restartGame);
+    void RestartGame();
     void UpdateRespawnTimers();
     void UpdateGameMode();
     void PickupAndRespawnItems();
