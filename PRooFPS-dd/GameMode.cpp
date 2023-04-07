@@ -57,7 +57,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::
     return m_timeReset;
 }
 
-void proofps_dd::GameMode::Reset()
+void proofps_dd::GameMode::restart()
 {
     m_timeReset = std::chrono::steady_clock::now();
 }
@@ -72,7 +72,7 @@ const std::list<proofps_dd::FragTableRow>& proofps_dd::GameMode::getFragTable() 
     return m_players;
 }
 
-void proofps_dd::GameMode::Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
+void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
     pure.getUImanager().text(s, x, y)->SetDropShadow(true);
 }
@@ -112,9 +112,9 @@ proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
-void proofps_dd::DeathMatchMode::Reset()
+void proofps_dd::DeathMatchMode::restart()
 {
-    proofps_dd::GameMode::Reset();
+    proofps_dd::GameMode::restart();
     m_players.clear();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
@@ -124,7 +124,7 @@ bool proofps_dd::DeathMatchMode::checkWinningConditions()
 {
     if (m_bWon)
     {
-        // once it is won, it stays won until next Reset()
+        // once it is won, it stays won until next restart()
         return m_bWon;
     }
     
@@ -157,7 +157,7 @@ unsigned int proofps_dd::DeathMatchMode::getTimeLimitSecs() const
     return m_nTimeLimitSecs;
 }
 
-void proofps_dd::DeathMatchMode::SetTimeLimitSecs(unsigned int secs)
+void proofps_dd::DeathMatchMode::setTimeLimitSecs(unsigned int secs)
 {
     m_nTimeLimitSecs = secs;
 }
@@ -176,7 +176,7 @@ unsigned int proofps_dd::DeathMatchMode::getFragLimit() const
     return m_nFragLimit;
 }
 
-void proofps_dd::DeathMatchMode::SetFragLimit(unsigned int limit)
+void proofps_dd::DeathMatchMode::setFragLimit(unsigned int limit)
 {
     m_nFragLimit = limit;
 }
@@ -281,7 +281,7 @@ bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
     return true;
 }
 
-void proofps_dd::DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
+void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
 {
     const int nXPosPlayerName = 20;
     const int nXPosFrags = 200;
@@ -290,7 +290,7 @@ void proofps_dd::DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& p
     
     if (checkWinningConditions())
     {
-        Text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
     }
     else
@@ -304,46 +304,46 @@ void proofps_dd::DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& p
         {
             sLimits += " | Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingSecs()) + " s";
         }
-        Text(pure, sLimits, nXPosPlayerName, nYPosStart);
+        text(pure, sLimits, nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
     }
 
     int nThisRowY = nYPosStart;
-    Text(pure, "Player Name", nXPosPlayerName, nThisRowY);
-    Text(pure, "Frags", nXPosFrags, nThisRowY);
-    Text(pure, "Deaths", nXPosDeaths, nThisRowY);
+    text(pure, "Player Name", nXPosPlayerName, nThisRowY);
+    text(pure, "Frags", nXPosFrags, nThisRowY);
+    text(pure, "Deaths", nXPosDeaths, nThisRowY);
 
     nThisRowY -= pure.getUImanager().getDefaultFontSize();
-    Text(pure, "========================================================", nXPosPlayerName, nThisRowY);
+    text(pure, "========================================================", nXPosPlayerName, nThisRowY);
 
     int i = 0;
     for (const auto& player : getFragTable())
     {
         i++;
         nThisRowY = nYPosStart - (i + 1) * pure.getUImanager().getDefaultFontSize();
-        Text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
-        Text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
-        Text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+        text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
+        text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
+        text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
     }
 
     if (!network.isServer())
     {
         nThisRowY -= 2 * pure.getUImanager().getDefaultFontSize();
-        Text(pure, "Ping: " + std::to_string(network.getClient().getPing(true)) + " ms",
+        text(pure, "Ping: " + std::to_string(network.getClient().getPing(true)) + " ms",
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
-        Text(pure, "Quality: local: " + std::to_string(network.getClient().getQualityLocal(false)) +
+        text(pure, "Quality: local: " + std::to_string(network.getClient().getQualityLocal(false)) +
             "; remote: " + std::to_string(network.getClient().getQualityRemote(false)),
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
-        Text(pure, "Tx Speed: " + std::to_string(std::lround(network.getClient().getTxByteRate(false))) +
+        text(pure, "Tx Speed: " + std::to_string(std::lround(network.getClient().getTxByteRate(false))) +
             " Bps; Rx Speed: " + std::to_string(std::lround(network.getClient().getRxByteRate(false))) + " Bps",
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
-        Text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
+        text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
             nXPosPlayerName, nThisRowY);
     }
 }

@@ -280,9 +280,9 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
     getPure().getWindow().SetCursorVisible(false);
 
-    m_deathMatchMode->SetFragLimit(10);
-    //m_deathMatchMode->SetTimeLimitSecs(500);
-    m_gameMode->Reset();
+    m_deathMatchMode->setFragLimit(10);
+    //m_deathMatchMode->setTimeLimitSecs(500);
+    m_gameMode->restart();
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = 0;
@@ -329,7 +329,7 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
 
     if (keybd.isKeyPressed(VK_TAB))
     {
-        m_gameMode->ShowObjectives(getPure(), getNetwork());
+        m_gameMode->showObjectives(getPure(), getNetwork());
     }
 
     if (keybd.isKeyPressed(VK_BACK))
@@ -1316,7 +1316,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
         } // end for items
     } // end server
 
-    m_gameMode->Reset(); // now both server and clients execute this on their own, in future only server should do this ...
+    m_gameMode->restart(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
@@ -1470,7 +1470,7 @@ void proofps_dd::PRooFPSddPGE::UpdateGameMode()
         else
         {
             // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
-            m_gameMode->ShowObjectives(getPure(), getNetwork());
+            m_gameMode->showObjectives(getPure(), getNetwork());
             m_pObjXHair->Hide();
             for (auto& playerPair : m_mapPlayers)
             {

@@ -159,7 +159,7 @@ private:
             return false;
         }
 
-        gm->Reset();
+        gm->restart();
         return assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time") &
             assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
     }
@@ -174,8 +174,8 @@ private:
         bool b = assertEquals(0u, dm->getTimeLimitSecs(), "default time limit") &
             assertEquals(0u, dm->getTimeRemainingSecs(), "remaining default");
 
-        dm->SetTimeLimitSecs(25u);
-        dm->Reset();  // Reset() is needed to have correct value for remaining time
+        dm->setTimeLimitSecs(25u);
+        dm->restart();  // restart() is needed to have correct value for remaining time
         b &= assertEquals(25u, dm->getTimeLimitSecs(), "new time limit") &
             assertEquals(25u, dm->getTimeRemainingSecs(), "new remaining");
 
@@ -190,7 +190,7 @@ private:
         }
 
         bool b = assertEquals(0u, dm->getFragLimit(), "default");
-        dm->SetFragLimit(25u);
+        dm->setFragLimit(25u);
         b &= assertEquals(25u, dm->getFragLimit(), "new");
 
         return b;
@@ -203,7 +203,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(11);
+        dm->setFragLimit(11);
 
         proofps_dd::Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
@@ -249,7 +249,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(11);
+        dm->setFragLimit(11);
 
         proofps_dd::Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
@@ -295,7 +295,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(11);
+        dm->setFragLimit(11);
 
         proofps_dd::Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
@@ -346,7 +346,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(11);
+        dm->setFragLimit(11);
 
         proofps_dd::Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         playerAdam.setName("Adam");
@@ -413,7 +413,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(10);
+        dm->setFragLimit(10);
 
         proofps_dd::Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         playerAdam.setName("Adam");
@@ -449,7 +449,7 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(10);
+        dm->setFragLimit(10);
 
         proofps_dd::Player playerAdam(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         playerAdam.setName("Adam");
@@ -490,8 +490,8 @@ private:
             return false;
         }
 
-        dm->SetTimeLimitSecs(25u);
-        dm->SetFragLimit(15u);
+        dm->setTimeLimitSecs(25u);
+        dm->setFragLimit(15u);
         
         proofps_dd::Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
@@ -510,7 +510,7 @@ private:
 
         b &= assertTrue(dm->addPlayer(player2), "add player 2");
 
-        dm->Reset();
+        dm->restart();
 
         b &= assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
         b &= assertEquals(15u, dm->getFragLimit(), "frag limit");
@@ -539,8 +539,8 @@ private:
             return false;
         }
 
-        dm->SetTimeLimitSecs(2);
-        dm->Reset();
+        dm->setTimeLimitSecs(2);
+        dm->restart();
         std::set<unsigned int> setRemainingSecs = {0, 1};
         int iSleep = 0;
         while ((iSleep++ < 5) && !dm->checkWinningConditions())
@@ -564,8 +564,8 @@ private:
             return false;
         }
 
-        dm->SetFragLimit(5);
-        dm->Reset();
+        dm->setFragLimit(5);
+        dm->restart();
 
         proofps_dd::Player player1(*m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
@@ -611,9 +611,9 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
 
-        dm->SetFragLimit(5);
-        dm->SetTimeLimitSecs(2);
-        dm->Reset();
+        dm->setFragLimit(5);
+        dm->setTimeLimitSecs(2);
+        dm->restart();
 
         bool b = assertTrue(dm->addPlayer(player1), "add player 1");
         b &= assertTrue(dm->addPlayer(player2), "add player 2");
@@ -633,8 +633,8 @@ private:
         b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         // frag limit reach also means winning even if time limit not reached
-        dm->SetTimeLimitSecs(100);
-        dm->Reset();
+        dm->setTimeLimitSecs(100);
+        dm->restart();
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
         b &= assertTrue(dm->addPlayer(player1), "add player 1");
         b &= assertTrue(dm->addPlayer(player2), "add player 2");

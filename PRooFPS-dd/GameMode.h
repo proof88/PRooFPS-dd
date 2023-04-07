@@ -58,13 +58,14 @@ namespace proofps_dd
 
         /**
         * Resets winning time and winning condition.
+        * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this.
         */
-        virtual void Reset();
+        virtual void restart();
 
         /**
         * Evaluates conditions to see if game is won or not.
         * Since conditions depend on game mode, the actual implementation must be in the specific derived game mode class.
-        * Note that once a game is won, it stays won even if all players are removed, until explicit call to Reset().
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         * 
         * @return True if game is won, false otherwise.
         */
@@ -92,7 +93,7 @@ namespace proofps_dd
         /**
         * Updates data for the specified player.
         * Automatically evaluates winning condition, in case of winning it also updates winning time.
-        * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to Reset().
+        * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
         * Fails if player with same cannot be found.
         *
         * @return True if updated the existing player, false otherwise.
@@ -102,19 +103,19 @@ namespace proofps_dd
         /**
         * Removes data for the specified player.
         * Fails if player with same cannot be found.
-        * Note that once a game is won, it stays won even if all players are removed, until explicit call to Reset().
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         *
         * @return True if removed the existing player, false otherwise.
         */
         virtual bool removePlayer(const Player& player) = 0;
 
-        void Text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
+        void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
         /**
         * Shows the objectives of the current game mode.
         * For example, in a deathmatch game, it might show a frag table, or in a single player game it might show mission objectives.
         */
-        virtual void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) = 0;
+        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) = 0;
 
     protected:
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
@@ -152,22 +153,22 @@ namespace proofps_dd
         DeathMatchMode();
         virtual ~DeathMatchMode();
 
-        virtual void Reset() override;
+        virtual void restart() override;
         virtual bool checkWinningConditions() override;
 
         /**
-        * @return Configured time limit previously set by SetTimeLimitSecs(). 0 means no time limit.
+        * @return Configured time limit previously set by setTimeLimitSecs(). 0 means no time limit.
         */
         unsigned int getTimeLimitSecs() const;
         
         /**
         * Set the time limit for the game.
         * If time limit expires, the winner is the player with most frags, even if frag limit is not set or not reached.
-        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call Reset() explicitly.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
         *
         * @param secs The time limit in seconds. If 0, there is no time limit.
         */
-        void SetTimeLimitSecs(unsigned int secs);
+        void setTimeLimitSecs(unsigned int secs);
 
         /**
         * @return Seconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
@@ -176,22 +177,22 @@ namespace proofps_dd
         unsigned int getTimeRemainingSecs() const;
 
         /**
-        * @return Configured frag limit previously set by SetFragLimit(). 0 means no frag limit.
+        * @return Configured frag limit previously set by setFragLimit(). 0 means no frag limit.
         */
         unsigned int getFragLimit() const;
 
         /**
         * Set the frag limit for the game.
         * If the frag limit is reached, the winner is the player with most frags, even if time limit is not yet reached or there is no time limit set.
-        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call Reset() explicitly.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
         * @param limit The frag limit. If 0, there is no frag limit.
         */
-        void SetFragLimit(unsigned int limit);
+        void setFragLimit(unsigned int limit);
 
         virtual bool addPlayer(const Player& player) override;
         virtual bool updatePlayer(const Player& player) override;
         virtual bool removePlayer(const Player& player) override;
-        virtual void ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) override;
+        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) override;
 
     protected:
 
