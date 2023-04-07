@@ -288,6 +288,7 @@ void DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_net
     const int nXPosFrags = 200;
     const int nXPosDeaths = 250;
     int nYPosStart = pure.getWindow().getClientHeight() - 20;
+    
     if (checkWinningConditions())
     {
         Text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
@@ -295,24 +296,17 @@ void DeathMatchMode::ShowObjectives(PR00FsUltimateRenderingEngine& pure, pge_net
     }
     else
     {
-        std::string sLimits;
+        std::string sLimits = "DeathMatch";
         if (getFragLimit() > 0)
         {
-            sLimits = "Frag Limit: " + std::to_string(getFragLimit());
+            sLimits += " | Frag Limit: " + std::to_string(getFragLimit());
         }
         if (getTimeLimitSecs() > 0)
         {
-            if (!sLimits.empty())
-            {
-                sLimits += ", ";
-            }
-            sLimits += "Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingSecs()) + " s";
+            sLimits += " | Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingSecs()) + " s";
         }
-        if (!sLimits.empty())
-        {
-            Text(pure, sLimits, nXPosPlayerName, nYPosStart);
-            nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
-        }
+        Text(pure, sLimits, nXPosPlayerName, nYPosStart);
+        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
     }
 
     int nThisRowY = nYPosStart;
