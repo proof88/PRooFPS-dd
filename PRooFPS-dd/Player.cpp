@@ -53,7 +53,6 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_nHealth(other.m_nHealth),
     m_nOldHealth(other.m_nOldHealth),
     m_vecPos(other.m_vecPos),
-    m_vecOldPos(other.m_vecOldPos),
     m_fPlayerAngleY(other.m_fPlayerAngleY),
     m_vWpnAngle(other.m_vWpnAngle),
     m_vOldWpnAngle(other.m_vOldWpnAngle),
@@ -87,7 +86,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_nHealth = other.m_nHealth;
     m_nOldHealth = other.m_nOldHealth;
     m_vecPos = other.m_vecPos;
-    m_vecOldPos = other.m_vecOldPos;
     m_fPlayerAngleY = other.m_fPlayerAngleY;
     m_vWpnAngle = other.m_vWpnAngle;
     m_vOldWpnAngle = other.m_vOldWpnAngle;
@@ -165,14 +163,9 @@ int proofps_dd::Player::getHealth() const
     return m_nHealth;
 }
 
-PureVector& proofps_dd::Player::getPos()
+PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
 {
     return m_vecPos;
-}
-
-PureVector& proofps_dd::Player::getOPos()
-{
-    return m_vecOldPos;
 }
 
 TPureFloat& proofps_dd::Player::getAngleY()
@@ -211,7 +204,7 @@ bool proofps_dd::Player::canFall() const
 }
 
 void proofps_dd::Player::UpdateOldPos() {
-    m_vecOldPos = m_vecPos;
+    m_vecPos.commit();
     m_fOldPlayerAngleY = m_fPlayerAngleY;
     m_vOldWpnAngle = m_vWpnAngle;
 }
@@ -251,9 +244,9 @@ void proofps_dd::Player::Jump() {
     m_bAllowJump = false;
     m_bJumping = true;
     m_fGravity = proofps_dd::GAME_GRAVITY_MAX;
-    m_vecForce.SetX(m_vecPos.getX() - m_vecOldPos.getX());
-    m_vecForce.SetY(m_vecPos.getY() - m_vecOldPos.getY());
-    m_vecForce.SetZ(m_vecPos.getZ() - m_vecOldPos.getZ());
+    m_vecForce.SetX(m_vecPos.getNew().getX() - m_vecPos.getOld().getX());
+    m_vecForce.SetY(m_vecPos.getNew().getY() - m_vecPos.getOld().getY());
+    m_vecForce.SetZ(m_vecPos.getNew().getZ() - m_vecPos.getOld().getZ());
 }
 
 void proofps_dd::Player::StopJumping() {

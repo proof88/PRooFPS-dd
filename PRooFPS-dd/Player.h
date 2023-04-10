@@ -16,6 +16,7 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
+#include "../../../PGE/PGE/Config/PgeOldNewValue.h"
 #include "../../../PGE/PGE/Network/PgePacket.h"
 #include "../../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
 #include "../../../PGE/PGE/Weapons/WeaponManager.h"
@@ -53,8 +54,7 @@ namespace proofps_dd
         void setName(const std::string& sName);
 
         int getHealth() const;
-        PureVector& getPos();
-        PureVector& getOPos();
+        PgeOldNewValue<PureVector>& getPos();
         TPureFloat& getAngleY();
         TPureFloat& getOldAngleY();
         PureObject3D* getObject3D() const;
@@ -117,7 +117,7 @@ namespace proofps_dd
         std::string m_sIpAddress; // TODO: this should be either in the engine, or wait until we move this class to the engine
         std::string m_sName;
         int m_nHealth, m_nOldHealth;
-        PureVector m_vecPos, m_vecOldPos;
+        PgeOldNewValue<PureVector> m_vecPos;
         TPureFloat m_fPlayerAngleY, m_fOldPlayerAngleY;
         PureVector m_vWpnAngle, m_vOldWpnAngle;
         PureVector m_vecForce;

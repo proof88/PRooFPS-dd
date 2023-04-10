@@ -870,11 +870,11 @@ void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
         const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
         const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
 
-        const float fPlayerOPos1XMinusHalf = player.getOPos().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getOPos().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = player.getPos().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf = player.getPos().getY() + plobj->getSizeVec().getY() / 2.f;
-        if (player.getOPos().getY() != player.getPos().getY())
+        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
+        if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
@@ -891,9 +891,17 @@ void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                     continue;
                 }
 
-                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getOPos().getY() ? 1 : -1;
+                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
                 const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
-                player.getPos().SetY(obj->getPosVec().getY() + fAlignCloseToWall);
+                // TODO: we could write this simpler if PureVector::Set() would return the object itself!
+                // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
+                // do this everywhere where Ctrl+F finds this text: PPPKKKGGGGGG
+                player.getPos().set(
+                    PureVector(
+                        player.getPos().getNew().getX(),
+                        obj->getPosVec().getY() + fAlignCloseToWall,
+                        player.getPos().getNew().getZ()
+                    ));
 
                 if (nAlignUnderOrAboveWall == 1)
                 {
@@ -913,14 +921,20 @@ void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
             }
         }
 
-        player.getPos().SetX(player.getPos().getX() + player.getForce().getX());
+        // PPPKKKGGGGGG
+        player.getPos().set(
+            PureVector(
+                player.getPos().getNew().getX() + player.getForce().getX(),
+                player.getPos().getNew().getY(),
+                player.getPos().getNew().getZ()
+            ));
 
-        const float fPlayerPos1XMinusHalf = player.getPos().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1XPlusHalf = player.getPos().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf_2 = player.getPos().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf_2 = player.getPos().getY() + plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1XMinusHalf = player.getPos().getNew().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1XPlusHalf = player.getPos().getNew().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
 
-        if (player.getOPos().getX() != player.getPos().getX())
+        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
@@ -938,9 +952,15 @@ void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                 }
 
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getOPos().getX() ? 1 : -1;
+                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
-                player.getPos().SetX(obj->getPosVec().getX() + fAlignNextToWall);
+                // PPPKKKGGGGGG
+                player.getPos().set(
+                    PureVector(
+                        obj->getPosVec().getX() + fAlignNextToWall,
+                        player.getPos().getNew().getY(),
+                        player.getPos().getNew().getZ()
+                    ));
 
                 break;
             }
@@ -1012,9 +1032,15 @@ void proofps_dd::PRooFPSddPGE::Gravity(int /*fps*/)
                 }
             }
         }
-        player.getPos().SetY(player.getPos().getY() + player.getGravity());
+        // PPPKKKGGGGGG
+        player.getPos().set(
+            PureVector(
+                player.getPos().getNew().getX(),
+                player.getPos().getNew().getY() + player.getGravity(),
+                player.getPos().getNew().getZ()
+            ));
         
-        if ( (player.getHealth() > 0) && (player.getPos().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        if ( (player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound
             HandlePlayerDied(player);
@@ -1498,7 +1524,8 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
     {
         auto& player = playerPair.second;
 
-        if ((player.getPos() != player.getOPos()) || (player.getOldAngleY() != player.getAngleY())
+        // TODO: in below condition, isDirty() can be used once we migrated to a float type that also has configurable epsilon!
+        if ((/*player.getPos().isDirty()*/ player.getPos().getNew() != player.getPos().getOld()) || (player.getOldAngleY() != player.getAngleY())
             || (player.getWeaponAngle() != player.getOldWeaponAngle())
             || (player.getHealth() != player.getOldHealth())
             || (player.getFrags() != player.getOldFrags())
@@ -1508,9 +1535,9 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
-                player.getPos().getX(),
-                player.getPos().getY(),
-                player.getPos().getZ(),
+                player.getPos().getNew().getX(),
+                player.getPos().getNew().getY(),
+                player.getPos().getNew().getZ(),
                 player.getAngleY(),
                 player.getWeaponAngle().getY(),
                 player.getWeaponAngle().getZ(),
@@ -1554,7 +1581,7 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
         auto& player = playerPair.second;
         if (getNetwork().isServer())
         {
-            if (player.getPos().getY() != player.getOPos().getY())
+            if (player.getPos().getNew().getY() != player.getPos().getOld().getY())
             {   // still could fall in previous frame, so jumping is still disallowed ...
                 player.SetJumpAllowed(false);
             }
@@ -1564,6 +1591,8 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
             }
         }
 
+        // TODO: why am I checking for valid connection here if player is already in the map?
+        // Probably this is a leftover from before the m_sUserName refactor. Remove this condition and test!
         if (hasValidConnection())
         {
             player.UpdateOldPos();
@@ -2243,14 +2272,26 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
     {
         if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
         {
-            player.getPos().SetX(player.getPos().getX() - fSpeed);
+            // PPPKKKGGGGGG
+            player.getPos().set(
+                PureVector(
+                    player.getPos().getNew().getX() - fSpeed,
+                    player.getPos().getNew().getY(),
+                    player.getPos().getNew().getZ()
+                ));
         }
     }
     if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::RIGHT )
     {
         if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
         {
-            player.getPos().SetX(player.getPos().getX() + fSpeed);
+            // PPPKKKGGGGGG
+            player.getPos().set(
+                PureVector(
+                    player.getPos().getNew().getX() + fSpeed,
+                    player.getPos().getNew().getY(),
+                    player.getPos().getNew().getZ()
+                ));
         }
     }
 
@@ -2450,8 +2491,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
     if (it->second.isExpectingStartPos())
     {
         it->second.SetExpectingStartPos(false);
-        it->second.getPos().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-        it->second.getOPos().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+        // PPPKKKGGGGGG
+        it->second.getPos().set(
+            PureVector(
+                msg.m_pos.x, msg.m_pos.y, msg.m_pos.z
+            ));
+        it->second.getPos().commit();
     }
 
     it->second.getObject3D()->getPosVec().Set(

@@ -173,7 +173,7 @@ private:
             assertEquals(PureVector(), player.getForce(), "force") &
             assertEquals(PureVector(), player.getOldWeaponAngle(), "old wpn angle") &
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
-            assertEquals(PureVector(), player.getOPos(), "old pos") &
+            assertFalse(player.getPos().isDirty(), "old pos") &
             assertEquals(PureVector(), player.getPos(), "pos") &
             assertEquals(0.f, player.getOldAngleY(), "old angle y") &
             assertEquals(0.f, player.getAngleY(), "angle y") &
@@ -267,7 +267,7 @@ private:
 
         bool b = assertEquals(PureVector(), player.getOldWeaponAngle(), "old wpn angle 1")&
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 1")&
-            assertEquals(PureVector(), player.getOPos(), "old pos 1")&
+            assertEquals(PureVector(), player.getPos().getOld(), "old pos 1") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 1")&
             assertEquals(0.f, player.getOldAngleY(), "old angle y 1")&
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 1");
@@ -276,7 +276,7 @@ private:
 
         b &= assertEquals(vecAngleWpnOriginal, player.getOldWeaponAngle(), "old wpn angle 2") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
-            assertEquals(vecPosOriginal, player.getOPos(), "old pos 2") &
+            assertEquals(vecPosOriginal, player.getPos().getOld(), "old pos 2") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 2") &
             assertEquals(fAngleYOriginal, player.getOldAngleY(), "old angle y 2") &
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 2");
@@ -430,9 +430,12 @@ private:
     bool test_jump()
     {
         proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-        player.getPos().Set(2.f, 4.f, 8.f);
-        player.getOPos().Set(1.f, 2.f, 3.f);
-        const PureVector vecExpectedForce = player.getPos() - player.getOPos();
+
+        player.getPos().set(PureVector(1.f, 2.f, 3.f));
+        player.getPos().commit();
+        player.getPos().set(PureVector(2.f, 4.f, 8.f));
+
+        const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
 
         player.SetJumpAllowed(true);
         bool b = assertTrue(player.jumpAllowed(), "allowed 1") &

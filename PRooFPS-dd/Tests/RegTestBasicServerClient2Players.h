@@ -407,6 +407,24 @@ private:
             /* client never injects packets to its pkt queue */
             assertEquals(evaluatePktStatsClient.nInjectPktTotalCount, 0u, "client nInjectPktTotalCount") &
             assertEquals(evaluatePktStatsClient.nInjectPktPerSecond, 0u, "client nInjectPktPerSecond");
+
+        if (evaluatePktStatsServer.nRxPktTotalCount < evaluatePktStatsClient.nTxPktTotalCount)
+        {   // this check is for logging more clear error, if we come here the above bRet check already failed
+            assertFalse(true, "client -> server pkt loss!");
+        }
+        else if (evaluatePktStatsServer.nRxPktTotalCount > evaluatePktStatsClient.nTxPktTotalCount)
+        {   // this check is for logging more clear error, if we come here the above bRet check already failed
+            assertFalse(true, "cannot happen: server received more pkts than client sent!");
+        }
+
+        if (evaluatePktStatsServer.nTxPktTotalCount > evaluatePktStatsClient.nRxPktTotalCount)
+        {   // this check is for logging more clear error, if we come here the above bRet check already failed
+            assertFalse(true, "server -> client pkt loss!");
+        }
+        else if (evaluatePktStatsServer.nTxPktTotalCount < evaluatePktStatsClient.nRxPktTotalCount)
+        {   // this check is for logging more clear error, if we come here the above bRet check already failed
+            assertFalse(true, "cannot happen: client received more pkts than server sent!");
+        }
         
         bRet &= evaluateFragTableCommon();
 
