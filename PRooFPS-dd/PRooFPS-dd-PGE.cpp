@@ -1524,8 +1524,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
     {
         auto& player = playerPair.second;
 
-        // TODO: in below condition, isDirty() can be used once we migrated to a float type that also has configurable epsilon!
-        if ((/*player.getPos().isDirty()*/ player.getPos().getNew() != player.getPos().getOld()) || (player.getOldAngleY() != player.getAngleY())
+        if (player.getPos().isDirty() || (player.getOldAngleY() != player.getAngleY())
             || (player.getWeaponAngle() != player.getOldWeaponAngle())
             || (player.getHealth() != player.getOldHealth())
             || (player.getFrags() != player.getOldFrags())
