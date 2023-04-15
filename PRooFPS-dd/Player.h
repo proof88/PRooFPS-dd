@@ -53,7 +53,8 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
-        int getHealth() const;
+        PgeOldNewValue<int>& getHealth();
+        const PgeOldNewValue<int>& getHealth() const;
         PgeOldNewValue<PureVector>& getPos();
         PgeOldNewValue<TPureFloat>& getAngleY();
         PureObject3D* getObject3D() const;
@@ -63,8 +64,6 @@ namespace proofps_dd
         bool canFall() const;
         void UpdateOldPos();
         void SetHealth(int value);
-        void UpdateOldHealth();
-        int getOldHealth() const;
         void SetGravity(float value);
         bool jumpAllowed() const;
         void SetJumpAllowed(bool b);
@@ -115,7 +114,7 @@ namespace proofps_dd
 
         std::string m_sIpAddress; // TODO: this should be either in the engine, or wait until we move this class to the engine
         std::string m_sName;
-        int m_nHealth, m_nOldHealth;
+        PgeOldNewValue<int> m_nHealth;
         PgeOldNewValue<PureVector> m_vecPos;
         PgeOldNewValue<TPureFloat> m_fPlayerAngleY;
         PureVector m_vWpnAngle, m_vOldWpnAngle;

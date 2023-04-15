@@ -25,7 +25,6 @@ proofps_dd::Player::Player(
     m_sIpAddress(sIpAddress),
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
     m_nHealth(100),
-    m_nOldHealth(100),
     m_fPlayerAngleY(0.f),
     m_pObj(PGENULL),
     m_pWpn(NULL),
@@ -50,7 +49,6 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_sIpAddress(other.m_sIpAddress),
     m_sName(other.m_sName),
     m_nHealth(other.m_nHealth),
-    m_nOldHealth(other.m_nOldHealth),
     m_vecPos(other.m_vecPos),
     m_fPlayerAngleY(other.m_fPlayerAngleY),
     m_vWpnAngle(other.m_vWpnAngle),
@@ -82,7 +80,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_sIpAddress = other.m_sIpAddress;
     m_sName = other.m_sName;
     m_nHealth = other.m_nHealth;
-    m_nOldHealth = other.m_nOldHealth;
     m_vecPos = other.m_vecPos;
     m_fPlayerAngleY = other.m_fPlayerAngleY;
     m_vWpnAngle = other.m_vWpnAngle;
@@ -155,7 +152,12 @@ const char* proofps_dd::Player::getLoggerModuleName()
     return "Player";
 }
 
-int proofps_dd::Player::getHealth() const
+PgeOldNewValue<int>& proofps_dd::Player::getHealth()
+{
+    return m_nHealth;
+}
+
+const PgeOldNewValue<int>& proofps_dd::Player::getHealth() const
 {
     return m_nHealth;
 }
@@ -205,16 +207,6 @@ void proofps_dd::Player::SetHealth(int value) {
     m_nHealth = max(0, min(value, 100));
 }
 
-void proofps_dd::Player::UpdateOldHealth()
-{
-    m_nOldHealth = m_nHealth;
-}
-
-int proofps_dd::Player::getOldHealth() const
-{
-    return m_nOldHealth;
-}
-
 void proofps_dd::Player::SetGravity(float value) {
     m_fGravity = value;
 }
@@ -246,8 +238,11 @@ void proofps_dd::Player::StopJumping() {
 }
 
 void proofps_dd::Player::DoDamage(int dmg) {
-    m_nHealth = m_nHealth - dmg;
-    if (m_nHealth < 0) m_nHealth = 0;
+    m_nHealth.set(m_nHealth - dmg);
+    if (m_nHealth < 0)
+    {
+        m_nHealth.set(0);
+    }
 }
 
 void proofps_dd::Player::SetCanFall(bool state) {
@@ -552,7 +547,7 @@ void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.Take();
-        SetHealth(getHealth() + MapItem::ITEM_HEALTH_HP_INC);
+        SetHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
         break;
     default:
         getConsole().EOLn(

@@ -55,7 +55,6 @@ protected:
             AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
             AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
             AddSubTest("test_set_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health);
-            AddSubTest("test_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_update_old_health);
             AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
             AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
             AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
@@ -155,7 +154,7 @@ private:
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
             assertFalse(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
-            assertEquals(100, player.getOldHealth(), "old health") &
+            assertFalse(player.getHealth().isDirty(), "old health") &
             assertEquals(100, player.getHealth(), "health") &
             assertEquals(0, player.getOldDeaths(), "old deaths") &
             assertEquals(0, player.getDeaths(), "deaths") &
@@ -297,37 +296,21 @@ private:
         return b;
     }
 
-    bool test_update_old_health()
-    {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-
-        player.SetHealth(50);
-        bool b = assertEquals(50, player.getHealth(), "health 1") &
-            assertEquals(100, player.getOldHealth(), "old health 1");
-
-        player.UpdateOldHealth();
-
-        b &= assertEquals(50, player.getHealth(), "health 2") &
-            assertEquals(player.getHealth(), player.getOldHealth(), "old health 2");
-
-        return b;
-    }
-
     bool test_do_damage()
     {
         proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.DoDamage(25);
         bool b = assertEquals(75, player.getHealth(), "health 1") &
-            assertEquals(100, player.getOldHealth(), "old health 1");
+            assertEquals(100, player.getHealth().getOld(), "old health 1");
 
         player.DoDamage(25);
         b &= assertEquals(50, player.getHealth(), "health 2") &
-            assertEquals(100, player.getOldHealth(), "old health 2");
+            assertEquals(100, player.getHealth().getOld(), "old health 2");
 
         player.DoDamage(100);
         b &= assertEquals(0, player.getHealth(), "health 3") &
-            assertEquals(100, player.getOldHealth(), "old health 3");
+            assertEquals(100, player.getHealth().getOld(), "old health 3");
 
         return b;
     }
@@ -345,7 +328,7 @@ private:
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = assertEquals(0, player.getHealth(), "health 1") &
-            assertEquals(100, player.getOldHealth(), "old health 1") &
+            assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
@@ -358,7 +341,7 @@ private:
         player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         b &= assertEquals(0, player.getHealth(), "health 2") &
-            assertEquals(100, player.getOldHealth(), "old health 2") &
+            assertEquals(100, player.getHealth().getOld(), "old health 2") &
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
@@ -382,7 +365,7 @@ private:
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = assertEquals(0, player.getHealth(), "health 1") &
-            assertEquals(100, player.getOldHealth(), "old health 1") &
+            assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
@@ -395,7 +378,7 @@ private:
         player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         b &= assertEquals(0, player.getHealth(), "health 2") &
-            assertEquals(100, player.getOldHealth(), "old health 2") &
+            assertEquals(100, player.getHealth().getOld(), "old health 2") &
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &

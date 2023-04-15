@@ -1526,7 +1526,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
 
         if (player.getPos().isDirty() || (player.getAngleY().isDirty())
             || (player.getWeaponAngle() != player.getOldWeaponAngle())
-            || (player.getHealth() != player.getOldHealth())
+            || player.getHealth().isDirty()
             || (player.getFrags() != player.getOldFrags())
             || (player.getDeaths() != player.getOldDeaths()))
         {
@@ -1595,7 +1595,7 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
         if (hasValidConnection())
         {
             player.UpdateOldPos();
-            player.UpdateOldHealth();
+            player.getHealth().commit();
             player.UpdateFragsDeaths();
         }
     }
@@ -2524,7 +2524,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
     }
     else
     {
-        if ((it->second.getOldHealth() > 0) && (it->second.getHealth() == 0))
+        if ((it->second.getHealth().getOld() > 0) && (it->second.getHealth() == 0))
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
