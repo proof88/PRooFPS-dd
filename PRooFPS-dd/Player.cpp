@@ -24,8 +24,6 @@ proofps_dd::Player::Player(
     m_connHandleServerSide(connHandle),
     m_sIpAddress(sIpAddress),
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
-    m_nHealth(100),
-    m_fPlayerAngleY(0.f),
     m_pObj(PGENULL),
     m_pWpn(NULL),
     m_gfx(gfx),
@@ -35,9 +33,7 @@ proofps_dd::Player::Player(
     m_bRunning(true),
     m_bAllowJump(false),
     m_bExpectingStartPos(true),
-    m_bRespawn(false),
-    m_nFrags(0),
-    m_nDeaths(0)
+    m_bRespawn(false)
 {
     BuildPlayerObject(true);
 }
@@ -46,10 +42,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_connHandleServerSide(other.m_connHandleServerSide),
     m_sIpAddress(other.m_sIpAddress),
     m_sName(other.m_sName),
-    m_nHealth(other.m_nHealth),
-    m_vecPos(other.m_vecPos),
-    m_fPlayerAngleY(other.m_fPlayerAngleY),
-    m_vWpnAngle(other.m_vWpnAngle),
+    m_vecOldNewValues(other.m_vecOldNewValues),
     m_vecForce(other.m_vecForce),
     m_pObj(PGENULL),
     m_pWpn(NULL),
@@ -62,9 +55,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bAllowJump(other.m_bAllowJump),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
     m_timeDied(other.m_timeDied),
-    m_bRespawn(other.m_bRespawn),
-    m_nFrags(other.m_nFrags),
-    m_nDeaths(other.m_nDeaths)
+    m_bRespawn(other.m_bRespawn)
 {
     BuildPlayerObject(true);
 }
@@ -74,10 +65,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_connHandleServerSide = other.m_connHandleServerSide;
     m_sIpAddress = other.m_sIpAddress;
     m_sName = other.m_sName;
-    m_nHealth = other.m_nHealth;
-    m_vecPos = other.m_vecPos;
-    m_fPlayerAngleY = other.m_fPlayerAngleY;
-    m_vWpnAngle = other.m_vWpnAngle;
+    m_vecOldNewValues = other.m_vecOldNewValues;
     m_vecForce = other.m_vecForce;
     m_timeLastWeaponSwitch = other.m_timeLastWeaponSwitch;
     m_gfx = other.m_gfx;
@@ -89,8 +77,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bExpectingStartPos = other.m_bExpectingStartPos;
     m_timeDied = other.m_timeDied;
     m_bRespawn = other.m_bRespawn;
-    m_nFrags = other.m_nFrags;
-    m_nDeaths = other.m_nDeaths;
 
     BuildPlayerObject(true);
 
@@ -146,22 +132,26 @@ const char* proofps_dd::Player::getLoggerModuleName()
 
 PgeOldNewValue<int>& proofps_dd::Player::getHealth()
 {
-    return m_nHealth;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
 }
 
 const PgeOldNewValue<int>& proofps_dd::Player::getHealth() const
 {
-    return m_nHealth;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
 }
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
 {
-    return m_vecPos;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvPos));
 }
 
 PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY()
 {
-    return m_fPlayerAngleY;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleY));
 }
 
 PureObject3D* proofps_dd::Player::getObject3D() const
@@ -190,13 +180,13 @@ bool proofps_dd::Player::canFall() const
 }
 
 void proofps_dd::Player::UpdateOldPos() {
-    m_vecPos.commit();
-    m_fPlayerAngleY.commit();
-    m_vWpnAngle.commit();
+    getPos().commit();
+    getAngleY().commit();
+    getWeaponAngle().commit();
 }
 
 void proofps_dd::Player::SetHealth(int value) {
-    m_nHealth.set( max(0, min(value, 100)) );
+    getHealth().set(max(0, min(value, 100)));
 }
 
 void proofps_dd::Player::SetGravity(float value) {
@@ -220,9 +210,9 @@ void proofps_dd::Player::Jump() {
     m_bAllowJump = false;
     m_bJumping = true;
     m_fGravity = proofps_dd::GAME_GRAVITY_MAX;
-    m_vecForce.SetX(m_vecPos.getNew().getX() - m_vecPos.getOld().getX());
-    m_vecForce.SetY(m_vecPos.getNew().getY() - m_vecPos.getOld().getY());
-    m_vecForce.SetZ(m_vecPos.getNew().getZ() - m_vecPos.getOld().getZ());
+    m_vecForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
+    m_vecForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
+    m_vecForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
 }
 
 void proofps_dd::Player::StopJumping() {
@@ -230,10 +220,10 @@ void proofps_dd::Player::StopJumping() {
 }
 
 void proofps_dd::Player::DoDamage(int dmg) {
-    m_nHealth.set(m_nHealth - dmg);
-    if (m_nHealth < 0)
+    getHealth().set(getHealth().getNew() - dmg);
+    if (getHealth().getNew() < 0)
     {
-        m_nHealth.set(0);
+        getHealth().set(0);
     }
 }
 
@@ -356,7 +346,8 @@ Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename)
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
 {
-    return m_vWpnAngle;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvWpnAngle));
 }
 
 void proofps_dd::Player::Die(bool bMe, bool bServer)
@@ -414,28 +405,32 @@ bool& proofps_dd::Player::getRespawnFlag()
 
 PgeOldNewValue<int>& proofps_dd::Player::getFrags()
 {
-    return m_nFrags;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvFrags));
 }
 
 const PgeOldNewValue<int>& proofps_dd::Player::getFrags() const
 {
-    return m_nFrags;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvFrags));
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getDeaths()
 {
-    return m_nDeaths;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
 }
 
 const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
 {
-    return m_nDeaths;
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
 }
 
 void proofps_dd::Player::UpdateFragsDeaths()
 {
-    m_nFrags.commit();
-    m_nDeaths.commit();
+    getFrags().commit();
+    getDeaths().commit();
 }
 
 bool proofps_dd::Player::canTakeItem(const MapItem& item) const

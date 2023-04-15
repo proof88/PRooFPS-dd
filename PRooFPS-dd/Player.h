@@ -10,8 +10,9 @@
     ###################################################################################
 */
 
-#include <chrono>  // requires cpp11
+#include <chrono>      // requires cpp11
 #include <map>
+#include <variant>     // requires cpp17
 #include <vector>
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
@@ -99,6 +100,16 @@ namespace proofps_dd
 
     private:
 
+        enum class OldNewValueName
+        {
+            OvHealth,
+            OvFrags,
+            OvDeaths,
+            OvPos,
+            OvAngleY,
+            OvWpnAngle,
+        };
+
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
         static uint32_t m_nPlayerInstanceCntr;
 
@@ -111,10 +122,21 @@ namespace proofps_dd
 
         std::string m_sIpAddress; // TODO: this should be either in the engine, or wait until we move this class to the engine
         std::string m_sName;
-        PgeOldNewValue<int> m_nHealth;
-        PgeOldNewValue<PureVector> m_vecPos;
-        PgeOldNewValue<TPureFloat> m_fPlayerAngleY;
-        PgeOldNewValue<PureVector> m_vWpnAngle;
+
+        std::map<OldNewValueName,
+            std::variant<
+            PgeOldNewValue<int>,
+            PgeOldNewValue<TPureFloat>,
+            PgeOldNewValue<PureVector>
+            >> m_vecOldNewValues = {
+                {OldNewValueName::OvHealth,   PgeOldNewValue<int>(100)},
+                {OldNewValueName::OvFrags,    PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvDeaths,   PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvPos,      PgeOldNewValue<PureVector>()},
+                {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
+                {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()}
+        };
+
         PureVector m_vecForce;
         PureObject3D* m_pObj;
         std::vector<Weapon*> m_weapons;
@@ -129,8 +151,6 @@ namespace proofps_dd
         bool m_bExpectingStartPos;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
-        PgeOldNewValue<int> m_nFrags;
-        PgeOldNewValue<int> m_nDeaths;
 
         // ---------------------------------------------------------------------------
 
