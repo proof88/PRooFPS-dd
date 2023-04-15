@@ -37,9 +37,7 @@ proofps_dd::Player::Player(
     m_bExpectingStartPos(true),
     m_bRespawn(false),
     m_nFrags(0),
-    m_nOldFrags(0),
-    m_nDeaths(0),
-    m_nOldDeaths(0)
+    m_nDeaths(0)
 {
     BuildPlayerObject(true);
 }
@@ -66,9 +64,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_timeDied(other.m_timeDied),
     m_bRespawn(other.m_bRespawn),
     m_nFrags(other.m_nFrags),
-    m_nOldFrags(other.m_nOldFrags),
-    m_nDeaths(other.m_nDeaths),
-    m_nOldDeaths(other.m_nOldDeaths)
+    m_nDeaths(other.m_nDeaths)
 {
     BuildPlayerObject(true);
 }
@@ -94,9 +90,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_timeDied = other.m_timeDied;
     m_bRespawn = other.m_bRespawn;
     m_nFrags = other.m_nFrags;
-    m_nOldFrags = other.m_nOldFrags;
     m_nDeaths = other.m_nDeaths;
-    m_nOldDeaths = other.m_nOldDeaths;
 
     BuildPlayerObject(true);
 
@@ -418,40 +412,30 @@ bool& proofps_dd::Player::getRespawnFlag()
     return m_bRespawn;
 }
 
-int& proofps_dd::Player::getFrags()
+PgeOldNewValue<int>& proofps_dd::Player::getFrags()
 {
     return m_nFrags;
 }
 
-const int& proofps_dd::Player::getFrags() const
+const PgeOldNewValue<int>& proofps_dd::Player::getFrags() const
 {
     return m_nFrags;
 }
 
-int& proofps_dd::Player::getOldFrags()
-{
-    return m_nOldFrags;
-}
-
-int& proofps_dd::Player::getDeaths()
+PgeOldNewValue<int>& proofps_dd::Player::getDeaths()
 {
     return m_nDeaths;
 }
 
-const int& proofps_dd::Player::getDeaths() const
+const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
 {
     return m_nDeaths;
-}
-
-int& proofps_dd::Player::getOldDeaths()
-{
-    return m_nOldDeaths;
 }
 
 void proofps_dd::Player::UpdateFragsDeaths()
 {
-    m_nOldFrags = m_nFrags;
-    m_nOldDeaths = m_nDeaths;
+    m_nFrags.commit();
+    m_nDeaths.commit();
 }
 
 bool proofps_dd::Player::canTakeItem(const MapItem& item) const

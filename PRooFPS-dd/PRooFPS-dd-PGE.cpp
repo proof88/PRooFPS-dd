@@ -1527,8 +1527,8 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
         if (player.getPos().isDirty() || player.getAngleY().isDirty()
             || player.getWeaponAngle().isDirty()
             || player.getHealth().isDirty()
-            || (player.getFrags() != player.getOldFrags())
-            || (player.getDeaths() != player.getOldDeaths()))
+            || player.getFrags().isDirty()
+            || player.getDeaths().isDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(

@@ -89,12 +89,10 @@ namespace proofps_dd
         PgeOldNewValue<PureVector>& getWeaponAngle();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
-        int& getFrags();
-        const int& getFrags() const;
-        int& getOldFrags();
-        int& getDeaths();
-        const int& getDeaths() const;
-        int& getOldDeaths();
+        PgeOldNewValue<int>& getFrags();
+        const PgeOldNewValue<int>& getFrags() const;
+        PgeOldNewValue<int>& getDeaths();
+        const PgeOldNewValue<int>& getDeaths() const;
         void UpdateFragsDeaths();
         bool canTakeItem(const MapItem& item) const;
         void TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
@@ -131,8 +129,8 @@ namespace proofps_dd
         bool m_bExpectingStartPos;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
-        int m_nFrags, m_nOldFrags;
-        int m_nDeaths, m_nOldDeaths;
+        PgeOldNewValue<int> m_nFrags;
+        PgeOldNewValue<int> m_nDeaths;
 
         // ---------------------------------------------------------------------------
 

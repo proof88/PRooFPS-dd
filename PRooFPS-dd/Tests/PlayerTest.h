@@ -156,9 +156,9 @@ private:
             assertNotNull(player.getObject3D(), "object3d") &
             assertFalse(player.getHealth().isDirty(), "old health") &
             assertEquals(100, player.getHealth(), "health") &
-            assertEquals(0, player.getOldDeaths(), "old deaths") &
+            assertFalse(player.getDeaths().isDirty(), "old deaths") &
             assertEquals(0, player.getDeaths(), "deaths") &
-            assertEquals(0, player.getOldFrags(), "old frags") &
+            assertFalse(player.getFrags().isDirty(), "old frags") &
             assertEquals(0, player.getFrags(), "frags") &
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
             assertEquals(0, player.getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
@@ -224,16 +224,16 @@ private:
         player.getFrags() = 2;
         player.getDeaths() = 1;
 
-        bool b = assertEquals(0, player.getOldDeaths(), "old deaths 1") &
+        bool b = assertEquals(0, player.getDeaths().getOld(), "old deaths 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") &
-            assertEquals(0, player.getOldFrags(), "old frags 1") &
+            assertEquals(0, player.getFrags().getOld(), "old frags 1") &
             assertEquals(2, player.getFrags(), "frags 1");
 
         player.UpdateFragsDeaths();
 
-        b &= assertEquals(player.getDeaths(), player.getOldDeaths(), "old deaths 2") &
+        b &= assertEquals(player.getDeaths(), player.getDeaths().getOld(), "old deaths 2") &
             assertEquals(1, player.getDeaths(), "deaths 2") &
-            assertEquals(player.getFrags(), player.getOldFrags(), "old frags 2") &
+            assertEquals(player.getFrags(), player.getFrags().getOld(), "old frags 2") &
             assertEquals(2, player.getFrags(), "frags 2");
         
         return b;
@@ -333,7 +333,7 @@ private:
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") /* server increases it */ &
-            assertEquals(0, player.getOldDeaths(), "old deaths 1");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
         
         player.SetHealth(100);
         player.Respawn(true, *(player.getWeapons()[0]), bServer);
@@ -347,7 +347,7 @@ private:
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(2, player.getDeaths(), "deaths 2") /* server increases it */ &
-            assertEquals(0, player.getOldDeaths(), "old deaths 2");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
 
         return b;
     }
@@ -370,7 +370,7 @@ private:
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(0, player.getDeaths(), "deaths 1") /* client doesn't change it, will receive update from server */ &
-            assertEquals(0, player.getOldDeaths(), "old deaths 1");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
 
         player.SetHealth(100);
         player.Respawn(true, *(player.getWeapons()[0]), bServer);
@@ -384,7 +384,7 @@ private:
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
             assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(0, player.getDeaths(), "deaths 2") /* client doesn't change it, will receive update from server */ &
-            assertEquals(0, player.getOldDeaths(), "old deaths 2");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
 
         return b;
     }
