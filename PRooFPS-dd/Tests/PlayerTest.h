@@ -170,7 +170,7 @@ private:
             assertTrue(player.isRunning(), "running default") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getForce(), "force") &
-            assertEquals(PureVector(), player.getOldWeaponAngle(), "old wpn angle") &
+            assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
             assertFalse(player.getPos().isDirty(), "old pos") &
             assertEquals(PureVector(), player.getPos(), "pos") &
@@ -264,7 +264,7 @@ private:
         player.getAngleY() = fAngleYOriginal;
         player.getWeaponAngle() = vecAngleWpnOriginal;
 
-        bool b = assertEquals(PureVector(), player.getOldWeaponAngle(), "old wpn angle 1")&
+        bool b = assertEquals(PureVector(), player.getWeaponAngle().getOld(), "old wpn angle 1") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 1")&
             assertEquals(PureVector(), player.getPos().getOld(), "old pos 1") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 1")&
@@ -273,7 +273,7 @@ private:
 
         player.UpdateOldPos();
 
-        b &= assertEquals(vecAngleWpnOriginal, player.getOldWeaponAngle(), "old wpn angle 2") &
+        b &= assertEquals(vecAngleWpnOriginal, player.getWeaponAngle().getOld(), "old wpn angle 2") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
             assertEquals(vecPosOriginal, player.getPos().getOld(), "old pos 2") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 2") &

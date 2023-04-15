@@ -52,7 +52,6 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_vecPos(other.m_vecPos),
     m_fPlayerAngleY(other.m_fPlayerAngleY),
     m_vWpnAngle(other.m_vWpnAngle),
-    m_vOldWpnAngle(other.m_vOldWpnAngle),
     m_vecForce(other.m_vecForce),
     m_pObj(PGENULL),
     m_pWpn(NULL),
@@ -83,7 +82,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_vecPos = other.m_vecPos;
     m_fPlayerAngleY = other.m_fPlayerAngleY;
     m_vWpnAngle = other.m_vWpnAngle;
-    m_vOldWpnAngle = other.m_vOldWpnAngle;
     m_vecForce = other.m_vecForce;
     m_timeLastWeaponSwitch = other.m_timeLastWeaponSwitch;
     m_gfx = other.m_gfx;
@@ -200,11 +198,11 @@ bool proofps_dd::Player::canFall() const
 void proofps_dd::Player::UpdateOldPos() {
     m_vecPos.commit();
     m_fPlayerAngleY.commit();
-    m_vOldWpnAngle = m_vWpnAngle;
+    m_vWpnAngle.commit();
 }
 
 void proofps_dd::Player::SetHealth(int value) {
-    m_nHealth = max(0, min(value, 100));
+    m_nHealth.set( max(0, min(value, 100)) );
 }
 
 void proofps_dd::Player::SetGravity(float value) {
@@ -362,12 +360,7 @@ Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename)
     return nullptr;
 }
 
-PureVector& proofps_dd::Player::getOldWeaponAngle()
-{
-    return m_vOldWpnAngle;
-}
-
-PureVector& proofps_dd::Player::getWeaponAngle()
+PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
 {
     return m_vWpnAngle;
 }

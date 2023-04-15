@@ -1524,8 +1524,8 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
     {
         auto& player = playerPair.second;
 
-        if (player.getPos().isDirty() || (player.getAngleY().isDirty())
-            || (player.getWeaponAngle() != player.getOldWeaponAngle())
+        if (player.getPos().isDirty() || player.getAngleY().isDirty()
+            || player.getWeaponAngle().isDirty()
             || player.getHealth().isDirty()
             || (player.getFrags() != player.getOldFrags())
             || (player.getDeaths() != player.getOldDeaths()))
@@ -1538,8 +1538,8 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ(),
                 player.getAngleY(),
-                player.getWeaponAngle().getY(),
-                player.getWeaponAngle().getZ(),
+                player.getWeaponAngle().getNew().getY(),
+                player.getWeaponAngle().getNew().getZ(),
                 player.getHealth(),
                 player.getRespawnFlag(),
                 player.getFrags(),
@@ -1673,11 +1673,14 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             {
                 // my xhair is used to update weapon angle
                 wpn->UpdatePositions(player.getObject3D()->getPosVec(), m_pObjXHair->getPosVec());
-                player.getWeaponAngle().Set(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ());
+                // PPPKKKGGGGGG
+                player.getWeaponAngle().set(
+                    PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
+                    );
 
-                if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || (player.getOldWeaponAngle() != player.getWeaponAngle()))
+                if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getWeaponAngle().isDirty())
                 {
-                    proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, player.getWeaponAngle().getY(), player.getWeaponAngle().getZ());
+                    proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, player.getWeaponAngle().getNew().getY(), player.getWeaponAngle().getNew().getZ());
                 }
             }
 
@@ -2406,7 +2409,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
     }
 
     // TODO: this should be moved up, so returning from function is easier for rest of action handling code
-    player.getWeaponAngle().Set(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ);
+    player.getWeaponAngle().set(PureVector(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ));
     wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
     wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
 
@@ -2830,7 +2833,7 @@ void proofps_dd::PRooFPSddPGE::RegTestDumpToFile()
     fRegTestDump << std::endl;
 
     fRegTestDump << "Player Info: Health" << std::endl;
-    fRegTestDump << "  " << selfPlayer.getHealth() << std::endl;
+    fRegTestDump << "  " << selfPlayer.getHealth().getNew() << std::endl;
 
     fRegTestDump.flush();
     fRegTestDump.close();

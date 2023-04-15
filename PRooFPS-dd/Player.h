@@ -86,8 +86,7 @@ namespace proofps_dd
         const std::vector<Weapon*>& getWeapons() const; // TODO: this will be get rid of after Player will have its own WeaponManager instance
         const Weapon* getWeaponByFilename(const std::string& sFilename) const; // TODO: this will be get rid of after Player will have its own WeaponManager instance
         Weapon* getWeaponByFilename(const std::string& sFilename); // TODO: this will be get rid of after Player will have its own WeaponManager instance
-        PureVector& getOldWeaponAngle();
-        PureVector& getWeaponAngle();
+        PgeOldNewValue<PureVector>& getWeaponAngle();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
         int& getFrags();
@@ -117,7 +116,7 @@ namespace proofps_dd
         PgeOldNewValue<int> m_nHealth;
         PgeOldNewValue<PureVector> m_vecPos;
         PgeOldNewValue<TPureFloat> m_fPlayerAngleY;
-        PureVector m_vWpnAngle, m_vOldWpnAngle;
+        PgeOldNewValue<PureVector> m_vWpnAngle;
         PureVector m_vecForce;
         PureObject3D* m_pObj;
         std::vector<Weapon*> m_weapons;
