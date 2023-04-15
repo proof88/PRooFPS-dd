@@ -175,7 +175,7 @@ private:
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
             assertFalse(player.getPos().isDirty(), "old pos") &
             assertEquals(PureVector(), player.getPos(), "pos") &
-            assertEquals(0.f, player.getOldAngleY(), "old angle y") &
+            assertFalse(player.getAngleY().isDirty(), "old angle y") &
             assertEquals(0.f, player.getAngleY(), "angle y") &
             assertEquals(0.f, player.getGravity(), "gravity") &
             assertNull(player.getWeapon(), "current weapon") &
@@ -269,7 +269,7 @@ private:
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 1")&
             assertEquals(PureVector(), player.getPos().getOld(), "old pos 1") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 1")&
-            assertEquals(0.f, player.getOldAngleY(), "old angle y 1")&
+            assertEquals(0.f, player.getAngleY().getOld(), "old angle y 1")&
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 1");
 
         player.UpdateOldPos();
@@ -278,7 +278,7 @@ private:
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
             assertEquals(vecPosOriginal, player.getPos().getOld(), "old pos 2") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 2") &
-            assertEquals(fAngleYOriginal, player.getOldAngleY(), "old angle y 2") &
+            assertEquals(fAngleYOriginal, player.getAngleY().getOld(), "old angle y 2") &
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 2");
 
         return b;

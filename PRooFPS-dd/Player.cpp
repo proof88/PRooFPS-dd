@@ -27,7 +27,6 @@ proofps_dd::Player::Player(
     m_nHealth(100),
     m_nOldHealth(100),
     m_fPlayerAngleY(0.f),
-    m_fOldPlayerAngleY(0.f),
     m_pObj(PGENULL),
     m_pWpn(NULL),
     m_gfx(gfx),
@@ -57,7 +56,6 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_vWpnAngle(other.m_vWpnAngle),
     m_vOldWpnAngle(other.m_vOldWpnAngle),
     m_vecForce(other.m_vecForce),
-    m_fOldPlayerAngleY(other.m_fOldPlayerAngleY),
     m_pObj(PGENULL),
     m_pWpn(NULL),
     m_timeLastWeaponSwitch(other.m_timeLastWeaponSwitch),
@@ -90,7 +88,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_vWpnAngle = other.m_vWpnAngle;
     m_vOldWpnAngle = other.m_vOldWpnAngle;
     m_vecForce = other.m_vecForce;
-    m_fOldPlayerAngleY = other.m_fOldPlayerAngleY;
     m_timeLastWeaponSwitch = other.m_timeLastWeaponSwitch;
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
@@ -168,14 +165,9 @@ PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
     return m_vecPos;
 }
 
-TPureFloat& proofps_dd::Player::getAngleY()
+PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY()
 {
     return m_fPlayerAngleY;
-}
-
-TPureFloat& proofps_dd::Player::getOldAngleY()
-{
-    return m_fOldPlayerAngleY;
 }
 
 PureObject3D* proofps_dd::Player::getObject3D() const
@@ -205,7 +197,7 @@ bool proofps_dd::Player::canFall() const
 
 void proofps_dd::Player::UpdateOldPos() {
     m_vecPos.commit();
-    m_fOldPlayerAngleY = m_fPlayerAngleY;
+    m_fPlayerAngleY.commit();
     m_vOldWpnAngle = m_vWpnAngle;
 }
 

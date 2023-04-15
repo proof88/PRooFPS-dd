@@ -55,8 +55,7 @@ namespace proofps_dd
 
         int getHealth() const;
         PgeOldNewValue<PureVector>& getPos();
-        TPureFloat& getAngleY();
-        TPureFloat& getOldAngleY();
+        PgeOldNewValue<TPureFloat>& getAngleY();
         PureObject3D* getObject3D() const;
         float getGravity() const;
         bool isJumping() const;
@@ -118,7 +117,7 @@ namespace proofps_dd
         std::string m_sName;
         int m_nHealth, m_nOldHealth;
         PgeOldNewValue<PureVector> m_vecPos;
-        TPureFloat m_fPlayerAngleY, m_fOldPlayerAngleY;
+        PgeOldNewValue<TPureFloat> m_fPlayerAngleY;
         PureVector m_vWpnAngle, m_vOldWpnAngle;
         PureVector m_vecForce;
         PureObject3D* m_pObj;
