@@ -54,6 +54,9 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
+        bool isDirty() const;
+        void updateOldValues();
+
         PgeOldNewValue<int>& getHealth();
         const PgeOldNewValue<int>& getHealth() const;
         PgeOldNewValue<PureVector>& getPos();
@@ -63,7 +66,6 @@ namespace proofps_dd
         bool isJumping() const;
         bool isFalling() const;
         bool canFall() const;
-        void UpdateOldPos();
         void SetHealth(int value);
         void SetGravity(float value);
         bool jumpAllowed() const;
@@ -94,7 +96,6 @@ namespace proofps_dd
         const PgeOldNewValue<int>& getFrags() const;
         PgeOldNewValue<int>& getDeaths();
         const PgeOldNewValue<int>& getDeaths() const;
-        void UpdateFragsDeaths();
         bool canTakeItem(const MapItem& item) const;
         void TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 

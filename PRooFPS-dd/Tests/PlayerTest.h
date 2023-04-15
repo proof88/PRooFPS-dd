@@ -51,10 +51,11 @@ protected:
             AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
             AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
             AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
-            AddSubTest("test_update_frags_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_frags_deaths);
+            AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
+            AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
             AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
             AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
-            AddSubTest("test_set_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health);
+            AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
             AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
             AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
             AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
@@ -217,7 +218,46 @@ private:
         return b;
     }
 
-    bool test_update_frags_deaths()
+    bool test_dirtiness_one_by_one()
+    {
+        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        bool b = assertFalse(player.isDirty(), "dirty 1");
+
+        player.getHealth().set(5);
+        b &= assertTrue(player.isDirty(), "dirty A 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty A 2");
+
+        player.getFrags().set(5);
+        b &= assertTrue(player.isDirty(), "dirty B 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty B 2");
+
+        player.getDeaths().set(5);
+        b &= assertTrue(player.isDirty(), "dirty C 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty C 2");
+
+        player.getAngleY().set(5.f);
+        b &= assertTrue(player.isDirty(), "dirty D 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty D 2");
+
+        player.getWeaponAngle().set(PureVector(5.f, 6.f, 7.f));
+        b &= assertTrue(player.isDirty(), "dirty E 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty E 2");
+
+        player.getPos().set(PureVector(5.f, 6.f, 7.f));
+        b &= assertTrue(player.isDirty(), "dirty F 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty F 2");
+
+        return b;
+    }
+
+    bool test_update_old_frags_and_deaths()
     {
         proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
@@ -227,14 +267,16 @@ private:
         bool b = assertEquals(0, player.getDeaths().getOld(), "old deaths 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") &
             assertEquals(0, player.getFrags().getOld(), "old frags 1") &
-            assertEquals(2, player.getFrags(), "frags 1");
+            assertEquals(2, player.getFrags(), "frags 1") &
+            assertTrue(player.isDirty(), "dirty 1");
 
-        player.UpdateFragsDeaths();
+        player.updateOldValues();
 
         b &= assertEquals(player.getDeaths(), player.getDeaths().getOld(), "old deaths 2") &
             assertEquals(1, player.getDeaths(), "deaths 2") &
             assertEquals(player.getFrags(), player.getFrags().getOld(), "old frags 2") &
-            assertEquals(2, player.getFrags(), "frags 2");
+            assertEquals(2, player.getFrags(), "frags 2") &
+            assertFalse(player.isDirty(), "dirty 2");
         
         return b;
     }
@@ -267,31 +309,42 @@ private:
         bool b = assertEquals(PureVector(), player.getWeaponAngle().getOld(), "old wpn angle 1") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 1")&
             assertEquals(PureVector(), player.getPos().getOld(), "old pos 1") &
-            assertEquals(vecPosOriginal, player.getPos(), "pos 1")&
-            assertEquals(0.f, player.getAngleY().getOld(), "old angle y 1")&
-            assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 1");
+            assertEquals(vecPosOriginal, player.getPos(), "pos 1") &
+            assertEquals(0.f, player.getAngleY().getOld(), "old angle y 1") &
+            assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 1") &
+            assertTrue(player.isDirty(), "dirty 1");
 
-        player.UpdateOldPos();
+        player.updateOldValues();
 
         b &= assertEquals(vecAngleWpnOriginal, player.getWeaponAngle().getOld(), "old wpn angle 2") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
             assertEquals(vecPosOriginal, player.getPos().getOld(), "old pos 2") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 2") &
             assertEquals(fAngleYOriginal, player.getAngleY().getOld(), "old angle y 2") &
-            assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 2");
+            assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 2") &
+            assertFalse(player.isDirty(), "dirty 2");
 
         return b;
     }
 
-    bool test_set_health()
+    bool test_set_health_and_update_old_health()
     {
         proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetHealth(200);
-        bool b = assertEquals(100, player.getHealth(), "health 1");
+        bool b = assertEquals(100, player.getHealth(), "health 1") &
+            assertFalse(player.getHealth().isDirty(), "dirty 1") &
+            assertFalse(player.isDirty(), "dirty 2");
 
         player.SetHealth(-1);
-        b &= assertEquals(0, player.getHealth(), "health 2");
+        b &= assertEquals(0, player.getHealth(), "health 2") &
+            assertTrue(player.getHealth().isDirty(), "dirty 3") &
+            assertTrue(player.isDirty(), "dirty 4");
+
+        player.updateOldValues();
+        b &= assertEquals(0, player.getHealth().getOld(), "health 3") &
+            assertFalse(player.getHealth().isDirty(), "dirty 5") &
+            assertFalse(player.isDirty(), "dirty 6");
 
         return b;
     }

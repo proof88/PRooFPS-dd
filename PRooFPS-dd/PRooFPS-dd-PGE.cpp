@@ -1524,11 +1524,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
     {
         auto& player = playerPair.second;
 
-        if (player.getPos().isDirty() || player.getAngleY().isDirty()
-            || player.getWeaponAngle().isDirty()
-            || player.getHealth().isDirty()
-            || player.getFrags().isDirty()
-            || player.getDeaths().isDirty())
+        if ( player.isDirty() )
         {
             pge_network::PgePacket newPktUserUpdate;
             proofps_dd::MsgUserUpdate::initPkt(
@@ -1544,6 +1540,11 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
                 player.getRespawnFlag(),
                 player.getFrags(),
                 player.getDeaths());
+
+            // player.updateOldValues() might be invoked here, however this code is only executed by server, and
+            // currently onGameFrameBegin() invokes player.updateOldValues() for all players even by clients, I'm not
+            // sure if there would be any difference in behavior, but logically I would call that function here ...
+            // Since I assume clients should not take care of old-new values anyway, only server does that I think ...
 
             // we always reset respawn flag here
             playerPair.second.getRespawnFlag() = false;
@@ -1594,9 +1595,7 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
         // Probably this is a leftover from before the m_sUserName refactor. Remove this condition and test!
         if (hasValidConnection())
         {
-            player.UpdateOldPos();
-            player.getHealth().commit();
-            player.UpdateFragsDeaths();
+            player.updateOldValues();
         }
     }
 }

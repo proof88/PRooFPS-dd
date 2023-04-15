@@ -120,6 +120,26 @@ void proofps_dd::Player::setName(const std::string& sName)
     m_sName = sName;
 }
 
+bool proofps_dd::Player::isDirty() const
+{
+    bool bDirtyFound = false;
+    for (auto it = m_vecOldNewValues.begin(); (it != m_vecOldNewValues.end()) && !bDirtyFound; it++)
+    {
+        // this is the "2. value-returning visitor" from example here: https://en.cppreference.com/w/cpp/utility/variant/visit
+        bDirtyFound = std::visit([](auto&& oldNewValue) -> bool { return oldNewValue.isDirty(); }, it->second);
+    }
+    return bDirtyFound;
+}
+
+void proofps_dd::Player::updateOldValues()
+{
+    for (auto& enumVariantPair : m_vecOldNewValues)
+    {
+        // this is the "1. void visitor" from example here: https://en.cppreference.com/w/cpp/utility/variant/visit
+        std::visit([](auto&& oldNewValue) { oldNewValue.commit(); }, enumVariantPair.second);
+    }
+}
+
 CConsole& proofps_dd::Player::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
@@ -177,12 +197,6 @@ bool proofps_dd::Player::isFalling() const
 bool proofps_dd::Player::canFall() const
 {
     return b_mCanFall;
-}
-
-void proofps_dd::Player::UpdateOldPos() {
-    getPos().commit();
-    getAngleY().commit();
-    getWeaponAngle().commit();
 }
 
 void proofps_dd::Player::SetHealth(int value) {
@@ -425,12 +439,6 @@ const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
-}
-
-void proofps_dd::Player::UpdateFragsDeaths()
-{
-    getFrags().commit();
-    getDeaths().commit();
 }
 
 bool proofps_dd::Player::canTakeItem(const MapItem& item) const
