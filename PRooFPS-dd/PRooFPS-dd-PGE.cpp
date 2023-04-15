@@ -1537,7 +1537,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
                 player.getPos().getNew().getX(),
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ(),
-                player.getAngleY().getNew(),
+                player.getAngleY(),
                 player.getWeaponAngle().getY(),
                 player.getWeaponAngle().getZ(),
                 player.getHealth(),
@@ -1662,11 +1662,10 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             Mouse(m_fps, m_bWon, pkt, player);
 
             player.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
-            player.getObject3D()->getAngleVec().SetY(player.getAngleY().getNew());
-            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) ||
-                (player.getAngleY().getOld() != player.getAngleY().getNew()))
+            player.getObject3D()->getAngleVec().SetY(player.getAngleY());
+            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getAngleY().isDirty())
             {
-                proofps_dd::MsgUserCmdMove::setAngleY(pkt, player.getAngleY().getNew());
+                proofps_dd::MsgUserCmdMove::setAngleY(pkt, player.getAngleY());
             }
 
             Weapon* const wpn = player.getWeapon();
