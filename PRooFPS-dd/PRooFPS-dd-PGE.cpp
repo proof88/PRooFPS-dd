@@ -69,13 +69,6 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_lastmeasure(0),
     m_fps_ms(0),
     m_pObjXHair(NULL),
-    m_bSpaceReleased(true),
-    m_bBackSpaceReleased(true),
-    m_bCtrlReleased(true),
-    m_bShiftReleased(true),
-    m_enterreleased(true),
-    m_bTeleportReleased(true),
-    m_bReloadReleased(true),
     m_bWon(false),
     m_fCameraMinY(0.0f),
     m_bShowGuiDemo(false),
@@ -315,9 +308,9 @@ void proofps_dd::PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
 
 void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt, Player& player)
 {
-    const PGEInputKeyboard& keybd = getInput().getKeyboard();
+    PGEInputKeyboard& keybd = getInput().getKeyboard();
   
-    if ( keybd.isKeyPressed(VK_ESCAPE) )
+    if ( keybd.isKeyPressedOnce(VK_ESCAPE) )
     {
         getPure().getWindow().Close();
     }
@@ -332,19 +325,11 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
         m_gameMode->showObjectives(getPure(), getNetwork());
     }
 
-    if (keybd.isKeyPressed(VK_BACK))
+    if (keybd.isKeyPressedOnce(VK_BACK))
     {
-        if (m_bBackSpaceReleased)
-        {
-            m_bShowGuiDemo = !m_bShowGuiDemo;
-            getPure().ShowGuiDemo(m_bShowGuiDemo);
-            getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
-            m_bBackSpaceReleased = false;
-        }
-    }
-    else
-    {
-        m_bBackSpaceReleased = true;
+        m_bShowGuiDemo = !m_bShowGuiDemo;
+        getPure().ShowGuiDemo(m_bShowGuiDemo);
+        getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
     }
 
     if (m_bShowGuiDemo)
@@ -360,75 +345,58 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
     if ( !won )
     {
 
-        if (keybd.isKeyPressed(VK_RETURN))
+        if (keybd.isKeyPressedOnce(VK_RETURN))
         {
-            if (m_enterreleased)
+            if (getConfigProfiles().getVars()["testing"].getAsBool())
             {
-                m_enterreleased = false;
-                if (getConfigProfiles().getVars()["testing"].getAsBool())
-                {
-                    RegTestDumpToFile();
-                }
+                RegTestDumpToFile();
             }
         }
-        else
-        {
-            m_enterreleased = true;
-        }
 
-        if (keybd.isKeyPressed((unsigned char)VkKeyScan('t')))
+        if (keybd.isKeyPressedOnce((unsigned char)VkKeyScan('t')))
         {
-            if (m_bTeleportReleased)
+            if (getNetwork().isServer())
             {
-                m_bTeleportReleased = false;
-                
-                if (getNetwork().isServer())
-                {
-                    // for testing purpose only, we can teleport server player to random spawn point
-                    player.getPos() = m_maps.getRandomSpawnpoint();
-                    player.getRespawnFlag() = true;
-                }
-
-                // log some stats
-                getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
-                getPure().getRenderer()->ResetStatistics();
-                getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
-
-                getConsole().OLn("");
-                getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
-                getConsole().OLn("Avg Durations per Frame:");
-                getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_nFullRoundtripDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_nGravityCollisionDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_nUpdateBulletsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_nUpdateGameModeDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-                getConsole().OLn("");
-
-                m_nFramesElapsedSinceLastDurationsReset = 0;
-                m_nFullRoundtripDurationUSecs = 0;
-                m_nFullOnGameRunningDurationUSecs = 0;
-                m_nGravityCollisionDurationUSecs = 0;
-                m_nActiveWindowStuffDurationUSecs = 0;
-                m_nUpdateWeaponsDurationUSecs = 0;
-                m_nUpdateBulletsDurationUSecs = 0;
-                m_nUpdateRespawnTimersDurationUSecs = 0;
-                m_nPickupAndRespawnItemsDurationUSecs = 0;
-                m_nUpdateGameModeDurationUSecs = 0;
-                m_nSendUserUpdatesDurationUSecs = 0;
-                m_nFullOnPacketReceivedDurationUSecs = 0;
-                m_nHandleUserCmdMoveDurationUSecs = 0;
+                // for testing purpose only, we can teleport server player to random spawn point
+                player.getPos() = m_maps.getRandomSpawnpoint();
+                player.getRespawnFlag() = true;
             }
-        }
-        else
-        {
-            m_bTeleportReleased = true;
+
+            // log some stats
+            getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
+            getPure().getRenderer()->ResetStatistics();
+            getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
+
+            getConsole().OLn("");
+            getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
+            getConsole().OLn("Avg Durations per Frame:");
+            getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_nFullRoundtripDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_nGravityCollisionDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_nUpdateBulletsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_nUpdateGameModeDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("");
+
+            m_nFramesElapsedSinceLastDurationsReset = 0;
+            m_nFullRoundtripDurationUSecs = 0;
+            m_nFullOnGameRunningDurationUSecs = 0;
+            m_nGravityCollisionDurationUSecs = 0;
+            m_nActiveWindowStuffDurationUSecs = 0;
+            m_nUpdateWeaponsDurationUSecs = 0;
+            m_nUpdateBulletsDurationUSecs = 0;
+            m_nUpdateRespawnTimersDurationUSecs = 0;
+            m_nPickupAndRespawnItemsDurationUSecs = 0;
+            m_nUpdateGameModeDurationUSecs = 0;
+            m_nSendUserUpdatesDurationUSecs = 0;
+            m_nFullOnPacketReceivedDurationUSecs = 0;
+            m_nHandleUserCmdMoveDurationUSecs = 0;
         }
 
         proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
@@ -442,45 +410,21 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
         }
     
         bool bSendJumpAction = false;
-        if ( keybd.isKeyPressed( VK_SPACE ) )
+        if ( keybd.isKeyPressedOnce( VK_SPACE ) )
         {
-            if (m_bSpaceReleased)
-            {
-                bSendJumpAction = true;
-                m_bSpaceReleased = false;
-            }
-        }
-        else
-        {
-            m_bSpaceReleased = true;
+            bSendJumpAction = true;
         }
     
         bool bToggleRunWalk = false;
-        if ( keybd.isKeyPressed( VK_SHIFT ) )
+        if ( keybd.isKeyPressedOnce( VK_SHIFT ) )
         {
-            if ( m_bShiftReleased )
-            {
-                bToggleRunWalk = true;
-                m_bShiftReleased = false;
-            }
-        }
-        else
-        {
-            m_bShiftReleased = true;
+            bToggleRunWalk = true;
         }
 
         bool bRequestReload = false;
         if (keybd.isKeyPressed((unsigned char)VkKeyScan('r')))
         {
-            if (m_bReloadReleased)
-            {
-                bRequestReload = true;
-                m_bReloadReleased = false;
-            }
-        }
-        else
-        {
-            m_bReloadReleased = true;
+            bRequestReload = true;
         }
 
         unsigned char cWeaponSwitch = '\0';
