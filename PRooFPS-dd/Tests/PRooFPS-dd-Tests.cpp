@@ -11,6 +11,7 @@
 #include "stdafx.h"  // PCH
 
 #include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include <memory>  // for std::unique_ptr; requires cpp11
 #include <vector>
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -76,10 +77,10 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     // regression tests
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players()));
 
-    std::vector<UnitTest*>::size_type nSucceededTests = 0;
-    std::vector<UnitTest*>::size_type nTotalSubTests = 0;
-    std::vector<UnitTest*>::size_type nTotalPassedSubTests = 0;
-    for (std::vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
+    std::vector<std::unique_ptr<UnitTest>>::size_type nSucceededTests = 0;
+    std::vector<std::unique_ptr<UnitTest>>::size_type nTotalSubTests = 0;
+    std::vector<std::unique_ptr<UnitTest>>::size_type nTotalPassedSubTests = 0;
+    for (std::vector<std::unique_ptr<UnitTest>>::size_type i = 0; i < tests.size(); ++i)
     {
         getConsole().OLn("Running test %d / %d ... ", i+1, tests.size());
         tests[i]->run();
@@ -87,7 +88,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
 
     // summarizing
     getConsole().OLn("");
-    for (std::vector<UnitTest*>::size_type i = 0; i < tests.size(); ++i)
+    for (std::vector<std::unique_ptr<UnitTest>>::size_type i = 0; i < tests.size(); ++i)
     {
         if ( tests[i]->isPassed() )
         {

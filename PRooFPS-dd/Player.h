@@ -11,6 +11,7 @@
 */
 
 #include <chrono>      // requires cpp11
+#include <list>
 #include <map>
 #include <variant>     // requires cpp17
 #include <vector>
@@ -41,6 +42,8 @@ namespace proofps_dd
         // TODO: we should pass the network instance also, so Player can always check if network instance is server or not,
         // and this also enables clearer testing
         explicit Player(
+            PGEcfgProfiles& cfgProfiles,
+            std::list<Bullet>& bullets,
             PR00FsUltimateRenderingEngine& gfx,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const std::string& sIpAddress);
@@ -53,6 +56,8 @@ namespace proofps_dd
         const std::string& getIpAddress() const;
         const std::string& getName() const;
         void setName(const std::string& sName);
+
+        WeaponManager& getWeaponManager();
 
         bool isDirty() const;
         void updateOldValues();
@@ -140,9 +145,12 @@ namespace proofps_dd
 
         PureVector m_vecForce;
         PureObject3D* m_pObj;
+        WeaponManager m_wpnMgr;
         std::vector<Weapon*> m_weapons;
         Weapon* m_pWpn;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWeaponSwitch;
+        PGEcfgProfiles& m_cfgProfiles;
+        std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;
         float m_fGravity;
         bool m_bJumping;

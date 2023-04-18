@@ -18,6 +18,8 @@
 
 
 proofps_dd::Player::Player(
+    PGEcfgProfiles& cfgProfiles,
+    std::list<Bullet>& bullets,
     PR00FsUltimateRenderingEngine& gfx,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const std::string& sIpAddress) :
@@ -25,7 +27,10 @@ proofps_dd::Player::Player(
     m_sIpAddress(sIpAddress),
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
     m_pObj(PGENULL),
+    m_wpnMgr(cfgProfiles, gfx, bullets),
     m_pWpn(NULL),
+    m_cfgProfiles(cfgProfiles),
+    m_bullets(bullets),
     m_gfx(gfx),
     m_fGravity(0.f),
     m_bJumping(false),
@@ -45,7 +50,10 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_vecOldNewValues(other.m_vecOldNewValues),
     m_vecForce(other.m_vecForce),
     m_pObj(PGENULL),
+    m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
     m_pWpn(NULL),
+    m_cfgProfiles(other.m_cfgProfiles),
+    m_bullets(other.m_bullets),
     m_timeLastWeaponSwitch(other.m_timeLastWeaponSwitch),
     m_gfx(other.m_gfx),
     m_fGravity(other.m_fGravity),
@@ -67,6 +75,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_sName = other.m_sName;
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_vecForce = other.m_vecForce;
+    m_bullets = other.m_bullets;
     m_timeLastWeaponSwitch = other.m_timeLastWeaponSwitch;
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
@@ -98,6 +107,8 @@ proofps_dd::Player::~Player()
         }
     }
     getWeapons().clear();
+
+    m_wpnMgr.Clear();
 }
 
 const pge_network::PgeNetworkConnectionHandle& proofps_dd::Player::getServerSideConnectionHandle() const
@@ -118,6 +129,11 @@ const std::string& proofps_dd::Player::getName() const
 void proofps_dd::Player::setName(const std::string& sName)
 {
     m_sName = sName;
+}
+
+WeaponManager& proofps_dd::Player::getWeaponManager()
+{
+    return m_wpnMgr;
 }
 
 bool proofps_dd::Player::isDirty() const

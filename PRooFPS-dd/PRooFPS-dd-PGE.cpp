@@ -64,7 +64,6 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     m_maps(getPure()),
-    m_wpnMgr(getConfigProfiles(), getPure(), getBullets()),
     m_fps(0),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -1219,7 +1218,7 @@ void proofps_dd::PRooFPSddPGE::HandlePlayerDied(Player& player)
 
 void proofps_dd::PRooFPSddPGE::HandlePlayerRespawned(Player& player)
 {
-    const Weapon* const wpnDefaultAvailable = m_wpnMgr.getWeaponByFilename(m_wpnMgr.getDefaultAvailableWeaponFilename());
+    const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
     player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, getNetwork().isServer());
 
@@ -1771,7 +1770,6 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     //getPure().WriteList();
     //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
-    m_wpnMgr.Clear();
     m_mapPlayers.clear(); // Dtors of Player instances will be implicitly called
     m_maps.shutdown();
     m_sServerMapFilenameToLoad.clear();
@@ -1871,7 +1869,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
     const auto insertRes = m_mapPlayers.insert(
         {
             connHandleServerSide,
-            Player(getPure(), connHandleServerSide, msg.m_szIpAddress)
+            Player(getConfigProfiles(), getBullets(), getPure(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)
     {
@@ -1889,52 +1887,29 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
         return false;
     }
 
-    // each client will load all weapons into their weaponManager for their own setup, when they initialie themselves,
-    // these will be the reference weapons, never visible, never moving, just to be copied!
-    if (msg.m_bCurrentClient)
+    for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
     {
-        for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
+        getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
+        if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
-            if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): skip wpn due to long filename: %s!", __func__, entry.path().string().c_str());
-                continue; // otherwise multiple weapons with same first nWpnNameNameMaxLength-1 chars would be mixed up in pkts
-            }
-
-            if (entry.path().extension().string() == ".txt")
-            {
-                if (!m_wpnMgr.load(entry.path().string().c_str(), connHandleServerSide))
-                {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): failed to load weapon: %s!", __func__, entry.path().string().c_str());
-                    assert(false);
-                    return false;
-                }
-            }
+            getConsole().EOLn("PRooFPSddPGE::%s(): skip wpn due to long filename: %s!", __func__, entry.path().string().c_str());
+            continue; // otherwise multiple weapons with same first nWpnNameNameMaxLength-1 chars would be mixed up in pkts
         }
 
-        // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
-        // value on both side ... cheating is not possible anyway, since on server side server will always know what is
-        // the default weapon for the player, so there is no use of overriding it on client side ...
-        if (!m_wpnMgr.setDefaultAvailableWeaponByFilename(proofps_dd::GAME_WPN_DEFAULT))
+        if (entry.path().extension().string() == ".txt")
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to set default weapon: %s!", __func__, proofps_dd::GAME_WPN_DEFAULT);
-            assert(false);
-            return false;
+            if (!insertedPlayer.getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): failed to load weapon: %s!", __func__, entry.path().string().c_str());
+                assert(false);
+                return false;
+            }
         }
-    }
-
-    Weapon* const wpnDefaultAvailable = m_wpnMgr.getWeaponByFilename(m_wpnMgr.getDefaultAvailableWeaponFilename());
-    if (!wpnDefaultAvailable)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to get default weapon!", __func__);
-        assert(false);
-        return false;
     }
 
     // and here the actual weapons for the specific player, these can be visible when active, moving with player, etc.
     // client doesnt do anything else with these, server also uses these to track and validate player weapons and related actions.
-    for (const auto pWpn : m_wpnMgr.getWeapons())
+    for (const auto pWpn : insertedPlayer.getWeaponManager().getWeapons())
     {
         if (!pWpn)
         {
@@ -1945,12 +1920,28 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
         insertedPlayer.getWeapons().push_back(pNewWeapon);
         pNewWeapon->SetOwner(connHandleServerSide);
         pNewWeapon->getObject3D().SetName(pNewWeapon->getObject3D().getName() + " (copied Weapon for user " + msg.m_szUserName + ")");
-        if (pNewWeapon->getFilename() == wpnDefaultAvailable->getFilename())
-        {
-            pNewWeapon->SetAvailable(true);
-            insertedPlayer.SetWeapon(pNewWeapon, false, getNetwork().isServer());
-        }
     }
+
+    // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
+    // value on both side ... cheating is not possible anyway, since on server side server will always know what is
+    // the default weapon for the player, so there is no use of overriding it on client side ...
+    if (!insertedPlayer.getWeaponManager().setDefaultAvailableWeaponByFilename(proofps_dd::GAME_WPN_DEFAULT))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to set default weapon: %s!", __func__, proofps_dd::GAME_WPN_DEFAULT);
+        assert(false);
+        return false;
+    }
+
+    Weapon* const wpnDefaultAvailable = insertedPlayer.getWeaponByFilename(insertedPlayer.getWeaponManager().getDefaultAvailableWeaponFilename());
+    if (!wpnDefaultAvailable)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to get default weapon!", __func__);
+        assert(false);
+        return false;
+    }
+
+    wpnDefaultAvailable->SetAvailable(true);
+    insertedPlayer.SetWeapon(wpnDefaultAvailable, false, getNetwork().isServer());
 
     if (!insertedPlayer.getWeapon())
     {
@@ -2500,8 +2491,8 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
 
     Bullet* pBullet = nullptr;
 
-    auto it = m_wpnMgr.getBullets().begin();
-    while (it != m_wpnMgr.getBullets().end())
+    auto it = getBullets().begin();
+    while (it != getBullets().end())
     {
         if (it->getId() == msg.m_bulletId)
         {
@@ -2510,7 +2501,7 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
         it++;
     }
 
-    if (m_wpnMgr.getBullets().end() == it)
+    if (getBullets().end() == it)
     {
         if (msg.m_bDelete)
         {
@@ -2564,15 +2555,15 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
 
         // TODO: here it is okay to get all the properties of the bullet, but if it is not a new bullet, it is not nice to
         // send every property in all BulletUpdate, this should be improved in future ...
-        m_wpnMgr.getBullets().push_back(
+        getBullets().push_back(
             Bullet(
                 getPure(),
                 msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z) );
-        pBullet = &(m_wpnMgr.getBullets().back());
-        it = m_wpnMgr.getBullets().end();
+        pBullet = &(getBullets().back());
+        it = getBullets().end();
         it--; // iterator points to this newly inserted last bullet
     }
     else
@@ -2583,7 +2574,7 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
 
     if (msg.m_bDelete)
     {
-        m_wpnMgr.getBullets().erase(it);
+        getBullets().erase(it);
         return true;
     }
 

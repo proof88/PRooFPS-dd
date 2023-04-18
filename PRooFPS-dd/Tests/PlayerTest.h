@@ -150,7 +150,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player(*engine, connHandleExpected, sIpAddr);
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
 
         return assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
@@ -188,12 +188,12 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player1(*engine, connHandleExpected, sIpAddr);
+        proofps_dd::Player player1(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
         {
-            proofps_dd::Player player2(*engine, connHandleExpected, sIpAddr);
+            proofps_dd::Player player2(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
             // implicit call to dtor
         }
-        proofps_dd::Player player3(*engine, connHandleExpected, sIpAddr);
+        proofps_dd::Player player3(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
 
         const std::size_t nSpacePos1 = player1.getName().find(' ');
         const uint32_t nPlayer1cntr = (nSpacePos1 < player1.getName().length()-1) ?
@@ -212,7 +212,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player(*engine, connHandleExpected, sIpAddr);
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
         player.setName("apple");
         bool b = assertEquals("apple", player.getName(), "apple");
 
@@ -221,7 +221,7 @@ private:
 
     bool test_dirtiness_one_by_one()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         bool b = assertFalse(player.isDirty(), "dirty 1");
 
@@ -260,7 +260,7 @@ private:
 
     bool test_update_old_frags_and_deaths()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.getFrags() = 2;
         player.getDeaths() = 1;
@@ -284,7 +284,7 @@ private:
 
     bool test_set_expecting_start_pos()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetExpectingStartPos(false);
         bool b = assertFalse(player.isExpectingStartPos(), "exp 1");
@@ -297,7 +297,7 @@ private:
 
     bool test_update_old_pos()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const PureVector vecPosOriginal(1.f, 2.f, 3.f);
         const TPureFloat fAngleYOriginal = 90.f;
@@ -330,7 +330,7 @@ private:
 
     bool test_set_health_and_update_old_health()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetHealth(200);
         bool b = assertEquals(100, player.getHealth(), "health 1") &
@@ -352,7 +352,7 @@ private:
 
     bool test_do_damage()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.DoDamage(25);
         bool b = assertEquals(75, player.getHealth(), "health 1") &
@@ -373,7 +373,7 @@ private:
     {
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -410,7 +410,7 @@ private:
     {
         const bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -447,7 +447,7 @@ private:
     {
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -466,7 +466,7 @@ private:
 
     bool test_jump()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.getPos().set(PureVector(1.f, 2.f, 3.f));
         player.getPos().commit();
@@ -508,7 +508,7 @@ private:
 
     bool test_set_can_fall()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetCanFall(false);
         bool b = assertFalse(player.canFall(), "can fall 1");
@@ -521,7 +521,7 @@ private:
 
     bool test_gravity()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetGravity(5.f);
 
@@ -530,7 +530,7 @@ private:
 
     bool test_set_run()
     {
-        proofps_dd::Player player(*engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetRun(false);
         
@@ -541,7 +541,7 @@ private:
     {
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -560,7 +560,7 @@ private:
     bool test_can_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miHealth(*engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
 
         bool b = assertFalse(player.canTakeItem(miHealth), "1");
@@ -574,7 +574,7 @@ private:
     bool test_can_take_item_weapon()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
@@ -592,7 +592,7 @@ private:
     bool test_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         proofps_dd::MapItem miHealth(*engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
         pge_network::PgePacket newPktWpnUpdate;
 
@@ -606,7 +606,7 @@ private:
     bool test_take_item_weapon()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(*engine, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         pge_network::PgePacket pktWpnUpdate;
