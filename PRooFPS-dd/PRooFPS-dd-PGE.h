@@ -45,13 +45,15 @@ namespace proofps_dd
         PRooFPSddPGE() :
             m_gameMode(nullptr),
             m_deathMatchMode(nullptr),
-            m_maps(getPure())
+            m_maps(getPure()),
+            m_wpnMgr(getConfigProfiles(), getPure(), getBullets())
         {}
 
         PRooFPSddPGE(const PRooFPSddPGE&) :
             m_gameMode(nullptr),
             m_deathMatchMode(nullptr),
-            m_maps(getPure())
+            m_maps(getPure()),
+            m_wpnMgr(getConfigProfiles(), getPure(), getBullets())
         {}
 
         PRooFPSddPGE& operator=(const PRooFPSddPGE&)
@@ -85,6 +87,7 @@ namespace proofps_dd
         proofps_dd::DeathMatchMode* m_deathMatchMode;
         std::string m_sServerMapFilenameToLoad;
         Maps m_maps;
+        WeaponManager m_wpnMgr;
 
         int m_fps, m_fps_counter;               /* fps méréséhez segédváltozók */
         unsigned int m_fps_lastmeasure;         /* - || - */

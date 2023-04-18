@@ -41,7 +41,7 @@ protected:
         engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        wm = new WeaponManager(m_cfgProfiles, *engine);
+        wm = new WeaponManager(m_cfgProfiles, *engine, m_bullets);
 
         if (assertNotNull(wm, "wm null") &&
             assertTrue(wm->load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol") &&
@@ -110,6 +110,7 @@ private:
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* engine;
     WeaponManager* wm;
+    std::list<Bullet> m_bullets;
 
     // ---------------------------------------------------------------------------
 
