@@ -28,7 +28,6 @@ proofps_dd::Player::Player(
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
     m_pObj(PGENULL),
     m_wpnMgr(cfgProfiles, gfx, bullets),
-    m_pWpn(NULL),
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
     m_gfx(gfx),
@@ -51,10 +50,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_vecForce(other.m_vecForce),
     m_pObj(PGENULL),
     m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
-    m_pWpn(NULL),
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
-    m_timeLastWeaponSwitch(other.m_timeLastWeaponSwitch),
     m_gfx(other.m_gfx),
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
@@ -76,7 +73,6 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_vecForce = other.m_vecForce;
     m_bullets = other.m_bullets;
-    m_timeLastWeaponSwitch = other.m_timeLastWeaponSwitch;
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
@@ -98,15 +94,6 @@ proofps_dd::Player::~Player()
     {
         delete m_pObj;  // yes, dtor will remove this from its Object3DManager too!
     }
-
-    for (auto pWpn : getWeapons())
-    {
-        if (pWpn)
-        {
-            delete pWpn;
-        }
-    }
-    getWeapons().clear();
 
     m_wpnMgr.Clear();
 }
@@ -132,6 +119,11 @@ void proofps_dd::Player::setName(const std::string& sName)
 }
 
 WeaponManager& proofps_dd::Player::getWeaponManager()
+{
+    return m_wpnMgr;
+}
+
+const WeaponManager& proofps_dd::Player::getWeaponManager() const
 {
     return m_wpnMgr;
 }
@@ -286,94 +278,6 @@ void proofps_dd::Player::SetExpectingStartPos(bool b)
     m_bExpectingStartPos = b;
 }
 
-Weapon* proofps_dd::Player::getWeapon()
-{
-    return m_pWpn;
-}
-
-const Weapon* proofps_dd::Player::getWeapon() const
-{
-    return m_pWpn;
-}
-
-void proofps_dd::Player::SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer)
-{
-    if (!wpn)
-    {
-        getConsole().EOLn("Player::%s(): CANNOT set nullptr!", __func__);
-        return;
-    }
-
-    if (bServer /* client should not do availability check since it is not aware of wpn availability of the players */ &&
-        !wpn->isAvailable())
-    {
-        //getConsole().EOLn(
-        //    "Player::%s(): wpn %s is NOT available!", __func__, wpn->getFilename().c_str());
-        return;
-    }
-
-    if (m_pWpn && (m_pWpn != wpn))
-    {
-        // we already have a current different weapon, so this will be a weapon switch
-        m_pWpn->getObject3D().Hide();
-        wpn->getObject3D().getAngleVec() = m_pWpn->getObject3D().getAngleVec();
-
-        if (bRecordSwitchTime)
-        {
-            getTimeLastWeaponSwitch() = std::chrono::steady_clock::now();
-        }
-    }
-    wpn->getObject3D().Show();
-    m_pWpn = wpn;
-}
-
-std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastWeaponSwitch()
-{
-    return m_timeLastWeaponSwitch;
-}
-
-std::vector<Weapon*>& proofps_dd::Player::getWeapons()
-{
-    return m_weapons;
-}
-
-const std::vector<Weapon*>& proofps_dd::Player::getWeapons() const
-{
-    return m_weapons;
-}
-
-const Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename) const
-{
-    for (const auto pWpn : m_weapons)
-    {
-        if (pWpn)
-        {
-            if (pWpn->getFilename() == sFilename)
-            {
-                return pWpn;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-Weapon* proofps_dd::Player::getWeaponByFilename(const std::string& sFilename)
-{
-    for (const auto pWpn : m_weapons)
-    {
-        if (pWpn)
-        {
-            if (pWpn->getFilename() == sFilename)
-            {
-                return pWpn;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
 PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
@@ -393,7 +297,10 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
     }
     SetHealth(0);
     getObject3D()->Hide();
-    getWeapon()->getObject3D().Hide();
+    if (m_wpnMgr.getCurrentWeapon())
+    {
+        m_wpnMgr.getCurrentWeapon()->getObject3D().Hide();
+    }
     if (bServer)
     {
         // server instance has the right to modify death count, clients will just receive it in update
@@ -406,7 +313,7 @@ void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
 {
     getObject3D()->Show();
 
-    for (auto pWpn : getWeapons())
+    for (auto pWpn : m_wpnMgr.getWeapons())
     {
         if (!pWpn)
         {
@@ -417,7 +324,7 @@ void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
         if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
         {
             pWpn->SetAvailable(true);
-            SetWeapon(pWpn, false, bServer);
+            m_wpnMgr.setCurrentWeapon(pWpn, false, bServer);
             pWpn->UpdatePosition(getObject3D()->getPosVec());
         }
     }
@@ -472,7 +379,7 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
             return false;
         }
         const std::string& sWeaponName = it->second;
-        const Weapon* const pWpn = getWeaponByFilename(sWeaponName);
+        const Weapon* const pWpn = m_wpnMgr.getWeaponByFilename(sWeaponName);
         if (!pWpn)
         {
             getConsole().EOLn(
@@ -505,7 +412,7 @@ void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             return;
         }
         const std::string& sWeaponBecomingAvailable = it->second;
-        Weapon* const pWpnBecomingAvailable = getWeaponByFilename(sWeaponBecomingAvailable);
+        Weapon* const pWpnBecomingAvailable = m_wpnMgr.getWeaponByFilename(sWeaponBecomingAvailable);
         if (!pWpnBecomingAvailable)
         {
             getConsole().EOLn(

@@ -58,6 +58,7 @@ namespace proofps_dd
         void setName(const std::string& sName);
 
         WeaponManager& getWeaponManager();
+        const WeaponManager& getWeaponManager() const;
 
         bool isDirty() const;
         void updateOldValues();
@@ -86,14 +87,6 @@ namespace proofps_dd
         PureVector& getForce();
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
-        Weapon* getWeapon();
-        const Weapon* getWeapon() const;
-        void SetWeapon(Weapon* wpn, bool bRecordSwitchTime, bool bServer);
-        std::chrono::time_point<std::chrono::steady_clock>& getTimeLastWeaponSwitch();
-        std::vector<Weapon*>& getWeapons(); // TODO: this will be get rid of after Player will have its own WeaponManager instance
-        const std::vector<Weapon*>& getWeapons() const; // TODO: this will be get rid of after Player will have its own WeaponManager instance
-        const Weapon* getWeaponByFilename(const std::string& sFilename) const; // TODO: this will be get rid of after Player will have its own WeaponManager instance
-        Weapon* getWeaponByFilename(const std::string& sFilename); // TODO: this will be get rid of after Player will have its own WeaponManager instance
         PgeOldNewValue<PureVector>& getWeaponAngle();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
@@ -146,9 +139,6 @@ namespace proofps_dd
         PureVector m_vecForce;
         PureObject3D* m_pObj;
         WeaponManager m_wpnMgr;
-        std::vector<Weapon*> m_weapons;
-        Weapon* m_pWpn;
-        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWeaponSwitch;
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;

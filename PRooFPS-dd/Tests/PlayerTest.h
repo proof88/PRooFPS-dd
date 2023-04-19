@@ -26,8 +26,7 @@ public:
     PlayerTest(PGEcfgProfiles& cfgProfiles) :
         UnitTest(__FILE__),
         m_cfgProfiles(cfgProfiles),
-        engine(nullptr),
-        wm(nullptr)
+        engine(nullptr)
     {}
 
 protected:
@@ -41,45 +40,31 @@ protected:
         engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        wm = new WeaponManager(m_cfgProfiles, *engine, m_bullets);
-
-        if (assertNotNull(wm, "wm null") &&
-            assertTrue(wm->load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol") &&
-            assertTrue(wm->setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn") &&
-            assertTrue(wm->load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun"))
-        {
-            AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
-            AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
-            AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
-            AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
-            AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
-            AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
-            AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
-            AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
-            AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
-            AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
-            AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
-            AddSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
-            AddSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
-            AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
-            AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
-            AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
-            AddSubTest("test_set_weapon", (PFNUNITSUBTEST)&PlayerTest::test_set_weapon);
-            AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
-            AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
-            AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
-            AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
-        }
+        AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
+        AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
+        AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
+        AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
+        AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
+        AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
+        AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
+        AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
+        AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
+        AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
+        AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
+        AddSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
+        AddSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
+        AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
+        AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
+        AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
+        AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
+        AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
+        AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
+        AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
     }
 
     virtual bool setUp()
     {
-        if (assertNotNull(wm, "wm null"))
-        {
-            return assertFalse(wm->getWeapons().empty(), "wm empty") &
-                assertTrue(engine && engine->isInitialized(), "engine inited");
-        }
-        return false;
+        return assertTrue(engine && engine->isInitialized(), "engine inited");
     }
 
     virtual void TearDown()
@@ -89,13 +74,6 @@ protected:
 
     virtual void Finalize()
     {
-        if (wm)
-        {
-            wm->Clear();
-            delete wm;
-            wm = nullptr;
-        }
-
         if (engine)
         {
             engine->shutdown();
@@ -109,15 +87,13 @@ private:
 
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* engine;
-    WeaponManager* wm;
     std::list<Bullet> m_bullets;
 
     // ---------------------------------------------------------------------------
 
     PlayerTest(const PlayerTest&) :
         m_cfgProfiles(m_cfgProfiles),
-        engine(nullptr),
-        wm(nullptr)
+        engine(nullptr)
     {};
 
     PlayerTest& operator=(const PlayerTest&)
@@ -127,22 +103,18 @@ private:
 
     bool loadWeaponsForPlayer(proofps_dd::Player& player)
     {
-        for (const auto pSrcWpn : wm->getWeapons())
+        bool b = assertTrue(player.getWeaponManager().load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol");
+        b &= assertTrue(player.getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun");
+
+        for (const auto pSrcWpn : player.getWeaponManager().getWeapons())
         {
-            assert(pSrcWpn);
-            Weapon* pNewWpn = new Weapon(*pSrcWpn);
-            if (!pNewWpn)
-            {
-                return false;
-            }
-
-            player.getWeapons().push_back(pNewWpn);
-            pNewWpn->SetOwner(player.getServerSideConnectionHandle());
+            pSrcWpn->SetOwner(player.getServerSideConnectionHandle());
         }
-        player.getWeapons()[0]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[0], false, true);
+        player.getWeaponManager().getWeapons()[0]->SetAvailable(true);
+        b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true), "wm current wpn");
 
-        return true;
+        return b;
     }
 
     bool test_initial_values()
@@ -163,7 +135,7 @@ private:
             assertFalse(player.getFrags().isDirty(), "old frags") &
             assertEquals(0, player.getFrags(), "frags") &
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
-            assertEquals(0, player.getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
+            assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
             assertTrue(player.isFalling(), "falling") &
             assertFalse(player.jumpAllowed(), "can jump") &
@@ -179,8 +151,8 @@ private:
             assertFalse(player.getAngleY().isDirty(), "old angle y") &
             assertEquals(0.f, player.getAngleY(), "angle y") &
             assertEquals(0.f, player.getGravity(), "gravity") &
-            assertNull(player.getWeapon(), "current weapon") &
-            assertTrue(player.getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
+            assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
+            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
     }
 
     bool test_number_in_name_monotonically_increasing()
@@ -385,12 +357,12 @@ private:
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
-            assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") /* server increases it */ &
             assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
         
         player.SetHealth(100);
-        player.Respawn(true, *(player.getWeapons()[0]), bServer);
+        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
         
         player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
@@ -399,7 +371,7 @@ private:
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
-            assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(2, player.getDeaths(), "deaths 2") /* server increases it */ &
             assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
 
@@ -422,12 +394,12 @@ private:
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
-            assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(0, player.getDeaths(), "deaths 1") /* client doesn't change it, will receive update from server */ &
             assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
 
         player.SetHealth(100);
-        player.Respawn(true, *(player.getWeapons()[0]), bServer);
+        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
         player.Die(true, bServer);
         const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
@@ -436,7 +408,7 @@ private:
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
-            assertFalse(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(0, player.getDeaths(), "deaths 2") /* client doesn't change it, will receive update from server */ &
             assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
 
@@ -452,16 +424,16 @@ private:
         {
             return false;
         };
-        player.getWeapons()[1]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[1], false, bServer);
+        player.getWeaponManager().getWeapons()[1]->SetAvailable(true);
+        bool b = assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, bServer), "set current wpn");
 
         player.Die(true, bServer);
-        player.Respawn(true, *(player.getWeapons()[0]), bServer);
+        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
-        return assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
-            assertTrue(player.getWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
-            assertFalse(player.getWeapons()[1]->isAvailable(), "wpn 2 not available") &
-            assertEquals(player.getWeapons()[0], player.getWeapon(), "current wpn");
+        return b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
+            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
+            assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
+            assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn");
     }
 
     bool test_jump()
@@ -537,26 +509,6 @@ private:
         return assertFalse(player.isRunning());
     }
 
-    bool test_set_weapon()
-    {
-        const bool bServer = true;
-        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
-        if (!assertTrue(loadWeaponsForPlayer(player)))
-        {
-            return false;
-        };
-        
-        player.SetWeapon(player.getWeapons()[1], false, bServer);
-        bool b = assertEquals(player.getWeapons()[0], player.getWeapon(), "current wpn 1");
-
-        player.getWeapons()[1]->SetAvailable(true);
-        player.SetWeapon(player.getWeapons()[1], false, bServer);
-        b &= assertEquals(player.getWeapons()[1], player.getWeapon(), "current wpn 2");
-
-        return b;
-    }
-
     bool test_can_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
@@ -583,7 +535,7 @@ private:
 
         bool b = assertTrue(player.canTakeItem(miPistol), "1");
 
-        player.getWeapons()[0]->SetUnmagBulletCount(player.getWeapons()[0]->getVars()["cap_max"].getAsInt());
+        player.getWeaponManager().getWeapons()[0]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[0]->getVars()["cap_max"].getAsInt());
         b &= assertFalse(player.canTakeItem(miPistol), "2");
 
         return b;
@@ -618,12 +570,12 @@ private:
 
         player.TakeItem(miPistol, pktWpnUpdate);
         bool bStrSafeChecked = strncmp(
-            player.getWeapons()[0]->getFilename().c_str(),
+            player.getWeaponManager().getWeapons()[0]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength) == 0;
 
-        bool b = assertEquals(player.getWeapons()[0]->getVars()["reloadable"].getAsInt(),
-            static_cast<int>(player.getWeapons()[0]->getUnmagBulletCount()), "wpn 1 unmag") &
+        bool b = assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[0]->getUnmagBulletCount()), "wpn 1 unmag") &
             assertTrue(miPistol.isTaken(), "item 1 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pktWpnUpdate.pktId),
@@ -633,20 +585,20 @@ private:
                 "msg 1 id") &
             assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
-            assertEquals(player.getWeapons()[0]->getVars()["reloadable"].getAsInt(),
+            assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 1 mag") &
-            assertEquals(player.getWeapons()[0]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
+            assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag");
 
         player.TakeItem(miMchGun, pktWpnUpdate);
         bStrSafeChecked = strncmp(
-            player.getWeapons()[1]->getFilename().c_str(),
+            player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength) == 0;
 
-        b &= assertEquals(player.getWeapons()[1]->getVars()["reloadable"].getAsInt(),
-            static_cast<int>(player.getWeapons()[1]->getMagBulletCount()), "wpn 2 mag") &
-            assertTrue(player.getWeapons()[1]->isAvailable(), "wpn 2 available") &
+        b &= assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[1]->getMagBulletCount()), "wpn 2 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 available") &
             assertTrue(miMchGun.isTaken(), "item 2 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pktWpnUpdate.pktId),
@@ -656,7 +608,7 @@ private:
                 "msg 2 id") &
             assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &
-            assertEquals(player.getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 2 mag") &
             assertEquals(0 /* we didnt have machinegun yet, so we expect unmag count to be 0 in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 2 unmag");

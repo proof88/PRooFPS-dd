@@ -438,7 +438,7 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
                     {
                         key.second.m_bReleased = false;
 
-                        const Weapon* const pTargetWpn = player.getWeaponByFilename(key.second.m_sWpnFilename);
+                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(key.second.m_sWpnFilename);
                         if (!pTargetWpn)
                         {
                             getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
@@ -451,7 +451,7 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
                             //    __func__, key.second.m_sWpnFilename.c_str());
                             break;
                         }
-                        if (pTargetWpn != player.getWeapon())
+                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
                         {
                             cWeaponSwitch = key.first;
                         }
@@ -505,7 +505,7 @@ bool proofps_dd::PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::Pg
 
         const auto nSecsSinceLastWeaponSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getTimeLastWeaponSwitch()
+                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
                 ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
@@ -598,7 +598,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
 
     // not nice but we have to search by value in the map now ...
     // TODO: btw in the future the weapon switch forward/backward functionality will be implemented in WeaponManager
-    const Weapon* const pMyCurrentWeapon = player.getWeapon();
+    const Weapon* const pMyCurrentWeapon = player.getWeaponManager().getCurrentWeapon();
     if (!pMyCurrentWeapon)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): pMyCurrentWeapon null, CANNOT HAPPEN!", __func__);
@@ -640,7 +640,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
         it++;
         while (it != m_mapKeypressToWeapon.end())
         {
-            const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -655,7 +655,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             it = m_mapKeypressToWeapon.begin();
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -679,7 +679,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             {
                 break;
             }
-            const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -694,7 +694,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             --it;
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = player.getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -1180,7 +1180,7 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
 
     for (auto& playerPair : m_mapPlayers)
     {
-        Weapon* const wpn = playerPair.second.getWeapon();
+        Weapon* const wpn = playerPair.second.getWeaponManager().getCurrentWeapon();
         if (!wpn)
         {
             continue;
@@ -1445,7 +1445,7 @@ void proofps_dd::PRooFPSddPGE::UpdateGameMode()
             for (auto& playerPair : m_mapPlayers)
             {
                 playerPair.second.getObject3D()->Hide();
-                playerPair.second.getWeapon()->getObject3D().Hide();
+                playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
             }
         }
     }
@@ -1583,13 +1583,13 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
         Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
 
-        if (player.getWeapon())
+        if (player.getWeaponManager().getCurrentWeapon())
         {
             // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
             Text(
-                player.getWeapon()->getVars()["name"].getAsString() + ": " +
-                std::to_string(player.getWeapon()->getMagBulletCount()) + " / " +
-                std::to_string(player.getWeapon()->getUnmagBulletCount()),
+                player.getWeaponManager().getCurrentWeapon()->getVars()["name"].getAsString() + ": " +
+                std::to_string(player.getWeaponManager().getCurrentWeapon()->getMagBulletCount()) + " / " +
+                std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
                 10, 150);
         }
 
@@ -1611,7 +1611,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 proofps_dd::MsgUserCmdMove::setAngleY(pkt, player.getAngleY());
             }
 
-            Weapon* const wpn = player.getWeapon();
+            Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
             if (wpn)
             {
                 // my xhair is used to update weapon angle
@@ -1647,7 +1647,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
         for (auto& otherPlayerPair : m_mapPlayers)
         {
-            Weapon* const wpn = otherPlayerPair.second.getWeapon();
+            Weapon* const wpn = otherPlayerPair.second.getWeaponManager().getCurrentWeapon();
             if (!wpn)
             {
                 continue;
@@ -1907,8 +1907,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
         }
     }
 
-    // and here the actual weapons for the specific player, these can be visible when active, moving with player, etc.
-    // client doesnt do anything else with these, server also uses these to track and validate player weapons and related actions.
+    // TODO: we wouldnt need this extra loop if wpn mgr load() would return ptr to loaded wpn instead of bool!
     for (const auto pWpn : insertedPlayer.getWeaponManager().getWeapons())
     {
         if (!pWpn)
@@ -1916,10 +1915,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
             continue;
         }
 
-        Weapon* const pNewWeapon = new Weapon(*pWpn);
-        insertedPlayer.getWeapons().push_back(pNewWeapon);
-        pNewWeapon->SetOwner(connHandleServerSide);
-        pNewWeapon->getObject3D().SetName(pNewWeapon->getObject3D().getName() + " (copied Weapon for user " + msg.m_szUserName + ")");
+        pWpn->SetOwner(connHandleServerSide);
+        pWpn->getObject3D().SetName(pWpn->getObject3D().getName() + " (for user " + msg.m_szUserName + ")");
     }
 
     // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
@@ -1932,7 +1929,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
         return false;
     }
 
-    Weapon* const wpnDefaultAvailable = insertedPlayer.getWeaponByFilename(insertedPlayer.getWeaponManager().getDefaultAvailableWeaponFilename());
+    Weapon* const wpnDefaultAvailable = insertedPlayer.getWeaponManager().getWeaponByFilename(insertedPlayer.getWeaponManager().getDefaultAvailableWeaponFilename());
     if (!wpnDefaultAvailable)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): failed to get default weapon!", __func__);
@@ -1941,9 +1938,15 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
     }
 
     wpnDefaultAvailable->SetAvailable(true);
-    insertedPlayer.SetWeapon(wpnDefaultAvailable, false, getNetwork().isServer());
+    if (!insertedPlayer.getWeaponManager().setCurrentWeapon(wpnDefaultAvailable, false, getNetwork().isServer()))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
+            __func__, msg.m_szUserName, wpnDefaultAvailable->getFilename().c_str());
+        assert(false);
+        return false;
+    }
 
-    if (!insertedPlayer.getWeapon())
+    if (!insertedPlayer.getWeaponManager().getCurrentWeapon())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): no default weapon selected for user %s!", __func__, msg.m_szUserName);
         assert(false);
@@ -1954,9 +1957,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
     // Because clients also store the full weapon instances for themselves, even though they dont use weapon cvars at all!
     // Task: On the long run, there should be a WeaponProxy or WeaponClient or something for the clients which are basically
     // just the image for their current weapon.
-    // Task: And I also think that each Player should have a WeaponManager instance, so player's weapons would be loaded there.
-    // Task: the only problem here would be that the bullets list should be extracted into separate entity, so all WeaponManager
-    // instances would refer to the same bullets list. And some functions may be enough to be static, but thats all!
 
     getNetwork().WriteList();
     WritePlayerList();
@@ -2088,8 +2088,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 it.second.getObject3D()->getPosVec().getY(),
                 it.second.getObject3D()->getPosVec().getZ(),
                 it.second.getObject3D()->getAngleVec().getY(),
-                it.second.getWeapon()->getObject3D().getAngleVec().getY(),
-                it.second.getWeapon()->getObject3D().getAngleVec().getZ(),
+                it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getY(),
+                it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                 it.second.getHealth(),
                 false,
                 it.second.getFrags(),
@@ -2247,7 +2247,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
         player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
-    Weapon* const wpn = player.getWeapon();
+    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
@@ -2292,7 +2292,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
             return false;
         }
 
-        Weapon* const pTargetWpn = player.getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
+        Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
         if (!pTargetWpn)
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
@@ -2308,13 +2308,20 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
             // TODO: I might disconnect this client!
         }
 
-        if (pTargetWpn != player.getWeapon())
+        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
         {
             if (isMyConnection(connHandleServerSide))
             {   // server plays for itself
                 getAudio().play(m_sndChangeWeapon);
             }
-            player.SetWeapon(pTargetWpn, true, getNetwork().isServer());
+            if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, getNetwork().isServer()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
+                    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+                assert(false);  // in debug mode, terminate the game
+                return true;   // in release mode, dont terminate the server, just silently ignore!
+            }
+
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
             //    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
 
@@ -2360,7 +2367,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
     {
         const auto nSecsSinceLastWeaponSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getTimeLastWeaponSwitch()
+                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
                 ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
@@ -2445,8 +2452,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
         it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
 
-    it->second.getWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
-    it->second.getWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
+    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getOldHealth());
@@ -2526,7 +2533,7 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
             // this is my newborn bullet
             // I'm playing the sound associated to my current weapon, although it might happen that with BIG latency, when I receive this update from server,
             // I have already switched to another weapon ... but I think this cannot happen since my inputs are processed and responded by server in order.
-            const Weapon* const wpn = player.getWeapon();
+            const Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
             if (!wpn)
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
@@ -2643,7 +2650,7 @@ bool proofps_dd::PRooFPSddPGE::handleWpnUpdate(
     }
 
     Player& player = playerIt->second;
-    Weapon* const wpn = player.getWeaponByFilename(msg.m_szWpnName);
+    Weapon* const wpn = player.getWeaponManager().getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnName);
@@ -2677,7 +2684,7 @@ bool proofps_dd::PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkCon
         return false;
     }
 
-    Weapon* const wpn = it->second.getWeaponByFilename(msg.m_szWpnCurrentName);
+    Weapon* const wpn = it->second.getWeaponManager().getWeaponByFilename(msg.m_szWpnCurrentName);
     if (!wpn)
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
@@ -2691,10 +2698,15 @@ bool proofps_dd::PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkCon
         getAudio().play(m_sndChangeWeapon);
     }
 
-    it->second.SetWeapon(
-        wpn,
+    if (!it->second.getWeaponManager().setCurrentWeapon(wpn,
         true /* even client should record last switch time to be able to check it on client side too */,
-        getNetwork().isServer());
+        getNetwork().isServer()))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
+            __func__, it->second.getName().c_str(), wpn->getFilename().c_str());
+        assert(false);
+        return false;
+    }
 
     return true;
 }
@@ -2755,7 +2767,7 @@ void proofps_dd::PRooFPSddPGE::RegTestDumpToFile()
     Player& selfPlayer = selfPlayerIt->second;
 
     fRegTestDump << "Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count" << std::endl;
-    for (const auto& wpn : selfPlayer.getWeapons())
+    for (const auto& wpn : selfPlayer.getWeaponManager().getWeapons())
     {
         if (wpn->isAvailable())
         {
