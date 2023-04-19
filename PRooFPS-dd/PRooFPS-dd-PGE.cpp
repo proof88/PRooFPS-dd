@@ -1898,25 +1898,16 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
 
         if (entry.path().extension().string() == ".txt")
         {
-            if (!insertedPlayer.getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide))
+            Weapon* const loadedWpn = insertedPlayer.getWeaponManager().load(entry.path().string().c_str(), connHandleServerSide);
+            if (!loadedWpn)
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): failed to load weapon: %s!", __func__, entry.path().string().c_str());
                 assert(false);
                 return false;
             }
+            loadedWpn->SetOwner(connHandleServerSide);
+            loadedWpn->getObject3D().SetName(loadedWpn->getObject3D().getName() + " (for user " + msg.m_szUserName + ")");
         }
-    }
-
-    // TODO: we wouldnt need this extra loop if wpn mgr load() would return ptr to loaded wpn instead of bool!
-    for (const auto pWpn : insertedPlayer.getWeaponManager().getWeapons())
-    {
-        if (!pWpn)
-        {
-            continue;
-        }
-
-        pWpn->SetOwner(connHandleServerSide);
-        pWpn->getObject3D().SetName(pWpn->getObject3D().getName() + " (for user " + msg.m_szUserName + ")");
     }
 
     // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
