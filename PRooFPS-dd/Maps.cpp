@@ -62,6 +62,12 @@ bool proofps_dd::Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
+    if (loaded())
+    {
+        getConsole().EOLnOO("ERROR: %s is already loaded, should call unload first!", m_sFileName.c_str());
+        return false;
+    }
+
     // this wont be needed after we require unload() before consecutive load()
     proofps_dd::MapItem::ResetGlobalData();
 

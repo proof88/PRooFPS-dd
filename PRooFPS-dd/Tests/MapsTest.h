@@ -367,6 +367,9 @@ private:
         b &= assertEquals(5u, maps.getItems().size(), "item count 1");
         b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         
+        // ################################# TRY LOAD AGAIN ###################################
+        b &= assertFalse(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
+
         // ###################################### UNLOAD ######################################
         maps.unload();
         b &= assertFalse(maps.loaded(), "loaded 2");
@@ -393,7 +396,7 @@ private:
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
 
         // ###################################### LOAD 2 ######################################
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
+        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 3");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
