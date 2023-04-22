@@ -196,8 +196,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     // Which key should switch to which weapon
     WeaponManager::getKeypressToWeaponMap() = {
-        {'2', {true, "pistol.txt"}},
-        {'3', {true, "machinegun.txt"}}
+        {'2', "pistol.txt"},
+        {'3', "machinegun.txt"}
     };
 
     if (getNetwork().isServer())
@@ -422,7 +422,7 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
         }
 
         bool bRequestReload = false;
-        if (keybd.isKeyPressed((unsigned char)VkKeyScan('r')))
+        if (keybd.isKeyPressedOnce((unsigned char)VkKeyScan('r')))
         {
             bRequestReload = true;
         }
@@ -430,37 +430,28 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
         unsigned char cWeaponSwitch = '\0';
         if (!bRequestReload)
         {   // we dont care about wpn switch if reload is requested
-            for (auto& key : WeaponManager::getKeypressToWeaponMap())
+            for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
             {
-                if (keybd.isKeyPressed(key.first))
+                if (keybd.isKeyPressedOnce(keyWpnPair.first))
                 {
-                    if (key.second.m_bReleased)
+                    const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
+                    if (!pTargetWpn)
                     {
-                        key.second.m_bReleased = false;
-
-                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(key.second.m_sWpnFilename);
-                        if (!pTargetWpn)
-                        {
-                            getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
-                                __func__, key.second.m_sWpnFilename.c_str());
-                            break;
-                        }
-                        if (!pTargetWpn->isAvailable())
-                        {
-                            //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
-                            //    __func__, key.second.m_sWpnFilename.c_str());
-                            break;
-                        }
-                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                        {
-                            cWeaponSwitch = key.first;
-                        }
+                        getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
+                            __func__, keyWpnPair.second.c_str());
+                        break;
+                    }
+                    if (!pTargetWpn->isAvailable())
+                    {
+                        //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
+                        //    __func__, key.second.c_str());
+                        break;
+                    }
+                    if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+                    {
+                        cWeaponSwitch = keyWpnPair.first;
                     }
                     break;
-                }
-                else
-                {
-                    key.second.m_bReleased = true;
                 }
             }
         }
@@ -610,7 +601,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
     auto it = WeaponManager::getKeypressToWeaponMap().begin();
     while (it != WeaponManager::getKeypressToWeaponMap().end())
     {
-        if (it->second.m_sWpnFilename == pMyCurrentWeapon->getFilename())
+        if (it->second == pMyCurrentWeapon->getFilename())
         {
             cCurrentWeaponKeyChar = it->first;
             break;
@@ -640,7 +631,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
         it++;
         while (it != WeaponManager::getKeypressToWeaponMap().end())
         {
-            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -655,7 +646,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             it = WeaponManager::getKeypressToWeaponMap().begin();
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -679,7 +670,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             {
                 break;
             }
-            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
+            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
             {
                 // we dont care about if bullets are loaded, if available then let it be the target!
@@ -694,7 +685,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             --it;
             while (it->first != cCurrentWeaponKeyChar)
             {
-                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
+                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
                 if (pTargetWeapon && pTargetWeapon->isAvailable())
                 {
                     // we dont care about if bullets are loaded, if available then let it be the target!
@@ -2283,17 +2274,17 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
             return false;
         }
 
-        Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second.m_sWpnFilename);
+        Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second);
         if (!pTargetWpn)
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
+            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
             assert(false);
             return false;
         }
 
         if (!pTargetWpn->isAvailable())
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.m_sWpnFilename.c_str());
+            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
             assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
             return true;    // in release mode, dont terminate the server, just silently ignore!
             // TODO: I might disconnect this client!
@@ -2308,13 +2299,13 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
             if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, getNetwork().isServer()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
-                    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
                 assert(false);  // in debug mode, terminate the game
                 return true;   // in release mode, dont terminate the server, just silently ignore!
             }
 
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
-            //    __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+            //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
 
             // all clients must be updated about this player's weapon switch
             for (const auto& client : m_mapPlayers)
@@ -2335,7 +2326,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
         {
             // should not happen because client should NOT send message in such case
             getConsole().OLn("PRooFPSddPGE::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
-                __func__, sClientUserName.c_str(), itTargetWpn->second.m_sWpnFilename.c_str());
+                __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
             assert(false);  // in debug mode, terminate the game
             return true;   // in release mode, dont terminate the server, just silently ignore!
             // TODO: I might disconnect this client!
