@@ -74,13 +74,6 @@ namespace proofps_dd
 
         static const unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
 
-        struct KeyReleasedAndWeaponFilenamePair
-        {
-            bool m_bReleased;
-            std::string m_sWpnFilename;
-        };
-        static std::map<unsigned char, KeyReleasedAndWeaponFilenamePair> m_mapKeypressToWeapon;
-
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
         std::string m_sServerMapFilenameToLoad;

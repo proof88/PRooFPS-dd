@@ -194,6 +194,12 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     getPure().WriteList();
 
+    // Which key should switch to which weapon
+    WeaponManager::getKeypressToWeaponMap() = {
+        {'2', {true, "pistol.txt"}},
+        {'3', {true, "machinegun.txt"}}
+    };
+
     if (getNetwork().isServer())
     {
         getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
@@ -289,13 +295,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
 
 const unsigned int proofps_dd::PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
-
-// Which key should switch to which weapon
-std::map<unsigned char, proofps_dd::PRooFPSddPGE::KeyReleasedAndWeaponFilenamePair> proofps_dd::PRooFPSddPGE::m_mapKeypressToWeapon =
-{
-    {'2', {true, "pistol.txt"}},
-    {'3', {true, "machinegun.txt"}}
-};
 
 void proofps_dd::PRooFPSddPGE::Text(const std::string& s, int x, int y) const
 {
@@ -431,7 +430,7 @@ void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::Pge
         unsigned char cWeaponSwitch = '\0';
         if (!bRequestReload)
         {   // we dont care about wpn switch if reload is requested
-            for (auto& key : m_mapKeypressToWeapon)
+            for (auto& key : WeaponManager::getKeypressToWeaponMap())
             {
                 if (keybd.isKeyPressed(key.first))
                 {
@@ -608,8 +607,8 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
                 
     // TODO: rewrite this search to use lambda, then cCurrentWeaponKeyChar can be const
     unsigned char cCurrentWeaponKeyChar = '\0';
-    auto it = m_mapKeypressToWeapon.begin();
-    while (it != m_mapKeypressToWeapon.end())
+    auto it = WeaponManager::getKeypressToWeaponMap().begin();
+    while (it != WeaponManager::getKeypressToWeaponMap().end())
     {
         if (it->second.m_sWpnFilename == pMyCurrentWeapon->getFilename())
         {
@@ -639,7 +638,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
     {
         // wheel rotated forward, in CS it means going forward in the list;
         it++;
-        while (it != m_mapKeypressToWeapon.end())
+        while (it != WeaponManager::getKeypressToWeaponMap().end())
         {
             const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
             if (pTargetWeapon && pTargetWeapon->isAvailable())
@@ -650,10 +649,10 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
             }
             ++it;
         }
-        if (it == m_mapKeypressToWeapon.end())
+        if (it == WeaponManager::getKeypressToWeaponMap().end())
         {
             // try it from the beginning ...
-            it = m_mapKeypressToWeapon.begin();
+            it = WeaponManager::getKeypressToWeaponMap().begin();
             while (it->first != cCurrentWeaponKeyChar)
             {
                 const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second.m_sWpnFilename);
@@ -672,7 +671,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
         // wheel rotated backward, in CS it means going backward in the list;
         do
         {
-            if (it != m_mapKeypressToWeapon.begin())
+            if (it != WeaponManager::getKeypressToWeaponMap().begin())
             {
                 --it;
             }
@@ -691,7 +690,7 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
         if (cTargetWeapon == cCurrentWeaponKeyChar)
         {
             // try it from the end ...
-            it = m_mapKeypressToWeapon.end();
+            it = WeaponManager::getKeypressToWeaponMap().end();
             --it;
             while (it->first != cCurrentWeaponKeyChar)
             {
@@ -2275,8 +2274,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
 
     if (!pktUserCmdMove.m_bRequestReload && (wpn->getState() == Weapon::State::WPN_READY) && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
-        const auto itTargetWpn = m_mapKeypressToWeapon.find(pktUserCmdMove.m_cWeaponSwitch);
-        if (itTargetWpn == m_mapKeypressToWeapon.end())
+        const auto itTargetWpn = WeaponManager::getKeypressToWeaponMap().find(pktUserCmdMove.m_cWeaponSwitch);
+        if (itTargetWpn == WeaponManager::getKeypressToWeaponMap().end())
         {
             const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
             getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for char %s!", __func__, sc.c_str());
