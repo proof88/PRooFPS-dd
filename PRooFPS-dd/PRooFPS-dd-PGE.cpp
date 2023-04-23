@@ -485,7 +485,7 @@ bool proofps_dd::PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::Pg
         return false;
     }
 
-    static bool bPrevLeftButtonPressed = false;
+    static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
     bool bShootActionBeingSent = false;
     if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
@@ -526,9 +526,6 @@ bool proofps_dd::PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::Pg
     {
         MouseWheel(nMouseWheelChange, pkt, player);
     }
-
-    // TODO: I think xhair update should happen earlier somewhere above, and click/wheel handling should
-    // happen after that, so returning from function is an easier thing then ...
 
     const int oldmx = mouse.getCursorPosX();
     const int oldmy = mouse.getCursorPosY();
