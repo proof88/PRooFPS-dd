@@ -581,131 +581,34 @@ void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pg
     {
         return;
     }
-    
+
     // if we dont shoot, and weapon switch not yet initiated by keyboard, we
     // are allowed to process mousewheel event for changing weapon
-        
     //getConsole().OLn("PRooFPSddPGE::%s(): mousewheel: %d!", __func__, nMouseWheelChange);
 
-    // not nice but we have to search by value in the map now ...
-    // TODO: btw in the future the weapon switch forward/backward functionality will be implemented in WeaponManager
-    const Weapon* const pMyCurrentWeapon = player.getWeaponManager().getCurrentWeapon();
-    if (!pMyCurrentWeapon)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): pMyCurrentWeapon null, CANNOT HAPPEN!", __func__);
-        return;
-    }
-                
-    // TODO: rewrite this search to use lambda, then cCurrentWeaponKeyChar can be const
-    unsigned char cCurrentWeaponKeyChar = '\0';
-    auto it = WeaponManager::getKeypressToWeaponMap().begin();
-    while (it != WeaponManager::getKeypressToWeaponMap().end())
-    {
-        if (it->second == pMyCurrentWeapon->getFilename())
-        {
-            cCurrentWeaponKeyChar = it->first;
-            break;
-        }
-        ++it;
-    }
-    if (cCurrentWeaponKeyChar == '\0')
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): could not set cCurrentWeaponKeyChar based on %s!",
-            __func__, pMyCurrentWeapon->getFilename().c_str());
-        return;
-    }
-
-    // Now we have to increment or decrement 'it' until:
-    // - we find an available weapon;
-    // - we reach back to the current weapon.
+    unsigned char cTargetWeapon;
+    const Weapon* pWpnTarget;
     // I dont know if it is a good approach to just check only the sign of the change, and based on that,
     // move 1 step forward or backward in weapons list ... or maybe I should move n steps based on the exact amount ...
-    
-    // This is very ugly as I have to iterate in a map either back or forth ... on the long run I will need
-    // a double linked list or similar, so it is easier to go in the list until we end up at the starting element or find an available wpn.
-    
-    unsigned char cTargetWeapon = cCurrentWeaponKeyChar;
     if (nMouseWheelChange > 0)
     {
         // wheel rotated forward, in CS it means going forward in the list;
-        it++;
-        while (it != WeaponManager::getKeypressToWeaponMap().end())
-        {
-            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
-            if (pTargetWeapon && pTargetWeapon->isAvailable())
-            {
-                // we dont care about if bullets are loaded, if available then let it be the target!
-                cTargetWeapon = it->first;
-                break;
-            }
-            ++it;
-        }
-        if (it == WeaponManager::getKeypressToWeaponMap().end())
-        {
-            // try it from the beginning ...
-            it = WeaponManager::getKeypressToWeaponMap().begin();
-            while (it->first != cCurrentWeaponKeyChar)
-            {
-                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
-                if (pTargetWeapon && pTargetWeapon->isAvailable())
-                {
-                    // we dont care about if bullets are loaded, if available then let it be the target!
-                    cTargetWeapon = it->first;
-                    break;
-                }
-                ++it;
-            }
-        }
+        pWpnTarget = player.getWeaponManager().getNextAvailableWeapon(cTargetWeapon);
     }
     else
     {
         // wheel rotated backward, in CS it means going backward in the list;
-        do
-        {
-            if (it != WeaponManager::getKeypressToWeaponMap().begin())
-            {
-                --it;
-            }
-            else
-            {
-                break;
-            }
-            const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
-            if (pTargetWeapon && pTargetWeapon->isAvailable())
-            {
-                // we dont care about if bullets are loaded, if available then let it be the target!
-                cTargetWeapon = it->first;
-                break;
-            }
-        } while (true);
-        if (cTargetWeapon == cCurrentWeaponKeyChar)
-        {
-            // try it from the end ...
-            it = WeaponManager::getKeypressToWeaponMap().end();
-            --it;
-            while (it->first != cCurrentWeaponKeyChar)
-            {
-                const Weapon* const pTargetWeapon = player.getWeaponManager().getWeaponByFilename(it->second);
-                if (pTargetWeapon && pTargetWeapon->isAvailable())
-                {
-                    // we dont care about if bullets are loaded, if available then let it be the target!
-                    cTargetWeapon = it->first;
-                    break;
-                }
-                --it;
-            }
-        }
+        pWpnTarget = player.getWeaponManager().getPrevAvailableWeapon(cTargetWeapon);
     }
 
-    if (cTargetWeapon == cCurrentWeaponKeyChar)
+    if (pWpnTarget == player.getWeaponManager().getCurrentWeapon())
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
+        getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
     }
     else
     {
         proofps_dd::MsgUserCmdMove::SetWeaponSwitch(pkt, cTargetWeapon);
-        //const std::string scTargetWeapon = std::to_string(cTargetWeapon);
-        //getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, scTargetWeapon.c_str());
+        getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, pWpnTarget->getFilename().c_str());
     }            
 }
 
