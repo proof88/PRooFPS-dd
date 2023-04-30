@@ -249,6 +249,9 @@
     <ClInclude Include="Tests\PlayerTest.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeIServerClient.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

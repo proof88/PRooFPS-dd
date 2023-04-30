@@ -114,7 +114,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitializing()
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 
     // Network logs
-    getConsole().SetLoggingState("PGESysNET", true);
+    getConsole().SetLoggingState("PgeGsnWrapper", true);
     getConsole().SetLoggingState(getNetwork().getLoggerModuleName(), true);
     getConsole().SetLoggingState(getNetwork().getServer().getLoggerModuleName(), true);
     getConsole().SetLoggingState(getNetwork().getClient().getLoggerModuleName(), true);
@@ -202,7 +202,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     if (getNetwork().isServer())
     {
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
+        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
 
         Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
@@ -231,18 +231,18 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         // MsgUserSetup is also processed by server, but it injects this pkt into its own queue when needed.
         // MsgUserSetup MUST NOT be received by server over network!
         // MsgUserSetup is received only by clients over network!
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetup::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetup::id));
 
         // MsgUserUpdate is also processed by server, but it injects this pkt into its own queue when needed.
         // MsgUserUpdate MUST NOT be received by server over network!
         // MsgUserUpdate is received only by clients over network!
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
 
         // following messages are received only by clients over network:
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
 
         std::string sIp = "127.0.0.1";
         if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())

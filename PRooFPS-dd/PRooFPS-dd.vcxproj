@@ -139,6 +139,7 @@
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h" />
+    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeIServerClient.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgePacket.h" />
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeServer.h" />
