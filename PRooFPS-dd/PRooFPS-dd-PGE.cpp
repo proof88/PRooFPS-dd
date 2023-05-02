@@ -2602,31 +2602,15 @@ void proofps_dd::PRooFPSddPGE::RegTestDumpToFile()
         return;
     }
 
-    // ahhh this is nonsense, we should really refactor client and server to have the same ancestor class!
-    if (getNetwork().isServer())
-    {
-        fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getTxPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getTxPacketPerSecondCount() << std::endl;
-        fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getRxPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getRxPacketPerSecondCount() << std::endl;
-        fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getInjectPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getServer().getInjectPacketPerSecondCount() << std::endl;
-    }
-    else
-    {
-        fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getTxPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getTxPacketPerSecondCount() << std::endl;
-        fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getRxPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getRxPacketPerSecondCount() << std::endl;
-        fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getInjectPacketCount() << std::endl;
-        fRegTestDump << "  " << getNetwork().getClient().getInjectPacketPerSecondCount() << std::endl;
-    }
+    fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
 
     fRegTestDump << "Frag Table: Player Name, Frags, Deaths" << std::endl;
     for (const auto& player : m_deathMatchMode->getFragTable())
