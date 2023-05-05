@@ -72,9 +72,6 @@
     <ClInclude Include="PRooFPS-dd-PGE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Maps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Consts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -251,6 +248,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\Network\PgeIServerClient.h">
       <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Maps.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

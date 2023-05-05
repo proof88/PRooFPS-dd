@@ -1392,7 +1392,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
                 if (sendToThisPlayer.second.getServerSideConnectionHandle() == 0)
                 {
                     // server injects this packet to own queue
-                    getNetwork().getServer().InjectPacket(newPktUserUpdate);
+                    getNetwork().getServer().SendToServer(newPktUserUpdate);
                 }
                 else
                 {
@@ -1519,17 +1519,12 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             }
 
             if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
-            {   // shouldSend() at this point means that there were actual input so MsgUserCmdMove will be sent out
-                if (getNetwork().isServer())
-                {
-                    // inject this packet to server's queue
-                    // server will properly update its own position and send update to all clients too based on current state of handleUserCmdMove()
-                    getNetwork().getServer().InjectPacket(pkt);
-                }
-                else
-                {
-                    getNetwork().getClient().SendToServer(pkt);
-                }
+            {   
+                // shouldSend() at this point means that there were actual input so MsgUserCmdMove will be sent out.
+                // Instead of using SendToServer() of getClient() or getServer() instances, we use the SendToServer() of
+                // their common interface which always points to the initialized instance, which is either client or server.
+                // Btw SendToServer() in case of server is implemented by InjectPacket() as of May 2023.
+                getNetwork().getServerClientInstance()->SendToServer(pkt);
             }
         } // window is active
         m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
@@ -1895,8 +1890,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
-            getNetwork().getServer().InjectPacket(newPktSetup);
-            getNetwork().getServer().InjectPacket(newPktUserUpdate);
+            getNetwork().getServer().SendToServer(newPktSetup);
+            getNetwork().getServer().SendToServer(newPktUserUpdate);
         }
         else
         {
@@ -1937,8 +1932,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
-        getNetwork().getServer().InjectPacket(newPktSetup);
-        getNetwork().getServer().InjectPacket(newPktUserUpdate);
+        getNetwork().getServer().SendToServer(newPktSetup);
+        getNetwork().getServer().SendToServer(newPktUserUpdate);
 
         // inform all other clients about this new user
         getNetwork().getServer().SendPacketToAllClients(newPktSetup, connHandleServerSide);
@@ -1948,7 +1943,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().SendPacketToClient(connHandleServerSide, newPktSetup);
-        getNetwork().getServer().InjectPacket(newPktUserUpdate);
+        getNetwork().getServer().SendToServer(newPktUserUpdate);
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
