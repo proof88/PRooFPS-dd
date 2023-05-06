@@ -72,7 +72,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bWon(false),
     m_fCameraMinY(0.0f),
     m_bShowGuiDemo(false),
-    m_nServerSideConnectionHandle(0),
+    m_nServerSideConnectionHandle(pge_network::ServerConnHandle),
     m_nFramesElapsedSinceLastDurationsReset(0),
     m_nGravityCollisionDurationUSecs(0),
     m_nActiveWindowStuffDurationUSecs(0),
@@ -1018,7 +1018,7 @@ void proofps_dd::PRooFPSddPGE::UpdateBullets()
         {
             proofps_dd::MsgBulletUpdate::initPktForDeleting_WithGarbageValues(
                 newPktBulletUpdate,
-                0,
+                pge_network::ServerConnHandle,
                 bullet.getId()); // clients will also delete this bullet on their side because we set pkt's delete flag here
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
         }
@@ -1045,7 +1045,7 @@ void proofps_dd::PRooFPSddPGE::UpdateBullets()
         // 'it' is referring to next bullet, don't use it from here!
         for (const auto& sendToThisPlayer : m_mapPlayers)
         {
-            if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
+            if (sendToThisPlayer.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle)
             {   // since bullet.Update() updates the bullet position already, server doesn't send this to itself
                 getNetwork().getServer().send(newPktBulletUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
             }
@@ -1083,7 +1083,7 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
                 pge_network::PgePacket pktWpnUpdate;
                 proofps_dd::MsgWpnUpdate::initPkt(
                     pktWpnUpdate,
-                    0 /* ignored by client anyway */,
+                    pge_network::ServerConnHandle /* ignored by client anyway */,
                     wpn->getFilename(),
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
@@ -1169,7 +1169,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
+                if (sendToThisPlayer.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle)
                 {
                     getNetwork().getServer().send(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
                 }
@@ -1288,7 +1288,7 @@ void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
                         // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
                         if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
                         {
-                            if (playerPair.second.getServerSideConnectionHandle() != 0) // server doesnt send this to itself
+                            if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
                             {
                                 getNetwork().getServer().send(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
                             }
@@ -1303,13 +1303,13 @@ void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
         {
             proofps_dd::MsgMapItemUpdate::initPkt(
                 newPktMapItemUpdate,
-                0,
+                pge_network::ServerConnHandle,
                 mapItem.getId(),
                 mapItem.isTaken());
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
+                if (sendToThisPlayer.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle)
                 { 
                     getNetwork().getServer().send(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
                 }
@@ -1931,8 +1931,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         getNetwork().getServer().send(newPktUserUpdate);
 
         // inform all other clients about this new user
-        getNetwork().getServer().sendToAllClients(newPktSetup, connHandleServerSide);
-        getNetwork().getServer().sendToAllClients(newPktUserUpdate, connHandleServerSide);
+        getNetwork().getServer().sendToAllClientsExcept(newPktSetup, connHandleServerSide);
+        getNetwork().getServer().sendToAllClientsExcept(newPktUserUpdate, connHandleServerSide);
 
         // now we send this msg to the client with this bool flag set so client will know it is their connect
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
@@ -1980,7 +1980,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
 
             proofps_dd::MsgMapItemUpdate::initPkt(
                 newPktMapItemUpdate,
-                0,
+                pge_network::ServerConnHandle,
                 itemPair.first,
                 itemPair.second->isTaken());
             getNetwork().getServer().send(newPktMapItemUpdate, connHandleServerSide);
@@ -2259,7 +2259,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
                 pge_network::PgePacket pktWpnUpdate;
                 proofps_dd::MsgWpnUpdate::initPkt(
                     pktWpnUpdate,
-                    0 /* ignored by client anyway */,
+                    pge_network::ServerConnHandle /* ignored by client anyway */,
                     wpn->getFilename(),
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
