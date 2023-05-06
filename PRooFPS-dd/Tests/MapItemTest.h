@@ -53,7 +53,7 @@ protected:
         proofps_dd::MapItem::ResetGlobalData();
     }
 
-    virtual void Finalize()
+    virtual void Finalize() override
     {
         if (engine)
         {

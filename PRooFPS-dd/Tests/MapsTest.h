@@ -59,7 +59,7 @@ protected:
     {
     }
 
-    virtual void Finalize()
+    virtual void Finalize() override
     {
         if ( engine )
         {
