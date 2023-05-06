@@ -50,12 +50,12 @@ protected:
         AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
     }
 
-    virtual bool setUp()
+    virtual bool setUp() override
     {
         return assertTrue(engine && engine->isInitialized());
     }
 
-    virtual void TearDown()
+    virtual void TearDown() override
     {
     }
 

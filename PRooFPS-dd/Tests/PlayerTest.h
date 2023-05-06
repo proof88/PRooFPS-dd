@@ -62,12 +62,12 @@ protected:
         AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
     }
 
-    virtual bool setUp()
+    virtual bool setUp() override
     {
         return assertTrue(engine && engine->isInitialized(), "engine inited");
     }
 
-    virtual void TearDown()
+    virtual void TearDown() override
     {
 
     }

@@ -43,12 +43,12 @@ protected:
         AddSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
     }
 
-    virtual bool setUp()
+    virtual bool setUp() override
     {
         return assertTrue(engine && engine->isInitialized());
     }
 
-    virtual void TearDown()
+    virtual void TearDown() override
     {
         proofps_dd::MapItem::ResetGlobalData();
     }
