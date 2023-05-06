@@ -1047,7 +1047,7 @@ void proofps_dd::PRooFPSddPGE::UpdateBullets()
         {
             if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
             {   // since bullet.Update() updates the bullet position already, server doesn't send this to itself
-                getNetwork().getServer().sendTo(newPktBulletUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
+                getNetwork().getServer().send(newPktBulletUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
             }
         }
     }
@@ -1088,7 +1088,7 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
                     wpn->getUnmagBulletCount());
-                getNetwork().getServer().sendTo(pktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
+                getNetwork().getServer().send(pktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
             }
         }
     }
@@ -1171,7 +1171,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
             {
                 if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
                 {
-                    getNetwork().getServer().sendTo(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
+                    getNetwork().getServer().send(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
                 }
             }
         } // end for items
@@ -1290,7 +1290,7 @@ void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
                         {
                             if (playerPair.second.getServerSideConnectionHandle() != 0) // server doesnt send this to itself
                             {
-                                getNetwork().getServer().sendTo(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
+                                getNetwork().getServer().send(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
                             }
                         }
                         break; // a player can collide with only one item at a time since there are no overlapping items
@@ -1311,7 +1311,7 @@ void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
             {
                 if (sendToThisPlayer.second.getServerSideConnectionHandle() != 0)
                 { 
-                    getNetwork().getServer().sendTo(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
+                    getNetwork().getServer().send(newPktMapItemUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
                 }
             }
         }
@@ -1392,7 +1392,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                getNetwork().getServer().sendTo(newPktUserUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
+                getNetwork().getServer().send(newPktUserUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
             }
         }
     }
@@ -1519,7 +1519,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 // Instead of using sendToServer() of getClient() or getServer() instances, we use the sendToServer() of
                 // their common interface which always points to the initialized instance, which is either client or server.
                 // Btw sendToServer() in case of server is implemented by inject() as of May 2023.
-                getNetwork().getServerClientInstance()->sendTo(pkt);
+                getNetwork().getServerClientInstance()->send(pkt);
             }
         } // window is active
         m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
@@ -1885,8 +1885,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
-            getNetwork().getServer().sendTo(newPktSetup);
-            getNetwork().getServer().sendTo(newPktUserUpdate);
+            getNetwork().getServer().send(newPktSetup);
+            getNetwork().getServer().send(newPktUserUpdate);
         }
         else
         {
@@ -1927,8 +1927,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
-        getNetwork().getServer().sendTo(newPktSetup);
-        getNetwork().getServer().sendTo(newPktUserUpdate);
+        getNetwork().getServer().send(newPktSetup);
+        getNetwork().getServer().send(newPktUserUpdate);
 
         // inform all other clients about this new user
         getNetwork().getServer().sendToAllClients(newPktSetup, connHandleServerSide);
@@ -1937,8 +1937,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // now we send this msg to the client with this bool flag set so client will know it is their connect
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
         msgUserSetup.m_bCurrentClient = true;
-        getNetwork().getServer().sendTo(newPktSetup, connHandleServerSide);
-        getNetwork().getServer().sendTo(newPktUserUpdate);
+        getNetwork().getServer().send(newPktSetup, connHandleServerSide);
+        getNetwork().getServer().send(newPktUserUpdate);
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
@@ -1951,7 +1951,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 false,
                 it.second.getName(), it.second.getIpAddress(),
                 "" /* here mapFilename is irrelevant */);
-            getNetwork().getServer().sendTo(newPktSetup, connHandleServerSide);
+            getNetwork().getServer().send(newPktSetup, connHandleServerSide);
 
             proofps_dd::MsgUserUpdate::initPkt(
                 newPktUserUpdate,
@@ -1966,7 +1966,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 false,
                 it.second.getFrags(),
                 it.second.getDeaths());
-            getNetwork().getServer().sendTo(newPktUserUpdate, connHandleServerSide);
+            getNetwork().getServer().send(newPktUserUpdate, connHandleServerSide);
         }
 
         // we also send the state of all map items
@@ -1983,7 +1983,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 0,
                 itemPair.first,
                 itemPair.second->isTaken());
-            getNetwork().getServer().sendTo(newPktMapItemUpdate, connHandleServerSide);
+            getNetwork().getServer().send(newPktMapItemUpdate, connHandleServerSide);
         }
     }
 
@@ -2207,7 +2207,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
                         pktWpnUpdateCurrent,
                         connHandleServerSide,
                         pTargetWpn->getFilename());
-                    getNetwork().getServer().sendTo(pktWpnUpdateCurrent, client.first);
+                    getNetwork().getServer().send(pktWpnUpdateCurrent, client.first);
                     //getConsole().OLn("PRooFPSddPGE::%s(): sent MsgWpnUpdateCurrent to %u about new wpn of %u!", __func__, client.first, connHandleServerSide);
                 }
             }
@@ -2264,7 +2264,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
                     wpn->getUnmagBulletCount());
-                getNetwork().getServer().sendTo(pktWpnUpdate, it->second.getServerSideConnectionHandle());
+                getNetwork().getServer().send(pktWpnUpdate, it->second.getServerSideConnectionHandle());
             }
             else
             {
