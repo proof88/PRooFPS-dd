@@ -1392,15 +1392,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
 
             for (const auto& sendToThisPlayer : m_mapPlayers)
             {
-                if (sendToThisPlayer.second.getServerSideConnectionHandle() == 0)
-                {
-                    // server injects this packet to own queue
-                    getNetwork().getServer().sendTo(newPktUserUpdate, 0);
-                }
-                else
-                {
-                    getNetwork().getServer().sendTo(newPktUserUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
-                }
+                getNetwork().getServer().sendTo(newPktUserUpdate, sendToThisPlayer.second.getServerSideConnectionHandle());
             }
         }
     }
@@ -1527,7 +1519,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 // Instead of using sendToServer() of getClient() or getServer() instances, we use the sendToServer() of
                 // their common interface which always points to the initialized instance, which is either client or server.
                 // Btw sendToServer() in case of server is implemented by inject() as of May 2023.
-                getNetwork().getServerClientInstance()->sendTo(pkt, 0);
+                getNetwork().getServerClientInstance()->sendTo(pkt);
             }
         } // window is active
         m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
@@ -1893,8 +1885,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
-            getNetwork().getServer().sendTo(newPktSetup, 0);
-            getNetwork().getServer().sendTo(newPktUserUpdate, 0);
+            getNetwork().getServer().sendTo(newPktSetup);
+            getNetwork().getServer().sendTo(newPktUserUpdate);
         }
         else
         {
@@ -1935,8 +1927,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
-        getNetwork().getServer().sendTo(newPktSetup, 0);
-        getNetwork().getServer().sendTo(newPktUserUpdate, 0);
+        getNetwork().getServer().sendTo(newPktSetup);
+        getNetwork().getServer().sendTo(newPktUserUpdate);
 
         // inform all other clients about this new user
         getNetwork().getServer().sendToAllClients(newPktSetup, connHandleServerSide);
@@ -1946,7 +1938,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().sendTo(newPktSetup, connHandleServerSide);
-        getNetwork().getServer().sendTo(newPktUserUpdate, 0);
+        getNetwork().getServer().sendTo(newPktUserUpdate);
 
         // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
