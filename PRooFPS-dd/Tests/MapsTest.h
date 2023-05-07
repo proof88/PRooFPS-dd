@@ -25,6 +25,11 @@ public:
         engine = NULL;
     }
 
+    MapsTest(const MapsTest&) = delete;
+    MapsTest& operator=(const MapsTest&) = delete;
+    MapsTest(MapsTest&&) = delete;
+    MapsTest&& operator=(MapsTest&&) = delete;
+
 protected:
 
     virtual void Initialize() override
@@ -81,15 +86,6 @@ private:
     PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
-
-    MapsTest(const MapsTest&) :
-        m_cfgProfiles(m_cfgProfiles)
-    {};         
-
-    MapsTest& operator=(const MapsTest&)
-    {
-        return *this;
-    };
 
     bool test_initially_empty()
     {

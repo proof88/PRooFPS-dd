@@ -48,6 +48,11 @@ public:
     {
     }
 
+    RegTestBasicServerClient2Players(const RegTestBasicServerClient2Players&) = delete;
+    RegTestBasicServerClient2Players& operator=(const RegTestBasicServerClient2Players&) = delete;
+    RegTestBasicServerClient2Players(RegTestBasicServerClient2Players&&) = delete;
+    RegTestBasicServerClient2Players&& operator=(RegTestBasicServerClient2Players&&) = delete;
+
 protected:
 
     virtual bool setUp() override
@@ -673,15 +678,5 @@ private:
     } // StartGame()
 
     // ---------------------------------------------------------------------------
-
-    RegTestBasicServerClient2Players(const RegTestBasicServerClient2Players&) :
-        cfgWpnPistol(false, false),
-        cfgWpnMachinegun(false, false)
-    {};
-
-    RegTestBasicServerClient2Players& operator=(const RegTestBasicServerClient2Players&)
-    {
-        return *this;
-    };
 
 };

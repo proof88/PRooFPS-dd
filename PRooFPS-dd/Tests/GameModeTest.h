@@ -30,6 +30,11 @@ public:
     {
     }
 
+    GameModeTest(const GameModeTest&) = delete;
+    GameModeTest& operator=(const GameModeTest&) = delete;
+    GameModeTest(GameModeTest&&) = delete;
+    GameModeTest&& operator=(GameModeTest&&) = delete;
+
 protected:
 
     virtual void Initialize() override
@@ -100,18 +105,6 @@ private:
     PR00FsUltimateRenderingEngine* m_engine;
 
     // ---------------------------------------------------------------------------
-
-    GameModeTest(const GameModeTest&) :
-        gm(nullptr),
-        dm(nullptr),
-        m_cfgProfiles(m_cfgProfiles),
-        m_engine(nullptr)
-    {};
-
-    GameModeTest& operator=(const GameModeTest&)
-    {
-        return *this;
-    };
 
     bool assertFragTableEquals(
         const std::vector<proofps_dd::FragTableRow>& expectedPlayers,

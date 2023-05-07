@@ -123,14 +123,10 @@ namespace proofps_dd
 
         GameMode(GameModeType gm);
 
-        // TODO: explicitly delete these
-        GameMode(const GameMode&)
-        {}
-
-        GameMode& operator=(const GameMode&)
-        {
-            return *this;
-        }
+        GameMode(const GameMode&) = delete;
+        GameMode& operator=(const GameMode&) = delete;
+        GameMode(GameMode&&) = delete;
+        GameMode&& operator=(GameMode&&) = delete;
 
     private:
 
@@ -152,6 +148,11 @@ namespace proofps_dd
 
         DeathMatchMode();
         virtual ~DeathMatchMode();
+
+        DeathMatchMode(const DeathMatchMode&) = delete;
+        DeathMatchMode& operator=(const DeathMatchMode&) = delete;
+        DeathMatchMode(DeathMatchMode&&) = delete;
+        DeathMatchMode&& operator=(DeathMatchMode&&) = delete;
 
         virtual void restart() override;
         virtual bool checkWinningConditions() override;
@@ -195,15 +196,6 @@ namespace proofps_dd
         virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) override;
 
     protected:
-
-        // TODO: explicitly delete these
-        DeathMatchMode(const DeathMatchMode& dmm) : GameMode(dmm.getGameModeType())
-        {}
-
-        DeathMatchMode& operator=(const DeathMatchMode&)
-        {
-            return *this;
-        }
 
     private:
 

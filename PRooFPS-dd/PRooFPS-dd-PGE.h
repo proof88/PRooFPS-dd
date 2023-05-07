@@ -45,41 +45,13 @@ namespace proofps_dd
 
     protected:
 
-        PRooFPSddPGE() :
-            proofps_dd::InputHandling(
-                getConfigProfiles(),
-                getInput().getKeyboard(),
-                getInput().getMouse(),
-                getNetwork(),
-                getPure(),
-                m_durations,
-                m_maps),
-            m_gameMode(nullptr),
-            m_deathMatchMode(nullptr),
-            m_maps(getPure())
-        {}
-
-        PRooFPSddPGE(const PRooFPSddPGE&) :
-            proofps_dd::InputHandling(
-                getConfigProfiles(),
-                getInput().getKeyboard(),
-                getInput().getMouse(),
-                getNetwork(),
-                getPure(),
-                m_durations,
-                m_maps),
-            m_gameMode(nullptr),
-            m_deathMatchMode(nullptr),
-            m_maps(getPure())
-        {}
-
-        PRooFPSddPGE& operator=(const PRooFPSddPGE&)
-        {
-            return *this;
-        }
-
         explicit PRooFPSddPGE(const char* gametitle);  /**< This is the only usable ctor, this is used by the static createAndGet(). */
         virtual ~PRooFPSddPGE();
+
+        PRooFPSddPGE(const PRooFPSddPGE&) = delete;
+        PRooFPSddPGE& operator=(const PRooFPSddPGE&) = delete;
+        PRooFPSddPGE(PRooFPSddPGE&&) = delete;
+        PRooFPSddPGE&& operator=(PRooFPSddPGE&&) = delete;
 
         virtual bool onGameInitializing() override;               /**< Must-have minimal stuff before loading anything. */
         virtual bool onGameInitialized() override;                /**< Loading game content here. */

@@ -23,6 +23,11 @@ public:
         m_cfgProfiles(cfgProfiles)
     {}
 
+    MapItemTest(const MapItemTest&) = delete;
+    MapItemTest& operator=(const MapItemTest&) = delete;
+    MapItemTest(MapItemTest&&) = delete;
+    MapItemTest&& operator=(MapItemTest&&) = delete;
+
 protected:
 
     virtual void Initialize() override
@@ -71,15 +76,6 @@ private:
     PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
-
-    MapItemTest(const MapItemTest&) :
-        m_cfgProfiles(m_cfgProfiles)
-    {};
-
-    MapItemTest& operator=(const MapItemTest&)
-    {
-        return *this;
-    };
 
     bool test_initially_empty()
     {

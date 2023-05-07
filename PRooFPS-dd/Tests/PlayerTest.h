@@ -29,6 +29,11 @@ public:
         engine(nullptr)
     {}
 
+    PlayerTest(const PlayerTest&) = delete;
+    PlayerTest& operator=(const PlayerTest&) = delete;
+    PlayerTest(PlayerTest&&) = delete;
+    PlayerTest&& operator=(PlayerTest&&) = delete;
+
 protected:
 
     virtual void Initialize() override
@@ -90,16 +95,6 @@ private:
     std::list<Bullet> m_bullets;
 
     // ---------------------------------------------------------------------------
-
-    PlayerTest(const PlayerTest&) :
-        m_cfgProfiles(m_cfgProfiles),
-        engine(nullptr)
-    {};
-
-    PlayerTest& operator=(const PlayerTest&)
-    {
-        return *this;
-    };
 
     bool loadWeaponsForPlayer(proofps_dd::Player& player)
     {

@@ -47,10 +47,14 @@ namespace proofps_dd
             PR00FsUltimateRenderingEngine& gfx,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const std::string& sIpAddress);
+        ~Player();
+
         Player(const Player&);
         Player& operator=(const Player&);
+
         // TODO: add move ctor and move assignment operator
-        ~Player();
+        Player(Player&&) = delete;
+        Player&& operator=(Player&&) = delete;
 
         const pge_network::PgeNetworkConnectionHandle& getServerSideConnectionHandle() const;
         const std::string& getIpAddress() const;

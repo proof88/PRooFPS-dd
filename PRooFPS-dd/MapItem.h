@@ -50,6 +50,11 @@ namespace proofps_dd
     
         MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos);
         ~MapItem();
+
+        MapItem(const MapItem&) = delete;
+        MapItem& operator=(const MapItem&) = delete;
+        MapItem(MapItem&&) = delete;
+        MapItem&& operator=(MapItem&&) = delete;
     
         const MapItemId&    getId() const;
         const MapItemType&  getType() const;

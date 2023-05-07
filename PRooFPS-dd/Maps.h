@@ -36,6 +36,11 @@ namespace proofps_dd
         Maps(PR00FsUltimateRenderingEngine& gfx);
         virtual ~Maps();
 
+        Maps(const Maps&) = delete;
+        Maps& operator=(const Maps&) = delete;
+        Maps(Maps&&) = delete;
+        Maps&& operator=(Maps&&) = delete;
+
         bool initialize();
         bool loaded() const;
         bool load(const char* fname);
@@ -62,15 +67,6 @@ namespace proofps_dd
         void Update();
 
     protected:
-
-        Maps(const Maps&) :
-            m_gfx(m_gfx)
-        {}
-
-        Maps& operator=(const Maps&)
-        {
-            return *this;
-        }
 
     private:
         const float GAME_PLAYERS_POS_Z = -1.2f;
