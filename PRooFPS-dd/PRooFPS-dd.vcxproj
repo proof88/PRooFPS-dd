@@ -181,7 +181,9 @@
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererHWfixedPipe.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h" />
     <ClInclude Include="Consts.h" />
+    <ClInclude Include="Durations.h" />
     <ClInclude Include="GameMode.h" />
+    <ClInclude Include="InputHandling.h" />
     <ClInclude Include="MapItem.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PRooFPS-dd-packet.h" />
@@ -201,6 +203,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameMode.cpp" />
+    <ClCompile Include="InputHandling.cpp" />
     <ClCompile Include="MapItem.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PRooFPS-dd-PGE.cpp" />

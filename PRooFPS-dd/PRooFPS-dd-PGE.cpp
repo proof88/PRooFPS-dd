@@ -63,6 +63,14 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 */
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
+    proofps_dd::InputHandling(
+        getConfigProfiles(),
+        getInput().getKeyboard(),
+        getInput().getMouse(),
+        getNetwork(),
+        getPure(),
+        m_durations,
+        m_maps),
     m_maps(getPure()),
     m_fps(0),
     m_fps_counter(0),
@@ -71,21 +79,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f),
-    m_bShowGuiDemo(false),
-    m_nServerSideConnectionHandle(pge_network::ServerConnHandle),
-    m_nFramesElapsedSinceLastDurationsReset(0),
-    m_nGravityCollisionDurationUSecs(0),
-    m_nActiveWindowStuffDurationUSecs(0),
-    m_nUpdateWeaponsDurationUSecs(0),
-    m_nUpdateBulletsDurationUSecs(0),
-    m_nUpdateRespawnTimersDurationUSecs(0),
-    m_nPickupAndRespawnItemsDurationUSecs(0),
-    m_nUpdateGameModeDurationUSecs(0),
-    m_nSendUserUpdatesDurationUSecs(0),
-    m_nFullOnGameRunningDurationUSecs(0),
-    m_nHandleUserCmdMoveDurationUSecs(0),
-    m_nFullOnPacketReceivedDurationUSecs(0),
-    m_nFullRoundtripDurationUSecs(0)
+    m_nServerSideConnectionHandle(pge_network::ServerConnHandle)
 {
     
 }
@@ -294,8 +288,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 // ############################### PRIVATE ###############################
 
 
-const unsigned int proofps_dd::PRooFPSddPGE::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
-
 void proofps_dd::PRooFPSddPGE::Text(const std::string& s, int x, int y) const
 {
     getPure().getUImanager().text(s, x, y)->SetDropShadow(true);
@@ -305,310 +297,6 @@ void proofps_dd::PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
 {
     getPure().getUImanager().addText(s, x, y)->SetDropShadow(true);
 }
-
-void proofps_dd::PRooFPSddPGE::KeyBoard(int /*fps*/, bool& won, pge_network::PgePacket& pkt, Player& player)
-{
-    PGEInputKeyboard& keybd = getInput().getKeyboard();
-  
-    if ( keybd.isKeyPressedOnce(VK_ESCAPE) )
-    {
-        getPure().getWindow().Close();
-    }
-
-    if (m_gameMode->checkWinningConditions())
-    {
-        return;
-    }
-
-    if (keybd.isKeyPressed(VK_TAB))
-    {
-        m_gameMode->showObjectives(getPure(), getNetwork());
-    }
-
-    if (keybd.isKeyPressedOnce(VK_BACK))
-    {
-        m_bShowGuiDemo = !m_bShowGuiDemo;
-        getPure().ShowGuiDemo(m_bShowGuiDemo);
-        getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
-    }
-
-    if (m_bShowGuiDemo)
-    {
-        return;
-    }
-
-    if (player.getHealth() == 0)
-    {
-        return;
-    }
-
-    if ( !won )
-    {
-
-        if (keybd.isKeyPressedOnce(VK_RETURN))
-        {
-            if (getConfigProfiles().getVars()["testing"].getAsBool())
-            {
-                RegTestDumpToFile();
-            }
-        }
-
-        if (keybd.isKeyPressedOnce((unsigned char)VkKeyScan('t')))
-        {
-            if (getNetwork().isServer())
-            {
-                // for testing purpose only, we can teleport server player to random spawn point
-                player.getPos() = m_maps.getRandomSpawnpoint();
-                player.getRespawnFlag() = true;
-            }
-
-            // log some stats
-            getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
-            getPure().getRenderer()->ResetStatistics();
-            getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
-
-            getConsole().OLn("");
-            getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_nFramesElapsedSinceLastDurationsReset);
-            getConsole().OLn("Avg Durations per Frame:");
-            getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_nFullRoundtripDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_nGravityCollisionDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_nUpdateBulletsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_nUpdateGameModeDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("");
-
-            m_nFramesElapsedSinceLastDurationsReset = 0;
-            m_nFullRoundtripDurationUSecs = 0;
-            m_nFullOnGameRunningDurationUSecs = 0;
-            m_nGravityCollisionDurationUSecs = 0;
-            m_nActiveWindowStuffDurationUSecs = 0;
-            m_nUpdateWeaponsDurationUSecs = 0;
-            m_nUpdateBulletsDurationUSecs = 0;
-            m_nUpdateRespawnTimersDurationUSecs = 0;
-            m_nPickupAndRespawnItemsDurationUSecs = 0;
-            m_nUpdateGameModeDurationUSecs = 0;
-            m_nSendUserUpdatesDurationUSecs = 0;
-            m_nFullOnPacketReceivedDurationUSecs = 0;
-            m_nHandleUserCmdMoveDurationUSecs = 0;
-        }
-
-        proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
-        if (keybd.isKeyPressed(VK_LEFT) || keybd.isKeyPressed((unsigned char)VkKeyScan('a')))
-        {
-            strafe = proofps_dd::Strafe::LEFT;
-        }
-        if (keybd.isKeyPressed(VK_RIGHT) || keybd.isKeyPressed((unsigned char)VkKeyScan('d')))
-        {
-            strafe = proofps_dd::Strafe::RIGHT;
-        }
-    
-        bool bSendJumpAction = false;
-        if ( keybd.isKeyPressedOnce( VK_SPACE ) )
-        {
-            bSendJumpAction = true;
-        }
-    
-        bool bToggleRunWalk = false;
-        if ( keybd.isKeyPressedOnce( VK_SHIFT ) )
-        {
-            bToggleRunWalk = true;
-        }
-
-        bool bRequestReload = false;
-        if (keybd.isKeyPressedOnce((unsigned char)VkKeyScan('r')))
-        {
-            bRequestReload = true;
-        }
-
-        unsigned char cWeaponSwitch = '\0';
-        if (!bRequestReload)
-        {   // we dont care about wpn switch if reload is requested
-            for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
-            {
-                if (keybd.isKeyPressedOnce(keyWpnPair.first))
-                {
-                    const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
-                    if (!pTargetWpn)
-                    {
-                        getConsole().EOLn("PRooFPSddPGE::%s(): not found weapon by name: %s!",
-                            __func__, keyWpnPair.second.c_str());
-                        break;
-                    }
-                    if (!pTargetWpn->isAvailable())
-                    {
-                        //getConsole().OLn("PRooFPSddPGE::%s(): weapon %s not available!",
-                        //    __func__, key.second.c_str());
-                        break;
-                    }
-                    if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                    {
-                        cWeaponSwitch = keyWpnPair.first;
-                    }
-                    break;
-                }
-            }
-        }
-    
-        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
-        {
-            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
-        }
-    }
-    else
-    {
-        
-    } // won
-}
-
-bool proofps_dd::PRooFPSddPGE::Mouse(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt, Player& player)
-{
-    PGEInputMouse& mouse = getInput().getMouse();
-
-    // we should always read the wheel data as often as possible, because this way we can avoid
-    // the amount of wheel rotation accumulating too much
-    const short int nMouseWheelChange = mouse.getWheel();
-    
-    if (m_gameMode->checkWinningConditions())
-    {
-        return false;
-    }
-
-    if (m_bShowGuiDemo)
-    {
-        return false;
-    }
-
-    static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
-    bool bShootActionBeingSent = false;
-    if (mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
-    {
-        bPrevLeftButtonPressed = true;
-
-        // sending mouse action is still allowed when player is dead, since server will treat that
-        // as respawn request
-
-        const auto nSecsSinceLastWeaponSwitch =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-                ).count();
-        if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
-        }
-        else
-        {
-            proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
-            bShootActionBeingSent = true;
-        }
-    }
-    else
-    {
-        if (!proofps_dd::MsgUserCmdMove::getReloadRequest(pkt) && bPrevLeftButtonPressed)
-        {
-            bPrevLeftButtonPressed = false;
-            proofps_dd::MsgUserCmdMove::setMouse(pkt, false);
-        }
-    }
-
-    if (player.getHealth() == 0)
-    {
-        return false;
-    }
-
-    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdMove::getReloadRequest(pkt))
-    {
-        MouseWheel(nMouseWheelChange, pkt, player);
-    }
-
-    const int oldmx = mouse.getCursorPosX();
-    const int oldmy = mouse.getCursorPosY();
-
-    mouse.SetCursorPos(
-        getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
-        getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
-
-    const int dx = oldmx - mouse.getCursorPosX();
-    const int dy = oldmy - mouse.getCursorPosY();
-
-    if ((dx == 0) && (dy == 0))
-    {
-        return false;
-    }
-    
-    static bool bInitialXHairPosForTestingApplied = false;
-    if (!bInitialXHairPosForTestingApplied && getConfigProfiles().getVars()["testing"].getAsBool())
-    {
-        getConsole().OLn("PRooFPSddPGE::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
-        bInitialXHairPosForTestingApplied = true;
-        if (getNetwork().isServer())
-        {
-            m_pObjXHair->getPosVec().Set(100.f, 0.f, m_pObjXHair->getPosVec().getZ());
-        }
-        else
-        {
-            m_pObjXHair->getPosVec().Set(-100.f, 0.f, m_pObjXHair->getPosVec().getZ());
-        }
-    }
-    else
-    {
-        m_pObjXHair->getPosVec().Set(
-            m_pObjXHair->getPosVec().getX() + dx,
-            m_pObjXHair->getPosVec().getY() - dy,
-            0.f);
-    }
-
-    return true;
-}
-
-void proofps_dd::PRooFPSddPGE::MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt, Player& player)
-{
-    if (proofps_dd::MsgUserCmdMove::getWeaponSwitch(pkt) != '\0')
-    {
-        return;
-    }
-
-    if (nMouseWheelChange == 0)
-    {
-        return;
-    }
-
-    // if we dont shoot, and weapon switch not yet initiated by keyboard, we
-    // are allowed to process mousewheel event for changing weapon
-    //getConsole().OLn("PRooFPSddPGE::%s(): mousewheel: %d!", __func__, nMouseWheelChange);
-
-    unsigned char cTargetWeapon;
-    const Weapon* pWpnTarget;
-    // I dont know if it is a good approach to just check only the sign of the change, and based on that,
-    // move 1 step forward or backward in weapons list ... or maybe I should move n steps based on the exact amount ...
-    if (nMouseWheelChange > 0)
-    {
-        // wheel rotated forward, in CS it means going forward in the list;
-        pWpnTarget = player.getWeaponManager().getNextAvailableWeapon(cTargetWeapon);
-    }
-    else
-    {
-        // wheel rotated backward, in CS it means going backward in the list;
-        pWpnTarget = player.getWeaponManager().getPrevAvailableWeapon(cTargetWeapon);
-    }
-
-    if (pWpnTarget == player.getWeaponManager().getCurrentWeapon())
-    {
-        getConsole().OLn("PRooFPSddPGE::%s(): no next available weapon found!", __func__);
-    }
-    else
-    {
-        proofps_dd::MsgUserCmdMove::SetWeaponSwitch(pkt, cTargetWeapon);
-        getConsole().OLn("PRooFPSddPGE::%s(): next weapon is: %s!", __func__, pWpnTarget->getFilename().c_str());
-    }            
-}
-
 
 bool proofps_dd::PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
 {
@@ -1051,7 +739,7 @@ void proofps_dd::PRooFPSddPGE::UpdateBullets()
         Bullet::ResetGlobalBulletId();
     }
 
-    m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::UpdateWeapons()
@@ -1087,7 +775,7 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
         }
     }
 
-    m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::HandlePlayerDied(Player& player)
@@ -1215,7 +903,7 @@ void proofps_dd::PRooFPSddPGE::UpdateRespawnTimers()
         }
     }
 
-    m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
@@ -1299,7 +987,7 @@ void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
         }
     } // for item
 
-    m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::UpdateGameMode()
@@ -1326,7 +1014,7 @@ void proofps_dd::PRooFPSddPGE::UpdateGameMode()
         }
     }
 
-    m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::SendUserUpdates()
@@ -1375,7 +1063,7 @@ void proofps_dd::PRooFPSddPGE::SendUserUpdates()
         }
     }
 
-    m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 /**
@@ -1417,16 +1105,16 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeOnGameRunningStart = std::chrono::steady_clock::now();
 
-    if (m_timeFullRoundtripStart.time_since_epoch().count() != 0)
+    if (m_durations.m_timeFullRoundtripStart.time_since_epoch().count() != 0)
     {
-        m_nFullRoundtripDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(timeOnGameRunningStart - m_timeFullRoundtripStart).count();
+        m_durations.m_nFullRoundtripDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(timeOnGameRunningStart - m_durations.m_timeFullRoundtripStart).count();
     }
-    m_timeFullRoundtripStart = timeOnGameRunningStart;
+    m_durations.m_timeFullRoundtripStart = timeOnGameRunningStart;
 
     PureWindow& window = getPure().getWindow();
 
     m_fps_ms = GetTickCount();
-    m_nFramesElapsedSinceLastDurationsReset++;
+    m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
     // having valid connection means that server accepted the connection and we have initialized our player;
     // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry even ...
@@ -1442,7 +1130,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 Gravity(m_fps);
                 PlayerCollisionWithWalls(m_bWon);
             }
-            m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+            m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
 
         Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
@@ -1465,8 +1153,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             pge_network::PgePacket pkt;
             proofps_dd::MsgUserCmdMove::initPkt(pkt);
 
-            KeyBoard(m_fps, m_bWon, pkt, player);
-            Mouse(m_fps, m_bWon, pkt, player);
+            keyboard(*m_gameMode, m_fps, m_bWon, pkt, player);
+            mouse(*m_gameMode, m_fps, m_bWon, pkt, player, *m_pObjXHair);
 
             player.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
             player.getObject3D()->getAngleVec().SetY(player.getAngleY());
@@ -1500,7 +1188,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 getNetwork().getServerClientInstance()->send(pkt);
             }
         } // window is active
-        m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
         CameraMovement(m_fps, player);
 
@@ -1556,7 +1244,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         window.SetCaption(str.str());
     } 
 
-    m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
+    m_durations.m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
 }
 
 /**
@@ -1613,7 +1301,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pkt.pktId);
     }
 
-    m_nFullOnPacketReceivedDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nFullOnPacketReceivedDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     return bRet;
 }
 
@@ -2202,7 +1890,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
     if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
         // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-        m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         return true; // don't check anything related to shooting in case of either of these actions
     }
 
@@ -2216,7 +1904,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
         {
             //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
             // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-            m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+            m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             return true;
         }
 
@@ -2259,7 +1947,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnecti
         }
     }
     // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-    m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
     return true;
 }
@@ -2552,64 +2240,4 @@ bool proofps_dd::PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkCon
     }
 
     return true;
-}
-
-void proofps_dd::PRooFPSddPGE::RegTestDumpToFile() 
-{
-    std::ofstream fRegTestDump(getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
-    if (fRegTestDump.fail())
-    {
-        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
-        return;
-    }
-
-    fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
-    fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
-    fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
-
-    fRegTestDump << "Frag Table: Player Name, Frags, Deaths" << std::endl;
-    for (const auto& player : m_deathMatchMode->getFragTable())
-    {
-        fRegTestDump << "  " << player.m_sName << std::endl;
-        fRegTestDump << "  " << player.m_nFrags << std::endl;
-        fRegTestDump << "  " << player.m_nDeaths << std::endl;
-    }
-
-    // add an extra empty line, so the regression test can easily detect end of frag table
-    fRegTestDump << std::endl;
-
-    const auto selfPlayerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
-    if (selfPlayerIt == m_mapPlayers.end())
-    {
-        // must always find self player
-        return;
-    }
-
-    Player& selfPlayer = selfPlayerIt->second;
-
-    fRegTestDump << "Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count" << std::endl;
-    for (const auto& wpn : selfPlayer.getWeaponManager().getWeapons())
-    {
-        if (wpn->isAvailable())
-        {
-            fRegTestDump << "  " << wpn->getFilename() << std::endl;
-            fRegTestDump << "  " << wpn->getMagBulletCount() << std::endl;
-            fRegTestDump << "  " << wpn->getUnmagBulletCount() << std::endl;
-        }
-    }
-
-    // add an extra empty line, so the regression test can easily detect end of weapon list
-    fRegTestDump << std::endl;
-
-    fRegTestDump << "Player Info: Health" << std::endl;
-    fRegTestDump << "  " << selfPlayer.getHealth().getNew() << std::endl;
-
-    fRegTestDump.flush();
-    fRegTestDump.close();
 }

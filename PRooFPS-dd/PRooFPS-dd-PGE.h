@@ -16,7 +16,9 @@
 #include "../../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
 
 #include "Consts.h"
+#include "Durations.h"
 #include "GameMode.h"
+#include "InputHandling.h"
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -27,8 +29,9 @@ namespace proofps_dd
     /**
         The customized game engine class. This handles the game logic. Singleton.
     */
-    class PRooFPSddPGE :
-        public PGE
+    class PRooFPSddPGE final :
+        public PGE,
+        protected proofps_dd::InputHandling
     {
 
     public:
@@ -43,12 +46,28 @@ namespace proofps_dd
     protected:
 
         PRooFPSddPGE() :
+            proofps_dd::InputHandling(
+                getConfigProfiles(),
+                getInput().getKeyboard(),
+                getInput().getMouse(),
+                getNetwork(),
+                getPure(),
+                m_durations,
+                m_maps),
             m_gameMode(nullptr),
             m_deathMatchMode(nullptr),
             m_maps(getPure())
         {}
 
         PRooFPSddPGE(const PRooFPSddPGE&) :
+            proofps_dd::InputHandling(
+                getConfigProfiles(),
+                getInput().getKeyboard(),
+                getInput().getMouse(),
+                getNetwork(),
+                getPure(),
+                m_durations,
+                m_maps),
             m_gameMode(nullptr),
             m_deathMatchMode(nullptr),
             m_maps(getPure())
@@ -72,8 +91,6 @@ namespace proofps_dd
 
     private:
 
-        static const unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
-
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
         std::string m_sServerMapFilenameToLoad;
@@ -86,7 +103,6 @@ namespace proofps_dd
         PureObject3D* m_pObjXHair;
         bool m_bWon;
         float m_fCameraMinY;
-        bool m_bShowGuiDemo;
 
         pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
                                                                                       (server instance also receives this from itself).
@@ -104,20 +120,7 @@ namespace proofps_dd
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;
 
-        unsigned int m_nFramesElapsedSinceLastDurationsReset;
-        long long m_nGravityCollisionDurationUSecs;
-        long long m_nActiveWindowStuffDurationUSecs;
-        long long m_nUpdateWeaponsDurationUSecs;
-        long long m_nUpdateBulletsDurationUSecs;
-        long long m_nUpdateRespawnTimersDurationUSecs;
-        long long m_nPickupAndRespawnItemsDurationUSecs;
-        long long m_nUpdateGameModeDurationUSecs;
-        long long m_nSendUserUpdatesDurationUSecs;
-        long long m_nFullOnGameRunningDurationUSecs;
-        long long m_nHandleUserCmdMoveDurationUSecs;
-        long long m_nFullOnPacketReceivedDurationUSecs;
-        long long m_nFullRoundtripDurationUSecs;
-        std::chrono::time_point<std::chrono::steady_clock> m_timeFullRoundtripStart;
+        proofps_dd::Durations m_durations;
 
         // ---------------------------------------------------------------------------
 
@@ -127,9 +130,6 @@ namespace proofps_dd
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void Text(const std::string& s, int x, int y) const;
         void AddText(const std::string& s, int x, int y) const;
-        void KeyBoard(int fps, bool& won, pge_network::PgePacket& pkt, Player& player);
-        bool Mouse(int fps, bool& won, pge_network::PgePacket& pkt, Player& player);
-        void MouseWheel(const short int& nMouseWheelChange, pge_network::PgePacket& pkt, Player& player);
         void CameraMovement(int fps, Player& player);
         void Gravity(int fps);
         bool Colliding(const PureObject3D& a, const PureObject3D& b);
@@ -164,7 +164,6 @@ namespace proofps_dd
         bool handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgMapItemUpdate& msg);
         bool handleWpnUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdate& msg);
         bool handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg);
-        void RegTestDumpToFile();  // TODO: could be const if m_mapPlayers wouldnt be used with [] operator ...
 
     }; // class PRooFPSddPGE
 
