@@ -45,22 +45,12 @@ namespace proofps_dd
             proofps_dd::Durations& m_durations,
             proofps_dd::Maps& maps);
 
+        InputHandling(const InputHandling&) = delete;
+        InputHandling& operator=(const InputHandling&) = delete;
+        InputHandling(InputHandling&&) = delete;
+        InputHandling&& operator=(InputHandling&&) = delete;
+
     protected:
-
-        InputHandling(const InputHandling&) :
-            m_cfgProfiles(m_cfgProfiles),
-            m_keyboard(m_keyboard),
-            m_mouse(m_mouse),
-            m_network(m_network),
-            m_gfx(m_gfx),
-            m_durations(m_durations),
-            m_maps(m_maps)
-        {}
-
-        InputHandling& operator=(const InputHandling&)
-        {
-            return *this;
-        }
 
         void keyboard(
             proofps_dd::GameMode& gameMode,
