@@ -21,18 +21,9 @@
 const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
 
 proofps_dd::InputHandling::InputHandling(
-    PGEcfgProfiles& cfg,
-    PGEInputKeyboard& keybd,
-    PGEInputMouse& mouse,
-    pge_network::PgeNetwork& network,
-    PR00FsUltimateRenderingEngine& gfx,
     proofps_dd::Durations& durations,
     proofps_dd::Maps& maps) :
-    m_cfgProfiles(cfg),
-    m_keyboard(keybd),
-    m_mouse(mouse),
-    m_network(network),
-    m_gfx(gfx),
+    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
     m_durations(durations),
     m_maps(maps),
     m_bShowGuiDemo(false)
@@ -63,9 +54,9 @@ void proofps_dd::InputHandling::keyboard(
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
 {
-    if (m_keyboard.isKeyPressedOnce(VK_ESCAPE))
+    if (getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
-        m_gfx.getWindow().Close();
+        getPure().getWindow().Close();
     }
 
     if (gameMode.checkWinningConditions())
@@ -73,16 +64,16 @@ void proofps_dd::InputHandling::keyboard(
         return;
     }
 
-    if (m_keyboard.isKeyPressed(VK_TAB))
+    if (getInput().getKeyboard().isKeyPressed(VK_TAB))
     {
-        gameMode.showObjectives(m_gfx, m_network);
+        gameMode.showObjectives(getPure(), getNetwork());
     }
 
-    if (m_keyboard.isKeyPressedOnce(VK_BACK))
+    if (getInput().getKeyboard().isKeyPressedOnce(VK_BACK))
     {
         m_bShowGuiDemo = !m_bShowGuiDemo;
-        m_gfx.ShowGuiDemo(m_bShowGuiDemo);
-        m_gfx.getWindow().SetCursorVisible(m_bShowGuiDemo);
+        getPure().ShowGuiDemo(m_bShowGuiDemo);
+        getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
     }
 
     if (m_bShowGuiDemo)
@@ -98,17 +89,17 @@ void proofps_dd::InputHandling::keyboard(
     if (!won)
     {
 
-        if (m_keyboard.isKeyPressedOnce(VK_RETURN))
+        if (getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
         {
-            if (m_cfgProfiles.getVars()["testing"].getAsBool())
+            if (getConfigProfiles().getVars()["testing"].getAsBool())
             {
                 RegTestDumpToFile(gameMode, player);
             }
         }
 
-        if (m_keyboard.isKeyPressedOnce((unsigned char)VkKeyScan('t')))
+        if (getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
         {
-            if (m_network.isServer())
+            if (getNetwork().isServer())
             {
                 // for testing purpose only, we can teleport server player to random spawn point
                 player.getPos() = m_maps.getRandomSpawnpoint();
@@ -117,7 +108,7 @@ void proofps_dd::InputHandling::keyboard(
 
             // log some stats
             getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
-            m_gfx.getRenderer()->ResetStatistics();
+            getPure().getRenderer()->ResetStatistics();
             getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
 
             getConsole().OLn("");
@@ -141,29 +132,29 @@ void proofps_dd::InputHandling::keyboard(
         }
 
         proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
-        if (m_keyboard.isKeyPressed(VK_LEFT) || m_keyboard.isKeyPressed((unsigned char)VkKeyScan('a')))
+        if (getInput().getKeyboard().isKeyPressed(VK_LEFT) || getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
             strafe = proofps_dd::Strafe::LEFT;
         }
-        if (m_keyboard.isKeyPressed(VK_RIGHT) || m_keyboard.isKeyPressed((unsigned char)VkKeyScan('d')))
+        if (getInput().getKeyboard().isKeyPressed(VK_RIGHT) || getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
         {
             strafe = proofps_dd::Strafe::RIGHT;
         }
 
         bool bSendJumpAction = false;
-        if (m_keyboard.isKeyPressedOnce(VK_SPACE))
+        if (getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))
         {
             bSendJumpAction = true;
         }
 
         bool bToggleRunWalk = false;
-        if (m_keyboard.isKeyPressedOnce(VK_SHIFT))
+        if (getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT))
         {
             bToggleRunWalk = true;
         }
 
         bool bRequestReload = false;
-        if (m_keyboard.isKeyPressedOnce((unsigned char)VkKeyScan('r')))
+        if (getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r')))
         {
             bRequestReload = true;
         }
@@ -173,7 +164,7 @@ void proofps_dd::InputHandling::keyboard(
         {   // we dont care about wpn switch if reload is requested
             for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
             {
-                if (m_keyboard.isKeyPressedOnce(keyWpnPair.first))
+                if (getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first))
                 {
                     const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
                     if (!pTargetWpn)
@@ -218,7 +209,7 @@ bool proofps_dd::InputHandling::mouse(
 {
     // we should always read the wheel data as often as possible, because this way we can avoid
     // the amount of wheel rotation accumulating too much
-    const short int nMouseWheelChange = m_mouse.getWheel();
+    const short int nMouseWheelChange = getInput().getMouse().getWheel();
 
     if (gameMode.checkWinningConditions())
     {
@@ -232,11 +223,11 @@ bool proofps_dd::InputHandling::mouse(
 
     static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
     bool bShootActionBeingSent = false;
-    if (m_mouse.isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
+    if (getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         bPrevLeftButtonPressed = true;
 
-        // sending m_mouse action is still allowed when player is dead, since server will treat that
+        // sending getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
 
         const auto nSecsSinceLastWeaponSwitch =
@@ -245,7 +236,7 @@ bool proofps_dd::InputHandling::mouse(
             ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            //getConsole().OLn("InputHandling::%s(): ignoring too early m_mouse action!", __func__);
+            //getConsole().OLn("InputHandling::%s(): ignoring too early getInput().getMouse() action!", __func__);
         }
         else
         {
@@ -272,15 +263,15 @@ bool proofps_dd::InputHandling::mouse(
         mouseWheel(nMouseWheelChange, pkt, player);
     }
 
-    const int oldmx = m_mouse.getCursorPosX();
-    const int oldmy = m_mouse.getCursorPosY();
+    const int oldmx = getInput().getMouse().getCursorPosX();
+    const int oldmy = getInput().getMouse().getCursorPosY();
 
-    m_mouse.SetCursorPos(
-        m_gfx.getWindow().getX() + m_gfx.getWindow().getWidth() / 2,
-        m_gfx.getWindow().getY() + m_gfx.getWindow().getHeight() / 2);
+    getInput().getMouse().SetCursorPos(
+        getPure().getWindow().getX() + getPure().getWindow().getWidth() / 2,
+        getPure().getWindow().getY() + getPure().getWindow().getHeight() / 2);
 
-    const int dx = oldmx - m_mouse.getCursorPosX();
-    const int dy = oldmy - m_mouse.getCursorPosY();
+    const int dx = oldmx - getInput().getMouse().getCursorPosX();
+    const int dy = oldmy - getInput().getMouse().getCursorPosY();
 
     if ((dx == 0) && (dy == 0))
     {
@@ -288,11 +279,11 @@ bool proofps_dd::InputHandling::mouse(
     }
 
     static bool bInitialXHairPosForTestingApplied = false;
-    if (!bInitialXHairPosForTestingApplied && m_cfgProfiles.getVars()["testing"].getAsBool())
+    if (!bInitialXHairPosForTestingApplied && getConfigProfiles().getVars()["testing"].getAsBool())
     {
         getConsole().OLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
         bInitialXHairPosForTestingApplied = true;
-        if (m_network.isServer())
+        if (getNetwork().isServer())
         {
             objXHair.getPosVec().Set(100.f, 0.f, objXHair.getPosVec().getZ());
         }
@@ -365,22 +356,22 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player)
 {
-    std::ofstream fRegTestDump(m_network.isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+    std::ofstream fRegTestDump(getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
     if (fRegTestDump.fail())
     {
-        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, m_network.isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
         return;
     }
 
     fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getTxPacketCount() << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
     fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getRxPacketCount() << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
     fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getInjectPacketCount() << std::endl;
-    fRegTestDump << "  " << m_network.getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
+    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
 
     proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
     if (!pDeathMatchMode)

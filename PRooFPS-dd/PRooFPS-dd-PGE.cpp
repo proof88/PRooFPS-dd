@@ -64,11 +64,6 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::InputHandling(
-        getConfigProfiles(),
-        getInput().getKeyboard(),
-        getInput().getMouse(),
-        getNetwork(),
-        getPure(),
         m_durations,
         m_maps),
     m_maps(getPure()),

@@ -12,8 +12,7 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
-#include "../../../PGE/PGE/PGEInputHandler.h"
-#include "../../../PGE/PGE/Network/PgeNetwork.h"
+#include "../../../PGE/PGE/PGE.h"
 
 #include "Durations.h"
 #include "GameMode.h"
@@ -24,7 +23,7 @@
 namespace proofps_dd
 {
 
-    class InputHandling
+    class InputHandling : public virtual PGE
     {
     public:
 
@@ -37,11 +36,6 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         InputHandling(
-            PGEcfgProfiles& cfg,
-            PGEInputKeyboard& keybd,
-            PGEInputMouse& mouse,
-            pge_network::PgeNetwork& network,
-            PR00FsUltimateRenderingEngine& gfx,
             proofps_dd::Durations& m_durations,
             proofps_dd::Maps& maps);
 
@@ -70,11 +64,6 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
-        PGEcfgProfiles& m_cfgProfiles;
-        PGEInputKeyboard& m_keyboard;
-        PGEInputMouse& m_mouse;
-        pge_network::PgeNetwork& m_network;
-        PR00FsUltimateRenderingEngine& m_gfx;
         proofps_dd::Durations& m_durations;
         proofps_dd::Maps& m_maps;
 

@@ -30,7 +30,7 @@ namespace proofps_dd
         The customized game engine class. This handles the game logic. Singleton.
     */
     class PRooFPSddPGE final :
-        public PGE,
+        public virtual PGE,
         protected proofps_dd::InputHandling
     {
 
