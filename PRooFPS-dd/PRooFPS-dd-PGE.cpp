@@ -25,8 +25,6 @@ static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
 static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 1500.0f;
-static const float GAME_PLAYER_SPEED1 = 2.0f;
-static const float GAME_PLAYER_SPEED2 = 4.0f;
 static const float GAME_FALLING_SPEED = 0.8f;
 static const float GAME_JUMPING_SPEED = 2.0f;
 
@@ -65,7 +63,8 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::InputHandling(
         m_durations,
-        m_maps),
+        m_maps,
+        m_sounds),
     m_maps(getPure()),
     m_fps(0),
     m_fps_counter(0),
@@ -252,15 +251,15 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         }
     }
 
-    LoadSound(m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
-    LoadSound(m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
-    LoadSound(m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
-    LoadSound(m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
-    LoadSound(m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
-    LoadSound(m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
-    LoadSound(m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
-    LoadSound(m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
-    LoadSound(m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
+    LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
+    LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
+    LoadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
+    LoadSound(m_sounds.m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
+    LoadSound(m_sounds.m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
+    LoadSound(m_sounds.m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
+    LoadSound(m_sounds.m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
+    LoadSound(m_sounds.m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
@@ -413,7 +412,7 @@ void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
                 const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
                 // TODO: we could write this simpler if PureVector::Set() would return the object itself!
                 // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-                // do this everywhere where Ctrl+F finds this text: PPPKKKGGGGGG
+                // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
                         player.getPos().getNew().getX(),
@@ -778,7 +777,7 @@ void proofps_dd::PRooFPSddPGE::HandlePlayerDied(Player& player)
     player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
-        getAudio().play(m_sndPlayerDie);
+        getAudio().play(m_sounds.m_sndPlayerDie);
         m_pObjXHair->Hide();
         AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
     }
@@ -858,6 +857,10 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 
 bool proofps_dd::PRooFPSddPGE::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
 {
+    // TODO: it would be much better if this function was part of PGE and not application.
+    // However, before any refactor could be done, PgeGsnClient::m_hConnectionServerSide should be properly filled, and then
+    // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
+    // is our connection or not.
     return m_nServerSideConnectionHandle == connHandleServerSide;
 }
 
@@ -1268,7 +1271,10 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = handleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserCmdMove::id:
-            bRet = handleUserCmdMove(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
+            bRet = handleUserCmdMove(
+                pkt.m_connHandleServerSide,
+                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData),
+                m_mapPlayers);
             break;
         case proofps_dd::MsgUserUpdate::id:
             bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
@@ -1400,7 +1406,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
             }
         }
 
-        getAudio().play(m_sndLetsgo);
+        getAudio().play(m_sounds.m_sndLetsgo);
     }
     else
     {
@@ -1679,274 +1685,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
-{
-    if (!getNetwork().isServer())
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
-        assert(false);
-        return false;
-    }
-
-    const auto it = m_mapPlayers.find(connHandleServerSide);
-    if (m_mapPlayers.end() == it)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        assert(false);  // in debug mode this terminates server
-        return true;    // in release mode, we dont terminate the server, just silently ignore
-    }
-
-    const std::string& sClientUserName = it->second.getName();
-
-    if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
-        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
-        (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
-        assert(false);  // in debug mode this terminates server
-        return false;   // in release mode, we dont terminate the server, just silently ignore
-        // TODO: I might disconnect this client!
-    }
-
-    auto& player = it->second;
-
-    if (player.getHealth() == 0)
-    {
-        if (pktUserCmdMove.m_bShootAction)
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
-            return true;
-        }
-
-        // for dead player, only the shoot action is allowed which is treated as respawn request
-        //getConsole().OLn("PRooFPSddPGE::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
-        return true;
-    }
-
-    if (pktUserCmdMove.m_bSendSwitchToRunning)
-    {
-        player.SetRun(!player.isRunning());
-    }
-
-    float fSpeed;
-    if (player.isRunning())
-    {
-        fSpeed = GAME_PLAYER_SPEED2 / 60.0f;
-    }
-    else
-    {
-        fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
-    }
-
-    if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::LEFT )
-    {
-        if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
-        {
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX() - fSpeed,
-                    player.getPos().getNew().getY(),
-                    player.getPos().getNew().getZ()
-                ));
-        }
-    }
-    if ( pktUserCmdMove.m_strafe == proofps_dd::Strafe::RIGHT )
-    {
-        if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
-        {
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX() + fSpeed,
-                    player.getPos().getNew().getY(),
-                    player.getPos().getNew().getZ()
-                ));
-        }
-    }
-
-    if (pktUserCmdMove.m_bJumpAction)
-    {
-        if (!player.isJumping() &&
-            !player.isFalling())
-        {
-            player.Jump();
-        }
-    }
-
-    if (pktUserCmdMove.m_fPlayerAngleY != -1.f)
-    {
-        player.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
-        player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
-    }
-
-    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-    if (!wpn)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): getWeapon() failed!", __func__);
-        assert(false);
-        return false;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    if (!pktUserCmdMove.m_bShootAction)
-    {
-        if (!wpn->isTriggerReleased())
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s released trigger!", 
-            //    __func__, sClientUserName.c_str());
-        }
-        wpn->releaseTrigger();
-    }
-
-    if (pktUserCmdMove.m_bRequestReload)
-    {
-        if (wpn->reload())
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s reloading the weapon!",
-            //    __func__, sClientUserName.c_str());
-        }
-        else
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s requested reload but we ignore it!",
-            //    __func__, sClientUserName.c_str());
-        }
-    }
-
-    if (!pktUserCmdMove.m_bRequestReload && (wpn->getState() == Weapon::State::WPN_READY) && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
-    {
-        const auto itTargetWpn = WeaponManager::getKeypressToWeaponMap().find(pktUserCmdMove.m_cWeaponSwitch);
-        if (itTargetWpn == WeaponManager::getKeypressToWeaponMap().end())
-        {
-            const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
-            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for char %s!", __func__, sc.c_str());
-            assert(false);
-            return false;
-        }
-
-        Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second);
-        if (!pTargetWpn)
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
-            assert(false);
-            return false;
-        }
-
-        if (!pTargetWpn->isAvailable())
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
-            assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
-            return true;    // in release mode, dont terminate the server, just silently ignore!
-            // TODO: I might disconnect this client!
-        }
-
-        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-        {
-            if (isMyConnection(connHandleServerSide))
-            {   // server plays for itself
-                getAudio().play(m_sndChangeWeapon);
-            }
-            if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, getNetwork().isServer()))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
-                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-                assert(false);  // in debug mode, terminate the game
-                return true;   // in release mode, dont terminate the server, just silently ignore!
-            }
-
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s switching to %s!",
-            //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-
-            // all clients must be updated about this player's weapon switch
-            pge_network::PgePacket pktWpnUpdateCurrent;
-            proofps_dd::MsgWpnUpdateCurrent::initPkt(
-                pktWpnUpdateCurrent,
-                connHandleServerSide,
-                pTargetWpn->getFilename());
-            getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
-        }
-        else
-        {
-            // should not happen because client should NOT send message in such case
-            getConsole().OLn("PRooFPSddPGE::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
-                __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-            assert(false);  // in debug mode, terminate the game
-            return true;   // in release mode, dont terminate the server, just silently ignore!
-            // TODO: I might disconnect this client!
-        }
-    }
-
-    // TODO: this should be moved up, so returning from function is easier for rest of action handling code
-    player.getWeaponAngle().set(PureVector(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ));
-    wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
-    wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
-
-    if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
-    {
-        // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-        m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        return true; // don't check anything related to shooting in case of either of these actions
-    }
-
-    if (pktUserCmdMove.m_bShootAction)
-    {
-        const auto nSecsSinceLastWeaponSwitch =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-                ).count();
-        if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
-        {
-            //getConsole().OLn("PRooFPSddPGE::%s(): ignoring too early mouse action!", __func__);
-            // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-            m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            return true;
-        }
-
-        // server will have the new bullet, clients will learn about the new bullet when server is sending out
-        // the regular bullet updates;
-        if (wpn->pullTrigger())
-        {
-            // but we send out the wpn update for bullet count change here for that single client
-            if (connHandleServerSide != m_nServerSideConnectionHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
-            {
-                pge_network::PgePacket pktWpnUpdate;
-                proofps_dd::MsgWpnUpdate::initPkt(
-                    pktWpnUpdate,
-                    pge_network::ServerConnHandle /* ignored by client anyway */,
-                    wpn->getFilename(),
-                    wpn->isAvailable(),
-                    wpn->getMagBulletCount(),
-                    wpn->getUnmagBulletCount());
-                getNetwork().getServer().send(pktWpnUpdate, it->second.getServerSideConnectionHandle());
-            }
-            else
-            {
-                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
-                // not nice, but this is just some temporal solution for private beta
-                if (wpn->getFilename() == "pistol.txt")
-                {
-                    getAudio().play(m_sndShootPistol);
-                }
-                else if (wpn->getFilename() == "machinegun.txt")
-                {
-                    getAudio().play(m_sndShootMchgun);
-                }
-                else
-                {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
-                    assert(false);
-                    return false;
-                }
-            }
-        }
-    }
-    // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
-    m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-
-    return true;
-}
-
 bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
@@ -2071,11 +1809,11 @@ bool proofps_dd::PRooFPSddPGE::handleBulletUpdate(pge_network::PgeNetworkConnect
                 // not nice, but this is just some temporal solution for private beta
                 if (wpn->getFilename() == "pistol.txt")
                 {
-                    getAudio().play(m_sndShootPistol);
+                    getAudio().play(m_sounds.m_sndShootPistol);
                 }
                 else if (wpn->getFilename() == "machinegun.txt")
                 {
-                    getAudio().play(m_sndShootMchgun);
+                    getAudio().play(m_sounds.m_sndShootMchgun);
                 }
                 else
                 {
@@ -2221,7 +1959,7 @@ bool proofps_dd::PRooFPSddPGE::handleWpnUpdateCurrent(pge_network::PgeNetworkCon
     if (isMyConnection(it->first))
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): this current weapon update is changing my current weapon!", __func__);
-        getAudio().play(m_sndChangeWeapon);
+        getAudio().play(m_sounds.m_sndChangeWeapon);
     }
 
     if (!it->second.getWeaponManager().setCurrentWeapon(wpn,

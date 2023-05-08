@@ -258,6 +258,9 @@
     <ClInclude Include="Durations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

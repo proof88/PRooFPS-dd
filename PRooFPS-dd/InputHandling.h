@@ -19,11 +19,12 @@
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+#include "Sounds.h"
 
 namespace proofps_dd
 {
 
-    class InputHandling : public virtual PGE
+    class InputHandling : protected virtual PGE
     {
     public:
 
@@ -37,7 +38,8 @@ namespace proofps_dd
 
         InputHandling(
             proofps_dd::Durations& m_durations,
-            proofps_dd::Maps& maps);
+            proofps_dd::Maps& maps,
+            proofps_dd::Sounds& sounds);
 
         InputHandling(const InputHandling&) = delete;
         InputHandling& operator=(const InputHandling&) = delete;
@@ -60,12 +62,18 @@ namespace proofps_dd
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
+        bool handleUserCmdMove(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserCmdMove& msg,
+            std::map<pge_network::PgeNetworkConnectionHandle, Player>& mapPlayers);
+
     private:
 
         // ---------------------------------------------------------------------------
 
         proofps_dd::Durations& m_durations;
         proofps_dd::Maps& m_maps;
+        proofps_dd::Sounds& m_sounds;
 
         bool m_bShowGuiDemo;
 

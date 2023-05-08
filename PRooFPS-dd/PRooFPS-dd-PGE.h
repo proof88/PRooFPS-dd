@@ -22,6 +22,7 @@
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+#include "Sounds.h"
 
 namespace proofps_dd
 {
@@ -82,17 +83,8 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                       Key is server-side connection handle. */
 
-        SoLoud::Wav m_sndLetsgo;
-        SoLoud::Wav m_sndReloadStart;
-        SoLoud::Wav m_sndReloadFinish;
-        SoLoud::Wav m_sndShootPistol;
-        SoLoud::Wav m_sndShootMchgun;
-        SoLoud::Wav m_sndShootDryPistol;
-        SoLoud::Wav m_sndShootDryMchgun;
-        SoLoud::Wav m_sndChangeWeapon;
-        SoLoud::Wav m_sndPlayerDie;
-
         proofps_dd::Durations m_durations;
+        proofps_dd::Sounds m_sounds;
 
         // ---------------------------------------------------------------------------
 
@@ -130,7 +122,6 @@ namespace proofps_dd
         bool handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg);
         bool handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);
         bool handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected& msg);
-        bool handleUserCmdMove(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserCmdMove& msg);
         bool handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg);
         bool handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg);
         bool handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgMapItemUpdate& msg);
