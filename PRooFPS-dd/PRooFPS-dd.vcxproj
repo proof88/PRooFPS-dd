@@ -185,6 +185,8 @@
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="InputHandling.h" />
     <ClInclude Include="MapItem.h" />
+    <ClInclude Include="Networking.h" />
+    <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
@@ -201,11 +203,14 @@
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
     <ClInclude Include="Tests\MapItemTest.h" />
     <ClInclude Include="Tests\MapsTest.h" />
+    <ClInclude Include="UserInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="InputHandling.cpp" />
     <ClCompile Include="MapItem.cpp" />
+    <ClCompile Include="Networking.cpp" />
+    <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PRooFPS-dd-PGE.cpp" />
     <ClCompile Include="Maps.cpp" />
@@ -217,6 +222,7 @@
     </ClCompile>
     <ClCompile Include="Tests\Input.cpp" />
     <ClCompile Include="Tests\PRooFPS-dd-Tests.cpp" />
+    <ClCompile Include="UserInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PRooFPS-dd.rc" />

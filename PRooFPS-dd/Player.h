@@ -3,7 +3,7 @@
 /*
     ###################################################################################
     Player.h
-    Player class for PRooFPS-dd
+    Player and PlayerHandling classes for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
@@ -18,13 +18,15 @@
 
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
+#include "../../../PGE/PGE/PGE.h"
 #include "../../../PGE/PGE/Config/PgeOldNewValue.h"
-#include "../../../PGE/PGE/Network/PgePacket.h"
-#include "../../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
-#include "../../../PGE/PGE/Weapons/WeaponManager.h"
 
 #include "Consts.h"
+#include "Durations.h"
 #include "MapItem.h"
+#include "Networking.h"
+#include "Sounds.h"
+#include "UserInterface.h"
 
 namespace proofps_dd
 {
@@ -160,5 +162,37 @@ namespace proofps_dd
         void BuildPlayerObject(bool blend);
 
     }; // class Player
+
+    class PlayerHandling :
+        protected virtual PGE,
+        protected virtual proofps_dd::Networking,
+        protected virtual proofps_dd::UserInterface
+    {
+    public:
+
+        static const char* getLoggerModuleName();
+
+        // ---------------------------------------------------------------------------
+
+        CConsole& getConsole() const;
+
+        PlayerHandling(proofps_dd::Durations& durations, proofps_dd::Sounds& sounds);
+
+        PlayerHandling(const PlayerHandling&) = delete;
+        PlayerHandling& operator=(const PlayerHandling&) = delete;
+        PlayerHandling(PlayerHandling&&) = delete;
+        PlayerHandling&& operator=(PlayerHandling&&) = delete;
+
+    protected:
+
+        void HandlePlayerDied(Player& player, PureObject3D& objXHair);
+
+    private:
+
+        // ---------------------------------------------------------------------------
+
+        proofps_dd::Sounds& m_sounds;
+
+    }; // class PlayerHandling
 
 } // namespace proofps_dd

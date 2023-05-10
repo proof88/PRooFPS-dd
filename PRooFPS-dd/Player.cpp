@@ -1,7 +1,7 @@
 /*
     ###################################################################################
     Player.cpp
-    Player class for PRooFPS-dd
+    Player and PlayerHandling classes for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
@@ -12,6 +12,11 @@
 
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+
+
+// #######################################################################
+// #                               PLAYER                                #
+// #######################################################################
 
 
 // ############################### PUBLIC ################################
@@ -495,3 +500,53 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     PureTexture* pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pObj->getMaterial().setTexture(pTexPlayer);
 }
+
+
+// #######################################################################
+// #                           PLAYERHANDLING                            #
+// #######################################################################
+
+
+// ############################### PUBLIC ################################
+
+
+proofps_dd::PlayerHandling::PlayerHandling(
+    proofps_dd::Durations& durations,
+    proofps_dd::Sounds& sounds) :
+    Networking(durations),
+    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
+    /* due to virtual inheritance, we don't invoke ctor of UserInterface, PRooFPSddPGE invokes it only */
+    m_sounds(sounds)
+{
+    // note that the following should not be touched here as they are not fully constructed when we are here:
+    // sounds
+    // But they can used in other functions.
+}
+
+CConsole& proofps_dd::PlayerHandling::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
+const char* proofps_dd::PlayerHandling::getLoggerModuleName()
+{
+    return "PlayerHandling";
+}
+
+
+// ############################## PROTECTED ##############################
+
+
+void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& objXHair)
+{
+    player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
+    if (isMyConnection(player.getServerSideConnectionHandle()))
+    {
+        getAudio().play(m_sounds.m_sndPlayerDie);
+        objXHair.Hide();
+        AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
+    }
+}
+
+
+// ############################### PRIVATE ###############################

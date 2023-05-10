@@ -10,6 +10,7 @@
     ###################################################################################
 */
 
+#include <map>
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
 #include "../../../PGE/PGE/PGE.h"
@@ -38,6 +39,7 @@ namespace proofps_dd
 
         InputHandling(
             proofps_dd::Durations& m_durations,
+            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
 
@@ -52,7 +54,7 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode,
             int fps,
             bool& won,
-            pge_network::PgePacket& pkt, Player& player);
+            pge_network::PgePacket& pkt, proofps_dd::Player& player);
 
         bool mouse(
             proofps_dd::GameMode& gameMode,
@@ -64,14 +66,14 @@ namespace proofps_dd
 
         bool handleUserCmdMove(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserCmdMove& msg,
-            std::map<pge_network::PgeNetworkConnectionHandle, Player>& mapPlayers);
+            const proofps_dd::MsgUserCmdMove& msg);
 
     private:
 
         // ---------------------------------------------------------------------------
 
         proofps_dd::Durations& m_durations;
+        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
 

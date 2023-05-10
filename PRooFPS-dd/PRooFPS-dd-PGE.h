@@ -20,9 +20,12 @@
 #include "GameMode.h"
 #include "InputHandling.h"
 #include "Maps.h"
+#include "Networking.h"
+#include "Physics.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
+#include "UserInterface.h"
 
 namespace proofps_dd
 {
@@ -32,7 +35,11 @@ namespace proofps_dd
     */
     class PRooFPSddPGE final :
         public virtual PGE,
-        protected proofps_dd::InputHandling
+        protected virtual proofps_dd::InputHandling,
+        protected virtual proofps_dd::Networking,
+        protected virtual proofps_dd::Physics,
+        protected virtual proofps_dd::PlayerHandling,
+        protected virtual proofps_dd::UserInterface
     {
 
     public:
@@ -77,9 +84,6 @@ namespace proofps_dd
         bool m_bWon;
         float m_fCameraMinY;
 
-        pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
-                                                                                      (server instance also receives this from itself).
-                                                                                      Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
         std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                       Key is server-side connection handle. */
 
@@ -89,28 +93,12 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         bool hasValidConnection() const;
-        bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
 
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void Text(const std::string& s, int x, int y) const;
-        void AddText(const std::string& s, int x, int y) const;
         void CameraMovement(int fps, Player& player);
-        void Gravity(int fps);
-        bool Colliding(const PureObject3D& a, const PureObject3D& b);
-        bool Colliding2(
-            float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
-            float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz);
-        bool Colliding2_NoZ(
-            float o1px, float o1py, float o1sx, float o1sy,
-            float o2px, float o2py, float o2sx, float o2sy);
-        bool Colliding3(
-            const PureVector& vecPosMin, const PureVector& vecPosMax,
-            const PureVector& vecObjPos, const PureVector& vecObjSize);
-        void PlayerCollisionWithWalls(bool& won);
         void UpdateWeapons();
         void UpdateBullets();
         void SendUserUpdates();
-        void HandlePlayerDied(Player& player);
         void HandlePlayerRespawned(Player& player);
         void ServerRespawnPlayer(Player& player, bool restartGame);
         void RestartGame();

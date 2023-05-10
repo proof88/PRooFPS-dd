@@ -25,8 +25,6 @@ static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
 static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 1500.0f;
-static const float GAME_FALLING_SPEED = 0.8f;
-static const float GAME_JUMPING_SPEED = 2.0f;
 
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
@@ -63,8 +61,20 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::InputHandling(
         m_durations,
+        m_mapPlayers,
         m_maps,
         m_sounds),
+    proofps_dd::Networking(
+        m_durations),
+    proofps_dd::Physics(
+        m_durations,
+        m_mapPlayers,
+        m_maps,
+        m_sounds),
+    proofps_dd::PlayerHandling(
+        m_durations,
+        m_sounds),
+    proofps_dd::UserInterface(),
     m_maps(getPure()),
     m_fps(0),
     m_fps_counter(0),
@@ -72,8 +82,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_ms(0),
     m_pObjXHair(NULL),
     m_bWon(false),
-    m_fCameraMinY(0.0f),
-    m_nServerSideConnectionHandle(pge_network::ServerConnHandle)
+    m_fCameraMinY(0.0f)
 {
     
 }
@@ -282,209 +291,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 // ############################### PRIVATE ###############################
 
 
-void proofps_dd::PRooFPSddPGE::Text(const std::string& s, int x, int y) const
-{
-    getPure().getUImanager().text(s, x, y)->SetDropShadow(true);
-}
-
-void proofps_dd::PRooFPSddPGE::AddText(const std::string& s, int x, int y) const
-{
-    getPure().getUImanager().addText(s, x, y)->SetDropShadow(true);
-}
-
-bool proofps_dd::PRooFPSddPGE::Colliding(const PureObject3D& a, const PureObject3D& b)
-{
-    return Colliding2(
-        a.getPosVec().getX(),  a.getPosVec().getY(),  a.getPosVec().getZ(),
-        a.getSizeVec().getX(), a.getSizeVec().getY(), a.getSizeVec().getZ(),
-        b.getPosVec().getX(),  b.getPosVec().getY(),  b.getPosVec().getZ(),
-        b.getSizeVec().getX(), b.getSizeVec().getY(), b.getSizeVec().getZ()
-    );
-}       
-
-bool proofps_dd::PRooFPSddPGE::Colliding2(
-    float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
-    float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz )
-{
-    return (
-        (
-            (o1px - o1sx / 2 <= o2px + o2sx / 2)
-            &&
-            (o1px + o1sx / 2 >= o2px - o2sx / 2)
-        )
-        &&
-        (
-            (o1py - o1sy / 2 <= o2py + o2sy / 2)
-            &&
-            (o1py + o1sy / 2 >= o2py - o2sy / 2)
-        )
-        &&
-        (
-            (o1pz - o1sz / 2 <= o2pz + o2sz / 2)
-            &&
-            (o1pz + o1sz / 2 >= o2pz - o2sz / 2)
-        )
-    );            
-}
-
-bool proofps_dd::PRooFPSddPGE::Colliding2_NoZ(
-    float o1px, float o1py, float o1sx, float o1sy,
-    float o2px, float o2py, float o2sx, float o2sy)
-{
-    return (
-        (
-            (o1px - o1sx / 2 <= o2px + o2sx / 2)
-            &&
-            (o1px + o1sx / 2 >= o2px - o2sx / 2)
-            )
-        &&
-        (
-            (o1py - o1sy / 2 <= o2py + o2sy / 2)
-            &&
-            (o1py + o1sy / 2 >= o2py - o2sy / 2)
-            )
-        );
-}
-
-bool proofps_dd::PRooFPSddPGE::Colliding3(
-    const PureVector& vecPosMin, const PureVector& vecPosMax,
-    const PureVector& vecObjPos, const PureVector& vecObjSize)
-{
-    const PureVector vecSize(
-        vecPosMax.getX() - vecPosMin.getX(),
-        vecPosMax.getY() - vecPosMin.getY(),
-        vecPosMax.getZ() - vecPosMin.getZ()
-    );
-    const PureVector vecPos(
-        vecPosMin.getX() + vecSize.getX() / 2.f,
-        vecPosMin.getY() + vecSize.getY() / 2.f,
-        vecPosMin.getZ() + vecSize.getZ() / 2.f
-    );
-
-    return Colliding2(
-        vecPos.getX(),  vecPos.getY(),  vecPos.getZ(),
-        vecSize.getX(), vecSize.getY(), vecSize.getZ(),
-        vecObjPos.getX(),  vecObjPos.getY(),  vecObjPos.getZ(),
-        vecObjSize.getX(), vecObjSize.getY(), vecObjSize.getZ()
-    );
-}
-
-void proofps_dd::PRooFPSddPGE::PlayerCollisionWithWalls(bool& /*won*/)
-{ 
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-
-        const PureObject3D* const plobj = player.getObject3D();
-
-        // how to make collision detection even faster:
-        // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
-        // and based on player's position it is very easy to know which few map elements around matrix[i][j] should be checked ...
-        // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
-        // could be fetched into cache for even faster iteration on its elements ...
-
-        // at this point, player.getPos().getY() is already updated by Gravity()
-        const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
-        const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
-
-        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
-        if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
-        {
-            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
-            {
-                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                assert(obj);  // we dont store nulls there
-
-                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
-                {
-                    continue;
-                }
-
-                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
-                {
-                    continue;
-                }
-
-                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
-                // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-                // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-                // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-                player.getPos().set(
-                    PureVector(
-                        player.getPos().getNew().getX(),
-                        obj->getPosVec().getY() + fAlignCloseToWall,
-                        player.getPos().getNew().getZ()
-                    ));
-
-                if (nAlignUnderOrAboveWall == 1)
-                {
-                    // we fell from above
-                    player.SetCanFall(false);
-                    player.getForce().Set(0.f, 0.f, 0.f);
-                }
-                else
-                {
-                    // we hit ceiling with our head during jumping
-                    player.SetCanFall(true);
-                    player.StopJumping();
-                    player.SetGravity(0.f);
-                }
-
-                break;
-            }
-        }
-
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                player.getPos().getNew().getX() + player.getForce().getX(),
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ()
-            ));
-
-        const float fPlayerPos1XMinusHalf = player.getPos().getNew().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1XPlusHalf = player.getPos().getNew().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
-
-        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
-        {
-            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
-            {
-                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                assert(obj);  // we dont store nulls there
-
-                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerPos1XPlusHalf))
-                {
-                    continue;
-                }
-
-                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
-                {
-                    continue;
-                }
-
-                // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
-                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
-                // PPPKKKGGGGGG
-                player.getPos().set(
-                    PureVector(
-                        obj->getPosVec().getX() + fAlignNextToWall,
-                        player.getPos().getNew().getY(),
-                        player.getPos().getNew().getZ()
-                    ));
-
-                break;
-            }
-        }
-    }
-}
-
 void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
@@ -523,47 +329,6 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
     getPure().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), player.getObject3D()->getPosVec().getZ() );
 
 } // CameraMovement()
-
-void proofps_dd::PRooFPSddPGE::Gravity(int /*fps*/)
-{
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-
-        if (player.isJumping())
-        {
-            player.SetGravity(player.getGravity() - GAME_JUMPING_SPEED / 60.f/*(float)fps*/);
-            if (player.getGravity() < 0.0f)
-            {
-                player.StopJumping();
-            }
-        }
-        else
-        {
-            if (player.getGravity() > proofps_dd::GAME_GRAVITY_MIN)
-            {
-                player.SetGravity(player.getGravity() - GAME_FALLING_SPEED / 60.f/*(float)fps*/);
-                if (player.getGravity() < proofps_dd::GAME_GRAVITY_MIN)
-                {
-                    player.SetGravity(proofps_dd::GAME_GRAVITY_MIN);
-                }
-            }
-        }
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity(),
-                player.getPos().getNew().getZ()
-            ));
-        
-        if ( (player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
-        {
-            // need to die, out of map lower bound
-            HandlePlayerDied(player);
-        }
-    }
-}
 
 void proofps_dd::PRooFPSddPGE::UpdateBullets()
 {
@@ -628,7 +393,7 @@ void proofps_dd::PRooFPSddPGE::UpdateBullets()
                             //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                         }
                         // server handles death here, clients will handle it when they receive MsgUserUpdate
-                        HandlePlayerDied(playerPair.second);
+                        HandlePlayerDied(playerPair.second, *m_pObjXHair);
                     }
                     break; // we can stop since 1 bullet can touch 1 playerPair only at a time
                 }
@@ -772,17 +537,6 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void proofps_dd::PRooFPSddPGE::HandlePlayerDied(Player& player)
-{
-    player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
-    if (isMyConnection(player.getServerSideConnectionHandle()))
-    {
-        getAudio().play(m_sounds.m_sndPlayerDie);
-        m_pObjXHair->Hide();
-        AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
-    }
-}
-
 void proofps_dd::PRooFPSddPGE::HandlePlayerRespawned(Player& player)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
@@ -853,15 +607,6 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 {
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
-}
-
-bool proofps_dd::PRooFPSddPGE::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
-{
-    // TODO: it would be much better if this function was part of PGE and not application.
-    // However, before any refactor could be done, PgeGsnClient::m_hConnectionServerSide should be properly filled, and then
-    // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
-    // is our connection or not.
-    return m_nServerSideConnectionHandle == connHandleServerSide;
 }
 
 void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
@@ -1125,7 +870,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             timeStart = std::chrono::steady_clock::now();
             if (!m_gameMode->checkWinningConditions())
             {
-                Gravity(m_fps);
+                Gravity(m_fps, *m_pObjXHair);
                 PlayerCollisionWithWalls(m_bWon);
             }
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
@@ -1273,8 +1018,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
                 pkt.m_connHandleServerSide,
-                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData),
-                m_mapPlayers);
+                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;
         case proofps_dd::MsgUserUpdate::id:
             bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
@@ -1739,7 +1483,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
-            HandlePlayerDied(it->second);
+            HandlePlayerDied(it->second, *m_pObjXHair);
         }
     }
 

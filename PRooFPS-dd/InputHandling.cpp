@@ -26,16 +26,18 @@ const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisec
 
 proofps_dd::InputHandling::InputHandling(
     proofps_dd::Durations& durations,
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
     /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
     m_durations(durations),
+    m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
     m_bShowGuiDemo(false)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // durations, maps, sounds
+    // durations, m_mapPlayers, maps, sounds
     // But they can used in other functions.
 }
 
@@ -311,8 +313,7 @@ bool proofps_dd::InputHandling::mouse(
 
 bool proofps_dd::InputHandling::handleUserCmdMove(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-    const proofps_dd::MsgUserCmdMove& pktUserCmdMove,
-    std::map<pge_network::PgeNetworkConnectionHandle, Player>& mapPlayers)
+    const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
     if (!getNetwork().isServer())
     {
@@ -321,8 +322,8 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         return false;
     }
 
-    const auto it = mapPlayers.find(connHandleServerSide);
-    if (mapPlayers.end() == it)
+    const auto it = m_mapPlayers.find(connHandleServerSide);
+    if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("InputHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         assert(false);  // in debug mode this terminates server

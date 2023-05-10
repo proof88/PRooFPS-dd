@@ -64,7 +64,7 @@ namespace proofps_dd
         char m_szUserName[nUserNameMaxLength];
         char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
         char m_szMapFilename[nMapFilenameMaxLength];
-    };
+    };  // struct MsgUserSetup
 
     enum class Strafe : std::uint8_t
     {
@@ -178,7 +178,7 @@ namespace proofps_dd
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleY;
         TPureFloat m_fWpnAngleZ;
-    };
+    };  // struct MsgUserCmdMove
 
     // server -> self (inject) and clients
     // sent regularly to all clients
@@ -229,7 +229,7 @@ namespace proofps_dd
         bool m_bRespawn;
         int m_nFrags;
         int m_nDeaths;
-    };
+    };  // struct MsgUserUpdate
 
     // server -> clients
     // sent to all clients
@@ -302,7 +302,7 @@ namespace proofps_dd
         TXYZ m_angle;
         TXYZ m_size;
         bool m_bDelete;
-    };
+    };  // struct MsgBulletUpdate
 
     // server -> clients
     // sent to all clients after specific event, e.g. picking up an item
@@ -331,7 +331,7 @@ namespace proofps_dd
 
         MapItem::MapItemId m_mapItemId;
         bool m_bTaken;
-    };
+    };  // struct MsgMapItemUpdate
 
     // server -> clients
     // availability and bullet counts update to a single client after specific events, e.g. shoot
@@ -373,7 +373,7 @@ namespace proofps_dd
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
-    };
+    };  // struct MsgWpnUpdate
 
     // server -> clients
     // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch
@@ -399,6 +399,6 @@ namespace proofps_dd
         }
 
         char m_szWpnCurrentName[MsgWpnUpdate::nWpnNameNameMaxLength];
-    };
+    };  // struct MsgWpnUpdateCurrent
 
 } // namespace proofps_dd
