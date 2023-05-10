@@ -23,7 +23,7 @@
 
 #include "Consts.h"
 #include "Durations.h"
-#include "MapItem.h"
+#include "Maps.h"
 #include "Networking.h"
 #include "Sounds.h"
 #include "UserInterface.h"
@@ -164,7 +164,6 @@ namespace proofps_dd
     }; // class Player
 
     class PlayerHandling :
-        protected virtual PGE,
         protected virtual proofps_dd::Networking,
         protected virtual proofps_dd::UserInterface
     {
@@ -176,7 +175,10 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
-        PlayerHandling(proofps_dd::Durations& durations, proofps_dd::Sounds& sounds);
+        PlayerHandling(
+            proofps_dd::Durations& durations,
+            proofps_dd::Maps& maps,
+            proofps_dd::Sounds& sounds);
 
         PlayerHandling(const PlayerHandling&) = delete;
         PlayerHandling& operator=(const PlayerHandling&) = delete;
@@ -186,11 +188,14 @@ namespace proofps_dd
     protected:
 
         void HandlePlayerDied(Player& player, PureObject3D& objXHair);
+        void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
+        void ServerRespawnPlayer(Player& player, bool restartGame);
 
     private:
 
         // ---------------------------------------------------------------------------
 
+        proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
 
     }; // class PlayerHandling

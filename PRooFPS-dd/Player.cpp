@@ -512,14 +512,16 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
 
 proofps_dd::PlayerHandling::PlayerHandling(
     proofps_dd::Durations& durations,
+    proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
     Networking(durations),
+    m_maps(maps),
     /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
     /* due to virtual inheritance, we don't invoke ctor of UserInterface, PRooFPSddPGE invokes it only */
     m_sounds(sounds)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // sounds
+    // maps, sounds
     // But they can used in other functions.
 }
 
@@ -537,6 +539,8 @@ const char* proofps_dd::PlayerHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
+static constexpr char* szWaitingToRespawn = "Waiting to respawn ...";
+
 void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& objXHair)
 {
     player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
@@ -544,7 +548,37 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& 
     {
         getAudio().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
-        AddText("Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2);
+        AddText(szWaitingToRespawn, 200, getPure().getWindow().getClientHeight() / 2);
+    }
+}
+
+
+
+void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObject3D& objXHair)
+{
+    const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
+    assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
+    player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, getNetwork().isServer());
+
+    if (isMyConnection(player.getServerSideConnectionHandle()))
+    {
+        objXHair.Show();
+        // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
+        getPure().getUImanager().RemoveText(
+            szWaitingToRespawn, 200, getPure().getWindow().getClientHeight() / 2, getPure().getUImanager().getDefaultFontSize());
+    }
+}
+
+void proofps_dd::PlayerHandling::ServerRespawnPlayer(Player& player, bool restartGame)
+{
+    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
+    player.getPos() = m_maps.getRandomSpawnpoint();
+    player.SetHealth(100);
+    player.getRespawnFlag() = true;
+    if (restartGame)
+    {
+        player.getFrags() = 0;
+        player.getDeaths() = 0;
     }
 }
 

@@ -73,6 +73,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_sounds),
     proofps_dd::PlayerHandling(
         m_durations,
+        m_maps,
         m_sounds),
     proofps_dd::UserInterface(),
     m_maps(getPure()),
@@ -535,34 +536,6 @@ void proofps_dd::PRooFPSddPGE::UpdateWeapons()
     }
 
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
-void proofps_dd::PRooFPSddPGE::HandlePlayerRespawned(Player& player)
-{
-    const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
-    assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
-    player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, getNetwork().isServer());
-
-    if (isMyConnection(player.getServerSideConnectionHandle()))
-    {
-        m_pObjXHair->Show();
-        // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
-        getPure().getUImanager().RemoveText(
-            "Waiting to respawn ...", 200, getPure().getWindow().getClientHeight() / 2, getPure().getUImanager().getDefaultFontSize());
-    }
-}
-
-void proofps_dd::PRooFPSddPGE::ServerRespawnPlayer(Player& player, bool restartGame)
-{
-    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-    player.getPos() = m_maps.getRandomSpawnpoint();
-    player.SetHealth(100);
-    player.getRespawnFlag() = true;
-    if (restartGame)
-    {
-        player.getFrags() = 0;
-        player.getDeaths() = 0;
-    }
 }
 
 void proofps_dd::PRooFPSddPGE::RestartGame()
@@ -1474,7 +1447,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
     if (msg.m_bRespawn)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
-        HandlePlayerRespawned(it->second);
+        HandlePlayerRespawned(it->second, *m_pObjXHair);
     }
     else
     {

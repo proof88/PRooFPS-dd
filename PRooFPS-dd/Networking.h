@@ -39,8 +39,8 @@ namespace proofps_dd
     protected:
 
         pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
-                                                                              (server instance also receives this from itself).
-                                                                              Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
+                                                                                      (server instance also receives this from itself).
+                                                                                      Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
 
         bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
 

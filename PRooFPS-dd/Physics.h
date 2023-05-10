@@ -28,7 +28,6 @@ namespace proofps_dd
 {
 
     class Physics :
-        protected virtual PGE,
         protected virtual proofps_dd::PlayerHandling,
         protected virtual proofps_dd::UserInterface
     {

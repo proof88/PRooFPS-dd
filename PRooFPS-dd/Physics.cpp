@@ -30,7 +30,7 @@ proofps_dd::Physics::Physics(
     /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
     /* due to virtual inheritance, we don't invoke ctor of UserInterface, PRooFPSddPGE invokes it only */
     Networking(durations),
-    PlayerHandling(durations, sounds),
+    PlayerHandling(durations, maps, sounds),
     m_durations(durations),
     m_mapPlayers(mapPlayers),
     m_maps(maps),

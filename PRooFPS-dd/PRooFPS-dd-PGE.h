@@ -36,10 +36,8 @@ namespace proofps_dd
     class PRooFPSddPGE final :
         public virtual PGE,
         protected virtual proofps_dd::InputHandling,
-        protected virtual proofps_dd::Networking,
         protected virtual proofps_dd::Physics,
-        protected virtual proofps_dd::PlayerHandling,
-        protected virtual proofps_dd::UserInterface
+        protected virtual proofps_dd::PlayerHandling
     {
 
     public:
@@ -99,8 +97,6 @@ namespace proofps_dd
         void UpdateWeapons();
         void UpdateBullets();
         void SendUserUpdates();
-        void HandlePlayerRespawned(Player& player);
-        void ServerRespawnPlayer(Player& player, bool restartGame);
         void RestartGame();
         void UpdateRespawnTimers();
         void UpdateGameMode();
