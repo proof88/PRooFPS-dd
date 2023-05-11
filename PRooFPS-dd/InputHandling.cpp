@@ -25,11 +25,12 @@ static const float GAME_PLAYER_SPEED2 = 4.0f;
 const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
 
 proofps_dd::InputHandling::InputHandling(
+    PGE& pge,
     proofps_dd::Durations& durations,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
-    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
+    m_pge(pge),
     m_durations(durations),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
@@ -37,7 +38,7 @@ proofps_dd::InputHandling::InputHandling(
     m_bShowGuiDemo(false)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // durations, m_mapPlayers, maps, sounds
+    // pge, durations, mapPlayers, maps, sounds
     // But they can used in other functions.
 }
 
@@ -62,9 +63,9 @@ void proofps_dd::InputHandling::keyboard(
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
 {
-    if (getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
-        getPure().getWindow().Close();
+        m_pge.getPure().getWindow().Close();
     }
 
     if (gameMode.checkWinningConditions())
@@ -72,16 +73,16 @@ void proofps_dd::InputHandling::keyboard(
         return;
     }
 
-    if (getInput().getKeyboard().isKeyPressed(VK_TAB))
+    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_TAB))
     {
-        gameMode.showObjectives(getPure(), getNetwork());
+        gameMode.showObjectives(m_pge.getPure(), m_pge.getNetwork());
     }
 
-    if (getInput().getKeyboard().isKeyPressedOnce(VK_BACK))
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_BACK))
     {
         m_bShowGuiDemo = !m_bShowGuiDemo;
-        getPure().ShowGuiDemo(m_bShowGuiDemo);
-        getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
+        m_pge.getPure().ShowGuiDemo(m_bShowGuiDemo);
+        m_pge.getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
     }
 
     if (m_bShowGuiDemo)
@@ -97,17 +98,17 @@ void proofps_dd::InputHandling::keyboard(
     if (!won)
     {
 
-        if (getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
         {
-            if (getConfigProfiles().getVars()["testing"].getAsBool())
+            if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
                 RegTestDumpToFile(gameMode, player);
             }
         }
 
-        if (getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
         {
-            if (getNetwork().isServer())
+            if (m_pge.getNetwork().isServer())
             {
                 // for testing purpose only, we can teleport server player to random spawn point
                 player.getPos() = m_maps.getRandomSpawnpoint();
@@ -116,7 +117,7 @@ void proofps_dd::InputHandling::keyboard(
 
             // log some stats
             getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
-            getPure().getRenderer()->ResetStatistics();
+            m_pge.getPure().getRenderer()->ResetStatistics();
             getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
 
             getConsole().OLn("");
@@ -140,29 +141,29 @@ void proofps_dd::InputHandling::keyboard(
         }
 
         proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
-        if (getInput().getKeyboard().isKeyPressed(VK_LEFT) || getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
             strafe = proofps_dd::Strafe::LEFT;
         }
-        if (getInput().getKeyboard().isKeyPressed(VK_RIGHT) || getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
         {
             strafe = proofps_dd::Strafe::RIGHT;
         }
 
         bool bSendJumpAction = false;
-        if (getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))
         {
             bSendJumpAction = true;
         }
 
         bool bToggleRunWalk = false;
-        if (getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT))
         {
             bToggleRunWalk = true;
         }
 
         bool bRequestReload = false;
-        if (getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r')))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r')))
         {
             bRequestReload = true;
         }
@@ -172,7 +173,7 @@ void proofps_dd::InputHandling::keyboard(
         {   // we dont care about wpn switch if reload is requested
             for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
             {
-                if (getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first))
+                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first))
                 {
                     const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
                     if (!pTargetWpn)
@@ -217,7 +218,7 @@ bool proofps_dd::InputHandling::mouse(
 {
     // we should always read the wheel data as often as possible, because this way we can avoid
     // the amount of wheel rotation accumulating too much
-    const short int nMouseWheelChange = getInput().getMouse().getWheel();
+    const short int nMouseWheelChange = m_pge.getInput().getMouse().getWheel();
 
     if (gameMode.checkWinningConditions())
     {
@@ -231,11 +232,11 @@ bool proofps_dd::InputHandling::mouse(
 
     static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
     bool bShootActionBeingSent = false;
-    if (getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
+    if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         bPrevLeftButtonPressed = true;
 
-        // sending getInput().getMouse() action is still allowed when player is dead, since server will treat that
+        // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
 
         const auto nSecsSinceLastWeaponSwitch =
@@ -244,7 +245,7 @@ bool proofps_dd::InputHandling::mouse(
             ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            //getConsole().OLn("InputHandling::%s(): ignoring too early getInput().getMouse() action!", __func__);
+            //getConsole().OLn("InputHandling::%s(): ignoring too early m_pge.getInput().getMouse() action!", __func__);
         }
         else
         {
@@ -271,15 +272,15 @@ bool proofps_dd::InputHandling::mouse(
         mouseWheel(nMouseWheelChange, pkt, player);
     }
 
-    const int oldmx = getInput().getMouse().getCursorPosX();
-    const int oldmy = getInput().getMouse().getCursorPosY();
+    const int oldmx = m_pge.getInput().getMouse().getCursorPosX();
+    const int oldmy = m_pge.getInput().getMouse().getCursorPosY();
 
-    getInput().getMouse().SetCursorPos(
-        getPure().getWindow().getX() + getPure().getWindow().getWidth() / 2,
-        getPure().getWindow().getY() + getPure().getWindow().getHeight() / 2);
+    m_pge.getInput().getMouse().SetCursorPos(
+        m_pge.getPure().getWindow().getX() + m_pge.getPure().getWindow().getWidth() / 2,
+        m_pge.getPure().getWindow().getY() + m_pge.getPure().getWindow().getHeight() / 2);
 
-    const int dx = oldmx - getInput().getMouse().getCursorPosX();
-    const int dy = oldmy - getInput().getMouse().getCursorPosY();
+    const int dx = oldmx - m_pge.getInput().getMouse().getCursorPosX();
+    const int dy = oldmy - m_pge.getInput().getMouse().getCursorPosY();
 
     if ((dx == 0) && (dy == 0))
     {
@@ -287,11 +288,11 @@ bool proofps_dd::InputHandling::mouse(
     }
 
     static bool bInitialXHairPosForTestingApplied = false;
-    if (!bInitialXHairPosForTestingApplied && getConfigProfiles().getVars()["testing"].getAsBool())
+    if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
     {
         getConsole().OLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
         bInitialXHairPosForTestingApplied = true;
-        if (getNetwork().isServer())
+        if (m_pge.getNetwork().isServer())
         {
             objXHair.getPosVec().Set(100.f, 0.f, objXHair.getPosVec().getZ());
         }
@@ -315,7 +316,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
-    if (!getNetwork().isServer())
+    if (!m_pge.getNetwork().isServer())
     {
         getConsole().EOLn("InputHandling::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
@@ -479,9 +480,9 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         {
             if (connHandleServerSide == pge_network::ServerConnHandle)
             {   // server plays for itself
-                getAudio().play(m_sounds.m_sndChangeWeapon);
+                m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
             }
-            if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, getNetwork().isServer()))
+            if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
             {
                 getConsole().EOLn("InputHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
                     __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
@@ -498,7 +499,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
                 pktWpnUpdateCurrent,
                 connHandleServerSide,
                 pTargetWpn->getFilename());
-            getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
+            m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
         }
         else
         {
@@ -552,7 +553,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
                     wpn->isAvailable(),
                     wpn->getMagBulletCount(),
                     wpn->getUnmagBulletCount());
-                getNetwork().getServer().send(pktWpnUpdate, it->second.getServerSideConnectionHandle());
+                m_pge.getNetwork().getServer().send(pktWpnUpdate, it->second.getServerSideConnectionHandle());
             }
             else
             {
@@ -560,11 +561,11 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
                 // not nice, but this is just some temporal solution for private beta
                 if (wpn->getFilename() == "pistol.txt")
                 {
-                    getAudio().play(m_sounds.m_sndShootPistol);
+                    m_pge.getAudio().play(m_sounds.m_sndShootPistol);
                 }
                 else if (wpn->getFilename() == "machinegun.txt")
                 {
-                    getAudio().play(m_sounds.m_sndShootMchgun);
+                    m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
                 }
                 else
                 {
@@ -634,22 +635,22 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player)
 {
-    std::ofstream fRegTestDump(getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+    std::ofstream fRegTestDump(m_pge.getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
     if (fRegTestDump.fail())
     {
-        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, m_pge.getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
         return;
     }
 
     fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
     fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
     fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
-    fRegTestDump << "  " << getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
+    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
 
     proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
     if (!pDeathMatchMode)

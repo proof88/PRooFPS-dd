@@ -20,11 +20,15 @@
 
 
 proofps_dd::Networking::Networking(
+    PGE& pge,
     proofps_dd::Durations& durations) : 
-    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
     m_nServerSideConnectionHandle(pge_network::ServerConnHandle),
+    m_pge(pge),
     m_durations(durations)
 {
+    // note that the following should not be touched here as they are not fully constructed when we are here:
+    // pge, durations
+    // But they can used in other functions.
 }
 
 CConsole& proofps_dd::Networking::getConsole() const

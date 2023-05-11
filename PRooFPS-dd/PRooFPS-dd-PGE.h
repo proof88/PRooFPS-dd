@@ -34,10 +34,11 @@ namespace proofps_dd
         The customized game engine class. This handles the game logic. Singleton.
     */
     class PRooFPSddPGE final :
-        public virtual PGE,
-        protected virtual proofps_dd::InputHandling,
-        protected virtual proofps_dd::Physics,
-        protected virtual proofps_dd::PlayerHandling
+        public PGE,
+        protected proofps_dd::InputHandling,
+        protected proofps_dd::Physics,
+        protected virtual proofps_dd::PlayerHandling,
+        protected virtual proofps_dd::UserInterface
     {
 
     public:

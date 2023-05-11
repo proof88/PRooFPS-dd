@@ -19,7 +19,7 @@
 namespace proofps_dd
 {
 
-    class Networking : protected virtual PGE
+    class Networking
     {
     public:
 
@@ -29,7 +29,9 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
-        Networking(proofps_dd::Durations& durations);
+        Networking(
+            PGE& pge,
+            proofps_dd::Durations& durations);
 
         Networking(const Networking&) = delete;
         Networking& operator=(const Networking&) = delete;
@@ -49,6 +51,7 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        PGE& m_pge;
         proofps_dd::Durations& m_durations;
 
 

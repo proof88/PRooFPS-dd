@@ -19,7 +19,7 @@
 namespace proofps_dd
 {
 
-    class UserInterface : protected virtual PGE
+    class UserInterface
     {
     public:
 
@@ -29,7 +29,7 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
-        UserInterface();
+        UserInterface(PGE& pge);
 
         UserInterface(const UserInterface&) = delete;
         UserInterface& operator=(const UserInterface&) = delete;
@@ -45,6 +45,7 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        PGE& m_pge;
 
     }; // class UserInterface
 

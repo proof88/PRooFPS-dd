@@ -60,22 +60,23 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::InputHandling(
+        *this,
         m_durations,
         m_mapPlayers,
         m_maps,
         m_sounds),
-    proofps_dd::Networking(
-        m_durations),
     proofps_dd::Physics(
+        *this,
         m_durations,
         m_mapPlayers,
         m_maps,
         m_sounds),
     proofps_dd::PlayerHandling(
+        *this,
         m_durations,
         m_maps,
         m_sounds),
-    proofps_dd::UserInterface(),
+    proofps_dd::UserInterface(static_cast<PGE&>(*this) /* static_cast so it will call the only ctor, not the deleted copy ctor */),
     m_maps(getPure()),
     m_fps(0),
     m_fps_counter(0),
@@ -85,7 +86,6 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bWon(false),
     m_fCameraMinY(0.0f)
 {
-    
 }
 
 proofps_dd::PRooFPSddPGE::~PRooFPSddPGE()

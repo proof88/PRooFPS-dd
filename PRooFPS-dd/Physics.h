@@ -40,7 +40,8 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         Physics(
-            proofps_dd::Durations& m_durations,
+            PGE& pge,
+            proofps_dd::Durations& durations,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
@@ -69,6 +70,7 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        PGE& m_pge;
         proofps_dd::Durations& m_durations;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;

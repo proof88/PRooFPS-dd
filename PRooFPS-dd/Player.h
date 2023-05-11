@@ -164,7 +164,7 @@ namespace proofps_dd
     }; // class Player
 
     class PlayerHandling :
-        protected virtual proofps_dd::Networking,
+        protected proofps_dd::Networking,
         protected virtual proofps_dd::UserInterface
     {
     public:
@@ -176,6 +176,7 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         PlayerHandling(
+            PGE& pge,
             proofps_dd::Durations& durations,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
@@ -195,6 +196,7 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        PGE& m_pge;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
 

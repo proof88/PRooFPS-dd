@@ -511,17 +511,18 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
 
 
 proofps_dd::PlayerHandling::PlayerHandling(
+    PGE& pge,
     proofps_dd::Durations& durations,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
-    Networking(durations),
+    proofps_dd::Networking(pge, durations),
+    proofps_dd::UserInterface(pge),
+    m_pge(pge),
     m_maps(maps),
-    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
-    /* due to virtual inheritance, we don't invoke ctor of UserInterface, PRooFPSddPGE invokes it only */
     m_sounds(sounds)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // maps, sounds
+    // pge, durations, maps, sounds
     // But they can used in other functions.
 }
 
@@ -543,12 +544,12 @@ static constexpr char* szWaitingToRespawn = "Waiting to respawn ...";
 
 void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& objXHair)
 {
-    player.Die(isMyConnection(player.getServerSideConnectionHandle()), getNetwork().isServer());
+    player.Die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
-        getAudio().play(m_sounds.m_sndPlayerDie);
+        m_pge.getAudio().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
-        AddText(szWaitingToRespawn, 200, getPure().getWindow().getClientHeight() / 2);
+        AddText(szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2);
     }
 }
 
@@ -558,14 +559,14 @@ void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObjec
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
-    player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, getNetwork().isServer());
+    player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         objXHair.Show();
         // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
-        getPure().getUImanager().RemoveText(
-            szWaitingToRespawn, 200, getPure().getWindow().getClientHeight() / 2, getPure().getUImanager().getDefaultFontSize());
+        m_pge.getPure().getUImanager().RemoveText(
+            szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2, m_pge.getPure().getUImanager().getDefaultFontSize());
     }
 }
 

@@ -23,21 +23,21 @@ static const float GAME_JUMPING_SPEED = 2.0f;
 
 
 proofps_dd::Physics::Physics(
+    PGE& pge,
     proofps_dd::Durations& durations,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
-    /* due to virtual inheritance, we don't invoke ctor of PGE, PRooFPSddPGE invokes it only */
-    /* due to virtual inheritance, we don't invoke ctor of UserInterface, PRooFPSddPGE invokes it only */
-    Networking(durations),
-    PlayerHandling(durations, maps, sounds),
+    proofps_dd::PlayerHandling(pge, durations, maps, sounds),
+    proofps_dd::UserInterface(pge),
+    m_pge(pge),
     m_durations(durations),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // durations, mapPlayers, maps, sounds
+    // pge, durations, mapPlayers, maps, sounds
     // But they can used in other functions.
 }
 
