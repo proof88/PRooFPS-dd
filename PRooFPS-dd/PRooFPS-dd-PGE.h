@@ -26,6 +26,7 @@
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
 #include "UserInterface.h"
+#include "WeaponHandling.h"
 
 namespace proofps_dd
 {
@@ -36,9 +37,9 @@ namespace proofps_dd
     class PRooFPSddPGE final :
         public PGE,
         protected proofps_dd::InputHandling,
-        protected proofps_dd::Physics,
         protected virtual proofps_dd::PlayerHandling,
-        protected virtual proofps_dd::UserInterface
+        protected virtual proofps_dd::UserInterface,
+        protected proofps_dd::WeaponHandling
     {
 
     public:
@@ -95,8 +96,6 @@ namespace proofps_dd
 
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(int fps, Player& player);
-        void UpdateWeapons();
-        void UpdateBullets();
         void SendUserUpdates();
         void RestartGame();
         void UpdateRespawnTimers();
@@ -108,10 +107,7 @@ namespace proofps_dd
         bool handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg);
         bool handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected& msg);
         bool handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg);
-        bool handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg);
         bool handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgMapItemUpdate& msg);
-        bool handleWpnUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdate& msg);
-        bool handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg);
 
     }; // class PRooFPSddPGE
 

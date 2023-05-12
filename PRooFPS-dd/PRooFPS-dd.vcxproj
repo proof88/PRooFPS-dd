@@ -204,6 +204,7 @@
     <ClInclude Include="Tests\MapItemTest.h" />
     <ClInclude Include="Tests\MapsTest.h" />
     <ClInclude Include="UserInterface.h" />
+    <ClInclude Include="WeaponHandling.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameMode.cpp" />
@@ -223,6 +224,7 @@
     <ClCompile Include="Tests\InputSim.cpp" />
     <ClCompile Include="Tests\PRooFPS-dd-Tests.cpp" />
     <ClCompile Include="UserInterface.cpp" />
+    <ClCompile Include="WeaponHandling.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PRooFPS-dd.rc" />
