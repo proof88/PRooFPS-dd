@@ -222,7 +222,7 @@
     <ClInclude Include="Tests\GameModeTest.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\Input.h">
+    <ClInclude Include="Tests\InputSim.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
     <ClInclude Include="Tests\MapItemTest.h">
@@ -293,7 +293,7 @@
     <ClCompile Include="MapItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\Input.cpp">
+    <ClCompile Include="Tests\InputSim.cpp">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">

@@ -524,6 +524,11 @@ proofps_dd::PlayerHandling::PlayerHandling(
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, maps, sounds
     // But they can used in other functions.
+
+    // Since this class is used to build up the PRooFPSddPGE class which is derived from PGE class, PGE is not yet initialized
+    // when this ctor is invoked. PRooFPSddPGE initializes PGE later. Furthermore, even the pimpl object inside PGE might not
+    // be extisting at this point, only isGameRunning() is safe to call. The following assertion is reminding me of that:
+    assert(!pge.isGameRunning());
 }
 
 CConsole& proofps_dd::PlayerHandling::getConsole() const

@@ -1,33 +1,43 @@
+/*
+    ###################################################################################
+    InputSim.cpp
+    Simulating input for PRooFPS-dd Regression Tests.
+    Made by PR00F88, West Whiskhyll Entertainment
+    2023
+    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
+    ###################################################################################
+*/
+
 #include "stdafx.h" // PCH
-#include "Input.h"
+#include "InputSim.h"
 
 #include <thread>
 
-void input::keybdPress(BYTE bVk, unsigned long nSleepMillisecs)
+void input_sim_test::keybdPress(BYTE bVk, unsigned long nSleepMillisecs)
 {
     keybd_event(bVk, 0, 0, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(nSleepMillisecs));
     keybd_event(bVk, 0, KEYEVENTF_KEYUP, 0);
 }
 
-void input::keybdPressNoRelease(BYTE bVk)
+void input_sim_test::keybdPressNoRelease(BYTE bVk)
 {
     keybd_event(bVk, 0, 0, 0);
 }
 
-void input::keybdRelease(BYTE bVk)
+void input_sim_test::keybdRelease(BYTE bVk)
 {
     keybd_event(bVk, 0, KEYEVENTF_KEYUP, 0);
 }
 
-void input::mouseClick(unsigned long nSleepMillisecs)
+void input_sim_test::mouseClick(unsigned long nSleepMillisecs)
 {
     mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(nSleepMillisecs));
     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 }
 
-void input::mouseScroll(bool bForward)
+void input_sim_test::mouseScroll(bool bForward)
 {
     // positive value in dwData is scrolling forward aka away from user aka scrolling up
     mouse_event(MOUSEEVENTF_WHEEL, 0, 0, bForward ? WHEEL_DELTA : -WHEEL_DELTA, 0);
@@ -44,7 +54,7 @@ void input::mouseScroll(bool bForward)
 //    return (y * 65536) / GetSystemMetrics(SM_CYSCREEN);
 //}
 
-void input::mouseMoveRelative(DWORD dx, DWORD dy)
+void input_sim_test::mouseMoveRelative(DWORD dx, DWORD dy)
 {
     mouse_event(MOUSEEVENTF_MOVE, dx, dy, 0, 0);
         

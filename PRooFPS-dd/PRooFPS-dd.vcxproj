@@ -197,7 +197,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
-    <ClInclude Include="Tests\Input.h" />
+    <ClInclude Include="Tests\InputSim.h" />
     <ClInclude Include="Tests\PlayerTest.h" />
     <ClInclude Include="Tests\Process.h" />
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
@@ -220,7 +220,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugTest_PRooFPS-dd|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Tests\Input.cpp" />
+    <ClCompile Include="Tests\InputSim.cpp" />
     <ClCompile Include="Tests\PRooFPS-dd-Tests.cpp" />
     <ClCompile Include="UserInterface.cpp" />
   </ItemGroup>

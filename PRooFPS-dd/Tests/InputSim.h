@@ -2,8 +2,8 @@
 
 /*
     ###################################################################################
-    MapsTest.h
-    Unit test for PRooFPS-dd Maps.
+    InputSim.h
+    Simulating input for PRooFPS-dd Regression Tests.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
@@ -14,7 +14,7 @@
 
 #include <Windows.h>
 
-namespace input
+namespace input_sim_test
 {
     void keybdPress(BYTE bVk, unsigned long nSleepMillisecs);
     void keybdPressNoRelease(BYTE bVk);

@@ -17,7 +17,7 @@
 #include "../../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Consts.h"
 #include "../GameMode.h"
-#include "Input.h"
+#include "InputSim.h"
 #include "Process.h"
 
 class RegTestBasicServerClient2Players :
@@ -96,7 +96,7 @@ protected:
         {
             BringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input::keybdPress(VK_ESCAPE, 100);
+            input_sim_test::keybdPress(VK_ESCAPE, 100);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
         else
@@ -108,7 +108,7 @@ protected:
         {
             BringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input::keybdPress(VK_ESCAPE, 100);
+            input_sim_test::keybdPress(VK_ESCAPE, 100);
         }
         else
         {
@@ -136,41 +136,41 @@ protected:
             BringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-            input::keybdPressNoRelease(VK_RIGHT);
+            input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(300));
-                input::keybdPress(VK_SPACE, 100); // jump over the hole
+                input_sim_test::keybdPress(VK_SPACE, 100); // jump over the hole
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                input::keybdPress(VK_SPACE, 100); // 1st crate
+                input_sim_test::keybdPress(VK_SPACE, 100); // 1st crate
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                input::keybdPress(VK_SPACE, 100); // 2nd crate
+                input_sim_test::keybdPress(VK_SPACE, 100); // 2nd crate
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                input::keybdPress(VK_SPACE, 100); // 3rd crate
+                input_sim_test::keybdPress(VK_SPACE, 100); // 3rd crate
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
-            input::keybdRelease(VK_RIGHT);
+            input_sim_test::keybdRelease(VK_RIGHT);
         }
 
         // client player moves into position and shoots
         {
             BringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input::keybdPressNoRelease(VK_LEFT);
+            input_sim_test::keybdPressNoRelease(VK_LEFT);
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(850));
-                input::keybdPress(VK_SPACE, 100); // jump over the hole
+                input_sim_test::keybdPress(VK_SPACE, 100); // jump over the hole
                 std::this_thread::sleep_for(std::chrono::milliseconds(3500));
             }
-            input::keybdRelease(VK_LEFT);
+            input_sim_test::keybdRelease(VK_LEFT);
 
             // now server and client player should be just a few blocks from each other
 
             // client should be able to switch to machinegun using scrolling forward/up
-            input::mouseScroll(true);
+            input_sim_test::mouseScroll(true);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             // shoot 2 bullets
-            input::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 2);
+            input_sim_test::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 2);
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -181,12 +181,12 @@ protected:
 
             // shoot 1 bullet
             // intentionally holding down mouse button for longer than cooldown, just for testing purpose, but pistol should shoot only 1 bullet!
-            input::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
+            input_sim_test::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
 
             // shoot 1 bullet again
             // intentionally holding down mouse button for longer than cooldown, just for testing purpose, but pistol should shoot only 1 bullet!
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            input::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
+            input_sim_test::mouseClick(cfgWpnPistol.getVars()["firing_cooldown"].getAsInt() * 2);
         }
 
         // client player shoots again and kills server player
@@ -195,7 +195,7 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 4 bullets
-            input::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 4);
+            input_sim_test::mouseClick(cfgWpnMachinegun.getVars()["firing_cooldown"].getAsInt() * 4);
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -205,12 +205,12 @@ protected:
         // trigger dump test data to file
         {
             // client
-            input::keybdPress(VK_RETURN, 100);
+            input_sim_test::keybdPress(VK_RETURN, 100);
 
             // server
             BringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input::keybdPress(VK_RETURN, 100);
+            input_sim_test::keybdPress(VK_RETURN, 100);
         }
 
         // wait for the test data files to be actually written
