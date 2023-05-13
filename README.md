@@ -28,6 +28,10 @@ https://www.facebook.com/whiskhyll
 
 ## History
 
+### v0.1.2 Private Beta (May 13, 2023)
+
+This version contains no changes to gameplay compared to the previous version, only massive code refactoring.
+
 ### v0.1.1 Private Beta (March 10, 2023)
 
 This version contains no changes to gameplay compared to the previous version, only changes that make testing for regression easier:
