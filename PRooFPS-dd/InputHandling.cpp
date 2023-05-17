@@ -243,7 +243,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
         {
             if (connHandleServerSide == pge_network::ServerConnHandle)
-            {   // server plays for itself
+            {   // server plays for itself because it doesnt inject the MsgWpnUpdateCurrent to itself
                 m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
             }
             if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
@@ -253,6 +253,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
                 assert(false);  // in debug mode, terminate the game
                 return true;   // in release mode, dont terminate the server, just silently ignore!
             }
+            it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
 
             //getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
             //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());

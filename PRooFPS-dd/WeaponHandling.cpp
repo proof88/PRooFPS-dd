@@ -461,6 +461,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrent(pge_network::PgeNetworkC
         return false;
     }
 
+    it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
+
     return true;
 }
 

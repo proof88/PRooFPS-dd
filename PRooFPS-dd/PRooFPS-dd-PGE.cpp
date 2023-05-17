@@ -668,24 +668,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
         CameraMovement(m_fps, player);
 
-        for (auto& otherPlayerPair : m_mapPlayers)
-        {
-            Weapon* const wpn = otherPlayerPair.second.getWeaponManager().getCurrentWeapon();
-            if (!wpn)
-            {
-                continue;
-            }
-
-            if (isMyConnection(otherPlayerPair.first))
-            {
-                // this should be done for ourselves too, but it is done only when window is active with different logic
-            }
-            else
-            {
-                wpn->UpdatePosition(otherPlayerPair.second.getObject3D()->getPosVec());
-            }
-        }
-        
         if (getNetwork().isServer())
         {
             UpdateWeapons(*m_gameMode);
@@ -1184,8 +1166,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
         it->second.getPos().commit();
     }
 
-    it->second.getObject3D()->getPosVec().Set(
-        msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    it->second.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
