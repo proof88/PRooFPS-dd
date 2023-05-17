@@ -21,7 +21,9 @@
 #include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
-static const int   GAME_FPS_INTERVAL = 500;  // should be greater than 0
+static const int   GAME_FPS_INTERVAL = 500;
+static_assert(GAME_FPS_INTERVAL > 0);
+
 static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 1500.0f;
@@ -87,7 +89,6 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps(0),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
-    m_fps_ms(0),
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f)
@@ -628,7 +629,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
     PureWindow& window = getPure().getWindow();
 
-    m_fps_ms = GetTickCount();
     m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
     // having valid connection means that server accepted the connection and we have initialized our player;
@@ -649,7 +649,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         }
 
         Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
-
         if (player.getWeaponManager().getCurrentWeapon())
         {
             // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
@@ -660,48 +659,10 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 10, 150);
         }
 
-        Text(std::to_string(m_fps), getPure().getWindow().getClientWidth() - 50, getPure().getWindow().getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
-
         timeStart = std::chrono::steady_clock::now();
         if (window.isActive())
         {
-            pge_network::PgePacket pkt;
-            proofps_dd::MsgUserCmdMove::initPkt(pkt);
-
-            keyboard(*m_gameMode, m_fps, m_bWon, pkt, player);
-            mouse(*m_gameMode, m_fps, m_bWon, pkt, player, *m_pObjXHair);
-
-            player.getAngleY() = (m_pObjXHair->getPosVec().getX() < 0.f) ? 0.f : 180.f;
-            player.getObject3D()->getAngleVec().SetY(player.getAngleY());
-            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getAngleY().isDirty())
-            {
-                proofps_dd::MsgUserCmdMove::setAngleY(pkt, player.getAngleY());
-            }
-
-            Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-            if (wpn)
-            {
-                // my xhair is used to update weapon angle
-                wpn->UpdatePositions(player.getObject3D()->getPosVec(), m_pObjXHair->getPosVec());
-                // PPPKKKGGGGGG
-                player.getWeaponAngle().set(
-                    PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
-                    );
-
-                if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getWeaponAngle().isDirty())
-                {
-                    proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, player.getWeaponAngle().getNew().getY(), player.getWeaponAngle().getNew().getZ());
-                }
-            }
-
-            if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
-            {   
-                // shouldSend() at this point means that there were actual input so MsgUserCmdMove will be sent out.
-                // Instead of using sendToServer() of getClient() or getServer() instances, we use the sendToServer() of
-                // their common interface which always points to the initialized instance, which is either client or server.
-                // Btw sendToServer() in case of server is implemented by inject() as of May 2023.
-                getNetwork().getServerClientInstance()->send(pkt);
-            }
+            handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
         } // window is active
         m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
@@ -745,7 +706,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         m_maps.UpdateVisibilitiesForRenderer();
     } // endif validConnection
 
-    m_fps_ms = GetTickCount() - m_fps_ms;
     // this is horrible that FPS measuring is still not available from outside of Pure .........
     m_fps_counter++;
     if ( GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure )
@@ -757,7 +717,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         std::stringstream str;
         str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << m_fps;
         window.SetCaption(str.str());
-    } 
+    }
+    Text(std::to_string(m_fps), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
 
     m_durations.m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
 }

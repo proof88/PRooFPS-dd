@@ -78,7 +78,6 @@ namespace proofps_dd
 
         int m_fps, m_fps_counter;               /* fps méréséhez segédváltozók */
         unsigned int m_fps_lastmeasure;         /* - || - */
-        unsigned int m_fps_ms;                  /* - || - */
 
         PureObject3D* m_pObjXHair;
         bool m_bWon;

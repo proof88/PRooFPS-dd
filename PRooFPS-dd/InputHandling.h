@@ -51,17 +51,10 @@ namespace proofps_dd
 
     protected:
 
-        void keyboard(
+        void handleInputAndSendUserCmdMove(
             proofps_dd::GameMode& gameMode,
             int fps,
             bool& won,
-            pge_network::PgePacket& pkt, proofps_dd::Player& player);
-
-        bool mouse(
-            proofps_dd::GameMode& gameMode,
-            int fps,
-            bool& won,
-            pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
@@ -80,6 +73,27 @@ namespace proofps_dd
         proofps_dd::Sounds& m_sounds;
 
         bool m_bShowGuiDemo;
+
+        void keyboard(
+            proofps_dd::GameMode& gameMode,
+            int fps,
+            bool& won,
+            pge_network::PgePacket& pkt, proofps_dd::Player& player);
+
+        bool mouse(
+            proofps_dd::GameMode& gameMode,
+            int fps,
+            bool& won,
+            pge_network::PgePacket& pkt,
+            proofps_dd::Player& player,
+            PureObject3D& objXHair);
+
+        void updatePlayerAsPerInputAndSendUserCmdMove(
+            int fps,
+            bool& won,
+            pge_network::PgePacket& pkt,
+            proofps_dd::Player& player,
+            PureObject3D& objXHair);
 
         void mouseWheel(
             const short int& nMouseWheelChange,
