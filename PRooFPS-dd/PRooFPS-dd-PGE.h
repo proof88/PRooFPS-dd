@@ -92,6 +92,11 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         bool hasValidConnection() const;
+        void mainLoopServerOnly(
+            std::chrono::steady_clock::time_point& timeStart);   /**< Only server executes this. */
+        void mainLoopShared(
+            std::chrono::steady_clock::time_point& timeStart,
+            PureWindow& window);                                 /**< Both clients and listen-server executes this. */
 
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(int fps, Player& player);

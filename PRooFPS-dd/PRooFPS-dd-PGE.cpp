@@ -295,293 +295,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     return true;
 }
 
-
-// ############################### PRIVATE ###############################
-
-
-void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
-{
-    PureVector campos = getPure().getCamera().getPosVec();
-    float celx, cely;
-    float speed = GAME_CAM_SPEED / 60.0f;
-
-    /* ne mehessen túlságosan balra vagy jobbra a kamera */
-    //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )
-    //    celx = m_maps.getStartPos().getX();
-    //else
-    //    if ( m_player.getPos().getX() > m_maps.getEndPos().getX() )
-    //        celx = m_maps.getEndPos().getX();
-    //     else
-            celx = player.getObject3D()->getPosVec().getX();
-
-    /* ne mehessen túlságosan le és fel a kamera */
-    //if ( m_player.getPos().getY() < m_fCameraMinY )
-    //    cely = m_fCameraMinY;
-    //else
-    //    if ( m_player.getPos().getY() > GAME_CAM_MAX_Y )
-    //        cely = GAME_CAM_MAX_Y;
-    //    else
-            cely = player.getObject3D()->getPosVec().getY();
-
-    /* a játékoshoz igazítjuk a kamerát */
-    if (celx != campos.getX() )
-    {
-        campos.SetX(campos.getX() + ((celx - campos.getX())/speed) );
-    }
-    if (cely != campos.getY() )
-    {
-        campos.SetY(campos.getY() + ((cely - campos.getY())/speed) );
-    }
-
-    getPure().getCamera().getPosVec().Set( campos.getX(), campos.getY(), GAME_CAM_Z );
-    getPure().getCamera().getTargetVec().Set( campos.getX(), campos.getY(), player.getObject3D()->getPosVec().getZ() );
-
-} // CameraMovement()
-
-void proofps_dd::PRooFPSddPGE::RestartGame()
-{
-    if (getNetwork().isServer())
-    {
-        for (auto& playerPair : m_mapPlayers)
-        {
-            ServerRespawnPlayer(playerPair.second, true);
-        }
-
-        // respawn all map items
-        pge_network::PgePacket newPktMapItemUpdate;
-        for (auto& itemPair : m_maps.getItems())
-        {
-            if (!itemPair.second)
-            {
-                continue;
-            }
-
-            MapItem& mapItem = *(itemPair.second);
-            if (!mapItem.isTaken())
-            {
-                continue;
-            }
-
-            mapItem.UnTake();
-
-            proofps_dd::MsgMapItemUpdate::initPkt(
-                newPktMapItemUpdate,
-                0,
-                mapItem.getId(),
-                mapItem.isTaken());
-
-            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
-        } // end for items
-    } // end server
-
-    m_gameMode->restart(); // now both server and clients execute this on their own, in future only server should do this ...
-}
-
-bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
-{
-    return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
-}
-
-void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
-{
-    const SoLoud::result resSoloud = snd.load(fname);
-    if (resSoloud == SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
-    {
-        getConsole().OLn("%s: %s loaded, length: %f secs!", __func__, fname, snd.getLength());
-    }
-    else
-    {
-        getConsole().EOLn("%s: %s load error: %d!", __func__, fname, resSoloud);
-    }
-}
-
-void proofps_dd::PRooFPSddPGE::UpdateRespawnTimers()
-{
-    if (m_gameMode->checkWinningConditions())
-    {
-        return;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        if (playerPair.second.getHealth() > 0)
-        {
-            continue;
-        }
-
-        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
-        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
-        {
-            ServerRespawnPlayer(playerPair.second, false);
-        }
-    }
-
-    m_durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
-void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
-{
-    if (m_gameMode->checkWinningConditions())
-    {
-        return;
-    }
-
-    std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    pge_network::PgePacket newPktMapItemUpdate;
-    pge_network::PgePacket newPktWpnUpdate;
-
-    for (auto& itemPair : m_maps.getItems())
-    {
-        if (!itemPair.second)
-        {
-            continue;
-        }
-
-        MapItem& mapItem = *(itemPair.second);
-        bool bSendItemUpdate = false;
-
-        if (mapItem.isTaken())
-        {
-            const auto nSecsSinceTake = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mapItem.getTimeTaken()).count();
-            if (nSecsSinceTake < MapItem::getItemRespawnTimeSecs(mapItem))
-            {
-                continue;
-            }
-
-            mapItem.UnTake();
-            bSendItemUpdate = true;
-        }
-        else
-        {
-            for (auto& playerPair : m_mapPlayers)
-            {
-                auto& player = playerPair.second;
-                if (player.getHealth() <= 0)
-                {
-                    continue;
-                }
-
-                const PureObject3D* const plobj = player.getObject3D();
-
-                // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
-                // decision than collision check ...
-                if (Colliding(*plobj, mapItem.getObject3D()))
-                {
-                    proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
-                    if (player.canTakeItem(mapItem))
-                    {
-                        player.TakeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
-                        bSendItemUpdate = true;
-                        // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
-                        // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
-                        if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
-                        {
-                            if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
-                            {
-                                getNetwork().getServer().send(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
-                            }
-                        }
-                        break; // a player can collide with only one item at a time since there are no overlapping items
-                    }
-                } // colliding
-            } // for playerPair
-        }
-
-        if (bSendItemUpdate)
-        {
-            proofps_dd::MsgMapItemUpdate::initPkt(
-                newPktMapItemUpdate,
-                pge_network::ServerConnHandle,
-                mapItem.getId(),
-                mapItem.isTaken());
-
-            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
-        }
-    } // for item
-
-    m_durations.m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
-void proofps_dd::PRooFPSddPGE::UpdateGameMode()
-{
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    if (m_gameMode->checkWinningConditions())
-    {
-        const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
-        if (nSecsSinceWin >= 15)
-        {
-            RestartGame();
-        }
-        else
-        {
-            // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
-            m_gameMode->showObjectives(getPure(), getNetwork());
-            m_pObjXHair->Hide();
-            for (auto& playerPair : m_mapPlayers)
-            {
-                playerPair.second.getObject3D()->Hide();
-                playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
-            }
-        }
-    }
-
-    m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
-void proofps_dd::PRooFPSddPGE::SendUserUpdates()
-{
-    if (!getNetwork().isServer())
-    {
-        // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
-        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
-        return;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-
-        if ( player.isDirty() )
-        {
-            pge_network::PgePacket newPktUserUpdate;
-            proofps_dd::MsgUserUpdate::initPkt(
-                newPktUserUpdate,
-                playerPair.second.getServerSideConnectionHandle(),
-                player.getPos().getNew().getX(),
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ(),
-                player.getAngleY(),
-                player.getWeaponAngle().getNew().getY(),
-                player.getWeaponAngle().getNew().getZ(),
-                player.getHealth(),
-                player.getRespawnFlag(),
-                player.getFrags(),
-                player.getDeaths());
-
-            // player.updateOldValues() might be invoked here, however this code is only executed by server, and
-            // currently onGameFrameBegin() invokes player.updateOldValues() for all players even by clients, I'm not
-            // sure if there would be any difference in behavior, but logically I would call that function here ...
-            // Since I assume clients should not take care of old-new values anyway, only server does that I think ...
-
-            // we always reset respawn flag here
-            playerPair.second.getRespawnFlag() = false;
-
-            // Note that health is not needed by server since it already has the updated health, but for convenience
-            // we put that into MsgUserUpdate and send anyway like all the other stuff.
-            getNetwork().getServer().sendToAll(newPktUserUpdate);
-        }
-    }
-
-    m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
 /**
     Game logic right before the engine would do anything.
     This is invoked at the very beginning of the main game loop, before processing window messages and incoming network packets.
@@ -612,7 +325,7 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
     }
 }
 
-/** 
+/**
     Game logic here.
     Game engine invokes this in every frame.
     DO NOT make any unnecessary operations here, as this function must always complete below 16 msecs to keep stable 60 fps!
@@ -638,48 +351,17 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
         if (getNetwork().isServer())
         {
-            timeStart = std::chrono::steady_clock::now();
-            if (!m_gameMode->checkWinningConditions())
-            {
-                Gravity(m_fps, *m_pObjXHair);
-                PlayerCollisionWithWalls(m_bWon);
-            }
-            m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            UpdateWeapons(*m_gameMode);
-            UpdateBullets(*m_gameMode, *m_pObjXHair);
-            UpdateRespawnTimers();
-            PickupAndRespawnItems();
-            SendUserUpdates();
+            mainLoopServerOnly(timeStart);
         }
 
-        Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
-        timeStart = std::chrono::steady_clock::now();
-        if (window.isActive())
-        {
-            handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
-        } // window is active
-        m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-
-        CameraMovement(m_fps, player);
-        UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
-        m_maps.Update();
-        m_maps.UpdateVisibilitiesForRenderer();
-        if (player.getWeaponManager().getCurrentWeapon())
-        {
-            // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
-            Text(
-                player.getWeaponManager().getCurrentWeapon()->getVars()["name"].getAsString() + ": " +
-                std::to_string(player.getWeaponManager().getCurrentWeapon()->getMagBulletCount()) + " / " +
-                std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
-                10, 150);
-        }
+        mainLoopShared(timeStart, window);
     } // endif validConnection
 
     // this is horrible that FPS measuring is still not available from outside of Pure .........
     m_fps_counter++;
-    if ( GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure )
+    if (GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
     {
-        m_fps = m_fps_counter * (1000/GAME_FPS_INTERVAL);
+        m_fps = m_fps_counter * (1000 / GAME_FPS_INTERVAL);
         m_fps_counter = 0;
         m_fps_lastmeasure = GetTickCount();
 
@@ -774,6 +456,342 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
     getConsole().OOOLn("proofps_dd::PRooFPSddPGE::onGameDestroying() done!");
     getConsole().Deinitialize();
+}
+
+
+// ############################### PRIVATE ###############################
+
+
+bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
+{
+    return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
+}
+
+/**
+    Only server executes this.
+    Good for either dedicated- or listen- server.
+*/
+void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(std::chrono::steady_clock::time_point& timeStart)
+{
+    timeStart = std::chrono::steady_clock::now();
+    if (!m_gameMode->checkWinningConditions())
+    {
+        Gravity(m_fps, *m_pObjXHair);
+        PlayerCollisionWithWalls(m_bWon);
+    }
+    m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    UpdateWeapons(*m_gameMode);
+    UpdateBullets(*m_gameMode, *m_pObjXHair);
+    UpdateRespawnTimers();
+    PickupAndRespawnItems();
+    SendUserUpdates();
+}
+
+/**
+    Both clients and listen-server executes this.
+    Dedicated server won't need this.
+*/
+void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_point& timeStart, PureWindow& window)
+{
+    Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
+    timeStart = std::chrono::steady_clock::now();
+    if (window.isActive())
+    {
+        handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
+    } // window is active
+    m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+
+    CameraMovement(m_fps, player);
+    UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
+    m_maps.Update();
+    m_maps.UpdateVisibilitiesForRenderer();
+    if (player.getWeaponManager().getCurrentWeapon())
+    {
+        // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
+        Text(
+            player.getWeaponManager().getCurrentWeapon()->getVars()["name"].getAsString() + ": " +
+            std::to_string(player.getWeaponManager().getCurrentWeapon()->getMagBulletCount()) + " / " +
+            std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
+            10, 150);
+    }
+}
+
+void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
+{
+    const SoLoud::result resSoloud = snd.load(fname);
+    if (resSoloud == SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
+    {
+        getConsole().OLn("%s: %s loaded, length: %f secs!", __func__, fname, snd.getLength());
+    }
+    else
+    {
+        getConsole().EOLn("%s: %s load error: %d!", __func__, fname, resSoloud);
+    }
+}
+
+void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
+{
+    PureVector campos = getPure().getCamera().getPosVec();
+    float celx, cely;
+    float speed = GAME_CAM_SPEED / 60.0f;
+
+    /* ne mehessen túlságosan balra vagy jobbra a kamera */
+    //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )
+    //    celx = m_maps.getStartPos().getX();
+    //else
+    //    if ( m_player.getPos().getX() > m_maps.getEndPos().getX() )
+    //        celx = m_maps.getEndPos().getX();
+    //     else
+    celx = player.getObject3D()->getPosVec().getX();
+
+    /* ne mehessen túlságosan le és fel a kamera */
+    //if ( m_player.getPos().getY() < m_fCameraMinY )
+    //    cely = m_fCameraMinY;
+    //else
+    //    if ( m_player.getPos().getY() > GAME_CAM_MAX_Y )
+    //        cely = GAME_CAM_MAX_Y;
+    //    else
+    cely = player.getObject3D()->getPosVec().getY();
+
+    /* a játékoshoz igazítjuk a kamerát */
+    if (celx != campos.getX())
+    {
+        campos.SetX(campos.getX() + ((celx - campos.getX()) / speed));
+    }
+    if (cely != campos.getY())
+    {
+        campos.SetY(campos.getY() + ((cely - campos.getY()) / speed));
+    }
+
+    getPure().getCamera().getPosVec().Set(campos.getX(), campos.getY(), GAME_CAM_Z);
+    getPure().getCamera().getTargetVec().Set(campos.getX(), campos.getY(), player.getObject3D()->getPosVec().getZ());
+
+} // CameraMovement()
+
+void proofps_dd::PRooFPSddPGE::SendUserUpdates()
+{
+    if (!getNetwork().isServer())
+    {
+        // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
+        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
+        return;
+    }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+
+        if (player.isDirty())
+        {
+            pge_network::PgePacket newPktUserUpdate;
+            proofps_dd::MsgUserUpdate::initPkt(
+                newPktUserUpdate,
+                playerPair.second.getServerSideConnectionHandle(),
+                player.getPos().getNew().getX(),
+                player.getPos().getNew().getY(),
+                player.getPos().getNew().getZ(),
+                player.getAngleY(),
+                player.getWeaponAngle().getNew().getY(),
+                player.getWeaponAngle().getNew().getZ(),
+                player.getHealth(),
+                player.getRespawnFlag(),
+                player.getFrags(),
+                player.getDeaths());
+
+            // player.updateOldValues() might be invoked here, however this code is only executed by server, and
+            // currently onGameFrameBegin() invokes player.updateOldValues() for all players even by clients, I'm not
+            // sure if there would be any difference in behavior, but logically I would call that function here ...
+            // Since I assume clients should not take care of old-new values anyway, only server does that I think ...
+
+            // we always reset respawn flag here
+            playerPair.second.getRespawnFlag() = false;
+
+            // Note that health is not needed by server since it already has the updated health, but for convenience
+            // we put that into MsgUserUpdate and send anyway like all the other stuff.
+            getNetwork().getServer().sendToAll(newPktUserUpdate);
+        }
+    }
+
+    m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::PRooFPSddPGE::RestartGame()
+{
+    if (getNetwork().isServer())
+    {
+        for (auto& playerPair : m_mapPlayers)
+        {
+            ServerRespawnPlayer(playerPair.second, true);
+        }
+
+        // respawn all map items
+        pge_network::PgePacket newPktMapItemUpdate;
+        for (auto& itemPair : m_maps.getItems())
+        {
+            if (!itemPair.second)
+            {
+                continue;
+            }
+
+            MapItem& mapItem = *(itemPair.second);
+            if (!mapItem.isTaken())
+            {
+                continue;
+            }
+
+            mapItem.UnTake();
+
+            proofps_dd::MsgMapItemUpdate::initPkt(
+                newPktMapItemUpdate,
+                0,
+                mapItem.getId(),
+                mapItem.isTaken());
+
+            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
+        } // end for items
+    } // end server
+
+    m_gameMode->restart(); // now both server and clients execute this on their own, in future only server should do this ...
+}
+
+void proofps_dd::PRooFPSddPGE::UpdateRespawnTimers()
+{
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
+    }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        if (playerPair.second.getHealth() > 0)
+        {
+            continue;
+        }
+
+        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
+        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
+        {
+            ServerRespawnPlayer(playerPair.second, false);
+        }
+    }
+
+    m_durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::PRooFPSddPGE::UpdateGameMode()
+{
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    if (m_gameMode->checkWinningConditions())
+    {
+        const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
+        if (nSecsSinceWin >= 15)
+        {
+            RestartGame();
+        }
+        else
+        {
+            // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
+            m_gameMode->showObjectives(getPure(), getNetwork());
+            m_pObjXHair->Hide();
+            for (auto& playerPair : m_mapPlayers)
+            {
+                playerPair.second.getObject3D()->Hide();
+                playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+            }
+        }
+    }
+
+    m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
+{
+    if (m_gameMode->checkWinningConditions())
+    {
+        return;
+    }
+
+    std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    pge_network::PgePacket newPktMapItemUpdate;
+    pge_network::PgePacket newPktWpnUpdate;
+
+    for (auto& itemPair : m_maps.getItems())
+    {
+        if (!itemPair.second)
+        {
+            continue;
+        }
+
+        MapItem& mapItem = *(itemPair.second);
+        bool bSendItemUpdate = false;
+
+        if (mapItem.isTaken())
+        {
+            const auto nSecsSinceTake = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mapItem.getTimeTaken()).count();
+            if (nSecsSinceTake < MapItem::getItemRespawnTimeSecs(mapItem))
+            {
+                continue;
+            }
+
+            mapItem.UnTake();
+            bSendItemUpdate = true;
+        }
+        else
+        {
+            for (auto& playerPair : m_mapPlayers)
+            {
+                auto& player = playerPair.second;
+                if (player.getHealth() <= 0)
+                {
+                    continue;
+                }
+
+                const PureObject3D* const plobj = player.getObject3D();
+
+                // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
+                // decision than collision check ...
+                if (Colliding(*plobj, mapItem.getObject3D()))
+                {
+                    proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
+                    if (player.canTakeItem(mapItem))
+                    {
+                        player.TakeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
+                        bSendItemUpdate = true;
+                        // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
+                        // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
+                        if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
+                        {
+                            if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
+                            {
+                                getNetwork().getServer().send(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
+                            }
+                        }
+                        break; // a player can collide with only one item at a time since there are no overlapping items
+                    }
+                } // colliding
+            } // for playerPair
+        }
+
+        if (bSendItemUpdate)
+        {
+            proofps_dd::MsgMapItemUpdate::initPkt(
+                newPktMapItemUpdate,
+                pge_network::ServerConnHandle,
+                mapItem.getId(),
+                mapItem.isTaken());
+
+            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
+        }
+    } // for item
+
+    m_durations.m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
