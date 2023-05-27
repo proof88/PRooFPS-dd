@@ -636,7 +636,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     if (hasValidConnection())
     {
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
-
         if (getNetwork().isServer())
         {
             timeStart = std::chrono::steady_clock::now();
@@ -646,9 +645,25 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 PlayerCollisionWithWalls(m_bWon);
             }
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+            UpdateWeapons(*m_gameMode);
+            UpdateBullets(*m_gameMode, *m_pObjXHair);
+            UpdateRespawnTimers();
+            PickupAndRespawnItems();
+            SendUserUpdates();
         }
 
         Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
+        timeStart = std::chrono::steady_clock::now();
+        if (window.isActive())
+        {
+            handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
+        } // window is active
+        m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+
+        CameraMovement(m_fps, player);
+        UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
+        m_maps.Update();
+        m_maps.UpdateVisibilitiesForRenderer();
         if (player.getWeaponManager().getCurrentWeapon())
         {
             // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
@@ -658,34 +673,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
                 10, 150);
         }
-
-        timeStart = std::chrono::steady_clock::now();
-        if (window.isActive())
-        {
-            handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
-        } // window is active
-        m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-
-        CameraMovement(m_fps, player);
-
-        if (getNetwork().isServer())
-        {
-            UpdateWeapons(*m_gameMode);
-            UpdateBullets(*m_gameMode, *m_pObjXHair);
-            UpdateRespawnTimers();
-            PickupAndRespawnItems();
-        }
-
-        m_maps.Update();
-
-        UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
-
-        if (getNetwork().isServer())
-        {
-            SendUserUpdates();
-        }
-
-        m_maps.UpdateVisibilitiesForRenderer();
     } // endif validConnection
 
     // this is horrible that FPS measuring is still not available from outside of Pure .........
