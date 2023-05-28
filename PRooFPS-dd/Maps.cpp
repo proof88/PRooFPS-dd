@@ -15,6 +15,8 @@
 #include "Consts.h"
 #include "Maps.h"
 
+static const float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
+
 
 // ############################### PUBLIC ################################
 
@@ -409,7 +411,7 @@ const std::map<std::string, PGEcfgVariable>& proofps_dd::Maps::getVars() const
     return m_vars;
 }
 
-void proofps_dd::Maps::Update()
+void proofps_dd::Maps::Update(const float& fps)
 {
     // invoked by both server and client
     for (auto& itemPair : getItems())
@@ -425,7 +427,7 @@ void proofps_dd::Maps::Update()
             continue;
         }
 
-        mapItem.Update(8.f);
+        mapItem.Update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
     }
 }
 

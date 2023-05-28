@@ -15,8 +15,8 @@
 
 #include "InputHandling.h"
 
-static const float GAME_PLAYER_SPEED1 = 2.0f;
-static const float GAME_PLAYER_SPEED2 = 4.0f;
+static const float GAME_PLAYER_SPEED_WALK = 2.0f;
+static const float GAME_PLAYER_SPEED_RUN  = 4.0f;
 
 
 // ############################### PUBLIC ################################
@@ -63,7 +63,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 
 void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     proofps_dd::GameMode& gameMode,
-    int fps,
+    const float& fps,
     bool& won,
     proofps_dd::Player& player,
     PureObject3D& objXHair)
@@ -77,6 +77,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
 }
 
 bool proofps_dd::InputHandling::handleUserCmdMove(
+    const float& fps,
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
@@ -130,11 +131,11 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
     float fSpeed;
     if (player.isRunning())
     {
-        fSpeed = GAME_PLAYER_SPEED2 / 60.0f;
+        fSpeed = GAME_PLAYER_SPEED_RUN / fps;
     }
     else
     {
-        fSpeed = GAME_PLAYER_SPEED1 / 60.0f;
+        fSpeed = GAME_PLAYER_SPEED_WALK / fps;
     }
 
     if (pktUserCmdMove.m_strafe == proofps_dd::Strafe::LEFT)
@@ -353,7 +354,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
 
 void proofps_dd::InputHandling::keyboard(
     proofps_dd::GameMode& gameMode,
-    int /*fps*/,
+    const float& /*fps*/,
     bool& won,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
@@ -505,7 +506,7 @@ void proofps_dd::InputHandling::keyboard(
 
 bool proofps_dd::InputHandling::mouse(
     proofps_dd::GameMode& gameMode,
-    int /*fps*/,
+    const float& /*fps*/,
     bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
@@ -607,7 +608,11 @@ bool proofps_dd::InputHandling::mouse(
     return true;
 }
 
-void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(int /*fps*/, bool& /*won*/, pge_network::PgePacket& pkt, proofps_dd::Player& player, PureObject3D& objXHair)
+void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
+    const float& /*fps*/,
+    bool& /*won*/,
+    pge_network::PgePacket& pkt,
+    proofps_dd::Player& player, PureObject3D& objXHair)
 {
     player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
     player.getObject3D()->getAngleVec().SetY(player.getAngleY());

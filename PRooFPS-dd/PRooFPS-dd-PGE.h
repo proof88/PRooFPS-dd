@@ -76,8 +76,10 @@ namespace proofps_dd
         std::string m_sServerMapFilenameToLoad;
         Maps m_maps;
 
-        int m_fps, m_fps_counter;               /* fps méréséhez segédváltozók */
-        unsigned int m_fps_lastmeasure;         /* - || - */
+        float m_fps;
+        unsigned int m_fps_counter;
+        unsigned long m_fps_lastmeasure;
+        bool m_bFpsFirstMeasure;
 
         PureObject3D* m_pObjXHair;
         bool m_bWon;
@@ -99,7 +101,7 @@ namespace proofps_dd
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
 
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void CameraMovement(int fps, Player& player);
+        void CameraMovement(const float& fps, Player& player);
         void SendUserUpdates();
         void RestartGame();
         void UpdateRespawnTimers();

@@ -535,7 +535,7 @@ private:
                 vOriginalItemPosY.push_back(itemPair.second->getPos().getY());
             }
 
-            maps.Update();
+            maps.Update(60.f);
 
             int i = 0;
             for (const auto& itemPair : maps.getItems())

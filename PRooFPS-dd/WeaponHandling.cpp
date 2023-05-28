@@ -63,7 +63,7 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::WeaponHandling::UpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair)
+void proofps_dd::WeaponHandling::UpdateBullets(const float& fps, proofps_dd::GameMode& gameMode, PureObject3D& objXHair)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -86,7 +86,7 @@ void proofps_dd::WeaponHandling::UpdateBullets(proofps_dd::GameMode& gameMode, P
         }
         else
         {
-            bullet.Update();
+            bullet.Update(fps);
         }
 
         const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
@@ -115,7 +115,7 @@ void proofps_dd::WeaponHandling::UpdateBullets(proofps_dd::GameMode& gameMode, P
                         const auto itKiller = m_mapPlayers.find(bullet.getOwner());
                         if (itKiller == m_mapPlayers.end())
                         {
-                            //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a playerPair already left!",
+                            //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
                             //    __func__, playerPair.first.c_str());
                         }
                         else

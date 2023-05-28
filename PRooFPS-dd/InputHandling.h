@@ -53,12 +53,13 @@ namespace proofps_dd
 
         void handleInputAndSendUserCmdMove(
             proofps_dd::GameMode& gameMode,
-            int fps,
+            const float& fps,
             bool& won,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
         bool handleUserCmdMove(
+            const float& fps,
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserCmdMove& msg);
 
@@ -76,20 +77,20 @@ namespace proofps_dd
 
         void keyboard(
             proofps_dd::GameMode& gameMode,
-            int fps,
+            const float& fps,
             bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player);
 
         bool mouse(
             proofps_dd::GameMode& gameMode,
-            int fps,
+            const float& fps,
             bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
         void updatePlayerAsPerInputAndSendUserCmdMove(
-            int fps,
+            const float& fps,
             bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,

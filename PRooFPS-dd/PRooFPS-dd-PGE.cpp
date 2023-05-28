@@ -14,6 +14,7 @@
 
 #include <filesystem>  // requires cpp17
 #include <functional>
+#include <iomanip>     // std::setprecision() for displaying fps
 
 #include "../../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
 #include "../../../PGE/PGE/Pure/include/external/PureUiManager.h"
@@ -21,7 +22,7 @@
 #include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
-static const int   GAME_FPS_INTERVAL = 500;
+static const unsigned int GAME_FPS_INTERVAL = 500;
 static_assert(GAME_FPS_INTERVAL > 0);
 
 static const int   GAME_MAXFPS = 60;
@@ -86,9 +87,10 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_maps(getPure()),
-    m_fps(0),
+    m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
+    m_bFpsFirstMeasure(true),
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f)
@@ -290,7 +292,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_gameMode->restart();
     
     m_fps_lastmeasure = GetTickCount();
-    m_fps = 0;
+    m_fps = GAME_MAXFPS;
 
     return true;
 }
@@ -336,7 +338,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
     if (m_durations.m_timeFullRoundtripStart.time_since_epoch().count() != 0)
     {
-        m_durations.m_nFullRoundtripDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(timeOnGameRunningStart - m_durations.m_timeFullRoundtripStart).count();
+        m_durations.m_nFullRoundtripDurationUSecs +=
+            std::chrono::duration_cast<std::chrono::microseconds>(timeOnGameRunningStart - m_durations.m_timeFullRoundtripStart).count();
     }
     m_durations.m_timeFullRoundtripStart = timeOnGameRunningStart;
 
@@ -345,7 +348,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
     // having valid connection means that server accepted the connection and we have initialized our player;
-    // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry even ...
+    // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
     if (hasValidConnection())
     {
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
@@ -358,18 +361,36 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     } // endif validConnection
 
     // this is horrible that FPS measuring is still not available from outside of Pure .........
+    std::stringstream ssFps;
+    ssFps << std::fixed << std::setprecision(1) << m_fps;
     m_fps_counter++;
-    if (GetTickCount() - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
+    const DWORD nGetTickCount = GetTickCount();
+    if (nGetTickCount - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
     {
-        m_fps = m_fps_counter * (1000 / GAME_FPS_INTERVAL);
+        if (!m_bFpsFirstMeasure)
+        {
+            // too much time might elapse between onGameInitialized() and onGameRunning() so we don't update fps
+            // when onGameRunning() is invoked for the first time
+            m_fps = m_fps_counter * (1000.f / (nGetTickCount - m_fps_lastmeasure));
+        }
+        else
+        {
+            m_bFpsFirstMeasure = false;
+        }
+
         m_fps_counter = 0;
-        m_fps_lastmeasure = GetTickCount();
+        m_fps_lastmeasure = nGetTickCount;
 
         std::stringstream str;
-        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << m_fps;
+        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << ssFps.str();
         window.SetCaption(str.str());
+
+        if (m_fps < 0.01f)
+        {
+            m_fps = 0.01f; // make sure nobody tries division by zero
+        }
     }
-    Text(std::to_string(m_fps), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
+    Text(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
 
     m_durations.m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
 }
@@ -401,6 +422,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             break;
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
+                m_fps,
                 pkt.m_connHandleServerSide,
                 reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;
@@ -481,7 +503,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(std::chrono::steady_clock::tim
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     UpdateWeapons(*m_gameMode);
-    UpdateBullets(*m_gameMode, *m_pObjXHair);
+    UpdateBullets(m_fps, *m_gameMode, *m_pObjXHair);
     UpdateRespawnTimers();
     PickupAndRespawnItems();
     SendUserUpdates();
@@ -503,7 +525,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
 
     CameraMovement(m_fps, player);
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
-    m_maps.Update();
+    m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
     {
@@ -529,11 +551,11 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
     }
 }
 
-void proofps_dd::PRooFPSddPGE::CameraMovement(int /*fps*/, Player& player)
+void proofps_dd::PRooFPSddPGE::CameraMovement(const float& fps, Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
-    float speed = GAME_CAM_SPEED / 60.0f;
+    float speed = GAME_CAM_SPEED / fps;
 
     /* ne mehessen túlságosan balra vagy jobbra a kamera */
     //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )

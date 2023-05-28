@@ -64,7 +64,7 @@ namespace proofps_dd
         int getForegroundBlockCount() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
-        void Update();
+        void Update(const float& fps);
 
     protected:
 
