@@ -82,7 +82,7 @@ namespace proofps_dd
         void SetGravity(float value);
         bool jumpAllowed() const;
         void SetJumpAllowed(bool b);
-        void Jump();
+        void Jump(const float& fps);
         void StopJumping();
         void DoDamage(int dmg);
         void SetCanFall(bool state);

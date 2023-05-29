@@ -228,7 +228,7 @@ void proofps_dd::Player::SetJumpAllowed(bool b) {
     m_bAllowJump = b;
 }
 
-void proofps_dd::Player::Jump() {
+void proofps_dd::Player::Jump(const float& /*fps*/) {
     if (!jumpAllowed())
     {
         return;
@@ -236,7 +236,7 @@ void proofps_dd::Player::Jump() {
 
     m_bAllowJump = false;
     m_bJumping = true;
-    m_fGravity = proofps_dd::GAME_GRAVITY_MAX;
+    m_fGravity = proofps_dd::GAME_GRAVITY_MAX/* / fps*/;
     m_vecForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     m_vecForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());

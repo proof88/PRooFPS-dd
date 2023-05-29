@@ -27,7 +27,7 @@ static_assert(GAME_FPS_INTERVAL > 0);
 
 static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
-static const float GAME_CAM_SPEED = 1500.0f;
+static const float GAME_CAM_SPEED = 0.416f;
 
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
@@ -160,6 +160,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     
     getPure().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
+    // for simulating slow rendering:
+    //setRenderExtraDelayMillisecs(100);
 
     getPure().getUImanager().SetDefaultFontSize(20);
 
@@ -270,7 +272,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         }
     }
 
-    LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
     LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
     LoadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
@@ -555,7 +557,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(const float& fps, Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
-    float speed = GAME_CAM_SPEED / fps;
+    float speed = GAME_CAM_SPEED * fps;
 
     /* ne mehessen túlságosan balra vagy jobbra a kamera */
     //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )

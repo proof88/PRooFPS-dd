@@ -448,7 +448,7 @@ private:
             assertEquals(PureVector(), player.getForce(), "force 1") &
             assertTrue(player.isFalling(), "falling 1");
 
-        player.Jump();
+        player.Jump(60.f);
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
             assertTrue(player.isJumping(), "jumping 2") &
             assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 2") &
@@ -463,7 +463,7 @@ private:
             assertFalse(player.isFalling(), "falling 3");
 
         player.SetJumpAllowed(false);
-        player.Jump();
+        player.Jump(60.f);
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
             assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 4") &

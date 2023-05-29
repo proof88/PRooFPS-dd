@@ -170,7 +170,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         if (!player.isJumping() &&
             !player.isFalling())
         {
-            player.Jump();
+            player.Jump(fps);
         }
     }
 

@@ -20,7 +20,7 @@ namespace proofps_dd
     static const float GAME_BLOCK_SIZE_Y = 1.0f;
     static const float GAME_BLOCK_SIZE_Z = 1.0f;
 
-    static const float GAME_GRAVITY_MIN = -0.3f;
+    static const float GAME_GRAVITY_MIN = -18.f;
     static const float GAME_GRAVITY_MAX = 0.4f;
 
     static const float GAME_PLAYER_W = 0.95f;

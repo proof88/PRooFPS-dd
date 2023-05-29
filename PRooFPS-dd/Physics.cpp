@@ -15,9 +15,6 @@
 
 #include "Physics.h"
 
-static const float GAME_FALLING_SPEED = 0.8f;
-static const float GAME_JUMPING_SPEED = 2.0f;
-
 
 // ############################### PUBLIC ################################
 
@@ -62,6 +59,9 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 
 void proofps_dd::Physics::Gravity(const float& fps, PureObject3D& objXHair)
 {
+    static const float GAME_FALLING_SPEED = 0.8f;
+    static const float GAME_JUMPING_SPEED = 2.0f;
+
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
@@ -76,12 +76,13 @@ void proofps_dd::Physics::Gravity(const float& fps, PureObject3D& objXHair)
         }
         else
         {
-            if (player.getGravity() > proofps_dd::GAME_GRAVITY_MIN)
+            const float fTargetGravityMin = GAME_GRAVITY_MIN / fps;
+            if (player.getGravity() > fTargetGravityMin)
             {
                 player.SetGravity(player.getGravity() - GAME_FALLING_SPEED / fps);
-                if (player.getGravity() < proofps_dd::GAME_GRAVITY_MIN)
+                if (player.getGravity() < fTargetGravityMin)
                 {
-                    player.SetGravity(proofps_dd::GAME_GRAVITY_MIN);
+                    player.SetGravity(fTargetGravityMin);
                 }
             }
         }
