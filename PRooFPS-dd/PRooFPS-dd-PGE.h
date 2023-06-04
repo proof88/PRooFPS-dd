@@ -76,6 +76,9 @@ namespace proofps_dd
         std::string m_sServerMapFilenameToLoad;
         Maps m_maps;
 
+        std::chrono::time_point<std::chrono::steady_clock> timeLastOnGameRunning;
+        std::chrono::time_point<std::chrono::steady_clock> timeSimulationStart;
+
         float m_fps;
         unsigned int m_fps_counter;
         unsigned long m_fps_lastmeasure;
@@ -95,7 +98,8 @@ namespace proofps_dd
 
         bool hasValidConnection() const;
         void mainLoopServerOnly(
-            std::chrono::steady_clock::time_point& timeStart);   /**< Only server executes this. */
+            std::chrono::steady_clock::time_point& timeStart,
+            long long durElapsedMicrosecs);                      /**< Only server executes this. */
         void mainLoopShared(
             std::chrono::steady_clock::time_point& timeStart,
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */

@@ -57,10 +57,10 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::Physics::Gravity(const float& fps, PureObject3D& objXHair)
+void proofps_dd::Physics::Gravity(const float& /*fps*/, PureObject3D& objXHair)
 {
-    static const float GAME_FALLING_SPEED = 0.8f;
-    static const float GAME_JUMPING_SPEED = 2.0f;
+    static constexpr float GAME_FALLING_SPEED = 0.8f / 60.f;
+    static constexpr float GAME_JUMPING_SPEED = 2.f / 60.f;
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -68,7 +68,7 @@ void proofps_dd::Physics::Gravity(const float& fps, PureObject3D& objXHair)
 
         if (player.isJumping())
         {
-            player.SetGravity(player.getGravity() - GAME_JUMPING_SPEED / fps);
+            player.SetGravity(player.getGravity() - GAME_JUMPING_SPEED);
             if (player.getGravity() < 0.0f)
             {
                 player.StopJumping();
@@ -76,13 +76,12 @@ void proofps_dd::Physics::Gravity(const float& fps, PureObject3D& objXHair)
         }
         else
         {
-            const float fTargetGravityMin = GAME_GRAVITY_MIN / fps;
-            if (player.getGravity() > fTargetGravityMin)
+            if (player.getGravity() > GAME_GRAVITY_MIN)
             {
-                player.SetGravity(player.getGravity() - GAME_FALLING_SPEED / fps);
-                if (player.getGravity() < fTargetGravityMin)
+                player.SetGravity(player.getGravity() - GAME_FALLING_SPEED);
+                if (player.getGravity() < GAME_GRAVITY_MIN)
                 {
-                    player.SetGravity(fTargetGravityMin);
+                    player.SetGravity(GAME_GRAVITY_MIN);
                 }
             }
         }

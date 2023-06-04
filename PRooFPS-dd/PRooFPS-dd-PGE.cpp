@@ -22,6 +22,8 @@
 #include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
 #include "../../../CConsole/CConsole/src/CConsole.h"
 
+using namespace std::chrono_literals;
+
 static const unsigned int GAME_FPS_INTERVAL = 500;
 static_assert(GAME_FPS_INTERVAL > 0);
 
@@ -337,6 +339,7 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
 void proofps_dd::PRooFPSddPGE::onGameRunning()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeOnGameRunningStart = std::chrono::steady_clock::now();
+     
 
     if (m_durations.m_timeFullRoundtripStart.time_since_epoch().count() != 0)
     {
@@ -356,9 +359,19 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
         if (getNetwork().isServer())
         {
-            mainLoopServerOnly(timeStart);
-        }
+            const auto timeNow = std::chrono::steady_clock::now();
+            if (timeSimulationStart.time_since_epoch().count() == 0)
+            {
+                timeSimulationStart = std::chrono::steady_clock::now() - 16ms;
+            }
 
+            while (timeSimulationStart < timeNow)
+            {
+                timeSimulationStart += 16ms;
+                mainLoopServerOnly(timeStart, 16000);
+            }
+            timeLastOnGameRunning = std::chrono::steady_clock::now();
+        }
         mainLoopShared(timeStart, window);
     } // endif validConnection
 
@@ -424,7 +437,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             break;
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
-                m_fps,
+                60.f,
                 pkt.m_connHandleServerSide,
                 reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;
@@ -495,17 +508,20 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     Only server executes this.
     Good for either dedicated- or listen- server.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(std::chrono::steady_clock::time_point& timeStart)
+void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(
+    std::chrono::steady_clock::time_point& timeStart,
+    long long durElapsedMicrosecs)
 {
     timeStart = std::chrono::steady_clock::now();
+    const float fps = 1000.f / (durElapsedMicrosecs / 1000.f);
     if (!m_gameMode->checkWinningConditions())
     {
-        Gravity(m_fps, *m_pObjXHair);
+        Gravity(fps, *m_pObjXHair);
         PlayerCollisionWithWalls(m_bWon);
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     UpdateWeapons(*m_gameMode);
-    UpdateBullets(m_fps, *m_gameMode, *m_pObjXHair);
+    UpdateBullets(fps, *m_gameMode, *m_pObjXHair);
     UpdateRespawnTimers();
     PickupAndRespawnItems();
     SendUserUpdates();
