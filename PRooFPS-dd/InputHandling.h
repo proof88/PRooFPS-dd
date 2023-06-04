@@ -59,7 +59,6 @@ namespace proofps_dd
             PureObject3D& objXHair);
 
         bool handleUserCmdMove(
-            const float& fps,
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserCmdMove& msg);
 

@@ -437,7 +437,6 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             break;
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
-                60.f,
                 pkt.m_connHandleServerSide,
                 reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
             break;

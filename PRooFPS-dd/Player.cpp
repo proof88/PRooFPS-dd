@@ -41,7 +41,9 @@ proofps_dd::Player::Player(
     b_mCanFall(true),
     m_bRunning(true),
     m_bAllowJump(false),
+    m_bWillJump(false),
     m_bExpectingStartPos(true),
+    m_strafe(proofps_dd::Strafe::NONE),
     m_bRespawn(false)
 {
     BuildPlayerObject(true);
@@ -63,7 +65,9 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     b_mCanFall(other.b_mCanFall),
     m_bRunning(other.m_bRunning),
     m_bAllowJump(other.m_bAllowJump),
+    m_bWillJump(other.m_bWillJump),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
+    m_strafe(other.m_strafe),
     m_timeDied(other.m_timeDied),
     m_bRespawn(other.m_bRespawn)
 {
@@ -84,7 +88,9 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     b_mCanFall = other.b_mCanFall;
     m_bRunning = other.m_bRunning;
     m_bAllowJump = other.m_bAllowJump;
+    m_bWillJump = other.m_bWillJump;
     m_bExpectingStartPos = other.m_bExpectingStartPos;
+    m_strafe = other.m_strafe;
     m_timeDied = other.m_timeDied;
     m_bRespawn = other.m_bRespawn;
 
@@ -228,7 +234,7 @@ void proofps_dd::Player::SetJumpAllowed(bool b) {
     m_bAllowJump = b;
 }
 
-void proofps_dd::Player::Jump(const float& /*fps*/) {
+void proofps_dd::Player::Jump() {
     if (!jumpAllowed())
     {
         return;
@@ -236,7 +242,8 @@ void proofps_dd::Player::Jump(const float& /*fps*/) {
 
     m_bAllowJump = false;
     m_bJumping = true;
-    m_fGravity = proofps_dd::GAME_GRAVITY_MAX/* / fps*/;
+    m_bWillJump = false;
+    m_fGravity = proofps_dd::GAME_GRAVITY_MAX;
     m_vecForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     m_vecForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
@@ -244,6 +251,21 @@ void proofps_dd::Player::Jump(const float& /*fps*/) {
 
 void proofps_dd::Player::StopJumping() {
     m_bJumping = false;
+}
+
+bool proofps_dd::Player::getWillJump() const
+{
+    return m_bWillJump;
+}
+
+void proofps_dd::Player::setWillJump(bool flag)
+{
+    if (!jumpAllowed())
+    {
+        return;
+    }
+
+    m_bWillJump = flag;
 }
 
 void proofps_dd::Player::DoDamage(int dmg) {
@@ -266,6 +288,16 @@ bool proofps_dd::Player::isRunning() const
 void proofps_dd::Player::SetRun(bool state)
 {
     m_bRunning = state;
+}
+
+const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const
+{
+    return m_strafe;
+}
+
+void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
+{
+    m_strafe = strafe;
 }
 
 PureVector& proofps_dd::Player::getForce()

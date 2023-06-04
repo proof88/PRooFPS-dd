@@ -15,9 +15,6 @@
 
 #include "InputHandling.h"
 
-static const float GAME_PLAYER_SPEED_WALK = 2.0f;
-static const float GAME_PLAYER_SPEED_RUN  = 4.0f;
-
 
 // ############################### PUBLIC ################################
 
@@ -77,7 +74,6 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
 }
 
 bool proofps_dd::InputHandling::handleUserCmdMove(
-    const float& fps,
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
 {
@@ -128,40 +124,11 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         player.SetRun(!player.isRunning());
     }
 
-    float fSpeed;
-    if (player.isRunning())
-    {
-        fSpeed = GAME_PLAYER_SPEED_RUN / fps;
-    }
-    else
-    {
-        fSpeed = GAME_PLAYER_SPEED_WALK / fps;
-    }
-
-    if (pktUserCmdMove.m_strafe == proofps_dd::Strafe::LEFT)
+    if (pktUserCmdMove.m_strafe != proofps_dd::Strafe::NONE)
     {
         if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
         {
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX() - fSpeed,
-                    player.getPos().getNew().getY(),
-                    player.getPos().getNew().getZ()
-                ));
-        }
-    }
-    if (pktUserCmdMove.m_strafe == proofps_dd::Strafe::RIGHT)
-    {
-        if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
-        {
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX() + fSpeed,
-                    player.getPos().getNew().getY(),
-                    player.getPos().getNew().getZ()
-                ));
+            player.setStrafe(pktUserCmdMove.m_strafe);
         }
     }
 
@@ -170,7 +137,10 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         if (!player.isJumping() &&
             !player.isFalling())
         {
-            player.Jump(fps);
+            // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
+            // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it for the
+            // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
+            player.setWillJump(true);
         }
     }
 

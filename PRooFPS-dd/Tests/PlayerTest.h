@@ -61,6 +61,7 @@ protected:
         AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
         AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
+        AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
         AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
         AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
         AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
@@ -135,8 +136,10 @@ private:
             assertTrue(player.isFalling(), "falling") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
+            assertFalse(player.getWillJump(), "will jump") &
             assertTrue(player.isExpectingStartPos(), "expecting start pos") &
             assertTrue(player.isRunning(), "running default") &
+            assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getForce(), "force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
@@ -448,12 +451,15 @@ private:
             assertEquals(PureVector(), player.getForce(), "force 1") &
             assertTrue(player.isFalling(), "falling 1");
 
-        player.Jump(60.f);
+        player.setWillJump(true);
+        b &= assertTrue(player.getWillJump(), "will jump 1");
+        player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
             assertTrue(player.isJumping(), "jumping 2") &
             assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 2") &
             assertEquals(vecExpectedForce, player.getForce(), "force 2") &
-            assertFalse(player.isFalling(), "falling 2");
+            assertFalse(player.isFalling(), "falling 2") &
+            assertFalse(player.getWillJump(), "will jump 2");
 
         player.StopJumping();
         b &= assertFalse(player.jumpAllowed(), "allowed 3") &
@@ -463,7 +469,10 @@ private:
             assertFalse(player.isFalling(), "falling 3");
 
         player.SetJumpAllowed(false);
-        player.Jump(60.f);
+        player.setWillJump(true);
+        b &= assertFalse(player.getWillJump(), "will jump 3");
+
+        player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
             assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 4") &
@@ -502,6 +511,22 @@ private:
         player.SetRun(false);
         
         return assertFalse(player.isRunning());
+    }
+
+    bool test_set_strafe()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        player.setStrafe(proofps_dd::Strafe::LEFT);
+        bool b = assertEquals(proofps_dd::Strafe::LEFT, player.getStrafe(), "1");
+
+        player.setStrafe(proofps_dd::Strafe::RIGHT);
+        b &= assertEquals(proofps_dd::Strafe::RIGHT, player.getStrafe(), "2");
+
+        player.setStrafe(proofps_dd::Strafe::NONE);
+        b &= assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "3");
+
+        return b;
     }
 
     bool test_can_take_item_health()

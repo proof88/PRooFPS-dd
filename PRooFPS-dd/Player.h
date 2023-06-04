@@ -25,7 +25,9 @@
 #include "Durations.h"
 #include "Maps.h"
 #include "Networking.h"
+#include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
+#include "Strafe.h"
 #include "UserInterface.h"
 
 namespace proofps_dd
@@ -82,12 +84,16 @@ namespace proofps_dd
         void SetGravity(float value);
         bool jumpAllowed() const;
         void SetJumpAllowed(bool b);
-        void Jump(const float& fps);
+        void Jump();
         void StopJumping();
+        bool getWillJump() const;
+        void setWillJump(bool flag);
         void DoDamage(int dmg);
         void SetCanFall(bool state);
         bool isRunning() const;
         void SetRun(bool state);
+        const proofps_dd::Strafe& getStrafe() const;
+        void setStrafe(const proofps_dd::Strafe& strafe);
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
         PureVector& getForce();
@@ -153,7 +159,9 @@ namespace proofps_dd
         bool b_mCanFall;
         bool m_bRunning;
         bool m_bAllowJump;
+        bool m_bWillJump;
         bool m_bExpectingStartPos;
+        proofps_dd::Strafe m_strafe;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
 

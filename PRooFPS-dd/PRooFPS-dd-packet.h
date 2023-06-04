@@ -13,6 +13,8 @@
 #include "../../../PGE/PGE/Network/PgePacket.h"
 #include "../../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
 
+#include "Strafe.h"
+
 namespace proofps_dd
 {
 
@@ -65,13 +67,6 @@ namespace proofps_dd
         char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
         char m_szMapFilename[nMapFilenameMaxLength];
     };  // struct MsgUserSetup
-
-    enum class Strafe : std::uint8_t
-    {
-        NONE = 0,
-        LEFT,
-        RIGHT
-    };
 
     // clients -> server + server self (inject)
     // MsgUserCmdMove messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdate

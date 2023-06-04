@@ -180,6 +180,9 @@ bool proofps_dd::Physics::Colliding3(
 
 void proofps_dd::Physics::PlayerCollisionWithWalls(bool& /*won*/)
 {
+    static constexpr float GAME_PLAYER_SPEED_WALK = 2.0f / 60.f;
+    static constexpr float GAME_PLAYER_SPEED_RUN = 4.0f / 60.f;
+
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
@@ -245,6 +248,34 @@ void proofps_dd::Physics::PlayerCollisionWithWalls(bool& /*won*/)
 
                 break;
             }
+        }
+
+        if (player.getStrafe() != proofps_dd::Strafe::NONE)
+        {
+            float fStrafeSpeed = player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK;
+            if (player.getStrafe() == proofps_dd::Strafe::LEFT)
+            {
+                fStrafeSpeed = -fStrafeSpeed;
+            }
+            // PPPKKKGGGGGG
+            player.getPos().set(
+                PureVector(
+                    player.getPos().getNew().getX() + fStrafeSpeed,
+                    player.getPos().getNew().getY(),
+                    player.getPos().getNew().getZ()
+                ));
+            player.setStrafe(proofps_dd::Strafe::NONE);
+        }
+
+        // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,
+        // to actually start jumping in the same frame as when we detected the player initiated the jumping.
+        // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
+        // that is essential for the Jump() function below to record the X-forces for the player.
+        // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
+        if (player.getWillJump())
+        {
+            // now we can actually jump and have the correct forces be saved for the jump
+            player.Jump(); // resets setWillJump()
         }
 
         // PPPKKKGGGGGG
