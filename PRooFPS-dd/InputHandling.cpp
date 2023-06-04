@@ -60,7 +60,6 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 
 void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     proofps_dd::GameMode& gameMode,
-    const float& fps,
     bool& won,
     proofps_dd::Player& player,
     PureObject3D& objXHair)
@@ -68,9 +67,9 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     pge_network::PgePacket pkt;
     proofps_dd::MsgUserCmdMove::initPkt(pkt);
 
-    keyboard(gameMode, fps, won, pkt, player);
-    mouse(gameMode, fps, won, pkt, player, objXHair);
-    updatePlayerAsPerInputAndSendUserCmdMove(fps, won, pkt, player, objXHair);
+    keyboard(gameMode, won, pkt, player);
+    mouse(gameMode, won, pkt, player, objXHair);
+    updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
 }
 
 bool proofps_dd::InputHandling::handleUserCmdMove(
@@ -324,7 +323,6 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
 
 void proofps_dd::InputHandling::keyboard(
     proofps_dd::GameMode& gameMode,
-    const float& /*fps*/,
     bool& won,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
@@ -476,7 +474,6 @@ void proofps_dd::InputHandling::keyboard(
 
 bool proofps_dd::InputHandling::mouse(
     proofps_dd::GameMode& gameMode,
-    const float& /*fps*/,
     bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
@@ -579,7 +576,6 @@ bool proofps_dd::InputHandling::mouse(
 }
 
 void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
-    const float& /*fps*/,
     bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player, PureObject3D& objXHair)

@@ -77,7 +77,8 @@ namespace proofps_dd
         Maps m_maps;
 
         std::chrono::time_point<std::chrono::steady_clock> timeLastOnGameRunning;
-        std::chrono::time_point<std::chrono::steady_clock> timeSimulationStart;
+        std::chrono::time_point<std::chrono::steady_clock> timeSimulation;
+        unsigned int m_nTickrate;
 
         float m_fps;
         unsigned int m_fps_counter;
@@ -105,7 +106,7 @@ namespace proofps_dd
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
 
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void CameraMovement(const float& fps, Player& player);
+        void CameraMovement(Player& player);
         void SendUserUpdates();
         void RestartGame();
         void UpdateRespawnTimers();

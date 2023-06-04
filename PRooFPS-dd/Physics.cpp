@@ -57,7 +57,7 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::Physics::Gravity(const float& /*fps*/, PureObject3D& objXHair)
+void proofps_dd::Physics::Gravity(PureObject3D& objXHair)
 {
     static constexpr float GAME_FALLING_SPEED = 0.8f / 60.f;
     static constexpr float GAME_JUMPING_SPEED = 2.f / 60.f;

@@ -53,7 +53,7 @@ namespace proofps_dd
 
     protected:
 
-        void Gravity(const float& fps, PureObject3D& objXHair);
+        void Gravity(PureObject3D& objXHair);
         bool Colliding(const PureObject3D& a, const PureObject3D& b);
         bool Colliding2(
             float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,

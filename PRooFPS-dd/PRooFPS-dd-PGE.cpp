@@ -31,6 +31,7 @@ static const int   GAME_MAXFPS = 60;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 0.416f;
 
+static constexpr char* CVAR_TICKRATE = "tickrate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
 
@@ -89,6 +90,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_maps(getPure()),
+    m_nTickrate(60),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -274,6 +276,25 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         }
     }
 
+    if (!getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
+    {
+        if (getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() > 0)
+        {
+            m_nTickrate = getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
+            getConsole().OLn("Tickrate from config: %u", m_nTickrate);
+        }
+        else
+        {
+            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing default: %u",
+                getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
+                m_nTickrate);
+        }
+    }
+    else
+    {
+        getConsole().OLn("Missing Tickrate in config, forcing default: %u", m_nTickrate);
+    }
+
     //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
     LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
@@ -339,7 +360,6 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
 void proofps_dd::PRooFPSddPGE::onGameRunning()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeOnGameRunningStart = std::chrono::steady_clock::now();
-     
 
     if (m_durations.m_timeFullRoundtripStart.time_since_epoch().count() != 0)
     {
@@ -359,16 +379,17 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
         if (getNetwork().isServer())
         {
+            static const auto DurationSimulationStepMicrosecs = std::chrono::microseconds((1000*1000) / m_nTickrate);
             const auto timeNow = std::chrono::steady_clock::now();
-            if (timeSimulationStart.time_since_epoch().count() == 0)
+            if (timeSimulation.time_since_epoch().count() == 0)
             {
-                timeSimulationStart = std::chrono::steady_clock::now() - 16ms;
+                timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecs;
             }
 
-            while (timeSimulationStart < timeNow)
+            while (timeSimulation < timeNow)
             {
-                timeSimulationStart += 16ms;
-                mainLoopServerOnly(timeStart, 16000);
+                timeSimulation += DurationSimulationStepMicrosecs;
+                mainLoopServerOnly(timeStart, DurationSimulationStepMicrosecs.count());
             }
             timeLastOnGameRunning = std::chrono::steady_clock::now();
         }
@@ -509,18 +530,17 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 */
 void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(
     std::chrono::steady_clock::time_point& timeStart,
-    long long durElapsedMicrosecs)
+    long long /*durElapsedMicrosecs*/)
 {
     timeStart = std::chrono::steady_clock::now();
-    const float fps = 1000.f / (durElapsedMicrosecs / 1000.f);
     if (!m_gameMode->checkWinningConditions())
     {
-        Gravity(fps, *m_pObjXHair);
+        Gravity(*m_pObjXHair);
         PlayerCollisionWithWalls(m_bWon);
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     UpdateWeapons(*m_gameMode);
-    UpdateBullets(fps, *m_gameMode, *m_pObjXHair);
+    UpdateBullets(*m_gameMode, *m_pObjXHair);
     UpdateRespawnTimers();
     PickupAndRespawnItems();
     SendUserUpdates();
@@ -536,11 +556,11 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     timeStart = std::chrono::steady_clock::now();
     if (window.isActive())
     {
-        handleInputAndSendUserCmdMove(*m_gameMode, m_fps, m_bWon, player, *m_pObjXHair);
+        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair);
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(m_fps, player);
+    CameraMovement(player);
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -568,11 +588,11 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
     }
 }
 
-void proofps_dd::PRooFPSddPGE::CameraMovement(const float& fps, Player& player)
+void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
 {
     PureVector campos = getPure().getCamera().getPosVec();
     float celx, cely;
-    float speed = GAME_CAM_SPEED * fps;
+    float speed = GAME_CAM_SPEED * m_fps;
 
     /* ne mehessen túlságosan balra vagy jobbra a kamera */
     //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )

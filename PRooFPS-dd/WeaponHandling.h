@@ -51,7 +51,7 @@ namespace proofps_dd
     protected:
 
         void UpdateWeapons(proofps_dd::GameMode& gameMode);
-        void UpdateBullets(const float& fps, proofps_dd::GameMode& gameMode, PureObject3D& objXHair);
+        void UpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair);
         bool handleBulletUpdate(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgBulletUpdate& msg);
