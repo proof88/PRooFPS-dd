@@ -53,7 +53,7 @@ namespace proofps_dd
 
     protected:
 
-        void Gravity(PureObject3D& objXHair);
+        void serverGravity(PureObject3D& objXHair);
         bool Colliding(const PureObject3D& a, const PureObject3D& b);
         bool Colliding2(
             float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
@@ -64,7 +64,7 @@ namespace proofps_dd
         bool Colliding3(
             const PureVector& vecPosMin, const PureVector& vecPosMax,
             const PureVector& vecObjPos, const PureVector& vecObjSize);
-        void PlayerCollisionWithWalls(bool& won);
+        void serverPlayerCollisionWithWalls(bool& won);
 
     private:
 

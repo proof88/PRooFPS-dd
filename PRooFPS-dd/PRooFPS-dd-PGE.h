@@ -107,11 +107,11 @@ namespace proofps_dd
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(Player& player);
-        void SendUserUpdates();
+        void serverSendUserUpdates();
         void RestartGame();
-        void UpdateRespawnTimers();
+        void serverUpdateRespawnTimers();
         void UpdateGameMode();
-        void PickupAndRespawnItems();
+        void serverPickupAndRespawnItems();
         void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const;
         void WritePlayerList();
         bool handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg);

@@ -63,7 +63,7 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::WeaponHandling::UpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair)
+void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -234,7 +234,7 @@ void proofps_dd::WeaponHandling::UpdateBullets(proofps_dd::GameMode& gameMode, P
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void proofps_dd::WeaponHandling::UpdateWeapons(proofps_dd::GameMode& gameMode)
+void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
 {
     if (gameMode.checkWinningConditions())
     {

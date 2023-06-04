@@ -505,15 +505,15 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(
     timeStart = std::chrono::steady_clock::now();
     if (!m_gameMode->checkWinningConditions())
     {
-        Gravity(*m_pObjXHair);
-        PlayerCollisionWithWalls(m_bWon);
+        serverGravity(*m_pObjXHair);
+        serverPlayerCollisionWithWalls(m_bWon);
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-    UpdateWeapons(*m_gameMode);
-    UpdateBullets(*m_gameMode, *m_pObjXHair);
-    UpdateRespawnTimers();
-    PickupAndRespawnItems();
-    SendUserUpdates();
+    serverUpdateWeapons(*m_gameMode);
+    serverUpdateBullets(*m_gameMode, *m_pObjXHair);
+    serverUpdateRespawnTimers();
+    serverPickupAndRespawnItems();
+    serverSendUserUpdates();
 }
 
 /**
@@ -632,7 +632,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
 
 } // CameraMovement()
 
-void proofps_dd::PRooFPSddPGE::SendUserUpdates()
+void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
 {
     if (!getNetwork().isServer())
     {
@@ -720,7 +720,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
     m_gameMode->restart(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
-void proofps_dd::PRooFPSddPGE::UpdateRespawnTimers()
+void proofps_dd::PRooFPSddPGE::serverUpdateRespawnTimers()
 {
     if (m_gameMode->checkWinningConditions())
     {
@@ -774,7 +774,7 @@ void proofps_dd::PRooFPSddPGE::UpdateGameMode()
     m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void proofps_dd::PRooFPSddPGE::PickupAndRespawnItems()
+void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 {
     if (m_gameMode->checkWinningConditions())
     {
