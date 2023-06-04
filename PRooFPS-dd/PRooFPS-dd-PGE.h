@@ -104,7 +104,7 @@ namespace proofps_dd
         void mainLoopShared(
             std::chrono::steady_clock::time_point& timeStart,
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
-
+        void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(Player& player);
         void SendUserUpdates();

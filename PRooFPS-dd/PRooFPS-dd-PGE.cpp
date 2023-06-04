@@ -396,37 +396,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         mainLoopShared(timeStart, window);
     } // endif validConnection
 
-    // this is horrible that FPS measuring is still not available from outside of Pure .........
-    std::stringstream ssFps;
-    ssFps << std::fixed << std::setprecision(1) << m_fps;
-    m_fps_counter++;
-    const DWORD nGetTickCount = GetTickCount();
-    if (nGetTickCount - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
-    {
-        if (!m_bFpsFirstMeasure)
-        {
-            // too much time might elapse between onGameInitialized() and onGameRunning() so we don't update fps
-            // when onGameRunning() is invoked for the first time
-            m_fps = m_fps_counter * (1000.f / (nGetTickCount - m_fps_lastmeasure));
-        }
-        else
-        {
-            m_bFpsFirstMeasure = false;
-        }
-
-        m_fps_counter = 0;
-        m_fps_lastmeasure = nGetTickCount;
-
-        std::stringstream str;
-        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << ssFps.str();
-        window.SetCaption(str.str());
-
-        if (m_fps < 0.01f)
-        {
-            m_fps = 0.01f; // make sure nobody tries division by zero
-        }
-    }
-    Text(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
+    updateFramesPerSecond(window);
 
     m_durations.m_nFullOnGameRunningDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeOnGameRunningStart).count();
 }
@@ -573,6 +543,41 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
             std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
             10, 150);
     }
+}
+
+void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
+{
+    // this is horrible that FPS measuring is still not available from outside of Pure .........
+    std::stringstream ssFps;
+    ssFps << std::fixed << std::setprecision(1) << m_fps;
+    m_fps_counter++;
+    const DWORD nGetTickCount = GetTickCount();  // TODO: switch to chrono ...
+    if (nGetTickCount - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
+    {
+        if (!m_bFpsFirstMeasure)
+        {
+            // too much time might elapse between onGameInitialized() and onGameRunning() so we don't update fps
+            // when onGameRunning() is invoked for the first time
+            m_fps = m_fps_counter * (1000.f / (nGetTickCount - m_fps_lastmeasure));
+        }
+        else
+        {
+            m_bFpsFirstMeasure = false;
+        }
+
+        m_fps_counter = 0;
+        m_fps_lastmeasure = nGetTickCount;
+
+        std::stringstream str;
+        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: FPS: " << ssFps.str();
+        window.SetCaption(str.str());
+
+        if (m_fps < 0.01f)
+        {
+            m_fps = 0.01f; // make sure nobody tries division by zero
+        }
+    }
+    Text(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
 }
 
 void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
