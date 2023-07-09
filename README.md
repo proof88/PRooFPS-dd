@@ -26,6 +26,12 @@ https://www.facebook.com/whiskhyll
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
 
+## Build
+
+You must have the Visual Studio solution file including other relevant projects as well in [PGE-misc](https://github.com/proof88/PGE-misc) repo.  
+**Follow the build instructions** in [PGE-WoW.txt](https://github.com/proof88/PGE-misc/blob/master/src/PGE-WoW.txt).  
+As described in that file, you need to build other projects before PRooFPS-dd can be built.
+
 ## History
 
 ### v0.1.2 Private Beta (May 13, 2023)
