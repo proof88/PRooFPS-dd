@@ -14,7 +14,7 @@
 
 #include <cassert>
 
-#include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Player.h"
 #include "../PRooFPS-dd-packet.h"
 

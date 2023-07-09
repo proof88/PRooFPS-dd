@@ -12,8 +12,8 @@
 
 #include <chrono>  // requires cpp11
 
-#include "../../../PGE/PGE/PGE.h"
-#include "../../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
+#include "../../PGE/PGE/PGE.h"
+#include "../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
 
 #include "Consts.h"
 #include "Durations.h"

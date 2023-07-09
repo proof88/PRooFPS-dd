@@ -12,7 +12,7 @@
 
 #include <Windows.h>
 
-#include "../../../../CConsole/CConsole/src/CConsole.h"
+#include "../../../Console/CConsole/src/CConsole.h"
 
 namespace process_stackoverflow_42531
 {

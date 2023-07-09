@@ -11,7 +11,7 @@
 */
 
 // not nice, included only for the SoLoud headers
-#include "../../../PGE/PGE/PGE.h"
+#include "../../PGE/PGE/PGE.h"
 
 namespace proofps_dd
 {

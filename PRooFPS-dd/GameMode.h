@@ -14,10 +14,10 @@
 #include <list>
 #include <string>
 
-#include "../../../CConsole/CConsole/src/CConsole.h"
+#include "../../Console/CConsole/src/CConsole.h"
 
-#include "../../../PGE/PGE/Network/PgeNetwork.h"
-#include "../../../PGE/PGE/PURE/include/external/PR00FsUltimateRenderingEngine.h"
+#include "../../PGE/PGE/Network/PgeNetwork.h"
+#include "../../PGE/PGE/PURE/include/external/PR00FsUltimateRenderingEngine.h"
 
 #include "Player.h"
 

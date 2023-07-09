@@ -10,7 +10,7 @@
 
 #include "stdafx.h"  // PCH
 
-#include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include <memory>  // for std::unique_ptr; requires cpp11
 #include <vector>
 
@@ -19,7 +19,7 @@
 #endif
 #include <windows.h>
 
-#include "../../../../CConsole/CConsole/src/CConsole.h"
+#include "../../../Console/CConsole/src/CConsole.h"
 
 // unit tests
 #include "GameModeTest.h"

@@ -13,7 +13,7 @@
 #include <list>
 #include <thread>
 
-#include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../GameMode.h"
 
 class GameModeTest :

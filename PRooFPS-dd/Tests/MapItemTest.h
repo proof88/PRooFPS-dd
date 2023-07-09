@@ -10,7 +10,7 @@
     ###################################################################################
 */
 
-#include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../MapItem.h"
 
 class MapItemTest :

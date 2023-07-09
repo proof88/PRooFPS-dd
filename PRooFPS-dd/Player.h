@@ -16,10 +16,10 @@
 #include <variant>     // requires cpp17
 #include <vector>
 
-#include "../../../CConsole/CConsole/src/CConsole.h"
+#include "../../Console/CConsole/src/CConsole.h"
 
-#include "../../../PGE/PGE/PGE.h"
-#include "../../../PGE/PGE/Config/PgeOldNewValue.h"
+#include "../../PGE/PGE/PGE.h"
+#include "../../PGE/PGE/Config/PgeOldNewValue.h"
 
 #include "Consts.h"
 #include "Durations.h"

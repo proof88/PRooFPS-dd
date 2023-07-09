@@ -14,7 +14,7 @@
 
 #include <Windows.h>
 
-#include "../../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Consts.h"
 #include "../GameMode.h"
 #include "InputSim.h"

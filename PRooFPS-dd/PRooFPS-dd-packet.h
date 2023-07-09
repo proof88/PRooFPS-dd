@@ -10,8 +10,8 @@
     ###################################################################################
 */
 
-#include "../../../PGE/PGE/Network/PgePacket.h"
-#include "../../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
+#include "../../PGE/PGE/Network/PgePacket.h"
+#include "../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
 
 #include "Strafe.h"
 

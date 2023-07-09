@@ -14,9 +14,9 @@
 #include <set>
 #include <string>
 
-#include "../../../CConsole/CConsole/src/CConsole.h"
-#include "../../../PGE/PGE/Config/PGEcfgVariable.h"
-#include "../../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
+#include "../../Console/CConsole/src/CConsole.h"
+#include "../../PGE/PGE/Config/PGEcfgVariable.h"
+#include "../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
 #include "MapItem.h"
 

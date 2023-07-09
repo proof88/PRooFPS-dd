@@ -16,11 +16,11 @@
 #include <functional>
 #include <iomanip>     // std::setprecision() for displaying fps
 
-#include "../../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
-#include "../../../PGE/PGE/Pure/include/external/PureUiManager.h"
-#include "../../../PGE/PGE/Pure/include/external/Display/PureWindow.h"
-#include "../../../PGE/PGE/Pure/include/external/PureCamera.h"
-#include "../../../CConsole/CConsole/src/CConsole.h"
+#include "../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
+#include "../../PGE/PGE/Pure/include/external/PureUiManager.h"
+#include "../../PGE/PGE/Pure/include/external/Display/PureWindow.h"
+#include "../../PGE/PGE/Pure/include/external/PureCamera.h"
+#include "../../Console/CConsole/src/CConsole.h"
 
 using namespace std::chrono_literals;
 
