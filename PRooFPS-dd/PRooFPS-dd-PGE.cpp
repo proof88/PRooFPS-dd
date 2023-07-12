@@ -295,6 +295,18 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getConsole().OLn("Missing Tickrate in config, forcing default: %u", m_nTickrate);
     }
 
+    getConsole().OLn("");
+    getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
+    getConsole().OLn("  size of PgePacket::msg: %u Bytes", sizeof(pge_network::PgePacket::msg));
+    getConsole().OLn("    size of PgePacket::msg.app: %u Bytes", sizeof(pge_network::PgePacket::msg.app));
+    getConsole().OLn("      size of MsgUserCmdMove: %u Bytes", sizeof(proofps_dd::MsgUserCmdMove));
+    getConsole().OLn("      size of MsgUserUpdate: %u Bytes", sizeof(proofps_dd::MsgUserUpdate));
+    getConsole().OLn("      size of MsgBulletUpdate: %u Bytes", sizeof(proofps_dd::MsgBulletUpdate));
+    getConsole().OLn("      size of MsgWpnUpdate: %u Bytes", sizeof(proofps_dd::MsgWpnUpdate));
+    getConsole().OLn("      size of MsgWpnUpdateCurrent: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateCurrent));
+    getConsole().OLn("      size of MsgMapItemUpdate: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdate));
+    getConsole().OLn("");
+
     //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
     LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
