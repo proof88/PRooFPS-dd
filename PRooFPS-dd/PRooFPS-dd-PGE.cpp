@@ -401,7 +401,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             while (timeSimulation < timeNow)
             {
                 timeSimulation += DurationSimulationStepMicrosecs;
-                mainLoopServerOnly(timeStart, DurationSimulationStepMicrosecs.count());
+                mainLoopServerOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
             }
             timeLastOnGameRunning = std::chrono::steady_clock::now();
         }
@@ -510,15 +510,25 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     Only server executes this.
     Good for either dedicated- or listen- server.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopServerOnly(
+void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     std::chrono::steady_clock::time_point& timeStart,
-    long long /*durElapsedMicrosecs*/)
+    const long long& /*durElapsedMicrosecs*/)
 {
+    /*
+    * This function is executed every tick.
+    * If executed rarely i.e. very low tickrate e.g. 1 tick/sec, might "jump" over walls.
+    * To solve this, we should execute it with smaller steps if required.
+    * For example: we can define that minimum physics rate is 20 tick/sec. Then the required number of physics
+    * iterations is 20 because it is = max(1, min_physics_rate / tick_rate).
+    * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0.
+    * 
+    * Other problem is that gravity is still not working the same with different rates ... it should work as the collision function.
+    */
     timeStart = std::chrono::steady_clock::now();
     if (!m_gameMode->checkWinningConditions())
     {
-        serverGravity(*m_pObjXHair);
-        serverPlayerCollisionWithWalls(m_bWon);
+        serverGravity(*m_pObjXHair, m_nTickrate);
+        serverPlayerCollisionWithWalls(m_bWon, m_nTickrate);
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     serverUpdateWeapons(*m_gameMode);

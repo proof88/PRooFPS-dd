@@ -93,8 +93,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
 
     const std::string& sClientUserName = it->second.getName();
 
-    if ((pktUserCmdMove.m_strafe == proofps_dd::Strafe::NONE) &&
-        (!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
+    if ((!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
         (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("InputHandling::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
@@ -129,6 +128,11 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         {
             player.setStrafe(pktUserCmdMove.m_strafe);
         }
+    }
+    else
+    {
+        // strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
+        player.setStrafe(pktUserCmdMove.m_strafe);
     }
 
     if (pktUserCmdMove.m_bJumpAction)
@@ -461,10 +465,15 @@ void proofps_dd::InputHandling::keyboard(
             }
         }
 
-        if ((strafe != proofps_dd::Strafe::NONE) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+        static proofps_dd::Strafe prevStrafe = proofps_dd::Strafe::NONE;
+        if ((strafe != proofps_dd::Strafe::NONE) || (prevStrafe != strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
         {
+            // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
+            // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
+            // as one-time actions.
             proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
         }
+        prevStrafe = strafe;
     }
     else
     {
@@ -605,7 +614,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
 
     if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
     {
-        // shouldSend() at this point means that there were actual input so MsgUserCmdMove will be sent out.
+        // shouldSend() at this point means that there were actual change in user input so MsgUserCmdMove will be sent out.
         // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
         // their common interface which always points to the initialized instance, which is either client or server.
         // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023.

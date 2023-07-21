@@ -98,9 +98,9 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         bool hasValidConnection() const;
-        void mainLoopServerOnly(
+        void mainLoopServerOnlyOneTick(
             std::chrono::steady_clock::time_point& timeStart,
-            long long durElapsedMicrosecs);                      /**< Only server executes this. */
+            const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
         void mainLoopShared(
             std::chrono::steady_clock::time_point& timeStart,
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */

@@ -57,7 +57,7 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::Physics::serverGravity(PureObject3D& objXHair)
+void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& /*nTickRate*/)
 {
     static constexpr float GAME_FALLING_SPEED = 0.8f / 60.f;
     static constexpr float GAME_JUMPING_SPEED = 2.f / 60.f;
@@ -178,10 +178,10 @@ bool proofps_dd::Physics::Colliding3(
     );
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/)
+void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nTickRate)
 {
-    static constexpr float GAME_PLAYER_SPEED_WALK = 2.0f / 60.f;
-    static constexpr float GAME_PLAYER_SPEED_RUN = 4.0f / 60.f;
+    static const float GAME_PLAYER_SPEED_WALK = 2.0f / nTickRate;
+    static const float GAME_PLAYER_SPEED_RUN = 4.0f / nTickRate;
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -269,7 +269,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/)
                     player.getPos().getNew().getY(),
                     player.getPos().getNew().getZ()
                 ));
-            player.setStrafe(proofps_dd::Strafe::NONE);
+            // since v0.1.3 strafe is a continuous server operation which requires explicit stop from client, so
+            // we set Strafe::NONE only when client tells us user released strafe key.
+            //   player.setStrafe(proofps_dd::Strafe::NONE);
         }
 
         // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,
