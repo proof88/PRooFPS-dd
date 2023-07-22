@@ -124,7 +124,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
 
     if (pktUserCmdMove.m_strafe != proofps_dd::Strafe::NONE)
     {
-        if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
+        //if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
         {
             player.setStrafe(pktUserCmdMove.m_strafe);
         }
@@ -138,7 +138,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
     if (pktUserCmdMove.m_bJumpAction)
     {
         if (!player.isJumping() &&
-            !player.isFalling())
+            !player.canFall())
         {
             // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
             // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it for the

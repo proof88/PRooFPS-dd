@@ -76,6 +76,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         }
         else
         {
+            player.SetCanFall(true);
             if (player.getGravity() > GAME_GRAVITY_MIN)
             {
                 player.SetGravity(player.getGravity() - GAME_FALLING_SPEED);
