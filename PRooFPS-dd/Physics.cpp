@@ -57,40 +57,35 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& /*nTickRate*/)
-{
-    static constexpr float GAME_FALLING_SPEED = 0.8f / 60.f;
-    static constexpr float GAME_JUMPING_SPEED = 2.f / 60.f;
+void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate)
+{   
+    static constexpr float GAME_GRAVITY_CONST = 80.f;
+    static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
 
+        player.SetGravity(player.getGravity() - GAME_GRAVITY_CONST / nTickRate);
         if (player.isJumping())
         {
-            player.SetGravity(player.getGravity() - GAME_JUMPING_SPEED);
             if (player.getGravity() < 0.0f)
             {
                 player.StopJumping();
+                player.SetCanFall(true);
             }
         }
         else
         {
             player.SetCanFall(true);
-            if (player.getGravity() > GAME_GRAVITY_MIN)
-            {
-                player.SetGravity(player.getGravity() - GAME_FALLING_SPEED);
-                if (player.getGravity() < GAME_GRAVITY_MIN)
-                {
-                    player.SetGravity(GAME_GRAVITY_MIN);
-                }
-            }
+            // player gravity cannot go below GAME_FALL_GRAVITY_MIN
+            player.SetGravity(max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
         }
         // PPPKKKGGGGGG
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity(),
+                player.getPos().getNew().getY() + player.getGravity() / nTickRate,
                 player.getPos().getNew().getZ()
             ));
 
@@ -243,6 +238,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     // some value, since if there is an explosion-induced force, it shouldnt be nulled out
                     // at this moment. Currently we want to null out the strafe-jump-induced force.
                     player.getForce().Set(0.f, 0.f, 0.f);
+                    player.SetGravity(0.f);
                 }
                 else
                 {
@@ -263,7 +259,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             {
                 fStrafeSpeed = -fStrafeSpeed;
             }
-            if ( ((vecOriginalForce.getX() >= 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalForce.getX() <= 0.f) && (fStrafeSpeed > 0.f))
+            if ( (!player.isJumping() && !player.canFall()) ||
+                 ((vecOriginalForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
                )
             {
                 // if we have horizontal force applied (due to ongoing jumping), we should let strafe affect movement only against the force,

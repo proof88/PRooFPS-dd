@@ -456,7 +456,7 @@ private:
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
             assertTrue(player.isJumping(), "jumping 2") &
-            assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 2") &
+            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 2") &
             assertEquals(vecExpectedForce, player.getForce(), "force 2") &
             assertFalse(player.isFalling(), "falling 2") &
             assertFalse(player.getWillJump(), "will jump 2");
@@ -464,7 +464,7 @@ private:
         player.StopJumping();
         b &= assertFalse(player.jumpAllowed(), "allowed 3") &
             assertFalse(player.isJumping(), "jumping 3") &
-            assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 3") &
+            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 3") &
             assertEquals(vecExpectedForce, player.getForce(), "force 3") &
             assertFalse(player.isFalling(), "falling 3");
 
@@ -475,7 +475,7 @@ private:
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
-            assertEquals(proofps_dd::GAME_GRAVITY_MAX, player.getGravity(), "gravity 4") &
+            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 4") &
             assertEquals(vecExpectedForce, player.getForce(), "force 4") &
             assertFalse(player.isFalling(), "falling 4");
 
