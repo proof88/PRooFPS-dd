@@ -262,16 +262,26 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             {
                 fStrafeSpeed = -fStrafeSpeed;
             }
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX() + fStrafeSpeed,
-                    player.getPos().getNew().getY(),
-                    player.getPos().getNew().getZ()
-                ));
-            // since v0.1.3 strafe is a continuous server operation which requires explicit stop from client, so
-            // we set Strafe::NONE only when client tells us user released strafe key.
-            //   player.setStrafe(proofps_dd::Strafe::NONE);
+            if ( ((vecOriginalForce.getX() >= 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalForce.getX() <= 0.f) && (fStrafeSpeed > 0.f))
+               )
+            {
+                // if we have horizontal force applied (due to ongoing jumping), we should let strafe affect movement only against the force,
+                // but not adding extra movement speed in same direction. This still allows the player to control the movement a bit during
+                // jumping/falling.
+                // On the long run, force will be used by other effects as well e.g. explosions, in that case we need to change this condition
+                // here because this condition won't be enough to decide if force is due to jumping/falling or explosion.
+
+                // PPPKKKGGGGGG
+                player.getPos().set(
+                    PureVector(
+                        player.getPos().getNew().getX() + fStrafeSpeed,
+                        player.getPos().getNew().getY(),
+                        player.getPos().getNew().getZ()
+                    ));
+                // since v0.1.3 strafe is a continuous server operation which requires explicit stop from client, so
+                // we set Strafe::NONE only when client tells us that user released strafe key.
+                //   player.setStrafe(proofps_dd::Strafe::NONE);
+            }
         }
 
         // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,

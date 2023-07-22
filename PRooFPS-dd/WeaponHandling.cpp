@@ -63,7 +63,7 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair)
+void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nTickRate)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -86,7 +86,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         }
         else
         {
-            bullet.Update();
+            bullet.Update(nTickRate);
         }
 
         const float fBulletPosX = bullet.getObject3D().getPosVec().getX();

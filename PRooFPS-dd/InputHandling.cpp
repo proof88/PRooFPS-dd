@@ -131,7 +131,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
     }
     else
     {
-        // strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
+        // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
         player.setStrafe(pktUserCmdMove.m_strafe);
     }
 

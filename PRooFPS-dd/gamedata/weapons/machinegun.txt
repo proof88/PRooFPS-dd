@@ -134,7 +134,7 @@ bullet_size_y = 0.05
 bullet_size_z = 0.0
 
 # Max speed is 1000, it means instant hit, e.g. rail gun
-bullet_speed = 0.2
+bullet_speed = 12
 
 # Gravity affecting the travel path of the bullet.
 # 0 means no effect of gravity.

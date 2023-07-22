@@ -516,13 +516,17 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
 {
     /*
     * This function is executed every tick.
-    * If executed rarely i.e. very low tickrate e.g. 1 tick/sec, might "jump" over walls.
-    * To solve this, we should execute it with smaller steps if required.
+    * If executed rarely i.e. very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
+    * To solve this, we should execute it with smaller steps if required in a loop.
     * For example: we can define that minimum physics rate is 20 tick/sec. Then the required number of physics
     * iterations is 20 because it is = max(1, min_physics_rate / tick_rate).
-    * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0.
+    * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0, so that a loop iteration simulates
+    * a discrete step.
     * 
     * Other problem is that gravity is still not working the same with different rates ... it should work as the collision function.
+    * 
+    * Task 1:
+    *  - 
     */
     timeStart = std::chrono::steady_clock::now();
     if (!m_gameMode->checkWinningConditions())
@@ -532,7 +536,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     serverUpdateWeapons(*m_gameMode);
-    serverUpdateBullets(*m_gameMode, *m_pObjXHair);
+    serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nTickrate);
     serverUpdateRespawnTimers();
     serverPickupAndRespawnItems();
     serverSendUserUpdates();
