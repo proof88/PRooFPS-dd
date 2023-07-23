@@ -31,8 +31,9 @@ public:
         CLIENT
     };
 
-    RegTestBasicServerClient2Players() :
-        UnitTest(__FILE__),
+    RegTestBasicServerClient2Players(const unsigned int& nTickrate) :
+        UnitTest(std::string(__FILE__) + " tickrate: " + std::to_string(nTickrate)),
+        m_nTickRate(nTickrate),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL),
         cfgWpnPistol(false, false),
@@ -243,6 +244,7 @@ private:
 
     int nPlayerHealth;
 
+    unsigned int m_nTickRate;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -552,13 +554,13 @@ private:
         {
             procInfoServer = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true");
+                "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" + std::to_string(m_nTickRate));
         }
         else
         {
             procInfoClient = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true");
+                "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" + std::to_string(m_nTickRate));
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.
