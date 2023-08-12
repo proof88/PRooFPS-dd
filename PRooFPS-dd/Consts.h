@@ -16,6 +16,15 @@ namespace proofps_dd
     static const std::string GAME_NAME = "PRooFPS-dd";
     static const std::string GAME_VERSION = "0.1.3.0 Private Beta";
 
+    static constexpr int   GAME_MAXFPS = 60;
+    static constexpr int   GAME_TICKRATE_DEFAULT = 20;
+    static constexpr int   GAME_TICKRATE_MIN = 20;
+    static constexpr int   GAME_TICKRATE_MAX = GAME_MAXFPS;
+    static_assert(GAME_TICKRATE_MAX == GAME_MAXFPS, "Max tickrate is limited by max FPS since onGameRunning() freq is same as max FPS.");
+    static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_MAX, "Min tickrate should not be greater than max tickrate.");
+    static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_DEFAULT, "Min tickrate should not be greater than default tickrate");
+    static_assert(GAME_TICKRATE_DEFAULT <= GAME_TICKRATE_MAX, "Max tickrate should not be smaller than default tickrate");
+
     static const float GAME_BLOCK_SIZE_X = 1.0f;
     static const float GAME_BLOCK_SIZE_Y = 1.0f;
     static const float GAME_BLOCK_SIZE_Z = 1.0f;

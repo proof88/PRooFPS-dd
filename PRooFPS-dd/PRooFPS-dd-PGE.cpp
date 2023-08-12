@@ -24,14 +24,11 @@
 
 using namespace std::chrono_literals;
 
-static const unsigned int GAME_FPS_INTERVAL = 500;
+static constexpr unsigned int GAME_FPS_INTERVAL = 500;
 static_assert(GAME_FPS_INTERVAL > 0);
 
-static const int   GAME_MAXFPS = 60;
-static const int   GAME_TICKRATE_DEFAULT = 20;
-static const int   GAME_TICKRATE_MIN = 20;
-static const float GAME_CAM_Z = -5.0f;
-static const float GAME_CAM_SPEED = 0.416f;
+static constexpr float GAME_CAM_Z = -5.0f;
+static constexpr float GAME_CAM_SPEED = 0.416f;
 
 static constexpr char* CVAR_TICKRATE = "tickrate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
@@ -524,11 +521,6 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     * iterations is 20 because it is = max(1, min_physics_rate / tick_rate).
     * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0, so that a loop iteration simulates
     * a discrete step.
-    * 
-    * Other problem is that gravity is still not working the same with different rates ... it should work as the collision function.
-    * 
-    * Task 1:
-    *  - 
     */
     timeStart = std::chrono::steady_clock::now();
     if (!m_gameMode->checkWinningConditions())

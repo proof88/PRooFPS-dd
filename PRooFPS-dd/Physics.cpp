@@ -59,7 +59,15 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 
 void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate)
 {   
-    static constexpr float GAME_GRAVITY_CONST = 80.f;
+    /* Although I tried to make calculations to have same result with different tickrate, the
+       results are not the same, just SIMILAR when comparing 60 vs 20 Hz results.
+       The real difference is during jumping:
+        - for 60 Hz, GAME_GRAVITY_CONST should be 90.f,
+        - for 20 Hz, GAME_GRAVITY_CONST should be 80.f to have same jumping.
+       So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate. */
+
+    static const float GAME_GRAVITY_LERP_FACTOR = (nTickRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
     for (auto& playerPair : m_mapPlayers)
