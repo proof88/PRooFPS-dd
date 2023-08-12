@@ -28,6 +28,8 @@ static const unsigned int GAME_FPS_INTERVAL = 500;
 static_assert(GAME_FPS_INTERVAL > 0);
 
 static const int   GAME_MAXFPS = 60;
+static const int   GAME_TICKRATE_DEFAULT = 20;
+static const int   GAME_TICKRATE_MIN = 20;
 static const float GAME_CAM_Z = -5.0f;
 static const float GAME_CAM_SPEED = 0.416f;
 
@@ -90,7 +92,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_maps(getPure()),
-    m_nTickrate(60),
+    m_nTickrate(GAME_TICKRATE_DEFAULT),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -164,8 +166,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     
     getPure().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
-    // for simulating slow rendering:
-    //setRenderExtraDelayMillisecs(100);
+    getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
 
     getPure().getUImanager().SetDefaultFontSize(20);
 
@@ -278,7 +279,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     if (!getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
     {
-        if (getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() > 0)
+        if ((getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() >= GAME_TICKRATE_MIN) &&
+            (getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() <= getGameRunningFrequency()))
         {
             m_nTickrate = getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
             getConsole().OLn("Tickrate from config: %u", m_nTickrate);
