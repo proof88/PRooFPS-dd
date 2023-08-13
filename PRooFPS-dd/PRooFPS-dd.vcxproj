@@ -193,6 +193,7 @@
     <ClInclude Include="Maps.h" />
     <ClInclude Include="PRooFPS-dd.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SharedWithTest.h" />
     <ClInclude Include="Sounds.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Strafe.h" />
@@ -217,6 +218,7 @@
     <ClCompile Include="PRooFPS-dd-PGE.cpp" />
     <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />
+    <ClCompile Include="SharedWithTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugTest_PRooFPS-dd|Win32'">Create</PrecompiledHeader>

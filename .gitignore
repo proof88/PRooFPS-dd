@@ -341,3 +341,7 @@ PRooFPS-dd/libprotobufd.dll
 PRooFPS-dd/libprotobuf.dll
 PRooFPS-dd/RegTestDumpClient.txt
 PRooFPS-dd/RegTestDumpServer.txt
+PRooFPS-dd/RegTestDumpClient_tickrate_20.txt
+PRooFPS-dd/RegTestDumpClient_tickrate_60.txt
+PRooFPS-dd/RegTestDumpServer_tickrate_60.txt
+PRooFPS-dd/RegTestDumpServer_tickrate_20.txt

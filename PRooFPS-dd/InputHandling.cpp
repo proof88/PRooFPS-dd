@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include "InputHandling.h"
+#include "SharedWithTest.h"
 
 
 // ############################### PUBLIC ################################
@@ -62,12 +63,13 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     proofps_dd::GameMode& gameMode,
     bool& won,
     proofps_dd::Player& player,
-    PureObject3D& objXHair)
+    PureObject3D& objXHair,
+    const unsigned int nTickrate)
 {
     pge_network::PgePacket pkt;
     proofps_dd::MsgUserCmdMove::initPkt(pkt);
 
-    keyboard(gameMode, won, pkt, player);
+    keyboard(gameMode, won, pkt, player, nTickrate);
     mouse(gameMode, won, pkt, player, objXHair);
     updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
 }
@@ -329,7 +331,8 @@ void proofps_dd::InputHandling::keyboard(
     proofps_dd::GameMode& gameMode,
     bool& won,
     pge_network::PgePacket& pkt,
-    proofps_dd::Player& player)
+    proofps_dd::Player& player,
+    const unsigned int nTickrate)
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -370,7 +373,7 @@ void proofps_dd::InputHandling::keyboard(
         {
             if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
-                RegTestDumpToFile(gameMode, player);
+                RegTestDumpToFile(gameMode, player, nTickrate);
             }
         }
 
@@ -669,12 +672,14 @@ void proofps_dd::InputHandling::mouseWheel(
 
 void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
-    proofps_dd::Player& player)
+    proofps_dd::Player& player,
+    const unsigned int nTickrate)
 {
-    std::ofstream fRegTestDump(m_pge.getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+    const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(m_pge.getNetwork().isServer(), nTickrate);
+    std::ofstream fRegTestDump(sRegTestDumpFilename);
     if (fRegTestDump.fail())
     {
-        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, m_pge.getNetwork().isServer() ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT);
+        getConsole().EOLn("%s ERROR: couldn't create file: %s", __func__, sRegTestDumpFilename.c_str());
         return;
     }
 

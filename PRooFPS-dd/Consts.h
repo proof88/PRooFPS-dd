@@ -20,6 +20,7 @@ namespace proofps_dd
     static constexpr int   GAME_TICKRATE_DEFAULT = 20;
     static constexpr int   GAME_TICKRATE_MIN = 20;
     static constexpr int   GAME_TICKRATE_MAX = GAME_MAXFPS;
+
     static_assert(GAME_TICKRATE_MAX == GAME_MAXFPS, "Max tickrate is limited by max FPS since onGameRunning() freq is same as max FPS.");
     static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_MAX, "Min tickrate should not be greater than max tickrate.");
     static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_DEFAULT, "Min tickrate should not be greater than default tickrate");
@@ -41,8 +42,4 @@ namespace proofps_dd
     static constexpr char* GAME_MAPS_DIR = "gamedata/maps/";
     static constexpr char* GAME_TEXTURES_DIR = "gamedata/textures/";
     static constexpr char* GAME_WEAPONS_DIR = "gamedata/weapons/";
-
-    static constexpr char* GAME_REG_TEST_DUMP_FILE_SERVER = "RegTestDumpServer.txt";
-    static constexpr char* GAME_REG_TEST_DUMP_FILE_CLIENT = "RegTestDumpClient.txt";
-
 } // namespace proofps_dd

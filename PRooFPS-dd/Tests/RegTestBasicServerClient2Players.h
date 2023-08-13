@@ -10,6 +10,7 @@
     ###################################################################################
 */
 
+#include <cstdio>
 #include <thread>
 
 #include <Windows.h>
@@ -17,6 +18,7 @@
 #include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Consts.h"
 #include "../GameMode.h"
+#include "../SharedWithTest.h"
 #include "InputSim.h"
 #include "Process.h"
 
@@ -282,11 +284,12 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        std::ifstream f(bServer ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT, std::ifstream::in);
+        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate);
+        std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
         {
             return assertFalse(true,
-                (std::string("failed to open file: ") + (bServer ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT)).c_str()
+                (std::string("failed to open file: ") + sTestDumpFilename).c_str()
             );
         }
 
@@ -394,9 +397,11 @@ private:
             /* server rx rate should be same in 20 Hz case as in 60 Hz case because clients are still sending updates with refresh rate */
             {expectedPktStatsServerTickrate60.nRxPktTotalCount.nMin,  expectedPktStatsServerTickrate60.nRxPktTotalCount.nMax},
             {expectedPktStatsServerTickrate60.nRxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nRxPktPerSecond.nMax},
-            /* server inject rate should be same in 20 Hz case as in 60 Hz case because that input handling code is shared with client code */
-            {expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMin, expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMax},
-            {expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMin, expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMax}
+            /* server inject rate should be somewhat less in 20 Hz case than in 60 Hz case because that input handling code is shared with client code,
+               which means that server generates same amount of messages for its player as a client generates for their player, however injected pkt
+               count in total is less because it also contains the player updates sent out to itself (inject) by tickrate */
+            {expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMin / 2, expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMax / 2},
+            {expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMin / 2, expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMax / 2}
         };
 
         static constexpr ExpectedPktStatsRanges expectedPktStatsClientTickrate60

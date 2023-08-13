@@ -546,7 +546,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     timeStart = std::chrono::steady_clock::now();
     if (window.isActive())
     {
-        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair);
+        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate);
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
