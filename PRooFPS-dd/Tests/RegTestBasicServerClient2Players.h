@@ -43,6 +43,13 @@ public:
         memset(&procInfoClient, 0, sizeof(procInfoClient));
         memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
         memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
+
+        // In the future we may dynamically calculate the current values for ExpectedPktStatsRanges
+        // based on the predefined expectedPktStatsServerTickrate60 and the given tick rate.
+        if ((m_nTickRate != 60) && (m_nTickRate != 20))
+        {
+            throw std::runtime_error("Unsupported tick rate: " + std::to_string(m_nTickRate));
+        }
     }
 
     ~RegTestBasicServerClient2Players()
@@ -70,9 +77,9 @@ protected:
             StartGame(InstanceType::CLIENT);
 
             // make sure the game windows are at the top, not the console windows
-            BringWindowToFront(hServerMainGameWindow);
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            BringWindowToFront(hClientMainGameWindow);
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
         catch (const std::exception& e)
@@ -95,7 +102,7 @@ protected:
 
         if (hClientMainGameWindow != NULL)
         {
-            BringWindowToFront(hClientMainGameWindow);
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             input_sim_test::keybdPress(VK_ESCAPE, 100);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -107,7 +114,7 @@ protected:
 
         if (hServerMainGameWindow != NULL)
         {
-            BringWindowToFront(hServerMainGameWindow);
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             input_sim_test::keybdPress(VK_ESCAPE, 100);
         }
@@ -134,12 +141,12 @@ protected:
 
         // server player moves into position
         {
-            BringWindowToFront(hServerMainGameWindow);
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                std::this_thread::sleep_for(std::chrono::milliseconds(350));
                 input_sim_test::keybdPress(VK_SPACE, 100); // jump over the hole
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 input_sim_test::keybdPress(VK_SPACE, 100); // 1st crate
@@ -154,7 +161,7 @@ protected:
 
         // client player moves into position and shoots
         {
-            BringWindowToFront(hClientMainGameWindow);
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             input_sim_test::keybdPressNoRelease(VK_LEFT);
             {
@@ -177,7 +184,7 @@ protected:
 
         // server player also shoots
         {
-            BringWindowToFront(hServerMainGameWindow);
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 1 bullet
@@ -192,7 +199,7 @@ protected:
 
         // client player shoots again and kills server player
         {
-            BringWindowToFront(hClientMainGameWindow);
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             // shoot 4 bullets
@@ -209,7 +216,7 @@ protected:
             input_sim_test::keybdPress(VK_RETURN, 100);
 
             // server
-            BringWindowToFront(hServerMainGameWindow);
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             input_sim_test::keybdPress(VK_RETURN, 100);
         }
@@ -231,6 +238,22 @@ private:
         uint32_t nInjectPktTotalCount;
         uint32_t nInjectPktPerSecond;
     } evaluatePktStatsServer, evaluatePktStatsClient;
+
+    struct PktStatRange
+    {
+        uint32_t nMin;
+        uint32_t nMax;
+    };
+
+    struct ExpectedPktStatsRanges
+    {
+        PktStatRange nTxPktTotalCount;
+        PktStatRange nTxPktPerSecond;
+        PktStatRange nRxPktTotalCount;
+        PktStatRange nRxPktPerSecond;
+        PktStatRange nInjectPktTotalCount;
+        PktStatRange nInjectPktPerSecond;
+    };
 
     std::vector<proofps_dd::FragTableRow> evaluateFragTable;
 
@@ -352,7 +375,55 @@ private:
             f >> nPlayerHealth;
         }
 
-        bRet = bServer ? evaluateServer(f) : evaluateClient(f);
+        static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate60
+        {
+            /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
+            /*.nTxPktTotalCount =*/     {400u,  800u},
+            /*.nTxPktPerSecond =*/      { 12u,   40u},
+            /*.nRxPktTotalCount =*/     {100u,  500u},
+            /*.nRxPktPerSecond =*/      {  2u,   35u},
+            /*.nInjectPktTotalCount =*/ {500u, 1500u},
+            /*.nInjectPktPerSecond =*/  { 20u,   50u}
+        };
+
+        static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate20
+        {
+            /* server tx rate should be only 1/3 in the 20 Hz case compared to 60 Hz case */
+            {expectedPktStatsServerTickrate60.nTxPktTotalCount.nMin / 3,  expectedPktStatsServerTickrate60.nTxPktTotalCount.nMax / 3},
+            {expectedPktStatsServerTickrate60.nTxPktPerSecond.nMin / 3, expectedPktStatsServerTickrate60.nTxPktPerSecond.nMax / 3},
+            /* server rx rate should be same in 20 Hz case as in 60 Hz case because clients are still sending updates with refresh rate */
+            {expectedPktStatsServerTickrate60.nRxPktTotalCount.nMin,  expectedPktStatsServerTickrate60.nRxPktTotalCount.nMax},
+            {expectedPktStatsServerTickrate60.nRxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nRxPktPerSecond.nMax},
+            /* server inject rate should be same in 20 Hz case as in 60 Hz case because that input handling code is shared with client code */
+            {expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMin, expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMax},
+            {expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMin, expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMax}
+        };
+
+        static constexpr ExpectedPktStatsRanges expectedPktStatsClientTickrate60
+        {
+            /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
+            /*.nTxPktTotalCount =*/     {  0u,    0u}, // 0 because we expect SAME as server RX
+            /*.nTxPktPerSecond =*/      { expectedPktStatsServerTickrate60.nRxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nRxPktPerSecond.nMax},
+            /*.nRxPktTotalCount =*/     {  0u,    0u}, // 0 because we expect SAME as server TX
+            /*.nRxPktPerSecond =*/      { expectedPktStatsServerTickrate60.nTxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nTxPktPerSecond.nMax},
+            /*.nInjectPktTotalCount =*/ {  0u,    0u}, // 0 because client never injects
+            /*.nInjectPktPerSecond =*/  {  0u,    0u}  // 0 because client never injects
+        };
+
+        static constexpr ExpectedPktStatsRanges expectedPktStatsClientTickrate20
+        {
+            /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
+            /*.nTxPktTotalCount =*/     { expectedPktStatsClientTickrate60.nTxPktTotalCount.nMin,     expectedPktStatsClientTickrate60.nTxPktTotalCount.nMax},
+            /*.nTxPktPerSecond =*/      { expectedPktStatsClientTickrate60.nTxPktPerSecond.nMin,      expectedPktStatsClientTickrate60.nTxPktPerSecond.nMax},
+            /*.nRxPktTotalCount =*/     { expectedPktStatsClientTickrate60.nRxPktTotalCount.nMin,     expectedPktStatsClientTickrate60.nRxPktTotalCount.nMax},
+            /*.nRxPktPerSecond =*/      { expectedPktStatsClientTickrate60.nRxPktPerSecond.nMin / 3,  expectedPktStatsClientTickrate60.nRxPktPerSecond.nMax / 3},
+            /*.nInjectPktTotalCount =*/ { expectedPktStatsClientTickrate60.nInjectPktTotalCount.nMin, expectedPktStatsClientTickrate60.nInjectPktTotalCount.nMax},
+            /*.nInjectPktPerSecond =*/  { expectedPktStatsClientTickrate60.nInjectPktPerSecond.nMin,  expectedPktStatsClientTickrate60.nInjectPktPerSecond.nMax}
+        };
+
+        bRet = bServer ?
+            evaluateServer(f, (m_nTickRate == 60 ? expectedPktStatsServerTickrate60 : expectedPktStatsServerTickrate20)) :
+            evaluateClient(f, (m_nTickRate == 60 ? expectedPktStatsClientTickrate60 : expectedPktStatsClientTickrate20));
         
         f.close();
         return bRet;
@@ -378,14 +449,33 @@ private:
         return bRet;
     }
 
-    bool evaluateServer(std::ifstream&)
+    bool evaluateServer(std::ifstream&, const ExpectedPktStatsRanges& expectedPktStatsRanges)
     {
-        bool bRet = assertBetween(400u, 800u, evaluatePktStatsServer.nTxPktTotalCount, "server nTxPktTotalCount") &
-            assertBetween(12u, 40u, evaluatePktStatsServer.nTxPktPerSecond, "server nTxPktPerSecond") &
-            assertBetween(100u, 500u, evaluatePktStatsServer.nRxPktTotalCount, "server nRxPktTotalCount") &
-            assertBetween(2u, 35u, evaluatePktStatsServer.nRxPktPerSecond, "server nRxPktPerSecond") &
-            assertBetween(500u, 1500u, evaluatePktStatsServer.nInjectPktTotalCount, "server nInjectPktTotalCount") &
-            assertBetween(20u, 50u, evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
+        bool bRet =
+          assertBetween(
+              expectedPktStatsRanges.nTxPktTotalCount.nMin,
+              expectedPktStatsRanges.nTxPktTotalCount.nMax,
+              evaluatePktStatsServer.nTxPktTotalCount, "server nTxPktTotalCount") &
+          assertBetween(
+              expectedPktStatsRanges.nTxPktPerSecond.nMin,
+              expectedPktStatsRanges.nTxPktPerSecond.nMax,
+              evaluatePktStatsServer.nTxPktPerSecond, "server nTxPktPerSecond") &
+          assertBetween(
+              expectedPktStatsRanges.nRxPktTotalCount.nMin,
+              expectedPktStatsRanges.nRxPktTotalCount.nMax,
+              evaluatePktStatsServer.nRxPktTotalCount, "server nRxPktTotalCount") &
+          assertBetween(
+              expectedPktStatsRanges.nRxPktPerSecond.nMin,
+              expectedPktStatsRanges.nRxPktPerSecond.nMax,
+              evaluatePktStatsServer.nRxPktPerSecond, "server nRxPktPerSecond") &
+          assertBetween(
+              expectedPktStatsRanges.nInjectPktTotalCount.nMin,
+              expectedPktStatsRanges.nInjectPktTotalCount.nMax,
+              evaluatePktStatsServer.nInjectPktTotalCount, "server nInjectPktTotalCount") &
+          assertBetween(
+              expectedPktStatsRanges.nInjectPktPerSecond.nMin,
+              expectedPktStatsRanges.nInjectPktPerSecond.nMax,
+              evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
         
         bRet &= evaluateFragTableCommon();
 
@@ -403,14 +493,21 @@ private:
         return bRet;
     }
 
-    bool evaluateClient(std::ifstream&)
+    bool evaluateClient(std::ifstream&, const ExpectedPktStatsRanges& expectedPktStatsRanges)
     {
         // when this function is called, server is already evaluated and evaluatePktStatsServer contains valid server data, so
         // we can also compare client data to server data!
-        bool bRet = assertEquals(evaluatePktStatsServer.nRxPktTotalCount, evaluatePktStatsClient.nTxPktTotalCount, "client nTxPktTotalCount") &
-            assertBetween(2u, 35u, evaluatePktStatsClient.nTxPktPerSecond, "client nTxPktPerSecond") &
+        bool bRet =
+            assertEquals(evaluatePktStatsServer.nRxPktTotalCount, evaluatePktStatsClient.nTxPktTotalCount, "client nTxPktTotalCount") &
+            assertBetween(
+                expectedPktStatsRanges.nTxPktPerSecond.nMin,
+                expectedPktStatsRanges.nTxPktPerSecond.nMax,
+                evaluatePktStatsClient.nTxPktPerSecond, "client nTxPktPerSecond") &
             assertEquals(evaluatePktStatsServer.nTxPktTotalCount, evaluatePktStatsClient.nRxPktTotalCount, "client nRxPktTotalCount") &
-            assertBetween(12u, 50u, evaluatePktStatsClient.nRxPktPerSecond, "client nRxPktPerSecond") &
+            assertBetween(
+                expectedPktStatsRanges.nRxPktPerSecond.nMin,
+                expectedPktStatsRanges.nRxPktPerSecond.nMax,
+                evaluatePktStatsClient.nRxPktPerSecond, "client nRxPktPerSecond") &
             /* client never injects packets to its pkt queue */
             assertEquals(evaluatePktStatsClient.nInjectPktTotalCount, 0u, "client nInjectPktTotalCount") &
             assertEquals(evaluatePktStatsClient.nInjectPktPerSecond, 0u, "client nInjectPktPerSecond");
@@ -471,77 +568,6 @@ private:
 
         return bRet;
     }
-
-    void BringWindowToFront(HWND hTargetWindow) noexcept(false)
-    {
-        // technique copied from: https://stackoverflow.com/questions/916259/win32-bring-a-window-to-top
-        const HWND hCurWnd = GetForegroundWindow();
-        if (hCurWnd == NULL)
-        {
-            // Win32 SDK: "The foreground window can be NULL in certain circumstances, such as when a window is losing activation."
-            // I still want to report this as an error since we use hCurWnd as input to other functions.
-            throw std::exception(
-                std::string("ERROR: GetForegroundWindow() returned NULL!").c_str());
-        }
-
-        const DWORD dwMyID = GetCurrentThreadId();
-        if (dwMyID == 0)
-        {
-            throw std::exception(
-                std::string("ERROR: GetCurrentThreadId() returned 0!").c_str());
-        }
-
-        const DWORD dwCurID = GetWindowThreadProcessId(hCurWnd, NULL);
-        if (dwCurID == 0)
-        {
-            throw std::exception(
-                std::string("ERROR: GetWindowThreadProcessId() returned 0!").c_str());
-        }
-
-        if (0 == AttachThreadInput(dwCurID, dwMyID, TRUE))
-        {
-            throw std::exception(
-                std::string("ERROR: AttachThreadInput(..., TRUE) failed: " + std::to_string(GetLastError()) + "!").c_str());
-        }
-
-        if (0 == SetWindowPos(hTargetWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE))
-        {
-            throw std::exception(
-                std::string("ERROR: SetWindowPos(TOPMOST) failed: " + std::to_string(GetLastError()) + "!").c_str());
-        }
-
-        if (0 == SetWindowPos(hTargetWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE))
-        {
-            throw std::exception(
-                std::string("ERROR: SetWindowPos(NOTOPMOST) failed: " + std::to_string(GetLastError()) + "!").c_str());
-        }
-
-        if (0 == SetForegroundWindow(hTargetWindow))
-        {
-            throw std::exception(
-                std::string("ERROR: SetForegroundWindow() failed!").c_str());
-        }
-
-        // This actually returns NULL for some reason, on for the client window, with error code 5: access denied.
-        //if (NULL == SetFocus(hTargetWindow))
-        //{
-        //    throw std::exception(
-        //        std::string("ERROR: SetFocus() failed: " + std::to_string(GetLastError()) + "!").c_str());
-        //}
-
-        // This also returns NULL for some reason, only for the client window, with error code 0: error_success.
-        //if (NULL == SetActiveWindow(hTargetWindow))
-        //{
-        //    throw std::exception(
-        //        std::string("ERROR: SetActiveWindow() failed: " + std::to_string(GetLastError()) + "!").c_str());
-        //}
-
-        if (0 == AttachThreadInput(dwCurID, dwMyID, FALSE))
-        {
-            throw std::exception(
-                std::string("ERROR: AttachThreadInput(..., FALSE) failed: " + std::to_string(GetLastError()) + "!").c_str());
-        }
-    } // BringWindowToFront()
 
     void StartGame(const InstanceType& instType) noexcept(false)
     {

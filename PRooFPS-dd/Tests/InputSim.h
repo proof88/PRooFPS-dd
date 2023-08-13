@@ -22,4 +22,5 @@ namespace input_sim_test
     void mouseClick(unsigned long nSleepMillisecs);
     void mouseScroll(bool bForward);
     void mouseMoveRelative(DWORD dx, DWORD dy);
+    void bringWindowToFront(HWND hTargetWindow) noexcept(false);
 }; // namespace

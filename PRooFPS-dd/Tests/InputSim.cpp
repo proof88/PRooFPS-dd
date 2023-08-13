@@ -79,3 +79,74 @@ void input_sim_test::mouseMoveRelative(DWORD dx, DWORD dy)
     //        mpy,
     //        0, 0);
 }
+
+void input_sim_test::bringWindowToFront(HWND hTargetWindow) noexcept(false)
+{
+    // technique copied from: https://stackoverflow.com/questions/916259/win32-bring-a-window-to-top
+    const HWND hCurWnd = GetForegroundWindow();
+    if (hCurWnd == NULL)
+    {
+        // Win32 SDK: "The foreground window can be NULL in certain circumstances, such as when a window is losing activation."
+        // I still want to report this as an error since we use hCurWnd as input to other functions.
+        throw std::exception(
+            std::string("ERROR: GetForegroundWindow() returned NULL!").c_str());
+    }
+
+    const DWORD dwMyID = GetCurrentThreadId();
+    if (dwMyID == 0)
+    {
+        throw std::exception(
+            std::string("ERROR: GetCurrentThreadId() returned 0!").c_str());
+    }
+
+    const DWORD dwCurID = GetWindowThreadProcessId(hCurWnd, NULL);
+    if (dwCurID == 0)
+    {
+        throw std::exception(
+            std::string("ERROR: GetWindowThreadProcessId() returned 0!").c_str());
+    }
+
+    if (0 == AttachThreadInput(dwCurID, dwMyID, TRUE))
+    {
+        throw std::exception(
+            std::string("ERROR: AttachThreadInput(..., TRUE) failed: " + std::to_string(GetLastError()) + "!").c_str());
+    }
+
+    if (0 == SetWindowPos(hTargetWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE))
+    {
+        throw std::exception(
+            std::string("ERROR: SetWindowPos(TOPMOST) failed: " + std::to_string(GetLastError()) + "!").c_str());
+    }
+
+    if (0 == SetWindowPos(hTargetWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE))
+    {
+        throw std::exception(
+            std::string("ERROR: SetWindowPos(NOTOPMOST) failed: " + std::to_string(GetLastError()) + "!").c_str());
+    }
+
+    if (0 == SetForegroundWindow(hTargetWindow))
+    {
+        throw std::exception(
+            std::string("ERROR: SetForegroundWindow() failed!").c_str());
+    }
+
+    // This actually returns NULL for some reason, on for the client window, with error code 5: access denied.
+    //if (NULL == SetFocus(hTargetWindow))
+    //{
+    //    throw std::exception(
+    //        std::string("ERROR: SetFocus() failed: " + std::to_string(GetLastError()) + "!").c_str());
+    //}
+
+    // This also returns NULL for some reason, only for the client window, with error code 0: error_success.
+    //if (NULL == SetActiveWindow(hTargetWindow))
+    //{
+    //    throw std::exception(
+    //        std::string("ERROR: SetActiveWindow() failed: " + std::to_string(GetLastError()) + "!").c_str());
+    //}
+
+    if (0 == AttachThreadInput(dwCurID, dwMyID, FALSE))
+    {
+        throw std::exception(
+            std::string("ERROR: AttachThreadInput(..., FALSE) failed: " + std::to_string(GetLastError()) + "!").c_str());
+    }
+} // BringWindowToFront()
