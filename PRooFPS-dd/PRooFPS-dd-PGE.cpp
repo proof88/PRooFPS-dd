@@ -15,6 +15,7 @@
 #include <filesystem>  // requires cpp17
 #include <functional>
 #include <iomanip>     // std::setprecision() for displaying fps
+#include <utility>
 
 #include "../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
 #include "../../PGE/PGE/Pure/include/external/PureUiManager.h"
@@ -210,6 +211,16 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         {'2', "pistol.txt"},
         {'3', "machinegun.txt"}
     };
+
+    // We tell the names of our app messages to the network engine so it can properly log message stats with message names
+    for (const auto& msgAppId2StringPair : MapMsgAppId2String)
+    {
+        getNetwork().getServerClientInstance()->getMsgAppId2StringMap().insert(
+            { static_cast<pge_network::TPgeMsgAppMsgId>(msgAppId2StringPair.msgId),
+              std::string(msgAppId2StringPair.zstring) }
+        );
+    }
+    
 
     if (getNetwork().isServer())
     {

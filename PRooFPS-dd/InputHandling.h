@@ -65,6 +65,7 @@ namespace proofps_dd
     private:
 
         static const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::ElteFailMsgId& id);
+        static const size_t getLongestMsgAppIdNameLength();
 
         // ---------------------------------------------------------------------------
 

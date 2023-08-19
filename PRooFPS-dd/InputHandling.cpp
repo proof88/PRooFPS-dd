@@ -682,39 +682,7 @@ const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::ElteFai
     return "UNKNOWN_MSG";
 }
 
-/*
-void getShortestAndLongestMsgAppIdNameLength(size_t& shortest, size_t& longest)
-{
-    shortest = UINT_MAX;
-    longest = 0;
-    for (const auto& msgId2ZStringPair : proofps_dd::MapMsgAppId2String)
-    {
-        const size_t currLen = strlen(msgId2ZStringPair.zstring);
-        if (currLen > longest)
-        {
-            longest = currLen;
-        }
-        if (currLen < shortest)
-        {
-            shortest = currLen;
-        }
-    }
-}
-
-std::string addSpaces(const size_t& longest, const char* str)
-{
-    const size_t nStrLen = strlen(str);
-    const size_t nSpacesToAdd = longest - nStrLen;
-    std::string sBuild = str;
-    for (size_t i = 0; i < nSpacesToAdd; i++)
-    {
-        sBuild += ' ';
-    }
-    return sBuild;
-}
-*/
-
-const size_t getLongestMsgAppIdNameLength()
+const size_t proofps_dd::InputHandling::getLongestMsgAppIdNameLength()
 {
     size_t nLongestLength = 0;
     for (const auto& msgId2ZStringPair : proofps_dd::MapMsgAppId2String)
