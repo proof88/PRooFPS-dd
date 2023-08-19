@@ -693,6 +693,30 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
     fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
 
+    fRegTestDump << "Total Tx'd App Msg Count per AppMsgId:" << std::endl;
+    for (const auto& txMsgCount : m_pge.getNetwork().getServerClientInstance()->getTxMsgCount())
+    {
+        fRegTestDump << "  Id " << txMsgCount.first << ": " << txMsgCount.second << std::endl;
+    }
+    // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
+    fRegTestDump << std::endl;
+
+    fRegTestDump << "Total Rx'd App Msg Count per AppMsgId:" << std::endl;
+    for (const auto& rxMsgCount : m_pge.getNetwork().getServerClientInstance()->getRxMsgCount())
+    {
+        fRegTestDump << "  Id " << rxMsgCount.first << ": " << rxMsgCount.second << std::endl;
+    }
+    // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
+    fRegTestDump << std::endl;
+
+    fRegTestDump << "Total Inj'd App Msg Count per AppMsgId:" << std::endl;
+    for (const auto& injectMsgCount : m_pge.getNetwork().getServerClientInstance()->getInjectMsgCount())
+    {
+        fRegTestDump << "  Id " << injectMsgCount.first << ": " << injectMsgCount.second << std::endl;
+    }
+    // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
+    fRegTestDump << std::endl;
+
     proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
     if (!pDeathMatchMode)
     {

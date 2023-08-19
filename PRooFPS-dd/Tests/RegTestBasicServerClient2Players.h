@@ -320,6 +320,60 @@ private:
             f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
         }
 
+        // read msg stats
+        {
+            f.getline(szLine, nBuffSize);  // Total Tx'd App Msg Count per AppMsgId:
+            while (!f.eof())
+            {
+                // Id <msgAppId>: <count>
+                std::string sTmp;
+                uint32_t uTmp;
+                f >> sTmp; // "Id"
+                if (sTmp != "Id")
+                {
+                    break;
+                }
+                f >> uTmp; // <msgAppId>
+                f >> sTmp; // ":"
+                f >> uTmp; // <count>
+                f.getline(szLine, nBuffSize); // consume remaining newline char in same line
+            }
+
+            f.getline(szLine, nBuffSize);  // Total Rx'd App Msg Count per AppMsgId:
+            while (!f.eof())
+            {
+                // Id <msgAppId>: <count>
+                std::string sTmp;
+                uint32_t uTmp;
+                f >> sTmp; // "Id"
+                if (sTmp != "Id")
+                {
+                    break;
+                }
+                f >> uTmp; // <msgAppId>
+                f >> sTmp; // ":"
+                f >> uTmp; // <count>
+                f.getline(szLine, nBuffSize); // consume remaining newline char in same line
+            }
+
+            f.getline(szLine, nBuffSize);  // Total Inj'd App Msg Count per AppMsgId:
+            while (!f.eof())
+            {
+                // Id <msgAppId>: <count>
+                std::string sTmp;
+                uint32_t uTmp;
+                f >> sTmp; // "Id"
+                if (sTmp != "Id")
+                {
+                    break;
+                }
+                f >> uTmp; // <msgAppId>
+                f >> sTmp; // ":"
+                f >> uTmp; // <count>
+                f.getline(szLine, nBuffSize); // consume remaining newline char in same line
+            }
+        }
+
         bool bRet = assertFalse(f.bad(), "f.bad()") & assertFalse(f.eof(), "f.eof()");
         if (!bRet)
         {
@@ -328,7 +382,8 @@ private:
 
         // read frag table
         {
-            f.getline(szLine, nBuffSize);  // Frag Table: Player Name, Frags, Deaths
+            // note that at this point, most probably "Frag" word is already eaten by a previous while loop but we are still in good line
+            f.getline(szLine, nBuffSize);  // [Frag ]Table: Player Name, Frags, Deaths
             while (!f.eof())
             {
                 proofps_dd::FragTableRow ftRow;
