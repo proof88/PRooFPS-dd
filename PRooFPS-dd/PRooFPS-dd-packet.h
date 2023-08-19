@@ -10,6 +10,10 @@
     ###################################################################################
 */
 
+#include <array>
+#include <string>
+#include <unordered_map>
+
 #include "../../PGE/PGE/Network/PgePacket.h"
 #include "../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
 
@@ -22,14 +26,31 @@ namespace proofps_dd
     {
         USER_SETUP = 0,
         USER_CMD_MOVE,
-        USER_CMD_TARGET,
         USER_UPDATE,
-        USER_UPDATE_2,
         BULLET_UPDATE,
         MAP_ITEM_UPDATE,
         WPN_UPDATE,
-        WPN_UPDATE_CURRENT
+        WPN_UPDATE_CURRENT,
+        LAST_MSG_ID
     };
+
+    struct ElteFailMsgId2ZStringPair
+    {
+        ElteFailMsgId msgId;
+        const char* const zstring;
+    };
+
+    // this way of defining std::array makes sure code cannot compile if we forget to align the array after changing ElteFailMsgId
+    constexpr std::array<ElteFailMsgId2ZStringPair, static_cast<size_t>(ElteFailMsgId::LAST_MSG_ID)> MapMsgAppId2String
+    { {
+         {ElteFailMsgId::USER_SETUP,         "MsgUserSetup"},
+         {ElteFailMsgId::USER_CMD_MOVE,      "MsgUserCmdMove"},
+         {ElteFailMsgId::USER_UPDATE,        "MsgUserUpdate"},
+         {ElteFailMsgId::BULLET_UPDATE,      "MsgBulletUpdate"},
+         {ElteFailMsgId::MAP_ITEM_UPDATE,    "MsgMapItemUpdate"},
+         {ElteFailMsgId::WPN_UPDATE,         "MsgWpnUpdate"},
+         {ElteFailMsgId::WPN_UPDATE_CURRENT, "MsgWpnUpdateCurrent"}
+    } };
 
     // server -> self (inject) and clients
     // sent to all clients after the connecting client has been accepted by server

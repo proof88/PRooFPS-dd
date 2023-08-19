@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <iomanip>
 
 #include "InputHandling.h"
 #include "SharedWithTest.h"
@@ -373,7 +374,9 @@ void proofps_dd::InputHandling::keyboard(
         {
             if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
+                getConsole().SetLoggingState("4LLM0DUL3S", true);
                 RegTestDumpToFile(gameMode, player, nTickrate);
+                getConsole().SetLoggingState("4LLM0DUL3S", false);
             }
         }
 
@@ -670,6 +673,61 @@ void proofps_dd::InputHandling::mouseWheel(
     }
 }
 
+const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::ElteFailMsgId& id)
+{
+    if (static_cast<size_t>(id) < proofps_dd::MapMsgAppId2String.size())
+    {
+        return proofps_dd::MapMsgAppId2String[static_cast<size_t>(id)].zstring;
+    }
+    return "UNKNOWN_MSG";
+}
+
+/*
+void getShortestAndLongestMsgAppIdNameLength(size_t& shortest, size_t& longest)
+{
+    shortest = UINT_MAX;
+    longest = 0;
+    for (const auto& msgId2ZStringPair : proofps_dd::MapMsgAppId2String)
+    {
+        const size_t currLen = strlen(msgId2ZStringPair.zstring);
+        if (currLen > longest)
+        {
+            longest = currLen;
+        }
+        if (currLen < shortest)
+        {
+            shortest = currLen;
+        }
+    }
+}
+
+std::string addSpaces(const size_t& longest, const char* str)
+{
+    const size_t nStrLen = strlen(str);
+    const size_t nSpacesToAdd = longest - nStrLen;
+    std::string sBuild = str;
+    for (size_t i = 0; i < nSpacesToAdd; i++)
+    {
+        sBuild += ' ';
+    }
+    return sBuild;
+}
+*/
+
+const size_t getLongestMsgAppIdNameLength()
+{
+    size_t nLongestLength = 0;
+    for (const auto& msgId2ZStringPair : proofps_dd::MapMsgAppId2String)
+    {
+        const size_t currLen = strlen(msgId2ZStringPair.zstring);
+        if (currLen > nLongestLength)
+        {
+            nLongestLength = currLen;
+        }
+    }
+    return nLongestLength;
+}
+
 void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player,
@@ -683,20 +741,25 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
         return;
     }
 
-    fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
-    fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
-    fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
-    fRegTestDump << "  " << m_pge.getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
+    getConsole().OLn("%s Dumping to file: %s ...", __func__, sRegTestDumpFilename.c_str());
 
+    fRegTestDump << "Tx: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getTxPacketCount() << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getTxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "Rx: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getRxPacketCount() << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getRxPacketPerSecondCount() << std::endl;
+    fRegTestDump << "Inject: Total Pkt Count, Pkt/Second" << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
+    fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
+
+    const size_t nLongestMsgAppIdNameLength = getLongestMsgAppIdNameLength();
     fRegTestDump << "Total Tx'd App Msg Count per AppMsgId:" << std::endl;
     for (const auto& txMsgCount : m_pge.getNetwork().getServerClientInstance()->getTxMsgCount())
     {
-        fRegTestDump << "  Id " << txMsgCount.first << ": " << txMsgCount.second << std::endl;
+        fRegTestDump << "  Id " << std::right << std::setw(2) << txMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
+            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(txMsgCount.first))
+            << ": " << std::right << std::setw(3) << txMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
     fRegTestDump << std::endl;
@@ -704,7 +767,9 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     fRegTestDump << "Total Rx'd App Msg Count per AppMsgId:" << std::endl;
     for (const auto& rxMsgCount : m_pge.getNetwork().getServerClientInstance()->getRxMsgCount())
     {
-        fRegTestDump << "  Id " << rxMsgCount.first << ": " << rxMsgCount.second << std::endl;
+        fRegTestDump << "  Id " << std::right << std::setw(2) << rxMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
+            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(rxMsgCount.first))
+            << ": " << std::right << std::setw(3) << rxMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
     fRegTestDump << std::endl;
@@ -712,7 +777,9 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     fRegTestDump << "Total Inj'd App Msg Count per AppMsgId:" << std::endl;
     for (const auto& injectMsgCount : m_pge.getNetwork().getServerClientInstance()->getInjectMsgCount())
     {
-        fRegTestDump << "  Id " << injectMsgCount.first << ": " << injectMsgCount.second << std::endl;
+        fRegTestDump << "  Id " << std::right << std::setw(2) << injectMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
+            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(injectMsgCount.first))
+            << ": " << std::right << std::setw(3) << injectMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
     fRegTestDump << std::endl;
@@ -728,8 +795,8 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     for (const auto& fragTableRow : pDeathMatchMode->getFragTable())
     {
         fRegTestDump << "  " << fragTableRow.m_sName << std::endl;
-        fRegTestDump << "  " << fragTableRow.m_nFrags << std::endl;
-        fRegTestDump << "  " << fragTableRow.m_nDeaths << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nFrags << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nDeaths << std::endl;
     }
 
     // add an extra empty line, so the regression test can easily detect end of frag table
@@ -741,8 +808,8 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
         if (wpn->isAvailable())
         {
             fRegTestDump << "  " << wpn->getFilename() << std::endl;
-            fRegTestDump << "  " << wpn->getMagBulletCount() << std::endl;
-            fRegTestDump << "  " << wpn->getUnmagBulletCount() << std::endl;
+            fRegTestDump << "  " << std::right << std::setw(wpn->getFilename().length()) << wpn->getMagBulletCount() << std::endl;
+            fRegTestDump << "  " << std::right << std::setw(wpn->getFilename().length()) << wpn->getUnmagBulletCount() << std::endl;
         }
     }
 
@@ -754,4 +821,6 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
 
     fRegTestDump.flush();
     fRegTestDump.close();
+
+    getConsole().OLn("%s Dumping to file: %s FINISHED!", __func__, sRegTestDumpFilename.c_str());
 }

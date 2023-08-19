@@ -1,0 +1,1 @@
+proofps-dd.exe --testing=true

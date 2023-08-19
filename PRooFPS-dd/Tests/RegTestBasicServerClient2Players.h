@@ -325,7 +325,7 @@ private:
             f.getline(szLine, nBuffSize);  // Total Tx'd App Msg Count per AppMsgId:
             while (!f.eof())
             {
-                // Id <msgAppId>: <count>
+                // Id <msgAppId> <msgAppName> : <count>
                 std::string sTmp;
                 uint32_t uTmp;
                 f >> sTmp; // "Id"
@@ -334,6 +334,7 @@ private:
                     break;
                 }
                 f >> uTmp; // <msgAppId>
+                f >> sTmp; // <msgAppName>
                 f >> sTmp; // ":"
                 f >> uTmp; // <count>
                 f.getline(szLine, nBuffSize); // consume remaining newline char in same line
@@ -342,7 +343,7 @@ private:
             f.getline(szLine, nBuffSize);  // Total Rx'd App Msg Count per AppMsgId:
             while (!f.eof())
             {
-                // Id <msgAppId>: <count>
+                // Id <msgAppId> <msgAppName> : <count>
                 std::string sTmp;
                 uint32_t uTmp;
                 f >> sTmp; // "Id"
@@ -351,6 +352,7 @@ private:
                     break;
                 }
                 f >> uTmp; // <msgAppId>
+                f >> sTmp; // <msgAppName>
                 f >> sTmp; // ":"
                 f >> uTmp; // <count>
                 f.getline(szLine, nBuffSize); // consume remaining newline char in same line
@@ -359,7 +361,7 @@ private:
             f.getline(szLine, nBuffSize);  // Total Inj'd App Msg Count per AppMsgId:
             while (!f.eof())
             {
-                // Id <msgAppId>: <count>
+                // Id <msgAppId> <msgAppName> : <count>
                 std::string sTmp;
                 uint32_t uTmp;
                 f >> sTmp; // "Id"
@@ -368,6 +370,7 @@ private:
                     break;
                 }
                 f >> uTmp; // <msgAppId>
+                f >> sTmp; // <msgAppName>
                 f >> sTmp; // ":"
                 f >> uTmp; // <count>
                 f.getline(szLine, nBuffSize); // consume remaining newline char in same line
