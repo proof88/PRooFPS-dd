@@ -133,16 +133,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgFile.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeIServerClient.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgePacket.h" />
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeServer.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGE.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEallHeaders.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PGEInputHandler.h" />
@@ -180,6 +170,16 @@
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureIRenderer.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererHWfixedPipe.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h" />
+    <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
+    <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgFile.h" />
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgProfiles.h" />
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgVariable.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeClient.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIServerClient.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeNetwork.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgePacket.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeServer.h" />
     <ClInclude Include="Consts.h" />
     <ClInclude Include="Durations.h" />
     <ClInclude Include="GameMode.h" />

@@ -93,18 +93,6 @@
     <ClInclude Include="..\..\..\PGE\PGE\PGEWorldWeather.h">
       <Filter>Header Files\PGE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeClient.h">
-      <Filter>Header Files\PGE\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeNetwork.h">
-      <Filter>Header Files\PGE\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgePacket.h">
-      <Filter>Header Files\PGE\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeServer.h">
-      <Filter>Header Files\PGE\Network</Filter>
-    </ClInclude>
     <ClInclude Include="PRooFPS-dd-packet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -113,18 +101,6 @@
     </ClInclude>
     <ClInclude Include="MapItem.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h">
-      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h">
-      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgVariable.h">
-      <Filter>Header Files\PGE\Config</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgFile.h">
-      <Filter>Header Files\PGE\Config</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Display\PureScreen.h">
       <Filter>Header Files\PGE\PURE\Display</Filter>
@@ -237,17 +213,11 @@
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Config\PGEcfgProfiles.h">
-      <Filter>Header Files\PGE\Config</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tests\PlayerTest.h">
       <Filter>Header Files\Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\PGE\PGE\Network\PgeIServerClient.h">
-      <Filter>Header Files\PGE\Network</Filter>
     </ClInclude>
     <ClInclude Include="Maps.h">
       <Filter>Header Files</Filter>
@@ -278,6 +248,36 @@
     </ClInclude>
     <ClInclude Include="SharedWithTest.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h">
+      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h">
+      <Filter>Header Files\PGE\Audio\SoLoud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgFile.h">
+      <Filter>Header Files\PGE\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgProfiles.h">
+      <Filter>Header Files\PGE\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgVariable.h">
+      <Filter>Header Files\PGE\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeClient.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIServerClient.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeNetwork.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgePacket.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeServer.h">
+      <Filter>Header Files\PGE\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
