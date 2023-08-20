@@ -37,8 +37,7 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 ### v0.1.3 Private Beta (Aug 20, 2023)
 
 This version contains no changes to gameplay compared to the previous version except that the movement of the player might have a slightly different feeling.  
-This version introduces a lot of changes to overcome network- and physics related issues experienced with v0.1 Private Beta during the LAN Party event last December:  
-lost packets between server and clients, occasional huge jumps of players.
+This version introduces a lot of changes to overcome network- and physics related issues experienced with v0.1 Private Beta during the LAN Party event last December: lost packets between server and clients and occasional huge jumps of players.
 
 Under-the-hood changes:
  - **Hardening Physics Calculations**: results are now calculated in fixed timesteps, have become rate-independent i.e. updating physics with lower rate still generate same results;
