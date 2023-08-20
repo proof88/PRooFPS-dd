@@ -46,6 +46,10 @@ Under-the-hood changes:
  - **Regression Test Update**: now regression test runs with 2 different tickrate configs: 60 and 20 Hz and expect the same result;
  - FPS-independent camera movement.
 
+Expected changes in upcoming v0.1.4 Private Beta:
+ - decreased packet rate in client->server direction;
+ - further decrease packet rate in server->client direction by reducing bullet travel updates by doing bullet movement simulation in clients (in the form of prediction, still server remains the authoritive).
+
 ### v0.1.2 Private Beta (May 13, 2023)
 
 This version contains no changes to gameplay compared to the previous version, only massive code refactoring.
