@@ -14,7 +14,7 @@ namespace proofps_dd
 {
 
     static const std::string GAME_NAME = "PRooFPS-dd";
-    static const std::string GAME_VERSION = "0.1.3.0 Private Beta";
+    static const std::string GAME_VERSION = "0.1.4.0 Private Beta";
 
     static constexpr int   GAME_MAXFPS = 60;
     static constexpr int   GAME_TICKRATE_DEFAULT = 20;
@@ -30,7 +30,13 @@ namespace proofps_dd
     static const float GAME_BLOCK_SIZE_Y = 1.0f;
     static const float GAME_BLOCK_SIZE_Z = 1.0f;
 
-    static const float GAME_JUMP_GRAVITY_START = 20.f; // for tickrate 20, this is good, for tickrate 60, 19.f gives identical result
+    /*
+      For the future:
+      for tickrate 20, this is good, for tickrate 60, 19.f gives identical result.
+      However, in Physics::serverGravity(), I'm lerping not this but GAME_GRAVITY_CONST based on tickrate.
+      I don't remember why I'm not lerping this between 19 and 20 but anyway my current approach is also good.
+    */
+    static const float GAME_JUMP_GRAVITY_START = 20.f;
 
     static const float GAME_PLAYER_W = 0.95f;
     static const float GAME_PLAYER_H = 1.88f;
