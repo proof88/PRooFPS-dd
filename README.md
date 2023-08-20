@@ -47,7 +47,7 @@ Under-the-hood changes:
  - FPS-independent camera movement.
 
 Expected changes in upcoming v0.1.4 Private Beta:
- - decreased packet rate in client->server direction;
+ - decrease packet rate in client->server direction by aligning input processing to tickrate;
  - further decrease packet rate in server->client direction by reducing bullet travel updates by doing bullet movement simulation in clients (in the form of prediction, still server remains the authoritive).
 
 ### v0.1.2 Private Beta (May 13, 2023)
