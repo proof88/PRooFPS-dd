@@ -41,7 +41,7 @@ This version introduces a lot of changes to overcome network- and physics relate
 
 Under-the-hood changes:
  - **Hardening Physics Calculations**: results are now calculated in fixed timesteps, have become rate-independent i.e. updating physics with lower rate still generate same results;
- - **Introduce Tickrate**: physics calculations and updating clients are tied now to a new rate called tickrate that is independent of framerate, that is usually lower than framerate;
+ - **Introduce Tickrate**: physics calculations and updating clients are now tied to a new rate called tickrate that is independent of framerate, that is usually lower than framerate;
  - **CVAR "tickrate"** added for configuring tickrate: currently values between 20 and 60 Hz are supported. Value of 20 Hz reduces packet rate in server->client direction to 1/3 of original tickrate 60 Hz;
  - **Regression Test Update**: now regression test runs with 2 different tickrate configs: 60 and 20 Hz and expect the same result;
  - FPS-independent camera movement.
