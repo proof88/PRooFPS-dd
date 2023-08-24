@@ -721,7 +721,18 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getInjectPacketCount() << std::endl;
     fRegTestDump << "  " << std::setw(3) << m_pge.getNetwork().getServerClientInstance()->getInjectPacketPerSecondCount() << std::endl;
 
+    fRegTestDump << std::endl;
+    fRegTestDump << "Tx: Total Byte Count" << std::endl;
+    fRegTestDump << "  " << std::setw(10) << m_pge.getNetwork().getServerClientInstance()->getTxByteCount() << std::endl;
+
+    fRegTestDump << "Rx: Total Byte Count" << std::endl;
+    fRegTestDump << "  " << std::setw(10) << m_pge.getNetwork().getServerClientInstance()->getRxByteCount() << std::endl;
+
+    fRegTestDump << "Inject: Total Byte Count" << std::endl;
+    fRegTestDump << "  " << std::setw(10) << m_pge.getNetwork().getServerClientInstance()->getInjectByteCount() << std::endl;
+
     const size_t nLongestMsgAppIdNameLength = getLongestMsgAppIdNameLength();
+    fRegTestDump << std::endl;
     fRegTestDump << "Total Tx'd App Msg Count per AppMsgId:" << std::endl;
     for (const auto& txMsgCount : m_pge.getNetwork().getServerClientInstance()->getTxMsgCount())
     {

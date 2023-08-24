@@ -319,6 +319,24 @@ private:
             f >> currentPktStats.nInjectPktPerSecond;
             f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
         }
+        f.getline(szLine, nBuffSize);  // consume next blank line
+        
+        // read Byte Count stats
+        {
+            uint32_t uTmp;
+            f.getline(szLine, nBuffSize);  // Tx: Total Byte Count
+            f >> uTmp;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+
+            f.getline(szLine, nBuffSize);  // Rx: Total Byte Count
+            f >> uTmp;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+
+            f.getline(szLine, nBuffSize);  // Inject: Total Byte Count
+            f >> uTmp;
+            f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+        }
+        f.getline(szLine, nBuffSize);  // consume next blank line
 
         // read msg stats
         {
