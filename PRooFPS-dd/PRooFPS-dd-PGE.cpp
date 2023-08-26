@@ -443,34 +443,39 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         break;
     case pge_network::MsgApp::id:
     {
-        switch (static_cast<proofps_dd::ElteFailMsgId>(pkt.msg.app.msgId))
+        // TODO: here we will need to iterate over all app msg but for now there is only 1 inside!
+        assert(pkt.msg.app.m_nMessageCount == 1);
+        const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pkt.msg.app.cData);
+        assert(pMsgApp);
+        assert(pMsgApp->nMsgSize > 0);  // for now we dont have empty messages
+        switch (static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId))
         {
         case proofps_dd::MsgUserSetup::id:
-            bRet = handleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pkt.msg.app.cData));
+            bRet = handleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
                 pkt.m_connHandleServerSide,
-                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pkt.msg.app.cData));
+                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgUserUpdate::id:
-            bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pkt.msg.app.cData));
+            bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgBulletUpdate::id:
-            bRet = handleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pkt.msg.app.cData));
+            bRet = handleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgMapItemUpdate::id:
-            bRet = handleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pkt.msg.app.cData));
+            bRet = handleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgWpnUpdate::id:
-            bRet = handleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pkt.msg.app.cData), hasValidConnection());
+            bRet = handleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData), hasValidConnection());
             break;
         case proofps_dd::MsgWpnUpdateCurrent::id:
-            bRet = handleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pkt.msg.app.cData));
+            bRet = handleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pMsgApp->cMsgData));
             break;
         default:
             bRet = false;
-            getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pkt.msg.app.msgId);
+            getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, pMsgApp->msgId);
         }
         break;
     }
@@ -1161,7 +1166,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         getNetwork().getServer().sendToAllClientsExcept(newPktUserUpdate, connHandleServerSide);
 
         // now we send this msg to the client with this bool flag set so client will know it is their connect
-        proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(newPktSetup.msg.app.cData);
+        pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(newPktSetup.msg.app.cData);
+        proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().send(newPktSetup, connHandleServerSide);
         getNetwork().getServer().send(newPktUserUpdate);

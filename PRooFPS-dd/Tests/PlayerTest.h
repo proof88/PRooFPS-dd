@@ -582,7 +582,11 @@ private:
         proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         pge_network::PgePacket pktWpnUpdate;
-        const proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pktWpnUpdate.msg.app.cData);
+        
+        // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
+        const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pktWpnUpdate.msg.app.cData);
+
+        const proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData);
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -601,7 +605,7 @@ private:
                 static_cast<uint32_t>(pktWpnUpdate.pktId),
                 "pkt 1 id") &
             assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdate::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pktWpnUpdate.msg.app.msgId)),
+                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId)),
                 "msg 1 id") &
             assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
@@ -624,7 +628,7 @@ private:
                 static_cast<uint32_t>(pktWpnUpdate.pktId),
                 "pkt 2 id") &
             assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdate::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pktWpnUpdate.msg.app.msgId)),
+                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId)),
                 "msg 2 id") &
             assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &
