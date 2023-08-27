@@ -1166,6 +1166,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         getNetwork().getServer().sendToAllClientsExcept(newPktUserUpdate, connHandleServerSide);
 
         // now we send this msg to the client with this bool flag set so client will know it is their connect
+        // TODO: no, this kind of thing we shouldnt do from this cpp file, we should use helper functions!
         pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(newPktSetup.msg.app.cData);
         proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData);
         msgUserSetup.m_bCurrentClient = true;
