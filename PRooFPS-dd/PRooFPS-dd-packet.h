@@ -72,11 +72,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgUserSetup);  // TODO: sizeof(*this)?
 
@@ -109,11 +109,11 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             // m_connHandleServerSide is ignored in this message
-            //pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            //pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgUserCmdMove);  // TODO: sizeof(*this)?
 
@@ -133,7 +133,7 @@ namespace proofps_dd
             unsigned char cWeaponSwitch)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_strafe = strafe;
@@ -146,7 +146,7 @@ namespace proofps_dd
         static unsigned char getWeaponSwitch(const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pkt.msg.app.cData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_cWeaponSwitch;
         }
@@ -154,7 +154,7 @@ namespace proofps_dd
         static void SetWeaponSwitch(pge_network::PgePacket& pkt, unsigned char cTargetWpnKey)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_cWeaponSwitch = cTargetWpnKey;
@@ -163,7 +163,7 @@ namespace proofps_dd
         static bool getReloadRequest(const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pkt.msg.app.cData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_bRequestReload;
         }
@@ -173,7 +173,7 @@ namespace proofps_dd
             bool bShootAction)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_bShootAction = bShootAction;
@@ -184,7 +184,7 @@ namespace proofps_dd
             TPureFloat fPlayerAngleY)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
@@ -196,7 +196,7 @@ namespace proofps_dd
             TPureFloat fWpnAngleZ)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
@@ -207,7 +207,7 @@ namespace proofps_dd
             const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pkt.msg.app.cData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_bShouldSend;
         }
@@ -248,11 +248,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgUserUpdate);  // TODO: sizeof(*this)?
 
@@ -305,11 +305,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             //memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgBulletUpdate);  // TODO: sizeof(*this)?
 
@@ -338,11 +338,11 @@ namespace proofps_dd
             static_assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgBulletUpdate);  // TODO: sizeof(*this)?
 
@@ -356,7 +356,7 @@ namespace proofps_dd
         static bool& getDelete(pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData);
             return msgBulletUpdate.m_bDelete;
         }
@@ -384,11 +384,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgMapItemUpdate);  // TODO: sizeof(*this)?
 
@@ -422,11 +422,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgWpnUpdate);  // TODO: sizeof(*this)?
 
@@ -442,7 +442,7 @@ namespace proofps_dd
         static bool& getAvailable(pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData);
             return msgWpnUpdate.m_bAvailable;
         }
@@ -468,11 +468,11 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
-            pkt.m_connHandleServerSide = connHandleServerSide;
-            pkt.pktId = pge_network::PgePktId::APP;
-            pkt.msg.app.m_nMessageCount = 1; // TODO: increase it instead!
+            pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pkt.msg.app.cData);
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
             pMsgApp->nMsgSize = sizeof(MsgWpnUpdateCurrent);  // TODO: sizeof(*this)?
 

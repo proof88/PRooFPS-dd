@@ -433,45 +433,45 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     bool bRet;
 
-    switch (pkt.pktId)
+    switch (pge_network::PgePacket::getPacketId(pkt))
     {
     case pge_network::MsgUserConnected::id:
-        bRet = handleUserConnected(pkt.m_connHandleServerSide, pkt.msg.userConnected);
+        bRet = handleUserConnected(pge_network::PgePacket::getServerSideConnectionHandle(pkt), pge_network::PgePacket::getMessageAsUserConnected(pkt));
         break;
     case pge_network::MsgUserDisconnected::id:
-        bRet = handleUserDisconnected(pkt.m_connHandleServerSide, pkt.msg.userDisconnected);
+        bRet = handleUserDisconnected(pge_network::PgePacket::getServerSideConnectionHandle(pkt), pge_network::PgePacket::getMessageAsUserDisconnected(pkt));
         break;
     case pge_network::MsgApp::id:
     {
         // TODO: here we will need to iterate over all app msg but for now there is only 1 inside!
-        assert(pkt.msg.app.m_nMessageCount == 1);
-        const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pkt.msg.app.cData);
+        assert(pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount == 1);
+        const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
         assert(pMsgApp);
         assert(pMsgApp->nMsgSize > 0);  // for now we dont have empty messages
         switch (static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId))
         {
         case proofps_dd::MsgUserSetup::id:
-            bRet = handleUserSetup(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData));
+            bRet = handleUserSetup(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgUserCmdMove::id:
             bRet = handleUserCmdMove(
-                pkt.m_connHandleServerSide,
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgUserUpdate::id:
-            bRet = handleUserUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pMsgApp->cMsgData));
+            bRet = handleUserUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgBulletUpdate::id:
-            bRet = handleBulletUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData));
+            bRet = handleBulletUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgMapItemUpdate::id:
-            bRet = handleMapItemUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pMsgApp->cMsgData));
+            bRet = handleMapItemUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pMsgApp->cMsgData));
             break;
         case proofps_dd::MsgWpnUpdate::id:
-            bRet = handleWpnUpdate(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData), hasValidConnection());
+            bRet = handleWpnUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData), hasValidConnection());
             break;
         case proofps_dd::MsgWpnUpdateCurrent::id:
-            bRet = handleWpnUpdateCurrent(pkt.m_connHandleServerSide, reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pMsgApp->cMsgData));
+            bRet = handleWpnUpdateCurrent(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pMsgApp->cMsgData));
             break;
         default:
             bRet = false;
@@ -481,7 +481,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
     }
     default:
         bRet = false;
-        getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pkt.pktId);
+        getConsole().EOLn("CustomPGE::%s(): unknown pktId %u!", __func__, pge_network::PgePacket::getPacketId(pkt));
     }
 
     m_durations.m_nFullOnPacketReceivedDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
