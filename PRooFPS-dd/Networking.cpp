@@ -53,7 +53,7 @@ const char* proofps_dd::Networking::getLoggerModuleName()
 bool proofps_dd::Networking::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
 {
     // TODO: it would be much better if this function was part of PGE and not application.
-    // However, before any refactor could be done, PgeGsnClient::m_hConnectionServerSide should be properly filled, and then
+    // However, before any refactor could be done, PgeGnsClient::m_hConnectionServerSide should be properly filled, and then
     // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
     // is our connection or not.
     return m_nServerSideConnectionHandle == connHandleServerSide;
