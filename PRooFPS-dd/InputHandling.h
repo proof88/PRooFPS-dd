@@ -60,11 +60,11 @@ namespace proofps_dd
 
         bool handleUserCmdMove(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserCmdMove& msg);
+            const proofps_dd::MsgUserCmdFromClient& msg);
 
     private:
 
-        static const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::ElteFailMsgId& id);
+        static const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::PRooFPSappMsgId& id);
         static const size_t getLongestMsgAppIdNameLength();
 
         // ---------------------------------------------------------------------------

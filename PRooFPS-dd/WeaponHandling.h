@@ -54,14 +54,14 @@ namespace proofps_dd
         void serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nTickRate);
         bool handleBulletUpdate(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgBulletUpdate& msg);
+            const proofps_dd::MsgBulletUpdateFromServer& msg);
         bool handleWpnUpdate(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgWpnUpdate& msg,
+            const proofps_dd::MsgWpnUpdateFromServer& msg,
             bool bHasValidConnection);
         bool handleWpnUpdateCurrent(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgWpnUpdateCurrent& msg);
+            const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);
 
     private:
 

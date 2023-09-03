@@ -476,7 +476,7 @@ void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
-        proofps_dd::MsgWpnUpdate::initPkt(
+        proofps_dd::MsgWpnUpdateFromServer::initPkt(
             pktWpnUpdate,
             0 /* ignored by client anyway */,
             sWeaponBecomingAvailable,

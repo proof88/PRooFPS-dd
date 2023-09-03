@@ -68,7 +68,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     const unsigned int nTickrate)
 {
     pge_network::PgePacket pkt;
-    proofps_dd::MsgUserCmdMove::initPkt(pkt);
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt);
 
     keyboard(gameMode, won, pkt, player, nTickrate);
     mouse(gameMode, won, pkt, player, objXHair);
@@ -77,7 +77,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
 
 bool proofps_dd::InputHandling::handleUserCmdMove(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-    const proofps_dd::MsgUserCmdMove& pktUserCmdMove)
+    const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
     if (!m_pge.getNetwork().isServer())
     {
@@ -220,7 +220,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
         if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
         {
             if (connHandleServerSide == pge_network::ServerConnHandle)
-            {   // server plays for itself because it doesnt inject the MsgWpnUpdateCurrent to itself
+            {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
                 m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
             }
             if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
@@ -237,7 +237,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
 
             // all clients must be updated about this player's weapon switch
             pge_network::PgePacket pktWpnUpdateCurrent;
-            proofps_dd::MsgWpnUpdateCurrent::initPkt(
+            proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
                 pktWpnUpdateCurrent,
                 connHandleServerSide,
                 pTargetWpn->getFilename());
@@ -288,7 +288,7 @@ bool proofps_dd::InputHandling::handleUserCmdMove(
             if (connHandleServerSide != pge_network::ServerConnHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
             {
                 pge_network::PgePacket pktWpnUpdate;
-                proofps_dd::MsgWpnUpdate::initPkt(
+                proofps_dd::MsgWpnUpdateFromServer::initPkt(
                     pktWpnUpdate,
                     pge_network::ServerConnHandle /* ignored by client anyway */,
                     wpn->getFilename(),
@@ -477,7 +477,7 @@ void proofps_dd::InputHandling::keyboard(
             // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
             // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
             // as one-time actions.
-            proofps_dd::MsgUserCmdMove::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
+            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
         }
         prevStrafe = strafe;
     }
@@ -527,16 +527,16 @@ bool proofps_dd::InputHandling::mouse(
         }
         else
         {
-            proofps_dd::MsgUserCmdMove::setMouse(pkt, true);
+            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, true);
             bShootActionBeingSent = true;
         }
     }
     else
     {
-        if (!proofps_dd::MsgUserCmdMove::getReloadRequest(pkt) && bPrevLeftButtonPressed)
+        if (!proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt) && bPrevLeftButtonPressed)
         {
             bPrevLeftButtonPressed = false;
-            proofps_dd::MsgUserCmdMove::setMouse(pkt, false);
+            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, false);
         }
     }
 
@@ -545,7 +545,7 @@ bool proofps_dd::InputHandling::mouse(
         return false;
     }
 
-    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdMove::getReloadRequest(pkt))
+    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
     {
         mouseWheel(nMouseWheelChange, pkt, player);
     }
@@ -597,9 +597,9 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
 {
     player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
     player.getObject3D()->getAngleVec().SetY(player.getAngleY());
-    if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getAngleY().isDirty())
+    if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) || player.getAngleY().isDirty())
     {
-        proofps_dd::MsgUserCmdMove::setAngleY(pkt, player.getAngleY());
+        proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, player.getAngleY());
     }
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
@@ -612,15 +612,15 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
             PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
         );
 
-        if (proofps_dd::MsgUserCmdMove::shouldSend(pkt) || player.getWeaponAngle().isDirty())
+        if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) || player.getWeaponAngle().isDirty())
         {
-            proofps_dd::MsgUserCmdMove::setWpnAngles(pkt, player.getWeaponAngle().getNew().getY(), player.getWeaponAngle().getNew().getZ());
+            proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, player.getWeaponAngle().getNew().getY(), player.getWeaponAngle().getNew().getZ());
         }
     }
 
-    if (proofps_dd::MsgUserCmdMove::shouldSend(pkt))
+    if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt))
     {
-        // shouldSend() at this point means that there were actual change in user input so MsgUserCmdMove will be sent out.
+        // shouldSend() at this point means that there were actual change in user input so MsgUserCmdFromClient will be sent out.
         // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
         // their common interface which always points to the initialized instance, which is either client or server.
         // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023.
@@ -633,7 +633,7 @@ void proofps_dd::InputHandling::mouseWheel(
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
 {
-    if (proofps_dd::MsgUserCmdMove::getWeaponSwitch(pkt) != '\0')
+    if (proofps_dd::MsgUserCmdFromClient::getWeaponSwitch(pkt) != '\0')
     {
         return;
     }
@@ -668,12 +668,12 @@ void proofps_dd::InputHandling::mouseWheel(
     }
     else
     {
-        proofps_dd::MsgUserCmdMove::SetWeaponSwitch(pkt, cTargetWeapon);
+        proofps_dd::MsgUserCmdFromClient::SetWeaponSwitch(pkt, cTargetWeapon);
         getConsole().OLn("InputHandling::%s(): next weapon is: %s!", __func__, pWpnTarget->getFilename().c_str());
     }
 }
 
-const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::ElteFailMsgId& id)
+const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::PRooFPSappMsgId& id)
 {
     if (static_cast<size_t>(id) < proofps_dd::MapMsgAppId2String.size())
     {
@@ -737,7 +737,7 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     for (const auto& txMsgCount : m_pge.getNetwork().getServerClientInstance()->getTxMsgCount())
     {
         fRegTestDump << "  Id " << std::right << std::setw(2) << txMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
-            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(txMsgCount.first))
+            << getMsgAppIdName(static_cast<proofps_dd::PRooFPSappMsgId>(txMsgCount.first))
             << ": " << std::right << std::setw(3) << txMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
@@ -747,7 +747,7 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     for (const auto& rxMsgCount : m_pge.getNetwork().getServerClientInstance()->getRxMsgCount())
     {
         fRegTestDump << "  Id " << std::right << std::setw(2) << rxMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
-            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(rxMsgCount.first))
+            << getMsgAppIdName(static_cast<proofps_dd::PRooFPSappMsgId>(rxMsgCount.first))
             << ": " << std::right << std::setw(3) << rxMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
@@ -757,7 +757,7 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     for (const auto& injectMsgCount : m_pge.getNetwork().getServerClientInstance()->getInjectMsgCount())
     {
         fRegTestDump << "  Id " << std::right << std::setw(2) << injectMsgCount.first << " " << std::left << std::setw(nLongestMsgAppIdNameLength + 1)
-            << getMsgAppIdName(static_cast<proofps_dd::ElteFailMsgId>(injectMsgCount.first))
+            << getMsgAppIdName(static_cast<proofps_dd::PRooFPSappMsgId>(injectMsgCount.first))
             << ": " << std::right << std::setw(3) << injectMsgCount.second << std::endl;
     }
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list

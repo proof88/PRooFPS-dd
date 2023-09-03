@@ -224,7 +224,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     if (getNetwork().isServer())
     {
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdMove::id));
+        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
         Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
@@ -250,21 +250,21 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     }
     else
     {
-        // MsgUserSetup is also processed by server, but it injects this pkt into its own queue when needed.
-        // MsgUserSetup MUST NOT be received by server over network!
-        // MsgUserSetup is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetup::id));
+        // MsgUserSetupFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserSetupFromServer MUST NOT be received by server over network!
+        // MsgUserSetupFromServer is received only by clients over network!
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetupFromServer::id));
 
-        // MsgUserUpdate is also processed by server, but it injects this pkt into its own queue when needed.
-        // MsgUserUpdate MUST NOT be received by server over network!
-        // MsgUserUpdate is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdate::id));
+        // MsgUserUpdateFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserUpdateFromServer MUST NOT be received by server over network!
+        // MsgUserUpdateFromServer is received only by clients over network!
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
 
         // following messages are received only by clients over network:
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdate::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdate::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdate::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateCurrent::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
 
         std::string sIp = "127.0.0.1";
         if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
@@ -309,12 +309,12 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
     getConsole().OLn("  size of PgePacket::msg: %u Bytes", sizeof(pge_network::PgePacket::msg));
     getConsole().OLn("    size of PgePacket::msg.app: %u Bytes", sizeof(pge_network::PgePacket::msg.app));
-    getConsole().OLn("      size of MsgUserCmdMove: %u Bytes", sizeof(proofps_dd::MsgUserCmdMove));
-    getConsole().OLn("      size of MsgUserUpdate: %u Bytes", sizeof(proofps_dd::MsgUserUpdate));
-    getConsole().OLn("      size of MsgBulletUpdate: %u Bytes", sizeof(proofps_dd::MsgBulletUpdate));
-    getConsole().OLn("      size of MsgWpnUpdate: %u Bytes", sizeof(proofps_dd::MsgWpnUpdate));
-    getConsole().OLn("      size of MsgWpnUpdateCurrent: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateCurrent));
-    getConsole().OLn("      size of MsgMapItemUpdate: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdate));
+    getConsole().OLn("      size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
+    getConsole().OLn("      size of MsgUserUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgUserUpdateFromServer));
+    getConsole().OLn("      size of MsgBulletUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgBulletUpdateFromServer));
+    getConsole().OLn("      size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
+    getConsole().OLn("      size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
+    getConsole().OLn("      size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
     getConsole().OLn("");
 
     //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
@@ -448,30 +448,30 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
         assert(pMsgApp);
         assert(pMsgApp->nMsgSize > 0);  // for now we dont have empty messages
-        switch (static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId))
+        switch (static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId))
         {
-        case proofps_dd::MsgUserSetup::id:
-            bRet = handleUserSetup(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData));
+        case proofps_dd::MsgUserSetupFromServer::id:
+            bRet = handleUserSetup(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserSetupFromServer&>(pMsgApp->cMsgData));
             break;
-        case proofps_dd::MsgUserCmdMove::id:
+        case proofps_dd::MsgUserCmdFromClient::id:
             bRet = handleUserCmdMove(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData));
+                reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData));
             break;
-        case proofps_dd::MsgUserUpdate::id:
-            bRet = handleUserUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserUpdate&>(pMsgApp->cMsgData));
+        case proofps_dd::MsgUserUpdateFromServer::id:
+            bRet = handleUserUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgUserUpdateFromServer&>(pMsgApp->cMsgData));
             break;
-        case proofps_dd::MsgBulletUpdate::id:
-            bRet = handleBulletUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData));
+        case proofps_dd::MsgBulletUpdateFromServer::id:
+            bRet = handleBulletUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData));
             break;
-        case proofps_dd::MsgMapItemUpdate::id:
-            bRet = handleMapItemUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgMapItemUpdate&>(pMsgApp->cMsgData));
+        case proofps_dd::MsgMapItemUpdateFromServer::id:
+            bRet = handleMapItemUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgMapItemUpdateFromServer&>(pMsgApp->cMsgData));
             break;
-        case proofps_dd::MsgWpnUpdate::id:
-            bRet = handleWpnUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData), hasValidConnection());
+        case proofps_dd::MsgWpnUpdateFromServer::id:
+            bRet = handleWpnUpdate(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData), hasValidConnection());
             break;
-        case proofps_dd::MsgWpnUpdateCurrent::id:
-            bRet = handleWpnUpdateCurrent(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgWpnUpdateCurrent&>(pMsgApp->cMsgData));
+        case proofps_dd::MsgCurrentWpnUpdateFromServer::id:
+            bRet = handleWpnUpdateCurrent(pge_network::PgePacket::getServerSideConnectionHandle(pkt), reinterpret_cast<const proofps_dd::MsgCurrentWpnUpdateFromServer&>(pMsgApp->cMsgData));
             break;
         default:
             bRet = false;
@@ -686,7 +686,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
         if (player.isDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
-            proofps_dd::MsgUserUpdate::initPkt(
+            proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
                 player.getPos().getNew().getX(),
@@ -709,7 +709,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
             playerPair.second.getRespawnFlag() = false;
 
             // Note that health is not needed by server since it already has the updated health, but for convenience
-            // we put that into MsgUserUpdate and send anyway like all the other stuff.
+            // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
             getNetwork().getServer().sendToAll(newPktUserUpdate);
         }
     }
@@ -743,7 +743,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
 
             mapItem.UnTake();
 
-            proofps_dd::MsgMapItemUpdate::initPkt(
+            proofps_dd::MsgMapItemUpdateFromServer::initPkt(
                 newPktMapItemUpdate,
                 0,
                 mapItem.getId(),
@@ -859,14 +859,14 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                 // decision than collision check ...
                 if (Colliding(*plobj, mapItem.getObject3D()))
                 {
-                    proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate) = false;
+                    proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
                     if (player.canTakeItem(mapItem))
                     {
                         player.TakeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
                         // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
-                        if (proofps_dd::MsgWpnUpdate::getAvailable(newPktWpnUpdate))
+                        if (proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate))
                         {
                             if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
                             {
@@ -881,7 +881,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 
         if (bSendItemUpdate)
         {
-            proofps_dd::MsgMapItemUpdate::initPkt(
+            proofps_dd::MsgMapItemUpdateFromServer::initPkt(
                 newPktMapItemUpdate,
                 pge_network::ServerConnHandle,
                 mapItem.getId(),
@@ -894,12 +894,12 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
     m_durations.m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void proofps_dd::PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength]) const
+void proofps_dd::PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength]) const
 {
     bool found = false;
     do
     {
-        sprintf_s(szNewUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength, "User%d", 10000 + (rand() % 100000));
+        sprintf_s(szNewUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength, "User%d", 10000 + (rand() % 100000));
         for (const auto& client : m_mapPlayers)
         {
             found = (client.second.getName() == szNewUserName);
@@ -922,9 +922,9 @@ void proofps_dd::PRooFPSddPGE::WritePlayerList()
     getConsole().OO();
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetup& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg)
 {
-    if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetup::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
+    if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u (rcvd user name: %s) is already present in players list!",
             __func__, connHandleServerSide, msg.m_szUserName);
@@ -1002,7 +1002,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
     for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
     {
         getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
-        if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength)
+        if (entry.path().filename().string().length() >= proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength)
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): skip wpn due to long filename: %s!", __func__, entry.path().string().c_str());
             continue; // otherwise multiple weapons with same first nWpnNameNameMaxLength-1 chars would be mixed up in pkts
@@ -1098,7 +1098,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 return false;
             }
 
-            char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
+            char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength];
             genUniqueUserName(szNewUserName);
             getConsole().OLn("PRooFPSddPGE::%s(): first (local) user %s connected and I'm server, so this is me (connHandleServerSide: %u)",
                 __func__, szNewUserName, connHandleServerSide);
@@ -1106,13 +1106,13 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             szConnectedUserName = szNewUserName;
 
             pge_network::PgePacket newPktSetup;
-            proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
+            proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
             const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
                 m_maps.getLeftMostSpawnpoint() :
                 m_maps.getRandomSpawnpoint();
 
-            proofps_dd::MsgUserUpdate::initPkt(
+            proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
             // server injects this msg to self so resources for player will be allocated
@@ -1141,20 +1141,20 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             return false;
         }
 
-        char szNewUserName[proofps_dd::MsgUserSetup::nUserNameMaxLength];
+        char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength];
         genUniqueUserName(szNewUserName);
         szConnectedUserName = szNewUserName;
         getConsole().OLn("PRooFPSddPGE::%s(): new remote user %s (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, szConnectedUserName, connHandleServerSide, msg.szIpAddress);
 
         pge_network::PgePacket newPktSetup;
-        proofps_dd::MsgUserSetup::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
+        proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename());
 
         const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
             m_maps.getRightMostSpawnpoint() :
             m_maps.getRandomSpawnpoint();
 
-        proofps_dd::MsgUserUpdate::initPkt(
+        proofps_dd::MsgUserUpdateFromServer::initPkt(
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0);
 
         // server injects this msg to self so resources for player will be allocated
@@ -1168,17 +1168,17 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // now we send this msg to the client with this bool flag set so client will know it is their connect
         // TODO: no, this kind of thing we shouldnt do from this cpp file, we should use helper functions!
         pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(newPktSetup.msg.app.cData);
-        proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData);
+        proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(pMsgApp->cMsgData);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().send(newPktSetup, connHandleServerSide);
         getNetwork().getServer().send(newPktUserUpdate);
 
-        // we also send as many MsgUserSetup pkts to the client as the number of already connected players,
+        // we also send as many MsgUserSetupFromServer pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
-        // we also send MsgUserUpdate about each player so new client will immediately have their positions and other data updated.
+        // we also send MsgUserUpdateFromServer about each player so new client will immediately have their positions and other data updated.
         for (const auto& it : m_mapPlayers)
         {
-            proofps_dd::MsgUserSetup::initPkt(
+            proofps_dd::MsgUserSetupFromServer::initPkt(
                 newPktSetup,
                 it.second.getServerSideConnectionHandle(),
                 false,
@@ -1186,7 +1186,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 "" /* here mapFilename is irrelevant */);
             getNetwork().getServer().send(newPktSetup, connHandleServerSide);
 
-            proofps_dd::MsgUserUpdate::initPkt(
+            proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 it.second.getServerSideConnectionHandle(),
                 it.second.getObject3D()->getPosVec().getX(),
@@ -1211,7 +1211,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 continue;
             }
 
-            proofps_dd::MsgMapItemUpdate::initPkt(
+            proofps_dd::MsgMapItemUpdateFromServer::initPkt(
                 newPktMapItemUpdate,
                 pge_network::ServerConnHandle,
                 itemPair.first,
@@ -1251,7 +1251,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdate& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdateFromServer& msg)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
@@ -1260,7 +1260,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdate: %f", __func__, it->first.c_str(), msg.m_pos.x);
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->first.c_str(), msg.m_pos.x);
 
     if (it->second.isExpectingStartPos())
     {
@@ -1317,7 +1317,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdate& msg)
+bool proofps_dd::PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdateFromServer& msg)
 {
     if (getNetwork().isServer())
     {

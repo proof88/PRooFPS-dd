@@ -586,7 +586,7 @@ private:
         // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
         const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pktWpnUpdate).cData);
 
-        const proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<const proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData);
+        const proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<const proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -596,7 +596,7 @@ private:
         bool bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[0]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
-            proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength) == 0;
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
         bool b = assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
             static_cast<int>(player.getWeaponManager().getWeapons()[0]->getUnmagBulletCount()), "wpn 1 unmag") &
@@ -604,8 +604,8 @@ private:
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
                 "pkt 1 id") &
-            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdate::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId)),
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId)),
                 "msg 1 id") &
             assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
@@ -618,7 +618,7 @@ private:
         bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
-            proofps_dd::MsgWpnUpdate::nWpnNameNameMaxLength) == 0;
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
         b &= assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
             static_cast<int>(player.getWeaponManager().getWeapons()[1]->getMagBulletCount()), "wpn 2 mag") &
@@ -627,8 +627,8 @@ private:
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
                 "pkt 2 id") &
-            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdate::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::ElteFailMsgId>(pMsgApp->msgId)),
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId)),
                 "msg 2 id") &
             assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &

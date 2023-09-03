@@ -22,41 +22,41 @@
 namespace proofps_dd
 {
 
-    enum class ElteFailMsgId : pge_network::TPgeMsgAppMsgId  /* underlying type should be same as type of MsgApp::msgId */
+    enum class PRooFPSappMsgId : pge_network::TPgeMsgAppMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
     {
-        USER_SETUP = 0,
-        USER_CMD_MOVE,
-        USER_UPDATE,
-        BULLET_UPDATE,
-        MAP_ITEM_UPDATE,
-        WPN_UPDATE,
-        WPN_UPDATE_CURRENT,
-        LAST_MSG_ID
+        UserSetupFromServer = 0,
+        UserCmdFromClient,
+        UserUpdateFromServer,
+        BulletUpdateFromServer,
+        MapItemUpdateFromServer,
+        WpnUpdateFromServer,
+        CurrentWpnUpdateFromServer,
+        LastMsgId
     };
 
-    struct ElteFailMsgId2ZStringPair
+    struct PRooFPSappMsgId2ZStringPair
     {
-        ElteFailMsgId msgId;
+        PRooFPSappMsgId msgId;
         const char* const zstring;
     };
 
-    // this way of defining std::array makes sure code cannot compile if we forget to align the array after changing ElteFailMsgId
-    constexpr std::array<ElteFailMsgId2ZStringPair, static_cast<size_t>(ElteFailMsgId::LAST_MSG_ID)> MapMsgAppId2String
+    // this way of defining std::array makes sure code cannot compile if we forget to align the array after changing PRooFPSappMsgId
+    constexpr std::array<PRooFPSappMsgId2ZStringPair, static_cast<size_t>(PRooFPSappMsgId::LastMsgId)> MapMsgAppId2String
     { {
-         {ElteFailMsgId::USER_SETUP,         "MsgUserSetup"},
-         {ElteFailMsgId::USER_CMD_MOVE,      "MsgUserCmdMove"},
-         {ElteFailMsgId::USER_UPDATE,        "MsgUserUpdate"},
-         {ElteFailMsgId::BULLET_UPDATE,      "MsgBulletUpdate"},
-         {ElteFailMsgId::MAP_ITEM_UPDATE,    "MsgMapItemUpdate"},
-         {ElteFailMsgId::WPN_UPDATE,         "MsgWpnUpdate"},
-         {ElteFailMsgId::WPN_UPDATE_CURRENT, "MsgWpnUpdateCurrent"}
+         {PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer"},
+         {PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient"},
+         {PRooFPSappMsgId::UserUpdateFromServer,        "MsgUserUpdateFromServer"},
+         {PRooFPSappMsgId::BulletUpdateFromServer,      "MsgBulletUpdateFromServer"},
+         {PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer"},
+         {PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer"},
+         {PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer"}
     } };
 
     // server -> self (inject) and clients
     // sent to all clients after the connecting client has been accepted by server
-    struct MsgUserSetup
+    struct MsgUserSetupFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::USER_SETUP;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
         static const uint8_t nUserNameMaxLength = 64;
         static const uint8_t nMapFilenameMaxLength = 64;
 
@@ -68,7 +68,7 @@ namespace proofps_dd
             const std::string& sIpAddress,
             const std::string& sMapFilename)
         {
-            static_assert(sizeof(MsgUserSetup) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgUserSetupFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -78,9 +78,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserSetup);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgUserSetupFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserSetup& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetup&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(pMsgApp->cMsgData);
             msgUserSetup.m_bCurrentClient = bCurrentClient;
             strncpy_s(msgUserSetup.m_szUserName, nUserNameMaxLength, sUserName.c_str(), sUserName.length());
             strncpy_s(msgUserSetup.m_szIpAddress, sizeof(msgUserSetup.m_szIpAddress), sIpAddress.c_str(), sIpAddress.length());
@@ -93,18 +93,18 @@ namespace proofps_dd
         char m_szUserName[nUserNameMaxLength];
         char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
         char m_szMapFilename[nMapFilenameMaxLength];
-    };  // struct MsgUserSetup
+    };  // struct MsgUserSetupFromServer
 
     // clients -> server + server self (inject)
-    // MsgUserCmdMove messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdate
-    struct MsgUserCmdMove
+    // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer
+    struct MsgUserCmdFromClient
     {
-        static const ElteFailMsgId id = ElteFailMsgId::USER_CMD_MOVE;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserCmdFromClient;
 
         static bool initPkt(
             pge_network::PgePacket& pkt)
         {
-            static_assert(sizeof(MsgUserCmdMove) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgUserCmdFromClient) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -115,9 +115,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserCmdMove);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgUserCmdFromClient);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = false;
             msgUserCmdMove.m_fPlayerAngleY = -1.f;
 
@@ -134,7 +134,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bJumpAction = bJump;
@@ -147,7 +147,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_cWeaponSwitch;
         }
 
@@ -155,7 +155,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_cWeaponSwitch = cTargetWpnKey;
         }
@@ -164,7 +164,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_bRequestReload;
         }
 
@@ -174,7 +174,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_bShootAction = bShootAction;
         }
@@ -185,7 +185,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
         }
@@ -197,7 +197,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWpnAngleZ;
@@ -208,7 +208,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdMove& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdMove&>(pMsgApp->cMsgData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
             return msgUserCmdMove.m_bShouldSend;
         }
 
@@ -222,13 +222,13 @@ namespace proofps_dd
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleY;
         TPureFloat m_fWpnAngleZ;
-    };  // struct MsgUserCmdMove
+    };  // struct MsgUserCmdFromClient
 
     // server -> self (inject) and clients
     // sent regularly to all clients
-    struct MsgUserUpdate
+    struct MsgUserUpdateFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::USER_UPDATE;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserUpdateFromServer;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -244,7 +244,7 @@ namespace proofps_dd
             int nFrags,
             int nDeaths)
         {
-            static_assert(sizeof(MsgUserUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgUserUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -254,9 +254,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserUpdate);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgUserUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserUpdate& msgUserCmdUpdate = reinterpret_cast<proofps_dd::MsgUserUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgUserUpdateFromServer& msgUserCmdUpdate = reinterpret_cast<proofps_dd::MsgUserUpdateFromServer&>(pMsgApp->cMsgData);
             msgUserCmdUpdate.m_pos.x = x;
             msgUserCmdUpdate.m_pos.y = y;
             msgUserCmdUpdate.m_pos.z = z;
@@ -279,13 +279,13 @@ namespace proofps_dd
         bool m_bRespawn;
         int m_nFrags;
         int m_nDeaths;
-    };  // struct MsgUserUpdate
+    };  // struct MsgUserUpdateFromServer
 
     // server -> clients
     // sent to all clients
-    struct MsgBulletUpdate
+    struct MsgBulletUpdateFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::BULLET_UPDATE;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::BulletUpdateFromServer;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -301,7 +301,7 @@ namespace proofps_dd
             const TPureFloat sy,
             const TPureFloat sz)
         {
-            static_assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             //memset(&pkt, 0, sizeof(pkt));
@@ -311,9 +311,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgBulletUpdate);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgBulletUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
             msgBulletUpdate.m_bulletId = bulletId;
             msgBulletUpdate.m_pos.x = px;
             msgBulletUpdate.m_pos.y = py;
@@ -335,7 +335,7 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const Bullet::BulletId bulletId)
         {
-            static_assert(sizeof(MsgBulletUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
@@ -344,9 +344,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgBulletUpdate);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgBulletUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
             msgBulletUpdate.m_bulletId = bulletId;
             msgBulletUpdate.m_bDelete = true;
 
@@ -357,7 +357,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgBulletUpdate& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
             return msgBulletUpdate.m_bDelete;
         }
 
@@ -366,13 +366,13 @@ namespace proofps_dd
         TXYZ m_angle;
         TXYZ m_size;
         bool m_bDelete;
-    };  // struct MsgBulletUpdate
+    };  // struct MsgBulletUpdateFromServer
 
     // server -> clients
     // sent to all clients after specific event, e.g. picking up an item
-    struct MsgMapItemUpdate
+    struct MsgMapItemUpdateFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::MAP_ITEM_UPDATE;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::MapItemUpdateFromServer;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -380,7 +380,7 @@ namespace proofps_dd
             const MapItem::MapItemId mapItemId,
             const bool bTaken)
         {
-            static_assert(sizeof(MsgMapItemUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgMapItemUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -390,9 +390,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgMapItemUpdate);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgMapItemUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgMapItemUpdate& msgMapItemUpdate = reinterpret_cast<proofps_dd::MsgMapItemUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgMapItemUpdateFromServer& msgMapItemUpdate = reinterpret_cast<proofps_dd::MsgMapItemUpdateFromServer&>(pMsgApp->cMsgData);
             msgMapItemUpdate.m_mapItemId = mapItemId;
             msgMapItemUpdate.m_bTaken = bTaken;
 
@@ -401,13 +401,13 @@ namespace proofps_dd
 
         MapItem::MapItemId m_mapItemId;
         bool m_bTaken;
-    };  // struct MsgMapItemUpdate
+    };  // struct MsgMapItemUpdateFromServer
 
     // server -> clients
     // availability and bullet counts update to a single client after specific events, e.g. shoot
-    struct MsgWpnUpdate
+    struct MsgWpnUpdateFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::WPN_UPDATE;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::WpnUpdateFromServer;
         static const uint8_t nWpnNameNameMaxLength = 64;
 
         static bool initPkt(
@@ -418,7 +418,7 @@ namespace proofps_dd
             unsigned int nMagBulletCount,
             unsigned int nUnmagBulletCount)
         {
-            static_assert(sizeof(MsgWpnUpdate) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -428,9 +428,9 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgWpnUpdate);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgWpnUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
             strncpy_s(msgWpnUpdate.m_szWpnName, nWpnNameNameMaxLength, sWpnName.c_str(), sWpnName.length());
             msgWpnUpdate.m_bAvailable = bAvailable;
             msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
@@ -443,7 +443,7 @@ namespace proofps_dd
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgWpnUpdate& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdate&>(pMsgApp->cMsgData);
+            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
             return msgWpnUpdate.m_bAvailable;
         }
 
@@ -451,20 +451,20 @@ namespace proofps_dd
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
-    };  // struct MsgWpnUpdate
+    };  // struct MsgWpnUpdateFromServer
 
     // server -> clients
     // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch
-    struct MsgWpnUpdateCurrent
+    struct MsgCurrentWpnUpdateFromServer
     {
-        static const ElteFailMsgId id = ElteFailMsgId::WPN_UPDATE_CURRENT;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::CurrentWpnUpdateFromServer;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const std::string& sWpnCurrentName)
         {
-            static_assert(sizeof(MsgWpnUpdateCurrent) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
+            static_assert(sizeof(MsgCurrentWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
@@ -474,15 +474,15 @@ namespace proofps_dd
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
             pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgWpnUpdateCurrent);  // TODO: sizeof(*this)?
+            pMsgApp->nMsgSize = sizeof(MsgCurrentWpnUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgWpnUpdateCurrent& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateCurrent&>(pMsgApp->cMsgData);
-            strncpy_s(msgWpnUpdate.m_szWpnCurrentName, MsgWpnUpdate::nWpnNameNameMaxLength, sWpnCurrentName.c_str(), sWpnCurrentName.length());
+            proofps_dd::MsgCurrentWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgCurrentWpnUpdateFromServer&>(pMsgApp->cMsgData);
+            strncpy_s(msgWpnUpdate.m_szWpnCurrentName, MsgWpnUpdateFromServer::nWpnNameNameMaxLength, sWpnCurrentName.c_str(), sWpnCurrentName.length());
 
             return true;
         }
 
-        char m_szWpnCurrentName[MsgWpnUpdate::nWpnNameNameMaxLength];
-    };  // struct MsgWpnUpdateCurrent
+        char m_szWpnCurrentName[MsgWpnUpdateFromServer::nWpnNameNameMaxLength];
+    };  // struct MsgCurrentWpnUpdateFromServer
 
 } // namespace proofps_dd

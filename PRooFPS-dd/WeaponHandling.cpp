@@ -125,7 +125,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                             //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                         }
-                        // server handles death here, clients will handle it when they receive MsgUserUpdate
+                        // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
                         HandlePlayerDied(playerPair.second, objXHair);
                     }
                     break; // we can stop since 1 bullet can touch 1 playerPair only at a time
@@ -196,7 +196,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         if (bDeleteBullet)
         {
-            proofps_dd::MsgBulletUpdate::initPktForDeleting_WithGarbageValues(
+            proofps_dd::MsgBulletUpdateFromServer::initPktForDeleting_WithGarbageValues(
                 newPktBulletUpdate,
                 pge_network::ServerConnHandle,
                 bullet.getId()); // clients will also delete this bullet on their side because we set pkt's delete flag here
@@ -204,7 +204,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         }
         else
         {
-            proofps_dd::MsgBulletUpdate::initPkt(
+            proofps_dd::MsgBulletUpdateFromServer::initPkt(
                 newPktBulletUpdate,
                 bullet.getOwner(),
                 bullet.getId(),
@@ -255,7 +255,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             if (playerPair.first != m_nServerSideConnectionHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
             {
                 pge_network::PgePacket pktWpnUpdate;
-                proofps_dd::MsgWpnUpdate::initPkt(
+                proofps_dd::MsgWpnUpdateFromServer::initPkt(
                     pktWpnUpdate,
                     pge_network::ServerConnHandle /* ignored by client anyway */,
                     wpn->getFilename(),
@@ -270,7 +270,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdate& msg)
+bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdateFromServer& msg)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -301,7 +301,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConne
             return true;
         }
         // need to create this new bullet first on our side
-        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdate: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdateFromServer: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
 
         const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
         if (playerIt == m_mapPlayers.end())
@@ -358,7 +358,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConne
     }
     else
     {
-        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdate: old bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdateFromServer: old bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
         pBullet = &(*it);
     }
 
@@ -375,7 +375,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConne
 
 bool proofps_dd::WeaponHandling::handleWpnUpdate(
     pge_network::PgeNetworkConnectionHandle /* connHandleServerSide, not filled properly by server so we ignore it */,
-    const proofps_dd::MsgWpnUpdate& msg,
+    const proofps_dd::MsgWpnUpdateFromServer& msg,
     bool bHasValidConnection)
 {
     if (m_pge.getNetwork().isServer())
@@ -418,7 +418,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdate(
     return true;
 }
 
-bool proofps_dd::WeaponHandling::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgWpnUpdateCurrent& msg)
+bool proofps_dd::WeaponHandling::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgCurrentWpnUpdateFromServer& msg)
 {
     if (m_pge.getNetwork().isServer())
     {
