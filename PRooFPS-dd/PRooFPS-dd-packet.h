@@ -73,7 +73,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -110,7 +110,7 @@ namespace proofps_dd
             memset(&pkt, 0, sizeof(pkt));
             // m_connHandleServerSide is ignored in this message
             //pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -249,7 +249,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -306,7 +306,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             //memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -339,7 +339,7 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -385,7 +385,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -423,7 +423,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
@@ -469,7 +469,7 @@ namespace proofps_dd
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             memset(&pkt, 0, sizeof(pkt));
             pge_network::PgePacket::getServerSideConnectionHandle(pkt) = connHandleServerSide;
-            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::APP;
+            pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
