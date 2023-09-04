@@ -68,14 +68,14 @@ namespace proofps_dd
             const std::string& sIpAddress,
             const std::string& sMapFilename)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserSetupFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
-            uint8_t* const pMsgAppData =
-                pge_network::PgePacket::preparePktMsgAppFill(pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserSetupFromServer));
-            
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserSetupFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -105,17 +105,20 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserCmdFromClient) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserCmdFromClient);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserCmdFromClient));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(*pMsgAppData);
             msgUserCmdMove.m_bShouldSend = false;
             msgUserCmdMove.m_fPlayerAngleY = -1.f;
 
@@ -242,17 +245,20 @@ namespace proofps_dd
             int nFrags,
             int nDeaths)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserUpdateFromServer& msgUserCmdUpdate = reinterpret_cast<proofps_dd::MsgUserUpdateFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserUpdateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgUserUpdateFromServer& msgUserCmdUpdate = reinterpret_cast<proofps_dd::MsgUserUpdateFromServer&>(*pMsgAppData);
             msgUserCmdUpdate.m_pos.x = x;
             msgUserCmdUpdate.m_pos.y = y;
             msgUserCmdUpdate.m_pos.z = z;
@@ -297,17 +303,20 @@ namespace proofps_dd
             const TPureFloat sy,
             const TPureFloat sz)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide, pge_network::PgePacket::AutoFill::NONE);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgBulletUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgBulletUpdateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(*pMsgAppData);
             msgBulletUpdate.m_bulletId = bulletId;
             msgBulletUpdate.m_pos.x = px;
             msgBulletUpdate.m_pos.y = py;
@@ -374,17 +383,20 @@ namespace proofps_dd
             const MapItem::MapItemId mapItemId,
             const bool bTaken)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgMapItemUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgMapItemUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgMapItemUpdateFromServer& msgMapItemUpdate = reinterpret_cast<proofps_dd::MsgMapItemUpdateFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgMapItemUpdateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgMapItemUpdateFromServer& msgMapItemUpdate = reinterpret_cast<proofps_dd::MsgMapItemUpdateFromServer&>(*pMsgAppData);
             msgMapItemUpdate.m_mapItemId = mapItemId;
             msgMapItemUpdate.m_bTaken = bTaken;
 
@@ -410,17 +422,20 @@ namespace proofps_dd
             unsigned int nMagBulletCount,
             unsigned int nUnmagBulletCount)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgWpnUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgWpnUpdateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(*pMsgAppData);
             strncpy_s(msgWpnUpdate.m_szWpnName, nWpnNameNameMaxLength, sWpnName.c_str(), sWpnName.length());
             msgWpnUpdate.m_bAvailable = bAvailable;
             msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
@@ -454,17 +469,20 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const std::string& sWpnCurrentName)
         {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgCurrentWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLength, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgCurrentWpnUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgCurrentWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgCurrentWpnUpdateFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgCurrentWpnUpdateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgCurrentWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgCurrentWpnUpdateFromServer&>(*pMsgAppData);
             strncpy_s(msgWpnUpdate.m_szWpnCurrentName, MsgWpnUpdateFromServer::nWpnNameNameMaxLength, sWpnCurrentName.c_str(), sWpnCurrentName.length());
 
             return true;
