@@ -435,10 +435,10 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
 
     switch (pge_network::PgePacket::getPacketId(pkt))
     {
-    case pge_network::MsgUserConnected::id:
+    case pge_network::MsgUserConnectedServerSelf::id:
         bRet = handleUserConnected(pge_network::PgePacket::getServerSideConnectionHandle(pkt), pge_network::PgePacket::getMessageAsUserConnected(pkt));
         break;
-    case pge_network::MsgUserDisconnected::id:
+    case pge_network::MsgUserDisconnectedFromServer::id:
         bRet = handleUserDisconnected(pge_network::PgePacket::getServerSideConnectionHandle(pkt), pge_network::PgePacket::getMessageAsUserDisconnected(pkt));
         break;
     case pge_network::MsgApp::id:
@@ -1067,7 +1067,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnection
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnected& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnectedServerSelf& msg)
 {
     if (!getNetwork().isServer())
     {
@@ -1223,7 +1223,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnected&)
+bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnectedFromServer&)
 {
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)

@@ -72,13 +72,16 @@ namespace proofps_dd
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
-            pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
-            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgUserSetupFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(pMsgApp->cMsgData);
+            uint8_t* const pMsgAppData =
+                pge_network::PgePacket::preparePktMsgAppFill(pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserSetupFromServer));
+            
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(*pMsgAppData);
             msgUserSetup.m_bCurrentClient = bCurrentClient;
             strncpy_s(msgUserSetup.m_szUserName, nUserNameMaxLength, sUserName.c_str(), sUserName.length());
             strncpy_s(msgUserSetup.m_szIpAddress, sizeof(msgUserSetup.m_szIpAddress), sIpAddress.c_str(), sIpAddress.length());
@@ -89,7 +92,7 @@ namespace proofps_dd
 
         bool m_bCurrentClient;
         char m_szUserName[nUserNameMaxLength];
-        char m_szIpAddress[pge_network::MsgUserConnected::nIpAddressMaxLength];
+        char m_szIpAddress[pge_network::MsgUserConnectedServerSelf::nIpAddressMaxLength];
         char m_szMapFilename[nMapFilenameMaxLength];
     };  // struct MsgUserSetupFromServer
 
