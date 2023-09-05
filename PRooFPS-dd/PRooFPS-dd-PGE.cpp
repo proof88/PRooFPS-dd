@@ -448,6 +448,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
         assert(pMsgApp);
         assert(pMsgApp->nMsgSize > 0);  // for now we dont have empty messages
+
         switch (static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId))
         {
         case proofps_dd::MsgUserSetupFromServer::id:
