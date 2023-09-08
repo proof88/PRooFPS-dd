@@ -35,8 +35,20 @@
 
 // Windows Header Files
 #include "targetver.h"
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#include <windows.h>
+#ifndef WINPROOF88_ALLOW_CONTROLS_AND_DIALOGS
+#define WINPROOF88_ALLOW_CONTROLS_AND_DIALOGS
+#endif
+#ifndef WINPROOF88_ALLOW_MSG_USER_WINMESSAGES
+#define WINPROOF88_ALLOW_MSG_USER_WINMESSAGES
+#endif
+// otherwise SoLoud.h will have problem due to colliding macro NOSOUND!
+#ifndef WINPROOF88_ALLOW_SOUND
+#define WINPROOF88_ALLOW_SOUND
+#endif
+#ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
+#define WINPROOF88_ALLOW_VIRTUALKEYCODES
+#endif
+#include "../../PFL/PFL/winproof88.h"
 
 // Own headers
 #include "../../PFL/PFL/PFL.h"

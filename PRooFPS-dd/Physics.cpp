@@ -87,7 +87,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         {
             player.SetCanFall(true);
             // player gravity cannot go below GAME_FALL_GRAVITY_MIN
-            player.SetGravity(max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
+            player.SetGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
         }
         // PPPKKKGGGGGG
         player.getPos().set(

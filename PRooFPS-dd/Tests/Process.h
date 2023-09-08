@@ -10,7 +10,7 @@
 #include <iostream>
 #include <string>
 
-#include <Windows.h>
+#include "../../../PFL/PFL/winproof88.h"
 
 #include "../../../Console/CConsole/src/CConsole.h"
 

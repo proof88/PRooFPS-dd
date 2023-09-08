@@ -12,7 +12,7 @@
 
 #include <chrono>
 
-#include <Windows.h>
+#include "../../../PFL/PFL/winproof88.h"
 
 namespace input_sim_test
 {

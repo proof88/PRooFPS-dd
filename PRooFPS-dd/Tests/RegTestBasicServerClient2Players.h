@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <thread>
 
-#include <Windows.h>
+#include "../../../PFL/PFL/winproof88.h"
 
 #include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Consts.h"

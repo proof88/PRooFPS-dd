@@ -219,7 +219,7 @@ bool proofps_dd::Player::canFall() const
 }
 
 void proofps_dd::Player::SetHealth(int value) {
-    getHealth().set(max(0, min(value, 100)));
+    getHealth().set(std::max(0, std::min(value, 100)));
 }
 
 void proofps_dd::Player::SetGravity(float value) {

@@ -14,10 +14,7 @@
 #include <memory>  // for std::unique_ptr; requires cpp11
 #include <vector>
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
+#include "../../../PFL/PFL/winproof88.h"
 
 #include "../../../Console/CConsole/src/CConsole.h"
 
