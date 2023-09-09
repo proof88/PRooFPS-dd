@@ -55,6 +55,9 @@
     <Filter Include="Header Files\Tests">
       <UniqueIdentifier>{9cee923d-908d-4fb4-803c-55f7c80aa543}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PFL">
+      <UniqueIdentifier>{4ea71ac0-f6d4-4572-a969-16018786a1b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -278,6 +281,9 @@
     </ClInclude>
     <ClInclude Include="..\..\PGE\PGE\Network\PgeServer.h">
       <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PFL\PFL\winproof88.h">
+      <Filter>Header Files\PFL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

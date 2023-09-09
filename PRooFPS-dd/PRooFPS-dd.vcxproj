@@ -67,7 +67,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_ALLOW_RTCc_IN_STL;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_ALLOW_RTCc_IN_STL;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SmallerTypeCheck>true</SmallerTypeCheck>
@@ -91,7 +91,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_ALLOW_RTCc_IN_STL;TESTING;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_ALLOW_RTCc_IN_STL;TESTING;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SmallerTypeCheck>true</SmallerTypeCheck>
@@ -116,7 +116,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -173,6 +173,7 @@
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureIRenderer.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererHWfixedPipe.h" />
     <ClInclude Include="..\..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h" />
+    <ClInclude Include="..\..\PFL\PFL\winproof88.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
     <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgFile.h" />
