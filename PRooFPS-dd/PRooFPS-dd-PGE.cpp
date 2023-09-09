@@ -918,7 +918,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
             }
             else
             {
-                // TODO: log error
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
             }
         }
@@ -1154,12 +1154,16 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 }
                 else
                 {
-                    // TODO: log error
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    return false;
                 }
             }
             else
             {
-                // TODO: log error
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return false;
             }
         }
         else
@@ -1193,7 +1197,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         pge_network::PgePacket newPktSetup;
         if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename()))
         {
-            // TODO: log error
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
@@ -1205,7 +1209,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0))
         {
-            // TODO: log error
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
@@ -1236,7 +1240,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 it.second.getName(), it.second.getIpAddress(),
                 "" /* here mapFilename is irrelevant */))
             {
-                // TODO: log error
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 continue;
             }
@@ -1256,7 +1260,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 it.second.getFrags(),
                 it.second.getDeaths()))
             {
-                // TODO: log error
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 continue;
             }
@@ -1282,7 +1286,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             }
             else
             {
-                // TODO: log error
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
             }
         }
