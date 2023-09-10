@@ -584,9 +584,7 @@ private:
         pge_network::PgePacket pktWpnUpdate;
         
         // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
-        const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pktWpnUpdate).cData);
-
-        const proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<const proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
+        const proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgWpnUpdateFromServer>(pktWpnUpdate);
         if (!assertTrue(loadWeaponsForPlayer(player)))
         {
             return false;
@@ -605,7 +603,7 @@ private:
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
                 "pkt 1 id") &
             assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId)),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
                 "msg 1 id") &
             assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
@@ -628,7 +626,7 @@ private:
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
                 "pkt 2 id") &
             assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
-                static_cast<uint32_t>(static_cast<proofps_dd::PRooFPSappMsgId>(pMsgApp->msgId)),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
                 "msg 2 id") &
             assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &

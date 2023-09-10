@@ -134,8 +134,8 @@ namespace proofps_dd
             unsigned char cWeaponSwitch)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bJumpAction = bJump;
@@ -147,16 +147,16 @@ namespace proofps_dd
         static unsigned char getWeaponSwitch(const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             return msgUserCmdMove.m_cWeaponSwitch;
         }
 
         static void SetWeaponSwitch(pge_network::PgePacket& pkt, unsigned char cTargetWpnKey)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_cWeaponSwitch = cTargetWpnKey;
         }
@@ -164,8 +164,8 @@ namespace proofps_dd
         static bool getReloadRequest(const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             return msgUserCmdMove.m_bRequestReload;
         }
 
@@ -174,8 +174,8 @@ namespace proofps_dd
             bool bShootAction)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_bShootAction = bShootAction;
         }
@@ -185,8 +185,8 @@ namespace proofps_dd
             TPureFloat fPlayerAngleY)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
         }
@@ -197,8 +197,8 @@ namespace proofps_dd
             TPureFloat fWpnAngleZ)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             msgUserCmdMove.m_bShouldSend = true;
             msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWpnAngleZ;
@@ -208,8 +208,8 @@ namespace proofps_dd
             const pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->cMsgData);
+            const pge_network::MsgApp* const pMsgApp = reinterpret_cast<const pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            const proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<const proofps_dd::MsgUserCmdFromClient&>(pMsgApp->m_cMsgData);
             return msgUserCmdMove.m_bShouldSend;
         }
 
@@ -345,11 +345,11 @@ namespace proofps_dd
             pge_network::PgePacket::getPacketId(pkt) = pge_network::PgePktId::Application;
             pge_network::PgePacket::getMessageAppArea(pkt).m_nMessageCount = 1; // TODO: increase it instead!
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            pMsgApp->msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
-            pMsgApp->nMsgSize = sizeof(MsgBulletUpdateFromServer);  // TODO: sizeof(*this)?
+            pge_network::MsgApp* pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            pMsgApp->m_msgId = static_cast<pge_network::TPgeMsgAppMsgId>(id);
+            pMsgApp->m_nMsgSize = sizeof(MsgBulletUpdateFromServer);  // TODO: sizeof(*this)?
 
-            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->m_cMsgData);
             msgBulletUpdate.m_bulletId = bulletId;
             msgBulletUpdate.m_bDelete = true;
 
@@ -359,8 +359,8 @@ namespace proofps_dd
         static bool& getDelete(pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(pMsgApp->m_cMsgData);
             return msgBulletUpdate.m_bDelete;
         }
 
@@ -447,8 +447,8 @@ namespace proofps_dd
         static bool& getAvailable(pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
-            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).cData);
-            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->cMsgData);
+            pge_network::MsgApp* const pMsgApp = reinterpret_cast<pge_network::MsgApp*>(pge_network::PgePacket::getMessageAppArea(pkt).m_cData);
+            proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(pMsgApp->m_cMsgData);
             return msgWpnUpdate.m_bAvailable;
         }
 

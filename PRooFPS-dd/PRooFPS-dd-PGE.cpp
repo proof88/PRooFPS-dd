@@ -305,17 +305,19 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getConsole().OLn("Missing Tickrate in config, forcing default: %u", m_nTickrate);
     }
 
-    getConsole().OLn("");
-    getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
-    getConsole().OLn("  size of PgePacket::msg: %u Bytes", sizeof(pge_network::PgePacket::msg));
-    getConsole().OLn("    size of PgePacket::msg.app: %u Bytes", sizeof(pge_network::PgePacket::msg.app));
-    getConsole().OLn("      size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
-    getConsole().OLn("      size of MsgUserUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgUserUpdateFromServer));
-    getConsole().OLn("      size of MsgBulletUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgBulletUpdateFromServer));
-    getConsole().OLn("      size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
-    getConsole().OLn("      size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
-    getConsole().OLn("      size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
-    getConsole().OLn("");
+    {
+        pge_network::PgePacket pktDummy;
+        getConsole().OLn("");
+        getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
+        getConsole().OLn("  size of PgePacket::m_msg.m_app: %u Bytes", sizeof(pge_network::PgePacket::getMessageAppArea(pktDummy)));
+        getConsole().OLn("    size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
+        getConsole().OLn("    size of MsgUserUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgUserUpdateFromServer));
+        getConsole().OLn("    size of MsgBulletUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgBulletUpdateFromServer));
+        getConsole().OLn("    size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
+        getConsole().OLn("    size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
+        getConsole().OLn("    size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
+        getConsole().OLn("");
+    }
 
     //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
@@ -1112,7 +1114,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
     const char* szConnectedUserName = nullptr;
     pge_network::PgePacket newPktUserUpdate;
 
-    if (msg.bCurrentClient)
+    if (msg.m_bCurrentClient)
     {
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
@@ -1139,7 +1141,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             szConnectedUserName = szNewUserName;
 
             pge_network::PgePacket newPktSetup;
-            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.szIpAddress, m_maps.getFilename()))
+            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.m_szIpAddress, m_maps.getFilename()))
             {
                 const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
                     m_maps.getLeftMostSpawnpoint() :
@@ -1192,10 +1194,10 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         genUniqueUserName(szNewUserName);
         szConnectedUserName = szNewUserName;
         getConsole().OLn("PRooFPSddPGE::%s(): new remote user %s (connHandleServerSide: %u) connected (from %s) and I'm server",
-            __func__, szConnectedUserName, connHandleServerSide, msg.szIpAddress);
+            __func__, szConnectedUserName, connHandleServerSide, msg.m_szIpAddress);
 
         pge_network::PgePacket newPktSetup;
-        if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.szIpAddress, m_maps.getFilename()))
+        if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, szConnectedUserName, msg.m_szIpAddress, m_maps.getFilename()))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
