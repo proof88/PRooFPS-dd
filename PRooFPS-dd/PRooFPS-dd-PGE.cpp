@@ -216,7 +216,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     for (const auto& msgAppId2StringPair : MapMsgAppId2String)
     {
         getNetwork().getServerClientInstance()->getMsgAppId2StringMap().insert(
-            { static_cast<pge_network::TPgeMsgAppMsgId>(msgAppId2StringPair.msgId),
+            { static_cast<pge_network::MsgApp::TMsgId>(msgAppId2StringPair.msgId),
               std::string(msgAppId2StringPair.zstring) }
         );
     }
@@ -224,7 +224,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     if (getNetwork().isServer())
     {
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserCmdFromClient::id));
+        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
         Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
@@ -253,18 +253,18 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         // MsgUserSetupFromServer is also processed by server, but it injects this pkt into its own queue when needed.
         // MsgUserSetupFromServer MUST NOT be received by server over network!
         // MsgUserSetupFromServer is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserSetupFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserSetupFromServer::id));
 
         // MsgUserUpdateFromServer is also processed by server, but it injects this pkt into its own queue when needed.
         // MsgUserUpdateFromServer MUST NOT be received by server over network!
         // MsgUserUpdateFromServer is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
 
         // following messages are received only by clients over network:
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::TPgeMsgAppMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
 
         std::string sIp = "127.0.0.1";
         if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
@@ -305,19 +305,15 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getConsole().OLn("Missing Tickrate in config, forcing default: %u", m_nTickrate);
     }
 
-    {
-        pge_network::PgePacket pktDummy;
-        getConsole().OLn("");
-        getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
-        getConsole().OLn("  size of PgePacket::m_msg.m_app: %u Bytes", sizeof(pge_network::PgePacket::getMessageAppArea(pktDummy)));
-        getConsole().OLn("    size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
-        getConsole().OLn("    size of MsgUserUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgUserUpdateFromServer));
-        getConsole().OLn("    size of MsgBulletUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgBulletUpdateFromServer));
-        getConsole().OLn("    size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
-        getConsole().OLn("    size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
-        getConsole().OLn("    size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
-        getConsole().OLn("");
-    }
+    getConsole().OLn("");
+    getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
+    getConsole().OLn("  size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
+    getConsole().OLn("  size of MsgUserUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgUserUpdateFromServer));
+    getConsole().OLn("  size of MsgBulletUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgBulletUpdateFromServer));
+    getConsole().OLn("  size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
+    getConsole().OLn("  size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
+    getConsole().OLn("  size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
+    getConsole().OLn("");
 
     //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());

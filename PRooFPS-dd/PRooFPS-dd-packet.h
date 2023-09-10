@@ -22,7 +22,7 @@
 namespace proofps_dd
 {
 
-    enum class PRooFPSappMsgId : pge_network::TPgeMsgAppMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
+    enum class PRooFPSappMsgId : pge_network::MsgApp::TMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
     {
         UserSetupFromServer = 0,
         UserCmdFromClient,
@@ -75,7 +75,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserSetupFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserSetupFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -112,7 +112,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserCmdFromClient));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserCmdFromClient));
             if (!pMsgAppData)
             {
                 return false;
@@ -244,7 +244,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgUserUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -302,7 +302,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide, pge_network::PgePacket::AutoFill::NONE);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgBulletUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgBulletUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -337,7 +337,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide, pge_network::PgePacket::AutoFill::NONE);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgBulletUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgBulletUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -383,7 +383,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgMapItemUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgMapItemUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -422,7 +422,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgWpnUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgWpnUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
@@ -468,7 +468,7 @@ namespace proofps_dd
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::TPgeMsgAppMsgId>(id), sizeof(MsgCurrentWpnUpdateFromServer));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgCurrentWpnUpdateFromServer));
             if (!pMsgAppData)
             {
                 return false;
