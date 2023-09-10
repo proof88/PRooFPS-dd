@@ -95,6 +95,9 @@ namespace proofps_dd
         char m_szIpAddress[pge_network::MsgUserConnectedServerSelf::nIpAddressMaxLength];
         char m_szMapFilename[nMapFilenameMaxLength];
     };  // struct MsgUserSetupFromServer
+    static_assert(std::is_trivial_v<MsgUserSetupFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgUserSetupFromServer>);
+    static_assert(std::is_standard_layout_v<MsgUserSetupFromServer>);
 
     // clients -> server + server self (inject)
     // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer
@@ -216,6 +219,9 @@ namespace proofps_dd
         TPureFloat m_fWpnAngleY;
         TPureFloat m_fWpnAngleZ;
     };  // struct MsgUserCmdFromClient
+    static_assert(std::is_trivial_v<MsgUserCmdFromClient>);
+    static_assert(std::is_trivially_copyable_v<MsgUserCmdFromClient>);
+    static_assert(std::is_standard_layout_v<MsgUserCmdFromClient>);
 
     // server -> self (inject) and clients
     // sent regularly to all clients
@@ -274,6 +280,9 @@ namespace proofps_dd
         int m_nFrags;
         int m_nDeaths;
     };  // struct MsgUserUpdateFromServer
+    static_assert(std::is_trivial_v<MsgUserUpdateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgUserUpdateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgUserUpdateFromServer>);
 
     // server -> clients
     // sent to all clients
@@ -363,6 +372,9 @@ namespace proofps_dd
         TXYZ m_size;
         bool m_bDelete;
     };  // struct MsgBulletUpdateFromServer
+    static_assert(std::is_trivial_v<MsgBulletUpdateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgBulletUpdateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgBulletUpdateFromServer>);
 
     // server -> clients
     // sent to all clients after specific event, e.g. picking up an item
@@ -399,6 +411,9 @@ namespace proofps_dd
         MapItem::MapItemId m_mapItemId;
         bool m_bTaken;
     };  // struct MsgMapItemUpdateFromServer
+    static_assert(std::is_trivial_v<MsgMapItemUpdateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgMapItemUpdateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgMapItemUpdateFromServer>);
 
     // server -> clients
     // availability and bullet counts update to a single client after specific events, e.g. shoot
@@ -449,6 +464,9 @@ namespace proofps_dd
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
     };  // struct MsgWpnUpdateFromServer
+    static_assert(std::is_trivial_v<MsgWpnUpdateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgWpnUpdateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgWpnUpdateFromServer>);
 
     // server -> clients
     // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch
@@ -482,5 +500,8 @@ namespace proofps_dd
 
         char m_szWpnCurrentName[MsgWpnUpdateFromServer::nWpnNameNameMaxLength];
     };  // struct MsgCurrentWpnUpdateFromServer
+    static_assert(std::is_trivial_v<MsgCurrentWpnUpdateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgCurrentWpnUpdateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgCurrentWpnUpdateFromServer>);
 
 } // namespace proofps_dd
