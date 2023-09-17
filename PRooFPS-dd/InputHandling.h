@@ -58,7 +58,7 @@ namespace proofps_dd
             PureObject3D& objXHair,
             const unsigned int nTickrate);
 
-        bool handleUserCmdMove(
+        bool handleUserCmdMoveFromClient(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserCmdFromClient& msg);
 

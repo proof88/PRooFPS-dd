@@ -307,7 +307,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                zeroed out above in the moment of falling on the ground, however here we still have to add
                the original force to be perfect.
                If we dont do this, there will be a 1 frame outage in the continuity of strafe movement at
-               the moment of finishing the jump because handleUserCmdMove() in this frame did not allow strafe
+               the moment of finishing the jump because handleUserCmdMoveFromClient() in this frame did not allow strafe
                due to ongoing jumping, while this current function terminates jumping above before we could
                apply the force here for last time - hence we use the original force at the beginning of function. */
             PureVector(

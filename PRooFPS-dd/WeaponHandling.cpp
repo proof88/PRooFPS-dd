@@ -270,7 +270,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdateFromServer& msg)
+bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdateFromServer& msg)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -373,7 +373,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdate(pge_network::PgeNetworkConne
     return true;
 }
 
-bool proofps_dd::WeaponHandling::handleWpnUpdate(
+bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle /* connHandleServerSide, not filled properly by server so we ignore it */,
     const proofps_dd::MsgWpnUpdateFromServer& msg,
     bool bHasValidConnection)
@@ -418,7 +418,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdate(
     return true;
 }
 
-bool proofps_dd::WeaponHandling::handleWpnUpdateCurrent(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgCurrentWpnUpdateFromServer& msg)
+bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgCurrentWpnUpdateFromServer& msg)
 {
     if (m_pge.getNetwork().isServer())
     {

@@ -595,7 +595,7 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& 
 void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObject3D& objXHair)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
-    assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetup()
+    assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetupFromServer()
     player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
 
     if (isMyConnection(player.getServerSideConnectionHandle()))

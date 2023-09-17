@@ -75,7 +75,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
 }
 
-bool proofps_dd::InputHandling::handleUserCmdMove(
+bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {

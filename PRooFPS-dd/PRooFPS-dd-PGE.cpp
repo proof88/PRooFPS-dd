@@ -452,38 +452,38 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         switch (proofpsAppMsgId)
         {
         case proofps_dd::MsgUserSetupFromServer::id:
-            bRet = handleUserSetup(
+            bRet = handleUserSetupFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserSetupFromServer>(pkt));
             break;
         case proofps_dd::MsgUserCmdFromClient::id:
-            bRet = handleUserCmdMove(
+            bRet = handleUserCmdMoveFromClient(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt));
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:
-            bRet = handleUserUpdate(
+            bRet = handleUserUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt));
             break;
         case proofps_dd::MsgBulletUpdateFromServer::id:
-            bRet = handleBulletUpdate(
+            bRet = handleBulletUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgBulletUpdateFromServer>(pkt));
             break;
         case proofps_dd::MsgMapItemUpdateFromServer::id:
-            bRet = handleMapItemUpdate(
+            bRet = handleMapItemUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgMapItemUpdateFromServer>(pkt));
             break;
         case proofps_dd::MsgWpnUpdateFromServer::id:
-            bRet = handleWpnUpdate(
+            bRet = handleWpnUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgWpnUpdateFromServer>(pkt),
                 hasValidConnection());
             break;
         case proofps_dd::MsgCurrentWpnUpdateFromServer::id:
-            bRet = handleWpnUpdateCurrent(
+            bRet = handleWpnUpdateCurrentFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgCurrentWpnUpdateFromServer>(pkt));
             break;
@@ -953,7 +953,7 @@ void proofps_dd::PRooFPSddPGE::WritePlayerList()
     getConsole().OO();
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserSetup(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg)
 {
     if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
     {
@@ -1321,7 +1321,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdateFromServer& msg)
+bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdateFromServer& msg)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
@@ -1387,7 +1387,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdate(pge_network::PgeNetworkConnectio
     return true;
 }
 
-bool proofps_dd::PRooFPSddPGE::handleMapItemUpdate(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdateFromServer& msg)
+bool proofps_dd::PRooFPSddPGE::handleMapItemUpdateFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdateFromServer& msg)
 {
     if (getNetwork().isServer())
     {
