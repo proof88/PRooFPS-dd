@@ -50,6 +50,8 @@ namespace proofps_dd
 
     protected:
 
+        void deleteWeaponHandlingAll();
+
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         void serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nTickRate);
         bool handleBulletUpdateFromServer(

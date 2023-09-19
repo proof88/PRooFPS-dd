@@ -514,7 +514,8 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     //getPure().WriteList();
     //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
-    m_mapPlayers.clear(); // Dtors of Player instances will be implicitly called
+    m_mapPlayers.clear();       // Dtors of Player instances will be implicitly called
+    deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_maps.shutdown();
     m_sServerMapFilenameToLoad.clear();
     delete m_pObjXHair;

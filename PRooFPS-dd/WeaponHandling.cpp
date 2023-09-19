@@ -234,6 +234,12 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
+void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
+{
+    m_pge.getBullets().clear();
+    Bullet::ResetGlobalBulletId();
+}
+
 void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
 {
     if (gameMode.checkWinningConditions())
