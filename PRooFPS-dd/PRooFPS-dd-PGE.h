@@ -77,7 +77,7 @@ namespace proofps_dd
         Maps m_maps;
 
         std::chrono::time_point<std::chrono::steady_clock> timeLastOnGameRunning;
-        std::chrono::time_point<std::chrono::steady_clock> timeSimulation;
+        std::chrono::time_point<std::chrono::steady_clock> timeSimulation;          /**< For stepping the time ahead in 1 single tick. */
         unsigned int m_nTickrate;
 
         float m_fps;
@@ -101,6 +101,9 @@ namespace proofps_dd
         void mainLoopServerOnlyOneTick(
             std::chrono::steady_clock::time_point& timeStart,
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
+        void mainLoopClientOnlyOneTick(
+            std::chrono::steady_clock::time_point& timeStart,
+            const long long& durElapsedMicrosecs);                      /**< Only client executes this. */
         void mainLoopShared(
             std::chrono::steady_clock::time_point& timeStart,
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */

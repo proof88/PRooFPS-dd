@@ -397,22 +397,26 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     if (hasValidConnection())
     {
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
-        if (getNetwork().isServer())
+        static const auto DurationSimulationStepMicrosecs = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
+        const auto timeNow = std::chrono::steady_clock::now();
+        if (timeSimulation.time_since_epoch().count() == 0)
         {
-            static const auto DurationSimulationStepMicrosecs = std::chrono::microseconds((1000*1000) / m_nTickrate);
-            const auto timeNow = std::chrono::steady_clock::now();
-            if (timeSimulation.time_since_epoch().count() == 0)
+            timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecs;
+        }
+        while (timeSimulation < timeNow)
+        {
+            timeSimulation += DurationSimulationStepMicrosecs;
+            if (getNetwork().isServer())
             {
-                timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecs;
-            }
-
-            while (timeSimulation < timeNow)
-            {
-                timeSimulation += DurationSimulationStepMicrosecs;
                 mainLoopServerOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
             }
-            timeLastOnGameRunning = std::chrono::steady_clock::now();
+            else
+            {
+                mainLoopClientOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
+            }
         }
+        timeLastOnGameRunning = std::chrono::steady_clock::now();
+
         mainLoopShared(timeStart, window);
     } // endif validConnection
 
@@ -565,6 +569,21 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     serverUpdateRespawnTimers();
     serverPickupAndRespawnItems();
     serverSendUserUpdates();
+}
+
+/**
+    Only client executes this.
+*/
+void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
+    std::chrono::steady_clock::time_point& timeStart,
+    const long long& /*durElapsedMicrosecs*/)
+{
+    /*
+    * This function is executed every tick.
+    * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopServerOnlyOneTick(). 
+    */
+    timeStart = std::chrono::steady_clock::now();
+    clientUpdateBullets(m_nTickrate);
 }
 
 /**

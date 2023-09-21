@@ -302,7 +302,10 @@ namespace proofps_dd
             const TPureFloat az,
             const TPureFloat sx,
             const TPureFloat sy,
-            const TPureFloat sz)
+            const TPureFloat sz,
+            const TPureFloat speed,
+            const TPureFloat gravity,
+            const TPureFloat drag)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -328,6 +331,9 @@ namespace proofps_dd
             msgBulletUpdate.m_size.x = sx;
             msgBulletUpdate.m_size.y = sy;
             msgBulletUpdate.m_size.z = sz;
+            msgBulletUpdate.m_fSpeed = speed;
+            msgBulletUpdate.m_fGravity = gravity;
+            msgBulletUpdate.m_fDrag = drag;
             msgBulletUpdate.m_bDelete = false;
 
             return true;
@@ -370,6 +376,9 @@ namespace proofps_dd
         TXYZ m_pos;
         TXYZ m_angle;
         TXYZ m_size;
+        TPureFloat m_fSpeed;
+        TPureFloat m_fGravity;
+        TPureFloat m_fDrag;
         bool m_bDelete;
     };  // struct MsgBulletUpdateFromServer
     static_assert(std::is_trivial_v<MsgBulletUpdateFromServer>);

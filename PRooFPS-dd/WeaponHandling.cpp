@@ -41,7 +41,7 @@ proofps_dd::WeaponHandling::WeaponHandling(
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, sounds
-    // But they can used in other functions.
+    // But they can be used in other functions.
 
     // Since this class is used to build up the WeaponHandling class which is derived from PGE class, PGE is not yet initialized
     // when this ctor is invoked. WeaponHandling initializes PGE later. Furthermore, even the pimpl object inside PGE might not
@@ -196,34 +196,44 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         if (bDeleteBullet)
         {
+            // TODO: we should have a separate msg for deleting Bullet because its size would be much less than this msg!
             proofps_dd::MsgBulletUpdateFromServer::initPktForDeleting_WithGarbageValues(
                 newPktBulletUpdate,
                 pge_network::ServerConnHandle,
                 bullet.getId()); // clients will also delete this bullet on their side because we set pkt's delete flag here
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
+            m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
         }
         else
         {
-            proofps_dd::MsgBulletUpdateFromServer::initPkt(
-                newPktBulletUpdate,
-                bullet.getOwner(),
-                bullet.getId(),
-                fBulletPosX,
-                fBulletPosY,
-                bullet.getObject3D().getPosVec().getZ(),
-                bullet.getObject3D().getAngleVec().getX(),
-                bullet.getObject3D().getAngleVec().getY(),
-                bullet.getObject3D().getAngleVec().getZ(),
-                bullet.getObject3D().getSizeVec().getX(),
-                bullet.getObject3D().getSizeVec().getY(),
-                bullet.getObject3D().getSizeVec().getZ());
-
+            if (!bullet.isCreateSentToClients())
+            {
+                // new bullet, inform clients
+                bullet.isCreateSentToClients() = true;
+                proofps_dd::MsgBulletUpdateFromServer::initPkt(
+                    newPktBulletUpdate,
+                    bullet.getOwner(),
+                    bullet.getId(),
+                    fBulletPosX,
+                    fBulletPosY,
+                    bullet.getObject3D().getPosVec().getZ(),
+                    bullet.getObject3D().getAngleVec().getX(),
+                    bullet.getObject3D().getAngleVec().getY(),
+                    bullet.getObject3D().getAngleVec().getZ(),
+                    bullet.getObject3D().getSizeVec().getX(),
+                    bullet.getObject3D().getSizeVec().getY(),
+                    bullet.getObject3D().getSizeVec().getZ(),
+                    bullet.getSpeed(),
+                    bullet.getGravity(),
+                    bullet.getDrag());
+                m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
+            }
             // bullet didn't touch anything, go to next
             it++;
+            // since v.0.1.4, server doesn't send the bullet travel updates to clients since clients simulate the travel in clientUpdateBullets()
         }
 
         // 'it' is referring to next bullet, don't use it from here!
-        m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
     }
 
     if (bEndGame && (Bullet::getGlobalBulletId() > 0))
@@ -232,6 +242,24 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     }
 
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nTickRate)
+{
+    // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
+    // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
+    std::list<Bullet>& bullets = m_pge.getBullets();
+    auto it = bullets.begin();
+    while (it != bullets.end())
+    {
+        auto& bullet = *it;
+
+        // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
+        // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
+        // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
+        bullet.Update(nTickRate);
+        it++;
+    }
 }
 
 void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
@@ -307,7 +335,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
             return true;
         }
         // need to create this new bullet first on our side
-        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdateFromServer: NEW bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+        //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: NEW bullet id %u", __func__, msg.m_bulletId);
 
         const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
         if (playerIt == m_mapPlayers.end())
@@ -349,23 +377,28 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
             }
         }
 
-        // TODO: here it is okay to get all the properties of the bullet, but if it is not a new bullet, it is not nice to
-        // send every property in all BulletUpdate, this should be improved in future ...
         m_pge.getBullets().push_back(
             Bullet(
                 m_pge.getPure(),
                 msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
-                msg.m_size.x, msg.m_size.y, msg.m_size.z));
+                msg.m_size.x, msg.m_size.y, msg.m_size.z,
+                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag));
         pBullet = &(m_pge.getBullets().back());
         it = m_pge.getBullets().end();
         it--; // iterator points to this newly inserted last bullet
     }
     else
     {
-        //getConsole().OLn("WeaponHandling::%s(): user %s received MsgBulletUpdateFromServer: old bullet id %u", __func__, m_sUserName.c_str(), msg.m_bulletId);
+        //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: old bullet id %u", __func__, msg.m_bulletId);
         pBullet = &(*it);
+
+        if (!msg.m_bDelete)
+        {
+            // for a known bullet, client should not receive position updates from server, so log error!
+            getConsole().EOLn("WeaponHandling::%s(): received non-delete update for already known bullet, MUST NOT HAPPEN!", __func__);
+        }
     }
 
     if (msg.m_bDelete)
@@ -373,8 +406,6 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
         m_pge.getBullets().erase(it);
         return true;
     }
-
-    pBullet->getObject3D().getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
 
     return true;
 }
