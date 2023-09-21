@@ -639,7 +639,7 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
         m_fps_lastmeasure = nGetTickCount;
 
         std::stringstream str;
-        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: Tickrate : " << m_nTickrate << " :: FPS : " << ssFps.str();
+        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: Tickrate : " << m_nTickrate << " Hz :: FPS : " << ssFps.str();
         window.SetCaption(str.str());
 
         if (m_fps < 0.01f)
