@@ -57,54 +57,6 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate)
-{   
-    /* Although I tried to make calculations to have same result with different tickrate, the
-       results are not the same, just SIMILAR when comparing 60 vs 20 Hz results.
-       The real difference is during jumping:
-        - for 60 Hz, GAME_GRAVITY_CONST should be 90.f,
-        - for 20 Hz, GAME_GRAVITY_CONST should be 80.f to have same jumping.
-       So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate. */
-
-    static const float GAME_GRAVITY_LERP_FACTOR = (nTickRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
-    static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-
-        player.SetGravity(player.getGravity() - GAME_GRAVITY_CONST / nTickRate);
-        if (player.isJumping())
-        {
-            if (player.getGravity() < 0.0f)
-            {
-                player.StopJumping();
-                player.SetCanFall(true);
-            }
-        }
-        else
-        {
-            player.SetCanFall(true);
-            // player gravity cannot go below GAME_FALL_GRAVITY_MIN
-            player.SetGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
-        }
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nTickRate,
-                player.getPos().getNew().getZ()
-            ));
-
-        if ((player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
-        {
-            // need to die, out of map lower bound
-            HandlePlayerDied(player, objXHair);
-        }
-    }
-}
-
 bool proofps_dd::Physics::Colliding(const PureObject3D& a, const PureObject3D& b)
 {
     return Colliding2(
@@ -180,6 +132,54 @@ bool proofps_dd::Physics::Colliding3(
         vecObjPos.getX(), vecObjPos.getY(), vecObjPos.getZ(),
         vecObjSize.getX(), vecObjSize.getY(), vecObjSize.getZ()
     );
+}
+
+void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate)
+{   
+    /* Although I tried to make calculations to have same result with different tickrate, the
+       results are not the same, just SIMILAR when comparing 60 vs 20 Hz results.
+       The real difference is during jumping:
+        - for 60 Hz, GAME_GRAVITY_CONST should be 90.f,
+        - for 20 Hz, GAME_GRAVITY_CONST should be 80.f to have same jumping.
+       So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate. */
+
+    static const float GAME_GRAVITY_LERP_FACTOR = (nTickRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
+    static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+
+        player.SetGravity(player.getGravity() - GAME_GRAVITY_CONST / nTickRate);
+        if (player.isJumping())
+        {
+            if (player.getGravity() < 0.0f)
+            {
+                player.StopJumping();
+                player.SetCanFall(true);
+            }
+        }
+        else
+        {
+            player.SetCanFall(true);
+            // player gravity cannot go below GAME_FALL_GRAVITY_MIN
+            player.SetGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
+        }
+        // PPPKKKGGGGGG
+        player.getPos().set(
+            PureVector(
+                player.getPos().getNew().getX(),
+                player.getPos().getNew().getY() + player.getGravity() / nTickRate,
+                player.getPos().getNew().getZ()
+            ));
+
+        if ((player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        {
+            // need to die, out of map lower bound
+            HandlePlayerDied(player, objXHair);
+        }
+    }
 }
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nTickRate)

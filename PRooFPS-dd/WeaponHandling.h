@@ -53,11 +53,14 @@ namespace proofps_dd
         void deleteWeaponHandlingAll();
 
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
+        
+        bool isBulletOutOfMapBounds(const Bullet& bullet) const;
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             PureObject3D& objXHair,
             const unsigned int& nTickRate);
         void clientUpdateBullets(const unsigned int& nTickRate);
+        
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgBulletUpdateFromServer& msg);

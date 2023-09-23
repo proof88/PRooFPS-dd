@@ -63,6 +63,21 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
+bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) const
+{
+    // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
+    const PureVector vRelaxedMapMinBounds(
+        m_maps.getBlocksVertexPosMin().getX() - proofps_dd::GAME_BLOCK_SIZE_X * 4,
+        m_maps.getBlocksVertexPosMin().getY() - proofps_dd::GAME_BLOCK_SIZE_Y,
+        m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+    const PureVector vRelaxedMapMaxBounds(
+        m_maps.getBlocksVertexPosMax().getX() + proofps_dd::GAME_BLOCK_SIZE_X * 4,
+        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::GAME_BLOCK_SIZE_Y,
+        m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::GAME_BLOCK_SIZE_Z);
+    
+    return !Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
+}
+
 void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nTickRate)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -134,17 +149,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
             if (!bDeleteBullet)
             {
-                // check if bullet is out of map bounds
-                // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
-                const PureVector vRelaxedMapMinBounds(
-                    m_maps.getBlocksVertexPosMin().getX() - proofps_dd::GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getBlocksVertexPosMin().getY() - proofps_dd::GAME_BLOCK_SIZE_Y,
-                    m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
-                const PureVector vRelaxedMapMaxBounds(
-                    m_maps.getBlocksVertexPosMax().getX() + proofps_dd::GAME_BLOCK_SIZE_X * 4,
-                    m_maps.getBlocksVertexPosMax().getY() + proofps_dd::GAME_BLOCK_SIZE_Y,
-                    m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::GAME_BLOCK_SIZE_Z);
-                if (!Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec()))
+                if (isBulletOutOfMapBounds(bullet))
                 {
                     bDeleteBullet = true;
                 }
@@ -258,6 +263,13 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nTickRa
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
         // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
         bullet.Update(nTickRate);
+
+        // There was a time when I was thinking that client should check against out of map bounds to cover corner case when we somehow miss
+        // the server's signal about that, in that case client would continue simulate bullet travel forever.
+        // However, I decided not to handle that because it could also introduce some unwanted effect: imagine that client detects out of map
+        // bounds earlier, so it deletes the bullet, however in next moment a bullet update for the same bullet is coming from the server,
+        // then client would have to create that bullet again which would bring performance penalty. Then next moment another msg from server
+        // would come about deleting the bullet. So I think we should just wait anyway for server to tell us delete bullet for any reason.
         it++;
     }
 }
