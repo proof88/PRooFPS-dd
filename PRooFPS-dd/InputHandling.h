@@ -29,6 +29,8 @@ namespace proofps_dd
     {
     public:
 
+        static const unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
+        static const unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 200;
         static const unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
 
         static const char* getLoggerModuleName();

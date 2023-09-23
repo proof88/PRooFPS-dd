@@ -21,6 +21,8 @@
 // ############################### PUBLIC ################################
 
 
+const unsigned int proofps_dd::InputHandling::m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds;
+const unsigned int proofps_dd::InputHandling::m_nKeyPressOnceJumpMinumumWaitMilliseconds;
 const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
 
 proofps_dd::InputHandling::InputHandling(
@@ -79,8 +81,8 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    //const int nRandom = PFL::random(0, 100);
-    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, %d!", __func__, connHandleServerSide, nRandom);
+    const int nRandom = PFL::random(0, 100);
+    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, %d!", __func__, connHandleServerSide, nRandom);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -428,19 +430,19 @@ void proofps_dd::InputHandling::keyboard(
         }
 
         bool bSendJumpAction = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
         {
             bSendJumpAction = true;
         }
 
         bool bToggleRunWalk = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
         {
             bToggleRunWalk = true;
         }
 
         bool bRequestReload = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r')))
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
         {
             bRequestReload = true;
         }
@@ -450,7 +452,7 @@ void proofps_dd::InputHandling::keyboard(
         {   // we dont care about wpn switch if reload is requested
             for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
             {
-                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first))
+                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
                 {
                     const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
                     if (!pTargetWpn)
