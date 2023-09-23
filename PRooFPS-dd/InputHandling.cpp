@@ -202,65 +202,79 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     if (!pktUserCmdMove.m_bRequestReload && (wpn->getState() == Weapon::State::WPN_READY) && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
-        const auto itTargetWpn = WeaponManager::getKeypressToWeaponMap().find(pktUserCmdMove.m_cWeaponSwitch);
-        if (itTargetWpn == WeaponManager::getKeypressToWeaponMap().end())
+        const auto nSecsSinceLastWeaponSwitchMillisecs =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                timeStart - player.getWeaponManager().getTimeLastWeaponSwitch()
+            ).count();
+        if (nSecsSinceLastWeaponSwitchMillisecs < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
-            const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
-            getConsole().EOLn("InputHandling::%s(): weapon not found for char %s!", __func__, sc.c_str());
-            assert(false);
-            return false;
-        }
-
-        Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second);
-        if (!pTargetWpn)
-        {
-            getConsole().EOLn("InputHandling::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
-            assert(false);
-            return false;
-        }
-
-        if (!pTargetWpn->isAvailable())
-        {
-            getConsole().EOLn("InputHandling::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
-            assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
-            return true;    // in release mode, dont terminate the server, just silently ignore!
-            // TODO: I might disconnect this client!
-        }
-
-        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-        {
-            if (connHandleServerSide == pge_network::ServerConnHandle)
-            {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
-                m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
-            }
-            if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
-            {
-                getConsole().EOLn("InputHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
-                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-                assert(false);  // in debug mode, terminate the game
-                return true;   // in release mode, dont terminate the server, just silently ignore!
-            }
-            it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
-
-            //getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
-            //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-
-            // all clients must be updated about this player's weapon switch
-            pge_network::PgePacket pktWpnUpdateCurrent;
-            proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
-                pktWpnUpdateCurrent,
-                connHandleServerSide,
-                pTargetWpn->getFilename());
-            m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
+            // should NOT had received this from client this early, maybe we should disconnect client?
+            getConsole().OLn("InputHandling::%s(): player %s sent wpn switch request too early, ignoring!",
+                __func__, sClientUserName.c_str());
+            assert(false);  // in debug mode, terminate the game
         }
         else
         {
-            // should not happen because client should NOT send message in such case
-            getConsole().OLn("InputHandling::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
-                __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-            assert(false);  // in debug mode, terminate the game
-            return true;   // in release mode, dont terminate the server, just silently ignore!
-            // TODO: I might disconnect this client!
+            const auto itTargetWpn = WeaponManager::getKeypressToWeaponMap().find(pktUserCmdMove.m_cWeaponSwitch);
+            if (itTargetWpn == WeaponManager::getKeypressToWeaponMap().end())
+            {
+                const std::string sc = std::to_string(pktUserCmdMove.m_cWeaponSwitch); // because CConsole still doesnt support %c!
+                getConsole().EOLn("InputHandling::%s(): weapon not found for char %s!", __func__, sc.c_str());
+                assert(false);
+                return false;
+            }
+
+            Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(itTargetWpn->second);
+            if (!pTargetWpn)
+            {
+                getConsole().EOLn("InputHandling::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
+                assert(false);
+                return false;
+            }
+
+            if (!pTargetWpn->isAvailable())
+            {
+                getConsole().EOLn("InputHandling::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
+                assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
+                return true;    // in release mode, dont terminate the server, just silently ignore!
+                // TODO: I might disconnect this client!
+            }
+
+            if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+            {
+                if (connHandleServerSide == pge_network::ServerConnHandle)
+                {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
+                    m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
+                }
+                if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
+                {
+                    getConsole().EOLn("InputHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
+                        __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
+                    assert(false);  // in debug mode, terminate the game
+                    return true;   // in release mode, dont terminate the server, just silently ignore!
+                }
+                it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
+
+                //getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
+                //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
+
+                // all clients must be updated about this player's weapon switch
+                pge_network::PgePacket pktWpnUpdateCurrent;
+                proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
+                    pktWpnUpdateCurrent,
+                    connHandleServerSide,
+                    pTargetWpn->getFilename());
+                m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
+            }
+            else
+            {
+                // should not happen because client should NOT send message in such case
+                getConsole().OLn("InputHandling::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
+                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
+                assert(false);  // in debug mode, terminate the game
+                return true;   // in release mode, dont terminate the server, just silently ignore!
+                // TODO: I might disconnect this client!
+            }
         }
     }
 
@@ -280,7 +294,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     {
         const auto nSecsSinceLastWeaponSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
+                timeStart - player.getWeaponManager().getTimeLastWeaponSwitch()
             ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
@@ -458,28 +472,35 @@ void proofps_dd::InputHandling::keyboard(
         unsigned char cWeaponSwitch = '\0';
         if (!bRequestReload)
         {   // we dont care about wpn switch if reload is requested
-            for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+            const auto nSecsSinceLastWeaponSwitchMillisecs =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
+                ).count();
+            if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
             {
-                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+                for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
                 {
-                    const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
-                    if (!pTargetWpn)
+                    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
                     {
-                        getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
-                            __func__, keyWpnPair.second.c_str());
+                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
+                        if (!pTargetWpn)
+                        {
+                            getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
+                                __func__, keyWpnPair.second.c_str());
+                            break;
+                        }
+                        if (!pTargetWpn->isAvailable())
+                        {
+                            //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
+                            //    __func__, key.second.c_str());
+                            break;
+                        }
+                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+                        {
+                            cWeaponSwitch = keyWpnPair.first;
+                        }
                         break;
                     }
-                    if (!pTargetWpn->isAvailable())
-                    {
-                        //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
-                        //    __func__, key.second.c_str());
-                        break;
-                    }
-                    if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                    {
-                        cWeaponSwitch = keyWpnPair.first;
-                    }
-                    break;
                 }
             }
         }
@@ -522,6 +543,10 @@ bool proofps_dd::InputHandling::mouse(
 
     static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
     bool bShootActionBeingSent = false;
+    const auto nSecsSinceLastWeaponSwitchMillisecs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
+        ).count();
     if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         bPrevLeftButtonPressed = true;
@@ -529,11 +554,8 @@ bool proofps_dd::InputHandling::mouse(
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
 
-        const auto nSecsSinceLastWeaponSwitch =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-            ).count();
-        if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
+        
+        if (nSecsSinceLastWeaponSwitchMillisecs < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
             //getConsole().OLn("InputHandling::%s(): ignoring too early m_pge.getInput().getMouse() action!", __func__);
         }
@@ -559,7 +581,10 @@ bool proofps_dd::InputHandling::mouse(
 
     if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
     {
-        mouseWheel(nMouseWheelChange, pkt, player);
+        if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+        {
+            mouseWheel(nMouseWheelChange, pkt, player);
+        }
     }
 
     const int oldmx = m_pge.getInput().getMouse().getCursorPosX();

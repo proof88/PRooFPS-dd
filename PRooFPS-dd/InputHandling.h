@@ -81,6 +81,7 @@ namespace proofps_dd
 
         proofps_dd::Strafe m_prevStrafe;
         proofps_dd::Strafe m_strafe;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWpnSwitch;
 
         void keyboard(
             proofps_dd::GameMode& gameMode,
