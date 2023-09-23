@@ -79,6 +79,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
+    //const int nRandom = PFL::random(0, 100);
+    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, %d!", __func__, connHandleServerSide, nRandom);
+
     if (!m_pge.getNetwork().isServer())
     {
         getConsole().EOLn("InputHandling::%s(): client received, CANNOT HAPPEN!", __func__);
@@ -472,7 +475,7 @@ void proofps_dd::InputHandling::keyboard(
         }
 
         static proofps_dd::Strafe prevStrafe = proofps_dd::Strafe::NONE;
-        if ((strafe != proofps_dd::Strafe::NONE) || (prevStrafe != strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+        if ((prevStrafe != strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
         {
             // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
             // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
