@@ -79,6 +79,9 @@ namespace proofps_dd
 
         bool m_bShowGuiDemo;
 
+        proofps_dd::Strafe m_prevStrafe;
+        proofps_dd::Strafe m_strafe;
+
         void keyboard(
             proofps_dd::GameMode& gameMode,
             bool& won,

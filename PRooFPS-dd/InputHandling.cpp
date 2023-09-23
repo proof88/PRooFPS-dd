@@ -36,7 +36,9 @@ proofps_dd::InputHandling::InputHandling(
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
-    m_bShowGuiDemo(false)
+    m_bShowGuiDemo(false),
+    m_prevStrafe(proofps_dd::Strafe::NONE),
+    m_strafe(proofps_dd::Strafe::NONE)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -70,7 +72,9 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     const unsigned int nTickrate)
 {
     pge_network::PgePacket pkt;
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt);
+    /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
+       in keyboard(), this is needed if only mouse() generates reason to send the pkt */
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe);
 
     keyboard(gameMode, won, pkt, player, nTickrate);
     mouse(gameMode, won, pkt, player, objXHair);
@@ -81,8 +85,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    const int nRandom = PFL::random(0, 100);
-    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, %d!", __func__, connHandleServerSide, nRandom);
+    //const int nRandom = PFL::random(0, 100);
+    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
+    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -419,14 +424,17 @@ void proofps_dd::InputHandling::keyboard(
             m_durations.reset();
         }
 
-        proofps_dd::Strafe strafe = proofps_dd::Strafe::NONE;
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
-            strafe = proofps_dd::Strafe::LEFT;
+            m_strafe = proofps_dd::Strafe::LEFT;
         }
-        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+        else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
         {
-            strafe = proofps_dd::Strafe::RIGHT;
+            m_strafe = proofps_dd::Strafe::RIGHT;
+        }
+        else
+        {
+            m_strafe = proofps_dd::Strafe::NONE;
         }
 
         bool bSendJumpAction = false;
@@ -476,15 +484,14 @@ void proofps_dd::InputHandling::keyboard(
             }
         }
 
-        static proofps_dd::Strafe prevStrafe = proofps_dd::Strafe::NONE;
-        if ((prevStrafe != strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+        if ((m_prevStrafe != m_strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
         {
             // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
             // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
             // as one-time actions.
-            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
+            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
         }
-        prevStrafe = strafe;
+        m_prevStrafe = m_strafe;
     }
     else
     {
