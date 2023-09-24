@@ -88,10 +88,12 @@ namespace proofps_dd
         void StopJumping();
         bool getWillJump() const;
         void setWillJump(bool flag);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
         void DoDamage(int dmg);
         void SetCanFall(bool state);
         bool isRunning() const;
         void SetRun(bool state);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleRun() const;
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
         void Die(bool bMe, bool bServer);
@@ -158,8 +160,10 @@ namespace proofps_dd
         bool m_bJumping;
         bool b_mCanFall;
         bool m_bRunning;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
         bool m_bAllowJump;
         bool m_bWillJump;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bExpectingStartPos;
         proofps_dd::Strafe m_strafe;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;

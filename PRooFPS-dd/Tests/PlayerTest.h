@@ -137,8 +137,10 @@ private:
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
             assertFalse(player.getWillJump(), "will jump") &
+            assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
             assertTrue(player.isExpectingStartPos(), "expecting start pos") &
             assertTrue(player.isRunning(), "running default") &
+            assertEquals(0, player.getTimeLastToggleRun().time_since_epoch().count(), "time last run toggle") &
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getForce(), "force") &
@@ -451,7 +453,11 @@ private:
             assertEquals(PureVector(), player.getForce(), "force 1") &
             assertTrue(player.isFalling(), "falling 1");
 
+        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
         player.setWillJump(true);
+        const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump = player.getTimeLastSetWillJump();
+        b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
+            assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
         b &= assertTrue(player.getWillJump(), "will jump 1");
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
@@ -470,7 +476,8 @@ private:
 
         player.SetJumpAllowed(false);
         player.setWillJump(true);
-        b &= assertFalse(player.getWillJump(), "will jump 3");
+        b &= assertFalse(player.getWillJump(), "will jump 3") &
+            assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged");
 
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
@@ -508,9 +515,13 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
+        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggleRun = std::chrono::steady_clock::now();
         player.SetRun(false);
+
+        bool b = assertTrue(player.getTimeLastToggleRun() > timeBeforeToggleRun, "cmp timeBefore") &
+            assertTrue(player.getTimeLastToggleRun() < std::chrono::steady_clock::now(), "cmp timeAfter");
         
-        return assertFalse(player.isRunning());
+        return b & assertFalse(player.isRunning(), "running");
     }
 
     bool test_set_strafe()

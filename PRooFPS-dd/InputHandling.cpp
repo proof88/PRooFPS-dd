@@ -85,9 +85,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    //const int nRandom = PFL::random(0, 100);
-    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
-    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
+    const int nRandom = PFL::random(0, 100);
+    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
+        __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -130,9 +130,24 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         return true;
     }
 
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     if (pktUserCmdMove.m_bSendSwitchToRunning)
     {
-        player.SetRun(!player.isRunning());
+        const auto nMillisecsSinceLastToggleRunning =
+            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleRun()).count();
+        if (nMillisecsSinceLastToggleRunning < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+        {
+            // should NOT had received this from client this early
+            getConsole().OLn("InputHandling::%s(): player %s sent run toggle request too early, ignoring (actual: %d, req: %d)!",
+                __func__, sClientUserName.c_str(), nMillisecsSinceLastToggleRunning, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds);
+            // Dont terminate for now, just log. Reason explained below at handling jumping.
+            //assert(false);  // in debug mode, terminate the game
+        }
+        else
+        {
+            player.SetRun(!player.isRunning());
+        }
     }
 
     if (pktUserCmdMove.m_strafe != proofps_dd::Strafe::NONE)
@@ -153,10 +168,33 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         if (!player.isJumping() &&
             !player.canFall())
         {
-            // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
-            // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it for the
-            // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
-            player.setWillJump(true);
+            const auto nMillisecsSinceLastJump =
+                std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
+            if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
+            {
+                // should NOT had received this from client this early (actually could, see explanation below)
+                getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %d, req: %d)!",
+                    __func__, sClientUserName.c_str(), nMillisecsSinceLastJump, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+                // For now, dont terminate. Reason: since client does the rate limit on its side, it can happen that the required time elapsed
+                // at client-side but did not elapse at server-side. Imagine client sends a packet to server, the ping is a bit high. Client
+                // already starts to wait the required delay before sending next packet. Server receives the packet 30 ms later and starts
+                // measuring time. In the meantime client sends next packet, ping is lower, delay is much less, so server receives the packet
+                // a few msecs earlier than the required delay elapsed on server-side.
+                // So we should not terminate but log these occurrences to understand how many such occasions are there on LAN party.
+                // A way to solve this issue in reliable way is that client must always send its timestamp as well to the server, so
+                // server can check if required time elapsed based on client's sent timestamp compared to the previously sent timestamp.
+                // To avoid cheating, server must also decide if client timestamp is valid: server must save the initial client timestamp
+                // upon client connect, and it can check if game session time duration is actually matching the real elapsed time with
+                // client's elapsed time.
+                //assert(false);  // in debug mode, terminate the game
+            }
+            else
+            {
+                // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
+                // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it to the
+                // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
+                player.setWillJump(true);
+            }
         }
     }
 
@@ -174,8 +212,6 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         return false;
     }
 
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
     if (!pktUserCmdMove.m_bShootAction)
     {
         if (!wpn->isTriggerReleased())
@@ -188,30 +224,45 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     if (pktUserCmdMove.m_bRequestReload)
     {
-        if (wpn->reload())
+        const auto nMillisecsSinceLastWpnReload =
+            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - m_timeLastWpnReload).count();
+        if (nMillisecsSinceLastWpnReload < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
-            //getConsole().OLn("InputHandling::%s(): player %s reloading the weapon!",
-            //    __func__, sClientUserName.c_str());
+            // should NOT had received this from client this early
+            getConsole().OLn("InputHandling::%s(): player %s sent wpn reload request too early, ignoring (actual: %d, req: %d)!",
+                __func__, sClientUserName.c_str(), nMillisecsSinceLastWpnReload, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds);
+            // Dont terminate for now, just log. Reason explained above at handling jumping.
+            //assert(false);  // in debug mode, terminate the game
         }
         else
         {
-            //getConsole().OLn("InputHandling::%s(): player %s requested reload but we ignore it!",
-            //    __func__, sClientUserName.c_str());
+            m_timeLastWpnReload = std::chrono::steady_clock::now();
+            if (wpn->reload())
+            {
+                //getConsole().OLn("InputHandling::%s(): player %s reloading the weapon!",
+                //    __func__, sClientUserName.c_str());
+            }
+            else
+            {
+                //getConsole().OLn("InputHandling::%s(): player %s requested reload but we ignore it!",
+                //    __func__, sClientUserName.c_str());
+            }
         }
     }
 
     if (!pktUserCmdMove.m_bRequestReload && (wpn->getState() == Weapon::State::WPN_READY) && (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
-        const auto nSecsSinceLastWeaponSwitchMillisecs =
+        const auto nMillisecsSinceLastWpnSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 timeStart - player.getWeaponManager().getTimeLastWeaponSwitch()
             ).count();
-        if (nSecsSinceLastWeaponSwitchMillisecs < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+        if (nMillisecsSinceLastWpnSwitch < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
-            // should NOT had received this from client this early, maybe we should disconnect client?
-            getConsole().OLn("InputHandling::%s(): player %s sent wpn switch request too early, ignoring!",
-                __func__, sClientUserName.c_str());
-            assert(false);  // in debug mode, terminate the game
+            // should NOT had received this from client this early
+            getConsole().OLn("InputHandling::%s(): player %s sent wpn switch request too early, ignoring (actual: %d, req: %d)!",
+                __func__, sClientUserName.c_str(), nMillisecsSinceLastWpnSwitch, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds);
+            // Dont terminate for now, just log. Reason explained above at handling jumping.
+            //assert(false);  // in debug mode, terminate the game
         }
         else
         {

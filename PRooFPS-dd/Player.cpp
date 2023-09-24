@@ -266,6 +266,12 @@ void proofps_dd::Player::setWillJump(bool flag)
     }
 
     m_bWillJump = flag;
+    m_timeLastWillJump = std::chrono::steady_clock::now();
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastSetWillJump() const
+{
+    return m_timeLastWillJump;
 }
 
 void proofps_dd::Player::DoDamage(int dmg) {
@@ -288,6 +294,12 @@ bool proofps_dd::Player::isRunning() const
 void proofps_dd::Player::SetRun(bool state)
 {
     m_bRunning = state;
+    m_timeLastToggleRun = std::chrono::steady_clock::now();
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastToggleRun() const
+{
+    return m_timeLastToggleRun;
 }
 
 const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const
