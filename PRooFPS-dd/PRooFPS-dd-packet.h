@@ -107,7 +107,8 @@ namespace proofps_dd
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
-            proofps_dd::Strafe strafe)
+            proofps_dd::Strafe strafe,
+            bool bAttack)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserCmdFromClient) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -125,6 +126,7 @@ namespace proofps_dd
             proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = reinterpret_cast<proofps_dd::MsgUserCmdFromClient&>(*pMsgAppData);
             msgUserCmdMove.m_bShouldSend = false;
             msgUserCmdMove.m_strafe = strafe;
+            msgUserCmdMove.m_bShootAction = bAttack;
             msgUserCmdMove.m_fPlayerAngleY = -1.f;
 
             return true;

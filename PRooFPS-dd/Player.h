@@ -96,6 +96,7 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleRun() const;
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
+        bool& getAttack();
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
         PureVector& getForce();
@@ -166,6 +167,7 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bExpectingStartPos;
         proofps_dd::Strafe m_strafe;
+        bool m_bAttack;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
 

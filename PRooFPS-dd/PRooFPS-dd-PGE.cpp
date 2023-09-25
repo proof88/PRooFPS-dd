@@ -396,6 +396,12 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
     if (hasValidConnection())
     {
+        if (getNetwork().isServer())
+        {
+            serverUpdateWeapons(*m_gameMode);
+        }
+
+        // 1 TICK START
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
         static const auto DurationSimulationStepMicrosecs = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
         const auto timeNow = std::chrono::steady_clock::now();
@@ -405,6 +411,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         }
         while (timeSimulation < timeNow)
         {
+            // @TICKRATE
             timeSimulation += DurationSimulationStepMicrosecs;
             if (getNetwork().isServer())
             {
@@ -415,6 +422,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 mainLoopClientOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
             }
         }
+        // 1 TICK END
         timeLastOnGameRunning = std::chrono::steady_clock::now();
 
         mainLoopShared(timeStart, window);
@@ -564,7 +572,6 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
         serverPlayerCollisionWithWalls(m_bWon, m_nTickrate);
     }
     m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-    serverUpdateWeapons(*m_gameMode);
     serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nTickrate);
     serverUpdateRespawnTimers();
     serverPickupAndRespawnItems();

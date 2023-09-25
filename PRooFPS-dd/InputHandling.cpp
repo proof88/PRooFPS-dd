@@ -74,7 +74,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe);
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack);
 
     keyboard(gameMode, won, pkt, player, nTickrate);
     mouse(gameMode, won, pkt, player, objXHair);
@@ -150,18 +150,8 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         }
     }
 
-    if (pktUserCmdMove.m_strafe != proofps_dd::Strafe::NONE)
-    {
-        //if (!player.isJumping() && !player.isFalling() && player.jumpAllowed())
-        {
-            player.setStrafe(pktUserCmdMove.m_strafe);
-        }
-    }
-    else
-    {
-        // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
-        player.setStrafe(pktUserCmdMove.m_strafe);
-    }
+    // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
+    player.setStrafe(pktUserCmdMove.m_strafe);
 
     if (pktUserCmdMove.m_bJumpAction)
     {
@@ -220,6 +210,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             //    __func__, sClientUserName.c_str());
         }
         wpn->releaseTrigger();
+        player.getAttack() = false;
     }
 
     if (pktUserCmdMove.m_bRequestReload)
@@ -354,43 +345,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             return true;
         }
-
-        // server will have the new bullet, clients will learn about the new bullet when server is sending out
-        // the regular bullet updates;
-        if (wpn->pullTrigger())
+        else
         {
-            // but we send out the wpn update for bullet count change here for that single client
-            if (connHandleServerSide != pge_network::ServerConnHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
-            {
-                pge_network::PgePacket pktWpnUpdate;
-                proofps_dd::MsgWpnUpdateFromServer::initPkt(
-                    pktWpnUpdate,
-                    pge_network::ServerConnHandle /* ignored by client anyway */,
-                    wpn->getFilename(),
-                    wpn->isAvailable(),
-                    wpn->getMagBulletCount(),
-                    wpn->getUnmagBulletCount());
-                m_pge.getNetwork().getServer().send(pktWpnUpdate, it->second.getServerSideConnectionHandle());
-            }
-            else
-            {
-                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
-                // not nice, but this is just some temporal solution for private beta
-                if (wpn->getFilename() == "pistol.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootPistol);
-                }
-                else if (wpn->getFilename() == "machinegun.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
-                }
-                else
-                {
-                    getConsole().EOLn("InputHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
-                    assert(false);
-                    return false;
-                }
-            }
+            player.getAttack() = true;
         }
     }
     // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
@@ -592,7 +549,7 @@ bool proofps_dd::InputHandling::mouse(
         return false;
     }
 
-    static bool bPrevLeftButtonPressed = false; // I guess we could get rid of this if we introduced isButtonPressedOnce()
+
     bool bShootActionBeingSent = false;
     const auto nSecsSinceLastWeaponSwitchMillisecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -600,30 +557,32 @@ bool proofps_dd::InputHandling::mouse(
         ).count();
     if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
-        bPrevLeftButtonPressed = true;
+        m_bAttack = true;
 
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
-
-        
         if (nSecsSinceLastWeaponSwitchMillisecs < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
             //getConsole().OLn("InputHandling::%s(): ignoring too early m_pge.getInput().getMouse() action!", __func__);
         }
         else
         {
-            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, true);
-            bShootActionBeingSent = true;
+            if (m_bAttack != m_bPrevAttack)
+            {
+                proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
+                bShootActionBeingSent = true;
+            }
         }
     }
     else
     {
-        if (!proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt) && bPrevLeftButtonPressed)
+        m_bAttack = false;
+        if (m_bAttack != m_bPrevAttack)
         {
-            bPrevLeftButtonPressed = false;
-            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, false);
+            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
         }
     }
+    m_bPrevAttack = m_bAttack;
 
     if (player.getHealth() == 0)
     {

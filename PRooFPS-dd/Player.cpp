@@ -44,6 +44,7 @@ proofps_dd::Player::Player(
     m_bWillJump(false),
     m_bExpectingStartPos(true),
     m_strafe(proofps_dd::Strafe::NONE),
+    m_bAttack(false),
     m_bRespawn(false)
 {
     BuildPlayerObject(true);
@@ -68,6 +69,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bWillJump(other.m_bWillJump),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
     m_strafe(other.m_strafe),
+    m_bAttack(other.m_bAttack),
     m_timeDied(other.m_timeDied),
     m_bRespawn(other.m_bRespawn)
 {
@@ -91,6 +93,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bWillJump = other.m_bWillJump;
     m_bExpectingStartPos = other.m_bExpectingStartPos;
     m_strafe = other.m_strafe;
+    m_bAttack = other.m_bAttack;
     m_timeDied = other.m_timeDied;
     m_bRespawn = other.m_bRespawn;
 
@@ -310,6 +313,11 @@ const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const
 void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
 {
     m_strafe = strafe;
+}
+
+bool& proofps_dd::Player::getAttack()
+{
+    return m_bAttack;
 }
 
 PureVector& proofps_dd::Player::getForce()

@@ -142,6 +142,7 @@ private:
             assertTrue(player.isRunning(), "running default") &
             assertEquals(0, player.getTimeLastToggleRun().time_since_epoch().count(), "time last run toggle") &
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
+            assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getForce(), "force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &

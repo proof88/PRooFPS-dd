@@ -291,11 +291,53 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
     for (auto& playerPair : m_mapPlayers)
     {
-        Weapon* const wpn = playerPair.second.getWeaponManager().getCurrentWeapon();
+        Player& player = playerPair.second;
+        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
         if (!wpn)
         {
             continue;
         }
+
+        if (player.getAttack())
+        {
+            // server will have the new bullet, clients will learn about the new bullet when server is sending out
+            // the regular bullet updates;
+            if (wpn->pullTrigger())
+            {
+                // but we send out the wpn update for bullet count change here for that single client
+                if (playerPair.first != pge_network::ServerConnHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
+                {
+                    pge_network::PgePacket pktWpnUpdate;
+                    proofps_dd::MsgWpnUpdateFromServer::initPkt(
+                        pktWpnUpdate,
+                        pge_network::ServerConnHandle /* ignored by client anyway */,
+                        wpn->getFilename(),
+                        wpn->isAvailable(),
+                        wpn->getMagBulletCount(),
+                        wpn->getUnmagBulletCount());
+                    m_pge.getNetwork().getServer().send(pktWpnUpdate, player.getServerSideConnectionHandle());
+                }
+                else
+                {
+                    // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
+                    // not nice, but this is just some temporal solution for private beta
+                    if (wpn->getFilename() == "pistol.txt")
+                    {
+                        m_pge.getAudio().play(m_sounds.m_sndShootPistol);
+                    }
+                    else if (wpn->getFilename() == "machinegun.txt")
+                    {
+                        m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
+                    }
+                    else
+                    {
+                        getConsole().EOLn("InputHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                        assert(false);
+                    }
+                }
+            }  // end wpn->pullTrigger()
+        }  // end player.getAttack()
+
         if (wpn->update())
         {
             if (playerPair.first != m_nServerSideConnectionHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
