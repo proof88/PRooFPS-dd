@@ -340,7 +340,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
-            //getConsole().OLn("InputHandling::%s(): ignoring too early mouse action!", __func__);
+            //getConsole().EOLn("InputHandling::%s(): ignoring too early mouse action!", __func__);
             // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
             m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             return true;
@@ -557,8 +557,6 @@ bool proofps_dd::InputHandling::mouse(
         ).count();
     if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
-        m_bAttack = true;
-
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
         if (nSecsSinceLastWeaponSwitchMillisecs < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
@@ -567,6 +565,7 @@ bool proofps_dd::InputHandling::mouse(
         }
         else
         {
+            m_bAttack = true;
             if (m_bAttack != m_bPrevAttack)
             {
                 proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);

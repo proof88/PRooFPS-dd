@@ -172,6 +172,8 @@ protected:
                 std::this_thread::sleep_for(std::chrono::milliseconds(3500));
             }
             input_sim_test::keybdRelease(VK_LEFT);
+            // wait a bit so keybdRelease and mouseScroll go out in separate pkts
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
             // now server and client player should be just a few blocks from each other
 
@@ -457,12 +459,12 @@ private:
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
-            /*.nTxPktTotalCount =*/     {400u,  800u},
+            /*.nTxPktTotalCount =*/     {300u,  700u},
             /*.nTxPktPerSecond =*/      { 12u,   40u},
-            /*.nRxPktTotalCount =*/     { 20u,  100u},
-            /*.nRxPktPerSecond =*/      {  1u,    7u},
-            /*.nInjectPktTotalCount =*/ {500u, 1500u},
-            /*.nInjectPktPerSecond =*/  { 20u,   50u}
+            /*.nRxPktTotalCount =*/     {  6u,   12u},
+            /*.nRxPktPerSecond =*/      {  0u,    0u},
+            /*.nInjectPktTotalCount =*/ {370u,  640u},
+            /*.nInjectPktPerSecond =*/  { 10u,   30u}
         };
 
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate20
