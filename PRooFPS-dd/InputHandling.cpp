@@ -321,8 +321,8 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     }
 
     // TODO: this should be moved up, so returning from function is easier for rest of action handling code
-    player.getWeaponAngle().set(PureVector(0.f, pktUserCmdMove.m_fWpnAngleY, pktUserCmdMove.m_fWpnAngleZ));
-    wpn->getObject3D().getAngleVec().SetY(pktUserCmdMove.m_fWpnAngleY);
+    player.getWeaponAngle().set(PureVector(0.f, player.getAngleY(), pktUserCmdMove.m_fWpnAngleZ));
+    wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
     wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
 
     if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
@@ -660,7 +660,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
 
         if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) || player.getWeaponAngle().isDirty())
         {
-            proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, player.getWeaponAngle().getNew().getY(), player.getWeaponAngle().getNew().getZ());
+            proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, player.getWeaponAngle().getNew().getZ());
         }
     }
 

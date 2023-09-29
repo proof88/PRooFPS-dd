@@ -194,13 +194,11 @@ namespace proofps_dd
 
         static void setWpnAngles(
             pge_network::PgePacket& pkt,
-            TPureFloat fWpnAngleY,
             TPureFloat fWpnAngleZ)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt);
             msgUserCmdMove.m_bShouldSend = true;
-            msgUserCmdMove.m_fWpnAngleY = fWpnAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWpnAngleZ;
         }
 
@@ -220,7 +218,6 @@ namespace proofps_dd
         unsigned char m_cWeaponSwitch;
         bool m_bShootAction;
         TPureFloat m_fPlayerAngleY;
-        TPureFloat m_fWpnAngleY;
         TPureFloat m_fWpnAngleZ;
     };  // struct MsgUserCmdFromClient
     static_assert(std::is_trivial_v<MsgUserCmdFromClient>);
