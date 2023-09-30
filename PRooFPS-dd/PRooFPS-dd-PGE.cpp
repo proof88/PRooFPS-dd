@@ -715,6 +715,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
     {
         // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
         getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
+        assert(false);
         return;
     }
 
@@ -727,6 +728,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
         if (player.isDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
+            getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
             if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
@@ -752,6 +754,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
                 getNetwork().getServer().sendToAll(newPktUserUpdate);
+                getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
             }
             else
             {
@@ -1170,7 +1173,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                     m_maps.getRandomSpawnpoint();
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0))
+                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 100, false, 0, 0))
                 {
                     // server injects this msg to self so resources for player will be allocated
                     getNetwork().getServer().send(newPktSetup);
@@ -1231,7 +1234,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             m_maps.getRandomSpawnpoint();
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, 100, false, 0, 0))
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 100, false, 0, 0))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -1277,7 +1280,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 it.second.getObject3D()->getPosVec().getY(),
                 it.second.getObject3D()->getPosVec().getZ(),
                 it.second.getObject3D()->getAngleVec().getY(),
-                it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getY(),
                 it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                 it.second.getHealth(),
                 false,
@@ -1356,7 +1358,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
+    getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
 
     if (it->second.isExpectingStartPos())
     {
@@ -1378,7 +1380,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
         it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
 
-    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(msg.m_fWpnAngleY);
+    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
