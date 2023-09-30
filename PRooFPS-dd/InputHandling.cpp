@@ -38,7 +38,9 @@ proofps_dd::InputHandling::InputHandling(
     m_sounds(sounds),
     m_bShowGuiDemo(false),
     m_prevStrafe(proofps_dd::Strafe::NONE),
-    m_strafe(proofps_dd::Strafe::NONE)
+    m_strafe(proofps_dd::Strafe::NONE),
+    m_fLastPlayerAngleYSent(-1.f),
+    m_fLastWeaponAngleZSent(0.f)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -74,7 +76,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack);
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     keyboard(gameMode, won, pkt, player, nTickrate);
     mouse(gameMode, won, pkt, player, objXHair);
@@ -648,14 +650,13 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
 
-    static TPureFloat fLastPlayerAngleYSent{};
-    if (fLastPlayerAngleYSent != player.getAngleY().getNew())
+    if (m_fLastPlayerAngleYSent != player.getAngleY().getNew())
     {
         if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
             (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nPlayerAngleYSendIntervalMilliseconds))
         {
-            fLastPlayerAngleYSent = player.getAngleY().getNew();
-            proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, fLastPlayerAngleYSent);
+            m_fLastPlayerAngleYSent = player.getAngleY().getNew();
+            proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, m_fLastPlayerAngleYSent);
         }
     }
 
@@ -669,17 +670,16 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
             PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
         );
 
-        static TPureFloat fLastWeaponAngleZSent{};
-        if (fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ())
+        if (m_fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ())
         {
             if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
                 ( (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZBigChangeSendIntervalMilliseconds) &&
-                  (abs(fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
+                  (abs(m_fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
                 (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZSmallChangeSendIntervalMilliseconds)
                 )
             {
-                fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
-                proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, fLastWeaponAngleZSent);
+                m_fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
+                proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, m_fLastWeaponAngleZSent);
             }
         }
     }

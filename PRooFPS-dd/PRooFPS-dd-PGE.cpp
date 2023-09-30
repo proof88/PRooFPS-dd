@@ -362,13 +362,6 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
                 player.SetJumpAllowed(true);
             }
         }
-
-        // TODO: why am I checking for valid connection here if player is already in the map?
-        // Probably this is a leftover from before the m_sUserName refactor. Remove this condition and test!
-        if (hasValidConnection())
-        {
-            player.updateOldValues();
-        }
     }
 }
 
@@ -728,7 +721,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
         if (player.isDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
-            getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
+            //getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
             if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
@@ -748,13 +741,15 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 // sure if there would be any difference in behavior, but logically I would call that function here ...
                 // Since I assume clients should not take care of old-new values anyway, only server does that I think ...
 
+                player.updateOldValues();
+
                 // we always reset respawn flag here
                 playerPair.second.getRespawnFlag() = false;
 
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
                 getNetwork().getServer().sendToAll(newPktUserUpdate);
-                getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
+                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
             }
             else
             {
@@ -1358,7 +1353,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
-    getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
 
     if (it->second.isExpectingStartPos())
     {

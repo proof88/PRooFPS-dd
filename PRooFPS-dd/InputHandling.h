@@ -87,6 +87,8 @@ namespace proofps_dd
         proofps_dd::Strafe m_strafe;
         bool m_bPrevAttack;
         bool m_bAttack;
+        TPureFloat m_fLastPlayerAngleYSent;
+        TPureFloat m_fLastWeaponAngleZSent;
 
         void keyboard(
             proofps_dd::GameMode& gameMode,
