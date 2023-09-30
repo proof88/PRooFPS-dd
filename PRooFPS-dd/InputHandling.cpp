@@ -85,9 +85,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    const int nRandom = PFL::random(0, 100);
-    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
-        __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
+    //const int nRandom = PFL::random(0, 100);
+    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
+    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -215,8 +215,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     if (pktUserCmdMove.m_bRequestReload)
     {
+        static std::chrono::time_point<std::chrono::steady_clock> timeLastWpnReload;
         const auto nMillisecsSinceLastWpnReload =
-            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - m_timeLastWpnReload).count();
+            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - timeLastWpnReload).count();
         if (nMillisecsSinceLastWpnReload < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
             // should NOT had received this from client this early
@@ -227,7 +228,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         }
         else
         {
-            m_timeLastWpnReload = std::chrono::steady_clock::now();
+            timeLastWpnReload = std::chrono::steady_clock::now();
             if (wpn->reload())
             {
                 //getConsole().OLn("InputHandling::%s(): player %s reloading the weapon!",
@@ -549,7 +550,6 @@ bool proofps_dd::InputHandling::mouse(
         return false;
     }
 
-
     bool bShootActionBeingSent = false;
     const auto nSecsSinceLastWeaponSwitchMillisecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -643,9 +643,20 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
 {
     player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
     player.getObject3D()->getAngleVec().SetY(player.getAngleY());
-    if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) || player.getAngleY().isDirty())
+    
+    static std::chrono::time_point<std::chrono::steady_clock> timeLastMsgUserCmdFromClientSent;
+    const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
+
+    static TPureFloat fLastPlayerAngleYSent{};
+    if (fLastPlayerAngleYSent != player.getAngleY().getNew())
     {
-        proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, player.getAngleY());
+        if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
+            (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nPlayerAngleYSendIntervalMilliseconds))
+        {
+            fLastPlayerAngleYSent = player.getAngleY().getNew();
+            proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, fLastPlayerAngleYSent);
+        }
     }
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
@@ -658,9 +669,18 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
             PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
         );
 
-        if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) || player.getWeaponAngle().isDirty())
+        static TPureFloat fLastWeaponAngleZSent{};
+        if (fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ())
         {
-            proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, player.getWeaponAngle().getNew().getZ());
+            if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
+                ( (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZBigChangeSendIntervalMilliseconds) &&
+                  (abs(fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
+                (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZSmallChangeSendIntervalMilliseconds)
+                )
+            {
+                fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
+                proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, fLastWeaponAngleZSent);
+            }
         }
     }
 
@@ -671,6 +691,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
         // their common interface which always points to the initialized instance, which is either client or server.
         // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023.
         m_pge.getNetwork().getServerClientInstance()->send(pkt);
+        timeLastMsgUserCmdFromClientSent = std::chrono::steady_clock::now();
     }
 }
 

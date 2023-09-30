@@ -237,7 +237,6 @@ namespace proofps_dd
             const TPureFloat y,
             const TPureFloat z,
             TPureFloat fPlayerAngleY,
-            TPureFloat fWpnAngleY,
             TPureFloat fWpnAngleZ,
             int nHealth,
             bool bRespawn,
@@ -262,7 +261,6 @@ namespace proofps_dd
             msgUserCmdUpdate.m_pos.y = y;
             msgUserCmdUpdate.m_pos.z = z;
             msgUserCmdUpdate.m_fPlayerAngleY = fPlayerAngleY;
-            msgUserCmdUpdate.m_fWpnAngleY = fWpnAngleY;
             msgUserCmdUpdate.m_fWpnAngleZ = fWpnAngleZ;
             msgUserCmdUpdate.m_nHealth = nHealth;
             msgUserCmdUpdate.m_bRespawn = bRespawn;
@@ -274,7 +272,6 @@ namespace proofps_dd
 
         TXYZ m_pos;
         TPureFloat m_fPlayerAngleY;
-        TPureFloat m_fWpnAngleY;
         TPureFloat m_fWpnAngleZ;
         int m_nHealth;
         bool m_bRespawn;

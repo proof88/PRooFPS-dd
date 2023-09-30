@@ -734,7 +734,6 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ(),
                 player.getAngleY(),
-                player.getWeaponAngle().getNew().getY(),
                 player.getWeaponAngle().getNew().getZ(),
                 player.getHealth(),
                 player.getRespawnFlag(),
@@ -1357,7 +1356,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->first.c_str(), msg.m_pos.x);
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
 
     if (it->second.isExpectingStartPos())
     {

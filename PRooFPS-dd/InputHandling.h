@@ -29,9 +29,13 @@ namespace proofps_dd
     {
     public:
 
-        static const unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
-        static const unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 200;
-        static const unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
+        static constexpr unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
+        static constexpr unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 200;
+        static constexpr unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
+        static constexpr unsigned int m_nPlayerAngleYSendIntervalMilliseconds = 200;
+        static constexpr unsigned int m_nWeaponAngleZBigChangeSendIntervalMilliseconds = 200;
+        static constexpr unsigned int m_nWeaponAngleZSmallChangeSendIntervalMilliseconds = 300;
+        static constexpr float m_fWeaponAngleZBigChange = 30.f;
 
         static const char* getLoggerModuleName();
 
@@ -83,7 +87,6 @@ namespace proofps_dd
         proofps_dd::Strafe m_strafe;
         bool m_bPrevAttack;
         bool m_bAttack;
-        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWpnReload;
 
         void keyboard(
             proofps_dd::GameMode& gameMode,
