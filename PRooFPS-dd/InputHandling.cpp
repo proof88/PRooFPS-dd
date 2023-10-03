@@ -650,16 +650,6 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
 
-    if (m_fLastPlayerAngleYSent != player.getAngleY().getNew())
-    {
-        if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
-            (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nPlayerAngleYSendIntervalMilliseconds))
-        {
-            m_fLastPlayerAngleYSent = player.getAngleY().getNew();
-            proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, m_fLastPlayerAngleYSent);
-        }
-    }
-
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
     if (wpn)
     {
@@ -669,23 +659,33 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
         player.getWeaponAngle().set(
             PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
         );
-
-        if (m_fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ())
-        {
-            if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
-                ( (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZBigChangeSendIntervalMilliseconds) &&
-                  (abs(m_fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
-                (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZSmallChangeSendIntervalMilliseconds)
-                )
-            {
-                m_fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
-                proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, m_fLastWeaponAngleZSent);
-            }
-        }
     }
 
-    if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt))
+    /* following condition is example of simple rate-limiting with time interval */
+    const bool bMustSendPlayerAngleY =
+        (m_fLastPlayerAngleYSent != player.getAngleY().getNew()) &&
+        (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nPlayerAngleYSendIntervalMilliseconds);
+
+    /* following condition is example of a more sophisticated rate-limiting, with time interval combined with threshold */
+    const bool bMustSendWeaponAngleZ =
+        (m_fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ()) &&
+        (((nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZBigChangeSendIntervalMilliseconds) &&
+            (abs(m_fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
+            (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZSmallChangeSendIntervalMilliseconds));
+    
+    // This condition is the combined form of the same multiple conditions in previous commit, and this is a step towards generalizing.
+    // TODO: In the future we can introduce a generalized way of defining the rate-limited variables, and then we won't need these special conditions
+    // and time difference calculations to be written here in game logic.
+    if (proofps_dd::MsgUserCmdFromClient::shouldSend(pkt) ||
+        bMustSendPlayerAngleY ||
+        bMustSendWeaponAngleZ)
     {
+        m_fLastPlayerAngleYSent = player.getAngleY().getNew();
+        proofps_dd::MsgUserCmdFromClient::setAngleY(pkt, m_fLastPlayerAngleYSent);
+
+        m_fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
+        proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, m_fLastWeaponAngleZSent);
+
         // shouldSend() at this point means that there were actual change in user input so MsgUserCmdFromClient will be sent out.
         // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
         // their common interface which always points to the initialized instance, which is either client or server.

@@ -735,12 +735,8 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getFrags(),
                 player.getDeaths()))
             {
-
-                // player.updateOldValues() might be invoked here, however this code is only executed by server, and
-                // currently onGameFrameBegin() invokes player.updateOldValues() for all players even by clients, I'm not
-                // sure if there would be any difference in behavior, but logically I would call that function here ...
-                // Since I assume clients should not take care of old-new values anyway, only server does that I think ...
-
+                // this code is only executed by server, I assume clients should not take care of old-new values anyway, so
+                // only server should also use player.isDirty()
                 player.updateOldValues();
 
                 // we always reset respawn flag here

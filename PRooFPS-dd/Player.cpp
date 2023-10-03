@@ -144,6 +144,7 @@ const WeaponManager& proofps_dd::Player::getWeaponManager() const
 
 bool proofps_dd::Player::isDirty() const
 {
+    // this function is reliable only on server instance because client doesn't invoke player.updateOldValues()
     bool bDirtyFound = false;
     for (auto it = m_vecOldNewValues.begin(); (it != m_vecOldNewValues.end()) && !bDirtyFound; it++)
     {
