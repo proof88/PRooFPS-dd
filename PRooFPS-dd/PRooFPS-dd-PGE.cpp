@@ -126,6 +126,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitializing()
 
     // Network logs
     getConsole().SetLoggingState("PgeGnsWrapper", true);
+    getConsole().SetLoggingState("PgeGnsServer", true);
+    getConsole().SetLoggingState("PgeGnsClient", true);
     getConsole().SetLoggingState(getNetwork().getLoggerModuleName(), true);
     getConsole().SetLoggingState(getNetwork().getServer().getLoggerModuleName(), true);
     getConsole().SetLoggingState(getNetwork().getClient().getLoggerModuleName(), true);
