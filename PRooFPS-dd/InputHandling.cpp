@@ -670,7 +670,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     const bool bMustSendWeaponAngleZ =
         (m_fLastWeaponAngleZSent != player.getWeaponAngle().getNew().getZ()) &&
         (((nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZBigChangeSendIntervalMilliseconds) &&
-            (abs(m_fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChange)) ||
+            (abs(m_fLastWeaponAngleZSent - player.getWeaponAngle().getNew().getZ()) >= m_fWeaponAngleZBigChangeThreshold)) ||
             (nMillisecsSinceLastMsgUserCmdFromClientSent >= m_nWeaponAngleZSmallChangeSendIntervalMilliseconds));
     
     // This condition is the combined form of the same multiple conditions in previous commit, and this is a step towards generalizing.
