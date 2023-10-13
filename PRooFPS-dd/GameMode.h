@@ -58,9 +58,16 @@ namespace proofps_dd
 
         /**
         * Resets winning time and winning condition.
-        * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this.
+        * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this or
+        * use restartWithoutRemovingPlayers() instead.
         */
         virtual void restart();
+
+        /**
+        * Resets winning time and winning condition.
+        * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this.
+        */
+        virtual void restartWithoutRemovingPlayers();
 
         /**
         * Evaluates conditions to see if game is won or not.
@@ -155,6 +162,7 @@ namespace proofps_dd
         DeathMatchMode&& operator=(DeathMatchMode&&) = delete;
 
         virtual void restart() override;
+        virtual void restartWithoutRemovingPlayers() override;
         virtual bool checkWinningConditions() override;
 
         /**

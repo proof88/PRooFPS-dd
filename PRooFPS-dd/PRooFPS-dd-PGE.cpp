@@ -800,7 +800,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
         } // end for items
     } // end server
 
-    m_gameMode->restart(); // now both server and clients execute this on their own, in future only server should do this ...
+    m_gameMode->restartWithoutRemovingPlayers(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
 void proofps_dd::PRooFPSddPGE::serverUpdateRespawnTimers()

@@ -57,6 +57,7 @@ protected:
         AddSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
         AddSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
         AddSubTest("test_deathmatch_reset", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_reset);
+        AddSubTest("test_deathmatch_restartWithoutRemovingPlayers", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restartWithoutRemovingPlayers);
         AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
         AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
         AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
@@ -513,6 +514,51 @@ private:
         b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
         b &= assertFalse(dm->checkWinningConditions(), "winning 2");
         b &= assertTrue(dm->getFragTable().empty(), "players empty");
+
+        return b;
+    }
+
+    bool test_deathmatch_restartWithoutRemovingPlayers()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->setTimeLimitSecs(25u);
+        dm->setFragLimit(15u);
+
+        proofps_dd::Player player1(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 15;
+        player1.getDeaths() = 0;
+
+        proofps_dd::Player player2(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 5;
+        player2.getDeaths() = 2;
+
+        bool b = assertTrue(dm->addPlayer(player1), "add player 1");
+
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(dm->checkWinningConditions(), "winning 1");
+
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+
+        dm->restartWithoutRemovingPlayers();
+
+        b &= assertEquals(25u, dm->getTimeLimitSecs(), "time limit");
+        b &= assertEquals(15u, dm->getFragLimit(), "frag limit");
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
+        b &= assertFalse(dm->checkWinningConditions(), "winning 2");
+        b &= assertEquals(2u, dm->getFragTable().size(), "players still there");
+
+        for (const auto& player : dm->getFragTable())
+        {
+            b &= assertEquals(0, player.m_nFrags, "players frags 0");
+            b &= assertEquals(0, player.m_nDeaths, "players deaths 0");
+        }
 
         return b;
     }

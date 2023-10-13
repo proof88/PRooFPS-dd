@@ -62,6 +62,11 @@ void proofps_dd::GameMode::restart()
     m_timeReset = std::chrono::steady_clock::now();
 }
 
+void proofps_dd::GameMode::restartWithoutRemovingPlayers()
+{
+    m_timeReset = std::chrono::steady_clock::now();
+}
+
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getWinTime() const
 {
     return m_timeWin;
@@ -116,6 +121,18 @@ void proofps_dd::DeathMatchMode::restart()
 {
     proofps_dd::GameMode::restart();
     m_players.clear();
+    m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
+    m_bWon = false;
+}
+
+void proofps_dd::DeathMatchMode::restartWithoutRemovingPlayers()
+{
+    proofps_dd::GameMode::restart();
+    for (auto& player : m_players)
+    {
+        player.m_nFrags = 0;
+        player.m_nDeaths = 0;
+    }
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
 }
