@@ -343,6 +343,15 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
+        text(pure, "Pending Pkt Counts: Unreliable: " + std::to_string(network.getClient().getPendingUnreliablePktCount(false)) + 
+             "; Reliable: " + std::to_string(network.getClient().getPendingReliablePktCount(false)),
+            nXPosPlayerName, nThisRowY);
+
+        nThisRowY -= pure.getUImanager().getDefaultFontSize();
+        text(pure, "Sent but UnAck'd Pkt Count: " + std::to_string(network.getClient().getSentButUnAckedReliablePktCount(false)),
+            nXPosPlayerName, nThisRowY);
+
+        nThisRowY -= pure.getUImanager().getDefaultFontSize();
         text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
             nXPosPlayerName, nThisRowY);
     }
