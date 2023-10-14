@@ -37,9 +37,9 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 ### v0.1.4 Private Beta (Oct 13, 2023)
 
 The major improvements in this version are the **networking improvements** that solved [all the networking-related problems experienced with v0.1.0](https://github.com/proof88/PRooFPS-dd/issues/184):
- - **client side rate limit**: sending packets should be limited so a single client would not be able to flood the server with packets;
- - **server side rate limit 1**: as a protection, server should also ignore packets arriving from a client with higher rate than a predefined rate limit;
- - **server side rate limit 2**: server should send out updates to clients also in rate limited fashion, to avoid too much load on the network, and causing unnecessary big load on clients;
+ - **client side rate limit**: sending packets are limited so a single client is not be able to flood the server with too many packets;
+ - **server side rate limit 1**: as a protection, server also ignores packets arriving from a client with higher rate than a predefined rate limit;
+ - **server side rate limit 2**: server sends out updates to clients also in rate limited fashion, to avoid too much load on the network, and causing unnecessary big load on clients;
  - **don't send unnecessary info**: bullet travel updates are no longer sent by server to clients as from now clients also simulate bullet travel.
  - **variable packet size**: packets had unreasonably fixed big sizes in previous versions, from now their sizes are much smaller and variable as actually required.
 
