@@ -34,6 +34,28 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 
 ## History
 
+### v0.1.4 Private Beta (Oct 13, 2023)
+
+The major improvements in this version are the **networking improvements** that solved [all the networking-related problems experienced with v0.1.0](https://github.com/proof88/PRooFPS-dd/issues/184):
+ - **client side rate limit**: sending packets should be limited so a single client would not be able to flood the server with packets;
+ - **server side rate limit 1**: as a protection, server should also ignore packets arriving from a client with higher rate than a predefined rate limit;
+ - **server side rate limit 2**: server should send out updates to clients also in rate limited fashion, to avoid too much load on the network, and causing unnecessary big load on clients;
+ - **don't send unnecessary info**: bullet travel updates are no longer sent by server to clients as from now clients also simulate bullet travel.
+ - **variable packet size**: packets had unreasonably fixed big sizes in previous versions, from now their sizes are much smaller and variable as actually required.
+
+**Comparison** of packet rates and used bandwidth between previous and this version, considering **8 players @ 60 FPS in a worst-case scenario** [described on the PGE Networking wiki page](https://github.com/proof88/PGE/blob/master/PGE/docpages/menu-04-Networking.md) (every player is shooting and picking up items and many bullets are travelling at the same time):
+ - **in server -> client direction:**
+   - **v0.1.0**: 30 240 PKT/s with 8 104 320 Byte/s used bandwidth;
+   - **v0.4.0**:
+     - **20 Hz tickrate**: 3 626 PKT/s resulting **88% decrease** with 189 574 Byte/s used bandwidth resulting **98% decrease**;
+     - **60 Hz tickrate**: 10 626 PKT/s resulting **65% decrease** with 548 814 Byte/s used bandwidth resulting **93% decrease**.
+ - **in client -> server direction:**
+   - **v0.1.0**: summarized 480 PKT/s from all clients with 128 640 Byte/s data rate;
+   - **v0.4.0**: summarized 128 PKT/s from all clients resulting **73% decrease** with 3 968 Byte/s data rate resulting **97% decrease**.
+
+This version was tested with 9 players with 20 and 60 Hz tickrate configs and didn't have any problem with either of them.  
+Contains NO changes to gameplay compared to the previous version except fixing [bug of removed players after the first round](https://github.com/proof88/PRooFPS-dd/issues/221).
+
 ### v0.1.3 Private Beta (Aug 20, 2023)
 
 This version contains no changes to gameplay compared to the previous version except that the movement of the player might have a slightly different feeling.  
