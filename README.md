@@ -62,7 +62,7 @@ TBD
 
 ### v0.1.4 Private Beta (Oct 13, 2023)
 
-A compressed build for Windows is available for **download here**: https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link).
 
 The major improvements in this version are the **networking improvements** that solved [all the networking-related problems experienced with v0.1.0](https://github.com/proof88/PRooFPS-dd/issues/184):
  - **client side rate limit**: sending packets are limited so a single client is not be able to flood the server with too many packets;
