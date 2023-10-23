@@ -1253,7 +1253,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
 
         // we also send as many MsgUserSetupFromServer pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
-        // we also send MsgUserUpdateFromServer about each player so new client will immediately have their positions and other data updated.
+        // we also send MsgUserUpdateFromServer about each player so new client will immediately have their positions and other data updated,
+        // and MsgCurrentWpnUpdateFromServer so their current weapon is also correctly display instead of the default wpn.
         for (const auto& it : m_mapPlayers)
         {
             if (!proofps_dd::MsgUserSetupFromServer::initPkt(
@@ -1287,6 +1288,18 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 continue;
             }
             getNetwork().getServer().send(newPktUserUpdate, connHandleServerSide);
+
+            pge_network::PgePacket pktWpnUpdateCurrent;
+            if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
+                pktWpnUpdateCurrent,
+                it.second.getServerSideConnectionHandle(),
+                it.second.getWeaponManager().getCurrentWeapon()->getFilename()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                continue;
+            }
+            getNetwork().getServer().send(pktWpnUpdateCurrent, connHandleServerSide);
         }
 
         // we also send the state of all map items
