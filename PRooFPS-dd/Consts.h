@@ -14,7 +14,7 @@ namespace proofps_dd
 {
 
     static const std::string GAME_NAME = "PRooFPS-dd";
-    static const std::string GAME_VERSION = "0.1.4.0 Private Beta";
+    static const std::string GAME_VERSION = "0.1.5.0 Private Beta";
 
     static constexpr int   GAME_MAXFPS = 60;
     static constexpr int   GAME_TICKRATE_DEFAULT = 20;

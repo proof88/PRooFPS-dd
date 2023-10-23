@@ -273,6 +273,8 @@ namespace proofps_dd
             return true;
         }
 
+        // important: the data members here should be kept in sync with the PgeOldNewValue data members of Player class!
+        // basically what we have here should be the data evaluated by Player.isDirty() and handled in handleUserUpdateFromServer().
         TXYZ m_pos;
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;

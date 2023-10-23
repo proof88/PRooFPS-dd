@@ -556,7 +556,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     * If executed rarely i.e. very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
     * To solve this, we should execute it with smaller steps if required in a loop.
     * For example: we can define that minimum physics rate is 20 tick/sec. Then the required number of physics
-    * iterations is 20 because it is = max(1, min_physics_rate / tick_rate).
+    * iterations in case of tickrate 1 is 20 because it is = max(1, min_physics_rate / tick_rate).
     * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0, so that a loop iteration simulates
     * a discrete step.
     */
@@ -737,8 +737,9 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getFrags(),
                 player.getDeaths()))
             {
-                // this code is only executed by server, I assume clients should not take care of old-new values anyway, so
-                // only server should also use player.isDirty()
+                // TODO: from v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also
+                // good to use old vs new values and isDirty(). Maybe we can delete this from here? And modify the
+                // condition in handleUserUpdateFromServer() so server would also call it there like clients do.
                 player.updateOldValues();
 
                 // we always reset respawn flag here
@@ -751,7 +752,8 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
             }
             else
             {
-                // TODO: log
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
             }
         }
     }
@@ -795,7 +797,8 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
             }
             else
             {
-                // TODO: log
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
             }
         } // end for items
     } // end server
@@ -1395,7 +1398,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->first.c_str());
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->second.getName().c_str());
             HandlePlayerDied(it->second, *m_pObjXHair);
         }
     }
@@ -1403,6 +1406,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     if (!m_gameMode->updatePlayer(it->second))
     {
         getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, it->second.getName().c_str());
+    }
+
+    if (!getNetwork().isServer())
+    {
+        // server already invoked updateOldValues() when it sent out this update message
+        it->second.updateOldValues();
     }
 
     return true;

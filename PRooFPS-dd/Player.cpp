@@ -611,8 +611,6 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& 
     }
 }
 
-
-
 void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObject3D& objXHair)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
