@@ -260,7 +260,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end if YPPos changed
 
-        if (player.getStrafe() != proofps_dd::Strafe::NONE)
+        if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
             float fStrafeSpeed = player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK;
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)

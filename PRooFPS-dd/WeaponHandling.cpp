@@ -143,7 +143,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
                         HandlePlayerDied(playerPair.second, objXHair);
                     }
-                    break; // we can stop since 1 bullet can touch 1 playerPair only at a time
+                    break; // we can stop since a bullet can touch 1 playerPair only at a time
                 }
             }
 
