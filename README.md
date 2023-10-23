@@ -8,21 +8,23 @@ https://github.com/proof88/PR00FPS
 
 This game is still **under development**.
 
-**Milestones**: https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=due_date&state=open
+**[Known Bugs](https://github.com/proof88/PRooFPS-dd/labels/bug)**  
+**[Known Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+label%3Aoptimization+sort%3Acreated-asc)**  
+**[Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
 
 You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
 
 ## Keyboard, Mouse
 
- - **WASD, LEFT/RIGHT:** walking/running with the player;
- - **SHIFT:** toggles between walking and running;
+ - **A/D, LEFT/RIGHT:** move the player;
+ - **SHIFT:** toggle move speed: walking or running;
  - **R**: reload current weapon;
  - **2,3 / Mouse Wheel**: change to pistol or machine gun;
- - **Mouse Click**: shoot;
- - **TAB:** shows frag table;
- - **BACKSPACE:** shows GUI demo;
- - **ENTER/RETURN:** if "testing=true" is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
+ - **Mouse Click**: attack;
+ - **TAB:** show frag table;
+ - **BACKSPACE:** show GUI demo;
+ - **ENTER/RETURN:** if "testing=true" CVAR is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
 
