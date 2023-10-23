@@ -10,7 +10,7 @@ This game is still **under development**.
 
 **[Known Bugs](https://github.com/proof88/PRooFPS-dd/labels/bug)**  
 **[Known Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+label%3Aoptimization+sort%3Acreated-asc)**  
-**[Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
+**[Full Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
 
 You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
