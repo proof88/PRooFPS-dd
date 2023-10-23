@@ -214,12 +214,12 @@ namespace proofps_dd
         }
 
         bool m_bShouldSend;
-        Strafe m_strafe;
+        Strafe m_strafe;                 // continuous op
         bool m_bJumpAction;
         bool m_bSendSwitchToRunning;
         bool m_bRequestReload;
         unsigned char m_cWeaponSwitch;
-        bool m_bShootAction;
+        bool m_bShootAction;             // continuous op
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;
     };  // struct MsgUserCmdFromClient

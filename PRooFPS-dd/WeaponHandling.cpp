@@ -303,6 +303,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         if (player.getAttack() && player.attack())
         {
+            //getConsole().EOLn("WeaponHandling::%s(): player %u attack", __func__, playerServerSideConnHandle);
             // server will have the new bullet, clients will learn about the new bullet when server is sending out
             // the regular bullet updates;
             // but we send out the wpn update for bullet count change here for that single client
@@ -313,7 +314,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             }
             else
             {
-                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
+                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
                 // not nice, but this is just some temporal solution for private beta
                 if (wpn->getFilename() == "pistol.txt")
                 {
@@ -325,7 +326,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 }
                 else
                 {
-                    getConsole().EOLn("InputHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                    getConsole().EOLn("WeaponHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
                     assert(false);
                 }
             }

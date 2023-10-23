@@ -167,8 +167,8 @@ namespace proofps_dd
         bool m_bWillJump;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bExpectingStartPos;
-        proofps_dd::Strafe m_strafe;
-        bool m_bAttack;
+        proofps_dd::Strafe m_strafe;  // continuous op
+        bool m_bAttack;               // continuous op
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
 

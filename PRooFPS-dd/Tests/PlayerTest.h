@@ -363,10 +363,12 @@ private:
             return false;
         };
 
+        player.getAttack() = true;
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
+            assertFalse(player.getAttack(), "attack 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &

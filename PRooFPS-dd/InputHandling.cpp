@@ -88,8 +88,8 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
     //const int nRandom = PFL::random(0, 100);
-    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d!",
-    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom);
+    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b!",
+    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom, pktUserCmdMove.m_bShootAction);
 
     if (!m_pge.getNetwork().isServer())
     {

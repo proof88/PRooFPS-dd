@@ -370,6 +370,7 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
         //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
     }
     SetHealth(0);
+    getAttack() = false;
     getObject3D()->Hide();
     if (m_wpnMgr.getCurrentWeapon())
     {
