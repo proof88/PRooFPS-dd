@@ -291,6 +291,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
     for (auto& playerPair : m_mapPlayers)
     {
+        const pge_network::PgeNetworkConnectionHandle& playerServerSideConnHandle = playerPair.first;
         Player& player = playerPair.second;
         Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
         if (!wpn)
@@ -298,62 +299,60 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             continue;
         }
 
-        if (player.getAttack())
+        bool bSendPkt = false;
+
+        if (player.getAttack() && player.attack())
         {
             // server will have the new bullet, clients will learn about the new bullet when server is sending out
             // the regular bullet updates;
-            if (wpn->pullTrigger())
+            // but we send out the wpn update for bullet count change here for that single client
+            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
             {
-                // but we send out the wpn update for bullet count change here for that single client
-                if (playerPair.first != pge_network::ServerConnHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger()
+                // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger() in player.attack()
+                bSendPkt = true;
+            }
+            else
+            {
+                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
+                // not nice, but this is just some temporal solution for private beta
+                if (wpn->getFilename() == "pistol.txt")
                 {
-                    pge_network::PgePacket pktWpnUpdate;
-                    proofps_dd::MsgWpnUpdateFromServer::initPkt(
-                        pktWpnUpdate,
-                        pge_network::ServerConnHandle /* ignored by client anyway */,
-                        wpn->getFilename(),
-                        wpn->isAvailable(),
-                        wpn->getMagBulletCount(),
-                        wpn->getUnmagBulletCount());
-                    m_pge.getNetwork().getServer().send(pktWpnUpdate, player.getServerSideConnectionHandle());
+                    m_pge.getAudio().play(m_sounds.m_sndShootPistol);
+                }
+                else if (wpn->getFilename() == "machinegun.txt")
+                {
+                    m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
                 }
                 else
                 {
-                    // here server plays the firing sound, clients play for themselves when they receive newborn bullet update
-                    // not nice, but this is just some temporal solution for private beta
-                    if (wpn->getFilename() == "pistol.txt")
-                    {
-                        m_pge.getAudio().play(m_sounds.m_sndShootPistol);
-                    }
-                    else if (wpn->getFilename() == "machinegun.txt")
-                    {
-                        m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
-                    }
-                    else
-                    {
-                        getConsole().EOLn("InputHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
-                        assert(false);
-                    }
+                    getConsole().EOLn("InputHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
+                    assert(false);
                 }
-            }  // end wpn->pullTrigger()
-        }  // end player.getAttack()
+            }
+        }  // end player.getAttack() && attack()
 
         if (wpn->update())
         {
-            if (playerPair.first != m_nServerSideConnectionHandle) // server doesn't need to send this msg to itself, it already executed bullet count change by reload()
+            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
             {
-                pge_network::PgePacket pktWpnUpdate;
-                proofps_dd::MsgWpnUpdateFromServer::initPkt(
-                    pktWpnUpdate,
-                    pge_network::ServerConnHandle /* ignored by client anyway */,
-                    wpn->getFilename(),
-                    wpn->isAvailable(),
-                    wpn->getMagBulletCount(),
-                    wpn->getUnmagBulletCount());
-                m_pge.getNetwork().getServer().send(pktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
+                // server doesn't need to send this msg to itself, it already executed bullet count change by wpn->update()
+                bSendPkt = true;
             }
         }
-    }
+
+        if (bSendPkt)
+        {
+            pge_network::PgePacket pktWpnUpdate;
+            proofps_dd::MsgWpnUpdateFromServer::initPkt(
+                pktWpnUpdate,
+                pge_network::ServerConnHandle /* ignored by client anyway */,
+                wpn->getFilename(),
+                wpn->isAvailable(),
+                wpn->getMagBulletCount(),
+                wpn->getUnmagBulletCount());
+            m_pge.getNetwork().getServer().send(pktWpnUpdate, playerServerSideConnHandle);
+        }
+    }  // end for playerPair
 
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }

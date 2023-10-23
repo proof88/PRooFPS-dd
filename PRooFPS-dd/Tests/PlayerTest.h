@@ -62,6 +62,7 @@ protected:
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
         AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
         AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
+        AddSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
         AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
         AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
         AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
@@ -75,7 +76,7 @@ protected:
 
     virtual void TearDown() override
     {
-
+        m_bullets.clear();
     }
 
     virtual void Finalize() override
@@ -91,13 +92,19 @@ protected:
 
 private:
 
+    enum class SetDfltWpn
+    {
+        Yes,
+        No
+    };
+
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* engine;
     std::list<Bullet> m_bullets;
 
     // ---------------------------------------------------------------------------
 
-    bool loadWeaponsForPlayer(proofps_dd::Player& player)
+    bool loadWeaponsForPlayer(proofps_dd::Player& player, const SetDfltWpn& setDefWpn)
     {
         bool b = assertTrue(player.getWeaponManager().load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol");
         b &= assertTrue(player.getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn");
@@ -108,7 +115,11 @@ private:
             pSrcWpn->SetOwner(player.getServerSideConnectionHandle());
         }
         player.getWeaponManager().getWeapons()[0]->SetAvailable(true);
-        b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true), "wm current wpn");
+
+        if (setDefWpn == SetDfltWpn::Yes)
+        {
+            b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true), "wm current wpn");
+        }
 
         return b;
     }
@@ -347,7 +358,7 @@ private:
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
-        if (!assertTrue(loadWeaponsForPlayer(player)))
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
@@ -384,7 +395,7 @@ private:
         const bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
-        if (!assertTrue(loadWeaponsForPlayer(player)))
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
@@ -421,7 +432,7 @@ private:
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
-        if (!assertTrue(loadWeaponsForPlayer(player)))
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
@@ -541,6 +552,59 @@ private:
         return b;
     }
 
+    bool test_attack()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::No)))
+        {
+            return false;
+        };
+
+        bool b = assertFalse(player.attack(), "player cannot attack by default due to not having attack state");
+
+        player.getAttack() = true;
+        b &= assertFalse(player.attack(), "player cannot attack without wpn");
+        
+        if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true))
+        {
+            return false;
+        }
+        const TPureUInt nOriginalBulletCount = player.getWeaponManager().getCurrentWeapon()->getMagBulletCount();
+
+        player.getAttack() = false; /* dbl check if first false was really because of state and not because of missing wpn */
+        b &= assertFalse(player.attack(), "player cannot attack due to not having attack state");
+        b &= assertEquals(nOriginalBulletCount, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "no change in bullet count 1");
+
+        player.getAttack() = true;
+        b &= assertTrue(player.attack(), "player should fire wpn");
+        b &= assertGreater(nOriginalBulletCount, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "bullet count changed 1");
+
+        // wait for wpn to go back to ready state
+        player.getWeaponManager().getCurrentWeapon()->releaseTrigger();
+        Sleep(player.getWeaponManager().getCurrentWeapon()->getVars()["firing_cooldown"].getAsInt());
+        player.getWeaponManager().getCurrentWeapon()->update();
+        if (!assertEquals(Weapon::State::WPN_READY, player.getWeaponManager().getCurrentWeapon()->getState()))
+        {   // make sure wpn is ready again
+            return false;
+        }
+
+        const TPureUInt nNewBulletCountAfterAttack = player.getWeaponManager().getCurrentWeapon()->getMagBulletCount();
+        if (!assertLess(0u, nNewBulletCountAfterAttack))
+        {   // make sure we still have loaded bullet to shoot
+            return false;
+        }
+
+        player.SetHealth(0);
+        b &= assertFalse(player.attack(), "dead player cannot attack");
+        b &= assertEquals(nNewBulletCountAfterAttack, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "no change in bullet count 2");
+
+        player.SetHealth(100);
+        player.getWeaponManager().getCurrentWeapon()->SetMagBulletCount(0);
+        b &= assertFalse(player.attack(), "should return wpn->pullTrigger() which is false in this case");
+
+        return b;
+    }
+
     bool test_can_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
@@ -560,7 +624,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
-        if (!assertTrue(loadWeaponsForPlayer(player)))
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
@@ -597,7 +661,7 @@ private:
         
         // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
         const proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgWpnUpdateFromServer>(pktWpnUpdate);
-        if (!assertTrue(loadWeaponsForPlayer(player)))
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };

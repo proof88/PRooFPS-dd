@@ -321,6 +321,22 @@ bool& proofps_dd::Player::getAttack()
     return m_bAttack;
 }
 
+bool proofps_dd::Player::attack()
+{
+    if ((getHealth() <= 0) || !getAttack())
+    {
+        return false;
+    }
+
+    Weapon* const wpn = getWeaponManager().getCurrentWeapon();
+    if (!wpn)
+    {
+        return false;
+    }
+
+    return wpn->pullTrigger();
+}
+
 PureVector& proofps_dd::Player::getForce()
 {
     return m_vecForce;

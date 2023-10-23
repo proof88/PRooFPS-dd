@@ -97,6 +97,7 @@ namespace proofps_dd
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
         bool& getAttack();
+        bool attack();
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
         PureVector& getForce();
