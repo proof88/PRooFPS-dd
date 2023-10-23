@@ -1,5 +1,9 @@
 # PRooFPS-dd
 
+Clicking on the image below brings you to a short **YouTube teaser video**:
+<p align="center">
+  <a href="http://www.youtube.com/watch?feature=player_embedded&v=XPMMzPYjR98" target="_blank"><img src="PR00FPS-dd-logo.png" alt="Click to see the video!"/></a>
+</p>
 
 ## Summary
 
@@ -15,7 +19,24 @@ This game is still **under development**.
 You can follow the project on my **facebook page**:
 https://www.facebook.com/whiskhyll
 
-## Keyboard, Mouse
+## Try the Game
+
+The latest available download version [v0.1.4 is here](https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link).  
+If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
+
+### Run as Server
+
+To start as server, simply run PRooFPS-dd.exe.
+
+### Run as Client
+
+To start as client, simply run the convenient PRooFPS-dd-as-client.bat.  
+To specify IP-address of the server for the client, change cl_server_ip CVAR in gamedata\profiles\proof88\proof88.cfg.  
+
+You can use command line arguments as well, e.g.:  
+PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100
+
+### Keyboard, Mouse
 
  - **A/D, LEFT/RIGHT:** move the player;
  - **SHIFT:** toggle move speed: walking or running;
@@ -27,7 +48,6 @@ https://www.facebook.com/whiskhyll
  - **ENTER/RETURN:** if "testing=true" CVAR is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
-
 ## Build
 
 You must have the Visual Studio solution file including other relevant projects as well in [PGE-misc](https://github.com/proof88/PGE-misc) repo.  
@@ -36,7 +56,13 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 
 ## History
 
+### v0.1.5 Private Beta (TBD)
+
+TBD
+
 ### v0.1.4 Private Beta (Oct 13, 2023)
+
+A compressed build for Windows is available for **download here**: https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link
 
 The major improvements in this version are the **networking improvements** that solved [all the networking-related problems experienced with v0.1.0](https://github.com/proof88/PRooFPS-dd/issues/184):
  - **client side rate limit**: sending packets are limited so a single client is not be able to flood the server with too many packets;
@@ -92,11 +118,6 @@ Example command line to start up a client: **"PRooFPS-dd.exe --net_server=false 
 
 ### v0.1 Private Beta (Dec 16, 2022)
 
-On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available from **download here**: https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link
+On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available for **download here**: https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link
 
 The Visual C++ Redistributable Package installer is also included in the zip, it might be needed to be installed before running the game.
-
-Clicking on the image below brings you to a short **YouTube teaser video**:
-<p align="center">
-  <a href="http://www.youtube.com/watch?feature=player_embedded&v=XPMMzPYjR98" target="_blank"><img src="PR00FPS-dd-logo.png" alt="Click to see the video!"/></a>
-</p>
