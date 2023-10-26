@@ -221,7 +221,7 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player)
 
     if (bRet)
     {
-        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths() });
+        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths(), player.getServerSideConnectionHandle() });
     }
 
     checkWinningConditions();  // to make sure winning time is updated if game has just been won!
@@ -300,9 +300,16 @@ bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
 
 void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
 {
-    const int nXPosPlayerName = 20;
-    const int nXPosFrags = 200;
-    const int nXPosDeaths = 250;
+    constexpr int nXPosPlayerName = 20;
+    constexpr int nXPosFrags = 200;
+    constexpr int nXPosDeaths = 250;
+    constexpr int nXPosPing = 320;
+    constexpr int nXPosQuality = 370;
+    constexpr int nXPosSpeed = 480;
+    constexpr int nXPosPending = 640;
+    constexpr int nXPosUnAckd = 740;
+    constexpr int nXPosInternalQueueTime = 830;
+
     int nYPosStart = pure.getWindow().getClientHeight() - 20;
     
     if (checkWinningConditions())
@@ -329,18 +336,63 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
     text(pure, "Player Name", nXPosPlayerName, nThisRowY);
     text(pure, "Frags", nXPosFrags, nThisRowY);
     text(pure, "Deaths", nXPosDeaths, nThisRowY);
+    if (network.isServer())
+    {
+        text(pure, "Ping", nXPosPing, nThisRowY);
+        text(pure, "Qlty", nXPosQuality, nThisRowY);
+        text(pure, "NE/FE", nXPosQuality, nThisRowY - pure.getUImanager().getDefaultFontSize());
+        text(pure, "Speed", nXPosSpeed, nThisRowY);
+        text(pure, "Tx/Rx(Bps)", nXPosSpeed, nThisRowY - pure.getUImanager().getDefaultFontSize());
+        text(pure, "Pending", nXPosPending, nThisRowY);
+        text(pure, "Rel/Unrel", nXPosPending, nThisRowY - pure.getUImanager().getDefaultFontSize());
+        text(pure, "UnAck'd", nXPosUnAckd, nThisRowY);
+        text(pure, "Int. Q Time", nXPosInternalQueueTime, nThisRowY);
+        text(pure, "(us)", nXPosInternalQueueTime, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    }
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
-    text(pure, "========================================================", nXPosPlayerName, nThisRowY);
+    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSize();
+    
+    if (network.isServer())
+    {
+        text(pure, "========================================================================================", nXPosPlayerName, nThisRowY);
+    }
+    else
+    {
+        text(pure, "=======================================", nXPosPlayerName, nThisRowY);
+    }
 
-    int i = 0;
     for (const auto& player : getFragTable())
     {
-        i++;
-        nThisRowY = nYPosStart - (i + 1) * pure.getUImanager().getDefaultFontSize();
+        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSize();
         text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
         text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
         text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
+        if (network.isServer() && (player.m_connHandle != pge_network::ServerConnHandle))
+        {
+            text(pure,
+                std::to_string(network.getServer().getPing(player.m_connHandle, true)),
+                nXPosPing, nThisRowY);
+            std::stringstream ssQuality;
+            ssQuality << std::fixed << std::setprecision(2) << network.getServer().getQualityLocal(player.m_connHandle, false) <<
+                "/" << network.getServer().getQualityRemote(player.m_connHandle, false);
+            text(pure,
+                ssQuality.str(),
+                nXPosQuality, nThisRowY);
+            text(pure,
+                std::to_string(std::lround(network.getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
+                std::to_string(std::lround(network.getServer().getRxByteRate(player.m_connHandle, false))),
+                nXPosSpeed, nThisRowY);
+            text(pure,
+                std::to_string(network.getServer().getPendingReliablePktCount(player.m_connHandle, false)) + "/" +
+                std::to_string(network.getServer().getPendingUnreliablePktCount(player.m_connHandle, false)),
+                nXPosPending, nThisRowY);
+            text(pure,
+                std::to_string(network.getServer().getSentButUnAckedReliablePktCount(player.m_connHandle, false)),
+                nXPosUnAckd, nThisRowY);
+            text(pure,
+                std::to_string(network.getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)),
+                nXPosInternalQueueTime, nThisRowY);
+        }
     }
 
     if (!network.isServer())
@@ -350,8 +402,11 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
-        text(pure, "Quality: local: " + std::to_string(network.getClient().getQualityLocal(false)) +
-            "; remote: " + std::to_string(network.getClient().getQualityRemote(false)),
+        std::stringstream ssQuality;
+        ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << network.getClient().getQualityLocal(false) <<
+            "; far: " << network.getClient().getQualityRemote(false);
+        text(pure,
+            ssQuality.str(),
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
@@ -360,8 +415,8 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();
-        text(pure, "Pending Pkt Counts: Unreliable: " + std::to_string(network.getClient().getPendingUnreliablePktCount(false)) + 
-             "; Reliable: " + std::to_string(network.getClient().getPendingReliablePktCount(false)),
+        text(pure, "Pending Pkt Counts: Reliable: " + std::to_string(network.getClient().getPendingReliablePktCount(false)) + 
+             "; Unreliable: " + std::to_string(network.getClient().getPendingUnreliablePktCount(false)),
             nXPosPlayerName, nThisRowY);
 
         nThisRowY -= pure.getUImanager().getDefaultFontSize();

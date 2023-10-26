@@ -36,6 +36,7 @@ namespace proofps_dd
         std::string m_sName;
         int m_nFrags;    // frags allowed to be negative due to player doing suicides decreases fragcount
         int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
+        pge_network::PgeNetworkConnectionHandle m_connHandle;
     };
 
     class GameMode
