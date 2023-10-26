@@ -216,6 +216,9 @@ namespace proofps_dd
         unsigned int m_nFragLimit;
         bool m_bWon;
 
+        void showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY);
+        void showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY);
+
     }; // class DeathMatchMode
 
 } // namespace proofps_dd
