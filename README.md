@@ -13,8 +13,8 @@ https://github.com/proof88/PR00FPS
 This game is still **under development**.
 
 **[Known Bugs](https://github.com/proof88/PRooFPS-dd/labels/bug)**  
-**[Known Network Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc)**
-**[Known Other Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+label%3Aoptimization+sort%3Acreated-asc)**  
+**[Known Network Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc)**  
+**[Other Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+-milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc+)**  
 **[Full Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
 
 You can follow the project on my **facebook page**:
