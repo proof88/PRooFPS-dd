@@ -1,1 +1,1 @@
-proofps-dd.exe --net_server=false
+%cd%/PRooFPS-dd.exe --net_server=false

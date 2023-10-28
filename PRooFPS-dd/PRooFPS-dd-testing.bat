@@ -1,1 +1,1 @@
-proofps-dd.exe --testing=true
+%cd%/PRooFPS-dd.exe --testing=true
