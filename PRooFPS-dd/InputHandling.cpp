@@ -137,11 +137,11 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     if (pktUserCmdMove.m_bSendSwitchToRunning)
     {
         const auto nMillisecsSinceLastToggleRunning =
-            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleRun()).count();
+            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleRun()).count());
         if (nMillisecsSinceLastToggleRunning < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
             // should NOT had received this from client this early
-            getConsole().OLn("InputHandling::%s(): player %s sent run toggle request too early, ignoring (actual: %d, req: %d)!",
+            getConsole().OLn("InputHandling::%s(): player %s sent run toggle request too early, ignoring (actual: %u, req: %u)!",
                 __func__, sClientUserName.c_str(), nMillisecsSinceLastToggleRunning, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds);
             // Dont terminate for now, just log. Reason explained below at handling jumping.
             //assert(false);  // in debug mode, terminate the game
@@ -161,11 +161,11 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             !player.canFall())
         {
             const auto nMillisecsSinceLastJump =
-                std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
+                static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count());
             if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
             {
                 // should NOT had received this from client this early (actually could, see explanation below)
-                getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %d, req: %d)!",
+                getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %u, req: %u)!",
                     __func__, sClientUserName.c_str(), nMillisecsSinceLastJump, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
                 // For now, dont terminate. Reason: since client does the rate limit on its side, it can happen that the required time elapsed
                 // at client-side but did not elapse at server-side. Imagine client sends a packet to server, the ping is a bit high. Client
@@ -338,9 +338,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     if (pktUserCmdMove.m_bShootAction)
     {
         const auto nSecsSinceLastWeaponSwitch =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
+            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
                 timeStart - player.getWeaponManager().getTimeLastWeaponSwitch()
-            ).count();
+            ).count());
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
             //getConsole().EOLn("InputHandling::%s(): ignoring too early mouse action!", __func__);
@@ -554,9 +554,9 @@ bool proofps_dd::InputHandling::mouse(
 
     bool bShootActionBeingSent = false;
     const auto nSecsSinceLastWeaponSwitchMillisecs =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
+        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-        ).count();
+        ).count());
     if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
     {
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
@@ -648,7 +648,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     
     static std::chrono::time_point<std::chrono::steady_clock> timeLastMsgUserCmdFromClientSent;
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
+        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count());
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
     if (wpn)
