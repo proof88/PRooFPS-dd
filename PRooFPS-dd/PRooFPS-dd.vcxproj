@@ -194,7 +194,6 @@
     <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
     <ClInclude Include="Maps.h" />
-    <ClInclude Include="PRooFPS-dd.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SharedWithTest.h" />
     <ClInclude Include="Sounds.h" />
@@ -239,6 +238,9 @@
   <ItemGroup>
     <Image Include="PRooFPS-dd.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="_how-to-release.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

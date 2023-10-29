@@ -69,9 +69,6 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PRooFPS-dd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PRooFPS-dd-PGE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -345,5 +342,8 @@
     <Image Include="PRooFPS-dd.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="_how-to-release.txt" />
   </ItemGroup>
 </Project>

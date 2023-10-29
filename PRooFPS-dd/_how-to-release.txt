@@ -1,0 +1,41 @@
+/*
+  ###################################################################################
+  _how-to-release.txt
+  Steps how to give a new release.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2023
+  EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
+  ###################################################################################
+*/
+
+ - update game version number in Consts.h (GAME_VERSION);
+
+ - build a Release version with "Release" configuration;
+
+ - copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
+
+ - change configuration to "DebugTest_PRooFPS-dd" and make sure all tests pass;
+
+ - make a separate directory for this new version under OldRegTestDumps directory and copy all
+   "RegTestDump*.txt" files there so we will have a saved reference later for packet numbers later, these
+   are also (should be) version-controlled;
+
+ - manual test: start a server instance and 2 client instances (2x PRooFPS-dd-as-client.bat), then
+   make sure the weapon switch for the server player and 1st client player is correctly visible in the
+   2nd client instance, and vice versa;
+
+ - if this is a bigger version number increment, it would be nice also to create a new benchmark measurement
+   based on perf-optimization-2022-dec.txt, to understand if we have improvement or regression wrt performance;
+   later this should be automatized;
+
+ - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
+   directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
+
+ - check if game is able to start up from this new release directory, if so then compress and upload;
+
+ - update the wiki page on github (README.md), especially the "Try the game" and "History" sections;
+
+ - make sure you pull the updated README.md, and then push a new commit including the changes regarding the
+   RegTestDump files described above;
+
+ - finally, make a new git tag, e.g.: "v0.1.5-PrivateBeta".
