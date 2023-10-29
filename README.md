@@ -49,6 +49,10 @@ PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100
  - **ENTER/RETURN:** if "testing=true" CVAR is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
+### Debugging
+
+TBD
+
 ## Build
 
 You must have the Visual Studio solution file including other relevant projects as well in [PGE-misc](https://github.com/proof88/PGE-misc) repo.  
