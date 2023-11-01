@@ -155,6 +155,22 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
     player.setStrafe(pktUserCmdMove.m_strafe);
 
+    //static std::chrono::time_point<std::chrono::steady_clock> timeStrafeStarted;
+    //static float fPlayerPosXStarted = 0.f;
+    //if (player.getStrafe() != Strafe::NONE)
+    //{
+    //    timeStrafeStarted = timeStart;
+    //    fPlayerPosXStarted = player.getPos().getNew().getX();
+    //}
+    //else
+    //{
+    //    const auto nMillisecsStrafing =
+    //        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - timeStrafeStarted).count());
+    //    const float fStrafeDistance = player.getPos().getNew().getX() - fPlayerPosXStarted;
+    //
+    //    getConsole().EOLn("Strafe duration: %u msecs, dist.: %f", nMillisecsStrafing, fStrafeDistance);
+    //}
+
     if (pktUserCmdMove.m_bJumpAction)
     {
         if (!player.isJumping() &&

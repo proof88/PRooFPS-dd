@@ -151,7 +151,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     {
         auto& player = playerPair.second;
 
-        player.SetGravity(player.getGravity() - GAME_GRAVITY_CONST / nTickRate);
+        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nTickRate;
+        player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
         {
             if (player.getGravity() < 0.0f)
@@ -162,6 +163,11 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         }
         else
         {
+            if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
+            {
+                // this means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down
+                //getConsole().EOLn("start falling (natural): %f", player.getGravity());
+            }
             player.SetCanFall(true);
             // player gravity cannot go below GAME_FALL_GRAVITY_MIN
             player.SetGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
@@ -251,6 +257,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 else
                 {
                     // we hit ceiling with our head during jumping
+                    //getConsole().EOLn("start falling (hit ceiling)");
                     player.SetCanFall(true);
                     player.StopJumping();
                     player.SetGravity(0.f);
@@ -260,6 +267,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end if YPPos changed
 
+        static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
             float fStrafeSpeed = player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK;
@@ -277,6 +285,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 // On the long run, force will be used by other effects as well e.g. explosions, in that case we need to change this condition
                 // here because this condition won't be enough to decide if force is due to jumping/falling or explosion.
 
+                ++nContinuousStrafeCount;
+                //getConsole().EOLn("Tick Strafe");
+
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
@@ -289,6 +300,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 //   player.setStrafe(proofps_dd::Strafe::NONE);
             }
         }
+        else
+        {
+            if (nContinuousStrafeCount > 0)
+            {
+                //getConsole().EOLn("Strafe stopped after: %u consecutive strafes", nContinuousStrafeCount);
+                nContinuousStrafeCount = 0;
+            }
+        }
 
         // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,
         // to actually start jumping in the same frame as when we detected the player initiated the jumping.
@@ -297,6 +316,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
         if (player.getWillJump())
         {
+            //getConsole().EOLn("start jumping");
             // now we can actually jump and have the correct forces be saved for the jump
             player.Jump(); // resets setWillJump()
         }
@@ -341,6 +361,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
+                getConsole().EOLn("x align to wall");
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(

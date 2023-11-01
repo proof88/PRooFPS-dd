@@ -251,6 +251,7 @@ void proofps_dd::Player::Jump() {
     m_vecForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     m_vecForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
+    //getConsole().EOLn("jump x force: %f", m_vecForce.getX());
 }
 
 void proofps_dd::Player::StopJumping() {

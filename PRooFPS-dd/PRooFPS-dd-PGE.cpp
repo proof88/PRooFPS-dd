@@ -222,7 +222,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
               std::string(msgAppId2StringPair.zstring) }
         );
     }
-    
 
     if (getNetwork().isServer())
     {
