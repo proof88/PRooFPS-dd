@@ -25,13 +25,15 @@
 
 using namespace std::chrono_literals;
 
-static constexpr unsigned int GAME_FPS_INTERVAL = 500;
-static_assert(GAME_FPS_INTERVAL > 0);
+static constexpr unsigned int GAME_FPS_MEASURE_INTERVAL = 500;
+static_assert(GAME_FPS_MEASURE_INTERVAL > 0);
 
 static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED = 0.416f;
 
 static constexpr char* CVAR_TICKRATE = "tickrate";
+static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
+static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
 
@@ -90,7 +92,9 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_maps(getPure()),
-    m_nTickrate(GAME_TICKRATE_DEFAULT),
+    m_nTickrate(GAME_TICKRATE_DEF),
+    m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
+    m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -286,24 +290,71 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         }
     }
 
+    // TODO: too much validation here, validation probably should be done by CVARS themselves.
+    // Update this code after implementing: https://github.com/proof88/PRooFPS-dd/issues/251 .
     if (!getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
     {
         if ((getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() >= GAME_TICKRATE_MIN) &&
             (getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() <= getGameRunningFrequency()))
         {
             m_nTickrate = getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
-            getConsole().OLn("Tickrate from config: %u", m_nTickrate);
+            getConsole().OLn("Tickrate from config: %u Hz", m_nTickrate);
         }
         else
         {
-            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing default: %u",
+            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing default: %u Hz",
                 getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
                 m_nTickrate);
         }
     }
     else
     {
-        getConsole().OLn("Missing Tickrate in config, forcing default: %u", m_nTickrate);
+        getConsole().OLn("Missing Tickrate in config, forcing default: %u Hz", m_nTickrate);
+    }
+
+    if (!getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().empty())
+    {
+        if ((getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() >= m_nTickrate) &&
+            /* Physics update distribution in time must be constant/even if we do it more frequently than tickrate. */
+            (getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() % m_nTickrate == 0u))
+        {
+            m_nPhysicsRateMin = getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt();
+            getConsole().OLn("Min. physics rate from config: %u Hz", m_nPhysicsRateMin);
+        }
+        else
+        {
+            m_nPhysicsRateMin = m_nTickrate;
+            getConsole().EOLn("ERROR: Invalid Min. physics rate in config: %s, forcing tickrate: %u Hz",
+                getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().c_str(),
+                m_nTickrate);
+        }
+    }
+    else
+    {
+        getConsole().OLn("Missing Min. physics rate in config, forcing default: %u Hz", m_nPhysicsRateMin);
+    }
+
+    if (!getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().empty())
+    {
+        if ((getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsInt() >= GAME_CL_UPDATERATE_MIN) &&
+            (getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() <= m_nTickrate) &&
+            /* Clients should receive UPDATED physics results evenly distributed in time. */
+            (m_nTickrate % getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() == 0u))
+        {
+            m_nClientUpdateRate = getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt();
+            getConsole().OLn("Client update rate from config: %u Hz", m_nClientUpdateRate);
+        }
+        else
+        {
+            m_nClientUpdateRate = m_nTickrate;
+            getConsole().EOLn("ERROR: Invalid Client update rate in config: %s, forcing tickrate: %u Hz",
+                getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().c_str(),
+                m_nClientUpdateRate);
+        }
+    }
+    else
+    {
+        getConsole().OLn("Missing Client update rate in config, forcing default: %u Hz", m_nClientUpdateRate);
     }
 
     getConsole().OLn("");
@@ -623,7 +674,7 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
     ssFps << std::fixed << std::setprecision(1) << m_fps;
     m_fps_counter++;
     const DWORD nGetTickCount = GetTickCount();  // TODO: switch to chrono ...
-    if (nGetTickCount - GAME_FPS_INTERVAL >= m_fps_lastmeasure)
+    if (nGetTickCount - GAME_FPS_MEASURE_INTERVAL >= m_fps_lastmeasure)
     {
         if (!m_bFpsFirstMeasure)
         {
@@ -640,7 +691,20 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
         m_fps_lastmeasure = nGetTickCount;
 
         std::stringstream str;
-        str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION << " :: Tickrate : " << m_nTickrate << " Hz :: FPS : " << ssFps.str();
+        if (getNetwork().isServer())
+        {
+            str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION <<
+                " Server :: Tickrate : " << m_nTickrate <<
+                " Hz :: MinPhyRate : " << m_nPhysicsRateMin <<
+                " Hz :: ClUpdRate : " << m_nClientUpdateRate <<
+                " Hz :: FPS : " << ssFps.str();
+        }
+        else
+        {
+            str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION <<
+                " Client :: Tickrate : " << m_nTickrate <<
+                " Hz :: FPS : " << ssFps.str();
+        }
         window.SetCaption(str.str());
 
         if (m_fps < 0.01f)

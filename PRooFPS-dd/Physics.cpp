@@ -361,7 +361,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
-                getConsole().EOLn("x align to wall");
+                //getConsole().EOLn("x align to wall");
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(

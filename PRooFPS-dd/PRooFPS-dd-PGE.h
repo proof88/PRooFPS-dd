@@ -79,6 +79,8 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> timeLastOnGameRunning;
         std::chrono::time_point<std::chrono::steady_clock> timeSimulation;          /**< For stepping the time ahead in 1 single tick. */
         unsigned int m_nTickrate;
+        unsigned int m_nPhysicsRateMin;
+        unsigned int m_nClientUpdateRate;
 
         float m_fps;
         unsigned int m_fps_counter;
