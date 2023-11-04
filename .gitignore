@@ -346,3 +346,9 @@ PRooFPS-dd/RegTestDumpClient_tickrate_20.txt
 PRooFPS-dd/RegTestDumpClient_tickrate_60.txt
 PRooFPS-dd/RegTestDumpServer_tickrate_60.txt
 PRooFPS-dd/RegTestDumpServer_tickrate_20.txt
+PRooFPS-dd/RegTestDumpClient_tickrate_20_cl_updaterate_20.txt
+PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_20.txt
+PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_60.txt
+PRooFPS-dd/RegTestDumpServer_tickrate_20_cl_updaterate_20.txt
+PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_20.txt
+PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_60.txt
