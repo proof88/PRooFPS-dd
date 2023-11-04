@@ -31,6 +31,7 @@ proofps_dd::Player::Player(
     m_connHandleServerSide(connHandle),
     m_sIpAddress(sIpAddress),
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
+    m_bNetDirty(false),
     m_pObj(PGENULL),
     m_wpnMgr(cfgProfiles, gfx, bullets),
     m_cfgProfiles(cfgProfiles),
@@ -55,6 +56,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_sIpAddress(other.m_sIpAddress),
     m_sName(other.m_sName),
     m_vecOldNewValues(other.m_vecOldNewValues),
+    m_bNetDirty(other.m_bNetDirty),
     m_vecForce(other.m_vecForce),
     m_pObj(PGENULL),
     m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
@@ -82,6 +84,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_sIpAddress = other.m_sIpAddress;
     m_sName = other.m_sName;
     m_vecOldNewValues = other.m_vecOldNewValues;
+    m_bNetDirty = other.m_bNetDirty;
     m_vecForce = other.m_vecForce;
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
@@ -142,9 +145,12 @@ const WeaponManager& proofps_dd::Player::getWeaponManager() const
     return m_wpnMgr;
 }
 
+/**
+ * Check if there is any old-new value pending to be committed.
+ * @return True if there is something to be committed, false otherwise.
+ */
 bool proofps_dd::Player::isDirty() const
 {
-    // this function is reliable only on server instance because client doesn't invoke player.updateOldValues()
     bool bDirtyFound = false;
     for (auto it = m_vecOldNewValues.begin(); (it != m_vecOldNewValues.end()) && !bDirtyFound; it++)
     {
@@ -154,13 +160,52 @@ bool proofps_dd::Player::isDirty() const
     return bDirtyFound;
 }
 
+
+/**
+ * Invokes commit() for all maintained old-new values.
+ * Also sets the isNetDirty() flag if there was any dirty old-new value.
+ * The idea is that the game should invoke this function in every tick/physics iteration, and the game
+ * should later check the isNetDirty() flag to decide if it should send out updates to clients or not.
+ */
 void proofps_dd::Player::updateOldValues()
 {
     for (auto& enumVariantPair : m_vecOldNewValues)
     {
         // this is the "1. void visitor" from example here: https://en.cppreference.com/w/cpp/utility/variant/visit
-        std::visit([](auto&& oldNewValue) { oldNewValue.commit(); }, enumVariantPair.second);
+        const bool bDirty = std::visit([](auto&& oldNewValue) -> bool {
+                const bool bRet = oldNewValue.isDirty();
+                oldNewValue.commit();
+                return bRet;
+            },
+            enumVariantPair.second);
+        if (bDirty)
+        {
+            m_bNetDirty = true;
+        }
     }
+}
+
+/**
+ * Check if there was any old-new value updated in recent updateOldValues() call(s) since the last call to clearNetDirty().
+ * The idea is that the game should invoke updateOldValues() in every tick/physics iteration, and the game
+ * should later check the isNetDirty() flag to decide if it should send out updates to clients or not.
+ * Thus the isNetDirty() flag cannot be set by the game itself, it is always set by the updateOldValues(), and the game
+ * is expected to clear it using clearNetDirty() after sending out updates to clients.
+ * 
+ * @return True if there is something to be sent to clients, false otherwise.
+ */
+bool proofps_dd::Player::isNetDirty() const
+{
+    return m_bNetDirty;
+}
+
+/**
+ * Clears the isNetDirty() flag.
+ * The idea is that this should be called by the game only after sending out updates to clients.
+ */
+void proofps_dd::Player::clearNetDirty()
+{
+    m_bNetDirty = false;
 }
 
 CConsole& proofps_dd::Player::getConsole() const

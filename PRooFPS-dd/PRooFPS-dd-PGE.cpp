@@ -448,23 +448,23 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
         // 1 TICK START
         std::chrono::time_point<std::chrono::steady_clock> timeStart;
-        static const auto DurationSimulationStepMicrosecs = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
+        static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
         const auto timeNow = std::chrono::steady_clock::now();
         if (timeSimulation.time_since_epoch().count() == 0)
         {
-            timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecs;
+            timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecsPerTick;
         }
         while (timeSimulation < timeNow)
         {
             // @TICKRATE
-            timeSimulation += DurationSimulationStepMicrosecs;
+            timeSimulation += DurationSimulationStepMicrosecsPerTick;
             if (getNetwork().isServer())
             {
-                mainLoopServerOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
+                mainLoopServerOnlyOneTick(timeStart, DurationSimulationStepMicrosecsPerTick.count());
             }
             else
             {
-                mainLoopClientOnlyOneTick(timeStart, DurationSimulationStepMicrosecs.count());
+                mainLoopClientOnlyOneTick(timeStart, DurationSimulationStepMicrosecsPerTick.count());
             }
         }
         // 1 TICK END
@@ -620,7 +620,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nTickrate);
     serverUpdateRespawnTimers();
     serverPickupAndRespawnItems();
-    serverSendUserUpdates();
+    serverUpdatePlayerDirtinessAndSendUserUpdates();
 }
 
 /**
@@ -648,7 +648,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     timeStart = std::chrono::steady_clock::now();
     if (window.isActive())
     {
-        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate);
+        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate);
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
@@ -767,7 +767,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
 
 } // CameraMovement()
 
-void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
+void proofps_dd::PRooFPSddPGE::serverUpdatePlayerDirtinessAndSendUserUpdates()
 {
     if (!getNetwork().isServer())
     {
@@ -779,11 +779,21 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
+    static const unsigned int nSendClientUpdatesInEveryNthTick = m_nTickrate / m_nClientUpdateRate;
+    static unsigned int nSendClientUpdatesCntr = nSendClientUpdatesInEveryNthTick;
+    const bool bSendUserUpdates = (nSendClientUpdatesCntr == nSendClientUpdatesInEveryNthTick);
+
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
 
-        if (player.isDirty())
+        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
+        // Server invokes it here in every tick. 2 reasons:
+        // - consecutive ticks require old and new values to be properly set;
+        // - player.isNetDirty() relies on player.updateOldValues().
+        player.updateOldValues();
+
+        if (bSendUserUpdates && player.isNetDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
             //getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
@@ -800,10 +810,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getFrags(),
                 player.getDeaths()))
             {
-                // TODO: from v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also
-                // good to use old vs new values and isDirty(). Maybe we can delete this from here? And modify the
-                // condition in handleUserUpdateFromServer() so server would also call it there like clients do.
-                player.updateOldValues();
+                player.clearNetDirty();
 
                 // we always reset respawn flag here
                 playerPair.second.getRespawnFlag() = false;
@@ -819,9 +826,16 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 assert(false);
             }
         }
+    }  // for playerPair
+
+    if (bSendUserUpdates)
+    {
+        nSendClientUpdatesCntr = 0;
+        // measure duration only if we really sent the user updates to clients
+        m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     }
 
-    m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    ++nSendClientUpdatesCntr;
 }
 
 void proofps_dd::PRooFPSddPGE::RestartGame()

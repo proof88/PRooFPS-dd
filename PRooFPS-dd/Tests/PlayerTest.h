@@ -135,6 +135,8 @@ private:
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
             assertFalse(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
+            assertFalse(player.isDirty(), "isDirty") &
+            assertFalse(player.isNetDirty(), "isNetDirty") &
             assertFalse(player.getHealth().isDirty(), "old health") &
             assertEquals(100, player.getHealth(), "health") &
             assertFalse(player.getDeaths().isDirty(), "old deaths") &
@@ -207,37 +209,62 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        bool b = assertFalse(player.isDirty(), "dirty 1");
+        bool b = assertFalse(player.isDirty(), "dirty 1") &
+            assertFalse(player.isNetDirty(), "net dirty 1");
 
         player.getHealth().set(5);
         b &= assertTrue(player.isDirty(), "dirty A 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty A 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty A 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty A 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty A 3");
 
         player.getFrags().set(5);
         b &= assertTrue(player.isDirty(), "dirty B 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty B 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty B 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty B 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty B 3");
 
         player.getDeaths().set(5);
         b &= assertTrue(player.isDirty(), "dirty C 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty C 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty C 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty C 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty C 3");
 
         player.getAngleY().set(5.f);
         b &= assertTrue(player.isDirty(), "dirty D 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty D 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty D 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty D 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty D 3");
 
         player.getWeaponAngle().set(PureVector(5.f, 6.f, 7.f));
         b &= assertTrue(player.isDirty(), "dirty E 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty E 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty E 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty E 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty E 3");
 
         player.getPos().set(PureVector(5.f, 6.f, 7.f));
         b &= assertTrue(player.isDirty(), "dirty F 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty F 1");
         player.updateOldValues();
         b &= assertFalse(player.isDirty(), "dirty F 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty F 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty F 3");
 
         return b;
     }
@@ -300,6 +327,7 @@ private:
             assertTrue(player.isDirty(), "dirty 1");
 
         player.updateOldValues();
+        b &= assertTrue(player.isNetDirty(), "is net dirty");
 
         b &= assertEquals(vecAngleWpnOriginal, player.getWeaponAngle().getOld(), "old wpn angle 2") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
@@ -327,6 +355,7 @@ private:
             assertTrue(player.isDirty(), "dirty 4");
 
         player.updateOldValues();
+        b &= assertTrue(player.isNetDirty(), "is net dirty");
         b &= assertEquals(0, player.getHealth().getOld(), "health 3") &
             assertFalse(player.getHealth().isDirty(), "dirty 5") &
             assertFalse(player.isDirty(), "dirty 6");

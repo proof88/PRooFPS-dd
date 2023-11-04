@@ -14,15 +14,24 @@
 
 namespace proofps_dd
 {
-    std::string generateTestDumpFilename(bool bServer, unsigned int nTickRate)
+    std::string generateTestDumpFilename(bool bServer, unsigned int nTickRate, unsigned int nClUpdateRate)
     {
         std::string sFilename = bServer ? proofps_dd::GAME_REG_TEST_DUMP_FILE_SERVER_FMT : proofps_dd::GAME_REG_TEST_DUMP_FILE_CLIENT_FMT;
-        const auto iTickratePos = sFilename.find("%u");
-        if (iTickratePos == std::string::npos)
+        
+        auto iFindStrPos = sFilename.find("%u");
+        if (iFindStrPos == std::string::npos)
         {
             return "Error: could not find position of tickrate in given string!";
         }
-        sFilename.replace(iTickratePos, 2, std::to_string(nTickRate));
+        sFilename.replace(iFindStrPos, 2, std::to_string(nTickRate));
+
+        iFindStrPos = sFilename.find("%u");
+        if (iFindStrPos == std::string::npos)
+        {
+            return "Error: could not find position of cl_updaterate in given string!";
+        }
+        sFilename.replace(iFindStrPos, 2, std::to_string(nClUpdateRate));
+
         return sFilename;
     }
 } // namespace proofps_dd

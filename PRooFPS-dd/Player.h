@@ -71,6 +71,9 @@ namespace proofps_dd
         bool isDirty() const;
         void updateOldValues();
 
+        bool isNetDirty() const;
+        void clearNetDirty();
+
         PgeOldNewValue<int>& getHealth();
         const PgeOldNewValue<int>& getHealth() const;
         PgeOldNewValue<PureVector>& getPos();
@@ -151,6 +154,7 @@ namespace proofps_dd
                 {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()}
         };
+        bool m_bNetDirty;
 
         PureVector m_vecForce;
         PureObject3D* m_pObj;

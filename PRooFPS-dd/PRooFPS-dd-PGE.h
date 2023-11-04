@@ -112,7 +112,7 @@ namespace proofps_dd
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(Player& player);
-        void serverSendUserUpdates();
+        void serverUpdatePlayerDirtinessAndSendUserUpdates();
         void RestartGame();
         void serverUpdateRespawnTimers();
         void UpdateGameMode();

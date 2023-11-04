@@ -71,14 +71,15 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     bool& won,
     proofps_dd::Player& player,
     PureObject3D& objXHair,
-    const unsigned int nTickrate)
+    const unsigned int nTickrate,
+    const unsigned int nClUpdateRate)
 {
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
-    keyboard(gameMode, won, pkt, player, nTickrate);
+    keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate);
     mouse(gameMode, won, pkt, player, objXHair);
     updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
 }
@@ -384,7 +385,8 @@ void proofps_dd::InputHandling::keyboard(
     bool& won,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
-    const unsigned int nTickrate)
+    const unsigned int nTickrate,
+    const unsigned int nClUpdateRate)
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -426,7 +428,7 @@ void proofps_dd::InputHandling::keyboard(
             if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
                 getConsole().SetLoggingState("4LLM0DUL3S", true);
-                RegTestDumpToFile(gameMode, player, nTickrate);
+                RegTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate);
                 getConsole().SetLoggingState("4LLM0DUL3S", false);
             }
         }
@@ -782,9 +784,10 @@ const size_t proofps_dd::InputHandling::getLongestMsgAppIdNameLength()
 void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player,
-    const unsigned int nTickrate)
+    const unsigned int nTickrate,
+    const unsigned int nClUpdateRate)
 {
-    const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(m_pge.getNetwork().isServer(), nTickrate);
+    const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(m_pge.getNetwork().isServer(), nTickrate, nClUpdateRate);
     std::ofstream fRegTestDump(sRegTestDumpFilename);
     if (fRegTestDump.fail())
     {

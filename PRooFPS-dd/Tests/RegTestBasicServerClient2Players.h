@@ -33,9 +33,12 @@ public:
         CLIENT
     };
 
-    RegTestBasicServerClient2Players(const unsigned int& nTickrate) :
-        UnitTest(std::string(__FILE__) + " tickrate: " + std::to_string(nTickrate)),
+    RegTestBasicServerClient2Players(
+        const unsigned int& nTickrate,
+        const unsigned int& nClUpdateRate) :
+        UnitTest(std::string(__FILE__) + " tickrate: " + std::to_string(nTickrate) + ", cl_updaterate: " + std::to_string(nClUpdateRate)),
         m_nTickRate(nTickrate),
+        m_nClUpdateRate(nClUpdateRate),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL),
         cfgWpnPistol(false, false),
@@ -46,11 +49,17 @@ public:
         memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
         memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
 
+        // We have expected pkt count tables only for 60 and 20.
         // In the future we may dynamically calculate the current values for ExpectedPktStatsRanges
-        // based on the predefined expectedPktStatsServerTickrate60 and the given tick rate.
+        // based on the predefined expectedPktStatsServerClUpdateRate60 and the given tick rate.
         if ((m_nTickRate != 60) && (m_nTickRate != 20))
         {
             throw std::runtime_error("Unsupported tick rate: " + std::to_string(m_nTickRate));
+        }
+
+        if ((m_nClUpdateRate != 60) && (m_nClUpdateRate != 20))
+        {
+            throw std::runtime_error("Unsupported client update rate: " + std::to_string(m_nClUpdateRate));
         }
     }
 
@@ -272,6 +281,7 @@ private:
     int nPlayerHealth;
 
     unsigned int m_nTickRate;
+    unsigned int m_nClUpdateRate;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -286,7 +296,7 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate);
+        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate, m_nClUpdateRate);
         std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
         {
@@ -456,7 +466,7 @@ private:
             f >> nPlayerHealth;
         }
 
-        static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate60
+        static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
             /*.nTxPktTotalCount =*/     {300u,  700u},
@@ -467,46 +477,46 @@ private:
             /*.nInjectPktPerSecond =*/  { 10u,   30u}
         };
 
-        static constexpr ExpectedPktStatsRanges expectedPktStatsServerTickrate20
+        static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate20
         {
             /* server tx rate should be only 1/3 in the 20 Hz case compared to 60 Hz case */
-            {expectedPktStatsServerTickrate60.nTxPktTotalCount.nMin / 3,  expectedPktStatsServerTickrate60.nTxPktTotalCount.nMax / 3},
-            {expectedPktStatsServerTickrate60.nTxPktPerSecond.nMin / 3, expectedPktStatsServerTickrate60.nTxPktPerSecond.nMax / 3},
+            {expectedPktStatsServerClUpdateRate60.nTxPktTotalCount.nMin / 3,  expectedPktStatsServerClUpdateRate60.nTxPktTotalCount.nMax / 3},
+            {expectedPktStatsServerClUpdateRate60.nTxPktPerSecond.nMin / 3, expectedPktStatsServerClUpdateRate60.nTxPktPerSecond.nMax / 3},
             /* server rx rate should be same in 20 Hz case as in 60 Hz case because clients are still sending updates with refresh rate */
-            {expectedPktStatsServerTickrate60.nRxPktTotalCount.nMin,  expectedPktStatsServerTickrate60.nRxPktTotalCount.nMax},
-            {expectedPktStatsServerTickrate60.nRxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nRxPktPerSecond.nMax},
+            {expectedPktStatsServerClUpdateRate60.nRxPktTotalCount.nMin,  expectedPktStatsServerClUpdateRate60.nRxPktTotalCount.nMax},
+            {expectedPktStatsServerClUpdateRate60.nRxPktPerSecond.nMin, expectedPktStatsServerClUpdateRate60.nRxPktPerSecond.nMax},
             /* server inject rate should be somewhat less in 20 Hz case than in 60 Hz case because that input handling code is shared with client code,
                which means that server generates same amount of messages for its player as a client generates for their player, however injected pkt
                count in total is less because it also contains the player updates sent out to itself (inject) by tickrate */
-            {expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMin / 2, expectedPktStatsServerTickrate60.nInjectPktTotalCount.nMax / 2},
-            {expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMin / 2, expectedPktStatsServerTickrate60.nInjectPktPerSecond.nMax / 2}
+            {expectedPktStatsServerClUpdateRate60.nInjectPktTotalCount.nMin / 2, expectedPktStatsServerClUpdateRate60.nInjectPktTotalCount.nMax / 2},
+            {expectedPktStatsServerClUpdateRate60.nInjectPktPerSecond.nMin / 2, expectedPktStatsServerClUpdateRate60.nInjectPktPerSecond.nMax / 2}
         };
 
-        static constexpr ExpectedPktStatsRanges expectedPktStatsClientTickrate60
+        static constexpr ExpectedPktStatsRanges expectedPktStatsClientClUpdateRate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
             /*.nTxPktTotalCount =*/     {  0u,    0u}, // 0 because we expect SAME as server RX
-            /*.nTxPktPerSecond =*/      { expectedPktStatsServerTickrate60.nRxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nRxPktPerSecond.nMax},
+            /*.nTxPktPerSecond =*/      { expectedPktStatsServerClUpdateRate60.nRxPktPerSecond.nMin, expectedPktStatsServerClUpdateRate60.nRxPktPerSecond.nMax},
             /*.nRxPktTotalCount =*/     {  0u,    0u}, // 0 because we expect SAME as server TX
-            /*.nRxPktPerSecond =*/      { expectedPktStatsServerTickrate60.nTxPktPerSecond.nMin, expectedPktStatsServerTickrate60.nTxPktPerSecond.nMax},
+            /*.nRxPktPerSecond =*/      { expectedPktStatsServerClUpdateRate60.nTxPktPerSecond.nMin, expectedPktStatsServerClUpdateRate60.nTxPktPerSecond.nMax},
             /*.nInjectPktTotalCount =*/ {  0u,    0u}, // 0 because client never injects
             /*.nInjectPktPerSecond =*/  {  0u,    0u}  // 0 because client never injects
         };
 
-        static constexpr ExpectedPktStatsRanges expectedPktStatsClientTickrate20
+        static constexpr ExpectedPktStatsRanges expectedPktStatsClientClUpdateRate20
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
-            /*.nTxPktTotalCount =*/     { expectedPktStatsClientTickrate60.nTxPktTotalCount.nMin,     expectedPktStatsClientTickrate60.nTxPktTotalCount.nMax},
-            /*.nTxPktPerSecond =*/      { expectedPktStatsClientTickrate60.nTxPktPerSecond.nMin,      expectedPktStatsClientTickrate60.nTxPktPerSecond.nMax},
-            /*.nRxPktTotalCount =*/     { expectedPktStatsClientTickrate60.nRxPktTotalCount.nMin,     expectedPktStatsClientTickrate60.nRxPktTotalCount.nMax},
-            /*.nRxPktPerSecond =*/      { expectedPktStatsClientTickrate60.nRxPktPerSecond.nMin / 3,  expectedPktStatsClientTickrate60.nRxPktPerSecond.nMax / 3},
-            /*.nInjectPktTotalCount =*/ { expectedPktStatsClientTickrate60.nInjectPktTotalCount.nMin, expectedPktStatsClientTickrate60.nInjectPktTotalCount.nMax},
-            /*.nInjectPktPerSecond =*/  { expectedPktStatsClientTickrate60.nInjectPktPerSecond.nMin,  expectedPktStatsClientTickrate60.nInjectPktPerSecond.nMax}
+            /*.nTxPktTotalCount =*/     { expectedPktStatsClientClUpdateRate60.nTxPktTotalCount.nMin,     expectedPktStatsClientClUpdateRate60.nTxPktTotalCount.nMax},
+            /*.nTxPktPerSecond =*/      { expectedPktStatsClientClUpdateRate60.nTxPktPerSecond.nMin,      expectedPktStatsClientClUpdateRate60.nTxPktPerSecond.nMax},
+            /*.nRxPktTotalCount =*/     { expectedPktStatsClientClUpdateRate60.nRxPktTotalCount.nMin,     expectedPktStatsClientClUpdateRate60.nRxPktTotalCount.nMax},
+            /*.nRxPktPerSecond =*/      { expectedPktStatsClientClUpdateRate60.nRxPktPerSecond.nMin / 3,  expectedPktStatsClientClUpdateRate60.nRxPktPerSecond.nMax / 3},
+            /*.nInjectPktTotalCount =*/ { expectedPktStatsClientClUpdateRate60.nInjectPktTotalCount.nMin, expectedPktStatsClientClUpdateRate60.nInjectPktTotalCount.nMax},
+            /*.nInjectPktPerSecond =*/  { expectedPktStatsClientClUpdateRate60.nInjectPktPerSecond.nMin,  expectedPktStatsClientClUpdateRate60.nInjectPktPerSecond.nMax}
         };
 
         bRet = bServer ?
-            evaluateServer(f, (m_nTickRate == 60 ? expectedPktStatsServerTickrate60 : expectedPktStatsServerTickrate20)) :
-            evaluateClient(f, (m_nTickRate == 60 ? expectedPktStatsClientTickrate60 : expectedPktStatsClientTickrate20));
+            evaluateServer(f, (m_nClUpdateRate == 60 ? expectedPktStatsServerClUpdateRate60 : expectedPktStatsServerClUpdateRate20)) :
+            evaluateClient(f, (m_nClUpdateRate == 60 ? expectedPktStatsClientClUpdateRate60 : expectedPktStatsClientClUpdateRate20));
         
         f.close();
         return bRet;
@@ -658,18 +668,22 @@ private:
         CConsole::getConsoleInstance().OLnOI("%s(%b) ...", __func__, bServer);
 
         // exe will be searched in PR00FPS-dd work dir, which means that the tested executable
-        // is manually put there: either the release or debug version can be put there.
+        // needs to be manually put there: either the release or debug version can be put there.
         if (bServer)
         {
             procInfoServer = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" + std::to_string(m_nTickRate));
+                "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
+                std::to_string(m_nTickRate) + " --cl_updaterate=" +
+                std::to_string(m_nClUpdateRate));
         }
         else
         {
             procInfoClient = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" + std::to_string(m_nTickRate));
+                "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
+                std::to_string(m_nTickRate) + " --cl_updaterate=" +
+                std::to_string(m_nClUpdateRate));
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.
