@@ -82,6 +82,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     proofps_dd::PlayerHandling(
         *this,
         m_durations,
+        m_mapPlayers,
         m_maps,
         m_sounds),
     proofps_dd::UserInterface(static_cast<PGE&>(*this) /* static_cast so it will call the only ctor, not the deleted copy ctor */),
@@ -315,6 +316,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     if (!getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().empty())
     {
         if ((getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() >= m_nTickrate) &&
+            (getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() <= GAME_PHYSICS_RATE_MIN_MAX) &&
             /* Physics update distribution in time must be constant/even if we do it more frequently than tickrate. */
             (getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() % m_nTickrate == 0u))
         {
@@ -603,24 +605,27 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
 {
     /*
     * This function is executed every tick.
-    * If executed rarely i.e. very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
-    * To solve this, we should execute it with smaller steps if required in a loop.
-    * For example: we can define that minimum physics rate is 20 tick/sec. Then the required number of physics
-    * iterations in case of tickrate 1 is 20 because it is = max(1, min_physics_rate / tick_rate).
-    * The rule is that if min_physics_rate > tick_rate then: min_physics_rate % tick_rate = 0, so that a loop iteration simulates
-    * a discrete step.
+    * If executed rarely i.e. with very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
+    * To solve this, we might run multiple physics iterations (nPhysicsIterationsPerTick) so movements are
+    * calculated in smaller steps, resulting in more precise results.
     */
     timeStart = std::chrono::steady_clock::now();
+    static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
     if (!m_gameMode->checkWinningConditions())
     {
-        serverGravity(*m_pObjXHair, m_nTickrate);
-        serverPlayerCollisionWithWalls(m_bWon, m_nTickrate);
-    }
-    m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-    serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nTickrate);
+        for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
+        {
+            serverGravity(*m_pObjXHair, m_nPhysicsRateMin);
+            serverPlayerCollisionWithWalls(m_bWon, m_nPhysicsRateMin);
+            // TODO: m_nGravityCollisionDurationUSecs is now wrong being in this loop, later should be fixed!
+            //m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nPhysicsRateMin);
+            serverPickupAndRespawnItems();
+            updatePlayersOldValues();
+        }  // for iPhyIter
+    }  // checkWinningConditions()
     serverUpdateRespawnTimers();
-    serverPickupAndRespawnItems();
-    serverUpdatePlayerDirtinessAndSendUserUpdates();
+    serverSendUserUpdates();
 }
 
 /**
@@ -635,7 +640,11 @@ void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
     * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopServerOnlyOneTick(). 
     */
     timeStart = std::chrono::steady_clock::now();
-    clientUpdateBullets(m_nTickrate);
+    static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
+    for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
+    {
+        clientUpdateBullets(m_nPhysicsRateMin);
+    }
 }
 
 /**
@@ -648,7 +657,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     timeStart = std::chrono::steady_clock::now();
     if (window.isActive())
     {
-        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate);
+        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin);
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
@@ -767,7 +776,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
 
 } // CameraMovement()
 
-void proofps_dd::PRooFPSddPGE::serverUpdatePlayerDirtinessAndSendUserUpdates()
+void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
 {
     if (!getNetwork().isServer())
     {
@@ -786,12 +795,6 @@ void proofps_dd::PRooFPSddPGE::serverUpdatePlayerDirtinessAndSendUserUpdates()
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
-
-        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
-        // Server invokes it here in every tick. 2 reasons:
-        // - consecutive ticks require old and new values to be properly set;
-        // - player.isNetDirty() relies on player.updateOldValues().
-        player.updateOldValues();
 
         if (bSendUserUpdates && player.isNetDirty())
         {

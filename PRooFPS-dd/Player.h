@@ -197,6 +197,7 @@ namespace proofps_dd
         PlayerHandling(
             PGE& pge,
             proofps_dd::Durations& durations,
+            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
 
@@ -210,12 +211,14 @@ namespace proofps_dd
         void HandlePlayerDied(Player& player, PureObject3D& objXHair);
         void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void ServerRespawnPlayer(Player& player, bool restartGame);
+        void updatePlayersOldValues();
 
     private:
 
         // ---------------------------------------------------------------------------
 
         PGE& m_pge;
+        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
 

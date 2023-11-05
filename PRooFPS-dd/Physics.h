@@ -64,8 +64,8 @@ namespace proofps_dd
             const PureVector& vecPosMin, const PureVector& vecPosMax,
             const PureVector& vecObjPos, const PureVector& vecObjSize);
         
-        void serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate);
-        void serverPlayerCollisionWithWalls(bool& won, const unsigned int& nTickRate);
+        void serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate);
+        void serverPlayerCollisionWithWalls(bool& won, const unsigned int& nPhysicsRate);
 
     private:
 

@@ -629,11 +629,13 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
 proofps_dd::PlayerHandling::PlayerHandling(
     PGE& pge,
     proofps_dd::Durations& durations,
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
     proofps_dd::Networking(pge, durations),
     proofps_dd::UserInterface(pge),
     m_pge(pge),
+    m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds)
 {
@@ -699,6 +701,19 @@ void proofps_dd::PlayerHandling::ServerRespawnPlayer(Player& player, bool restar
     {
         player.getFrags() = 0;
         player.getDeaths() = 0;
+    }
+}
+
+void proofps_dd::PlayerHandling::updatePlayersOldValues()
+{
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
+        // Server invokes it here in every physics iteration. 2 reasons:
+        // - consecutive physics iterations require old and new values to be properly set;
+        // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
+        player.updateOldValues();
     }
 }
 

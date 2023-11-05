@@ -23,7 +23,7 @@ namespace proofps_dd
     static_assert(0 < GAME_MAXFPS, "Max FPS should be positive.");
 
     static constexpr int   GAME_TICKRATE_DEF = 60;
-    static constexpr int   GAME_TICKRATE_MIN = 20;
+    static constexpr int   GAME_TICKRATE_MIN = 20;           /* Before modifying this, keep in mind serverGravity() is lerping between 20 and 60! */
     static constexpr int   GAME_TICKRATE_MAX = GAME_MAXFPS;
     static_assert(GAME_TICKRATE_MAX == GAME_MAXFPS, "Max tickrate is limited by max FPS since onGameRunning() freq is same as max FPS.");
     static_assert(0 < GAME_TICKRATE_MIN, "Min tickrate should be positive.");
@@ -33,7 +33,11 @@ namespace proofps_dd
 
     static constexpr int   GAME_PHYSICS_RATE_MIN_DEF = 60;
     static constexpr int   GAME_PHYSICS_RATE_MIN_MIN = GAME_TICKRATE_DEF; /* There should be at least 1 physics iteration per tick. */
+    static constexpr int   GAME_PHYSICS_RATE_MIN_MAX = 60;                /* Before modifying this, keep in mind serverGravity() is lerping between 20 and 60! */
     static_assert(GAME_PHYSICS_RATE_MIN_MIN <= GAME_PHYSICS_RATE_MIN_DEF, "Min physics_rate_min should not be greater than default physics_rate_min.");
+    static_assert(GAME_PHYSICS_RATE_MIN_MIN <= GAME_PHYSICS_RATE_MIN_MAX, "Min physics_rate_min should not be greater than max physics_rate_min.");
+    static_assert(GAME_PHYSICS_RATE_MIN_DEF <= GAME_PHYSICS_RATE_MIN_MAX, "Max physics_rate_min should not be smaller than default physics_rate_min.");
+    static_assert(GAME_PHYSICS_RATE_MIN_MIN >= 20, "Physics::serverGravity() is lerping between 20 and 60!");
     static_assert(GAME_PHYSICS_RATE_MIN_DEF % GAME_TICKRATE_DEF == 0, "Physics update distribution in time must be constant/even.");
 
     static constexpr int   GAME_CL_UPDATERATE_DEF = 60;

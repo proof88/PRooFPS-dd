@@ -35,10 +35,15 @@ public:
 
     RegTestBasicServerClient2Players(
         const unsigned int& nTickrate,
-        const unsigned int& nClUpdateRate) :
-        UnitTest(std::string(__FILE__) + " tickrate: " + std::to_string(nTickrate) + ", cl_updaterate: " + std::to_string(nClUpdateRate)),
+        const unsigned int& nClUpdateRate,
+        const unsigned int& nPhysicsRateMin) :
+        UnitTest(std::string(__FILE__) +
+            " tickrate: " + std::to_string(nTickrate) +
+            ", cl_updaterate: " + std::to_string(nClUpdateRate) +
+            ", physics_rate_min: " + std::to_string(nPhysicsRateMin)),
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
+        m_nPhysicsRateMin(nPhysicsRateMin),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL),
         cfgWpnPistol(false, false),
@@ -282,6 +287,7 @@ private:
 
     unsigned int m_nTickRate;
     unsigned int m_nClUpdateRate;
+    unsigned int m_nPhysicsRateMin;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -296,7 +302,7 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate, m_nClUpdateRate);
+        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
         std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
         {
@@ -675,7 +681,8 @@ private:
                 "PRooFPS-dd.exe",
                 "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
-                std::to_string(m_nClUpdateRate));
+                std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
+                std::to_string(m_nPhysicsRateMin));
         }
         else
         {
@@ -683,7 +690,8 @@ private:
                 "PRooFPS-dd.exe",
                 "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
-                std::to_string(m_nClUpdateRate));
+                std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
+                std::to_string(m_nPhysicsRateMin));
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.

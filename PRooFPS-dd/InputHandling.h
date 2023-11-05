@@ -63,7 +63,8 @@ namespace proofps_dd
             proofps_dd::Player& player,
             PureObject3D& objXHair,
             const unsigned int nTickrate,
-            const unsigned int nClUpdateRate);
+            const unsigned int nClUpdateRate,
+            const unsigned int nPhysicsRateMin);
 
         bool handleUserCmdMoveFromClient(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -96,7 +97,8 @@ namespace proofps_dd
             bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
             const unsigned int nTickrate,
-            const unsigned int nClUpdateRate);
+            const unsigned int nClUpdateRate,
+            const unsigned int nPhysicsRateMin);
 
         bool mouse(
             proofps_dd::GameMode& gameMode,
@@ -120,7 +122,8 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode,
             proofps_dd::Player& player,
             const unsigned int nTickrate,
-            const unsigned int nClUpdateRate);  // TODO: could be const if m_mapPlayers wouldnt be used with [] operator ...
+            const unsigned int nClUpdateRate,
+            const unsigned int nPhysicsRateMin);  // TODO: could be const if m_mapPlayers wouldnt be used with [] operator ...
 
     }; // class InputHandling
 

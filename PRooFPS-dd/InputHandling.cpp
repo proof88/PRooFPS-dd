@@ -72,14 +72,15 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     proofps_dd::Player& player,
     PureObject3D& objXHair,
     const unsigned int nTickrate,
-    const unsigned int nClUpdateRate)
+    const unsigned int nClUpdateRate,
+    const unsigned int nPhysicsRateMin)
 {
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
-    keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate);
+    keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     mouse(gameMode, won, pkt, player, objXHair);
     updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
 }
@@ -386,7 +387,8 @@ void proofps_dd::InputHandling::keyboard(
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
     const unsigned int nTickrate,
-    const unsigned int nClUpdateRate)
+    const unsigned int nClUpdateRate,
+    const unsigned int nPhysicsRateMin)
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -428,7 +430,7 @@ void proofps_dd::InputHandling::keyboard(
             if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
                 getConsole().SetLoggingState("4LLM0DUL3S", true);
-                RegTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate);
+                RegTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
                 getConsole().SetLoggingState("4LLM0DUL3S", false);
             }
         }
@@ -785,9 +787,11 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player,
     const unsigned int nTickrate,
-    const unsigned int nClUpdateRate)
+    const unsigned int nClUpdateRate,
+    const unsigned int nPhysicsRateMin)
 {
-    const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(m_pge.getNetwork().isServer(), nTickrate, nClUpdateRate);
+    const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(
+        m_pge.getNetwork().isServer(), nTickrate, nClUpdateRate, nPhysicsRateMin);
     std::ofstream fRegTestDump(sRegTestDumpFilename);
     if (fRegTestDump.fail())
     {

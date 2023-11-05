@@ -31,7 +31,7 @@ proofps_dd::WeaponHandling::WeaponHandling(
         m_mapPlayers,
         m_maps,
         m_sounds),
-    proofps_dd::PlayerHandling(pge, durations, maps, sounds),
+    proofps_dd::PlayerHandling(pge, durations, mapPlayers, maps, sounds),
     proofps_dd::UserInterface(pge),
     m_pge(pge),
     m_durations(durations),
@@ -78,7 +78,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
-void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nTickRate)
+void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nPhysicsRate)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -101,7 +101,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         }
         else
         {
-            bullet.Update(nTickRate);
+            bullet.Update(nPhysicsRate);
         }
 
         const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
@@ -112,7 +112,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             // check if bullet is hitting a player
             for (auto& playerPair : m_mapPlayers)
             {
-                if (bullet.getOwner() == playerPair.second.getServerSideConnectionHandle())
+                auto& player = playerPair.second;
+                if (bullet.getOwner() == player.getServerSideConnectionHandle())
                 {
                     // bullet cannot hit the owner, at least for now ...
                     // in the future, when bullets start in proper position, we won't need this check ...
@@ -120,12 +121,16 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     continue;
                 }
 
-                if ((playerPair.second.getHealth() > 0) &&
-                    Colliding(*(playerPair.second.getObject3D()), bullet.getObject3D()))
+                if ((player.getHealth() > 0) &&
+                    Colliding2_NoZ(
+                        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+                        player.getObject3D()->getSizeVec().getX(), player.getObject3D()->getSizeVec().getY(),
+                        fBulletPosX, fBulletPosY,
+                        bullet.getObject3D().getSizeVec().getX(), bullet.getObject3D().getSizeVec().getY()))
                 {
                     bDeleteBullet = true;
-                    playerPair.second.DoDamage(bullet.getDamageHp());
-                    if (playerPair.second.getHealth() == 0)
+                    player.DoDamage(bullet.getDamageHp());
+                    if (player.getHealth() == 0)
                     {
                         const auto itKiller = m_mapPlayers.find(bullet.getOwner());
                         if (itKiller == m_mapPlayers.end())
@@ -141,7 +146,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                         }
                         // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                        HandlePlayerDied(playerPair.second, objXHair);
+                        HandlePlayerDied(player, objXHair);
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
                 }
@@ -249,7 +254,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nTickRate)
+void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysicsRate)
 {
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
@@ -262,7 +267,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nTickRa
         // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
         // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
-        bullet.Update(nTickRate);
+        bullet.Update(nPhysicsRate);
 
         // There was a time when I was thinking that client should check against out of map bounds to cover corner case when we somehow miss
         // the server's signal about that, in that case client would continue simulate bullet travel forever.

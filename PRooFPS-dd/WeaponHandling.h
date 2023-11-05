@@ -58,8 +58,8 @@ namespace proofps_dd
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             PureObject3D& objXHair,
-            const unsigned int& nTickRate);
-        void clientUpdateBullets(const unsigned int& nTickRate);
+            const unsigned int& nPhysicsRate);
+        void clientUpdateBullets(const unsigned int& nPhysicsRate);
         
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

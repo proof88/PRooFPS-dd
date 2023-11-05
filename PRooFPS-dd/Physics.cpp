@@ -25,7 +25,7 @@ proofps_dd::Physics::Physics(
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
-    proofps_dd::PlayerHandling(pge, durations, maps, sounds),
+    proofps_dd::PlayerHandling(pge, durations, mapPlayers, maps, sounds),
     proofps_dd::UserInterface(pge),
     m_pge(pge),
     m_durations(durations),
@@ -134,7 +134,7 @@ bool proofps_dd::Physics::Colliding3(
     );
 }
 
-void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nTickRate)
+void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate)
 {   
     /* Although I tried to make calculations to have same result with different tickrate, the
        results are not the same, just SIMILAR when comparing 60 vs 20 Hz results.
@@ -143,7 +143,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         - for 20 Hz, GAME_GRAVITY_CONST should be 80.f to have same jumping.
        So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate. */
 
-    static const float GAME_GRAVITY_LERP_FACTOR = (nTickRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    static const float GAME_GRAVITY_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
@@ -151,7 +151,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     {
         auto& player = playerPair.second;
 
-        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nTickRate;
+        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
         player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
         {
@@ -176,7 +176,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nTickRate,
+                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate,
                 player.getPos().getNew().getZ()
             ));
 
@@ -188,10 +188,10 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     }
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nTickRate)
+void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nPhysicsRate)
 {
-    static const float GAME_PLAYER_SPEED_WALK = 2.0f / nTickRate;
-    static const float GAME_PLAYER_SPEED_RUN = 4.0f / nTickRate;
+    static const float GAME_PLAYER_SPEED_WALK = 2.0f / nPhysicsRate;
+    static const float GAME_PLAYER_SPEED_RUN = 4.0f / nPhysicsRate;
 
     for (auto& playerPair : m_mapPlayers)
     {

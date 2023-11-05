@@ -1,0 +1,48 @@
+Tx: Total Pkt Count, Pkt/Second
+    9
+    0
+Rx: Total Pkt Count, Pkt/Second
+  545
+   24
+Inject: Total Pkt Count, Pkt/Second
+    0
+    0
+
+Tx: Total Byte Count
+         279
+Rx: Total Byte Count
+       28577
+Inject: Total Byte Count
+           0
+
+Total Tx'd App Msg Count per AppMsgId:
+  Id  1 MsgUserCmdFromClient          :   9
+
+Total Rx'd App Msg Count per AppMsgId:
+  Id  0 MsgUserSetupFromServer        :   2
+  Id  2 MsgUserUpdateFromServer       : 510
+  Id  3 MsgBulletUpdateFromServer     :  16
+  Id  4 MsgMapItemUpdateFromServer    :   7
+  Id  5 MsgWpnUpdateFromServer        :   8
+  Id  6 MsgCurrentWpnUpdateFromServer :   2
+
+Total Inj'd App Msg Count per AppMsgId:
+
+Frag Table: Player Name, Frags, Deaths
+  User28467
+          1
+          0
+  User10041
+          0
+          1
+
+Weapons Available: Weapon Filename, Mag Bullet Count, Unmag Bullet Count
+  machinegun.txt
+              24
+               0
+  pistol.txt
+          12
+          12
+
+Player Info: Health
+  20
