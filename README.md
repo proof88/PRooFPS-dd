@@ -34,12 +34,12 @@ If the game cannot start due to missing DLL files, [this Visual C++ Redistributa
 
 ### Run as Server
 
-To start as server, simply run PRooFPS-dd.exe.
+To start as server, simply run `PRooFPS-dd.exe`.
 
 ### Run as Client
 
 To start as client, simply run the convenient `PRooFPS-dd-as-client.bat` (Windows) or `PRooFPS-dd-as-client.sh` (Linux).  
-To specify IP-address of the server for the client, change cl_server_ip CVAR in gamedata\profiles\proof88\proof88.cfg.  
+To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata\profiles\proof88\proof88.cfg`.  
 
 Alternatively, you can use command line arguments as well, e.g.:  
 `./PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100`
@@ -53,7 +53,7 @@ Alternatively, you can use command line arguments as well, e.g.:
  - **Mouse Click**: attack;
  - **TAB:** show frag table;
  - **BACKSPACE:** show GUI demo;
- - **ENTER/RETURN:** if "testing=true" CVAR is defined, it makes a dump of testing data into "RegTestDumpServer.txt" or "RegTestDumpClient.txt";
+ - **ENTER/RETURN:** if `"testing=true"` CVAR is defined, it makes a dump of testing data into `"RegTestDumpServer.txt"` or `"RegTestDumpClient.txt"`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
 ### Debugging
@@ -98,11 +98,11 @@ Contains NO changes to gameplay compared to the previous version except fixing [
 
 ### v0.1.3 Private Beta (Aug 20, 2023)
 
-This version contains no changes to gameplay compared to the previous version except that the movement of the player might have a slightly different feeling.  
+This version contains **no changes to gameplay** compared to the previous version except that the movement of the player might have a slightly different feeling.  
 This version introduces **a lot of changes to overcome network- and physics related issues** experienced with v0.1 Private Beta during the LAN Party event last December: lost packets between server and clients and occasional huge jumps of players.
 
 Under-the-hood changes:
- - **Hardening Physics Calculations**: results are now calculated in fixed timesteps, have become rate-independent i.e. updating physics with lower rate still generate same results;
+ - **Hardening Physics Calculations**: results are now calculated in fixed timesteps, have become almost rate-independent i.e. updating physics with lower rate still generate same results;
  - **Introduce Tickrate**: physics calculations and updating clients are now tied to a new rate called tickrate that is independent of framerate, that is usually lower than framerate;
  - **CVAR "tickrate"** added for configuring tickrate: currently values between 20 and 60 Hz are supported. Value of 20 Hz reduces packet rate in server->client direction to 1/3 of original tickrate 60 Hz;
  - **Regression Test Update**: now regression test runs with 2 different tickrate configs: 60 and 20 Hz and expect the same result;
@@ -114,11 +114,11 @@ Expected changes in upcoming v0.1.4 Private Beta:
 
 ### v0.1.2 Private Beta (May 13, 2023)
 
-This version contains no changes to gameplay compared to the previous version, only massive code refactoring.
+This version contains **no changes to gameplay** compared to the previous version, only **massive code refactoring**.
 
 ### v0.1.1 Private Beta (March 10, 2023)
 
-This version contains no changes to gameplay compared to the previous version, only changes that make testing for regression easier:
+This version contains **no changes to gameplay** compared to the previous version, only changes that **make testing for regression easier**:
  - **FTR: user profile config support**: each user can have their own config files. Currently the config file of the first found user profile is loaded automatically. With this change, there is no more need for "gyorsan.txt" and "server.txt".
 The following cvars (config variables) are supported so far: **cl_name, cl_server_ip, gfx_windowed, gfx_vsync, net_server, sv_map**.
  - **FTR: command line support**: cvars (config variables) can be also defined now in command line arguments. These override values loaded from user profile config file (except cl_name).
@@ -132,4 +132,4 @@ Example command line to start up a client: **"PRooFPS-dd.exe --net_server=false 
 
 On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available for **[download here](https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link)**.
 
-The Visual C++ Redistributable Package installer is also included in the zip, it might be needed to be installed before running the game.
+The Visual C++ Redistributable Package installer is also included in the zip, it might be needed to be installed before running the game (use the x86 version).
