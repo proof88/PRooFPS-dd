@@ -5,6 +5,8 @@
 </p>
 Clicking on the image above brings you to a short **YouTube teaser video**:
 
+[TOC]
+
 ## Summary
 
 This game is the successor of the original PR00FPS:
