@@ -6,7 +6,6 @@
 Clicking on the image above brings you to a short YouTube teaser video.
 
 **Table of Contents**
-
 - [PRooFPS-dd](#proofps-dd)
   * [Summary](#summary)
   * [Try the Game](#try-the-game)
