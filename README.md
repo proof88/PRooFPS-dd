@@ -123,6 +123,6 @@ Example command line to start up a client: **"PRooFPS-dd.exe --net_server=false 
 
 ### v0.1 Private Beta (Dec 16, 2022)
 
-On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available for [**download here**](https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link).
+On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available for **[download here](https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link)**.
 
 The Visual C++ Redistributable Package installer is also included in the zip, it might be needed to be installed before running the game.
