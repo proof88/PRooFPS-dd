@@ -3,25 +3,15 @@
 <p align="center">
   <a href="http://www.youtube.com/watch?feature=player_embedded&v=XPMMzPYjR98" target="_blank"><img src="PR00FPS-dd-logo.png" alt="Click to see the video!"/></a>
 </p>
-Clicking on the image above brings you to a short **YouTube teaser video**:
+Clicking on the image above brings you to a short YouTube teaser video.
 
 **Table of Contents**
 
 - [PRooFPS-dd](#proofps-dd)
   * [Summary](#summary)
   * [Try the Game](#try-the-game)
-    + [Run as Server](#run-as-server)
-    + [Run as Client](#run-as-client)
-    + [Keyboard, Mouse](#keyboard--mouse)
-    + [Debugging](#debugging)
   * [Build](#build)
   * [History](#history)
-    + [v0.1.5 Private Beta (TBD)](#v015-private-beta--tbd-)
-    + [v0.1.4 Private Beta (Oct 13, 2023)](#v014-private-beta--oct-13--2023-)
-    + [v0.1.3 Private Beta (Aug 20, 2023)](#v013-private-beta--aug-20--2023-)
-    + [v0.1.2 Private Beta (May 13, 2023)](#v012-private-beta--may-13--2023-)
-    + [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta--march-10--2023-)
-    + [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta--dec-16--2022-)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
