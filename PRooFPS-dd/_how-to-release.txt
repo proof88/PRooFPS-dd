@@ -10,6 +10,8 @@
 
  - update game version number in Consts.h (GAME_VERSION);
 
+ - update the packet rate and packet data rate calculations in https://github.com/proof88/PGE/blob/master/PGE/docpages/menu-04-Networking.md ;
+
  - build a Release version with "Release" configuration;
 
  - copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
@@ -33,7 +35,9 @@
 
  - check if game is able to start up from this new release directory, if so then compress and upload;
 
- - update the wiki page on github (README.md), especially the "Try the game" and "History" sections;
+ - check if game is able to start up on a separate machine after downloading;
+
+ - update the wiki page on github (README.md), especially the "Try the game", "Debugging" and "History" sections;
 
  - make sure you pull the updated README.md, and then push a new commit including the changes regarding the
    RegTestDump files described above;
