@@ -3,9 +3,8 @@
 <p align="center">
   <a href="http://www.youtube.com/watch?feature=player_embedded&v=XPMMzPYjR98" target="_blank"><img src="PR00FPS-dd-logo.png" alt="Click to see the video!"/></a>
 </p>
-Clicking on the image above brings you to a short YouTube teaser video.
 
-- [PRooFPS-dd](#proofps-dd)
+- [Table of Contents](#proofps-dd)
   * [Summary](#summary)
   * [Try the Game](#try-the-game)
   * [Build](#build)
