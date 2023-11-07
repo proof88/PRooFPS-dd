@@ -34,7 +34,7 @@ To start as server, simply run PRooFPS-dd.exe.
 To start as client, simply run the convenient PRooFPS-dd-as-client.bat (Windows) or PRooFPS-dd-as-client.sh (Linux).  
 To specify IP-address of the server for the client, change cl_server_ip CVAR in gamedata\profiles\proof88\proof88.cfg.  
 
-You can use command line arguments as well, e.g.:  
+Alternatively, you can use command line arguments as well, e.g.:  
 ./PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100
 
 ### Keyboard, Mouse
