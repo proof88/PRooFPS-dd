@@ -1,35 +1,35 @@
 Tx: Total Pkt Count, Pkt/Second
-  214
+  212
     9
 Rx: Total Pkt Count, Pkt/Second
-   10
+    9
     0
 Inject: Total Pkt Count, Pkt/Second
-  198
+  196
     7
 
 Tx: Total Byte Count
-       11696
+       11594
 Rx: Total Byte Count
-         310
+         279
 Inject: Total Byte Count
-       53064
+       52528
 
 Total Tx'd App Msg Count per AppMsgId:
   Id  0 MsgUserSetupFromServer        :   2
-  Id  2 MsgUserUpdateFromServer       : 179
+  Id  2 MsgUserUpdateFromServer       : 177
   Id  3 MsgBulletUpdateFromServer     :  16
   Id  4 MsgMapItemUpdateFromServer    :   7
   Id  5 MsgWpnUpdateFromServer        :   8
   Id  6 MsgCurrentWpnUpdateFromServer :   2
 
 Total Rx'd App Msg Count per AppMsgId:
-  Id  1 MsgUserCmdFromClient          :  10
+  Id  1 MsgUserCmdFromClient          :   9
 
 Total Inj'd App Msg Count per AppMsgId:
   Id  0 MsgUserSetupFromServer        :   2
   Id  1 MsgUserCmdFromClient          :  11
-  Id  2 MsgUserUpdateFromServer       : 185
+  Id  2 MsgUserUpdateFromServer       : 183
 
 Frag Table: Player Name, Frags, Deaths
   User28467

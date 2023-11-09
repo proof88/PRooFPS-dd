@@ -2,8 +2,8 @@ Tx: Total Pkt Count, Pkt/Second
     9
     0
 Rx: Total Pkt Count, Pkt/Second
-  545
-   24
+  543
+   25
 Inject: Total Pkt Count, Pkt/Second
     0
     0
@@ -11,7 +11,7 @@ Inject: Total Pkt Count, Pkt/Second
 Tx: Total Byte Count
          279
 Rx: Total Byte Count
-       28577
+       28475
 Inject: Total Byte Count
            0
 
@@ -20,7 +20,7 @@ Total Tx'd App Msg Count per AppMsgId:
 
 Total Rx'd App Msg Count per AppMsgId:
   Id  0 MsgUserSetupFromServer        :   2
-  Id  2 MsgUserUpdateFromServer       : 510
+  Id  2 MsgUserUpdateFromServer       : 508
   Id  3 MsgBulletUpdateFromServer     :  16
   Id  4 MsgMapItemUpdateFromServer    :   7
   Id  5 MsgWpnUpdateFromServer        :   8
