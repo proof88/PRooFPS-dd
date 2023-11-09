@@ -67,6 +67,8 @@ namespace proofps_dd
         void serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate);
         void serverPlayerCollisionWithWalls(bool& won, const unsigned int& nPhysicsRate);
 
+        void serverSetAllowStrafeMidAir(bool bAllow);
+
     private:
 
         // ---------------------------------------------------------------------------
@@ -76,6 +78,7 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
+        bool m_bAllowStrafeMidAir;
 
     }; // class Physics
 

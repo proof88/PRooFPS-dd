@@ -203,7 +203,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
                 // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
                 // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it to the
                 // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
-                player.setWillJump(true);
+                player.setWillJumpInNextTick(true);
             }
         }
     }

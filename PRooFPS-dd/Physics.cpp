@@ -31,7 +31,8 @@ proofps_dd::Physics::Physics(
     m_durations(durations),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
-    m_sounds(sounds)
+    m_sounds(sounds),
+    m_bAllowStrafeMidAir(true)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -141,7 +142,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
        The real difference is during jumping:
         - for 60 Hz, GAME_GRAVITY_CONST should be 90.f,
         - for 20 Hz, GAME_GRAVITY_CONST should be 80.f to have same jumping.
-       So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate. */
+       So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate.
+       Note that originally I wanted to lerp GAME_JUMP_GRAVITY_START as commented at its definition. */
 
     static const float GAME_GRAVITY_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
@@ -151,13 +153,18 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     {
         auto& player = playerPair.second;
 
+        player.getHasJustStartedFallingNaturallyInThisTick() = false;
+        player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = false;
         const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
         player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
         {
             if (player.getGravity() < 0.0f)
             {
+                //getConsole().EOLn("stopped jumping up (natural): %f", player.getGravity());
+                player.SetGravity(0.f);
                 player.StopJumping();
+                player.getHasJustStoppedJumpingInThisTick() = true;
                 player.SetCanFall(true);
             }
         }
@@ -165,8 +172,18 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         {
             if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
             {
-                // this means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down
-                //getConsole().EOLn("start falling (natural): %f", player.getGravity());
+                // This means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down.
+                // We won't come here in next tick.
+                if (player.getHasJustStoppedJumpingInThisTick())
+                {
+                    player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = true;
+                }
+                else
+                {
+                    player.getHasJustStartedFallingNaturallyInThisTick() = true;
+                }
+                player.getHasJustStoppedJumpingInThisTick() = false;
+                //getConsole().EOLn("asd: %f", player.getGravity());
             }
             player.SetCanFall(true);
             // player gravity cannot go below GAME_FALL_GRAVITY_MIN
@@ -198,7 +215,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         auto& player = playerPair.second;
 
         const PureObject3D* const plobj = player.getObject3D();
-        const PureVector vecOriginalJumpForce = player.getJumpForce();
+        PureVector vecOriginalJumpForce = player.getJumpForce();
 
         // how to make collision detection even faster:
         // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
@@ -260,6 +277,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     //getConsole().EOLn("start falling (hit ceiling)");
                     player.SetCanFall(true);
                     player.StopJumping();
+                    player.getHasJustStoppedJumpingInThisTick() = true;
                     player.SetGravity(0.f);
                 }
 
@@ -275,16 +293,24 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             {
                 fStrafeSpeed = -fStrafeSpeed;
             }
-            if ( (!player.isJumping() && !player.canFall()) ||
-                 ((vecOriginalJumpForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
+
+            if (player.getHasJustStartedFallingNaturallyInThisTick())
+            {
+                player.getJumpForce().SetX(fStrafeSpeed);
+                vecOriginalJumpForce = player.getJumpForce();
+            }
+
+            const bool bPlayerInAir = player.isJumping() || player.canFall();
+            if ( !bPlayerInAir ||
+                 (m_bAllowStrafeMidAir &&
+                 (
+                    /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
+                    (vecOriginalJumpForce.getX() == 0.f) ||
+                    /* if we have horizontal jump force, we cannot add more to it in the same direction */
+                    ((vecOriginalJumpForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
+                 ))
                )
             {
-                // if we have horizontal force applied (due to ongoing jumping), we should let strafe affect movement only against the force,
-                // but not adding extra movement speed in same direction. This still allows the player to control the movement a bit during
-                // jumping/falling.
-                // On the long run, force will be used by other effects as well e.g. explosions, in that case we need to change this condition
-                // here because this condition won't be enough to decide if force is due to jumping/falling or explosion.
-
                 ++nContinuousStrafeCount;
                 //getConsole().EOLn("Tick Strafe");
 
@@ -295,9 +321,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                         player.getPos().getNew().getY(),
                         player.getPos().getNew().getZ()
                     ));
-                // since v0.1.3 strafe is a continuous server operation which requires explicit stop from client, so
-                // we set Strafe::NONE only when client tells us that user released strafe key.
-                //   player.setStrafe(proofps_dd::Strafe::NONE);
             }
         }
         else
@@ -314,11 +337,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
         // that is essential for the Jump() function below to record the X-forces for the player.
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
-        if (player.getWillJump())
+        if (player.getWillJumpInNextTick())
         {
             //getConsole().EOLn("start jumping");
             // now we can actually jump and have the correct forces be saved for the jump
-            player.Jump(); // resets setWillJump()
+            player.Jump(); // resets setWillJumpInNextTick()
         }
 
         // PPPKKKGGGGGG
@@ -358,6 +381,15 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     continue;
                 }
 
+                if (m_bAllowStrafeMidAir || player.canFall())
+                {
+                    // Horizontal collision must stop horizontal jump-induced force (unlike explosion-induced force).
+                    // However, in case of m_bAllowStrafeMidAir == false it would make it impossible to jump on a box
+                    // when jump is initiated from right next to the box. So as a cheat we allow keeping the horizontal
+                    // jump-induced force for the period of jumping and just zero it out at the moment of starting to fall.
+                    player.getJumpForce().SetX(0.f);
+                }
+
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
@@ -374,6 +406,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end XPos changed
     } // end for player
+}
+
+void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
+{
+    m_bAllowStrafeMidAir = bAllow;
 }
 
 

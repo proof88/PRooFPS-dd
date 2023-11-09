@@ -40,6 +40,9 @@ proofps_dd::Player::Player(
     m_fGravity(0.f),
     m_bJumping(false),
     b_mCanFall(true),
+    m_bHasJustStartedFallingNaturally(true),
+    m_bHasJustStartedFallingAfterJumpingStopped(false),
+    m_bHasJustStoppedJumping(false),
     m_bRunning(true),
     m_bAllowJump(false),
     m_bWillJump(false),
@@ -66,6 +69,9 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
     b_mCanFall(other.b_mCanFall),
+    m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
+    m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
+    m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bRunning(other.m_bRunning),
     m_bAllowJump(other.m_bAllowJump),
     m_bWillJump(other.m_bWillJump),
@@ -91,6 +97,9 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
     b_mCanFall = other.b_mCanFall;
+    m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
+    m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
+    m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
     m_bRunning = other.m_bRunning;
     m_bAllowJump = other.m_bAllowJump;
     m_bWillJump = other.m_bWillJump;
@@ -257,14 +266,24 @@ bool proofps_dd::Player::isJumping() const
     return m_bJumping;
 }
 
-bool proofps_dd::Player::isFalling() const
-{
-    return (m_fGravity == 0.0f);
-}
-
 bool proofps_dd::Player::canFall() const
 {
     return b_mCanFall;
+}
+
+bool& proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick()
+{
+    return m_bHasJustStartedFallingNaturally;
+}
+
+bool& proofps_dd::Player::getHasJustStartedFallingAfterJumpingStoppedInThisTick()
+{
+    return m_bHasJustStartedFallingAfterJumpingStopped;
+}
+
+bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
+{
+    return m_bHasJustStoppedJumping;
 }
 
 void proofps_dd::Player::SetHealth(int value) {
@@ -303,12 +322,12 @@ void proofps_dd::Player::StopJumping() {
     m_bJumping = false;
 }
 
-bool proofps_dd::Player::getWillJump() const
+bool proofps_dd::Player::getWillJumpInNextTick() const
 {
     return m_bWillJump;
 }
 
-void proofps_dd::Player::setWillJump(bool flag)
+void proofps_dd::Player::setWillJumpInNextTick(bool flag)
 {
     if (!jumpAllowed())
     {

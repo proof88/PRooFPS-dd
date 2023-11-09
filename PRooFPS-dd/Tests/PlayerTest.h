@@ -146,10 +146,12 @@ private:
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
             assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
-            assertTrue(player.isFalling(), "falling") &
+            assertTrue(player.getHasJustStartedFallingNaturallyInThisTick(), "getHasJustStartedFallingNaturallyInThisTick") &
+            assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
+            assertFalse(player.getHasJustStoppedJumpingInThisTick(), "getHasJustStoppedJumpingInThisTick") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
-            assertFalse(player.getWillJump(), "will jump") &
+            assertFalse(player.getWillJumpInNextTick(), "will jump") &
             assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
             assertTrue(player.isExpectingStartPos(), "expecting start pos") &
             assertTrue(player.isRunning(), "running default") &
@@ -493,41 +495,37 @@ private:
         bool b = assertTrue(player.jumpAllowed(), "allowed 1") &
             assertFalse(player.isJumping(), "jumping 1") &
             assertEquals(0.f, player.getGravity(), "gravity 1") &
-            assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
-            assertTrue(player.isFalling(), "falling 1");
+            assertEquals(PureVector(), player.getJumpForce(), "jump force 1");
 
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
-        player.setWillJump(true);
+        player.setWillJumpInNextTick(true);
         const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump = player.getTimeLastSetWillJump();
         b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
             assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
-        b &= assertTrue(player.getWillJump(), "will jump 1");
+        b &= assertTrue(player.getWillJumpInNextTick(), "will jump 1");
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
             assertTrue(player.isJumping(), "jumping 2") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 2") &
             assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
-            assertFalse(player.isFalling(), "falling 2") &
-            assertFalse(player.getWillJump(), "will jump 2");
+            assertFalse(player.getWillJumpInNextTick(), "will jump 2");
 
         player.StopJumping();
         b &= assertFalse(player.jumpAllowed(), "allowed 3") &
             assertFalse(player.isJumping(), "jumping 3") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 3") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
-            assertFalse(player.isFalling(), "falling 3");
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3");
 
         player.SetJumpAllowed(false);
-        player.setWillJump(true);
-        b &= assertFalse(player.getWillJump(), "will jump 3") &
+        player.setWillJumpInNextTick(true);
+        b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
             assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged");
 
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 4") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
-            assertFalse(player.isFalling(), "falling 4");
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4");
 
         return b;
     }

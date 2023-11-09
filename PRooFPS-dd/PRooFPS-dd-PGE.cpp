@@ -36,6 +36,7 @@ static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
 static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
+static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
 
 
 // ############################### PUBLIC ################################
@@ -358,6 +359,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     {
         getConsole().OLn("Missing Client update rate in config, forcing default: %u Hz", m_nClientUpdateRate);
     }
+
+    serverSetAllowStrafeMidAir( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() );
 
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
