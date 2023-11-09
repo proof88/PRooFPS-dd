@@ -103,7 +103,7 @@ namespace proofps_dd
         bool attack();
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
-        PureVector& getForce();
+        PureVector& getJumpForce();
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
         PgeOldNewValue<PureVector>& getWeaponAngle();
@@ -156,7 +156,7 @@ namespace proofps_dd
         };
         bool m_bNetDirty;
 
-        PureVector m_vecForce;
+        PureVector m_vecJumpForce;
         PureObject3D* m_pObj;
         WeaponManager m_wpnMgr;
         PGEcfgProfiles& m_cfgProfiles;

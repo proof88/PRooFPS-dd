@@ -198,7 +198,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         auto& player = playerPair.second;
 
         const PureObject3D* const plobj = player.getObject3D();
-        const PureVector vecOriginalForce = player.getForce();
+        const PureVector vecOriginalJumpForce = player.getJumpForce();
 
         // how to make collision detection even faster:
         // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
@@ -251,7 +251,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     // maybe not null everything out in the future but only decrement the components by
                     // some value, since if there is an explosion-induced force, it shouldnt be nulled out
                     // at this moment. Currently we want to null out the strafe-jump-induced force.
-                    player.getForce().Set(0.f, 0.f, 0.f);
+                    player.getJumpForce().Set(0.f, 0.f, 0.f);
                     player.SetGravity(0.f);
                 }
                 else
@@ -276,7 +276,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 fStrafeSpeed = -fStrafeSpeed;
             }
             if ( (!player.isJumping() && !player.canFall()) ||
-                 ((vecOriginalForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
+                 ((vecOriginalJumpForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
                )
             {
                 // if we have horizontal force applied (due to ongoing jumping), we should let strafe affect movement only against the force,
@@ -323,7 +323,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         // PPPKKKGGGGGG
         player.getPos().set(
-            /* we use the vecOriginalForce instead of current force because current force might had been
+            /* we use the vecOriginalJumpForce instead of current force because current force might had been
                zeroed out above in the moment of falling on the ground, however here we still have to add
                the original force to be perfect.
                If we dont do this, there will be a 1 frame outage in the continuity of strafe movement at
@@ -331,7 +331,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                due to ongoing jumping, while this current function terminates jumping above before we could
                apply the force here for last time - hence we use the original force at the beginning of function. */
             PureVector(
-                player.getPos().getNew().getX() + vecOriginalForce.getX(),
+                player.getPos().getNew().getX() + vecOriginalJumpForce.getX(),
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ()
             ));

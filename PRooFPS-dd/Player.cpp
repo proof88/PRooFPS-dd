@@ -57,7 +57,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_sName(other.m_sName),
     m_vecOldNewValues(other.m_vecOldNewValues),
     m_bNetDirty(other.m_bNetDirty),
-    m_vecForce(other.m_vecForce),
+    m_vecJumpForce(other.m_vecJumpForce),
     m_pObj(PGENULL),
     m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
     m_cfgProfiles(other.m_cfgProfiles),
@@ -85,7 +85,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_sName = other.m_sName;
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_bNetDirty = other.m_bNetDirty;
-    m_vecForce = other.m_vecForce;
+    m_vecJumpForce = other.m_vecJumpForce;
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
@@ -293,10 +293,10 @@ void proofps_dd::Player::Jump() {
     m_bJumping = true;
     m_bWillJump = false;
     m_fGravity = proofps_dd::GAME_JUMP_GRAVITY_START;
-    m_vecForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
-    m_vecForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
-    m_vecForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
-    //getConsole().EOLn("jump x force: %f", m_vecForce.getX());
+    m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
+    m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
+    m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
+    //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
 }
 
 void proofps_dd::Player::StopJumping() {
@@ -383,9 +383,9 @@ bool proofps_dd::Player::attack()
     return wpn->pullTrigger();
 }
 
-PureVector& proofps_dd::Player::getForce()
+PureVector& proofps_dd::Player::getJumpForce()
 {
-    return m_vecForce;
+    return m_vecJumpForce;
 }
 
 bool proofps_dd::Player::isExpectingStartPos() const

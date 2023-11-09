@@ -157,7 +157,7 @@ private:
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
-            assertEquals(PureVector(), player.getForce(), "force") &
+            assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
             assertFalse(player.getPos().isDirty(), "old pos") &
@@ -493,7 +493,7 @@ private:
         bool b = assertTrue(player.jumpAllowed(), "allowed 1") &
             assertFalse(player.isJumping(), "jumping 1") &
             assertEquals(0.f, player.getGravity(), "gravity 1") &
-            assertEquals(PureVector(), player.getForce(), "force 1") &
+            assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
             assertTrue(player.isFalling(), "falling 1");
 
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
@@ -506,7 +506,7 @@ private:
         b &= assertFalse(player.jumpAllowed(), "allowed 2") &
             assertTrue(player.isJumping(), "jumping 2") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 2") &
-            assertEquals(vecExpectedForce, player.getForce(), "force 2") &
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
             assertFalse(player.isFalling(), "falling 2") &
             assertFalse(player.getWillJump(), "will jump 2");
 
@@ -514,7 +514,7 @@ private:
         b &= assertFalse(player.jumpAllowed(), "allowed 3") &
             assertFalse(player.isJumping(), "jumping 3") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 3") &
-            assertEquals(vecExpectedForce, player.getForce(), "force 3") &
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
             assertFalse(player.isFalling(), "falling 3");
 
         player.SetJumpAllowed(false);
@@ -526,7 +526,7 @@ private:
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 4") &
-            assertEquals(vecExpectedForce, player.getForce(), "force 4") &
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
             assertFalse(player.isFalling(), "falling 4");
 
         return b;
