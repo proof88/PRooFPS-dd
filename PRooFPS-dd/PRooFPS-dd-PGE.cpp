@@ -37,6 +37,7 @@ static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
+static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
 
 
 // ############################### PUBLIC ################################
@@ -361,6 +362,15 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     }
 
     serverSetAllowStrafeMidAir( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() );
+    
+    if (getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() &&
+        !getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool())
+    {
+        getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
+        getConsole().EOLn("ERROR: %s cannot be true when %s is false, forcing false!",
+            CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL, CVAR_SV_ALLOW_STRAFE_MID_AIR);
+    }
+    serverSetAllowStrafeMidAirFull( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() );
 
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));

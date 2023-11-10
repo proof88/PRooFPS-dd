@@ -32,7 +32,8 @@ proofps_dd::Physics::Physics(
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
-    m_bAllowStrafeMidAir(true)
+    m_bAllowStrafeMidAir(true),
+    m_bAllowStrafeMidAirFull(false)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -314,6 +315,13 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 ++nContinuousStrafeCount;
                 //getConsole().EOLn("Tick Strafe");
 
+                if (m_bAllowStrafeMidAirFull)
+                {
+                    // cancel the saved horizontal force, let the player have full control over mid-air strafe
+                    player.getJumpForce().SetX(0.f);
+                    vecOriginalJumpForce = player.getJumpForce();
+                }
+
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
@@ -411,6 +419,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
 {
     m_bAllowStrafeMidAir = bAllow;
+}
+
+void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
+{
+    m_bAllowStrafeMidAirFull = bAllow;
 }
 
 
