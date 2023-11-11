@@ -752,40 +752,50 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
 
 void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
 {
-    PureVector campos = getPure().getCamera().getPosVec();
-    float celx, cely;
-    float speed = GAME_CAM_SPEED * m_fps;
+    constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
+    constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
+    constexpr unsigned int nBlocksToKeepCameraWithinMapTop = 1;
+    
+    const float fCamMinAllowedPosX =
+        m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
+        m_maps.getBlocksVertexPosMin().getX() :
+        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::GAME_BLOCK_SIZE_X * (nBlocksToKeepCameraWithinMapBoundsHorizontally));
+    const float fCamMaxAllowedPosX =
+        m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
+        m_maps.getBlocksVertexPosMax().getX() :
+        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::GAME_BLOCK_SIZE_X * (m_maps.width() - nBlocksToKeepCameraWithinMapBoundsHorizontally));
+    
+    const float fCamMinAllowedPosY =
+        m_maps.height() < (nBlocksToKeepCameraWithinMapBottom + 1) ?
+        m_maps.getBlocksVertexPosMin().getY() :
+        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (nBlocksToKeepCameraWithinMapBottom - 1));
+    const float fCamMaxAllowedPosY =
+        m_maps.height() < (nBlocksToKeepCameraWithinMapTop + 1) ?
+        m_maps.getBlocksVertexPosMax().getY() :
+        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
-    /* ne mehessen túlságosan balra vagy jobbra a kamera */
-    //if ( m_player.getPos().getX() < m_maps.getStartPos().getX() )
-    //    celx = m_maps.getStartPos().getX();
-    //else
-    //    if ( m_player.getPos().getX() > m_maps.getEndPos().getX() )
-    //        celx = m_maps.getEndPos().getX();
-    //     else
-    celx = player.getObject3D()->getPosVec().getX();
+    const float fCamTargetX = std::min(
+        fCamMaxAllowedPosX,
+        std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
+    
+    const float fCamTargetY = std::min(
+        fCamMaxAllowedPosY,
+        std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
 
-    /* ne mehessen túlságosan le és fel a kamera */
-    //if ( m_player.getPos().getY() < m_fCameraMinY )
-    //    cely = m_fCameraMinY;
-    //else
-    //    if ( m_player.getPos().getY() > GAME_CAM_MAX_Y )
-    //        cely = GAME_CAM_MAX_Y;
-    //    else
-    cely = player.getObject3D()->getPosVec().getY();
+    const float fSpeed = GAME_CAM_SPEED * m_fps;
+    auto& camera = getPure().getCamera();
+    const PureVector vecCamPos{
+        PFL::smooth(camera.getPosVec().getX(), fCamTargetX, fSpeed),
+        PFL::smooth(camera.getPosVec().getY(), fCamTargetY, fSpeed),
+        GAME_CAM_Z
+    };
 
-    /* a játékoshoz igazítjuk a kamerát */
-    if (celx != campos.getX())
-    {
-        campos.SetX(campos.getX() + ((celx - campos.getX()) / speed));
-    }
-    if (cely != campos.getY())
-    {
-        campos.SetY(campos.getY() + ((cely - campos.getY()) / speed));
-    }
-
-    getPure().getCamera().getPosVec().Set(campos.getX(), campos.getY(), GAME_CAM_Z);
-    getPure().getCamera().getTargetVec().Set(campos.getX(), campos.getY(), player.getObject3D()->getPosVec().getZ());
+    camera.getPosVec() = vecCamPos;
+    camera.getTargetVec().Set(
+        vecCamPos.getX(),
+        vecCamPos.getY(),
+        player.getObject3D()->getPosVec().getZ()
+    );
 
 } // CameraMovement()
 

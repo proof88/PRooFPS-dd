@@ -213,10 +213,16 @@ bool proofps_dd::Maps::load(const char* fname)
             }
         }
     }
-    m_blocksVertexPosMin.Set(m_blockPosMin.getX() - proofps_dd::GAME_BLOCK_SIZE_X / 2.f, m_blockPosMin.getY() - proofps_dd::GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMin.getZ() - proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
-    m_blocksVertexPosMax.Set(m_blockPosMax.getX() + proofps_dd::GAME_BLOCK_SIZE_X / 2.f, m_blockPosMax.getY() + proofps_dd::GAME_BLOCK_SIZE_Y / 2.f, m_blockPosMax.getZ() + proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMin.Set(
+        m_blockPosMin.getX() - proofps_dd::GAME_BLOCK_SIZE_X / 2.f,
+        m_blockPosMin.getY() - proofps_dd::GAME_BLOCK_SIZE_Y / 2.f,
+        m_blockPosMin.getZ() - proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
+    m_blocksVertexPosMax.Set(
+        m_blockPosMax.getX() + proofps_dd::GAME_BLOCK_SIZE_X / 2.f,
+        m_blockPosMax.getY() + proofps_dd::GAME_BLOCK_SIZE_Y / 2.f,
+        m_blockPosMax.getZ() + proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
 
-    getConsole().SOLnOO("Map loaded with width %d and height %d!", m_width, m_height);
+    getConsole().SOLnOO("Map loaded with width %u and height %u!", m_width, m_height);
     return true;
 }
 
