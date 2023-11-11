@@ -15,7 +15,7 @@
 ## Summary
 
 This game is the successor of the [original PR00FPS made in 2007](https://github.com/proof88/PR00FPS).  
-It uses my open-source [game engine]().
+It uses my open-source [game engine](https://github.com/proof88/PGE).
 
 This game is still **under development**.
 
