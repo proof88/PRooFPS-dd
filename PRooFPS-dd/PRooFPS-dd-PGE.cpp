@@ -1129,6 +1129,16 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             }
         }
 
+        // camera must start from the center of the map
+        getPure().getCamera().getPosVec().Set(
+            (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
+            (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
+            GAME_CAM_Z);
+        getPure().getCamera().getTargetVec().Set(
+            getPure().getCamera().getPosVec().getX(),
+            getPure().getCamera().getPosVec().getY(),
+            -proofps_dd::GAME_BLOCK_SIZE_Z);
+
         getAudio().play(m_sounds.m_sndLetsgo);
     }
     else
