@@ -621,9 +621,10 @@ bool proofps_dd::InputHandling::mouse(
     const int oldmx = m_pge.getInput().getMouse().getCursorPosX();
     const int oldmy = m_pge.getInput().getMouse().getCursorPosY();
 
+    auto& window = m_pge.getPure().getWindow();
     m_pge.getInput().getMouse().SetCursorPos(
-        m_pge.getPure().getWindow().getX() + m_pge.getPure().getWindow().getWidth() / 2,
-        m_pge.getPure().getWindow().getY() + m_pge.getPure().getWindow().getHeight() / 2);
+        window.getX() + window.getWidth() / 2,
+        window.getY() + window.getHeight() / 2);
 
     const int dx = oldmx - m_pge.getInput().getMouse().getCursorPosX();
     const int dy = oldmy - m_pge.getInput().getMouse().getCursorPosY();
@@ -649,9 +650,17 @@ bool proofps_dd::InputHandling::mouse(
     }
     else
     {
+        const float fCursorNewX = std::min(
+            static_cast<float>(window.getClientWidth() / 2),
+            std::max(-static_cast<float>(window.getClientWidth() / 2), objXHair.getPosVec().getX() + dx));
+
+        const float fCursorNewY = std::min(
+            static_cast<float>(window.getClientHeight() / 2),
+            std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
+
         objXHair.getPosVec().Set(
-            objXHair.getPosVec().getX() + dx,
-            objXHair.getPosVec().getY() - dy,
+            fCursorNewX,
+            fCursorNewY,
             0.f);
     }
 
