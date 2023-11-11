@@ -697,12 +697,20 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& 
 
 void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObject3D& objXHair)
 {
-    const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(player.getWeaponManager().getDefaultAvailableWeaponFilename());
+    const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
+        player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetupFromServer()
     player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
+        // camera must be repositioned immediately so players can see themselves ASAP
+        auto& camera = m_pge.getPure().getCamera();
+        camera.getPosVec().SetX(player.getObject3D()->getPosVec().getX());
+        camera.getPosVec().SetY(player.getObject3D()->getPosVec().getY());
+        camera.getTargetVec().SetX(camera.getPosVec().getX());
+        camera.getTargetVec().SetY(camera.getPosVec().getY());
+
         objXHair.Show();
         // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
         m_pge.getPure().getUImanager().RemoveText(
