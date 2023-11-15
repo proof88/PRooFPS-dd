@@ -60,7 +60,14 @@ Alternatively, you can use command line arguments as well, e.g.:
 
 ### Debugging
 
-TBD
+If you have any problem with the game, it is always recommended to save the latest generated log file(s) from the game's main directory.  
+Their file name format is: `log_<hostname>_<date>_<time>.html` .  
+Since they are saved in HTML format, it is easy to open and read them in your favourite web browser, but what is better is if you send it to the developer.
+
+If you have performance issues and you are running the server instance of the game, pressing 'T' key anytime during the game saves extra information into the HTML log file.  
+
+If you have network related issue, you can check real-time network statistics by displaying the frag table by pressing the 'TAB' key.  
+Note that some network statistics are also saved into the HTML log file whenever a client- or server instance disconnects.
 
 ## Build
 
