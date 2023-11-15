@@ -70,6 +70,7 @@ namespace proofps_dd
 
     private:
         const float GAME_PLAYERS_POS_Z = -1.2f;
+        const float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;
 
         const std::set<char> foregroundBlocks = {
             'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T'

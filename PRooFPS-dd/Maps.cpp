@@ -301,13 +301,13 @@ void proofps_dd::Maps::UpdateVisibilitiesForRenderer()
         PureObject3D* const obj = m_blocks[i];
         if ( obj != PGENULL )
         {
-            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX() - 9.f )
+            if ( (obj->getPosVec().getX() + obj->getSizeVec().getX()/2.0f) <= campos.getX() - 13.f )
             {
                 obj->SetRenderingAllowed(false);
             }
             else
             {
-                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX() + 9.f )
+                if ( (obj->getPosVec().getX() - obj->getSizeVec().getX()/2.0f) >= campos.getX() + 13.f )
                 {
                     obj->SetRenderingAllowed(false);
                 }
@@ -611,7 +611,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;
@@ -622,7 +622,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;
@@ -633,7 +633,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_PLAYERS_POS_Z));
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
             bSpecialBlock = true;

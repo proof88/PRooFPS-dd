@@ -82,6 +82,7 @@ namespace proofps_dd
         unsigned int m_nPhysicsRateMin;
         unsigned int m_nClientUpdateRate;
         bool m_bCamFollowsXHair;
+        bool m_bCamTilting;
 
         float m_fps;
         unsigned int m_fps_counter;
@@ -112,7 +113,10 @@ namespace proofps_dd
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void CameraMovement(const Player& player, bool bCamFollowsXHair);
+        void CameraMovement(
+            const Player& player,
+            bool bCamFollowsXHair,
+            bool bCamTilting);
         void serverSendUserUpdates();
         void RestartGame();
         void serverUpdateRespawnTimers();
@@ -120,11 +124,21 @@ namespace proofps_dd
         void serverPickupAndRespawnItems();
         void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength]) const;
         void WritePlayerList();
-        bool handleUserSetupFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg);
-        bool handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnectedServerSelf& msg);
-        bool handleUserDisconnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserDisconnectedFromServer& msg);
-        bool handleUserUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdateFromServer& msg);
-        bool handleMapItemUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgMapItemUpdateFromServer& msg);
+        bool handleUserSetupFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserSetupFromServer& msg);
+        bool handleUserConnected(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const pge_network::MsgUserConnectedServerSelf& msg);
+        bool handleUserDisconnected(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const pge_network::MsgUserDisconnectedFromServer& msg);
+        bool handleUserUpdateFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserUpdateFromServer& msg);
+        bool handleMapItemUpdateFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgMapItemUpdateFromServer& msg);
 
     }; // class PRooFPSddPGE
 

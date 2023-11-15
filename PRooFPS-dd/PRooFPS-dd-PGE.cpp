@@ -41,6 +41,7 @@ static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
 
 static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
+static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
 
 
 // ############################### PUBLIC ################################
@@ -102,6 +103,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
     m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
     m_bCamFollowsXHair(true),
+    m_bCamTilting(true),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -377,6 +379,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     serverSetAllowStrafeMidAirFull( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() );
 
     m_bCamFollowsXHair = getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
+    m_bCamTilting = getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
 
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
@@ -680,7 +683,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(player, m_bCamFollowsXHair);
+    CameraMovement(player, m_bCamFollowsXHair, m_bCamTilting);
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -756,7 +759,10 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
     }
 }
 
-void proofps_dd::PRooFPSddPGE::CameraMovement(const Player& player, bool bCamFollowsXHair)
+void proofps_dd::PRooFPSddPGE::CameraMovement(
+    const Player& player,
+    bool bCamFollowsXHair,
+    bool bCamTilting)
 {
     constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
     constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
@@ -847,8 +853,8 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(const Player& player, bool bCamFol
 
     camera.getPosVec() = vecCamPos;
     camera.getTargetVec().Set(
-        vecCamPos.getX(),
-        vecCamPos.getY(),
+        bCamTilting ? ((vecCamPos.getX() + fCamTargetX) / 2.f) : vecCamPos.getX(),
+        bCamTilting ? ((vecCamPos.getY() + fCamTargetY) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
 
@@ -1065,7 +1071,9 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 
                 // TODO: from performance perspective, maybe it would be better to check canTakeItem() first since that might be faster
                 // decision than collision check ...
-                if (Colliding(*plobj, mapItem.getObject3D()))
+                // To avoid Z-fighting, players and items have different Z-coords. This makes Colliding() unable to work, so we use Colliding_NoZ().
+                // And it is faster too, no use of Z anyway since theoretically players and items have the same Z.
+                if (Colliding_NoZ(*plobj, mapItem.getObject3D()))
                 {
                     proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
                     if (player.canTakeItem(mapItem))

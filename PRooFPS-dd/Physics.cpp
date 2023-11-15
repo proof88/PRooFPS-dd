@@ -69,6 +69,16 @@ bool proofps_dd::Physics::Colliding(const PureObject3D& a, const PureObject3D& b
     );
 }
 
+bool proofps_dd::Physics::Colliding_NoZ(const PureObject3D& a, const PureObject3D& b)
+{
+    return Colliding2_NoZ(
+        a.getPosVec().getX(), a.getPosVec().getY(),
+        a.getSizeVec().getX(), a.getSizeVec().getY(),
+        b.getPosVec().getX(), b.getPosVec().getY(),
+        b.getSizeVec().getX(), b.getSizeVec().getY()
+    );
+}
+
 bool proofps_dd::Physics::Colliding2(
     float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
     float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz)
