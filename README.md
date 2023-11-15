@@ -28,7 +28,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.1.4 is here](https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link).  
+The latest available download version [v0.1.5 Private Beta is here](https://drive.google.com/file/d/1n1HiC5JYTBkp3LGDGQSalIdAIOyuiITO/view?usp=sharing).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
 ### Run as Server
@@ -37,8 +37,11 @@ To start as server, simply run `PRooFPS-dd.exe`.
 
 ### Run as Client
 
-To start as client, simply run the convenient `PRooFPS-dd-as-client.bat` (Windows) or `PRooFPS-dd-as-client.sh` (Linux).  
-To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata\profiles\proof88\proof88.cfg`.  
+To start as client, simply run the convenient:
+ - `PRooFPS-dd-as-client.bat` (Windows) or
+ - `PRooFPS-dd-as-client.sh` (Linux).
+
+To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata/profiles/proof88/proof88.cfg`.  
 
 Alternatively, you can use command line arguments as well, e.g.:  
 `./PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100`
