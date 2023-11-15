@@ -1,3 +1,5 @@
+v0.1.0
+
 GravityCollisionDuration optimization.
 
 Debug 1 player: T lentre, majd jobb szélre futás, és onnantól 10 mp
