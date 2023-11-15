@@ -14,8 +14,8 @@
 
 ## Summary
 
-This game is the successor of the original PR00FPS:
-https://github.com/proof88/PR00FPS
+This game is the successor of the [original PR00FPS made in 2007](https://github.com/proof88/PR00FPS).  
+It uses my open-source [game engine](https://github.com/proof88/PGE).
 
 This game is still **under development**.
 
@@ -24,8 +24,7 @@ This game is still **under development**.
 **[Other Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+-milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc+)**  
 **[Full Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
 
-You can follow the project on my **facebook page**:
-https://www.facebook.com/whiskhyll
+You can follow the project on my **[facebook page](https://www.facebook.com/whiskhyll)**.
 
 ## Try the Game
 
