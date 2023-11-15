@@ -29,7 +29,8 @@ static constexpr unsigned int GAME_FPS_MEASURE_INTERVAL = 500;
 static_assert(GAME_FPS_MEASURE_INTERVAL > 0);
 
 static constexpr float GAME_CAM_Z = -5.0f;
-static constexpr float GAME_CAM_SPEED = 0.416f;
+static constexpr float GAME_CAM_SPEED_X = 0.1f;
+static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
 static constexpr char* CVAR_TICKRATE = "tickrate";
 static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
@@ -38,6 +39,8 @@ static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
+
+static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
 
 
 // ############################### PUBLIC ################################
@@ -98,6 +101,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_nTickrate(GAME_TICKRATE_DEF),
     m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
     m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
+    m_bCamFollowsXHair(true),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -371,6 +375,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
             CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL, CVAR_SV_ALLOW_STRAFE_MID_AIR);
     }
     serverSetAllowStrafeMidAirFull( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() );
+
+    m_bCamFollowsXHair = getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
 
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
@@ -674,7 +680,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_po
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(player);
+    CameraMovement(player, m_bCamFollowsXHair);
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -750,7 +756,7 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
     }
 }
 
-void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
+void proofps_dd::PRooFPSddPGE::CameraMovement(const Player& player, bool bCamFollowsXHair)
 {
     constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
     constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
@@ -774,19 +780,68 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(Player& player)
         m_maps.getBlocksVertexPosMax().getY() :
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
-    const float fCamTargetX = std::min(
-        fCamMaxAllowedPosX,
-        std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
-    
-    const float fCamTargetY = std::min(
-        fCamMaxAllowedPosY,
-        std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
-
-    const float fSpeed = GAME_CAM_SPEED * m_fps;
     auto& camera = getPure().getCamera();
+    float fCamTargetX, fCamTargetY;
+    if (bCamFollowsXHair)
+    {
+        /* Unsure about if we really need to unproject the 2D xhair's position.
+           Because of matrix multiplication and inversion, maybe this way is too expensive.
+           
+           I see 2 other ways of doing this:
+            - keep the xhair 2D, and anytime mouse is moved, we should also change 2 variables: fCamPosOffsetX and fCamPosOffsetY
+              based on the dx and dy variables in InputHandling::mouse(). Camera will have this position offset applied relative to
+              player's position. This looks to be the easiest solution.
+              However, on the long run we will need 3D position of xhair since we want to use pick/select method, for example,
+              when hovering the xhair over other player, we should be able to tell which player is that.
+              
+            - change the xhair to 3D, so in InputHandling::mouse() the dx and dy variable changes will be applied to xhair's 3D position.
+              With this method, pick/select can be implemented in a different way: no need to unproject, we just need collision
+              logic to find out which player object collides with our xhair object!
+        */
+        PureVector vecUnprojected;
+        if (!camera.project2dTo3d(
+            static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getX()) + camera.getViewport().size.width/2),
+            static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getY()) + camera.getViewport().size.height/2),
+            /* in v0.1.5 this is player's Z mapped to depth buffer: 0.9747f,*/
+            0.96f,
+            vecUnprojected))
+        {
+            //getConsole().EOLn("PRooFPSddPGE::%s(): project2dTo3d() failed!", __func__);
+        }
+        else
+        {
+            //getConsole().EOLn("obj X: %f, Y: %f, vecUnprojected X: %f, Y: %f",
+            //    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
+            //    vecUnprojected.getX(), vecUnprojected.getY());
+        }
+
+        fCamTargetX = std::min(
+            fCamMaxAllowedPosX,
+            std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + vecUnprojected.getX())/2));
+        
+        fCamTargetY = std::min(
+            fCamMaxAllowedPosY,
+            std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + vecUnprojected.getY())/2));
+    }
+    else
+    {
+        fCamTargetX = std::min(
+            fCamMaxAllowedPosX,
+            std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
+
+        fCamTargetY = std::min(
+            fCamMaxAllowedPosY,
+            std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
+    }
+
     const PureVector vecCamPos{
-        PFL::smooth(camera.getPosVec().getX(), fCamTargetX, fSpeed),
-        PFL::smooth(camera.getPosVec().getY(), fCamTargetY, fSpeed),
+        PFL::smooth(
+            camera.getPosVec().getX(), fCamTargetX, GAME_CAM_SPEED_X * m_fps),
+        PFL::smooth(
+            camera.getPosVec().getY(),
+            fCamTargetY,
+            /* if we are not following xhair, we want an eased vertical camera movement because it looks nice */
+            (bCamFollowsXHair ? (GAME_CAM_SPEED_X * m_fps) : (GAME_CAM_SPEED_Y * m_fps))),
         GAME_CAM_Z
     };
 

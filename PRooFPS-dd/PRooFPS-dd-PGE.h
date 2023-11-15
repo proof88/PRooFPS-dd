@@ -81,6 +81,7 @@ namespace proofps_dd
         unsigned int m_nTickrate;
         unsigned int m_nPhysicsRateMin;
         unsigned int m_nClientUpdateRate;
+        bool m_bCamFollowsXHair;
 
         float m_fps;
         unsigned int m_fps_counter;
@@ -111,7 +112,7 @@ namespace proofps_dd
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void CameraMovement(Player& player);
+        void CameraMovement(const Player& player, bool bCamFollowsXHair);
         void serverSendUserUpdates();
         void RestartGame();
         void serverUpdateRespawnTimers();

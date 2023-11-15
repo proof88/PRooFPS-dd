@@ -658,6 +658,7 @@ bool proofps_dd::InputHandling::mouse(
             static_cast<float>(window.getClientHeight() / 2),
             std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
 
+        //getConsole().EOLn("InputHandling::%s(): objXHair x: %f, y: %f!", __func__, fCursorNewX, fCursorNewY);
         objXHair.getPosVec().Set(
             fCursorNewX,
             fCursorNewY,

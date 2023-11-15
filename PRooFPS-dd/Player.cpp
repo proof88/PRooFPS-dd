@@ -169,7 +169,6 @@ bool proofps_dd::Player::isDirty() const
     return bDirtyFound;
 }
 
-
 /**
  * Invokes commit() for all maintained old-new values.
  * Also sets the isNetDirty() flag if there was any dirty old-new value.
@@ -632,7 +631,7 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     }
     m_pObj->SetLit(false);
 
-    PureTexture* pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
+    PureTexture* const pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pObj->getMaterial().setTexture(pTexPlayer);
 }
 
