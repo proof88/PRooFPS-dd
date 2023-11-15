@@ -33,6 +33,8 @@
  - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
    directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
 
+ - make sure the LICENSE file is also copied into the main directory of the game;
+
  - check if game is able to start up from this new release directory, if so then compress and upload;
 
  - check if game is able to start up on a separate machine after downloading;
