@@ -25,6 +25,7 @@ namespace proofps_dd
         long long m_nUpdateRespawnTimersDurationUSecs;
         long long m_nPickupAndRespawnItemsDurationUSecs;
         long long m_nUpdateGameModeDurationUSecs;
+        long long m_nCameraMovementDurationUSecs;
         long long m_nSendUserUpdatesDurationUSecs;
         long long m_nFullOnGameRunningDurationUSecs;
         long long m_nHandleUserCmdMoveDurationUSecs;
@@ -47,6 +48,7 @@ namespace proofps_dd
             m_nUpdateRespawnTimersDurationUSecs = 0;
             m_nPickupAndRespawnItemsDurationUSecs = 0;
             m_nUpdateGameModeDurationUSecs = 0;
+            m_nCameraMovementDurationUSecs = 0;
             m_nSendUserUpdatesDurationUSecs = 0;
             m_nFullOnGameRunningDurationUSecs = 0;
             m_nHandleUserCmdMoveDurationUSecs = 0;

@@ -103,13 +103,10 @@ namespace proofps_dd
 
         bool hasValidConnection() const;
         void mainLoopServerOnlyOneTick(
-            std::chrono::steady_clock::time_point& timeStart,
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
         void mainLoopClientOnlyOneTick(
-            std::chrono::steady_clock::time_point& timeStart,
             const long long& durElapsedMicrosecs);                      /**< Only client executes this. */
         void mainLoopShared(
-            std::chrono::steady_clock::time_point& timeStart,
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);

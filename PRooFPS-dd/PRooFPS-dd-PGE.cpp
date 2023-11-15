@@ -471,7 +471,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         }
 
         // 1 TICK START
-        std::chrono::time_point<std::chrono::steady_clock> timeStart;
         static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
         const auto timeNow = std::chrono::steady_clock::now();
         if (timeSimulation.time_since_epoch().count() == 0)
@@ -484,17 +483,17 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             timeSimulation += DurationSimulationStepMicrosecsPerTick;
             if (getNetwork().isServer())
             {
-                mainLoopServerOnlyOneTick(timeStart, DurationSimulationStepMicrosecsPerTick.count());
+                mainLoopServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
             }
             else
             {
-                mainLoopClientOnlyOneTick(timeStart, DurationSimulationStepMicrosecsPerTick.count());
+                mainLoopClientOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
             }
         }
         // 1 TICK END
         timeLastOnGameRunning = std::chrono::steady_clock::now();
 
-        mainLoopShared(timeStart, window);
+        mainLoopShared(window);
     } // endif validConnection
 
     updateFramesPerSecond(window);
@@ -622,7 +621,6 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     Good for either dedicated- or listen- server.
 */
 void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
-    std::chrono::steady_clock::time_point& timeStart,
     const long long& /*durElapsedMicrosecs*/)
 {
     /*
@@ -631,16 +629,15 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     * To solve this, we might run multiple physics iterations (nPhysicsIterationsPerTick) so movements are
     * calculated in smaller steps, resulting in more precise results.
     */
-    timeStart = std::chrono::steady_clock::now();
     static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
     if (!m_gameMode->checkWinningConditions())
     {
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
         {
+            const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
             serverGravity(*m_pObjXHair, m_nPhysicsRateMin);
             serverPlayerCollisionWithWalls(m_bWon, m_nPhysicsRateMin);
-            // TODO: m_nGravityCollisionDurationUSecs is now wrong being in this loop, later should be fixed!
-            //m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+            m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nPhysicsRateMin);
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
@@ -654,14 +651,12 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     Only client executes this.
 */
 void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
-    std::chrono::steady_clock::time_point& timeStart,
     const long long& /*durElapsedMicrosecs*/)
 {
     /*
     * This function is executed every tick.
     * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopServerOnlyOneTick(). 
     */
-    timeStart = std::chrono::steady_clock::now();
     static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
@@ -673,10 +668,10 @@ void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
     Both clients and listen-server executes this.
     Dedicated server won't need this.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopShared(std::chrono::steady_clock::time_point& timeStart, PureWindow& window)
+void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
 {
+    std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
-    timeStart = std::chrono::steady_clock::now();
     if (window.isActive())
     {
         handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin);
@@ -764,6 +759,8 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
     bool bCamFollowsXHair,
     bool bCamTilting)
 {
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
     constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
     constexpr unsigned int nBlocksToKeepCameraWithinMapTop = 1;
@@ -857,6 +854,8 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
         bCamTilting ? ((vecCamPos.getY() + fCamTargetY) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
+
+    m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
 } // CameraMovement()
 

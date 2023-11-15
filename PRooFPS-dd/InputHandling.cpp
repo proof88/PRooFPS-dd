@@ -449,6 +449,7 @@ void proofps_dd::InputHandling::keyboard(
             m_pge.getPure().getRenderer()->ResetStatistics();
             getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
 
+            getConsole().SetLoggingState(getLoggerModuleName(), true);
             getConsole().OLn("");
             getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_durations.m_nFramesElapsedSinceLastDurationsReset);
             getConsole().OLn("Avg Durations per Frame:");
@@ -463,8 +464,10 @@ void proofps_dd::InputHandling::keyboard(
             getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_durations.m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
             getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_durations.m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
             getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_durations.m_nUpdateGameModeDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+            getConsole().OLn("   - CameraMovementDuration: %f usecs", m_durations.m_nCameraMovementDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
             getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_durations.m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
             getConsole().OLn("");
+            getConsole().SetLoggingState(getLoggerModuleName(), false);
 
             m_durations.reset();
         }
