@@ -27,13 +27,15 @@
    2nd client instance, and vice versa;
 
  - if this is a bigger version number increment, it would be nice also to create a new benchmark measurement
-   based on perf-optimization-2022-dec.txt, to understand if we have improvement or regression wrt performance;
+   stored in OldPerfMeasurements directory, to understand if we have improvement or regression wrt performance;
    later this should be automatized;
 
  - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
    directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
 
  - make sure the LICENSE file is also copied into the main directory of the game;
+
+ - delete any recently generated log file from the directory;
 
  - check if game is able to start up from this new release directory, if so then compress and upload;
 
