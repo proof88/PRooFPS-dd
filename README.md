@@ -62,7 +62,7 @@ Alternatively, you can use command line arguments as well, e.g.:
 
 If you have any problem with the game, it is always recommended to save the latest generated log file(s) from the game's main directory.  
 Their file name format is: `log_<hostname>_<date>_<time>.html` .  
-Since they are saved in HTML format, it is easy to open and read them in your favourite web browser, but what is better is if you send it to the developer.
+Since they are saved in HTML format, it is easy to open and read them in your favourite web browser, but what is better is if you send them to the developer.
 
 If you have performance issues and you are running the server instance of the game, pressing 'T' key anytime during the game saves extra information into the HTML log file.  
 
@@ -79,7 +79,43 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 
 ### v0.1.5 Private Beta (TBD)
 
-TBD
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1n1HiC5JYTBkp3LGDGQSalIdAIOyuiITO/view?usp=sharing).
+
+The major improvements in this version are related to **gameplay**:
+ - **Player control** is easier and feels much more natural due to the changes related to jumping and falling;
+ - Player is able to control the **mid-air strafing** similar to CS 1.6 and QIII, for that **2 new CVARs** are created:
+   - `sv_allow_strafe_mid_air`: for CS 1.6/QIII-style mid-air control;
+   - `sv_allow_strafe_mid_air_full`: for Super Mario style mid-air control.
+ - **Camera**:
+   - Immediately repositioned when player respawns;
+   - Kept within map bounds, so players know earlier when they reached an edge of the map;
+   - Follows the player much faster, this is an improvement to the pre-v0.1.5 behavior;
+   - **Follows both the player AND the crosshair**, which is the default behavior from now on;
+   - Tilts when repositioned, this gives a bit more feeling of being in a 3D environment;
+   - Created **2 new CVARs** for configuring the abovementioned behaviors:
+     - `gfx_cam_follows_xhair`: true/false to control camera following crosshair;
+     - `gfx_cam_tilting`: true/false to control camera tilting.
+ - Crosshair is kept within window area;
+
+The following **bugs have been fixed**:
+ - [Cannot Jump on Some Boxes at 20 Hz Tickrate](https://github.com/proof88/PRooFPS-dd/issues/234);
+ - Client played repeating die sound after dying;
+ - Zombie player: continued strafing after dying;
+ - [Zombie player: continued shooting after dying](https://github.com/proof88/PRooFPS-dd/issues/232);
+ - An unintended shot was fired when player respawned after dying during shooting;
+ - [Pistol is Visible as Current Weapon even though They Already Switched to Machinegun](https://github.com/proof88/PRooFPS-dd/issues/185).
+
+The following **bugs got RCA** and scheduled to be fixed later:
+ - [No Logging under Linux](https://github.com/proof88/PRooFPS-dd/issues/239)
+
+Major **under-the-hood changes**:
+ - from now **server doesn't need to send user updates to clients in every tick**. This is for having higher tickrate for more precise physics while keeping server->client traffic low;
+ - for this a new CVAR is introduced: `cl_updaterate`;
+ - from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured;
+ - for this a new CVAR is introduced: `physics_rate_min`;
+
+server client debug network frag table
+sh for linux
 
 ### v0.1.4 Private Beta (Oct 13, 2023)
 
