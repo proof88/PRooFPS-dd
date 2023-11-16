@@ -77,7 +77,7 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 
 ## History
 
-### v0.1.5 Private Beta (TBD)
+### v0.1.5 Private Beta (Nov 15, 2023)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1n1HiC5JYTBkp3LGDGQSalIdAIOyuiITO/view?usp=sharing).
 
@@ -88,7 +88,7 @@ The major improvements in this version are related to **gameplay**:
    - `sv_allow_strafe_mid_air_full`: for Super Mario style mid-air control.
  - **Camera**:
    - Immediately repositioned when player respawns;
-   - Kept within map bounds, so players know earlier when they reached an edge of the map;
+   - Kept within map bounds, so players know earlier when they reach an edge of the map;
    - Follows the player much faster, this is an improvement to the pre-v0.1.5 behavior;
    - **Follows both the player AND the crosshair**, which is the default behavior from now on;
    - Tilts when repositioned, this gives a bit more feeling of being in a 3D environment;
@@ -114,8 +114,9 @@ Major **under-the-hood changes**:
  - from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured;
  - for this a new CVAR is introduced: `physics_rate_min`;
 
-server client debug network frag table
-sh for linux
+**Debug/Convenience changes**:
+ - Server instance shows per-client network stats in the frag table;
+ - a `PRooFPS-dd-as-client.sh` is added for Linux, similar to `PRooFPS-dd-as-client.bat` for Windows.
 
 ### v0.1.4 Private Beta (Oct 13, 2023)
 
