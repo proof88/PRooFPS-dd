@@ -89,8 +89,8 @@ The major improvements in this version are related to **gameplay**:
  - **Camera**:
    - Immediately repositioned when player respawns;
    - Kept within map bounds, so players know earlier when they reach an edge of the map;
-   - Follows the player much faster, this is an improvement to the pre-v0.1.5 behavior;
-   - **Follows both the player AND the crosshair**, which is the default behavior from now on;
+   - Follows the player much closely, this is an improvement to the pre-v0.1.5 behavior;
+   - **Follows both the player AND the crosshair**, which is a change and the default behavior from now on;
    - Tilts when repositioned, this gives a bit more feeling of being in a 3D environment;
    - Created **2 new CVARs** for configuring the abovementioned behaviors:
      - `gfx_cam_follows_xhair`: true/false to control camera following crosshair;
