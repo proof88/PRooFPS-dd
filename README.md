@@ -89,7 +89,7 @@ The major improvements in this version are related to **gameplay**:
  - **Camera**:
    - Immediately repositioned when player respawns;
    - Kept within map bounds, so players know earlier when they reach an edge of the map;
-   - Follows the player much closely, this is an improvement to the pre-v0.1.5 behavior;
+   - Follows the player much closer, this is an improvement to the pre-v0.1.5 behavior;
    - **Follows both the player AND the crosshair**, which is a change and the default behavior from now on;
    - Tilts when repositioned, this gives a bit more feeling of being in a 3D environment;
    - Created **2 new CVARs** for configuring the abovementioned behaviors:
@@ -98,22 +98,22 @@ The major improvements in this version are related to **gameplay**:
  - Crosshair is kept within window area;
 
 The following **bugs have been fixed**:
- - [Cannot Jump on Some Boxes at 20 Hz Tickrate](https://github.com/proof88/PRooFPS-dd/issues/234);
- - Client played repeating die sound after dying;
- - Zombie player: continued strafing after dying;
- - [Zombie player: continued shooting after dying](https://github.com/proof88/PRooFPS-dd/issues/232);
- - An unintended shot was fired when player respawned after dying during shooting;
- - [Pistol is Visible as Current Weapon even though They Already Switched to Machinegun](https://github.com/proof88/PRooFPS-dd/issues/185).
+ - [FIX: Cannot Jump on Some Boxes at 20 Hz Tickrate](https://github.com/proof88/PRooFPS-dd/issues/234);
+ - FIX: Client played repeating die sound after dying;
+ - FIX: Zombie player: continued strafing after dying;
+ - [FIX: Zombie player: continued shooting after dying](https://github.com/proof88/PRooFPS-dd/issues/232);
+ - FIX: An unintended shot was fired when player respawned after dying during shooting;
+ - [FIX: Pistol is Visible as Current Weapon even though They Already Switched to Machinegun](https://github.com/proof88/PRooFPS-dd/issues/185).
 
 The following **bugs got RCA** and scheduled to be fixed later:
- - [No Logging under Linux](https://github.com/proof88/PRooFPS-dd/issues/239)
+ - [BUG: No Logging under Linux](https://github.com/proof88/PRooFPS-dd/issues/239)
 
 Major **under-the-hood changes**:
- - from now **server doesn't need to send user updates to clients in every tick**. This is for having higher tickrate for more precise physics while keeping server->client traffic low. For this a new CVAR is introduced: `cl_updaterate`;
- - from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured. For this a new CVAR is introduced: `physics_rate_min`.
+ - FTR: from now **server doesn't need to send user updates to clients in every tick**. This is for having higher tickrate for more precise physics while keeping server->client traffic low. For this a new CVAR is introduced: `cl_updaterate`;
+ - FTR: from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured. For this a new CVAR is introduced: `physics_rate_min`.
 
 **Debug/Convenience changes**:
- - Server instance shows per-client network stats in the frag table;
+ - FTR: Server instance shows per-client network stats in the frag table;
  - a `PRooFPS-dd-as-client.sh` is added for Linux, similar to `PRooFPS-dd-as-client.bat` for Windows.
 
 ### v0.1.4 Private Beta (Oct 13, 2023)
