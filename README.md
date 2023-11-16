@@ -109,10 +109,8 @@ The following **bugs got RCA** and scheduled to be fixed later:
  - [No Logging under Linux](https://github.com/proof88/PRooFPS-dd/issues/239)
 
 Major **under-the-hood changes**:
- - from now **server doesn't need to send user updates to clients in every tick**. This is for having higher tickrate for more precise physics while keeping server->client traffic low;
- - for this a new CVAR is introduced: `cl_updaterate`;
- - from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured;
- - for this a new CVAR is introduced: `physics_rate_min`;
+ - from now **server doesn't need to send user updates to clients in every tick**. This is for having higher tickrate for more precise physics while keeping server->client traffic low. For this a new CVAR is introduced: `cl_updaterate`;
+ - from now **multiple physics iterations can be run within a single tick**. This is for having more precise physics when a lower tickrate is configured. For this a new CVAR is introduced: `physics_rate_min`.
 
 **Debug/Convenience changes**:
  - Server instance shows per-client network stats in the frag table;
