@@ -13,6 +13,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "../../Console/CConsole/src/CConsole.h"
 #include "../../PGE/PGE/Config/PGEcfgVariable.h"
@@ -41,17 +42,21 @@ namespace proofps_dd
         Maps(Maps&&) = delete;
         Maps&& operator=(Maps&&) = delete;
 
-        bool initialize();
+        bool initialize();                                   /**< Initializes the map handler. */
+        bool isInitialized() const;
+        void shutdown();                                     /**< Shuts down the map handler. */
+
+        /* Current map handling */
+
         bool loaded() const;
         bool load(const char* fname);
         void unload();
-        void shutdown();
         unsigned int width() const;
         unsigned int height() const;
         void UpdateVisibilitiesForRenderer();
-        const std::string& getFilename() const;
-        const std::set<PureVector>& getSpawnpoints() const;
-        const PureVector& getRandomSpawnpoint() const;
+        const std::string& getFilename() const;              /**< Retrieves the currently loaded map filename. */
+        const std::set<PureVector>& getSpawnpoints() const;  /**< Retrieves the set of spawnpoints of the currently loaded map. */
+        const PureVector& getRandomSpawnpoint() const;       /**< Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map. */
         const PureVector& getLeftMostSpawnpoint() const;
         const PureVector& getRightMostSpawnpoint() const;
         const PureVector& getBlockPosMin() const;
@@ -66,9 +71,18 @@ namespace proofps_dd
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         void Update(const float& fps);
 
+        /* Mapcycle handling */
+        
+        const std::vector<std::string>& mapcycleGet() const;
+        const std::string mapcycleGetCurrent() const;
+        bool mapcycleReload();
+        void mapcycleNext();
+        void mapcycleRewind();
+
     protected:
 
     private:
+
         const float GAME_PLAYERS_POS_Z = -1.2f;
         const float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;
 
@@ -82,6 +96,11 @@ namespace proofps_dd
             '+', 'M', 'P', 'S'
         };
 
+        PR00FsUltimateRenderingEngine& m_gfx;
+        PureTexture* m_texRed;  // TODO: unique_ptr
+
+        /* Current map handling */
+
         std::map<char, PureObject3D*> m_mapReferenceBlockObject3Ds;
 
         PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
@@ -91,17 +110,20 @@ namespace proofps_dd
         int m_foregroundBlocks_h;
 
         std::map<std::string, PGEcfgVariable> m_vars;
-        PR00FsUltimateRenderingEngine& m_gfx;
         std::string m_sRawName;
         std::string m_sFileName;
         std::map<char, std::string> m_Block2Texture;
-        PureTexture* m_texRed;
         std::set<PureVector> m_spawnpoints;
         PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;
         PureVector m_blockPosMin, m_blockPosMax;
         PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
+
+        /* Mapcycle handling */
+
+        std::vector<std::string> m_mapcycle;
+        std::vector<std::string>::iterator m_mapcycleItCurrent;
 
         // ---------------------------------------------------------------------------
 

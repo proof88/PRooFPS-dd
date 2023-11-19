@@ -49,10 +49,14 @@ protected:
         AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
         AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
         AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
         AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
         AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        AddSubTest("test_map_mapcycle_reload", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_reload);
+        AddSubTest("test_map_mapcycle_next", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_next);
+        AddSubTest("test_map_mapcycle_rewind", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind);
     }
 
     virtual bool setUp() override
@@ -90,7 +94,8 @@ private:
     bool test_initially_empty()
     {
         proofps_dd::Maps maps(*engine);
-        bool b = assertFalse(maps.loaded(), "loaded 1") &
+        bool b = assertFalse(maps.isInitialized(), "inited 1") &
+            assertFalse(maps.loaded(), "loaded 1") &
             assertTrue(maps.getFilename().empty(), "filename 1") &
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
@@ -104,10 +109,12 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 1") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
             assertEquals(0u, maps.getItems().size(), "item count 1") &
-            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
+            assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
         
         b &= assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.loaded(), "loaded 2") &
+        b &= assertTrue(maps.isInitialized(), "inited 2") &
+            assertFalse(maps.loaded(), "loaded 2") &
             assertTrue(maps.getFilename().empty(), "filename 2") &
             assertEquals(0u, maps.width(), "width 2") &
             assertEquals(0u, maps.height(), "height 2") &
@@ -122,7 +129,8 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 2") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
             assertEquals(0u, maps.getItems().size(), "item count 2") &
-            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
+            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
+            assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2");
         return b;
     }
 
@@ -130,7 +138,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("gamedata/maps/egsdghsdghsdghdsghgds.txt"), "load");
+        b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
@@ -161,7 +169,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("gamedata/maps/map_test_bad_assignment.txt"), "load");
+        b &= assertFalse(maps.load("map_test_bad_assignment.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
@@ -192,7 +200,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("gamedata/maps/map_test_bad_order.txt"), "load");
+        b &= assertFalse(maps.load("map_test_bad_order.txt"), "load");
         b &= assertFalse(maps.loaded(), "loaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
@@ -223,7 +231,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename");
 
@@ -324,7 +332,7 @@ private:
 
         // ###################################### LOAD 1 ######################################
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 1");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 1");
 
@@ -364,7 +372,7 @@ private:
         b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         
         // ################################# TRY LOAD AGAIN ###################################
-        b &= assertFalse(maps.load("gamedata/maps/map_test_good.txt"), "load 2");
+        b &= assertFalse(maps.load("map_test_good.txt"), "load 2");
 
         // ###################################### UNLOAD ######################################
         maps.unload();
@@ -392,7 +400,7 @@ private:
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
 
         // ###################################### LOAD 2 ######################################
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load 3");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load 3");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
@@ -434,11 +442,30 @@ private:
         return b;
     }
 
+    bool test_map_shutdown()
+    {
+        proofps_dd::Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        b &= assertTrue(maps.isInitialized(), "initialized");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertFalse(maps.mapcycleGet().empty(), "mapcycle");
+
+        maps.shutdown();
+
+        b &= assertFalse(maps.loaded(), "loaded 2");
+        b &= assertFalse(maps.isInitialized(), "initialized 2");
+        b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle 2");
+
+        return b;
+    }
+
     bool test_map_get_random_spawnpoint()
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         
@@ -465,7 +492,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
 
@@ -494,7 +521,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
 
@@ -523,7 +550,7 @@ private:
     {
         proofps_dd::Maps maps(*engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("gamedata/maps/map_test_good.txt"), "load");
+        b &= assertTrue(maps.load("map_test_good.txt"), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertLess(0u, maps.getItems().size(), "items");
 
@@ -543,6 +570,71 @@ private:
                 assertNotEquals(vOriginalItemPosY[i], itemPair.second->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
                 i++;
             }
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_reload()
+    {
+        proofps_dd::Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto originalMapcycle = maps.mapcycleGet();
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+
+        if (b)
+        {
+            // just make sure our current is also changed, we are testing it to be the original after reload
+            maps.mapcycleNext();
+            b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
+
+            b &= assertTrue(maps.mapcycleReload(), "reload");
+            b &= assertTrue(originalMapcycle == maps.mapcycleGet(), "equals");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_next()
+    {
+        proofps_dd::Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+        b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+
+        if (b)
+        {
+            size_t nNextCount = 0;
+            do
+            {
+                ++nNextCount;
+                maps.mapcycleNext();
+            } while ((maps.mapcycleGetCurrent() != sFirstMapName) && (nNextCount < 100u));
+            b &= assertNotEquals(100u, nNextCount, "nNextCount 1");
+            b &= assertEquals(maps.mapcycleGet().size(), nNextCount, "nNextCount 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_rewind()
+    {
+        proofps_dd::Maps maps(*engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+        b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+
+        if (b)
+        {
+            maps.mapcycleNext();
+            b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
+
+            maps.mapcycleRewind();
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
         }
 
         return b;

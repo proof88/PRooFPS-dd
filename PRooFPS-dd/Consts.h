@@ -14,7 +14,7 @@ namespace proofps_dd
 {
 
     static const std::string GAME_NAME = "PRooFPS-dd";
-    static const std::string GAME_VERSION = "0.1.5.0 Private Beta";
+    static const std::string GAME_VERSION = "0.1.6.0 Private Beta";
 
     // TODO: unsure why I'm not using unsigned for these. Anyway, these will need to be handled in different way anyway in near future,
     // to have object for each of these with validation rules defined in object: https://github.com/proof88/PRooFPS-dd/issues/251 .
@@ -71,7 +71,6 @@ namespace proofps_dd
     static constexpr char* GAME_WPN_DEFAULT = "pistol.txt";
 
     static constexpr char* GAME_AUDIO_DIR = "gamedata/audio/";
-    static constexpr char* GAME_MAPS_DIR = "gamedata/maps/";
     static constexpr char* GAME_TEXTURES_DIR = "gamedata/textures/";
     static constexpr char* GAME_WEAPONS_DIR = "gamedata/weapons/";
 } // namespace proofps_dd

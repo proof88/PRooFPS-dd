@@ -15,6 +15,8 @@
 #include "Consts.h"
 #include "Maps.h"
 
+static constexpr char* GAME_MAPS_DIR = "gamedata/maps/";
+static constexpr char* GAME_MAPS_MAPCYCLE = "gamedata/maps/mapcycle.txt";
 static const float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
 
 
@@ -23,13 +25,14 @@ static const float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
 
 proofps_dd::Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
     m_gfx(gfx),
+    m_texRed(PGENULL),
     m_blocks(NULL),
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
     m_foregroundBlocks_h(0),
-    m_texRed(PGENULL),
     m_width(0),
-    m_height(0)
+    m_height(0),
+    m_mapcycleItCurrent(m_mapcycle.end())
 {
     proofps_dd::MapItem::ResetGlobalData();
 }
@@ -49,10 +52,51 @@ const char* proofps_dd::Maps::getLoggerModuleName()
     return "Maps";
 }
 
+/**
+    Initializes the map handler.
+    Reads the mapcycle file if it exists.
+    You need to invoke this once before trying to load any map.
+
+    @return True on success, false otherwise.
+*/
 bool proofps_dd::Maps::initialize()
 {
+    if (isInitialized())
+    {
+        return true;
+    }
+
+    mapcycleReload();
     m_texRed = m_gfx.getTextureManager().createFromFile( (std::string(proofps_dd::GAME_TEXTURES_DIR) + "red.bmp").c_str() );
-    return true;
+    return m_texRed != PGENULL;
+}
+
+bool proofps_dd::Maps::isInitialized() const
+{
+    return m_texRed != PGENULL;
+}
+
+/**
+    Shuts down the map handler.
+    The currently loaded map will be also unloaded.
+    After calling this, initialize() can be invoked again.
+*/
+void proofps_dd::Maps::shutdown()
+{
+    getConsole().OLnOI("Maps::shutdown() ...");
+    if (isInitialized())
+    {
+        /* Current map handling */
+        unload();
+
+        /* Mapcycle handling */
+        m_mapcycle.clear();
+        m_mapcycleItCurrent = m_mapcycle.end();
+
+        delete m_texRed;
+        m_texRed = PGENULL;
+    }
+    getConsole().OOOLn("Maps::shutdown() done!");
 }
 
 bool proofps_dd::Maps::loaded() const
@@ -64,6 +108,12 @@ bool proofps_dd::Maps::load(const char* fname)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
+    if (!isInitialized())
+    {
+        getConsole().EOLnOO("ERROR: map handler is not initialized!");
+        return false;
+    }
+
     if (loaded())
     {
         getConsole().EOLnOO("ERROR: %s is already loaded, should call unload first!", m_sFileName.c_str());
@@ -73,7 +123,8 @@ bool proofps_dd::Maps::load(const char* fname)
     // this wont be needed after we require unload() before consecutive load()
     proofps_dd::MapItem::ResetGlobalData();
 
-    m_sFileName = PFL::getFilename(fname);
+    const std::string sFilenameWithRelativePath = std::string(GAME_MAPS_DIR) + fname;
+    m_sFileName = PFL::getFilename(sFilenameWithRelativePath.c_str());
     m_sRawName = PFL::changeExtension(m_sFileName.c_str(), "");
     if (m_sRawName.empty())
     {
@@ -83,10 +134,10 @@ bool proofps_dd::Maps::load(const char* fname)
     }
 
     std::ifstream f;                                                                   
-    f.open(fname, std::ifstream::in);
+    f.open(sFilenameWithRelativePath.c_str(), std::ifstream::in);
     if ( !f.good() )
     {
-        getConsole().EOLnOO("ERROR: failed to open file %s!", fname);
+        getConsole().EOLnOO("ERROR: failed to open file %s!", m_sFileName.c_str());
         unload();
         return false;
     }
@@ -99,7 +150,7 @@ bool proofps_dd::Maps::load(const char* fname)
 
     bool bParseError = false;
     bool bMapLayoutReached = false;
-    const std::streamsize nBuffSize = 1024;
+    constexpr std::streamsize nBuffSize = 1024;
     char cLine[nBuffSize];
     TPureFloat y = 4.0f;
     std::streampos fStreamPosMapLayoutStart, fStreamPosPrevLine;
@@ -222,7 +273,7 @@ bool proofps_dd::Maps::load(const char* fname)
         m_blockPosMax.getY() + proofps_dd::GAME_BLOCK_SIZE_Y / 2.f,
         m_blockPosMax.getZ() + proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
 
-    getConsole().SOLnOO("Map loaded with width %u and height %u!", m_width, m_height);
+    getConsole().SOLnOO("> Map loaded with width %u and height %u!", m_width, m_height);
     return true;
 }
 
@@ -272,16 +323,6 @@ void proofps_dd::Maps::unload()
     getConsole().OOOLn("Maps::unload() done!");
 }
 
-void proofps_dd::Maps::shutdown()
-{
-    getConsole().OLnOI("Maps::shutdown() ...");
-    if ( m_gfx.isInitialized() )
-    {
-        unload();
-    }
-    getConsole().OOOLn("Maps::shutdown() done!");
-}
-
 unsigned int proofps_dd::Maps::width() const
 {
     return m_width;
@@ -294,7 +335,7 @@ unsigned int proofps_dd::Maps::height() const
 
 void proofps_dd::Maps::UpdateVisibilitiesForRenderer()
 {
-    const PureVector campos = m_gfx.getCamera().getPosVec();
+    const PureVector& campos = m_gfx.getCamera().getPosVec();
 
     for (int i = 0; i < m_blocks_h; i++)
     {
@@ -320,16 +361,35 @@ void proofps_dd::Maps::UpdateVisibilitiesForRenderer()
     }
 }
 
+/**
+    Retrieves the currently loaded map filename.
+
+    @return Filename of the currently loaded map. Empty string if no map is loaded currently.
+*/
 const std::string& proofps_dd::Maps::getFilename() const
 {
     return m_sFileName;
 }
 
+
+/**
+    Retrieves the set of spawnpoints of the currently loaded map.
+    A spawnpoint is a 3D coordinate where the player can spawn at.
+
+    @return The set of spawnpoints of the currently loaded map.
+*/
 const std::set<PureVector>& proofps_dd::Maps::getSpawnpoints() const
 {
     return m_spawnpoints;
 }
 
+
+/**
+    Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map.
+    A spawnpoint is a 3D coordinate where the player can spawn at.
+
+    @return A randomly selected spawnpoint on the current map.
+*/
 const PureVector& proofps_dd::Maps::getRandomSpawnpoint() const
 {
     if ( m_spawnpoints.empty() )
@@ -435,6 +495,99 @@ void proofps_dd::Maps::Update(const float& fps)
 
         mapItem.Update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
     }
+}
+
+const std::vector<std::string>& proofps_dd::Maps::mapcycleGet() const
+{
+    return m_mapcycle;
+}
+
+const std::string proofps_dd::Maps::mapcycleGetCurrent() const
+{
+    return (m_mapcycleItCurrent == m_mapcycle.end()) ?
+        "" :
+        *m_mapcycleItCurrent;
+}
+
+bool proofps_dd::Maps::mapcycleReload()
+{
+    getConsole().OLnOI("Maps::mapcycleReload(%s) ...", GAME_MAPS_MAPCYCLE);
+
+    m_mapcycle.clear();
+    m_mapcycleItCurrent = m_mapcycle.end();
+
+    std::ifstream f;
+    f.open(GAME_MAPS_MAPCYCLE, std::ifstream::in);
+    if (!f.good())
+    {
+        getConsole().EOLnOO("ERROR: failed to open file %s!", GAME_MAPS_MAPCYCLE);
+        return false;
+    }
+
+    bool bParseError = false;
+    constexpr std::streamsize nBuffSize = 200;
+    char cLine[nBuffSize];
+    while (!bParseError && !f.eof())
+    {
+        f.getline(cLine, nBuffSize);
+        // TODO: we should finally have a strClr() version for std::string or FINALLY UPGRADE TO NEWER CPP THAT MAYBE HAS THIS FUNCTIONALITY!!!
+        PFL::strClr(cLine);
+        const std::string sLine(cLine);
+        if (lineShouldBeIgnored(sLine))
+        {
+            continue;
+        }
+        bParseError = sLine.find(' ') != std::string::npos;  // TODO: this should be a better check for VALID filenames
+        if (!bParseError)
+        {
+            m_mapcycle.push_back(sLine);
+        }
+    }
+
+    f.close();
+    if (bParseError)
+    {
+        getConsole().EOLnOO("ERROR: failed to parse file: %s!", GAME_MAPS_MAPCYCLE);
+        m_mapcycle.clear();
+        return false;
+    }
+
+    if (m_mapcycle.empty())
+    {
+        getConsole().EOLnOO("ERROR: mapcycle file %s parsed as empty!", GAME_MAPS_MAPCYCLE);
+        return false;
+    }
+
+    m_mapcycleItCurrent = m_mapcycle.begin();
+    getConsole().SOLnOO("> Mapcycle loaded with %u maps!", m_mapcycle.size());
+    return true;
+}  // mapcycleReload()
+
+
+void proofps_dd::Maps::mapcycleNext()
+{
+    if (m_mapcycleItCurrent == m_mapcycle.end())
+    {
+        // no valid mapcycle
+        return;
+    }
+
+    ++m_mapcycleItCurrent;
+    if (m_mapcycleItCurrent == m_mapcycle.end())
+    {
+        // with valid mapcycle, it never stays on end(), it should automatically go back to the beginning
+        m_mapcycleItCurrent = m_mapcycle.begin();
+    }
+}
+
+void proofps_dd::Maps::mapcycleRewind()
+{
+    if (m_mapcycleItCurrent == m_mapcycle.end())
+    {
+        // no valid mapcycle
+        return;
+    }
+    m_mapcycleItCurrent = m_mapcycle.begin();
 }
 
 
@@ -749,4 +902,4 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     }  // while
     y = y - proofps_dd::GAME_BLOCK_SIZE_Y;
     return true;
-}
+}  // lineHandleLayout()

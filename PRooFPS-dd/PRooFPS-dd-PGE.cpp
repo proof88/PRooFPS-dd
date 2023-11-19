@@ -1183,7 +1183,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
 
-            if (!m_maps.load((proofps_dd::GAME_MAPS_DIR + std::string(msg.m_szMapFilename)).c_str()))
+            if (!m_maps.load((msg.m_szMapFilename)))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
                 assert(false);
@@ -1322,7 +1322,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
 
             // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            if (!m_maps.load((std::string(proofps_dd::GAME_MAPS_DIR) + m_sServerMapFilenameToLoad).c_str()))
+            if (!m_maps.load(m_sServerMapFilenameToLoad.c_str()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
                 assert(false);

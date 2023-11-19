@@ -1,0 +1,6 @@
+# This is a sample comment line.
+# Mapcycle can contain such comment lines, for example if you want to temporarily disable a map,
+# you dont need to delete that line, just simply comment it out.
+
+map_warhouse.txt
+map_warena.txt
