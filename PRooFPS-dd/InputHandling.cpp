@@ -472,6 +472,21 @@ void proofps_dd::InputHandling::keyboard(
             m_durations.reset();
         }
 
+        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
+        {
+            if (m_pge.getNetwork().isServer())
+            {
+                m_maps.mapcycleNext();
+                pge_network::PgePacket newPktMapChange;
+                if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.mapcycleGetCurrent()))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                }
+                m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
+            }
+        }
+
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
             m_strafe = proofps_dd::Strafe::LEFT;

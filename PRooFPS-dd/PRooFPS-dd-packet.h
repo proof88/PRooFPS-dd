@@ -24,7 +24,8 @@ namespace proofps_dd
 
     enum class PRooFPSappMsgId : pge_network::MsgApp::TMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
     {
-        UserSetupFromServer = 0,
+        MapChangeFromServer = 0,
+        UserSetupFromServer,
         UserCmdFromClient,
         UserUpdateFromServer,
         BulletUpdateFromServer,
@@ -43,6 +44,7 @@ namespace proofps_dd
     // this way of defining std::array makes sure code cannot compile if we forget to align the array after changing PRooFPSappMsgId
     constexpr std::array<PRooFPSappMsgId2ZStringPair, static_cast<size_t>(PRooFPSappMsgId::LastMsgId)> MapMsgAppId2String
     { {
+         {PRooFPSappMsgId::MapChangeFromServer,         "MapChangeFromServer"},
          {PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer"},
          {PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient"},
          {PRooFPSappMsgId::UserUpdateFromServer,        "MsgUserUpdateFromServer"},
@@ -53,12 +55,50 @@ namespace proofps_dd
     } };
 
     // server -> self (inject) and clients
+    // sent to all clients when map is changing
+    // So currently this is NOT used at bootup.
+    struct MsgMapChangeFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::MapChangeFromServer;
+        static const uint8_t nMapFilenameMaxLength = 64;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const std::string& sMapFilename)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgMapChangeFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgMapChangeFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgMapChangeFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgMapChangeFromServer&>(*pMsgAppData);
+            strncpy_s(msgUserSetup.m_szMapFilename, sizeof(msgUserSetup.m_szMapFilename), sMapFilename.c_str(), sMapFilename.length());
+
+            return true;
+        }
+
+        char m_szMapFilename[nMapFilenameMaxLength];
+    };  // struct MsgMapChangeFromServer
+    static_assert(std::is_trivial_v<MsgMapChangeFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgMapChangeFromServer>);
+    static_assert(std::is_standard_layout_v<MsgMapChangeFromServer>);
+
+    // server -> self (inject) and clients
     // sent to all clients after the connecting client has been accepted by server
+    // This message is also used to tell the client which map to load at bootup.
+    // However, in case of map change, MsgMapChangeFromServer contains this info, but this message also contains it again.
     struct MsgUserSetupFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
         static const uint8_t nUserNameMaxLength = 64;
-        static const uint8_t nMapFilenameMaxLength = 64;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -93,7 +133,7 @@ namespace proofps_dd
         bool m_bCurrentClient;
         char m_szUserName[nUserNameMaxLength];
         char m_szIpAddress[pge_network::MsgUserConnectedServerSelf::nIpAddressMaxLength];
-        char m_szMapFilename[nMapFilenameMaxLength];
+        char m_szMapFilename[MsgMapChangeFromServer::nMapFilenameMaxLength];
     };  // struct MsgUserSetupFromServer
     static_assert(std::is_trivial_v<MsgUserSetupFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgUserSetupFromServer>);

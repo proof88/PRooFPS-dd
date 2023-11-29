@@ -73,11 +73,17 @@ namespace proofps_dd
 
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
-        std::string m_sServerMapFilenameToLoad;
+        std::string m_sServerMapFilenameToLoad;                   /**< We set this as soon as we get to know which map we should load. */
+        
+        /** Whenever we initiate a network connection or disconnection, we save the timestamp here.
+            This is needed because then in the main game loop we can check the amount of time elapsed
+            and then try reconnect automatically after a specific time. */
+        std::chrono::time_point<std::chrono::steady_clock> m_timeConnectionStateChangeInitiated;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastPrintWaitConnection;
+
         Maps m_maps;
 
-        std::chrono::time_point<std::chrono::steady_clock> timeLastOnGameRunning;
-        std::chrono::time_point<std::chrono::steady_clock> timeSimulation;          /**< For stepping the time ahead in 1 single tick. */
+        std::chrono::time_point<std::chrono::steady_clock> m_timeSimulation;          /**< For stepping the time ahead in 1 single tick. */
         unsigned int m_nTickrate;
         unsigned int m_nPhysicsRateMin;
         unsigned int m_nClientUpdateRate;
@@ -102,6 +108,7 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         bool hasValidConnection() const;
+        void disconnect();
         void mainLoopServerOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
         void mainLoopClientOnlyOneTick(
@@ -124,6 +131,9 @@ namespace proofps_dd
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserSetupFromServer& msg);
+        bool handleMapChangeFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgMapChangeFromServer& msg);
         bool handleUserConnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserConnectedServerSelf& msg);

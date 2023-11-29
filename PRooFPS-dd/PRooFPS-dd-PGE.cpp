@@ -264,6 +264,11 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     }
     else
     {
+        // MsgMapChangeFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgMapChangeFromServer MUST NOT be received by server over network!
+        // MsgMapChangeFromServer is received only by clients over network!
+        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapChangeFromServer::id));
+
         // MsgUserSetupFromServer is also processed by server, but it injects this pkt into its own queue when needed.
         // MsgUserSetupFromServer MUST NOT be received by server over network!
         // MsgUserSetupFromServer is received only by clients over network!
@@ -391,7 +396,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("  size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
     getConsole().OLn("");
 
-    //LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
     LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
     LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
     LoadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
@@ -473,14 +478,14 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         // 1 TICK START
         static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
         const auto timeNow = std::chrono::steady_clock::now();
-        if (timeSimulation.time_since_epoch().count() == 0)
+        if (m_timeSimulation.time_since_epoch().count() == 0)
         {
-            timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecsPerTick;
+            m_timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecsPerTick;
         }
-        while (timeSimulation < timeNow)
+        while (m_timeSimulation < timeNow)
         {
             // @TICKRATE
-            timeSimulation += DurationSimulationStepMicrosecsPerTick;
+            m_timeSimulation += DurationSimulationStepMicrosecsPerTick;
             if (getNetwork().isServer())
             {
                 mainLoopServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
@@ -491,10 +496,63 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             }
         }
         // 1 TICK END
-        timeLastOnGameRunning = std::chrono::steady_clock::now();
 
         mainLoopShared(window);
     } // endif validConnection
+    else
+    {
+        // try connecting back
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= 2)
+        {
+            // now try to connect back
+            // TODO: we will need to think about the possible outcomes of when server is loading slowly, thus client trying connecting might time out.
+            // So client should try connecting multiple times for this reason.
+            getConsole().SetLoggingState("4LLM0DUL3S", true);
+            if (getNetwork().isServer())
+            {
+                Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
+                getPure().getRenderer()->RenderScene();
+
+                if (!getNetwork().getServer().startListening())
+                {
+                    getConsole().EOLn("ERROR: Server has FAILED to start listening!");
+
+                    // try again a bit later
+                    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
+                }
+                m_timeSimulation = {};  // reset tick-based simulation time as well
+            }
+            else
+            {
+                std::string sIp = "127.0.0.1";
+                if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
+                {
+                    sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
+                }
+            
+                Text("Connecting to " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+                getPure().getRenderer()->RenderScene();
+            
+                if (!getNetwork().getClient().connectToServer(sIp))
+                {
+                    getConsole().EOLn("ERROR: Client has FAILED to establish connection to the server!");
+
+                    // try again a bit later
+                    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
+                }
+                m_timeSimulation = {};  // reset tick-based simulation time as well
+            }
+            getConsole().SetLoggingState("4LLM0DUL3S", false);
+        }
+        else
+        {
+            if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
+            {
+                m_timeLastPrintWaitConnection = std::chrono::steady_clock::now();
+                getConsole().EOLn("Waiting a bit before trying to connect back ... ");
+            }
+        }
+    }
 
     updateFramesPerSecond(window);
 
@@ -531,6 +589,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         const proofps_dd::PRooFPSappMsgId& proofpsAppMsgId = static_cast<proofps_dd::PRooFPSappMsgId>(pge_network::PgePacket::getMsgAppIdFromPkt(pkt));
         switch (proofpsAppMsgId)
         {
+        case proofps_dd::MsgMapChangeFromServer::id:
+            bRet = handleMapChangeFromServer(
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgMapChangeFromServer>(pkt));
+            break;
         case proofps_dd::MsgUserSetupFromServer::id:
             bRet = handleUserSetupFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
@@ -590,14 +653,18 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("proofps_dd::PRooFPSddPGE::onGameDestroying() ...");
 
+    Text("Exiting game ...", 200, getPure().getWindow().getClientHeight() / 2);
+    getPure().getRenderer()->RenderScene();
+
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
     //getPure().WriteList();
     //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
+    // TODO: check common parts with disconnect()
     m_mapPlayers.clear();       // Dtors of Player instances will be implicitly called
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
-    m_maps.shutdown();
     m_sServerMapFilenameToLoad.clear();
+    m_maps.shutdown();
     delete m_pObjXHair;
     delete m_gameMode;
     getPure().getObject3DManager().DeleteAll();
@@ -613,7 +680,40 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 {
+    // This is why it is very important to clear out m_nServerSideConnectionHandle when we are disconnecting:
+    // to make sure this conditiona fails, so the main loop is aware of not having a valid connection.
+    // And it is also very important to clear m_mapPlayers in that case, otherwise 2 bugs would occur:
+    // - server: it would still be able to find itself in the map, obviously since 0 is its own handle anyway;
+    // - client: it would still be able to find the server in the map, which is a false conclusion of having a valid connection.
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
+}
+
+void proofps_dd::PRooFPSddPGE::disconnect()
+{
+    getPure().getUImanager().RemoveAllPermanentTexts(); // cannot find better way to get rid of permanent texts
+    Text("Unloading resources ...", 200, getPure().getWindow().getClientHeight() / 2);
+    getPure().getRenderer()->RenderScene();
+
+    getConsole().SetLoggingState("4LLM0DUL3S", true);
+    getNetwork().disconnect();
+    m_nServerSideConnectionHandle = pge_network::ServerConnHandle; // default it back
+    getConsole().SetLoggingState("4LLM0DUL3S", false);
+    
+    // As server, dont need to remove players because we already disconnected above, this will cause all connection states to transition to
+    // disconnected while handling state changes in engine main loop (getNetwork.Update()), invoking our handleUserDisconnected() as well.
+    // The only user who will stay in m_mapPlayers is the server player but for that server is injecting a userDisconnected message so it
+    // will be also removed from the map, leading to an empty map as expected.
+    // As client, there will be a userDisconnected message for the server, for which we should delete all players.
+    // So eventually all players will be also removed not only from m_mapPlayers but also from m_gameMode.
+    // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reasion is explained in hasValidConnection().
+
+    // TODO: but we should hide all the players because actual deleting them will happen later once
+    // game is receiving the disconnects, however they should not be visible from now as they would be visible
+    // during map loading.
+
+    deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
+    m_sServerMapFilenameToLoad.clear();
+    m_maps.unload();
 }
 
 /**
@@ -1169,10 +1269,30 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 
         if (getNetwork().isServer())
         {
+            // if we are server and current client is us, then our m_nServerSideConnectionHandle should be pge_network::ServerConnHandle
+            if (m_nServerSideConnectionHandle != pge_network::ServerConnHandle)
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: m_nServerSideConnectionHandle != pge_network::ServerConnHandle: %u != %u, programming error!",
+                    __func__, m_nServerSideConnectionHandle, pge_network::ServerConnHandle);
+                assert(false);
+                return false;
+            }
+
             AddText("Server, User name: " + std::string(msg.m_szUserName) +
                 (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
-            // server is not loading map here, it already loaded earlier for itself
+
+            // Server receives map name also in MsgUserSetupFromServer.
+            // However, the server MUST have the correct map loaded already at this point:
+            //  - if this is a bootup, it loaded already in handleUserConnected();
+            //  - if this is a map change, it loaded already in handleMapChangeFromServer().
+            // So if file name is mismatching then there must be a huge logic error somewhere and we should terminate now.
+            if (m_maps.getFilename() != msg.m_szMapFilename)
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): unexpected map name received by self: %s, loaded map: %s!", __func__, msg.m_szMapFilename, m_maps.getFilename().c_str());
+                assert(false);
+                return false;
+            }
         }
         else
         {
@@ -1180,18 +1300,29 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                 (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
 
-            Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
-            getPure().getRenderer()->RenderScene();
-
-            if (!m_maps.load((msg.m_szMapFilename)))
+            // Client receives map name also in MsgUserSetupFromServer.
+            // If this is a bootup, then we need to load map here, only if it is different than what we have already loaded (map change case).
+            // Because we also get here in case of reconnecting after a map change, we should load the map only if it is different than server just asked for.
+            if (m_maps.getFilename() != msg.m_szMapFilename)
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
-                assert(false);
-                return false;
+                // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
+                Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+                getPure().getRenderer()->RenderScene();
+
+                if (!m_maps.load(msg.m_szMapFilename))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
+                    assert(false);
+                    return false;
+                }
+            }
+            else
+            {
+                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, msg.m_szMapFilename);
             }
         }
 
-        // camera must start from the center of the map
+        // at this point we can be sure we have the proper map loaded, camera must start from the center of the map
         getPure().getCamera().getPosVec().Set(
             (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
             (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
@@ -1298,6 +1429,66 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     return true;
 }
 
+bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapChangeFromServer& msg)
+{
+    getConsole().SetLoggingState("4LLM0DUL3S", true);
+    getConsole().OLn("PRooFPSddPGE::%s(): map: %s", __func__, msg.m_szMapFilename);
+
+    // map change request may come anytime, so first we disconnect and clean up
+    disconnect();
+    // reason for disconnecting from the server (in case of client) or clients (in case of server) is the following:
+    // - in case of server we stop listening because we are busy anyway with map loading, cannot process messages on the main thread,
+    //   so even if we could turn off GNS heartbeat supervisioning we still could not receive client messages;
+    // - in case of client we disconnect because being busy with map loading on the main thread would cause the GNS connection to be
+    //   torn down anyway due to not answering for heartbeats.
+    // We could do the map loading on a separate thread and keep the connections active by letting the main thread loop run without blocking,
+    // however the Pure graphics engine is not thread-safe thus letting both the main thread and the map loading thread call Pure would cause
+    // hell.
+    // Another issue with keeping the connections active would be: some clients would finish with loading faster, others later, so we would
+    // need to maintain a flag per client if they are finished with loading or not: if not, we should NOT send any message to them since
+    // their main thread is blocked temporarily, would cause congestion and dropped packets, also their player object should be kept hidden
+    // for this temporal period. Also, if we want to keep the connections open, and load the map on main thread, we need to turn GNS heartbeat
+    // supervising off for that period temporarily.
+    // Sticking to the first idea: disconnecting and reconnecting later looks to be a less error-prone design where we need to handle less
+    // corner cases in the future.
+
+    // Note that when server sends this message to us, it also closes down all connections.
+    // We would receive as many userDisconnected messages from the server as the number of players, however we don't receive it
+    // because we also already closed the connection above.
+    // But programmatically client's disconnect injects a MsgUserDisconnected pkt with server's connection handle, so the client will
+    // get informed about server's disconnect anyway in handleUserDisconnected() where it can delete all players.
+
+    m_sServerMapFilenameToLoad = msg.m_szMapFilename;
+
+    Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+    getPure().getRenderer()->RenderScene();
+    
+    //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
+    if (!m_maps.load((msg.m_szMapFilename)))
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
+        assert(false);
+        return false;
+    }
+    // We don't need to align camera, it is done for both server and client in handleUserSetupFromServer(), they will get that pkg from server
+    // after they successfully reconnect to server later.
+
+    // Since we are here from a message callback, it is not really good to try building up a connection again, since
+    // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,
+    // only after that we should try connect back. This is true for server also, not only for clients.
+    // So we just save the time here, and then try connect back when a predefined amount of time elapsed.
+    // This is a temporal solution. On the long run the engine's network system should support querying of real connection state so we can
+    // just query it and reconnect when it really became disconnected.
+    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
+
+    // TODO: there are things that are the same as in onGameInitialized(), put them into a common function!
+    m_timeSimulation = {};  // reset tick-based simulation time as well
+    m_fps_lastmeasure = GetTickCount();
+    m_fps = GAME_MAXFPS;
+
+    return true;
+}
+
 bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const pge_network::MsgUserConnectedServerSelf& msg)
 {
     if (!getNetwork().isServer())
@@ -1318,15 +1509,21 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             Text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPure().getWindow().getClientHeight() / 2);
             getPure().getRenderer()->RenderScene();
 
-            Bullet::ResetGlobalBulletId();
-
-            // server already loads the map for itself at this point, so no need for map filename in PktSetup, but we fill it anyway ...
+            // server already loads the map for itself at this point
             //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-            if (!m_maps.load(m_sServerMapFilenameToLoad.c_str()))
+            if (m_maps.getFilename() != m_sServerMapFilenameToLoad)
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
-                assert(false);
-                return false;
+                // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
+                if (!m_maps.load(m_sServerMapFilenameToLoad.c_str()))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
+                    assert(false);
+                    return false;
+                }
+            }
+            else
+            {
+                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_sServerMapFilenameToLoad.c_str());
             }
 
             char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength];
@@ -1337,7 +1534,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             szConnectedUserName = szNewUserName;
 
             pge_network::PgePacket newPktSetup;
-            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.m_szIpAddress, m_maps.getFilename()))
+            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, szConnectedUserName, msg.m_szIpAddress, m_sServerMapFilenameToLoad.c_str()))
             {
                 const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
                     m_maps.getLeftMostSpawnpoint() :
@@ -1424,7 +1621,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         proofps_dd::MsgUserSetupFromServer& msgUserSetup = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserSetupFromServer>(newPktSetup);
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().send(newPktSetup, connHandleServerSide);
-        getNetwork().getServer().send(newPktUserUpdate);
+        getNetwork().getServer().send(newPktUserUpdate);   // TODO: why is this here? we already sent it few lines earlier.
 
         // we also send as many MsgUserSetupFromServer pkts to the client as the number of already connected players,
         // otherwise client won't know about them, so this way the client will detect them as newly connected users;
@@ -1515,17 +1712,36 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
         return true; // in release mode, dont terminate
     }
 
+    // Server should not remove all players when it it notified with its connHandle being disconnected, because in that case
+    // all players are expected to be removed by subsequent calls into this function with their connHandle as their connection state transitions.
+    // There will be userDisconnected message for all players, including the server as well, so eventually this way m_mapPlayers will be
+    // cleared out in multiple steps on server-side.
+    // However, client won't be notified about all clients disconnecting in this case, but it is quite trivial when the server itself disconnects.
+    // So that is why we manually get rid of all players in case of client.
+    // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reasion is explained in hasValidConnection().
+    const bool bClientShouldRemoveAllPlayers = !getNetwork().isServer() && (connHandleServerSide == pge_network::ServerConnHandle);
     if (getNetwork().isServer())
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm server", __func__, playerIt->second.getName().c_str());
+        getConsole().OLn(
+            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm server",
+            __func__, playerIt->second.getName().c_str(), connHandleServerSide);
     }
     else
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): user %s disconnected and I'm client", __func__, playerIt->second.getName().c_str());
+        getConsole().OLn(
+            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm client",
+            __func__, playerIt->second.getName().c_str(), connHandleServerSide);
     }
 
     m_gameMode->removePlayer(playerIt->second);
     m_mapPlayers.erase(playerIt);
+
+    if (bClientShouldRemoveAllPlayers)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
+        m_gameMode->restart();
+        m_mapPlayers.clear();
+    }
 
     getNetwork().WriteList();
     WritePlayerList();

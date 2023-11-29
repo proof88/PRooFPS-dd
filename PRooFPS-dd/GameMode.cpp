@@ -60,11 +60,13 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::
 void proofps_dd::GameMode::restart()
 {
     m_timeReset = std::chrono::steady_clock::now();
+    // extended in derived class
 }
 
 void proofps_dd::GameMode::restartWithoutRemovingPlayers()
 {
     m_timeReset = std::chrono::steady_clock::now();
+    // extended in derived class
 }
 
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getWinTime() const
