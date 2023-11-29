@@ -80,6 +80,7 @@ namespace proofps_dd
             and then try reconnect automatically after a specific time. */
         std::chrono::time_point<std::chrono::steady_clock> m_timeConnectionStateChangeInitiated;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastPrintWaitConnection;
+        unsigned int m_nSecondsReconnectDelay;
 
         Maps m_maps;
 

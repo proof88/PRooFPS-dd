@@ -39,6 +39,8 @@ static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
 static constexpr char* CVAR_SV_MAP = "sv_map";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
+static constexpr char* CVAR_SV_RECONNECT_DELAY = "sv_reconnect_delay";
+static constexpr char* CVAR_CL_RECONNECT_DELAY = "cl_reconnect_delay";
 
 static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
 static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
@@ -98,6 +100,9 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_mapPlayers,
         m_maps,
         m_sounds),
+    m_gameMode(nullptr),
+    m_deathMatchMode(nullptr),
+    m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
     m_maps(getPure()),
     m_nTickrate(GAME_TICKRATE_DEF),
     m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
@@ -372,6 +377,27 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getConsole().OLn("Missing Client update rate in config, forcing default: %u Hz", m_nClientUpdateRate);
     }
 
+    const char* const szCVarReconnectDelay = getNetwork().isServer() ? CVAR_SV_RECONNECT_DELAY : CVAR_CL_RECONNECT_DELAY;
+
+    if (!getConfigProfiles().getVars()[szCVarReconnectDelay].getAsString().empty())
+    {
+        if (getConfigProfiles().getVars()[szCVarReconnectDelay].getAsInt() >= 0)
+        {
+            m_nSecondsReconnectDelay = getConfigProfiles().getVars()[szCVarReconnectDelay].getAsUInt();
+            getConsole().OLn("%s rate from config: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
+        }
+        else
+        {
+            getConsole().EOLn("ERROR: Invalid %s in config: %s, forcing: %u seconds",
+                szCVarReconnectDelay, getConfigProfiles().getVars()[szCVarReconnectDelay].getAsString().c_str(),
+                m_nSecondsReconnectDelay);
+        }
+    }
+    else
+    {
+        getConsole().OLn("Missing %s, forcing default: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
+    }
+
     serverSetAllowStrafeMidAir( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() );
     
     if (getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() &&
@@ -502,12 +528,11 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     else
     {
         // try connecting back
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= 2)
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay)
         {
             // now try to connect back
             // TODO: we will need to think about the possible outcomes of when server is loading slowly, thus client trying connecting might time out.
             // So client should try connecting multiple times for this reason.
-            getConsole().SetLoggingState("4LLM0DUL3S", true);
             if (getNetwork().isServer())
             {
                 Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
@@ -542,7 +567,6 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 }
                 m_timeSimulation = {};  // reset tick-based simulation time as well
             }
-            getConsole().SetLoggingState("4LLM0DUL3S", false);
         }
         else
         {

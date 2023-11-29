@@ -52,6 +52,8 @@ namespace proofps_dd
     static_assert(GAME_CL_UPDATERATE_DEF <= GAME_CL_UPDATERATE_MAX, "Max cl_updaterate should not be smaller than default cl_updaterate.");
     static_assert(GAME_TICKRATE_DEF % GAME_CL_UPDATERATE_DEF == 0, "Clients should receive UPDATED physics results evenly distributed in time.");
 
+    static constexpr unsigned int GAME_NETWORK_RECONNECT_SECONDS = 2;
+
     static const float GAME_BLOCK_SIZE_X = 1.0f;
     static const float GAME_BLOCK_SIZE_Y = 1.0f;
     static const float GAME_BLOCK_SIZE_Z = 1.0f;
