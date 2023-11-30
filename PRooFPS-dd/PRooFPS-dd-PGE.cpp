@@ -570,6 +570,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         }
         else
         {
+            Text("Waiting for restoring connection ...", 200, getPure().getWindow().getClientHeight() / 2);
             if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
             {
                 m_timeLastPrintWaitConnection = std::chrono::steady_clock::now();
@@ -712,14 +713,18 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
 }
 
-void proofps_dd::PRooFPSddPGE::disconnect()
+void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
 {
     getPure().getUImanager().RemoveAllPermanentTexts(); // cannot find better way to get rid of permanent texts
-    Text("Unloading resources ...", 200, getPure().getWindow().getClientHeight() / 2);
+    const std::string sPrintText =
+        sExtraDebugText.empty() ?
+        "Unloading resources ..." :
+        "Unloading resources ... Reason: " + sExtraDebugText;
+    Text(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
     getPure().getRenderer()->RenderScene();
 
     getConsole().SetLoggingState("4LLM0DUL3S", true);
-    getNetwork().disconnect();
+    getNetwork().disconnect(sExtraDebugText);
     m_nServerSideConnectionHandle = pge_network::ServerConnHandle; // default it back
     getConsole().SetLoggingState("4LLM0DUL3S", false);
     
@@ -1455,11 +1460,10 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 
 bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapChangeFromServer& msg)
 {
-    getConsole().SetLoggingState("4LLM0DUL3S", true);
     getConsole().OLn("PRooFPSddPGE::%s(): map: %s", __func__, msg.m_szMapFilename);
 
     // map change request may come anytime, so first we disconnect and clean up
-    disconnect();
+    disconnect("Map change: " + m_maps.getFilename() + " -> " + msg.m_szMapFilename);
     // reason for disconnecting from the server (in case of client) or clients (in case of server) is the following:
     // - in case of server we stop listening because we are busy anyway with map loading, cannot process messages on the main thread,
     //   so even if we could turn off GNS heartbeat supervisioning we still could not receive client messages;
