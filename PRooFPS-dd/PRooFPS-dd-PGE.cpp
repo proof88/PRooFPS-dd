@@ -223,6 +223,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
     PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR)+"hud_xhair.bmp").c_str());
     m_pObjXHair->getMaterial().setTexture( xhairtex );
+    m_pObjXHair->Hide();
 
     getPure().WriteList();
 
@@ -438,6 +439,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
         getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
     getPure().getWindow().SetCursorVisible(false);
+    m_pObjXHair->Show();
 
     m_deathMatchMode->setFragLimit(10);
     //m_deathMatchMode->setTimeLimitSecs(500);
@@ -545,7 +547,11 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                     // try again a bit later
                     m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
                 }
-                m_timeSimulation = {};  // reset tick-based simulation time as well
+                else
+                {
+                    m_pObjXHair->Show();
+                    m_timeSimulation = {};  // reset tick-based simulation time as well
+                }
             }
             else
             {
@@ -565,7 +571,11 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                     // try again a bit later
                     m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
                 }
-                m_timeSimulation = {};  // reset tick-based simulation time as well
+                else
+                {
+                    m_pObjXHair->Show();
+                    m_timeSimulation = {};  // reset tick-based simulation time as well
+                }
             }
         }
         else
@@ -736,9 +746,18 @@ void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
     // So eventually all players will be also removed not only from m_mapPlayers but also from m_gameMode.
     // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reasion is explained in hasValidConnection().
 
-    // TODO: but we should hide all the players because actual deleting them will happen later once
-    // game is receiving the disconnects, however they should not be visible from now as they would be visible
+    // we should hide all the players because actual deleting them will happen later once
+    // game is processing each player disconnect, however they should not be visible from now as they would be visible
     // during map loading.
+    m_pObjXHair->Hide();
+    for (auto& connHandlePlayerPair : m_mapPlayers)
+    {
+        connHandlePlayerPair.second.getObject3D()->Hide();
+        if (connHandlePlayerPair.second.getWeaponManager().getCurrentWeapon())
+        {
+            connHandlePlayerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+        }
+    }
 
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_sServerMapFilenameToLoad.clear();
@@ -1498,8 +1517,17 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
         assert(false);
         return false;
     }
-    // We don't need to align camera, it is done for both server and client in handleUserSetupFromServer(), they will get that pkg from server
-    // after they successfully reconnect to server later.
+    // Camera must start from the center of the map.
+    // This is also done in both server and client in handleUserSetupFromServer(), they will get that pkg from server
+    // after they successfully reconnect to server later. However due to rendering again before that, camera should already positioned now.
+    getPure().getCamera().getPosVec().Set(
+        (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
+        (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
+        GAME_CAM_Z);
+    getPure().getCamera().getTargetVec().Set(
+        getPure().getCamera().getPosVec().getX(),
+        getPure().getCamera().getPosVec().getY(),
+        -proofps_dd::GAME_BLOCK_SIZE_Z);
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,
@@ -1821,7 +1849,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
 
     if (msg.m_bRespawn)
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->first.c_str());
+        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->second.getName().c_str());
         HandlePlayerRespawned(it->second, *m_pObjXHair);
     }
     else
