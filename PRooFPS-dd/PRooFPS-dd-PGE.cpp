@@ -258,13 +258,22 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
         if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
         {
-            m_sServerMapFilenameToLoad = "map_warena.txt";
-            getConsole().OLn("Map default: %s", m_sServerMapFilenameToLoad.c_str());
+            m_sServerMapFilenameToLoad = m_maps.mapcycleGetCurrent();
+            if (m_sServerMapFilenameToLoad.empty())
+            {
+                getConsole().EOLnOO("ERROR: Server is unable to select first map!");
+                PGE::showErrorDialog("Server is unable to select first map!");
+                return false;
+            }
+            else
+            {
+                getConsole().OLn("First map by mapcycle: %s", m_sServerMapFilenameToLoad.c_str());
+            }
         }
         else
         {
             m_sServerMapFilenameToLoad = getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString();
-            getConsole().OLn("Map from config: %s", m_sServerMapFilenameToLoad.c_str());
+            getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, m_sServerMapFilenameToLoad.c_str());
         }
         // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
     }
