@@ -109,6 +109,7 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         bool hasValidConnection() const;
+        bool connect();
         void disconnect(const std::string& sExtraDebugText = "");
         void mainLoopServerOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */

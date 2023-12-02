@@ -246,16 +246,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     {
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
-        Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
-        getPure().getRenderer()->RenderScene();
-
-        if (!getNetwork().getServer().startListening())
-        {
-            PGE::showErrorDialog("Server has FAILED to start listening!");
-            getConsole().EOLnOO("ERROR: Server has FAILED to start listening!");
-            return false;
-        }
-
         if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
         {
             m_sServerMapFilenameToLoad = m_maps.mapcycleGetCurrent();
@@ -300,23 +290,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
         getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
 
-        std::string sIp = "127.0.0.1";
-        if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
-        {
-            sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
-            getConsole().OLn("IP from config: %s", sIp.c_str());
-        }
         // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
-
-        Text("Connecting to " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
-        getPure().getRenderer()->RenderScene();
-
-        if (!getNetwork().getClient().connectToServer(sIp))
-        {
-            getConsole().EOLnOO("ERROR: Client has FAILED to establish connection to the server!");
-            PGE::showErrorDialog("Client has FAILED to establish connection to the server!");
-            return false;
-        }
     }
 
     // TODO: too much validation here, validation probably should be done by CVARS themselves.
@@ -541,50 +515,15 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         // try connecting back
         if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay)
         {
-            // now try to connect back
-            // TODO: we will need to think about the possible outcomes of when server is loading slowly, thus client trying connecting might time out.
-            // So client should try connecting multiple times for this reason.
-            if (getNetwork().isServer())
+            if (connect())
             {
-                Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
-                getPure().getRenderer()->RenderScene();
-
-                if (!getNetwork().getServer().startListening())
-                {
-                    getConsole().EOLn("ERROR: Server has FAILED to start listening!");
-
-                    // try again a bit later
-                    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
-                }
-                else
-                {
-                    m_pObjXHair->Show();
-                    m_timeSimulation = {};  // reset tick-based simulation time as well
-                }
+                m_pObjXHair->Show();
+                m_timeSimulation = {};  // reset tick-based simulation time as well
             }
             else
             {
-                std::string sIp = "127.0.0.1";
-                if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
-                {
-                    sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
-                }
-            
-                Text("Connecting to " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
-                getPure().getRenderer()->RenderScene();
-            
-                if (!getNetwork().getClient().connectToServer(sIp))
-                {
-                    getConsole().EOLn("ERROR: Client has FAILED to establish connection to the server!");
-
-                    // try again a bit later
-                    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
-                }
-                else
-                {
-                    m_pObjXHair->Show();
-                    m_timeSimulation = {};  // reset tick-based simulation time as well
-                }
+                // try again a bit later
+                m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
             }
         }
         else
@@ -730,6 +669,41 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     // - server: it would still be able to find itself in the map, obviously since 0 is its own handle anyway;
     // - client: it would still be able to find the server in the map, which is a false conclusion of having a valid connection.
     return m_mapPlayers.find(m_nServerSideConnectionHandle) != m_mapPlayers.end();
+}
+
+bool proofps_dd::PRooFPSddPGE::connect()
+{
+    bool bRet;
+    if (getNetwork().isServer())
+    {
+        Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
+        getPure().getRenderer()->RenderScene();
+
+        bRet = getNetwork().getServer().startListening();
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: Server has FAILED to start listening!");
+        }
+    }
+    else
+    {
+        std::string sIp = "127.0.0.1";
+        if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
+        {
+            sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
+            getConsole().OLn("IP from config: %s", sIp.c_str());
+        }
+
+        Text("Connecting to Server @ " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+        getPure().getRenderer()->RenderScene();
+
+        bRet = getNetwork().getClient().connectToServer(sIp);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: Client has FAILED to establish connection to the server!");
+        }
+    }
+    return bRet;
 }
 
 void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
