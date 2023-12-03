@@ -368,7 +368,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         if (getConfigProfiles().getVars()[szCVarReconnectDelay].getAsInt() >= 0)
         {
             m_nSecondsReconnectDelay = getConfigProfiles().getVars()[szCVarReconnectDelay].getAsUInt();
-            getConsole().OLn("%s rate from config: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
+            getConsole().OLn("%s from config: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
         }
         else
         {
