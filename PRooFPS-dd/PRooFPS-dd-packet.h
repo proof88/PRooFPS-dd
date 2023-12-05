@@ -98,7 +98,7 @@ namespace proofps_dd
     struct MsgUserSetupFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
-        static const uint8_t nUserNameMaxLength = 64;
+        static const uint8_t nUserNameMaxLength = 11;  // for now very short, to keep the frag table look nice
 
         static bool initPkt(
             pge_network::PgePacket& pkt,

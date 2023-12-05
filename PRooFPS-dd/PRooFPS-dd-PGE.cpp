@@ -32,6 +32,8 @@ static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
 static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
+static constexpr char* CVAR_CL_NAME = "cl_name";
+
 static constexpr char* CVAR_TICKRATE = "tickrate";
 static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
 static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
@@ -1248,19 +1250,40 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 
 void proofps_dd::PRooFPSddPGE::genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength]) const
 {
-    bool found = false;
-    do
+    if (getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().empty())
     {
-        sprintf_s(szNewUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength, "User%d", 10000 + (rand() % 100000));
-        for (const auto& client : m_mapPlayers)
+        getConfigProfiles().getVars()[CVAR_CL_NAME].Set("Player");
+    }
+
+    std::string sNewPlayerName = getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().substr(0, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength-1);
+    
+    // if everybody is connecting with the SAME name, the maximum number of unique player names is: 10 ^ nUniqueNumberWidthInName
+    constexpr size_t nUniqueNumberWidthInName = 3; // used only if sInitialName collides with another name
+    static_assert(nUniqueNumberWidthInName >= 2);
+    static_assert(nUniqueNumberWidthInName < 5);
+    
+    bool bNameCollision = true;
+    while (bNameCollision)
+    {
+        bNameCollision = false;
+        for (const auto& player : m_mapPlayers)
         {
-            found = (client.second.getName() == szNewUserName);
-            if (found)
+            bNameCollision = (player.second.getName() == sNewPlayerName);
+            if (bNameCollision)
             {
                 break;
             }
         }
-    } while (found);
+        
+        if (bNameCollision)
+        {
+            // if we are here, we are even allowed to be a bit invasive with the name ...
+            sNewPlayerName = sNewPlayerName.substr(0, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength - 1 - nUniqueNumberWidthInName) +
+                std::to_string(static_cast<size_t>(std::pow(10,nUniqueNumberWidthInName-1)) + (rand() % static_cast<size_t>(std::pow(10, nUniqueNumberWidthInName))));
+        }
+    };
+
+    strncpy_s(szNewUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength, sNewPlayerName.c_str(), sNewPlayerName.length());
 }
 
 void proofps_dd::PRooFPSddPGE::WritePlayerList()
@@ -1276,6 +1299,10 @@ void proofps_dd::PRooFPSddPGE::WritePlayerList()
 
 bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg)
 {
+    // TODO: make sure received user name is properly null-terminated! someone else could had sent that, e.g. malicious server
+    // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
+    // TODO: make sure received IP address is properly null-terminated! someone else could had sent that, e.g. malicious server
+
     if ((strnlen(msg.m_szUserName, proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength) > 0) && (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide)))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u (rcvd user name: %s) is already present in players list!",
@@ -1463,6 +1490,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapChangeFromServer& msg)
 {
     getConsole().OLn("PRooFPSddPGE::%s(): map: %s", __func__, msg.m_szMapFilename);
+
+    // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
 
     // map change request may come anytime, so first we disconnect and clean up
     disconnect("Map change: " + m_maps.getFilename() + " -> " + msg.m_szMapFilename);
