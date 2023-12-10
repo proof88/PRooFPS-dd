@@ -79,6 +79,38 @@ const std::list<proofps_dd::FragTableRow>& proofps_dd::GameMode::getFragTable() 
     return m_players;
 }
 
+bool proofps_dd::GameMode::renamePlayer(const std::string& sOldName, const std::string& sNewName)
+{
+    if (sOldName.empty() || sNewName.empty())
+    {
+        return false;
+    }
+
+    FragTableRow* pPlayerToRename = nullptr;
+    
+    // loop over the all players and check for name collision, at the same time save ptr to target player
+    for (auto& player : m_players)
+    {
+        if (player.m_sName == sOldName)
+        {
+            pPlayerToRename = &player;  // will rename this
+        }
+        else if (player.m_sName == sNewName)
+        {
+            return false;  // name collision
+        }
+    }
+
+    if (pPlayerToRename)
+    {
+        pPlayerToRename->m_sName = sNewName;
+        return true;
+    }
+
+    // no such player found
+    return false;
+}
+
 void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
     pure.getUImanager().text(s, x, y)->SetDropShadow(true);

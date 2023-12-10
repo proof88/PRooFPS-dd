@@ -39,6 +39,10 @@ namespace proofps_dd
         pge_network::PgeNetworkConnectionHandle m_connHandle;
     };
 
+    /**
+    * GameMode class represent the Frag Table and the winning condition checks.
+    * It identifies players by their name thus it is essential that all players have unique name.
+    */
     class GameMode
     {
     public:
@@ -116,6 +120,18 @@ namespace proofps_dd
         * @return True if removed the existing player, false otherwise.
         */
         virtual bool removePlayer(const Player& player) = 0;
+
+        /**
+        * Renames the player.
+        * All players must have unique name.
+        * The function fails if there is already a player having the same name as sNewName, or if there was no such player with name as sOldName.
+        * 
+        * @param sOldName The previous name of the player that we want to change.
+        * @param sNewName The new name of the player we want to change to.
+        * 
+        * @return True if rename was successful, false otherwise.
+        */
+        bool renamePlayer(const std::string& sOldName, const std::string& sNewName);
 
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 

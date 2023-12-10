@@ -288,6 +288,7 @@ private:
     unsigned int m_nTickRate;
     unsigned int m_nClUpdateRate;
     unsigned int m_nPhysicsRateMin;
+    std::string m_sPlayerName;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -537,11 +538,11 @@ private:
             return bRet;
         }
 
-        bRet &= assertEquals("User28467", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
+        bRet &= assertEquals("Player2", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
             assertEquals(1, evaluateFragTable[0].m_nFrags, "fragtable row 1 frags") &
             assertEquals(0, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths");
 
-        bRet &= assertEquals("User10041", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
+        bRet &= assertEquals("Player1", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
             assertEquals(0, evaluateFragTable[1].m_nFrags, "fragtable row 2 frags") &
             assertEquals(1, evaluateFragTable[1].m_nDeaths, "fragtable row 2 deaths");
 
@@ -682,7 +683,7 @@ private:
                 "--gfx_windowed=true --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin));
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1");
         }
         else
         {
@@ -691,7 +692,7 @@ private:
                 "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin));
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player2");
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.

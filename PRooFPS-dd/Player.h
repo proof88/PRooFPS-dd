@@ -38,6 +38,10 @@ namespace proofps_dd
     public:
 
         static const char* getLoggerModuleName();
+        static void proofps_dd::Player::genUniqueUserName(
+            char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength],
+            const std::string& sNameFromConfig,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers);
 
         // ---------------------------------------------------------------------------
 

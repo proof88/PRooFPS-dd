@@ -48,6 +48,7 @@ protected:
 
         AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
         AddSubTest("test_reset_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_times);
+        AddSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
         AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
         AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
@@ -158,6 +159,64 @@ private:
         gm->restart();
         return assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time") &
             assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
+    }
+
+    bool test_rename_player()
+    {
+        if (!testInitDeathmatch())
+        {
+            return false;
+        }
+
+        dm->setFragLimit(11);
+
+        bool b = assertFalse(gm->renamePlayer("alma", "gg"), "rename 1");
+        b &= assertFalse(gm->renamePlayer("", ""), "rename 2");
+
+        proofps_dd::Player player1(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 2;
+        player1.getDeaths() = 0;
+
+        proofps_dd::Player player2(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 1;
+        player2.getDeaths() = 0;
+
+        proofps_dd::Player player3(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setName("Joe");
+        player3.getFrags() = 0;
+        player3.getDeaths() = 0;
+
+        proofps_dd::Player player4(m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+        player4.setName("Banana");
+        player4.getFrags() = 0;
+        player4.getDeaths() = 0;
+
+        b &= assertTrue(dm->addPlayer(player1), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2), "add player 2");
+        b &= assertTrue(dm->addPlayer(player3), "add player 3");
+        b &= assertTrue(dm->addPlayer(player4), "add player 4");
+
+        b &= assertFalse(gm->renamePlayer("", ""), "rename 3");
+        b &= assertFalse(gm->renamePlayer("Adam", ""), "rename 4");
+        b &= assertFalse(gm->renamePlayer("", "Adam"), "rename 5");
+        b &= assertFalse(gm->renamePlayer("gg", "kkk"), "rename 6");
+        b &= assertFalse(gm->renamePlayer("Adam", "Joe"), "rename 7");
+        b &= assertFalse(gm->renamePlayer("Joe", "Adam"), "rename 8");
+        b &= assertFalse(gm->renamePlayer("adam", "Peter"), "rename 9");
+        b &= assertTrue(gm->renamePlayer("Adam", "Peter"), "rename 10");
+
+        const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            { /*"Adam"*/ "Peter", 2, 0 },
+            { "Apple", 1, 0 },
+            { "Joe", 0, 0 },
+            { "Banana", 0, 0 }
+        };
+
+        b &= assertFragTableEquals(expectedPlayers, dm->getFragTable());
+
+        return b;
     }
 
     bool test_deathmatch_time_limit_get_set_and_remaining_time_get()

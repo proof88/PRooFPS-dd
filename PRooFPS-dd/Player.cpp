@@ -22,6 +22,54 @@
 // ############################### PUBLIC ################################
 
 
+const char* proofps_dd::Player::getLoggerModuleName()
+{
+    return "Player";
+}
+
+void proofps_dd::Player::genUniqueUserName(
+    char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength],
+    const std::string& sNameFromConfig,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers)
+{
+    std::string sNewPlayerName(sNameFromConfig);
+    if (sNewPlayerName.empty())
+    {
+        sNewPlayerName = "Player";
+    }
+    sNewPlayerName = sNewPlayerName.substr(0, proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength - 1);
+
+    // if everybody is connecting with the SAME name, the maximum number of unique player names is: 10 ^ nUniqueNumberWidthInName
+    constexpr size_t nUniqueNumberWidthInName = 3; // used only if sInitialName collides with another name
+    static_assert(nUniqueNumberWidthInName >= 2);
+    static_assert(nUniqueNumberWidthInName < 5);
+
+    bool bNameCollision = true;
+    while (bNameCollision)
+    {
+        bNameCollision = false;
+        for (const auto& player : m_mapPlayers)
+        {
+            bNameCollision = (player.second.getName() == sNewPlayerName);
+            if (bNameCollision)
+            {
+                break;
+            }
+        }
+
+        if (bNameCollision)
+        {
+            // if we are here, we are even allowed to be a bit invasive with the name ...
+            sNewPlayerName = sNewPlayerName.substr(0, proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength - 1 - nUniqueNumberWidthInName) +
+                std::to_string(static_cast<size_t>(std::pow(10, nUniqueNumberWidthInName - 1)) + (rand() % static_cast<size_t>(std::pow(10, nUniqueNumberWidthInName))));
+            sNewPlayerName = sNewPlayerName.substr(0, proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength - 1);
+        }
+    };
+
+    strncpy_s(szNewUserName, proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength, sNewPlayerName.c_str(), sNewPlayerName.length());
+}
+
+
 proofps_dd::Player::Player(
     PGEcfgProfiles& cfgProfiles,
     std::list<Bullet>& bullets,
@@ -219,11 +267,6 @@ void proofps_dd::Player::clearNetDirty()
 CConsole& proofps_dd::Player::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
-}
-
-const char* proofps_dd::Player::getLoggerModuleName()
-{
-    return "Player";
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getHealth()

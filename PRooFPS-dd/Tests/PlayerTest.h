@@ -13,6 +13,8 @@
 #include <string.h>
 
 #include <cassert>
+#include <set>
+#include <string>
 
 #include "../../../PGE/PGE/UnitTests/UnitTest.h"
 #include "../Player.h"
@@ -45,6 +47,7 @@ protected:
         engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
+        AddSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
         AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
         AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
@@ -121,6 +124,110 @@ private:
             b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true), "wm current wpn");
         }
 
+        return b;
+    }
+
+    bool test_gen_unique_user_name()
+    {
+        char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength];
+        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player> mapPlayers;
+        bool b = true;
+
+        // insert 20 players with same name, no name truncating should happen
+        for (int i = 0; i < 20; i++)
+        {
+            const pge_network::PgeNetworkConnectionHandle connHandle = static_cast<pge_network::PgeNetworkConnectionHandle>(i);
+            const auto insertRes = mapPlayers.insert(
+                {
+                    connHandle,
+                    proofps_dd::Player(m_cfgProfiles, m_bullets, *engine, connHandle, std::string("192.168.1.") + std::to_string(i))
+                });
+            b &= insertRes.second;
+            if (!b)
+            {
+                return assertFalse(true, (std::string("player ") + std::to_string(i) + " insert").c_str());
+            }
+            proofps_dd::Player::genUniqueUserName(szNewUserName, "Player", mapPlayers);
+            proofps_dd::Player& insertedPlayer = insertRes.first->second;
+            insertedPlayer.setName(szNewUserName);
+        }
+
+        // checkpoint 1
+        std::set<std::string> namesSet;
+        for (const auto& connHandlePlayerPair : mapPlayers)
+        {
+            b &= assertEquals("Player", connHandlePlayerPair.second.getName().substr(0, 6), "player name cp 1");
+            const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
+            b &= assertTrue(insertRes.second, "insert into set 1");
+        }
+        b &= assertEquals(mapPlayers.size(), namesSet.size(), "container sizes 1");
+
+        mapPlayers.clear();
+        namesSet.clear();
+
+        // insert 20 players with same name, but now name truncating should happen
+        for (int i = 0; i < 20; i++)
+        {
+            const pge_network::PgeNetworkConnectionHandle connHandle = static_cast<pge_network::PgeNetworkConnectionHandle>(i);
+            const auto insertRes = mapPlayers.insert(
+                {
+                    connHandle,
+                    proofps_dd::Player(m_cfgProfiles, m_bullets, *engine, connHandle, std::string("192.168.1.") + std::to_string(i))
+                });
+            b &= insertRes.second;
+            if (!b)
+            {
+                return assertFalse(true, (std::string("player ") + std::to_string(i) + " insert").c_str());
+            }
+            proofps_dd::Player::genUniqueUserName(szNewUserName, "ASDASDADSASDASDASD", mapPlayers);
+            proofps_dd::Player& insertedPlayer = insertRes.first->second;
+            insertedPlayer.setName(szNewUserName);
+        }
+
+        // checkpoint 2
+        for (const auto& connHandlePlayerPair : mapPlayers)
+        {
+            b &= assertEquals("ASDASDA", connHandlePlayerPair.second.getName().substr(0, 7), "player name cp 2") &
+                assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength-1u, "player name length cp 2");
+            const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
+            b &= assertTrue(insertRes.second, "insert into set 2");
+        }
+        b &= assertEquals(mapPlayers.size(), namesSet.size(), "container sizes 2");
+
+        mapPlayers.clear();
+        namesSet.clear();
+        
+        // try inserting with empty name
+        for (int i = 0; i < 20; i++)
+        {
+            const pge_network::PgeNetworkConnectionHandle connHandle = static_cast<pge_network::PgeNetworkConnectionHandle>(i);
+            const auto insertRes = mapPlayers.insert(
+                {
+                    connHandle,
+                    proofps_dd::Player(m_cfgProfiles, m_bullets, *engine, connHandle, std::string("192.168.1.") + std::to_string(i))
+                });
+            b &= insertRes.second;
+            if (!b)
+            {
+                return assertFalse(true, (std::string("player ") + std::to_string(i) + " insert").c_str());
+            }
+            proofps_dd::Player::genUniqueUserName(szNewUserName, "", mapPlayers);
+            proofps_dd::Player& insertedPlayer = insertRes.first->second;
+            insertedPlayer.setName(szNewUserName);
+            b &= assertFalse(insertedPlayer.getName().empty(), ("player " + std::to_string(i) + " name empty").c_str());
+        }
+
+        // checkpoint 3
+        for (const auto& connHandlePlayerPair : mapPlayers)
+        {
+            const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
+            b &= assertTrue(insertRes.second, "insert into set 3");
+        }
+        b &= assertEquals(mapPlayers.size(), namesSet.size(), "container sizes 3");
+
+        mapPlayers.clear();
+        namesSet.clear();
+        
         return b;
     }
 

@@ -128,11 +128,13 @@ namespace proofps_dd
         void serverUpdateRespawnTimers();
         void UpdateGameMode();
         void serverPickupAndRespawnItems();
-        void genUniqueUserName(char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameMaxLength]) const;
         void WritePlayerList();
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserSetupFromServer& msg);
+        bool handleUserNameChange(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserNameChange& msg);
         bool handleMapChangeFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapChangeFromServer& msg);

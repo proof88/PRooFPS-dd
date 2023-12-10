@@ -26,6 +26,7 @@ namespace proofps_dd
     {
         MapChangeFromServer = 0,
         UserSetupFromServer,
+        UserNameChange,
         UserCmdFromClient,
         UserUpdateFromServer,
         BulletUpdateFromServer,
@@ -41,18 +42,21 @@ namespace proofps_dd
         const char* const zstring;
     };
 
-    // this way of defining std::array makes sure code cannot compile if we forget to align the array after changing PRooFPSappMsgId
-    constexpr std::array<PRooFPSappMsgId2ZStringPair, static_cast<size_t>(PRooFPSappMsgId::LastMsgId)> MapMsgAppId2String
-    { {
-         {PRooFPSappMsgId::MapChangeFromServer,         "MapChangeFromServer"},
-         {PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer"},
-         {PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient"},
-         {PRooFPSappMsgId::UserUpdateFromServer,        "MsgUserUpdateFromServer"},
-         {PRooFPSappMsgId::BulletUpdateFromServer,      "MsgBulletUpdateFromServer"},
-         {PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer"},
-         {PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer"},
-         {PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer"}
-    } };
+    const auto MapMsgAppId2String = PFL::std_array_of<PRooFPSappMsgId2ZStringPair>
+    (
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MapChangeFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChange,              "MsgUserNameChange" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserUpdateFromServer,        "MsgUserUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::BulletUpdateFromServer,      "MsgBulletUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" }
+    );
+
+    // this way nobody will forget updating both the enum and the array
+    static_assert(static_cast<size_t>(PRooFPSappMsgId::LastMsgId) == MapMsgAppId2String.size());
 
     // server -> self (inject) and clients
     // sent to all clients when map is changing
@@ -95,10 +99,12 @@ namespace proofps_dd
     // sent to all clients after the connecting client has been accepted by server
     // This message is also used to tell the client which map to load at bootup.
     // However, in case of map change, MsgMapChangeFromServer contains this info, but this message also contains it again.
+    // A unique pre-generated user name is also in the message, which must be accepted by clients, however clients are
+    // also encouraged to request user name change using MsgUserNameChange message.
     struct MsgUserSetupFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
-        static const uint8_t nUserNameMaxLength = 11;  // for now very short, to keep the frag table look nice
+        static const uint8_t nUserNameBufferLength = 11;  // for now very short, to keep the frag table look nice
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -123,7 +129,7 @@ namespace proofps_dd
 
             proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(*pMsgAppData);
             msgUserSetup.m_bCurrentClient = bCurrentClient;
-            strncpy_s(msgUserSetup.m_szUserName, nUserNameMaxLength, sUserName.c_str(), sUserName.length());
+            strncpy_s(msgUserSetup.m_szUserName, nUserNameBufferLength, sUserName.c_str(), sUserName.length());
             strncpy_s(msgUserSetup.m_szIpAddress, sizeof(msgUserSetup.m_szIpAddress), sIpAddress.c_str(), sIpAddress.length());
             strncpy_s(msgUserSetup.m_szMapFilename, sizeof(msgUserSetup.m_szMapFilename), sMapFilename.c_str(), sMapFilename.length());
 
@@ -131,13 +137,56 @@ namespace proofps_dd
         }
 
         bool m_bCurrentClient;
-        char m_szUserName[nUserNameMaxLength];
+        char m_szUserName[nUserNameBufferLength];
         char m_szIpAddress[pge_network::MsgUserConnectedServerSelf::nIpAddressMaxLength];
         char m_szMapFilename[MsgMapChangeFromServer::nMapFilenameMaxLength];
     };  // struct MsgUserSetupFromServer
     static_assert(std::is_trivial_v<MsgUserSetupFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgUserSetupFromServer>);
     static_assert(std::is_standard_layout_v<MsgUserSetupFromServer>);
+
+    // client -> server -> clients
+    // MsgUserNameChange messages are first sent by client to server to request user name change, for which the server will reply back the
+    // same kind of message. Since server is in charge for ensuring unique user names for all players, it might generate a unique user name
+    // for the user in case of name collision. A response message is always sent back to the clients, containing either the accepted or the
+    // newly generated user name, which must be accepted by the clients.
+    // Server NEVER injects this message to itself, as server player's name is handled in a different code path.
+    struct MsgUserNameChange
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserNameChange;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            bool bCurrentClient,
+            const std::string& sUserName)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgUserNameChange) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserNameChange));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgUserNameChange& msgUserNameChange = reinterpret_cast<proofps_dd::MsgUserNameChange&>(*pMsgAppData);
+            msgUserNameChange.m_bCurrentClient = bCurrentClient;
+            strncpy_s(msgUserNameChange.m_szUserName, MsgUserSetupFromServer::nUserNameBufferLength, sUserName.c_str(), sUserName.length());
+
+            return true;
+        }  // initPkt()
+
+        bool m_bCurrentClient; // TODO: this could be removed once every instance saves its server-side connection handle
+        char m_szUserName[MsgUserSetupFromServer::nUserNameBufferLength];
+    };  // MsgUserNameChange
+    static_assert(std::is_trivial_v<MsgUserNameChange>);
+    static_assert(std::is_trivially_copyable_v<MsgUserNameChange>);
+    static_assert(std::is_standard_layout_v<MsgUserNameChange>);
 
     // clients -> server + server self (inject)
     // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer
