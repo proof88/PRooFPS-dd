@@ -252,6 +252,17 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
+        // PGEcfgProfiles allows the value of a CVAR be full of spaces (it is a valid case), which means that here we should trim
+        // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
+        {
+            // this is ridiculous, PFL still doesnt have std::string-compatible strClr() !!!
+            const std::string sOriginalMapName = getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString();
+            char cLine[200]{};
+            strncpy_s(cLine, sizeof(cLine), sOriginalMapName.c_str(), sOriginalMapName.length());
+            PFL::strClr(cLine);
+            getConfigProfiles().getVars()[CVAR_SV_MAP].Set(cLine);
+        }
+
         if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
         {
             m_sServerMapFilenameToLoad = m_maps.mapcycleGetCurrent();
