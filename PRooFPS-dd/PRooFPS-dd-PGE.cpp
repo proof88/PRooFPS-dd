@@ -1504,6 +1504,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
             return false;
         }
         playerIt->second.setName(szNewUserName);
+        getNetwork().getServer().setDebugNickname(connHandleServerSide, szNewUserName);
 
         // then we let all clients except this one know about the name change
         pge_network::PgePacket newPktUserNameChange;
@@ -1726,6 +1727,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // for now we just generate a unique name for this client, however we expect the client will also send us a MsgUserNameChange soon with their requested name
         char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength];
         Player::genUniqueUserName(szNewUserName, "Player", m_mapPlayers);
+        getNetwork().getServer().setDebugNickname(connHandleServerSide, szNewUserName);
         szConnectedUserName = szNewUserName;
         getConsole().OLn("PRooFPSddPGE::%s(): new remote user %s (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, szConnectedUserName, connHandleServerSide, msg.m_szIpAddress);
