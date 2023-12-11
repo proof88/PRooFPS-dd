@@ -89,6 +89,8 @@ namespace proofps_dd
         proofps_dd::Strafe m_strafe;
         bool m_bPrevAttack;
         bool m_bAttack;
+        bool m_bPrevCrouch;
+        bool m_bCrouch;
         TPureFloat m_fLastPlayerAngleYSent;
         TPureFloat m_fLastWeaponAngleZSent;
 

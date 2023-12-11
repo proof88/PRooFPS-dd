@@ -198,6 +198,7 @@ namespace proofps_dd
             pge_network::PgePacket& pkt,
             proofps_dd::Strafe strafe,
             bool bAttack,
+            bool bCrouch,
             TPureFloat fPlayerAngleY,
             TPureFloat fWeaponAngleZ)
         {
@@ -218,6 +219,7 @@ namespace proofps_dd
             msgUserCmdMove.m_bShouldSend = false;
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bShootAction = bAttack;
+            msgUserCmdMove.m_bCrouch = bCrouch;
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWeaponAngleZ;
 
@@ -229,6 +231,7 @@ namespace proofps_dd
             const Strafe& strafe,
             bool bJump,
             bool bSwitchToRunning,
+            bool bCrouch,
             bool bRequestReload,
             unsigned char cWeaponSwitch)
         {
@@ -238,6 +241,7 @@ namespace proofps_dd
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bJumpAction = bJump;
             msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
+            msgUserCmdMove.m_bCrouch = bCrouch;
             msgUserCmdMove.m_bRequestReload = bRequestReload;
             msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
         }
@@ -309,6 +313,7 @@ namespace proofps_dd
         bool m_bRequestReload;
         unsigned char m_cWeaponSwitch;
         bool m_bShootAction;             // continuous op
+        bool m_bCrouch;                  // continuous op
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;
     };  // struct MsgUserCmdFromClient
@@ -330,6 +335,7 @@ namespace proofps_dd
             const TPureFloat z,
             TPureFloat fPlayerAngleY,
             TPureFloat fWpnAngleZ,
+            bool bCrouch,
             int nHealth,
             bool bRespawn,
             int nFrags,
@@ -354,6 +360,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_pos.z = z;
             msgUserCmdUpdate.m_fPlayerAngleY = fPlayerAngleY;
             msgUserCmdUpdate.m_fWpnAngleZ = fWpnAngleZ;
+            msgUserCmdUpdate.m_bCrouch = bCrouch;
             msgUserCmdUpdate.m_nHealth = nHealth;
             msgUserCmdUpdate.m_bRespawn = bRespawn;
             msgUserCmdUpdate.m_nFrags = nFrags;
@@ -367,6 +374,7 @@ namespace proofps_dd
         TXYZ m_pos;
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;
+        bool m_bCrouch;
         int m_nHealth;
         bool m_bRespawn;
         int m_nFrags;

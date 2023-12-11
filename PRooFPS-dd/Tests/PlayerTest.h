@@ -274,6 +274,8 @@ private:
             assertFalse(player.getAngleY().isDirty(), "old angle y") &
             assertEquals(0.f, player.getAngleY(), "angle y") &
             assertEquals(0.f, player.getGravity(), "gravity") &
+            assertFalse(player.getCrouch().isDirty(), "old crouch") &
+            assertFalse(player.getCrouch(), "crouch") &
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
             assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
     }
@@ -374,6 +376,15 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty F 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty F 3");
+
+        player.getCrouch().set(true);
+        b &= assertTrue(player.isDirty(), "dirty G 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty G 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty G 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty G 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty G 3");
 
         return b;
     }

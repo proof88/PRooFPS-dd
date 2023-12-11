@@ -113,6 +113,7 @@ namespace proofps_dd
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
         PgeOldNewValue<PureVector>& getWeaponAngle();
+        PgeOldNewValue<bool>& getCrouch();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
         PgeOldNewValue<int>& getFrags();
@@ -132,6 +133,7 @@ namespace proofps_dd
             OvPos,
             OvAngleY,
             OvWpnAngle,
+            OvCrouch
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -150,6 +152,7 @@ namespace proofps_dd
         std::map<OldNewValueName,
             std::variant<
             PgeOldNewValue<int>,
+            PgeOldNewValue<bool>,
             PgeOldNewValue<TPureFloat>,
             PgeOldNewValue<PureVector>
             >> m_vecOldNewValues = {
@@ -158,7 +161,8 @@ namespace proofps_dd
                 {OldNewValueName::OvDeaths,   PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvPos,      PgeOldNewValue<PureVector>()},
                 {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
-                {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()}
+                {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()},
+                {OldNewValueName::OvCrouch,   PgeOldNewValue<bool>(false)}, // continuous op
         };
         bool m_bNetDirty;
 

@@ -1044,6 +1044,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getPos().getNew().getZ(),
                 player.getAngleY(),
                 player.getWeaponAngle().getNew().getZ(),
+                player.getCrouch().getNew(),
                 player.getHealth(),
                 player.getRespawnFlag(),
                 player.getFrags(),
@@ -1693,7 +1694,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                     m_maps.getRandomSpawnpoint();
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 100, false, 0, 0))
+                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
                 {
                     // server injects this msg to self so resources for player will be allocated
                     getNetwork().getServer().send(newPktSetup);
@@ -1756,7 +1757,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             m_maps.getRandomSpawnpoint();
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 100, false, 0, 0))
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -1804,6 +1805,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
                 it.second.getObject3D()->getPosVec().getZ(),
                 it.second.getObject3D()->getAngleVec().getY(),
                 it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
+                false,
                 it.second.getHealth(),
                 false,
                 it.second.getFrags(),
@@ -1936,13 +1938,16 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
 
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
-
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getOldHealth());
+    
+    getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b, crouch: %b, old crouch: %b",
+        __func__, msg.m_bCrouch, it->second.getCrouch(), it->second.getCrouch().getOld());
+    it->second.getCrouch() = msg.m_bCrouch;
 
     it->second.getFrags() = msg.m_nFrags;
     it->second.getDeaths() = msg.m_nDeaths;
 
+    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
+    //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getHealth().getOld());
     it->second.SetHealth(msg.m_nHealth);
 
     if (msg.m_bRespawn)

@@ -465,6 +465,12 @@ PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
     return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvWpnAngle));
 }
 
+PgeOldNewValue<bool>& proofps_dd::Player::getCrouch()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouch));
+}
+
 void proofps_dd::Player::Die(bool bMe, bool bServer)
 {
     getTimeDied() = std::chrono::steady_clock::now();

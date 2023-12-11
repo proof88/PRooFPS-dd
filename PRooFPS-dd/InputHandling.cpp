@@ -39,6 +39,10 @@ proofps_dd::InputHandling::InputHandling(
     m_bShowGuiDemo(false),
     m_prevStrafe(proofps_dd::Strafe::NONE),
     m_strafe(proofps_dd::Strafe::NONE),
+    m_bPrevAttack(false),
+    m_bAttack(false),
+    m_bPrevCrouch(false),
+    m_bCrouch(false),
     m_fLastPlayerAngleYSent(-1.f),
     m_fLastWeaponAngleZSent(0.f)
 {
@@ -78,7 +82,7 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     mouse(gameMode, won, pkt, player, objXHair);
@@ -89,9 +93,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    //const int nRandom = PFL::random(0, 100);
-    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b!",
-    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom, pktUserCmdMove.m_bShootAction);
+    const int nRandom = PFL::random(0, 100);
+    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b, crouch: %b!",
+        __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom, pktUserCmdMove.m_bShootAction, pktUserCmdMove.m_bCrouch);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -110,7 +114,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     const std::string& sClientUserName = it->second.getName();
 
-    if ((!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
+    if ((!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bCrouch) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
         (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("InputHandling::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
@@ -172,6 +176,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     //
     //    getConsole().EOLn("Strafe duration: %u msecs, dist.: %f", nMillisecsStrafing, fStrafeDistance);
     //}
+
+    // crouching is also continuous op
+    player.getCrouch().set(pktUserCmdMove.m_bCrouch);
 
     if (pktUserCmdMove.m_bJumpAction)
     {
@@ -500,6 +507,9 @@ void proofps_dd::InputHandling::keyboard(
             m_strafe = proofps_dd::Strafe::NONE;
         }
 
+        // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update
+        m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
+
         bool bSendJumpAction = false;
         if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
         {
@@ -554,14 +564,15 @@ void proofps_dd::InputHandling::keyboard(
             }
         }
 
-        if ((m_prevStrafe != m_strafe) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+        if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
         {
             // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
             // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
             // as one-time actions.
-            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, bRequestReload, cWeaponSwitch);
+            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
         }
         m_prevStrafe = m_strafe;
+        m_bPrevCrouch = m_bCrouch;
     }
     else
     {
