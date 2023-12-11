@@ -93,9 +93,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
-    const int nRandom = PFL::random(0, 100);
-    getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b, crouch: %b!",
-        __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom, pktUserCmdMove.m_bShootAction, pktUserCmdMove.m_bCrouch);
+    //const int nRandom = PFL::random(0, 100);
+    //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b, crouch: %b!",
+    //    __func__, connHandleServerSide, pktUserCmdMove.m_strafe, nRandom, pktUserCmdMove.m_bShootAction, pktUserCmdMove.m_bCrouch);
 
     if (!m_pge.getNetwork().isServer())
     {
@@ -670,11 +670,11 @@ bool proofps_dd::InputHandling::mouse(
         bInitialXHairPosForTestingApplied = true;
         if (m_pge.getNetwork().isServer())
         {
-            objXHair.getPosVec().Set(100.f, 0.f, objXHair.getPosVec().getZ());
+            objXHair.getPosVec().Set(100.f, -100.f, objXHair.getPosVec().getZ());
         }
         else
         {
-            objXHair.getPosVec().Set(-100.f, 0.f, objXHair.getPosVec().getZ());
+            objXHair.getPosVec().Set(-100.f, -100.f, objXHair.getPosVec().getZ());
         }
     }
     else

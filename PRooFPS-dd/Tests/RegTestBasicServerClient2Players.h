@@ -228,8 +228,37 @@ protected:
         // wait for the killed server player to respawn
         std::this_thread::sleep_for(std::chrono::milliseconds(proofps_dd::GAME_PLAYER_RESPAWN_SECONDS*1000 + 200));
 
-        // trigger dump test data to file
         {
+            // it is recommended to be a bit more patient here, since after respawn the camera will reposition gradually, which
+            // causes the weapon angle to change for 1-2 seconds, generating traffic. If traffic is not settling down before
+            // dumping data, there will be mismatch between client and server sent/received pkt count which is misleading.
+            // It is also worth noting that window switching will further trigger update to weapon angle, since weapon angle is
+            // updated only when window is active. Thus after switching to window of another game instance, further patience
+            // is needed to let weapon angle and traffic settle down.
+            
+            // client settle down
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+            // allow server to update its angle
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+            // switch back to client again who hopefully won't do any further alignment after switch
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            // switch back to server again who hopefully won't do any further alignment after switch
+            input_sim_test::bringWindowToFront(hServerMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            // switch back to client again who hopefully won't do any further alignment after switch
+            input_sim_test::bringWindowToFront(hClientMainGameWindow);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+
+        {
+            // trigger dump test data to file
+
             // client
             input_sim_test::keybdPress(VK_RETURN, 100);
 
@@ -476,12 +505,12 @@ private:
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
-            /*.nTxPktTotalCount =*/     {300u,  700u},
+            /*.nTxPktTotalCount =*/     {300u,  750u},
             /*.nTxPktPerSecond =*/      { 12u,   40u},
-            /*.nRxPktTotalCount =*/     {  6u,   12u},
-            /*.nRxPktPerSecond =*/      {  0u,    0u},
-            /*.nInjectPktTotalCount =*/ {370u,  640u},
-            /*.nInjectPktPerSecond =*/  { 10u,   30u}
+            /*.nRxPktTotalCount =*/     { 21u,   45u},
+            /*.nRxPktPerSecond =*/      {  0u,    3u},
+            /*.nInjectPktTotalCount =*/ {400u,  700u},
+            /*.nInjectPktPerSecond =*/  { 15u,   33u}
         };
 
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate20

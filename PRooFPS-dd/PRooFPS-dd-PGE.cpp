@@ -1939,8 +1939,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
     
-    getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b, crouch: %b, old crouch: %b",
-        __func__, msg.m_bCrouch, it->second.getCrouch(), it->second.getCrouch().getOld());
+    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b, crouch: %b, old crouch: %b",
+    //    __func__, msg.m_bCrouch, it->second.getCrouch(), it->second.getCrouch().getOld());
     it->second.getCrouch() = msg.m_bCrouch;
 
     it->second.getFrags() = msg.m_nFrags;
