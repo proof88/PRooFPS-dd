@@ -69,7 +69,10 @@ namespace proofps_dd
       For example, as of v0.1.6, 20.f and 19.f works fine, but 18.f produces this issue.
       And different tick/physics_min_rate config values should be tested (60 and 20).
     */
-    static const float GAME_JUMP_GRAVITY_START = 19.f;
+    static const float GAME_JUMP_GRAVITY_START_FROM_STANDING = 19.f;
+
+    // WARNING: change this value with same caution as with above const!
+    static const float GAME_JUMP_GRAVITY_START_FROM_CROUCHING = 15.f;
 
     static const float GAME_PLAYER_W = 0.95f;
     static const float GAME_PLAYER_H_STAND  = 1.88f;

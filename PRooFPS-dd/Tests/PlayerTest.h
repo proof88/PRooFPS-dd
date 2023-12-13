@@ -606,55 +606,64 @@ private:
 
     bool test_jump()
     {
-        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        bool b = true;
+        // use loop with 2 cycles for 2 different starting state: standing and crouching.
+        for (int i = 0; i < 2; i++)
+        {
+            proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.getPos().set(PureVector(1.f, 2.f, 3.f));
-        player.getPos().commit();
-        player.getPos().set(PureVector(2.f, 4.f, 8.f));
+            player.getPos().set(PureVector(1.f, 2.f, 3.f));
+            player.getPos().commit();
+            player.getPos().set(PureVector(2.f, 4.f, 8.f));
 
-        const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
+            const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
 
-        // TODO: maybe we should also check for object height
-        player.SetJumpAllowed(true);
-        bool b = assertTrue(player.jumpAllowed(), "allowed 1") &
-            assertFalse(player.isJumping(), "jumping 1") &
-            assertEquals(0.f, player.getGravity(), "gravity 1") &
-            assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
-            assertTrue(player.getWantToStandup(), "wantstandup 1");
+            player.getCrouch().set(i == 1);
+            const float fExpectedInitialGravity = player.getCrouch() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
 
-        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
-        player.setWillJumpInNextTick(true);
-        const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump = player.getTimeLastSetWillJump();
-        b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
-            assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
-        b &= assertTrue(player.getWillJumpInNextTick(), "will jump 1");
-        player.Jump();
-        b &= assertFalse(player.jumpAllowed(), "allowed 2") &
-            assertTrue(player.isJumping(), "jumping 2") &
-            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 2") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
-            assertFalse(player.getWillJumpInNextTick(), "will jump 2") &
-            assertTrue(player.getWantToStandup(), "wantstandup 2");
+            // TODO: maybe we should also check for object height
+            player.SetJumpAllowed(true);
+            b &= assertTrue(player.jumpAllowed(), "allowed 1") &
+                assertFalse(player.isJumping(), "jumping 1") &
+                assertEquals(0.f, player.getGravity(), "gravity 1") &
+                assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
+                assertTrue(player.getWantToStandup(), "wantstandup 1");
 
-        player.StopJumping();
-        b &= assertFalse(player.jumpAllowed(), "allowed 3") &
-            assertFalse(player.isJumping(), "jumping 3") &
-            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 3") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
-            assertTrue(player.getWantToStandup(), "wantstandup 3");;
+            const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
+            player.setWillJumpInNextTick(true);
+            const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump = player.getTimeLastSetWillJump();
+            b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
+                assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
+            b &= assertTrue(player.getWillJumpInNextTick(), "will jump 1");
+            player.Jump();
+            b &= assertFalse(player.jumpAllowed(), "allowed 2") &
+                assertTrue(player.isJumping(), "jumping 2") &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 2 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
+                assertFalse(player.getWillJumpInNextTick(), "will jump 2") &
+                assertTrue(player.getWantToStandup(), "wantstandup 2");
 
-        player.SetJumpAllowed(false);
-        player.setWillJumpInNextTick(true);
-        b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
-            assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
-            assertTrue(player.getWantToStandup(), "wantstandup 4");
+            player.StopJumping();
+            b &= assertFalse(player.jumpAllowed(), "allowed 3") &
+                assertFalse(player.isJumping(), "jumping 3") &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 3 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
+                assertTrue(player.getWantToStandup(), "wantstandup 3");;
 
-        player.Jump();
-        b &= assertFalse(player.jumpAllowed(), "allowed 4") &
-            assertFalse(player.isJumping(), "jumping 4") &
-            assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 4") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
-            assertTrue(player.getWantToStandup(), "wantstandup 5");;
+            player.SetJumpAllowed(false);
+            player.setWillJumpInNextTick(true);
+            b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
+                assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
+                assertTrue(player.getWantToStandup(), "wantstandup 4");
+
+            player.Jump();
+            b &= assertFalse(player.jumpAllowed(), "allowed 4") &
+                assertFalse(player.isJumping(), "jumping 4") &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
+                assertTrue(player.getWantToStandup(), "wantstandup 5");
+
+        } // end for i
 
         return b;
     }

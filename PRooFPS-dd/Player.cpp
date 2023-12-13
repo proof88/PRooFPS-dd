@@ -356,7 +356,7 @@ void proofps_dd::Player::Jump() {
     m_bAllowJump = false;
     m_bJumping = true;
     m_bWillJump = false;
-    m_fGravity = proofps_dd::GAME_JUMP_GRAVITY_START;
+    m_fGravity = getCrouch().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
