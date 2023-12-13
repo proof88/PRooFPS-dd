@@ -234,69 +234,40 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
         // could be fetched into cache for even faster iteration on its elements ...
 
-        // TODO: I think here I should check if we are just beginning to crouch or stand up
-        // and based on it, I might step iHeight in the loop below accordingly
-        // for now just default case:
-        int iHeightStart = 2;
-        int iHeightEnd = 2;
-
         // at this point, player.getPos().getY() is already updated by Gravity()
         const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
         const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
 
-        // for simple logic, we always check vertical collision with 2 heights:
-        // iHeight = 1 for crouching height, 2 for standing height,
-        // in future we might optimize this ...
-        for (int iHeight = iHeightStart; iHeight <= iHeightEnd; iHeight++)
+        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
+        if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
-            const float fPlayerHeightHalf = ((iHeight == 1) ? GAME_PLAYER_H_CROUCH / 2.f : GAME_PLAYER_H_STAND / 2.f);
-            const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getSizeVec().getX() / 2.f;
-            const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getSizeVec().getX() / 2.f;
-            const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHeightHalf;
-            const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHeightHalf;
-            if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
+            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
-                const PureObject3D* pObjWallColliding = nullptr;
-                for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                assert(obj);  // we dont store nulls there
+
+                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
                 {
-                    pObjWallColliding = m_maps.getForegroundBlocks()[i];
-                    assert(pObjWallColliding);  // we dont store nulls there
-
-                    if ((pObjWallColliding->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (pObjWallColliding->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
-                    {
-                        pObjWallColliding = nullptr;
-                        continue;
-                    }
-
-                    if ((pObjWallColliding->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (pObjWallColliding->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
-                    {
-                        pObjWallColliding = nullptr;
-                        continue;
-                    }
-
-                    break;
-                } // end for i
-
-                if (!pObjWallColliding)
-                {
-                    continue;  // to next player height check
+                    continue;
                 }
 
-                // we are here if there is a vertical collision with pObjWallColliding (wall, box, etc)
+                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
+                {
+                    continue;
+                }
 
-                // TODO: lines below probably should be AFTER the loop, to make sure we dont mess up player Y Position and other states here
-                // if multiple cycles will be run of this loop.
-                // After all this loop is only for deciding which wall we are colliding with AND with which height: can we stand up or not?
-
-                const int nAlignUnderOrAboveWall = pObjWallColliding->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHeightHalf + 0.01f);
+                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
+                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
                 // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-                // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(pObjWallColliding->getPosVec().getY() + fAlignCloseToWall) )
+                // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
                 // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
                         player.getPos().getNew().getX(),
-                        pObjWallColliding->getPosVec().getY() + fAlignCloseToWall,
+                        obj->getPosVec().getY() + fAlignCloseToWall,
                         player.getPos().getNew().getZ()
                     ));
 
@@ -304,7 +275,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 {
                     // we fell from above
                     player.SetCanFall(false);
-
+                    
                     // maybe not null everything out in the future but only decrement the components by
                     // some value, since if there is an explosion-induced force, it shouldnt be nulled out
                     // at this moment. Currently we want to null out the strafe-jump-induced force.
@@ -320,8 +291,10 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     player.getHasJustStoppedJumpingInThisTick() = true;
                     player.SetGravity(0.f);
                 }
-            } // end if YPPos changed
-        } // end for iHeight
+
+                break;
+            } // end for i
+        } // end if YPPos changed
 
         static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
