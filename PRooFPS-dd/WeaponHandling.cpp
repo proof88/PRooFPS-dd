@@ -124,7 +124,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 if ((player.getHealth() > 0) &&
                     Colliding2_NoZ(
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-                        player.getObject3D()->getSizeVec().getX(), player.getObject3D()->getSizeVec().getY(),
+                        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
                         fBulletPosX, fBulletPosY,
                         bullet.getObject3D().getSizeVec().getX(), bullet.getObject3D().getSizeVec().getY()))
                 {

@@ -63,9 +63,9 @@ bool proofps_dd::Physics::Colliding(const PureObject3D& a, const PureObject3D& b
 {
     return Colliding2(
         a.getPosVec().getX(), a.getPosVec().getY(), a.getPosVec().getZ(),
-        a.getSizeVec().getX(), a.getSizeVec().getY(), a.getSizeVec().getZ(),
+        a.getScaledSizeVec().getX(), a.getScaledSizeVec().getY(), a.getScaledSizeVec().getZ(),
         b.getPosVec().getX(), b.getPosVec().getY(), b.getPosVec().getZ(),
-        b.getSizeVec().getX(), b.getSizeVec().getY(), b.getSizeVec().getZ()
+        b.getScaledSizeVec().getX(), b.getScaledSizeVec().getY(), b.getScaledSizeVec().getZ()
     );
 }
 
@@ -73,9 +73,9 @@ bool proofps_dd::Physics::Colliding_NoZ(const PureObject3D& a, const PureObject3
 {
     return Colliding2_NoZ(
         a.getPosVec().getX(), a.getPosVec().getY(),
-        a.getSizeVec().getX(), a.getSizeVec().getY(),
+        a.getScaledSizeVec().getX(), a.getScaledSizeVec().getY(),
         b.getPosVec().getX(), b.getPosVec().getY(),
-        b.getSizeVec().getX(), b.getSizeVec().getY()
+        b.getScaledSizeVec().getX(), b.getScaledSizeVec().getY()
     );
 }
 
