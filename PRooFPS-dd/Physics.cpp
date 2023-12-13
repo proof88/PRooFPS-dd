@@ -241,6 +241,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 {
     static const float GAME_PLAYER_SPEED_WALK = 2.0f / nPhysicsRate;
     static const float GAME_PLAYER_SPEED_RUN = 4.0f / nPhysicsRate;
+    static const float GAME_PLAYER_SPEED_CROUCH = 1.5f / nPhysicsRate;
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -327,7 +328,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
-            float fStrafeSpeed = player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK;
+            float fStrafeSpeed = player.getCrouch().getNew() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)
             {
                 fStrafeSpeed = -fStrafeSpeed;
