@@ -167,6 +167,27 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         player.getHasJustStartedFallingNaturallyInThisTick() = false;
         player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = false;
         const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
+
+        if (!player.getCrouch().getOld() && player.getCrouch().getNew())
+        {
+            // TODO: move this into Player function with a flag bPullUpLegs;
+            // player just initiated crouching;
+            // scaling change is legal since player object will be smaller thus no unexpected collision can happen;
+            // position change is also legal since player area stays within previous standing area
+            player.getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+            if (player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick))
+            {
+                // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
+                // however we don't reposition if being on ground because it looks bad
+                player.getObject3D()->getPosVec().SetY(
+                    player.getObject3D()->getPosVec().getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f
+                );
+                player.getPos().set(player.getObject3D()->getPosVec());
+                // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
+                player.getPos().commit();
+            }
+        } // end handle crouch
+
         player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
         {
