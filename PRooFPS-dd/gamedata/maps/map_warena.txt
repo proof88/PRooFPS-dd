@@ -73,14 +73,14 @@ c = dirt2.bmp
 
 BBBB                                            SMSMSMSMS                                            BBBB
 BBBB                                            aMMMMMMMa                                            BBBB
-BBBB                                           aBBBBBBBBBa                                           BBBB
+BBBB                                           aBBBBBBaBBa                                           BBBB
 BBBB    SSSSSS                                aMaaaaaaaaaMa                                SSSSSS    BBBB
-BBBBaMaaMMMMMMa                               a  aaaaaaa  a                               aMMMMMMaaMaBBBB
+BBBBaMaaMMMMMMa                               a  aaaaaBa  a                               aMMMMMMaaMaBBBB
 BBBBaaaaBBBBBBa                              aa   aa aa   aa                              aBBBBBBaaaaBBBB
-BBBBBaPaaaBaaaa                              aa   aa aa   aa                              aaaaBaaaPaBBBBB
-BBBBBBaaaaaaaaa          cccccccccc          aa  aaaaaaa  aa          cccccccccc          aaaaaaaaaBBBBBB
+BBBBBaPaaaBaaaa                              aa   aaBaa   aa                              aaaaBaaaPaBBBBB
+BBBBBBaaaaaaaaa          cccccccccc          aa  aBaaaaa  aa          cccccccccc          aaaaaaaaaBBBBBB
 BBBBBBBaaSSSaaa        cccDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDccc        aaaSSSaaBBBBBBB
-BBBBBBBBa++++BaccccccM+cDDDDDDDDDDDDcccccccaaaaaaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+MccccccaB++++aBBBBBBBB
+BBBBBBBBa++++BaccccccM+cDDDDDDDDDDDDcccccccaaaaBaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+MccccccaB++++aBBBBBBBB
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
