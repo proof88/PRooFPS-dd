@@ -63,8 +63,13 @@ namespace proofps_dd
       for tickrate 20, this is good, for tickrate 60, 19.f gives identical result.
       However, in Physics::serverGravity(), I'm lerping not this but GAME_GRAVITY_CONST based on tickrate.
       I don't remember why I'm not lerping this between 19 and 20 but anyway that approach is also good.
+      
+      WARNING: when value is changed, physics must be manually tested on Warhouse: there are some places
+      on that map when we cannot jump HORIZONTALLY in between walls/boxes.
+      For example, as of v0.1.6, 20.f and 19.f works fine, but 18.f produces this issue.
+      And different tick/physics_min_rate config values should be tested (60 and 20).
     */
-    static const float GAME_JUMP_GRAVITY_START = 20.f;
+    static const float GAME_JUMP_GRAVITY_START = 19.f;
 
     static const float GAME_PLAYER_W = 0.95f;
     static const float GAME_PLAYER_H_STAND  = 1.88f;
