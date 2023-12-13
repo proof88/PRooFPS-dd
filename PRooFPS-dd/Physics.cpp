@@ -298,6 +298,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end if YPPos changed
 
+        if (player.getWantToStandup())
+        {
+            player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+        }
+
         static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
