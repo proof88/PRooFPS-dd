@@ -182,6 +182,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
                 player.getObject3D()->getPosVec().SetY(
                     player.getObject3D()->getPosVec().getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f
                 );
+                // TODO: swich the player getpos set below with getobject3dgetposvesset above, and set object's based on players posvec.
+                //       and probably we dont need getobject3d setposvec anyway here!
                 player.getPos().set(player.getObject3D()->getPosVec());
                 // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
                 player.getPos().commit();
@@ -322,7 +324,18 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         if (player.getWantToStandup())
         {
-            player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+            if (player.getObject3D()->getScaling().getY() != 1.f)
+            {
+                player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+                // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
+                player.getPos().set(
+                    PureVector(
+                        player.getPos().getNew().getX(),
+                        player.getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + GAME_PLAYER_H_STAND / 2.f + 0.01f,
+                        player.getPos().getNew().getZ()
+                    ));
+                player.getObject3D()->getPosVec().SetY( player.getPos().getNew().getY() );
+            }
         }
 
         static unsigned int nContinuousStrafeCount = 0;
