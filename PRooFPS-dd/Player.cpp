@@ -666,7 +666,7 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
-    m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::GAME_PLAYER_W, proofps_dd::GAME_PLAYER_H);
+    m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::GAME_PLAYER_W, proofps_dd::GAME_PLAYER_H_STAND);
     if (!m_pObj)
     {
         throw std::runtime_error("Failed to create object for new player!");
