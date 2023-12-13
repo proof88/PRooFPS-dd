@@ -91,6 +91,7 @@ proofps_dd::Player::Player(
     m_bHasJustStartedFallingNaturally(true),
     m_bHasJustStartedFallingAfterJumpingStopped(false),
     m_bHasJustStoppedJumping(false),
+    m_bWantToStandup(true),
     m_bRunning(true),
     m_bAllowJump(false),
     m_bWillJump(false),
@@ -120,6 +121,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
+    m_bWantToStandup(other.m_bWantToStandup),
     m_bRunning(other.m_bRunning),
     m_bAllowJump(other.m_bAllowJump),
     m_bWillJump(other.m_bWillJump),
@@ -148,6 +150,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
     m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
+    m_bWantToStandup = other.m_bWantToStandup;
     m_bRunning = other.m_bRunning;
     m_bAllowJump = other.m_bAllowJump;
     m_bWillJump = other.m_bWillJump;
@@ -471,6 +474,11 @@ PgeOldNewValue<bool>& proofps_dd::Player::getCrouch()
     return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouch));
 }
 
+bool& proofps_dd::Player::getWantToStandup()
+{
+    return m_bWantToStandup;
+}
+
 void proofps_dd::Player::Die(bool bMe, bool bServer)
 {
     getTimeDied() = std::chrono::steady_clock::now();
@@ -500,6 +508,7 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
 void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
     getObject3D()->Show();
+    getWantToStandup() = true;  // TODO: maybe object height should be also set to standing height here
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {

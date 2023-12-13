@@ -260,7 +260,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 }
 
                 const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H / 2.0f + 0.01f);
+                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H_STAND / 2.0f + 0.01f);
                 // TODO: we could write this simpler if PureVector::Set() would return the object itself!
                 // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
                 // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG

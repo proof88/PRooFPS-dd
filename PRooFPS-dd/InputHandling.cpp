@@ -179,6 +179,17 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     // crouching is also continuous op
     player.getCrouch().set(pktUserCmdMove.m_bCrouch);
+    if (player.getCrouch().getOld() && !player.getCrouch().getNew())
+    {
+        player.getWantToStandup() = true;  // this stays permanent across frames, getCrouch() old and new is valid only this frame
+        //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
+    }
+    else if (!player.getCrouch().getOld() && player.getCrouch().getNew())
+    {
+        player.getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+        player.getWantToStandup() = false;  // this stays permanent across frames, getCrouch() old and new is valid only this frame
+        //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
+    }
 
     if (pktUserCmdMove.m_bJumpAction)
     {

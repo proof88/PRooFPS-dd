@@ -67,8 +67,8 @@ namespace proofps_dd
     static const float GAME_JUMP_GRAVITY_START = 20.f;
 
     static const float GAME_PLAYER_W = 0.95f;
-    static const float GAME_PLAYER_H_STAND = 1.88f;
-    static const float GAME_PLAYER_H_CROUCH = 0.4f;
+    static const float GAME_PLAYER_H_STAND  = 1.88f;
+    static const float GAME_PLAYER_H_CROUCH_SCALING_Y = 0.5f;
     static const unsigned GAME_PLAYER_RESPAWN_SECONDS = 3;
 
     static constexpr char* GAME_WPN_DEFAULT = "pistol.txt";

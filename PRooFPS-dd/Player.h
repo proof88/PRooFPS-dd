@@ -114,6 +114,7 @@ namespace proofps_dd
         void SetExpectingStartPos(bool b);
         PgeOldNewValue<PureVector>& getWeaponAngle();
         PgeOldNewValue<bool>& getCrouch();
+        bool& getWantToStandup();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
         PgeOldNewValue<int>& getFrags();
@@ -178,6 +179,7 @@ namespace proofps_dd
         bool m_bHasJustStartedFallingNaturally;
         bool m_bHasJustStartedFallingAfterJumpingStopped;
         bool m_bHasJustStoppedJumping;
+        bool m_bWantToStandup;
         bool m_bRunning;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
         bool m_bAllowJump;

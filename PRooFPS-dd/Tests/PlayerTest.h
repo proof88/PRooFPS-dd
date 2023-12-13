@@ -256,6 +256,8 @@ private:
             assertTrue(player.getHasJustStartedFallingNaturallyInThisTick(), "getHasJustStartedFallingNaturallyInThisTick") &
             assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
             assertFalse(player.getHasJustStoppedJumpingInThisTick(), "getHasJustStoppedJumpingInThisTick") &
+            // TODO: maybe we should also check for object height
+            assertTrue(player.getWantToStandup(), "getWantToStandup") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
             assertFalse(player.getWillJumpInNextTick(), "will jump") &
@@ -590,13 +592,16 @@ private:
         player.getWeaponManager().getWeapons()[1]->SetAvailable(true);
         bool b = assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, bServer), "set current wpn");
 
+        // TODO: maybe we should also check for object height
+        player.getWantToStandup() = false;
         player.Die(true, bServer);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
         return b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
             assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
-            assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn");
+            assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
+            assertTrue(player.getWantToStandup(), "wantstandup");;
     }
 
     bool test_jump()
@@ -609,11 +614,13 @@ private:
 
         const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
 
+        // TODO: maybe we should also check for object height
         player.SetJumpAllowed(true);
         bool b = assertTrue(player.jumpAllowed(), "allowed 1") &
             assertFalse(player.isJumping(), "jumping 1") &
             assertEquals(0.f, player.getGravity(), "gravity 1") &
-            assertEquals(PureVector(), player.getJumpForce(), "jump force 1");
+            assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
+            assertTrue(player.getWantToStandup(), "wantstandup 1");
 
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
         player.setWillJumpInNextTick(true);
@@ -626,24 +633,28 @@ private:
             assertTrue(player.isJumping(), "jumping 2") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 2") &
             assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
-            assertFalse(player.getWillJumpInNextTick(), "will jump 2");
+            assertFalse(player.getWillJumpInNextTick(), "will jump 2") &
+            assertTrue(player.getWantToStandup(), "wantstandup 2");
 
         player.StopJumping();
         b &= assertFalse(player.jumpAllowed(), "allowed 3") &
             assertFalse(player.isJumping(), "jumping 3") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 3") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3");
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
+            assertTrue(player.getWantToStandup(), "wantstandup 3");;
 
         player.SetJumpAllowed(false);
         player.setWillJumpInNextTick(true);
         b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
-            assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged");
+            assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
+            assertTrue(player.getWantToStandup(), "wantstandup 4");
 
         player.Jump();
         b &= assertFalse(player.jumpAllowed(), "allowed 4") &
             assertFalse(player.isJumping(), "jumping 4") &
             assertEquals(proofps_dd::GAME_JUMP_GRAVITY_START, player.getGravity(), "gravity 4") &
-            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4");
+            assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
+            assertTrue(player.getWantToStandup(), "wantstandup 5");;
 
         return b;
     }
