@@ -238,10 +238,12 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
         const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
 
-        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
+
+        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getScaledSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getScaledSizeVec().getX() / 2.f;
+        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
+        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
@@ -260,7 +262,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 }
 
                 const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + proofps_dd::GAME_PLAYER_H_STAND / 2.0f + 0.01f);
+                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
                 // TODO: we could write this simpler if PureVector::Set() would return the object itself!
                 // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
                 // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
@@ -379,8 +381,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         const float fPlayerPos1XMinusHalf = player.getPos().getNew().getX() - plobj->getSizeVec().getX() / 2.f;
         const float fPlayerPos1XPlusHalf = player.getPos().getNew().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - plobj->getSizeVec().getY() / 2.f;
-        const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + plobj->getSizeVec().getY() / 2.f;
+        const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
+        const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + fPlayerHalfHeight;
 
         if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
