@@ -326,17 +326,44 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         {
             if (player.getObject3D()->getScaling().getY() != 1.f)
             {
-                player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
-                // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
-                player.getPos().set(
-                    PureVector(
-                        player.getPos().getNew().getX(),
-                        player.getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + GAME_PLAYER_H_STAND / 2.f + 0.01f,
-                        player.getPos().getNew().getZ()
-                    ));
-                player.getObject3D()->getPosVec().SetY( player.getPos().getNew().getY() );
+                const float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
+                const float fProposedNewPlayerPosY = player.getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
+                const float fProposedNewPlayerPos1YMinusHalf = fProposedNewPlayerPosY - fProposedNewPlayerHalfHeight;
+                const float fProposedNewPlayerPos1YPlusHalf = fProposedNewPlayerPosY + fProposedNewPlayerHalfHeight;
+                bool bCanStandUp = true;
+                for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+                {
+                    const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
+                    assert(obj);  // we dont store nulls there
+
+                    if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+                    {
+                        continue;
+                    }
+
+                    if ((obj->getPosVec().getY() + fBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
+                    {
+                        continue;
+                    }
+
+                    // found a blocking object, cannot stand up
+                    bCanStandUp = false;
+                    break;
+                } // end for i
+                if (bCanStandUp)
+                {
+                    player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+                    // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
+                    player.getPos().set(
+                        PureVector(
+                            player.getPos().getNew().getX(),
+                            fProposedNewPlayerPosY,
+                            player.getPos().getNew().getZ()
+                        ));
+                    player.getObject3D()->getPosVec().SetY(player.getPos().getNew().getY());
+                }
             }
-        }
+        } // end if (player.getWantToStandup())
 
         static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
