@@ -257,6 +257,7 @@ private:
             assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
             assertFalse(player.getHasJustStoppedJumpingInThisTick(), "getHasJustStoppedJumpingInThisTick") &
             // TODO: maybe we should also check for object height
+            assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
             assertTrue(player.getWantToStandup(), "getWantToStandup") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
@@ -276,8 +277,8 @@ private:
             assertFalse(player.getAngleY().isDirty(), "old angle y") &
             assertEquals(0.f, player.getAngleY(), "angle y") &
             assertEquals(0.f, player.getGravity(), "gravity") &
-            assertFalse(player.getCrouch().isDirty(), "old crouch") &
-            assertFalse(player.getCrouch(), "crouch") &
+            assertFalse(player.getCrouchInput().isDirty(), "old crouch") &
+            assertFalse(player.getCrouchInput(), "crouch") &
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
             assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
     }
@@ -379,7 +380,7 @@ private:
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty F 3");
 
-        player.getCrouch().set(true);
+        player.getCrouchInput().set(true);
         b &= assertTrue(player.isDirty(), "dirty G 1");
         b &= assertFalse(player.isNetDirty(), "net dirty G 1");
         player.updateOldValues();
@@ -594,6 +595,10 @@ private:
 
         // TODO: maybe we should also check for object height
         player.getWantToStandup() = false;
+        // "# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
+        //  # tunnel where only crouching would be available is considered as map design error."
+        player.getCrouchStateCurrent() = true;  // respawn event is allowed to set it to false
+
         player.Die(true, bServer);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
@@ -601,7 +606,8 @@ private:
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
             assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
             assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
-            assertTrue(player.getWantToStandup(), "wantstandup");;
+            assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
+            assertTrue(player.getWantToStandup(), "wantstandup");
     }
 
     bool test_jump()
@@ -618,8 +624,9 @@ private:
 
             const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
 
-            player.getCrouch().set(i == 1);
-            const float fExpectedInitialGravity = player.getCrouch() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+            player.getCrouchInput().set(i == 1);
+            const float fExpectedInitialGravity = player.getCrouchInput() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+            player.getCrouchStateCurrent() = true;  // jumping is not changing crouching state since crouching is also valid mid-air
 
             // TODO: maybe we should also check for object height
             player.SetJumpAllowed(true);
@@ -627,6 +634,7 @@ private:
                 assertFalse(player.isJumping(), "jumping 1") &
                 assertEquals(0.f, player.getGravity(), "gravity 1") &
                 assertEquals(PureVector(), player.getJumpForce(), "jump force 1") &
+                assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 1") &
                 assertTrue(player.getWantToStandup(), "wantstandup 1");
 
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
@@ -638,29 +646,33 @@ private:
             player.Jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 2") &
                 assertTrue(player.isJumping(), "jumping 2") &
-                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 2 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 2 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
                 assertFalse(player.getWillJumpInNextTick(), "will jump 2") &
+                assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 2") &
                 assertTrue(player.getWantToStandup(), "wantstandup 2");
 
             player.StopJumping();
             b &= assertFalse(player.jumpAllowed(), "allowed 3") &
                 assertFalse(player.isJumping(), "jumping 3") &
-                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 3 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 3 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 3") &
-                assertTrue(player.getWantToStandup(), "wantstandup 3");;
+                assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 3") &
+                assertTrue(player.getWantToStandup(), "wantstandup 3");
 
             player.SetJumpAllowed(false);
             player.setWillJumpInNextTick(true);
             b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
                 assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
+                assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 4") &
                 assertTrue(player.getWantToStandup(), "wantstandup 4");
 
             player.Jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 4") &
                 assertFalse(player.isJumping(), "jumping 4") &
-                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouch())).c_str()) &
+                assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
+                assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 5") &
                 assertTrue(player.getWantToStandup(), "wantstandup 5");
 
         } // end for i

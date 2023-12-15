@@ -113,7 +113,8 @@ namespace proofps_dd
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
         PgeOldNewValue<PureVector>& getWeaponAngle();
-        PgeOldNewValue<bool>& getCrouch();
+        PgeOldNewValue<bool>& getCrouchInput();
+        bool& getCrouchStateCurrent();
         bool& getWantToStandup();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
@@ -163,7 +164,10 @@ namespace proofps_dd
                 {OldNewValueName::OvPos,      PgeOldNewValue<PureVector>()},
                 {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()},
-                {OldNewValueName::OvCrouch,   PgeOldNewValue<bool>(false)}, // continuous op
+                /** Current state of player crouch input, regardless of current crouching state.
+                    Player is setting in as per input.
+                    Continuous op. */
+                {OldNewValueName::OvCrouch,   PgeOldNewValue<bool>(false)},
         };
         bool m_bNetDirty;
 
@@ -181,7 +185,23 @@ namespace proofps_dd
         bool m_bHasJustStartedFallingNaturally;
         bool m_bHasJustStartedFallingAfterJumpingStopped;
         bool m_bHasJustStoppedJumping;
+        
+        /** True when player is crouching currently, regardless of current input.
+            This should be replicated to all clients, this should affect the visuals of the player.
+            Can be set to true by input, but only server physics engine can set it to false, or a respawn event.
+            Default false. */
+        bool m_bCrouchingStateCurrent;   
+
+        /** True when player wants standing position as per input, regardless of currently crouching or not.
+            This is an input to the physics engine.
+            Unlike getCrouchInput(), this is persistent across frames.
+            If this is true and the player is currently crouching, the physics engine will contantly check if there is
+            possibility to stand up i.e. there is nothing blocking us from standing up.
+            If the physics engine finds enough space to stand up, it will flip m_bCrouchingStateCurrent to false so
+            higher level layers will know the player is not crouching anymore.
+            Default true. */
         bool m_bWantToStandup;
+        
         bool m_bRunning;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
         bool m_bAllowJump;

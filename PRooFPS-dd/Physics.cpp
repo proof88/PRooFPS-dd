@@ -168,23 +168,23 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = false;
         const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
 
-        if (!player.getCrouch().getOld() && player.getCrouch().getNew())
+        if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
         {
             // TODO: move this into Player function with a flag bPullUpLegs;
             // player just initiated crouching;
             // scaling change is legal since player object will be smaller thus no unexpected collision can happen;
-            // position change is also legal since player area stays within previous standing area
+            // position change is also legal since player area stays within previous standing area;
+            // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
+            // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+            // On the long run we should use colliders so physics does not depend on graphics.
             player.getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
             if (player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick))
             {
                 // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
                 // however we don't reposition if being on ground because it looks bad
-                player.getObject3D()->getPosVec().SetY(
-                    player.getObject3D()->getPosVec().getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f
-                );
-                // TODO: swich the player getpos set below with getobject3dgetposvesset above, and set object's based on players posvec.
-                //       and probably we dont need getobject3d setposvec anyway here!
-                player.getPos().set(player.getObject3D()->getPosVec());
+                PureVector playerPos = player.getPos().getNew();
+                playerPos.SetY(playerPos.getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f);
+                player.getPos().set(playerPos);
                 // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
                 player.getPos().commit();
             }
@@ -264,6 +264,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
+        // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
+        // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+        // On the long run we should use colliders so physics does not depend on graphics.
         const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getScaledSizeVec().getX() / 2.f;
         const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getScaledSizeVec().getX() / 2.f;
         const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
@@ -324,7 +327,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         if (player.getWantToStandup())
         {
-            if (player.getObject3D()->getScaling().getY() != 1.f)
+            if (player.getCrouchStateCurrent())
             {
                 const float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
                 const float fProposedNewPlayerPosY = player.getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
@@ -352,6 +355,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 } // end for i
                 if (bCanStandUp)
                 {
+                    player.getCrouchStateCurrent() = false;
                     player.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
                     // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
                     player.getPos().set(
@@ -360,6 +364,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                             fProposedNewPlayerPosY,
                             player.getPos().getNew().getZ()
                         ));
+                    
+                    // WA: This line is only needed to get rid of the phenomenon on server side: for 1 frame, player object will overlap the ground object below it.
+                    // This is because after physics iteration there will be 1 frame rendered, and only at the beginning of next frame the server will
+                    // process the handleUserUpdateFromServer() where it repositions the player object.
+                    // So this line here is just a workaround to get rid of it.
+                    // Clients don't see this phenomenon since they dont run this physics, just get position updates from server.
+                    // The only way to fix this is to introduce colliders so we dont mess with graphical entities in physics.
+                    // A bug ticket has been opened for this: https://github.com/proof88/PRooFPS-dd/issues/265.
                     player.getObject3D()->getPosVec().SetY(player.getPos().getNew().getY());
                 }
             }
@@ -368,7 +380,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         static unsigned int nContinuousStrafeCount = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
-            float fStrafeSpeed = player.getCrouch().getNew() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
+            float fStrafeSpeed = player.getCrouchStateCurrent() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)
             {
                 fStrafeSpeed = -fStrafeSpeed;

@@ -178,17 +178,18 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     //}
 
     // crouching is also continuous op
-    player.getCrouch().set(pktUserCmdMove.m_bCrouch);
+    player.getCrouchInput().set(pktUserCmdMove.m_bCrouch);
     // crouch-induced player scaling and repositioning are handled in the physics class
-    if (player.getCrouch().getOld() && !player.getCrouch().getNew())
+    if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
     {
-        player.getWantToStandup() = true;  // this stays permanent across frames, getCrouch() old and new is valid only this frame
+        player.getWantToStandup() = true;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
         //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
     }
-    else if (!player.getCrouch().getOld() && player.getCrouch().getNew())
+    else if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
     {
         //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
-        player.getWantToStandup() = false;  // this stays permanent across frames, getCrouch() old and new is valid only this frame
+        player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
+        player.getCrouchStateCurrent() = true;  // can always go to crouching immediately
     }
 
     if (pktUserCmdMove.m_bJumpAction)

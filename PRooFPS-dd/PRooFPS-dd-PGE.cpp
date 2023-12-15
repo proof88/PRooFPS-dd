@@ -1044,7 +1044,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
                 player.getPos().getNew().getZ(),
                 player.getAngleY(),
                 player.getWeaponAngle().getNew().getZ(),
-                player.getCrouch().getNew(),
+                player.getCrouchStateCurrent(),
                 player.getHealth(),
                 player.getRespawnFlag(),
                 player.getFrags(),
@@ -1939,9 +1939,21 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
     
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b, crouch: %b, old crouch: %b",
-    //    __func__, msg.m_bCrouch, it->second.getCrouch(), it->second.getCrouch().getOld());
-    it->second.getCrouch() = msg.m_bCrouch;
+    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
+    if (msg.m_bCrouch)
+    {
+        // server already had set scaling since it uses it for physics, so basically this line here is for clients, however
+        // there is no use of adding extra condition for checking if we are server or client
+        it->second.getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+        // server also knows this since this is the same bool as it sent, but for clients we also save this value
+        it->second.getCrouchStateCurrent() = true;
+        // TODO: player visual update
+    }
+    else
+    {
+        it->second.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+        // TODO: player visual update
+    }
 
     it->second.getFrags() = msg.m_nFrags;
     it->second.getDeaths() = msg.m_nDeaths;

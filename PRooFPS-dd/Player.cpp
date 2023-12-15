@@ -93,6 +93,7 @@ proofps_dd::Player::Player(
     m_bHasJustStartedFallingNaturally(true),
     m_bHasJustStartedFallingAfterJumpingStopped(false),
     m_bHasJustStoppedJumping(false),
+    m_bCrouchingStateCurrent(false),
     m_bWantToStandup(true),
     m_bRunning(true),
     m_bAllowJump(false),
@@ -125,6 +126,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
+    m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
     m_bWantToStandup(other.m_bWantToStandup),
     m_bRunning(other.m_bRunning),
     m_bAllowJump(other.m_bAllowJump),
@@ -154,6 +156,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
     m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
+    m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
     m_bWantToStandup = other.m_bWantToStandup;
     m_bRunning = other.m_bRunning;
     m_bAllowJump = other.m_bAllowJump;
@@ -175,6 +178,10 @@ proofps_dd::Player::~Player()
     {
         delete m_pObj;  // yes, dtor will remove this from its Object3DManager too!
     }
+
+    // Dont telete player textures here because other Player instances refer to the same textures.
+    // Unfortunately the engine still doesn't use reference counting for textures.
+    // Anyway, the engine takes care of deleting textures at shutdown.
 
     m_wpnMgr.Clear();
 }
@@ -360,7 +367,7 @@ void proofps_dd::Player::Jump() {
     m_bAllowJump = false;
     m_bJumping = true;
     m_bWillJump = false;
-    m_fGravity = getCrouch().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+    m_fGravity = getCrouchInput().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
@@ -472,10 +479,15 @@ PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
     return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvWpnAngle));
 }
 
-PgeOldNewValue<bool>& proofps_dd::Player::getCrouch()
+PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouch));
+}
+
+bool& proofps_dd::Player::getCrouchStateCurrent()
+{
+    return m_bCrouchingStateCurrent;
 }
 
 bool& proofps_dd::Player::getWantToStandup()
@@ -513,6 +525,7 @@ void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
 {
     getObject3D()->Show();
     getWantToStandup() = true;  // TODO: maybe object height should be also set to standing height here
+    getCrouchStateCurrent() = false;  // physics and respawn is allowed to set it false, spawnpoint in small tunnel is bad map design
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {

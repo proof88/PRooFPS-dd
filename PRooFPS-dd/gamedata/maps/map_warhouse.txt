@@ -67,6 +67,8 @@ y = paperboxes.bmp
 # now players don't collide, so it is not yet a hard limit.
 # A spawn point is similar to pickupable items but it is not visible.
 # Background block might be implicitly created with the same rule as with pickupable items.
+# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
+# tunnel where only crouching would be available is considered as map design error.
 
 # If not '=' char and not ignored line, it is treated as
 # layout definition. 
