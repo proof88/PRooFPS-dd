@@ -169,6 +169,8 @@ namespace proofps_dd
 
         PureVector m_vecJumpForce;
         PureObject3D* m_pObj;
+        PureTexture* m_pTexPlayerStand;
+        PureTexture* m_pTexPlayerCrouch;
         WeaponManager m_wpnMgr;
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;

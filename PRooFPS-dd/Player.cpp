@@ -81,6 +81,8 @@ proofps_dd::Player::Player(
     m_sName("Player " + std::to_string(++m_nPlayerInstanceCntr)),
     m_bNetDirty(false),
     m_pObj(PGENULL),
+    m_pTexPlayerStand(PGENULL),
+    m_pTexPlayerCrouch(PGENULL),
     m_wpnMgr(cfgProfiles, gfx, bullets),
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
@@ -111,6 +113,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bNetDirty(other.m_bNetDirty),
     m_vecJumpForce(other.m_vecJumpForce),
     m_pObj(PGENULL),
+    m_pTexPlayerStand(PGENULL),
+    m_pTexPlayerCrouch(PGENULL),
     m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
@@ -687,10 +691,11 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     {
         m_pObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
     }
-    m_pObj->SetLit(false);
-
-    PureTexture* const pTexPlayer = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
-    m_pObj->getMaterial().setTexture(pTexPlayer);
+    m_pObj->SetLit(false);                                                                                               
+    
+    m_pTexPlayerStand = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
+    m_pTexPlayerCrouch = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe_crouch.bmp").c_str());
+    m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
 }
 
 
