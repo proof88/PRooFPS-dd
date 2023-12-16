@@ -342,7 +342,7 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
     
     if (checkWinningConditions())
     {
-        text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        text(pure, "Happy 10th LANniversary! Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
     }
     else

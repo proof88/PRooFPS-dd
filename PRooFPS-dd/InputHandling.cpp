@@ -505,6 +505,7 @@ void proofps_dd::InputHandling::keyboard(
             }
         }
 
+        // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
             m_strafe = proofps_dd::Strafe::LEFT;
@@ -518,7 +519,8 @@ void proofps_dd::InputHandling::keyboard(
             m_strafe = proofps_dd::Strafe::NONE;
         }
 
-        // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update
+        // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
+        // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
         m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
 
         bool bSendJumpAction = false;
