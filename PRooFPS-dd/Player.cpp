@@ -530,7 +530,8 @@ void proofps_dd::Player::DoCrouchShared()
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
     getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
-    getWantToStandup() = false;
+    // getWantToStandup() stays updated on server-side only, in handleInputAndSendUserCmdMove(), do not modify anywhere else!
+    //getWantToStandup() = false;
 }
 
 /**
@@ -567,7 +568,8 @@ void proofps_dd::Player::DoStandupShared()
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
     getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
-    getWantToStandup() = true;
+    // getWantToStandup() stays updated on server-side only, in handleInputAndSendUserCmdMove(), do not modify anywhere else!
+    //getWantToStandup() = true;
 }
 
 void proofps_dd::Player::Die(bool bMe, bool bServer)
