@@ -495,6 +495,81 @@ bool& proofps_dd::Player::getWantToStandup()
     return m_bWantToStandup;
 }
 
+/**
+* Changing player properties for physics.
+* Invokes getPos().commit() too so not be called careless from anywhere.
+* Should be invoked only by server physics at the beginning of physics calculations.
+* 
+* @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards.
+*                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center.
+*/
+void proofps_dd::Player::ServerDoCrouch(bool bPullUpLegs)
+{
+    // Scaling change is legal since player object will be smaller thus no unexpected collision can happen;
+    // position change is also legal since player area stays within previous standing area.
+    // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
+    // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+    // On the long run we should use colliders so physics does not depend on graphics.
+    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getCrouchStateCurrent() = true;  // can always go to crouching immediately
+    if (bPullUpLegs)
+    {
+        // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
+        // however we don't reposition if being on ground because it looks bad
+        // PPPKKKGGGGGG
+        PureVector playerPos = getPos().getNew();
+        playerPos.SetY(playerPos.getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f);
+        getPos().set(playerPos);
+        // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
+        getPos().commit();
+    }
+}
+
+void proofps_dd::Player::ClientDoCrouch()
+{
+    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
+    getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
+    getWantToStandup() = false;
+}
+
+/**
+* Changing player properties for physics.
+* Invokes getPos().set() too so not be called careless from anywhere.
+* Should be invoked only by server physics during physics calculations.
+*
+* @param fNewPosY The new Y position for the player.
+*/
+void proofps_dd::Player::ServerDoStandup(const float& fNewPosY)
+{
+    getCrouchStateCurrent() = false;
+    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+    // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
+    getPos().set(
+        PureVector(
+            getPos().getNew().getX(),
+            fNewPosY,
+            getPos().getNew().getZ()
+        ));
+
+    // WA: This line is only needed to get rid of the phenomenon on server side: for 1 frame, player object will overlap the ground object below it.
+    // This is because after physics iteration there will be 1 frame rendered, and only at the beginning of next frame the server will
+    // process the handleUserUpdateFromServer() where it repositions the player object.
+    // So this line here is just a workaround to get rid of it.
+    // Clients don't see this phenomenon since they dont run this physics, just get position updates from server.
+    // The only way to fix this is to introduce colliders so we dont mess with graphical entities in physics.
+    // A bug ticket has been opened for this: https://github.com/proof88/PRooFPS-dd/issues/265.
+    getObject3D()->getPosVec().SetY(getPos().getNew().getY());
+}
+
+void proofps_dd::Player::ClientDoStandup()
+{
+    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+    getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
+    getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
+    getWantToStandup() = true;
+}
+
 void proofps_dd::Player::Die(bool bMe, bool bServer)
 {
     getTimeDied() = std::chrono::steady_clock::now();
@@ -524,8 +599,7 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
 void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
     getObject3D()->Show();
-    getWantToStandup() = true;  // TODO: maybe object height should be also set to standing height here
-    getCrouchStateCurrent() = false;  // physics and respawn is allowed to set it false, spawnpoint in small tunnel is bad map design
+    ClientDoStandup();
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {

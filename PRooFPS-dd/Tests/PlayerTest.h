@@ -65,6 +65,10 @@ protected:
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
         AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
         AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
+        AddSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
+        AddSubTest("test_client_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_client_do_crouch);
+        AddSubTest("test_server_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_server_do_standup);
+        AddSubTest("test_client_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_client_do_standup);
         AddSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
         AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
         AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
@@ -727,6 +731,70 @@ private:
 
         player.setStrafe(proofps_dd::Strafe::NONE);
         b &= assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "3");
+
+        return b;
+    }
+
+    bool test_server_do_crouch()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        const auto vecOriginalPos = player.getPos();
+        player.ServerDoCrouch(false);
+        bool b = assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
+            assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+            assertTrue(player.getCrouchStateCurrent(), "crouch current state 1");
+
+        player.ServerDoStandup(player.getPos().getNew().getY());
+
+        player.ServerDoCrouch(true);
+        b &= assertNotEquals(vecOriginalPos, player.getPos(), "pos vec 2") &
+            assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 2") &
+            assertTrue(player.getCrouchStateCurrent(), "crouch current state 2");
+
+        return b;
+    }
+
+    bool test_client_do_crouch()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
+        player.ClientDoCrouch();
+        bool b = assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+            assertTrue(player.getCrouchStateCurrent(), "crouch current state 1") &
+            assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
+            assertFalse(player.getWantToStandup(), "want standup 1");
+
+        return b;
+    }
+
+    bool test_server_do_standup()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        player.ServerDoCrouch(false);
+
+        player.ServerDoStandup(12.f);
+        bool b = assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
+            assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+            assertFalse(player.getCrouchStateCurrent(), "crouch current state 1");
+
+        return b;
+    }
+
+    bool test_client_do_standup()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        player.ClientDoCrouch();
+        const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
+
+        player.ClientDoStandup();
+        bool b = assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+            assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
+            assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
+            assertTrue(player.getWantToStandup(), "want standup 1");
 
         return b;
     }

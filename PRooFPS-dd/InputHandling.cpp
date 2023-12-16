@@ -189,7 +189,6 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     {
         //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
         player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
-        player.getCrouchStateCurrent() = true;  // can always go to crouching immediately
     }
 
     if (pktUserCmdMove.m_bJumpAction)

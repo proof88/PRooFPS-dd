@@ -116,6 +116,10 @@ namespace proofps_dd
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
         bool& getWantToStandup();
+        void ServerDoCrouch(bool bPullUpLegs);
+        void ClientDoCrouch();
+        void ServerDoStandup(const float& fNewPosY);
+        void ClientDoStandup();
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
         PgeOldNewValue<int>& getFrags();

@@ -1942,17 +1942,13 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
     if (msg.m_bCrouch)
     {
-        // server already had set scaling since it uses it for physics, so basically this line here is for clients, however
+        // server had already set stuff since it relayed this to clients, however
         // there is no use of adding extra condition for checking if we are server or client
-        it->second.getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
-        // server also knows this since this is the same bool as it sent, but for clients we also save this value
-        it->second.getCrouchStateCurrent() = true;
-        // TODO: player visual update
+        it->second.ClientDoCrouch();
     }
     else
     {
-        it->second.getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
-        // TODO: player visual update
+        it->second.ClientDoStandup();
     }
 
     it->second.getFrags() = msg.m_nFrags;
