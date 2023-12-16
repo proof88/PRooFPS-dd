@@ -28,7 +28,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.1.5 Private Beta is here](https://drive.google.com/file/d/1n1HiC5JYTBkp3LGDGQSalIdAIOyuiITO/view?usp=sharing).  
+The latest available download version [v0.1.6 Private Beta is here](https://drive.google.com/file/d/1sAsAn1u0nTLE2Rqy9q1c2dEVbRPYvXA7/view?usp=drive_link).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
 ### Run as Server
@@ -41,7 +41,7 @@ To start as client, simply run the convenient:
  - `PRooFPS-dd-as-client.bat` (Windows) or
  - `PRooFPS-dd-as-client.sh` (Linux).
 
-To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata/profiles/proof88/proof88.cfg`.  
+To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata/profiles/default/default.cfg`.  
 
 Alternatively, you can use command line arguments as well, e.g.:  
 `./PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100`
@@ -49,11 +49,13 @@ Alternatively, you can use command line arguments as well, e.g.:
 ### Keyboard, Mouse
 
  - **A/D, LEFT/RIGHT:** move the player;
- - **SHIFT:** toggle move speed: walking or running;
+ - **LSHIFT:** toggle move speed: walking or running;
+ - **LCTRL:** crouch/duck;
  - **R**: reload current weapon;
  - **2,3 / Mouse Wheel**: change to pistol or machine gun;
  - **Mouse Click**: attack;
  - **TAB:** show frag table;
+ - **M:** change to next map based on mapcycle.txt;
  - **BACKSPACE:** show GUI demo;
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
@@ -76,6 +78,12 @@ You must have the Visual Studio solution file including other relevant projects 
 As described in that file, you need to build other projects before PRooFPS-dd can be built.
 
 ## History
+
+### v0.1.6 Private Beta (Dec 16, 2023)
+
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1sAsAn1u0nTLE2Rqy9q1c2dEVbRPYvXA7/view?usp=drive_link).
+
+The major improvements in this version are related to **gameplay**:
 
 ### v0.1.5 Private Beta (Nov 15, 2023)
 
