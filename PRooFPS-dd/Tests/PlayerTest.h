@@ -740,14 +740,14 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const auto vecOriginalPos = player.getPos();
-        player.ServerDoCrouch(false);
+        player.DoCrouchServer(false);
         bool b = assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1");
 
-        player.ServerDoStandup(player.getPos().getNew().getY());
+        player.DoStandupServer(player.getPos().getNew().getY());
 
-        player.ServerDoCrouch(true);
+        player.DoCrouchServer(true);
         b &= assertNotEquals(vecOriginalPos, player.getPos(), "pos vec 2") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 2") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 2");
@@ -760,7 +760,7 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
-        player.ClientDoCrouch();
+        player.DoCrouchShared();
         bool b = assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
@@ -773,9 +773,9 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.ServerDoCrouch(false);
+        player.DoCrouchServer(false);
 
-        player.ServerDoStandup(12.f);
+        player.DoStandupServer(12.f);
         bool b = assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
             assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1");
@@ -787,10 +787,10 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.ClientDoCrouch();
+        player.DoCrouchShared();
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
 
-        player.ClientDoStandup();
+        player.DoStandupShared();
         bool b = assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &

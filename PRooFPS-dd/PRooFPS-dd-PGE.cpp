@@ -1944,11 +1944,11 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     {
         // server had already set stuff since it relayed this to clients, however
         // there is no use of adding extra condition for checking if we are server or client
-        it->second.ClientDoCrouch();
+        it->second.DoCrouchShared();
     }
     else
     {
-        it->second.ClientDoStandup();
+        it->second.DoStandupShared();
     }
 
     it->second.getFrags() = msg.m_nFrags;

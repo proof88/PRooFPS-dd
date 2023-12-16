@@ -171,7 +171,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
         {
             // player just initiated crouching by input
-            player.ServerDoCrouch(player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick));
+            player.DoCrouchServer(player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick));
         } // end handle crouch
 
         player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
@@ -340,7 +340,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 } // end for i
                 if (bCanStandUp)
                 {
-                    player.ServerDoStandup(fProposedNewPlayerPosY);
+                    player.DoStandupServer(fProposedNewPlayerPosY);
                 }
             }
         } // end if (player.getWantToStandup())

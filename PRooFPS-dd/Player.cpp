@@ -503,7 +503,7 @@ bool& proofps_dd::Player::getWantToStandup()
 * @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards.
 *                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center.
 */
-void proofps_dd::Player::ServerDoCrouch(bool bPullUpLegs)
+void proofps_dd::Player::DoCrouchServer(bool bPullUpLegs)
 {
     // Scaling change is legal since player object will be smaller thus no unexpected collision can happen;
     // position change is also legal since player area stays within previous standing area.
@@ -525,7 +525,7 @@ void proofps_dd::Player::ServerDoCrouch(bool bPullUpLegs)
     }
 }
 
-void proofps_dd::Player::ClientDoCrouch()
+void proofps_dd::Player::DoCrouchShared()
 {
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
@@ -540,7 +540,7 @@ void proofps_dd::Player::ClientDoCrouch()
 *
 * @param fNewPosY The new Y position for the player.
 */
-void proofps_dd::Player::ServerDoStandup(const float& fNewPosY)
+void proofps_dd::Player::DoStandupServer(const float& fNewPosY)
 {
     getCrouchStateCurrent() = false;
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
@@ -562,7 +562,7 @@ void proofps_dd::Player::ServerDoStandup(const float& fNewPosY)
     getObject3D()->getPosVec().SetY(getPos().getNew().getY());
 }
 
-void proofps_dd::Player::ClientDoStandup()
+void proofps_dd::Player::DoStandupShared()
 {
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
@@ -599,7 +599,7 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
 void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
     getObject3D()->Show();
-    ClientDoStandup();
+    DoStandupShared();
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
