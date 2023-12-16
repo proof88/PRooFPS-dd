@@ -602,6 +602,7 @@ void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
 {
     getObject3D()->Show();
     DoStandupShared();
+    getWantToStandup() = true;
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {

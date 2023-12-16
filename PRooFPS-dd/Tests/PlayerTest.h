@@ -764,7 +764,7 @@ private:
         bool b = assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
-            assertFalse(player.getWantToStandup(), "want standup 1");
+            assertTrue(player.getWantToStandup(), "want standup intact 1");
 
         return b;
     }
@@ -794,7 +794,7 @@ private:
         bool b = assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
-            assertTrue(player.getWantToStandup(), "want standup 1");
+            assertTrue(player.getWantToStandup(), "want standup intact 1");
 
         return b;
     }
