@@ -115,7 +115,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_counter(0),
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
-    m_pObjLoadingScreen(NULL),
+    m_pObjLoadingScreenImg(NULL),
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f)
@@ -216,15 +216,30 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         return false;
     }
 
-    m_pObjLoadingScreen = getPure().getObject3DManager().createPlane(
+    m_pObjLoadingScreenBg = getPure().getObject3DManager().createPlane(
+        getPure().getCamera().getViewport().size.width,
+        getPure().getCamera().getViewport().size.height);
+    m_pObjLoadingScreenBg->SetStickedToScreen(true);
+    m_pObjLoadingScreenBg->SetDoubleSided(true);
+    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenBg->SetLit(false);
+    PureTexture* pTexBlack = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
+    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
+
+    m_pObjLoadingScreenImg = getPure().getObject3DManager().createPlane(
         getPure().getCamera().getViewport().size.width,
         (getPure().getCamera().getViewport().size.width/2.f) * 0.8f);
-    m_pObjLoadingScreen->SetStickedToScreen(true);
-    m_pObjLoadingScreen->SetDoubleSided(true);
-    m_pObjLoadingScreen->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreen->SetLit(false);
+    m_pObjLoadingScreenImg->SetStickedToScreen(true);
+    m_pObjLoadingScreenImg->SetDoubleSided(true);
+    m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenImg->SetLit(false);
     PureTexture* pTexLoadingScreen = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
-    m_pObjLoadingScreen->getMaterial().setTexture(pTexLoadingScreen);
+    m_pObjLoadingScreenImg->getMaterial().setTexture(pTexLoadingScreen);
+
+    m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
+    {
+        showLoadingScreen(nProgress);
+    };
 
     m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -681,7 +696,8 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_sServerMapFilenameToLoad.clear();
     m_maps.shutdown();
-    delete m_pObjLoadingScreen;
+    delete m_pObjLoadingScreenBg;
+    delete m_pObjLoadingScreenImg;
     delete m_pObjXHair;
     delete m_gameMode;
     getPure().getObject3DManager().DeleteAll();
@@ -694,6 +710,24 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 // ############################### PRIVATE ###############################
 
+
+void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
+{
+    m_pObjLoadingScreenBg->Show();
+    m_pObjLoadingScreenImg->Show();
+    Text(
+        "Loading Map: " + m_sServerMapFilenameToLoad + " ... " + std::to_string(nProgress) + " %",
+        200,
+        getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
+    getPure().getRenderer()->RenderScene();
+}
+
+void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
+{
+    m_pObjLoadingScreenBg->Hide();
+    m_pObjLoadingScreenImg->Hide();
+    m_maps.UpdateVisibilitiesForRenderer();
+}
 
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 {
@@ -1371,13 +1405,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             if (m_maps.getFilename() != msg.m_szMapFilename)
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                Text(
-                    "Loading Map: " + std::string(msg.m_szMapFilename) + " ...",
-                    200,
-                    getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
-                getPure().getRenderer()->RenderScene();
-
-                if (!m_maps.load(msg.m_szMapFilename))
+                m_cbDisplayMapLoadingProgressUpdate(0);
+                if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
                     assert(false);
@@ -1400,7 +1429,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             getPure().getCamera().getPosVec().getY(),
             -proofps_dd::GAME_BLOCK_SIZE_Z);
 
-        m_pObjLoadingScreen->Hide();
+        hideLoadingScreen();
         getAudio().play(m_sounds.m_sndLetsgo);
     }
     else
@@ -1619,22 +1648,14 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // get informed about server's disconnect anyway in handleUserDisconnected() where it can delete all players.
 
     m_sServerMapFilenameToLoad = msg.m_szMapFilename;
-
-    m_pObjLoadingScreen->Show();
-    Text(
-        "Loading Map: " + std::string(msg.m_szMapFilename) + " ...",
-        200, 
-        getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
-    getPure().getRenderer()->RenderScene();
-    
-    //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
-    if (!m_maps.load((msg.m_szMapFilename)))
+    m_cbDisplayMapLoadingProgressUpdate(0);
+    if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
         assert(false);
         return false;
     }
-    m_pObjLoadingScreen->Hide();
+    
     // Camera must start from the center of the map.
     // This is also done in both server and client in handleUserSetupFromServer(), they will get that pkg from server
     // after they successfully reconnect to server later. However due to rendering again before that, camera should already positioned now.
@@ -1646,6 +1667,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
         getPure().getCamera().getPosVec().getX(),
         getPure().getCamera().getPosVec().getY(),
         -proofps_dd::GAME_BLOCK_SIZE_Z);
+    hideLoadingScreen();
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,
@@ -1680,19 +1702,13 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
-            m_pObjLoadingScreen->Show();
-            Text(
-                "Loading Map: " + m_sServerMapFilenameToLoad + " ...",
-                200,
-                getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
-            getPure().getRenderer()->RenderScene();
+            m_cbDisplayMapLoadingProgressUpdate(0);
 
             // server already loads the map for itself at this point
-            //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
             if (m_maps.getFilename() != m_sServerMapFilenameToLoad)
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                if (!m_maps.load(m_sServerMapFilenameToLoad.c_str()))
+                if (!m_maps.load(m_sServerMapFilenameToLoad.c_str(), m_cbDisplayMapLoadingProgressUpdate))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
                     assert(false);

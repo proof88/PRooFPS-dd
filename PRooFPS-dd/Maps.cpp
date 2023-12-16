@@ -11,7 +11,6 @@
 #include "stdafx.h"  // PCH
 
 #include <cassert>
-
 #include "Consts.h"
 #include "Maps.h"
 
@@ -104,7 +103,7 @@ bool proofps_dd::Maps::loaded() const
     return ( m_blocks != NULL );
 }
 
-bool proofps_dd::Maps::load(const char* fname)
+bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDisplayProgressUpdate)
 {
     getConsole().OLnOI("Maps::load(%s) ...", fname);
 
@@ -194,11 +193,16 @@ bool proofps_dd::Maps::load(const char* fname)
         }
     };
 
+    // non-dry-run starts, this is the slowest part of map loading, thus we invoke cbDisplayProgressUpdate in this block
     if (!bParseError)
     {
         getConsole().OLn(
             "Just finished dry run, now building up the map with width %u, height %u, m_blocks_h %d, m_foregroundBlocks_h %d ...",
             m_width, m_height, m_blocks_h, m_foregroundBlocks_h);
+        
+        // During dry-run above, m_blocks_h and m_foregroundBlocks_h had been properly set, but they will be reset and counted again now
+        // during the non-dry-run, so save m_blocks_h now to calculate loading progress
+        const int nTotalBlocks_h = m_blocks_h;
         f.clear();  // clears error states, including eof bit
         f.seekg(fStreamPosMapLayoutStart);
         y = 4.0f; // just reset this to same value as it was before the loop
@@ -213,8 +217,9 @@ bool proofps_dd::Maps::load(const char* fname)
                 continue;
             }
             bParseError = !lineHandleLayout(sLine, y, false);
+            cbDisplayProgressUpdate(nTotalBlocks_h == 0 ? 0 : static_cast<int>((m_blocks_h / static_cast<float>(nTotalBlocks_h)) * 100));
         }
-     }
+    }
     f.close();
 
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
@@ -872,7 +877,8 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     }
                     pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
                 }
-                pNewBlockObj->Show();
+                // dont need to show, can stay hidden, since main game loop invokes UpdateVisibilitiesForRenderer() anyway which shows what is needed
+                //pNewBlockObj->Show();
                 m_blocks[m_blocks_h - 1] = pNewBlockObj;
                 m_blocks[m_blocks_h - 1]->SetLit(true);
             }

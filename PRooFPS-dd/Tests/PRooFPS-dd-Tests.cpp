@@ -70,7 +70,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
     tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
     tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
-
+    
     // regression tests
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));

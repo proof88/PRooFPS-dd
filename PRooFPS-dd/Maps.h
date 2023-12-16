@@ -10,6 +10,7 @@
     ###################################################################################
 */
 
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -49,7 +50,9 @@ namespace proofps_dd
         /* Current map handling */
 
         bool loaded() const;
-        bool load(const char* fname);
+        bool load(
+            const char* fname,
+            std::function<void(int)>& cbDisplayProgressUpdate);
         void unload();
         unsigned int width() const;
         unsigned int height() const;
