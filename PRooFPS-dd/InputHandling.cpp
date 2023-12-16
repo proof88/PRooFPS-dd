@@ -715,9 +715,6 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player, PureObject3D& objXHair)
 {
-    player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
-    player.getObject3D()->getAngleVec().SetY(player.getAngleY());
-    
     static std::chrono::time_point<std::chrono::steady_clock> timeLastMsgUserCmdFromClientSent;
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
         static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count());
@@ -731,7 +728,19 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
         player.getWeaponAngle().set(
             PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
         );
+
+        // TODO: on the long run there should be a more general function that calculates angle because now player angle also depends on
+        // weapon angle, however in future we might end up not having a weapon!
+
+        // player should also look in the same horizontal direction as the weapon
+        player.getAngleY() = wpn->getObject3D().getAngleVec().getY();
     }
+    else
+    {
+        // this is just a fallback case if for any reason we dont have a weapon
+        player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
+    }
+    player.getObject3D()->getAngleVec().SetY(player.getAngleY());
 
     /* following condition is example of simple rate-limiting with time interval */
     const bool bMustSendPlayerAngleY =
