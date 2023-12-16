@@ -115,6 +115,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_counter(0),
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
+    m_pObjLoadingScreen(NULL),
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f)
@@ -214,6 +215,16 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getConsole().EOLnOO("ERROR: m_maps.initialize() failed!");
         return false;
     }
+
+    m_pObjLoadingScreen = getPure().getObject3DManager().createPlane(
+        getPure().getCamera().getViewport().size.width,
+        (getPure().getCamera().getViewport().size.width/2.f) * 0.8f);
+    m_pObjLoadingScreen->SetStickedToScreen(true);
+    m_pObjLoadingScreen->SetDoubleSided(true);
+    m_pObjLoadingScreen->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreen->SetLit(false);
+    PureTexture* pTexLoadingScreen = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
+    m_pObjLoadingScreen->getMaterial().setTexture(pTexLoadingScreen);
 
     m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
     m_pObjXHair->SetStickedToScreen(true);
@@ -670,6 +681,7 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_sServerMapFilenameToLoad.clear();
     m_maps.shutdown();
+    delete m_pObjLoadingScreen;
     delete m_pObjXHair;
     delete m_gameMode;
     getPure().getObject3DManager().DeleteAll();
@@ -1359,7 +1371,10 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             if (m_maps.getFilename() != msg.m_szMapFilename)
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+                Text(
+                    "Loading Map: " + std::string(msg.m_szMapFilename) + " ...",
+                    200,
+                    getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
                 getPure().getRenderer()->RenderScene();
 
                 if (!m_maps.load(msg.m_szMapFilename))
@@ -1385,6 +1400,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             getPure().getCamera().getPosVec().getY(),
             -proofps_dd::GAME_BLOCK_SIZE_Z);
 
+        m_pObjLoadingScreen->Hide();
         getAudio().play(m_sounds.m_sndLetsgo);
     }
     else
@@ -1604,7 +1620,11 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
 
     m_sServerMapFilenameToLoad = msg.m_szMapFilename;
 
-    Text("Loading Map: " + std::string(msg.m_szMapFilename) + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+    m_pObjLoadingScreen->Show();
+    Text(
+        "Loading Map: " + std::string(msg.m_szMapFilename) + " ...",
+        200, 
+        getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
     getPure().getRenderer()->RenderScene();
     
     //const bool mapLoaded = m_maps.load("gamedata/maps/map_test_good.txt");
@@ -1614,6 +1634,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
         assert(false);
         return false;
     }
+    m_pObjLoadingScreen->Hide();
     // Camera must start from the center of the map.
     // This is also done in both server and client in handleUserSetupFromServer(), they will get that pkg from server
     // after they successfully reconnect to server later. However due to rendering again before that, camera should already positioned now.
@@ -1659,7 +1680,11 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
-            Text("Loading Map: " + m_sServerMapFilenameToLoad + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+            m_pObjLoadingScreen->Show();
+            Text(
+                "Loading Map: " + m_sServerMapFilenameToLoad + " ...",
+                200,
+                getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreen->getPosVec().getY() - m_pObjLoadingScreen->getSizeVec().getY() / 2.f));
             getPure().getRenderer()->RenderScene();
 
             // server already loads the map for itself at this point

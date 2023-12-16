@@ -96,6 +96,7 @@ namespace proofps_dd
         unsigned long m_fps_lastmeasure;
         bool m_bFpsFirstMeasure;
 
+        PureObject3D* m_pObjLoadingScreen;
         PureObject3D* m_pObjXHair;
         bool m_bWon;
         float m_fCameraMinY;
