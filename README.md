@@ -84,6 +84,11 @@ As described in that file, you need to build other projects before PRooFPS-dd ca
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1sAsAn1u0nTLE2Rqy9q1c2dEVbRPYvXA7/view?usp=drive_link).
 
 The major improvements in this version are related to **gameplay**:
+ - **Map Change with Mapcycle Support:** in `gamedata/maps/mapcycle.txt` a list of maps can be made, and the server instance can easily initiate map change to the next map in the list by the 'M' key;  
+Connected clients are automatically notified and load the requested map, and connect back to the server;
+ - **Players with custom names:** you can specify your name in default.cfg by changing the `cl_name` CVAR. In case of name collision, the server will assign a unique number to your name;
+ - **Crouch/Duck:** players can now crouch/duck by pressing the left CTRL key, this way they can go into small tunnels or hide behind a box easily;
+ - **Loading Screen:** during map loading, a loading screen with the game logo and progress of loading in percentage is shown.
 
 ### v0.1.5 Private Beta (Nov 15, 2023)
 
