@@ -226,9 +226,10 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     PureTexture* pTexBlack = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
     m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
 
+    const auto fLoadingScreenImgWidth = getPure().getCamera().getViewport().size.width * 0.8f;
     m_pObjLoadingScreenImg = getPure().getObject3DManager().createPlane(
-        getPure().getCamera().getViewport().size.width,
-        (getPure().getCamera().getViewport().size.width/2.f) * 0.8f);
+        fLoadingScreenImgWidth,
+        (fLoadingScreenImgWidth * 0.5f) * 0.5f);
     m_pObjLoadingScreenImg->SetStickedToScreen(true);
     m_pObjLoadingScreenImg->SetDoubleSided(true);
     m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
