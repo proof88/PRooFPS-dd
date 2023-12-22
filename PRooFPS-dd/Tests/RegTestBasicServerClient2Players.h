@@ -3,7 +3,7 @@
 /*
     ###################################################################################
     RegTestBasicServerClient2Players.h
-    Regression test for PRooFPS-dd.
+    Basic Regression test for PRooFPS-dd with 2 players: 1 server, 1 client.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
