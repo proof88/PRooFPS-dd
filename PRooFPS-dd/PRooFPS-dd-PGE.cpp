@@ -172,7 +172,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
-    getConsole().SetLoggingState("4LLM0DUL3S", false);
+    //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
     // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way;
     // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
@@ -1561,6 +1561,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
         // server updates player's name first
         
         playerIt->second.setName(szNewUserName);
+        // TODO: these commented lines below will be needed when we are allowing player name change WHILE already connected to the server
         // TODO: check if such name is already present in frag table, if so, then rename
         //if (!m_gameMode->renamePlayer(playerIt->second.getName().c_str(), szNewUserName))
         //{
@@ -1616,6 +1617,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
         
         playerIt->second.setName(msg.m_szUserName);
+        // TODO: these commented lines below will be needed when we are allowing player name change WHILE already connected to the server
         // TODO: check if such name is already present in frag table, if so, then rename
         //if (!m_gameMode->renamePlayer(playerIt->second.getName(), msg.m_szUserName))
         //{
