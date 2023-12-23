@@ -66,8 +66,7 @@ namespace proofps_dd
             const proofps_dd::MsgBulletUpdateFromServer& msg);
         bool handleWpnUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgWpnUpdateFromServer& msg,
-            bool bHasValidConnection);
+            const proofps_dd::MsgWpnUpdateFromServer& msg);
         bool handleWpnUpdateCurrentFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);

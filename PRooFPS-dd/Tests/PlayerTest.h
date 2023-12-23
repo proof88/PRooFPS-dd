@@ -49,7 +49,6 @@ protected:
 
         AddSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
-        AddSubTest("test_number_in_name_monotonically_increasing", (PFNUNITSUBTEST)&PlayerTest::test_number_in_name_monotonically_increasing);
         AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
         AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
         AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
@@ -133,7 +132,7 @@ private:
 
     bool test_gen_unique_user_name()
     {
-        char szNewUserName[proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength];
+        char szNewUserName[proofps_dd::MsgUserNameChange::nUserNameBufferLength];
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player> mapPlayers;
         bool b = true;
 
@@ -192,7 +191,7 @@ private:
         for (const auto& connHandlePlayerPair : mapPlayers)
         {
             b &= assertEquals("ASDASDA", connHandlePlayerPair.second.getName().substr(0, 7), "player name cp 2") &
-                assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserSetupFromServer::nUserNameBufferLength-1u, "player name length cp 2");
+                assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserNameChange::nUserNameBufferLength-1u, "player name length cp 2");
             const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
             b &= assertTrue(insertRes.second, "insert into set 2");
         }
@@ -244,7 +243,7 @@ private:
 
         return assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
-            assertFalse(player.getName().empty(), "name") &
+            assertTrue(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
             assertFalse(player.isDirty(), "isDirty") &
             assertFalse(player.isNetDirty(), "isNetDirty") &
@@ -285,30 +284,6 @@ private:
             assertFalse(player.getCrouchInput(), "crouch") &
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
             assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
-    }
-
-    bool test_number_in_name_monotonically_increasing()
-    {
-        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        const std::string sIpAddr = "192.168.1.12";
-
-        proofps_dd::Player player1(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
-        {
-            proofps_dd::Player player2(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
-            // implicit call to dtor
-        }
-        proofps_dd::Player player3(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
-
-        const std::size_t nSpacePos1 = player1.getName().find(' ');
-        const uint32_t nPlayer1cntr = (nSpacePos1 < player1.getName().length()-1) ?
-            std::stoul(player1.getName().substr(nSpacePos1 + 1)) : 0;
-
-        const std::size_t nSpacePos3 = player3.getName().find(' ');
-        const uint32_t nPlayer3cntr = (nSpacePos3 < player3.getName().length() - 1) ?
-            std::stoul(player3.getName().substr(nSpacePos3 + 1)) : 0;
-
-        return assertGreater(nPlayer1cntr, 0u, "nPlayer1cntr") &
-            assertGreater(nPlayer3cntr, nPlayer1cntr + 1, "nPlayer3cntr");
     }
 
     bool test_set_name()

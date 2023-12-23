@@ -104,13 +104,11 @@ namespace proofps_dd
     struct MsgUserSetupFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
-        static const uint8_t nUserNameBufferLength = 11;  // for now very short, to keep the frag table look nice
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             bool bCurrentClient,
-            const std::string& sUserName,
             const std::string& sIpAddress,
             const std::string& sMapFilename)
         {
@@ -129,7 +127,6 @@ namespace proofps_dd
 
             proofps_dd::MsgUserSetupFromServer& msgUserSetup = reinterpret_cast<proofps_dd::MsgUserSetupFromServer&>(*pMsgAppData);
             msgUserSetup.m_bCurrentClient = bCurrentClient;
-            strncpy_s(msgUserSetup.m_szUserName, nUserNameBufferLength, sUserName.c_str(), sUserName.length());
             strncpy_s(msgUserSetup.m_szIpAddress, sizeof(msgUserSetup.m_szIpAddress), sIpAddress.c_str(), sIpAddress.length());
             strncpy_s(msgUserSetup.m_szMapFilename, sizeof(msgUserSetup.m_szMapFilename), sMapFilename.c_str(), sMapFilename.length());
 
@@ -137,7 +134,6 @@ namespace proofps_dd
         }
 
         bool m_bCurrentClient;
-        char m_szUserName[nUserNameBufferLength];
         char m_szIpAddress[pge_network::MsgUserConnectedServerSelf::nIpAddressMaxLength];
         char m_szMapFilename[MsgMapChangeFromServer::nMapFilenameMaxLength];
     };  // struct MsgUserSetupFromServer
@@ -150,10 +146,11 @@ namespace proofps_dd
     // same kind of message. Since server is in charge for ensuring unique user names for all players, it might generate a unique user name
     // for the user in case of name collision. A response message is always sent back to the clients, containing either the accepted or the
     // newly generated user name, which must be accepted by the clients.
-    // Server NEVER injects this message to itself, as server player's name is handled in a different code path.
+    // Server also injects this message to itself, names are handled in the same code path.
     struct MsgUserNameChange
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserNameChange;
+        static const uint8_t nUserNameBufferLength = 11;  // for now very short, to keep the frag table look nice
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
@@ -176,13 +173,13 @@ namespace proofps_dd
 
             proofps_dd::MsgUserNameChange& msgUserNameChange = reinterpret_cast<proofps_dd::MsgUserNameChange&>(*pMsgAppData);
             msgUserNameChange.m_bCurrentClient = bCurrentClient;
-            strncpy_s(msgUserNameChange.m_szUserName, MsgUserSetupFromServer::nUserNameBufferLength, sUserName.c_str(), sUserName.length());
+            strncpy_s(msgUserNameChange.m_szUserName, nUserNameBufferLength, sUserName.c_str(), sUserName.length());
 
             return true;
         }  // initPkt()
 
         bool m_bCurrentClient; // TODO: this could be removed once every instance saves its server-side connection handle
-        char m_szUserName[MsgUserSetupFromServer::nUserNameBufferLength];
+        char m_szUserName[nUserNameBufferLength];
     };  // MsgUserNameChange
     static_assert(std::is_trivial_v<MsgUserNameChange>);
     static_assert(std::is_trivially_copyable_v<MsgUserNameChange>);

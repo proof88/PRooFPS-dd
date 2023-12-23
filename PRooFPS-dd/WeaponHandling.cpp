@@ -471,8 +471,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
 
 bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle /* connHandleServerSide, not filled properly by server so we ignore it */,
-    const proofps_dd::MsgWpnUpdateFromServer& msg,
-    bool bHasValidConnection)
+    const proofps_dd::MsgWpnUpdateFromServer& msg)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -483,13 +482,6 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
 
     //getConsole().OLn("WeaponHandling::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
     //    __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
-
-    if (!bHasValidConnection)
-    {
-        getConsole().EOLn("WeaponHandling::%s(): my connection is invalid, CANNOT HAPPEN!", __func__);
-        assert(false);
-        return false;
-    }
 
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
