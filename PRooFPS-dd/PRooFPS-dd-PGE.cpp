@@ -215,6 +215,20 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         return false;
     }
 
+    // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
+    // this is needed because it is not trivial when to show/hide the xhair for the server.
+    m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
+    m_pObjXHair->SetStickedToScreen(true);
+    m_pObjXHair->SetDoubleSided(true);
+    m_pObjXHair->SetTestingAgainstZBuffer(false);
+    m_pObjXHair->SetLit(false);
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
+    // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
+    m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
+    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair.bmp").c_str());
+    m_pObjXHair->getMaterial().setTexture(xhairtex);
+    m_pObjXHair->Hide();
+
     m_pObjLoadingScreenBg = getPure().getObject3DManager().createPlane(
         getPure().getCamera().getViewport().size.width,
         getPure().getCamera().getViewport().size.height);
@@ -240,18 +254,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     {
         showLoadingScreen(nProgress);
     };
-
-    m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
-    m_pObjXHair->SetStickedToScreen(true);
-    m_pObjXHair->SetDoubleSided(true);
-    m_pObjXHair->SetTestingAgainstZBuffer(false);
-    m_pObjXHair->SetLit(false);
-    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
-    // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
-    m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR)+"hud_xhair.bmp").c_str());
-    m_pObjXHair->getMaterial().setTexture( xhairtex );
-    m_pObjXHair->Hide();
 
     getPure().WriteList();
 
