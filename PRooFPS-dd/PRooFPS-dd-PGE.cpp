@@ -185,7 +185,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         PURE_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
         PURE_RH_ORDERING_BY_DISTANCE_OFF);
     
-    getPure().getScreen().SetVSyncEnabled(true);
     setGameRunningFrequency(GAME_MAXFPS);
     getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
 
