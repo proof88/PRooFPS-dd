@@ -172,7 +172,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
-    //getConsole().SetLoggingState("4LLM0DUL3S", false);
+    getConsole().SetLoggingState("4LLM0DUL3S", false);
 
     // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way;
     // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
