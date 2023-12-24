@@ -558,7 +558,10 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     else
     {
         // try connecting back
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay)
+        // we also need to wait for m_mapPlayers to become empty, it is important for server otherwise it will fail in handleUserConnected();
+        // it might take a while to bring down all clients one-by-one and let m_mapPlayers be empty, so we also need to check that here!
+        if (m_mapPlayers.empty() &&
+            (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay))
         {
             if (connect())
             {
@@ -573,11 +576,13 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         }
         else
         {
-            Text("Waiting for restoring connection ...", 200, getPure().getWindow().getClientHeight() / 2);
+            Text("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
+                200,
+                getPure().getWindow().getClientHeight() / 2);
             if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
             {
                 m_timeLastPrintWaitConnection = std::chrono::steady_clock::now();
-                getConsole().EOLn("Waiting a bit before trying to connect back ... ");
+                getConsole().EOLn("Waiting a bit before trying to connect back (pending clients to be disconnected: %u) ... ", m_mapPlayers.size());
             }
         }
     }
@@ -1614,6 +1619,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
             return false;   // for release mode
         }
 
+
         getConsole().OLn("PRooFPSddPGE::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
         
@@ -1794,17 +1800,14 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
     }
     else
     {
-        // server is processing another user's birth
-        if (m_mapPlayers.empty())
+        if (connHandleServerSide == pge_network::ServerConnHandle)
         {
-            // cannot happen because at least the user of the server should be in the map!
-            // this should happen only if we are dedicated server but currently only listen-server is supported!
-            getConsole().EOLn("PRooFPSddPGE::%s(): non-server user (connHandleServerSide: %u) connected but map of players is still empty, CANNOT HAPPEN!",
+            getConsole().EOLn("PRooFPSddPGE::%s(): server user (connHandleServerSide: %u) connected but map m_bCurrentClient is false, CANNOT HAPPEN!",
                 __func__, connHandleServerSide);
             assert(false);
             return false;
         }
-
+        // server is processing another user's birth
         getConsole().OLn("PRooFPSddPGE::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, connHandleServerSide, msg.m_szIpAddress);
 
@@ -1861,18 +1864,23 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
             }
             getNetwork().getServer().send(newPktSetup, connHandleServerSide);
 
-            pge_network::PgePacket newPktUserNameChange;
-            if (!proofps_dd::MsgUserNameChange::initPkt(
-                newPktUserNameChange,
-                it.second.getServerSideConnectionHandle(),
-                false,
-                it.second.getName()))
+            if (!it.second.getName().empty())
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                return false;
+                // send out only confirmed non-empty names, as handleUserNameChange() expects confirmed, unique, non-empty names!
+                // Once this client has a confirmed name, server will send out this info to all clients anyway!
+                pge_network::PgePacket newPktUserNameChange;
+                if (!proofps_dd::MsgUserNameChange::initPkt(
+                    newPktUserNameChange,
+                    it.second.getServerSideConnectionHandle(),
+                    false,
+                    it.second.getName()))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    return false;
+                }
+                getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
             }
-            getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
 
             if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
@@ -2053,7 +2061,9 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     }
 
     // the only situation when game mode does not contain the player but we already receive update for the player is
-    // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later
+    // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later;
+    // note that it can also happen that we receive update here for a player who has not yet handshaked its name
+    // with the server, in that case the name is empty, that is why we also need to check emptiness!
     if (!it->second.getName().empty() && !bOriginalExpectingStartPos && !m_gameMode->updatePlayer(it->second))
     {
         getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, it->second.getName().c_str());
