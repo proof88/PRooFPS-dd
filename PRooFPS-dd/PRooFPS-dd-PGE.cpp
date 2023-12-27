@@ -1342,12 +1342,21 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
     // TODO: make sure received IP address is properly null-terminated! someone else could had sent that, e.g. malicious server
 
+    // TEMPORARY COMMENTED DUE TO: https://github.com/proof88/PRooFPS-dd/issues/268
+    //if (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide))
+    //{
+    //    getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u is already present in players list!",
+    //        __func__, connHandleServerSide);
+    //    assert(false);
+    //    return false;
+    //}
+
+    // TEMPORAL WORKAROUND DUE TO: https://github.com/proof88/PRooFPS-dd/issues/268
     if (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide))
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u is already present in players list!",
+        getConsole().EOLn("PRooFPSddPGE::%s(): connHandleServerSide: %u is already present in players list, allowed temporarily!",
             __func__, connHandleServerSide);
-        assert(false);
-        return false;
+        return true;
     }
 
     if (msg.m_bCurrentClient)
@@ -1446,6 +1455,106 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     {
         getConsole().OLn("PRooFPSddPGE::%s(): new user (connHandleServerSide: %u; IP: %s) connected",
             __func__, connHandleServerSide, msg.m_szIpAddress);
+
+        if (getNetwork().isServer())
+        {
+            // we send as many MsgUserSetupFromServer pkts to the client as the number of already connected players,
+            // otherwise client won't know about them, so this way the client will detect them as newly connected users;
+            // we also send MsgUserUpdateFromServer about each player so new client will immediately have their positions and other data updated,
+            // and MsgCurrentWpnUpdateFromServer so their current weapon is also correctly display instead of the default wpn.
+            
+            for (const auto& it : m_mapPlayers)
+            {
+                pge_network::PgePacket newPktSetup;
+                if (!proofps_dd::MsgUserSetupFromServer::initPkt(
+                    newPktSetup,
+                    it.second.getServerSideConnectionHandle(),
+                    false,
+                    it.second.getIpAddress(),
+                    "" /* here mapFilename is irrelevant */))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    continue;
+                }
+                getNetwork().getServer().send(newPktSetup, connHandleServerSide);
+
+                if (!it.second.getName().empty())
+                {
+                    // send out only confirmed non-empty names, as handleUserNameChange() expects confirmed, unique, non-empty names!
+                    // Once this client has a confirmed name, server will send out this info to all clients anyway!
+                    pge_network::PgePacket newPktUserNameChange;
+                    if (!proofps_dd::MsgUserNameChange::initPkt(
+                        newPktUserNameChange,
+                        it.second.getServerSideConnectionHandle(),
+                        false,
+                        it.second.getName()))
+                    {
+                        getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                        assert(false);
+                        return false;
+                    }
+                    getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
+                }
+
+                pge_network::PgePacket newPktUserUpdate;
+                if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
+                    newPktUserUpdate,
+                    it.second.getServerSideConnectionHandle(),
+                    it.second.getObject3D()->getPosVec().getX(),
+                    it.second.getObject3D()->getPosVec().getY(),
+                    it.second.getObject3D()->getPosVec().getZ(),
+                    it.second.getObject3D()->getAngleVec().getY(),
+                    it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
+                    false,
+                    it.second.getHealth(),
+                    false,
+                    it.second.getFrags(),
+                    it.second.getDeaths()))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    continue;
+                }
+                getNetwork().getServer().send(newPktUserUpdate, connHandleServerSide);
+
+                pge_network::PgePacket pktWpnUpdateCurrent;
+                if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
+                    pktWpnUpdateCurrent,
+                    it.second.getServerSideConnectionHandle(),
+                    it.second.getWeaponManager().getCurrentWeapon()->getFilename()))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    continue;
+                }
+                getNetwork().getServer().send(pktWpnUpdateCurrent, connHandleServerSide);
+            }
+
+            // we also send the state of all map items
+            pge_network::PgePacket newPktMapItemUpdate;
+            for (auto& itemPair : m_maps.getItems())
+            {
+                if (!itemPair.second)
+                {
+                    continue;
+                }
+
+                if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
+                    newPktMapItemUpdate,
+                    pge_network::ServerConnHandle,
+                    itemPair.first,
+                    itemPair.second->isTaken()))
+                {
+                    getNetwork().getServer().send(newPktMapItemUpdate, connHandleServerSide);
+                }
+                else
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                }
+            }
+        } // end server processing birth of another user
     }
 
     const auto insertRes = m_mapPlayers.insert(
@@ -1844,100 +1953,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         msgUserSetup.m_bCurrentClient = true;
         getNetwork().getServer().send(newPktSetup, connHandleServerSide);
         getNetwork().getServer().send(newPktUserUpdate);   // TODO: why is this here? we already sent it few lines earlier.
-
-        // we also send as many MsgUserSetupFromServer pkts to the client as the number of already connected players,
-        // otherwise client won't know about them, so this way the client will detect them as newly connected users;
-        // we also send MsgUserUpdateFromServer about each player so new client will immediately have their positions and other data updated,
-        // and MsgCurrentWpnUpdateFromServer so their current weapon is also correctly display instead of the default wpn.
-        for (const auto& it : m_mapPlayers)
-        {
-            if (!proofps_dd::MsgUserSetupFromServer::initPkt(
-                newPktSetup,
-                it.second.getServerSideConnectionHandle(),
-                false,
-                it.second.getIpAddress(),
-                "" /* here mapFilename is irrelevant */))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                continue;
-            }
-            getNetwork().getServer().send(newPktSetup, connHandleServerSide);
-
-            if (!it.second.getName().empty())
-            {
-                // send out only confirmed non-empty names, as handleUserNameChange() expects confirmed, unique, non-empty names!
-                // Once this client has a confirmed name, server will send out this info to all clients anyway!
-                pge_network::PgePacket newPktUserNameChange;
-                if (!proofps_dd::MsgUserNameChange::initPkt(
-                    newPktUserNameChange,
-                    it.second.getServerSideConnectionHandle(),
-                    false,
-                    it.second.getName()))
-                {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                    assert(false);
-                    return false;
-                }
-                getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
-            }
-
-            if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-                newPktUserUpdate,
-                it.second.getServerSideConnectionHandle(),
-                it.second.getObject3D()->getPosVec().getX(),
-                it.second.getObject3D()->getPosVec().getY(),
-                it.second.getObject3D()->getPosVec().getZ(),
-                it.second.getObject3D()->getAngleVec().getY(),
-                it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
-                false,
-                it.second.getHealth(),
-                false,
-                it.second.getFrags(),
-                it.second.getDeaths()))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                continue;
-            }
-            getNetwork().getServer().send(newPktUserUpdate, connHandleServerSide);
-
-            pge_network::PgePacket pktWpnUpdateCurrent;
-            if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
-                pktWpnUpdateCurrent,
-                it.second.getServerSideConnectionHandle(),
-                it.second.getWeaponManager().getCurrentWeapon()->getFilename()))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                continue;
-            }
-            getNetwork().getServer().send(pktWpnUpdateCurrent, connHandleServerSide);
-        }
-
-        // we also send the state of all map items
-        pge_network::PgePacket newPktMapItemUpdate;
-        for (auto& itemPair : m_maps.getItems())
-        {
-            if (!itemPair.second)
-            {
-                continue;
-            }
-
-            if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
-                newPktMapItemUpdate,
-                pge_network::ServerConnHandle,
-                itemPair.first,
-                itemPair.second->isTaken()))
-            {
-                getNetwork().getServer().send(newPktMapItemUpdate, connHandleServerSide);
-            }
-            else
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-            }
-        }
     }
 
     return true;

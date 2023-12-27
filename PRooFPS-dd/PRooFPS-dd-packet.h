@@ -95,6 +95,152 @@ namespace proofps_dd
     static_assert(std::is_trivially_copyable_v<MsgMapChangeFromServer>);
     static_assert(std::is_standard_layout_v<MsgMapChangeFromServer>);
 
+    /*
+     * As of v0.1.6.1, there are 3 messages that are needed to be processed by server and clients to bring up a new player successfully.
+     * The order of these messages is defined as:
+     *  - pge_network::MsgUserConnectedServerSelf;
+     *  - proofps_dd::MsgUserSetupFromServer;
+     *  - proofps_dd::MsgUserNameChange.
+     * 
+     * However, when multiple players are connecting simulatenously to the server, messages for different players can come
+     * interleaved, thus handling of these messages must take this into account.
+     * 
+     * 1.) pge_network::MsgUserConnectedServerSelf
+     *     This message is present only on the server, thus it cannot cause any trouble on client-side.
+     *     It is guaranteed to be the first message for server app level to receive for itself right after listening is started.
+     *     It is also guaranteed that at GNS level the connection is already transitioned from Connecting to Connected state when
+     *     this message is delivered to application level because this message is directly injected into the message queue, and
+     *     in the next game loop iteration PgeServer::Update() runs connection transition callbacks again, and only after that
+     *     we start delivering the received messages from the queue.
+     * 
+     *     When we get this message at application level, the connected client is already added to PgeGnsServer::m_mapClients.
+     *     This is important to understand because from this point sendToAllClientsExcept() includes this newly connected instance too.
+     *     
+     *     PRooFPS-dd-PGE::m_mapPlayers is still empty at this point, so at app level we still don't have any player.
+     *     
+     *     When processing this message, server sends the following messages regarding the connecting instance to itself, other clients
+     *     based on PgeGnsServer::m_mapClients and then to the connecting client too:
+     *     - MsgUserSetupFromServer;
+     *     - MsgUserUpdateFromServer.
+     * 
+     * 2.) proofps_dd::MsgUserSetupFromServer
+     *     If the server is setuping itself, then only a MsgUserNameChange will be injected, assuming there are no other players at this point
+     *     to be notified. The assumption is good, since we learnt above that when server starts listening, the first message will be
+     *     the MsgUserConnectedServerSelf for the server itself, which generates this MsgUserSetupFromServer too.
+     * 
+     *     If the server is setuping a client, then the following messages will be sent:
+     *      - iterating over PRooFPS-dd-PGE::m_mapPlayers, sending out messages about the players already in the container to the client being set up:
+     *        - MsgUserSetupFromServer;
+     *        - MsgUserNameChange (if that player's name is not still empty);
+     *        - MsgUserUpdateFromServer;
+     *        - MsgCurrentWpnUpdateFromServer;
+     *      - iterating over map items, sending out state of all map items to the client being set up:
+     *        - MsgMapItemUpdateFromServer (but I leave this out from the analysis below).
+     * 
+     *     If we are client then we are sending a MsgUserNameChange to the server.
+     * 
+     *     Only after this the new player is added to PRooFPS-dd-PGE::m_mapPlayers.
+     * 
+     * 3.) proofps_dd::MsgUserNameChange
+     *     Server reacts to this with the same kind of message, client doesn't react to it.
+     *     This is when the player is added to PRooFPS-dd-PGE::m_gameMode.
+     * 
+     * In the following paragraph I analyse how messages come when MsgUserConnectedServerSelf is kicking in for all players at the same time, with 3 players:
+     * 1 server (connection handle 0) and 2 client players with connection handles 100 and 400.
+     * We are right after a map change, so server just started to listen again and clients are connecting simulatenously.
+     * We are monitoring also PgeGnsServer::m_mapClients in the server, and also PRooFPS-dd-PGE::m_mapPlayers and PRooFPS-dd-PGE::m_gameMode in all iterations.
+     * Time is elapsing from top to bottom in column 1 first, then in column 2, and so on, so the whole procedure finishes somewhere in the bottom right.
+     * 
+     *            I T E R A T I O N  1         |         I T E R A T I O N  2             |         I T E R A T I O N  3          |         I T E R A T I O N  4
+     *                                         |                                          |                                       |
+     * PgeGnsServer::m_mapClients  : {}        | PgeGnsServer::m_mapClients:              |  PgeGnsServer::m_mapClients:          |
+     *                                         |    {0, 100, 400}                         |     {0, 100, 400}                     |
+     *                                         | PRooFPS-dd-PGE(0)::m_mapPlayers: {}      |  PRooFPS-dd-PGE(0)::m_mapPlayers:     |
+     *                                         |                                          |  {0, 100, 400}                        |
+     *                                         | PRooFPS-dd-PGE(100)::m_mapPlayers: {}    |  PRooFPS-dd-PGE(100)::m_mapPlayers:   |
+     *                                         |                                          |  {100, 400}                           |
+     *                                         | PRooFPS-dd-PGE(400)::m_mapPlayers: {}    |  PRooFPS-dd-PGE(400)::m_mapPlayers:   |
+     *                                         |                                          |  {400}                                |
+     * Server connecting:                      |                                          |                                       |
+     * - MsgUserConnectedServerSelf(0)         |                                          |                                       |
+     *   PgeGnsServer::m_mapClients: {0}       |                                          |                                       |
+     *   -> MsgUserSetupFromServer(0)  ------->| 0 (self)                                 |                                       |
+     *                                         |   -> MsgUserNameChange(0) -------------->|  0 (self)                             |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers: {0}   |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserUpdateFromServer(0) ------->| 0 (self)                                 |                                       |
+     *                                         |                                          |                                       |
+     *                                         |                                          |                                       |
+     * Client with handle 100 connecting:      |                                          |                                       |
+     * - MsgUserConnectedServerSelf(100)       |                                          |                                       |
+     *   PgeGnsServer::m_mapClients: {0, 100}  |                                          |                                       |
+     *   -> MsgUserSetupFromServer(100) ------>| 0 (self)                                 |                                       |
+     *                                         |   -> MsgUserSetupFromServer(0) --------->|  100                                  |
+     *                                         |                                          |    PRooFPS-dd-PGE(100)::m_mapPlayers: |
+     *                                         |                                          |    {0, 100, 400}                      |
+     *                                         |   -> MsgUserNameChange(0) -------------->|  100                                  |
+     *                                         |   -> MsgUserUpdateFromServer(0) -------->|  100                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) -->|  100                                  |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:       |                                       |
+     *                                         |      {0, 100}                            |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserSetupFromServer(100) ------>| 100                                      |                                       |
+     *                                         |   -> MsgUserNameChange(100) ------------>|  0                                    |
+     *                                         |                                          |    -> MsgUserNameChange(100) -------->|  100
+     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:     |                                       |
+     *                                         |      {100}                               |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserUpdateFromServer(100) ----->| 0 (self)                                 |                                       |
+     *   -> MsgUserUpdateFromServer(100) ----->| 100                                      |                                       |
+     *                                         |                                          |                                       |
+     *                                         |                                          |                                       |
+     * Client with handle 400 connecting:      |                                          |                                       |
+     * - MsgUserConnectedServerSelf(400)       |                                          |                                       |
+     *   PgeGnsServer::m_mapClients:           |                                          |                                       |
+     *   {0, 100, 400}                         |                                          |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 0 (self)                                 |                                       |
+     *                                         |   -> MsgUserSetupFromServer(0) --------->|  400                                  |
+     *                                         |                                          |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
+     *                                         |                                          |    {0, 400}                           |
+     *                                         |   -> MsgUserNameChange(0) -------------->|  400                                  |
+     *                                         |   -> MsgUserUpdateFromServer(0) -------->|  400                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) -->|  400                                  |
+     *                                         |   -> MsgUserSetupFromServer(100) ------->|  400                                  |
+     *                                         |                                          |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
+     *                                         |                                          |    {0, 100, 400}                      |
+     *                                         |   -> MsgUserNameChange(100) ------------>|  400                                  |
+     *                                         |   -> MsgUserUpdateFromServer(100) ------>|  400                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(100)->|  400                                  |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:       |                                       |
+     *                                         |      {0, 100, 400}                       |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 100                                      |                                       |
+     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:     |                                       |
+     *                                         |      {100, 400}                          |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 400                                      |                                       |
+     *                                         |   -> MsgUserNameChange(400) ------------>|  0                                    |
+     *                                         |                                          |    -> MsgUserNameChange(400) -------->|  400
+     *                                         |   PRooFPS-dd-PGE(400)::m_mapPlayers:     |                                       |
+     *                                         |      {400}                               |                                       |
+     *                                         |                                          |                                       |
+     *   -> MsgUserUpdateFromServer(400) ----->| 0 (self)                                 |                                       |
+     *   -> MsgUserUpdateFromServer(400) ----->| 400                                      |                                       |
+     *
+     * 
+     * Some conclusions:
+     * - PgeGnsServer::m_mapClients already contains every instance after iteration 1 but PRooFPS-dd-PGE::m_mapPlayers is still empty;
+     * - the situation is also good with a different sequence when both MsgUserConnectedServerSelf(0) and MsgUserConnectedServerSelf(100) and
+     *   both MsgUserSetupFromServer(0) and MsgUserSetupFromServer(100) are processed: no duplicate/redundant message will be received
+     *   by any client about any other client;
+     * - however what is not seen above is that when multiple MsgUserConnectedServerSelf messages are injected by server to itself,
+     *   it actually means that the connection state of multiple clients has changed to Connected, so they are in PgeGnsServer's
+     *   m_mapClients map, leading to sending some redundant messages by the app without knowing it.
+     *   Because of this, we must NOT fail in handleUserSetupFromServer() when the received connection handle is already present
+     *   in m_mapPlayers. A ticket has been filed for this: https://github.com/proof88/PRooFPS-dd/issues/268 .
+     *
+     */
+
     // server -> self (inject) and clients
     // sent to all clients after the connecting client has been accepted by server
     // This message is also used to tell the client which map to load at bootup.
