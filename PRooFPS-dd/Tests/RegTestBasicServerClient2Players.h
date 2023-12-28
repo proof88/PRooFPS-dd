@@ -317,9 +317,9 @@ private:
 
     int nPlayerHealth;
 
-    unsigned int m_nTickRate;
-    unsigned int m_nClUpdateRate;
-    unsigned int m_nPhysicsRateMin;
+    const unsigned int m_nTickRate;
+    const unsigned int m_nClUpdateRate;
+    const unsigned int m_nPhysicsRateMin;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;

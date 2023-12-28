@@ -39,7 +39,8 @@ public:
     RegTestMapChangeServerClient3Players(
         const unsigned int& nTickrate,
         const unsigned int& nClUpdateRate,
-        const unsigned int& nPhysicsRateMin) :
+        const unsigned int& nPhysicsRateMin,
+        const unsigned int& nTestIterations) :
         UnitTest(std::string(__FILE__) +
             " tickrate: " + std::to_string(nTickrate) +
             ", cl_updaterate: " + std::to_string(nClUpdateRate) +
@@ -47,6 +48,7 @@ public:
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
+        m_nTestIterations(nTestIterations),
         m_nPlayerCounter(0),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL)
@@ -151,46 +153,55 @@ protected:
         // Game instances reposition the mouse cursor into the center of the window in every frame, keep that in mind when specifying relative coords!
         // By default, in testing mode, initially the server points xhair to the right, client points xhair to the left.
 
-        // server instance initiates map change
+        bool bRes = true;
+        
+        for (unsigned int i = 0; (i < m_nTestIterations) && bRes; i++)
         {
-            input_sim_test::bringWindowToFront(hServerMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-            input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
+            // server instance initiates map change
+            {
+                input_sim_test::bringWindowToFront(hServerMainGameWindow);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
+            }
+
+            // wait for all instances change the map
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+            {
+                // client to front
+                input_sim_test::bringWindowToFront(hClientMainGameWindow);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                // trigger client dump test data to file
+                input_sim_test::keybdPress(VK_RETURN, 100);
+
+                // server to front
+                input_sim_test::bringWindowToFront(hServerMainGameWindow);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                // trigger dump test data to file
+                input_sim_test::keybdPress(VK_RETURN, 100);
+            }
+
+            // wait for the test data files to be actually written
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+            bRes &= assertTrue(evaluateTest(), (std::string("Failure in iteration ") + std::to_string(i+1)).c_str());
         }
 
-        // wait for all instances change the map
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-
-        {
-            // client to front
-            input_sim_test::bringWindowToFront(hClientMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-            // trigger dump test data to file
-            input_sim_test::keybdPress(VK_RETURN, 100);
-
-            // server to front
-            input_sim_test::bringWindowToFront(hServerMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-            // trigger dump test data to file
-            input_sim_test::keybdPress(VK_RETURN, 100);
-        }
-
-        // wait for the test data files to be actually written
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-        return evaluateTest();
+        return bRes;
     }
 
 private:
 
     std::vector<proofps_dd::FragTableRow> evaluateFragTable;
 
-    unsigned int m_nTickRate;
-    unsigned int m_nClUpdateRate;
-    unsigned int m_nPhysicsRateMin;
+    const unsigned int m_nTickRate;
+    const unsigned int m_nClUpdateRate;
+    const unsigned int m_nPhysicsRateMin;
+    const unsigned int m_nTestIterations;
     unsigned int m_nPlayerCounter;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
