@@ -13,6 +13,9 @@
 #include <cstdio>
 #include <thread>
 
+#ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
+#define WINPROOF88_ALLOW_VIRTUALKEYCODES
+#endif
 #include "../../../PFL/PFL/winproof88.h"
 
 #include "../../../PGE/PGE/UnitTests/UnitTest.h"
@@ -317,7 +320,6 @@ private:
     unsigned int m_nTickRate;
     unsigned int m_nClUpdateRate;
     unsigned int m_nPhysicsRateMin;
-    std::string m_sPlayerName;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;

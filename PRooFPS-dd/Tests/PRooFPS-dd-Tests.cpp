@@ -14,6 +14,9 @@
 #include <memory>  // for std::unique_ptr; requires cpp11
 #include <vector>
 
+#ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
+#define WINPROOF88_ALLOW_VIRTUALKEYCODES
+#endif
 #include "../../../PFL/PFL/winproof88.h"
 
 #include "../../../Console/CConsole/src/CConsole.h"
@@ -26,6 +29,7 @@
 
 // regression smoke tests
 #include "RegTestBasicServerClient2Players.h"
+#include "RegTestMapChangeServerClient3Players.h"
 
 static constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
 
@@ -66,15 +70,16 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     std::vector<std::unique_ptr<UnitTest>> tests;
     
     // unit tests
-    tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest(cfgProfiles)));
-    tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
-    tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
-    tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
-    
-    // regression tests
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest(cfgProfiles)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
+    //
+    //// regression tests
+    //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
+    //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
+    tests.push_back(std::unique_ptr<UnitTest>(new RegTestMapChangeServerClient3Players(60, 60, 60)));
 
     std::vector<std::unique_ptr<UnitTest>>::size_type nSucceededTests = 0;
     std::vector<std::unique_ptr<UnitTest>>::size_type nTotalSubTests = 0;

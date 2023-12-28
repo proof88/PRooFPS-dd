@@ -279,6 +279,9 @@
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h">
       <Filter>Header Files\PGE\PURE\Render</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\RegTestMapChangeServerClient3Players.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

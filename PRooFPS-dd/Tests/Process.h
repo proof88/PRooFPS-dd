@@ -1,3 +1,5 @@
+#pragma once
+
 // copied from: https://stackoverflow.com/questions/42531/how-do-i-call-createprocess-in-c-to-launch-a-windows-executable
 
 #ifdef _WIN32

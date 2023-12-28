@@ -207,6 +207,7 @@
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
     <ClInclude Include="Tests\MapItemTest.h" />
     <ClInclude Include="Tests\MapsTest.h" />
+    <ClInclude Include="Tests\RegTestMapChangeServerClient3Players.h" />
     <ClInclude Include="UserInterface.h" />
     <ClInclude Include="WeaponHandling.h" />
   </ItemGroup>
