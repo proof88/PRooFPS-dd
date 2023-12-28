@@ -334,7 +334,9 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
+        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(
+            bServer, bServer ? static_cast<unsigned long>(procInfoServer.dwProcessId) : static_cast<unsigned long>(procInfoClient.dwProcessId),
+            m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
         std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
         {

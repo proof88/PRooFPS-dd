@@ -11,6 +11,7 @@
 */
 
 #include <cstdio>
+#include <filesystem>  // requires cpp17
 #include <thread>
 
 #ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
@@ -40,7 +41,8 @@ public:
         const unsigned int& nTickrate,
         const unsigned int& nClUpdateRate,
         const unsigned int& nPhysicsRateMin,
-        const unsigned int& nTestIterations) :
+        const unsigned int& nTestIterations,
+        const unsigned int& nSecondsWaitForInstancesToChangeMap) :
         UnitTest(std::string(__FILE__) +
             " tickrate: " + std::to_string(nTickrate) +
             ", cl_updaterate: " + std::to_string(nClUpdateRate) +
@@ -49,6 +51,7 @@ public:
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
         m_nTestIterations(nTestIterations),
+        m_nSecondsWaitForInstancesToChangeMap(nSecondsWaitForInstancesToChangeMap),
         m_nPlayerCounter(0),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL)
@@ -167,7 +170,7 @@ protected:
             }
 
             // wait for all instances change the map
-            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+            std::this_thread::sleep_for(std::chrono::seconds(m_nSecondsWaitForInstancesToChangeMap));
 
             {
                 // client to front
@@ -202,6 +205,7 @@ private:
     const unsigned int m_nClUpdateRate;
     const unsigned int m_nPhysicsRateMin;
     const unsigned int m_nTestIterations;
+    const unsigned int m_nSecondsWaitForInstancesToChangeMap;
     unsigned int m_nPlayerCounter;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
@@ -213,12 +217,14 @@ private:
     bool evaluateInstance(const InstanceType& instType)
     {
         const bool bServer = instType == InstanceType::SERVER;
-        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(bServer, m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
+        const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(
+            bServer, bServer ? static_cast<unsigned long>(procInfoServer.dwProcessId) : static_cast<unsigned long>(procInfoClient.dwProcessId),
+            m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
         std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
         {
             return assertFalse(true,
-                (std::string("failed to open file: ") + sTestDumpFilename).c_str()
+                (std::string("failed to open file (simulated key down for DumpRegTest too early?): ") + sTestDumpFilename).c_str()
             );
         }
 
@@ -278,9 +284,25 @@ private:
         }
 
         f.close();
-        return assertTrue(bRet, "an instance had an unexpected name in its frag table!") &
+
+        bRet &= assertTrue(bRet, "an instance had an unexpected name in its frag table!") &
             assertEquals(m_nPlayerCounter, nErasedNameCounter, "Number of erased names vs number of generated names") &
             assertTrue(setOfExpectedPlayerNames.empty(), "set is still not empty!");
+
+        // delete dump file only if test is successful, otherwise leave it in the filesystem for further debugging!
+        if (bRet)
+        {
+            // delete the evaluated dump file so we definitely fail next iteration if an instance fails to generate new dump, otherwise
+            // we may evaluate a same dump file in next iteration that was generated in a previous iteration and might think everything is ok!
+            const std::filesystem::path fsPathToDumpFile(sTestDumpFilename);
+            std::error_code nErrCode;
+            bRet &= assertTrue(std::filesystem::remove(fsPathToDumpFile, nErrCode),
+                (std::string("Could not remove dump file (") + fsPathToDumpFile.string().c_str() +
+                    "), error code: " + std::to_string(nErrCode.value()) +
+                    ", message: " + nErrCode.message()).c_str());
+        }
+
+        return bRet;
     }
 
     bool evaluateTest()

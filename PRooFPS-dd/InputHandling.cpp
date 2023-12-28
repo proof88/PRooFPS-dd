@@ -10,6 +10,10 @@
 
 #include "stdafx.h"  // PCH
 
+// there is no unistd.h in VS, we use process.h instead
+//#include <unistd.h>   // for getpid()
+#include <process.h>  // for getpid()
+
 #include <cassert>
 #include <chrono>
 #include <iomanip>
@@ -852,7 +856,7 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     const unsigned int nPhysicsRateMin)
 {
     const std::string sRegTestDumpFilename = proofps_dd::generateTestDumpFilename(
-        m_pge.getNetwork().isServer(), nTickrate, nClUpdateRate, nPhysicsRateMin);
+        m_pge.getNetwork().isServer(), static_cast<unsigned long>(_getpid()), nTickrate, nClUpdateRate, nPhysicsRateMin);
     std::ofstream fRegTestDump(sRegTestDumpFilename);
     if (fRegTestDump.fail())
     {
