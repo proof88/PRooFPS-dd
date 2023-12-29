@@ -39,9 +39,10 @@ public:
         const bool& bAreWeTestingReleaseBuild,
         const unsigned int& nClients) :
         UnitTest(std::string(__FILE__) +
-            " tickrate: " + std::to_string(nTickrate) +
-            ", cl_updaterate: " + std::to_string(nClUpdateRate) +
-            ", physics_rate_min: " + std::to_string(nPhysicsRateMin)),
+            " TR: " + std::to_string(nTickrate) +
+            ", UR: " + std::to_string(nClUpdateRate) +
+            ", PR: " + std::to_string(nPhysicsRateMin) + 
+            ", iterations: " + std::to_string(nTestIterations)),
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
@@ -388,8 +389,8 @@ private:
                 hMainGameWindow,
                 NULL,
                 /* traditionally, server goes to left edge, client 1 goes to right edge, subsequent clients go somewhere in between from left to right */
-                bServer ? 0 : ((iInstanceIndex > 1) ? 200 + iInstanceIndex * 20 : 900),
-                rectGameWindow.top,
+                bServer ? 0 : ((iInstanceIndex > 1) ? 200 + iInstanceIndex * 40 : 900),
+                bServer ? rectGameWindow.top /*unchanged*/ : ((iInstanceIndex > 1) ? rectGameWindow.top + iInstanceIndex * 20 : rectGameWindow.top /*unchanged*/),
                 0, 0,
                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER))
             {
