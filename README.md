@@ -48,12 +48,13 @@ Alternatively, you can use command line arguments as well, e.g.:
 
 ### Keyboard, Mouse
 
- - **A/D, LEFT/RIGHT:** move the player;
+ - **A/D, LEFT/RIGHT:** move the player (strafe);
  - **LSHIFT:** toggle move speed: walking or running;
+ - **SPACE:** jump;
  - **LCTRL:** crouch/duck;
  - **R**: reload current weapon;
  - **2,3 / Mouse Wheel**: change to pistol or machine gun;
- - **Mouse Click**: attack;
+ - **Mouse Click**: attack (fire weapon);
  - **TAB:** show frag table;
  - **M:** switch to next map based on mapcycle.txt;
  - **BACKSPACE:** show GUI demo;
