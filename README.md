@@ -25,7 +25,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.1.6 Private Beta is here](https://drive.google.com/file/d/1sAsAn1u0nTLE2Rqy9q1c2dEVbRPYvXA7/view?usp=drive_link).  
+The latest available download version [v0.1.6.1 Private Beta is here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
 [Version history is here.](HISTORY.md)
@@ -54,7 +54,7 @@ Alternatively, you can use command line arguments as well, e.g.:
  - **2,3 / Mouse Wheel**: change to pistol or machine gun;
  - **Mouse Click**: attack;
  - **TAB:** show frag table;
- - **M:** change to next map based on mapcycle.txt;
+ - **M:** switch to next map based on mapcycle.txt;
  - **BACKSPACE:** show GUI demo;
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
