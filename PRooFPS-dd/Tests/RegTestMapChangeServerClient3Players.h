@@ -39,9 +39,9 @@ public:
         const bool& bAreWeTestingReleaseBuild,
         const unsigned int& nClients) :
         UnitTest(std::string(__FILE__) +
-            " TR: " + std::to_string(nTickrate) +
-            ", UR: " + std::to_string(nClUpdateRate) +
-            ", PR: " + std::to_string(nPhysicsRateMin) + 
+            " TiR: " + std::to_string(nTickrate) +
+            ", UpR: " + std::to_string(nClUpdateRate) +
+            ", PhR: " + std::to_string(nPhysicsRateMin) + 
             ", iterations: " + std::to_string(nTestIterations)),
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
@@ -50,8 +50,7 @@ public:
         m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 5 : 8),
         m_nClients(nClients),
         m_nPlayerCounter(0),
-        hServerMainGameWindow(NULL),
-        m_vecHClientMainGameWindow(NULL)
+        hServerMainGameWindow(static_cast<HWND>(0))
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
 
