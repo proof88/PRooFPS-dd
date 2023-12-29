@@ -31,12 +31,6 @@ class RegTestMapChangeServerClient3Players :
 {
 public:
 
-    enum class InstanceType
-    {
-        SERVER,
-        CLIENT
-    };
-
     RegTestMapChangeServerClient3Players(
         const unsigned int& nTickrate,
         const unsigned int& nClUpdateRate,
@@ -59,7 +53,6 @@ public:
         m_vecHClientMainGameWindow(NULL)
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
-        memset(&m_vecProcInfoClient, 0, sizeof(m_vecProcInfoClient));
 
         // unlike with RegTestBasicServerClient2Players, we don't need these restrictions in this test, but I still keep them
         // because officially we test with 60 and 20 anyway, since we want to support those 2 values only for now.
@@ -171,7 +164,7 @@ protected:
 
         bool bRes = true;
         
-        for (unsigned int i = 0; (i < m_nTestIterations) && bRes; i++)
+        for (unsigned int iTestIt = 0; (iTestIt < m_nTestIterations) && bRes; iTestIt++)
         {
 
             // server instance initiates map change
@@ -207,11 +200,11 @@ protected:
             // wait for the test data files to be actually written
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-            bRes &= assertTrue(evaluateTest(), (std::string("Failure in iteration ") + std::to_string(i+1)).c_str());
+            bRes &= assertTrue(evaluateTest(iTestIt == m_nTestIterations-1), (std::string("Failure in iteration ") + std::to_string(iTestIt+1)).c_str());
         }
 
         return bRes;
-    }
+    } // testMethod()
 
 private:
 
@@ -229,7 +222,7 @@ private:
     HWND hServerMainGameWindow;
     std::vector<HWND> m_vecHClientMainGameWindow;
 
-    bool evaluateInstance(const unsigned int& iInstanceIndex)
+    bool evaluateInstance(const unsigned int& iInstanceIndex, const bool& bLastIteration)
     {
         const bool bServer = (iInstanceIndex == 0);
         const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(
@@ -305,7 +298,8 @@ private:
             assertTrue(setOfExpectedPlayerNames.empty(), "set is still not empty!");
 
         // delete dump file only if test is successful, otherwise leave it in the filesystem for further debugging!
-        if (bRet)
+        // but last iteration dump files are never deleted because we might want to have a look at them anyway!
+        if (bRet && !bLastIteration)
         {
             // delete the evaluated dump file so we definitely fail next iteration if an instance fails to generate new dump, otherwise
             // we may evaluate a same dump file in next iteration that was generated in a previous iteration and might think everything is ok!
@@ -318,16 +312,16 @@ private:
         }
 
         return bRet;
-    }
+    } // evaluateInstance()
 
-    bool evaluateTest()
+    bool evaluateTest(const bool& bLastIteration)
     {
         // unlike with RegTestBasicServerClient2Players, in this test evaluate order is irrelevant
-        bool bRet = assertTrue(evaluateInstance(0), "evaluateServer");
+        bool bRet = assertTrue(evaluateInstance(0, bLastIteration), "evaluateServer");
         
         for (unsigned int i = 1; i <= m_nClients; i++)
         {
-            bRet &= assertTrue(evaluateInstance(i), (std::string("evaluateClient ") + std::to_string(i)).c_str());
+            bRet &= assertTrue(evaluateInstance(i, bLastIteration), (std::string("evaluateClient ") + std::to_string(i)).c_str());
         }
 
         return bRet;
