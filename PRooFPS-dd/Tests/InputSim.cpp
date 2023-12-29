@@ -83,7 +83,14 @@ void input_sim_test::mouseMoveRelative(DWORD dx, DWORD dy)
 void input_sim_test::bringWindowToFront(HWND hTargetWindow) noexcept(false)
 {
     // technique copied from: https://stackoverflow.com/questions/916259/win32-bring-a-window-to-top
-    const HWND hCurWnd = GetForegroundWindow();
+    // slightly modified: try not to accept NULL foreground window, try a bit more ...
+    HWND hTmpWnd = GetForegroundWindow();
+    for (int i = 0; (i < 3) && (hTmpWnd == NULL); i++)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        hTmpWnd = GetForegroundWindow();
+    }
+    const HWND hCurWnd = hTmpWnd;
     if (hCurWnd == NULL)
     {
         // Win32 SDK: "The foreground window can be NULL in certain circumstances, such as when a window is losing activation."
