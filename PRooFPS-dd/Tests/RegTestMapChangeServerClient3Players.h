@@ -42,7 +42,7 @@ public:
         const unsigned int& nClUpdateRate,
         const unsigned int& nPhysicsRateMin,
         const unsigned int& nTestIterations,
-        const unsigned int& nSecondsWaitForInstancesToChangeMap,
+        const bool& bAreWeTestingReleaseBuild,
         const unsigned int& nClients) :
         UnitTest(std::string(__FILE__) +
             " tickrate: " + std::to_string(nTickrate) +
@@ -52,7 +52,7 @@ public:
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
         m_nTestIterations(nTestIterations),
-        m_nSecondsWaitForInstancesToChangeMap(nSecondsWaitForInstancesToChangeMap),
+        m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 5 : 8),
         m_nClients(nClients),
         m_nPlayerCounter(0),
         hServerMainGameWindow(NULL),

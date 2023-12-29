@@ -80,9 +80,8 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
     //tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
     constexpr bool bAreWeTestingReleaseBuild = false;
-    constexpr auto nSecondsWaitForInstancesToChangeMap = bAreWeTestingReleaseBuild ? 5 : 8;
     tests.push_back(std::unique_ptr<UnitTest>(
-        new RegTestMapChangeServerClient3Players(60, 60, 60, 1 /*iterations*/, nSecondsWaitForInstancesToChangeMap, 2 /*clients*/)
+        new RegTestMapChangeServerClient3Players(60, 60, 60, 1 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
     ));
 
     std::vector<std::unique_ptr<UnitTest>>::size_type nSucceededTests = 0;
