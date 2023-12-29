@@ -15,10 +15,10 @@
 A compressed build for Windows is available for[ download here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).
 
 This version addresses 2 issues:
- - FIX: clients could not reconnect to server due to player name collision resulted in terminating the server;
- - FIX: V-Sync was always enabled even when `gfx_vsync` CVAR was false.
+ - FIX: clients could not **reconnect** to server after **map change** due to player name collision resulted in terminating the server;
+ - FIX: **V-Sync** was always enabled even when `gfx_vsync` CVAR was false.
 
-A regression test has been also added that is triggering map change in loop with 3 players.
+A **regression test** has been also added that is triggering map change in loop with 3 players.
 
 ## v0.1.6 Private Beta (Dec 16, 2023)
 
