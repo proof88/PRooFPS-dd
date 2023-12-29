@@ -54,8 +54,6 @@ public:
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
         memset(&procInfoClient, 0, sizeof(procInfoClient));
-        memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
-        memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
 
         // We have expected pkt count tables only for 60 and 20.
         // In the future we may dynamically calculate the current values for ExpectedPktStatsRanges
@@ -324,8 +322,6 @@ private:
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
     HWND hClientMainGameWindow;
-    RECT rectServerGameWindow;  // screen coordinates
-    RECT rectClientGameWindow;  // screen coordinates
 
     // These should be Weapon instances, however we would need proper gfx engine instance as well, or a stubbed gfx engine instance,
     // for now I dont want any of these, so I just load them as config files, so I can still use their config values as reference!
@@ -789,7 +785,8 @@ private:
         }
 
         CConsole::getConsoleInstance().SOLn("Found game window, fetching RECT ...");
-        RECT& rectGameWindow = bServer ? rectServerGameWindow : rectClientGameWindow;
+        RECT rectGameWindow;  // screen coordinates
+        memset(&rectGameWindow, 0, sizeof(rectGameWindow));
         if (TRUE == GetWindowRect(hMainGameWindow, &rectGameWindow))
         {
             if (FALSE == SetWindowPos(

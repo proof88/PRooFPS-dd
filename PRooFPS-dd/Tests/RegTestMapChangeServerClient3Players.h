@@ -42,7 +42,8 @@ public:
         const unsigned int& nClUpdateRate,
         const unsigned int& nPhysicsRateMin,
         const unsigned int& nTestIterations,
-        const unsigned int& nSecondsWaitForInstancesToChangeMap) :
+        const unsigned int& nSecondsWaitForInstancesToChangeMap,
+        const unsigned int& nClients) :
         UnitTest(std::string(__FILE__) +
             " tickrate: " + std::to_string(nTickrate) +
             ", cl_updaterate: " + std::to_string(nClUpdateRate) +
@@ -52,14 +53,13 @@ public:
         m_nPhysicsRateMin(nPhysicsRateMin),
         m_nTestIterations(nTestIterations),
         m_nSecondsWaitForInstancesToChangeMap(nSecondsWaitForInstancesToChangeMap),
+        m_nClients(nClients),
         m_nPlayerCounter(0),
         hServerMainGameWindow(NULL),
-        hClientMainGameWindow(NULL)
+        m_vecHClientMainGameWindow(NULL)
     {
         memset(&procInfoServer, 0, sizeof(procInfoServer));
-        memset(&procInfoClient, 0, sizeof(procInfoClient));
-        memset(&rectServerGameWindow, 0, sizeof(rectServerGameWindow));
-        memset(&rectClientGameWindow, 0, sizeof(rectClientGameWindow));
+        memset(&m_vecProcInfoClient, 0, sizeof(m_vecProcInfoClient));
 
         // unlike with RegTestBasicServerClient2Players, we don't need these restrictions in this test, but I still keep them
         // because officially we test with 60 and 20 anyway, since we want to support those 2 values only for now.
@@ -90,14 +90,21 @@ protected:
         try
         {
 
-            StartGame(InstanceType::SERVER);
-            StartGame(InstanceType::CLIENT);
+            StartGame(0 /*server*/);
+            for (unsigned int iClient = 0; iClient < m_nClients; iClient++)
+            {
+                StartGame(iClient+1);
+            }
 
             // make sure the game windows are at the top, not the console windows
             input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input_sim_test::bringWindowToFront(hClientMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            for (unsigned int iClient = 0; iClient < m_nClients; iClient++)
+            {
+                input_sim_test::bringWindowToFront(m_vecHClientMainGameWindow[iClient]);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
         }
         catch (const std::exception& e)
         {
@@ -117,16 +124,19 @@ protected:
         // when we come here, even setUp() might had failed, so try graceful shutdown only if game windows are actually available!
         // Otherwise do ungraceful process stopping.
 
-        if (hClientMainGameWindow != NULL)
+        for (unsigned int iClient = 0; iClient < m_nClients; iClient++)
         {
-            input_sim_test::bringWindowToFront(hClientMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            input_sim_test::keybdPress(VK_ESCAPE, 100);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
-        else
-        {
-            process_stackoverflow_42531::Process::stopProcess(procInfoClient);
+            if (m_vecHClientMainGameWindow[iClient] != NULL)
+            {
+                input_sim_test::bringWindowToFront(m_vecHClientMainGameWindow[iClient]);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                input_sim_test::keybdPress(VK_ESCAPE, 100);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+            else
+            {
+                process_stackoverflow_42531::Process::stopProcess(m_vecProcInfoClient[iClient]);
+            }
         }
 
         if (hServerMainGameWindow != NULL)
@@ -140,10 +150,13 @@ protected:
             process_stackoverflow_42531::Process::stopProcess(procInfoServer);
         }
 
-        do
+        for (unsigned int iClient = 0; iClient < m_nClients; iClient++)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        } while (process_stackoverflow_42531::Process::checkIfProcessIsActive(procInfoClient));
+            do
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            } while (process_stackoverflow_42531::Process::checkIfProcessIsActive(m_vecProcInfoClient[iClient]));
+        }
 
         do
         {
@@ -173,12 +186,15 @@ protected:
             std::this_thread::sleep_for(std::chrono::seconds(m_nSecondsWaitForInstancesToChangeMap));
 
             {
-                // client to front
-                input_sim_test::bringWindowToFront(hClientMainGameWindow);
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                for (unsigned int iClient = 0; iClient < m_nClients; iClient++)
+                {
+                    // client to front
+                    input_sim_test::bringWindowToFront(m_vecHClientMainGameWindow[iClient]);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-                // trigger client dump test data to file
-                input_sim_test::keybdPress(VK_RETURN, 100);
+                    // trigger client dump test data to file
+                    input_sim_test::keybdPress(VK_RETURN, 100);
+                }
 
                 // server to front
                 input_sim_test::bringWindowToFront(hServerMainGameWindow);
@@ -206,19 +222,18 @@ private:
     const unsigned int m_nPhysicsRateMin;
     const unsigned int m_nTestIterations;
     const unsigned int m_nSecondsWaitForInstancesToChangeMap;
+    const unsigned int m_nClients;
     unsigned int m_nPlayerCounter;
     PROCESS_INFORMATION procInfoServer;
-    PROCESS_INFORMATION procInfoClient;
+    std::vector<PROCESS_INFORMATION> m_vecProcInfoClient;
     HWND hServerMainGameWindow;
-    HWND hClientMainGameWindow;
-    RECT rectServerGameWindow;  // screen coordinates
-    RECT rectClientGameWindow;  // screen coordinates
+    std::vector<HWND> m_vecHClientMainGameWindow;
 
-    bool evaluateInstance(const InstanceType& instType)
+    bool evaluateInstance(const unsigned int& iInstanceIndex)
     {
-        const bool bServer = instType == InstanceType::SERVER;
+        const bool bServer = (iInstanceIndex == 0);
         const std::string sTestDumpFilename = proofps_dd::generateTestDumpFilename(
-            bServer, bServer ? static_cast<unsigned long>(procInfoServer.dwProcessId) : static_cast<unsigned long>(procInfoClient.dwProcessId),
+            bServer, bServer ? static_cast<unsigned long>(procInfoServer.dwProcessId) : static_cast<unsigned long>(m_vecProcInfoClient[iInstanceIndex-1].dwProcessId),
             m_nTickRate, m_nClUpdateRate, m_nPhysicsRateMin);
         std::ifstream f(sTestDumpFilename, std::ifstream::in);
         if (!f.good())
@@ -308,15 +323,19 @@ private:
     bool evaluateTest()
     {
         // unlike with RegTestBasicServerClient2Players, in this test evaluate order is irrelevant
-        bool bRet = assertTrue(evaluateInstance(InstanceType::SERVER), "evaluateServer") &
-            assertTrue(evaluateInstance(InstanceType::CLIENT), "evaluateClient");
+        bool bRet = assertTrue(evaluateInstance(0), "evaluateServer");
+        
+        for (unsigned int i = 1; i <= m_nClients; i++)
+        {
+            bRet &= assertTrue(evaluateInstance(i), (std::string("evaluateClient ") + std::to_string(i)).c_str());
+        }
 
         return bRet;
     }
 
-    void StartGame(const InstanceType& instType) noexcept(false)
+    void StartGame(const unsigned int& iInstanceIndex) noexcept(false)
     {
-        const bool bServer = instType == InstanceType::SERVER;
+        const bool bServer = (iInstanceIndex == 0);
         CConsole::getConsoleInstance().OLnOI("%s(%b) ...", __func__, bServer);
 
         m_nPlayerCounter++;
@@ -335,17 +354,19 @@ private:
         }
         else
         {
-            procInfoClient = process_stackoverflow_42531::Process::launchProcess(
+            m_vecProcInfoClient.push_back( process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
                 "--gfx_windowed=true --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName);
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName)
+            );
+            m_vecHClientMainGameWindow.push_back(static_cast<HWND>(0)); // we set this later below
         }
 
         // main game window
         CConsole::getConsoleInstance().OLn("Trying to find main game window ...");
-        HWND& hMainGameWindow = bServer ? hServerMainGameWindow : hClientMainGameWindow;
+        HWND& hMainGameWindow = bServer ? hServerMainGameWindow : m_vecHClientMainGameWindow[m_vecHClientMainGameWindow.size()-1];
         hMainGameWindow = 0;
         unsigned int iWaitCntr = 0;
         do
@@ -365,14 +386,15 @@ private:
         }
 
         CConsole::getConsoleInstance().SOLn("Found game window, fetching RECT ...");
-        RECT& rectGameWindow = bServer ? rectServerGameWindow : rectClientGameWindow;
+        RECT rectGameWindow;  // screen coordinates
+        memset(&rectGameWindow, 0, sizeof(rectGameWindow));
         if (TRUE == GetWindowRect(hMainGameWindow, &rectGameWindow))
         {
             if (FALSE == SetWindowPos(
                 hMainGameWindow,
                 NULL,
                 /* traditionally, server goes to left edge, client 1 goes to right edge, subsequent clients go somewhere in between from left to right */
-                bServer ? 0 : ((m_nPlayerCounter > 2) ? 200 + m_nPlayerCounter*20 : 900),
+                bServer ? 0 : ((iInstanceIndex > 1) ? 200 + iInstanceIndex * 20 : 900),
                 rectGameWindow.top,
                 0, 0,
                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER))
