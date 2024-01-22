@@ -717,6 +717,63 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 // ############################### PRIVATE ###############################
 
 
+void proofps_dd::PRooFPSddPGE::mainMenu()
+{
+    /*
+        There should be a CVAR for enabling/disabling the menu.
+        Reg tests will disable it from command line.
+    
+        CREATE GAME
+         JOIN GAME
+         SETTINGS
+           EXIT
+
+        ---
+
+        CREATE GAME
+
+        Player Name - input box; max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
+
+        Select Map - combobox, prefilled by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
+
+        Tickrate - radio group: high (60 Hz), low (20 Hz); CVAR: tickrate.
+
+        Client Updates - radio group: high (60 Hz), low (20 Hz); CVAR: cl_updaterate.
+
+        Mid-Air Strafe - radio group: full, moderate, off; CVAR: sv_allow_strafe_mid_air and sv_allow_strafe_mid_air_full.
+
+        START - When clicking on START, CVAR net_server should become true. Cfg file to be saved.
+        BACK - Cfg file to be saved.
+
+        ---
+
+        JOIN GAME
+
+        Player Name - input box; max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
+        
+        Server IP: input box, to be validated for ip address format, CVAR: cl_server_ip.
+        
+        JOIN - When clicking on JOIN, CVAR net_server should become false. Cfg file to be saved.
+        BACK - Cfg file to be saved.
+
+        ---
+
+        SETTINGS
+
+        Fullscreen - checkbox; CVAR: gfx_windowed.
+
+        V-Sync - checkbox; CVAR: gfx_vsync.
+
+        Camera Target - radio group: xhair and player, player only; CVAR: gfx_cam_follows_xhair.
+
+        Camera Tilting - checkbox; CVAR: gfx_cam_tilting.
+
+        BACK - Cfg file to be saved.
+
+
+    */
+}
+
 void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 {
     m_pObjLoadingScreenBg->Show();

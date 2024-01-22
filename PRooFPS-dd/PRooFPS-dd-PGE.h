@@ -111,6 +111,7 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        void mainMenu();
         void showLoadingScreen(int nProgress);
         void hideLoadingScreen();
         bool hasValidConnection() const;
