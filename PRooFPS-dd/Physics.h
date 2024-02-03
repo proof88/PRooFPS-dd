@@ -18,18 +18,17 @@
 
 #include "Durations.h"
 #include "GameMode.h"
+#include "GUI.h"
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
-#include "UserInterface.h"
 
 namespace proofps_dd
 {
 
     class Physics :
-        protected virtual proofps_dd::PlayerHandling,
-        protected virtual proofps_dd::UserInterface
+        protected virtual proofps_dd::PlayerHandling
     {
     public:
 
@@ -42,6 +41,7 @@ namespace proofps_dd
         Physics(
             PGE& pge,
             proofps_dd::Durations& durations,
+            proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);

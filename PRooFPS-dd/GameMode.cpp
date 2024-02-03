@@ -113,7 +113,7 @@ bool proofps_dd::GameMode::renamePlayer(const std::string& sOldName, const std::
 
 void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
-    pure.getUImanager().text(s, x, y)->SetDropShadow(true);
+    pure.getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
 }
 
 
@@ -343,7 +343,7 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
     if (checkWinningConditions())
     {
         text(pure, "Happy 10th LANniversary! Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
+        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
     }
     else
     {
@@ -357,7 +357,7 @@ void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& p
             sLimits += " | Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingSecs()) + " s";
         }
         text(pure, sLimits, nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSize();
+        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
     }
 
     text(pure, "Player Name", nXPosPlayerName, nYPosStart);
@@ -399,23 +399,23 @@ void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEng
 
     text(pure, "Ping", nXPosPing, nThisRowY);
     text(pure, "Qlty", nXPosQuality, nThisRowY);
-    text(pure, "NE/FE", nXPosQuality, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    text(pure, "NE/FE", nXPosQuality, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
     text(pure, "Speed", nXPosSpeed, nThisRowY);
-    text(pure, "Tx/Rx(Bps)", nXPosSpeed, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    text(pure, "Tx/Rx(Bps)", nXPosSpeed, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
     text(pure, "Pending", nXPosPending, nThisRowY);
-    text(pure, "Rel/Unrel(Bps)", nXPosPending, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    text(pure, "Rel/Unrel(Bps)", nXPosPending, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
     text(pure, "UnAck'd", nXPosUnAckd, nThisRowY);
-    text(pure, "(Bps)", nXPosUnAckd, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    text(pure, "(Bps)", nXPosUnAckd, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
     text(pure, "Int. Q", nXPosInternalQueueTime, nThisRowY);
-    text(pure, "Time (us)", nXPosInternalQueueTime, nThisRowY - pure.getUImanager().getDefaultFontSize());
+    text(pure, "Time (us)", nXPosInternalQueueTime, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
 
-    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
 
     text(pure, "============================================================================================", nXPosPlayerName, nThisRowY);
 
     for (const auto& player : getFragTable())
     {
-        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSize();
+        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy();
         text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
         text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
         text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
@@ -454,13 +454,13 @@ void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEng
 {
     assert(!network.isServer());
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
 
     text(pure, "=======================================", nXPosPlayerName, nThisRowY);
 
     for (const auto& player : getFragTable())
     {
-        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSize();
+        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy();
         text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
         text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
         text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
@@ -468,11 +468,11 @@ void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEng
 
     /* debug data */
 
-    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
     text(pure, "Ping: " + std::to_string(network.getClient().getPing(true)) + " ms",
         nXPosPlayerName, nThisRowY);
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
     std::stringstream ssQuality;
     ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << network.getClient().getQualityLocal(false) <<
         "; far: " << network.getClient().getQualityRemote(false);
@@ -480,21 +480,21 @@ void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEng
         ssQuality.str(),
         nXPosPlayerName, nThisRowY);
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
     text(pure, "Tx Speed: " + std::to_string(std::lround(network.getClient().getTxByteRate(false))) +
         " Bps; Rx Speed: " + std::to_string(std::lround(network.getClient().getRxByteRate(false))) + " Bps",
         nXPosPlayerName, nThisRowY);
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
     text(pure, "Pending Bytes: Reliable: " + std::to_string(network.getClient().getPendingReliableBytes(false)) +
         "; Unreliable: " + std::to_string(network.getClient().getPendingUnreliableBytes(false)),
         nXPosPlayerName, nThisRowY);
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
     text(pure, "UnAck'd Bytes: " + std::to_string(network.getClient().getSentButUnAckedReliableBytes(false)),
         nXPosPlayerName, nThisRowY);
 
-    nThisRowY -= pure.getUImanager().getDefaultFontSize();
+    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
     text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
         nXPosPlayerName, nThisRowY);
 }  // showObjectivesClient()

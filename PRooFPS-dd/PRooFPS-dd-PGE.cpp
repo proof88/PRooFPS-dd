@@ -78,7 +78,7 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::InputHandling(
-        *this,
+        *this, /* Hint: for 1-param ctors, use: static_cast<PGE&>(*this) so it will call the only ctor, not the deleted copy ctor. */
         m_durations,
         m_mapPlayers,
         m_maps,
@@ -86,19 +86,21 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     proofps_dd::Physics(
         *this,
         m_durations,
+        m_gui,
         m_mapPlayers,
         m_maps,
         m_sounds),
     proofps_dd::PlayerHandling(
         *this,
         m_durations,
+        m_gui,
         m_mapPlayers,
         m_maps,
         m_sounds),
-    proofps_dd::UserInterface(static_cast<PGE&>(*this) /* static_cast so it will call the only ctor, not the deleted copy ctor */),
     proofps_dd::WeaponHandling(
         *this,
         m_durations,
+        m_gui,
         m_mapPlayers,
         m_maps,
         m_sounds),
@@ -117,7 +119,6 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_counter(0),
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
-    m_pObjLoadingScreenImg(NULL),
     m_pObjXHair(NULL),
     m_bWon(false),
     m_fCameraMinY(0.0f)
@@ -190,8 +191,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     setGameRunningFrequency(GAME_MAXFPS);
     getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
 
-    m_gui.initialize();
-
     getPure().getCamera().SetNearPlane(0.1f);
     getPure().getCamera().SetFarPlane(100.0f);
     getPure().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
@@ -231,26 +230,9 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_pObjXHair->getMaterial().setTexture(xhairtex);
     m_pObjXHair->Hide();
 
-    m_pObjLoadingScreenBg = getPure().getObject3DManager().createPlane(
-        getPure().getCamera().getViewport().size.width,
-        getPure().getCamera().getViewport().size.height);
-    m_pObjLoadingScreenBg->SetStickedToScreen(true);
-    m_pObjLoadingScreenBg->SetDoubleSided(true);
-    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenBg->SetLit(false);
-    PureTexture* pTexBlack = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
-    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
-
-    const auto fLoadingScreenImgWidth = getPure().getCamera().getViewport().size.width * 0.8f;
-    m_pObjLoadingScreenImg = getPure().getObject3DManager().createPlane(
-        fLoadingScreenImgWidth,
-        (fLoadingScreenImgWidth * 0.5f) * 0.5f);
-    m_pObjLoadingScreenImg->SetStickedToScreen(true);
-    m_pObjLoadingScreenImg->SetDoubleSided(true);
-    m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenImg->SetLit(false);
-    PureTexture* pTexLoadingScreen = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
-    m_pObjLoadingScreenImg->getMaterial().setTexture(pTexLoadingScreen);
+    // let the GUI create loading screen AFTER we created the xhair because otherwise in some situations the xhair
+    // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
+    m_gui.initialize();
 
     m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
     {
@@ -586,7 +568,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             }
             else
             {
-                Text("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
+                m_gui.textForNextFrame("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
                     200,
                     getPure().getWindow().getClientHeight() / 2);
                 if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
@@ -701,7 +683,7 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 {
     getConsole().OLnOI("proofps_dd::PRooFPSddPGE::onGameDestroying() ...");
 
-    Text("Exiting game ...", 200, getPure().getWindow().getClientHeight() / 2);
+    m_gui.textForNextFrame("Exiting game ...", 200, getPure().getWindow().getClientHeight() / 2);
     getPure().getRenderer()->RenderScene();
 
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
@@ -713,8 +695,7 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_sServerMapFilenameToLoad.clear();
     m_maps.shutdown();
-    delete m_pObjLoadingScreenBg;
-    delete m_pObjLoadingScreenImg;
+    m_gui.shutdown();
     delete m_pObjXHair;
     delete m_gameMode;
     getPure().getObject3DManager().DeleteAll();
@@ -730,19 +711,12 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 {
-    m_pObjLoadingScreenBg->Show();
-    m_pObjLoadingScreenImg->Show();
-    Text(
-        "Loading Map: " + m_sServerMapFilenameToLoad + " ... " + std::to_string(nProgress) + " %",
-        200,
-        getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
-    getPure().getRenderer()->RenderScene();
+    m_gui.showLoadingScreen(nProgress, m_sServerMapFilenameToLoad);
 }
 
 void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
 {
-    m_pObjLoadingScreenBg->Hide();
-    m_pObjLoadingScreenImg->Hide();
+    m_gui.hideLoadingScreen();
     m_maps.UpdateVisibilitiesForRenderer();
 }
 
@@ -765,7 +739,7 @@ bool proofps_dd::PRooFPSddPGE::connect()
     bool bRet;
     if (getNetwork().isServer())
     {
-        Text("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
+        m_gui.textForNextFrame("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
 
         bRet = getNetwork().getServer().startListening();
@@ -783,7 +757,7 @@ bool proofps_dd::PRooFPSddPGE::connect()
             getConsole().OLn("IP from config: %s", sIp.c_str());
         }
 
-        Text("Connecting to Server @ " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
+        m_gui.textForNextFrame("Connecting to Server @ " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
 
         bRet = getNetwork().getClient().connectToServer(sIp);
@@ -797,12 +771,12 @@ bool proofps_dd::PRooFPSddPGE::connect()
 
 void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
 {
-    getPure().getUImanager().RemoveAllPermanentTexts(); // cannot find better way to get rid of permanent texts
+    getPure().getUImanager().removeAllTextPermanentLegacy(); // cannot find better way to get rid of permanent texts
     const std::string sPrintText =
         sExtraDebugText.empty() ?
         "Unloading resources ..." :
         "Unloading resources ... Reason: " + sExtraDebugText;
-    Text(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
+    m_gui.textForNextFrame(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
     getPure().getRenderer()->RenderScene();
 
     getConsole().SetLoggingState("4LLM0DUL3S", true);
@@ -904,8 +878,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
     m_maps.UpdateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
     {
-        // very bad: AddText() should be used, but then RemoveText() would be also needed anytime there is a change ...
-        Text(
+        // very bad: m_gui.textPermanent() should be used, but then removeTextPermanentLegacy() would be also needed anytime there is a change ...
+        m_gui.textForNextFrame(
             player.getWeaponManager().getCurrentWeapon()->getVars()["name"].getAsString() + ": " +
             std::to_string(player.getWeaponManager().getCurrentWeapon()->getMagBulletCount()) + " / " +
             std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
@@ -958,7 +932,7 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
             m_fps = 0.01f; // make sure nobody tries division by zero
         }
     }
-    Text(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSize());
+    m_gui.textForNextFrame(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSizeLegacy());
 }
 
 void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
@@ -1723,7 +1697,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
 
         if (msg.m_bCurrentClient)
         {
-            AddText("Server, User name: " + std::string(szNewUserName) +
+            m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
                 (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
         }
@@ -1761,8 +1735,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConne
 
         if (msg.m_bCurrentClient)
         {
-            // due to difficulties caused by AddText() it is easier to use it here than in handleUserSetupFromServer()
-            AddText("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
+            // due to difficulties caused by m_gui.textPermanent() it is easier to use it here than in handleUserSetupFromServer()
+            m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
                 (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
         }

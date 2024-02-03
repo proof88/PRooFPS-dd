@@ -16,6 +16,7 @@
 
 #include "Durations.h"
 #include "GameMode.h"
+#include "GUI.h"
 #include "Maps.h"
 #include "Physics.h"
 #include "Player.h"
@@ -39,6 +40,7 @@ namespace proofps_dd
         WeaponHandling(
             PGE& pge,
             proofps_dd::Durations& durations,
+            proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);

@@ -26,7 +26,6 @@
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
-#include "UserInterface.h"
 #include "WeaponHandling.h"
 
 namespace proofps_dd
@@ -39,7 +38,6 @@ namespace proofps_dd
         public PGE,
         protected proofps_dd::InputHandling,
         protected virtual proofps_dd::PlayerHandling,
-        protected virtual proofps_dd::UserInterface,
         protected proofps_dd::WeaponHandling
     {
 
@@ -101,8 +99,6 @@ namespace proofps_dd
         unsigned long m_fps_lastmeasure;
         bool m_bFpsFirstMeasure;
 
-        PureObject3D* m_pObjLoadingScreenBg;
-        PureObject3D* m_pObjLoadingScreenImg;
         PureObject3D* m_pObjXHair;
         bool m_bWon;
         float m_fCameraMinY;
@@ -117,6 +113,7 @@ namespace proofps_dd
 
         void showLoadingScreen(int nProgress);
         void hideLoadingScreen();
+
         bool hasValidConnection() const;
         bool connect();
         void disconnect(const std::string& sExtraDebugText = "");

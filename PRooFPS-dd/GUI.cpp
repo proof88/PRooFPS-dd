@@ -17,6 +17,8 @@
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
 #include "imgui.h"
 
+#include "Consts.h"
+
 // ############################### PUBLIC ################################
 
 
@@ -31,16 +33,23 @@ CConsole& proofps_dd::GUI::getConsole() const
 }
 
 proofps_dd::GUI::GUI(PGE& pge) :
-    m_pge(pge)
+    m_pge(pge),
+    m_pObjLoadingScreenBg(nullptr),
+    m_pObjLoadingScreenImg(nullptr)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge
     // But they can be used in other functions.
 }
 
+proofps_dd::GUI::~GUI()
+{
+    shutdown();
+}
+
 void proofps_dd::GUI::initialize()
 {
-    m_pge.getPure().getUImanager().SetDefaultFontSize(20);
+    m_pge.getPure().getUImanager().setDefaultFontSizeLegacy(20);
     m_pge.getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -97,7 +106,74 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
+
+    m_pObjLoadingScreenBg = m_pge.getPure().getObject3DManager().createPlane(
+        m_pge.getPure().getCamera().getViewport().size.width,
+        m_pge.getPure().getCamera().getViewport().size.height);
+    m_pObjLoadingScreenBg->SetStickedToScreen(true);
+    m_pObjLoadingScreenBg->SetDoubleSided(true);
+    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenBg->SetLit(false);
+    PureTexture* pTexBlack = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
+    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
+
+    const auto fLoadingScreenImgWidth = m_pge.getPure().getCamera().getViewport().size.width * 0.8f;
+    m_pObjLoadingScreenImg = m_pge.getPure().getObject3DManager().createPlane(
+        fLoadingScreenImgWidth,
+        (fLoadingScreenImgWidth * 0.5f) * 0.5f);
+    m_pObjLoadingScreenImg->SetStickedToScreen(true);
+    m_pObjLoadingScreenImg->SetDoubleSided(true);
+    m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenImg->SetLit(false);
+    PureTexture* pTexLoadingScreen = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
+    m_pObjLoadingScreenImg->getMaterial().setTexture(pTexLoadingScreen);
+
+    
 } // initialize()
+
+void proofps_dd::GUI::shutdown()
+{
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    {
+        delete m_pObjLoadingScreenBg;
+        delete m_pObjLoadingScreenImg;
+        m_pObjLoadingScreenBg = nullptr;
+        m_pObjLoadingScreenImg = nullptr;
+    }
+}
+
+void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
+{
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    {
+        m_pObjLoadingScreenBg->Show();
+        m_pObjLoadingScreenImg->Show();
+        textForNextFrame(
+            "Loading Map: " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
+            200,
+            m_pge.getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
+        m_pge.getPure().getRenderer()->RenderScene();
+    }
+}
+
+void proofps_dd::GUI::hideLoadingScreen()
+{
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    {
+        m_pObjLoadingScreenBg->Hide();
+        m_pObjLoadingScreenImg->Hide();
+    }
+}
+
+void proofps_dd::GUI::textForNextFrame(const std::string& s, int x, int y) const
+{
+    m_pge.getPure().getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
+}
+
+void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
+{
+    m_pge.getPure().getUImanager().textPermanentLegacy(s, x, y)->SetDropShadow(true);
+}
 
 
 // ############################## PROTECTED ##############################

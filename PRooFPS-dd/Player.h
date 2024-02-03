@@ -23,12 +23,12 @@
 
 #include "Consts.h"
 #include "Durations.h"
+#include "GUI.h"
 #include "Maps.h"
 #include "Networking.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
 #include "Strafe.h"
-#include "UserInterface.h"
 
 namespace proofps_dd
 {
@@ -224,8 +224,7 @@ namespace proofps_dd
     }; // class Player
 
     class PlayerHandling :
-        protected proofps_dd::Networking,
-        protected virtual proofps_dd::UserInterface
+        protected proofps_dd::Networking
     {
     public:
 
@@ -238,6 +237,7 @@ namespace proofps_dd
         PlayerHandling(
             PGE& pge,
             proofps_dd::Durations& durations,
+            proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
@@ -259,6 +259,7 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         PGE& m_pge;
+        proofps_dd::GUI& m_gui;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;

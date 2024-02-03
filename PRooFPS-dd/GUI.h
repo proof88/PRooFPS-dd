@@ -10,6 +10,9 @@
     ###################################################################################
 */
 
+#include <functional>
+#include <string>
+
 #include "../../Console/CConsole/src/CConsole.h"
 
 #include "PGE.h"
@@ -28,6 +31,7 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         GUI(PGE& pge);
+        ~GUI();
 
         GUI(const GUI&) = delete;
         GUI& operator=(const GUI&) = delete;
@@ -35,12 +39,24 @@ namespace proofps_dd
         GUI&& operator=(GUI&&) = delete;
 
         void initialize();
+        void shutdown();
+
+        void showLoadingScreen(
+            int nProgress,
+            const std::string& sMapFilename);
+        void hideLoadingScreen();
+
+        void textForNextFrame(const std::string& s, int x, int y) const;
+        void textPermanent(const std::string& s, int x, int y) const;
 
     protected:
 
     private:
 
         PGE& m_pge;
+
+        PureObject3D* m_pObjLoadingScreenBg;
+        PureObject3D* m_pObjLoadingScreenImg;
 
         // ---------------------------------------------------------------------------
 

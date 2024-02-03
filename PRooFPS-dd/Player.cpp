@@ -799,18 +799,19 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
 proofps_dd::PlayerHandling::PlayerHandling(
     PGE& pge,
     proofps_dd::Durations& durations,
+    proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
     proofps_dd::Networking(pge, durations),
-    proofps_dd::UserInterface(pge),
     m_pge(pge),
+    m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // pge, durations, maps, sounds
+    // pge, durations, gui, maps, sounds
     // But they can used in other functions.
 
     // Since this class is used to build up the PRooFPSddPGE class which is derived from PGE class, PGE is not yet initialized
@@ -842,7 +843,7 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(Player& player, PureObject3D& 
     {
         m_pge.getAudio().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
-        AddText(szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2);
+        m_gui.textPermanent(szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2);
     }
 }
 
@@ -864,8 +865,8 @@ void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObjec
 
         objXHair.Show();
         // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
-        m_pge.getPure().getUImanager().RemoveText(
-            szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2, m_pge.getPure().getUImanager().getDefaultFontSize());
+        m_pge.getPure().getUImanager().removeTextPermanentLegacy(
+            szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2, m_pge.getPure().getUImanager().getDefaultFontSizeLegacy());
     }
 }
 

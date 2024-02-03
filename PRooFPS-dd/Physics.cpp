@@ -22,11 +22,11 @@
 proofps_dd::Physics::Physics(
     PGE& pge,
     proofps_dd::Durations& durations,
+    proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
-    proofps_dd::PlayerHandling(pge, durations, mapPlayers, maps, sounds),
-    proofps_dd::UserInterface(pge),
+    proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds),
     m_pge(pge),
     m_durations(durations),
     m_mapPlayers(mapPlayers),
