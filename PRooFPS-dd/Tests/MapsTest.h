@@ -10,7 +10,7 @@
     ###################################################################################
 */
 
-#include "../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "UnitTests/UnitTest.h"
 #include "../Maps.h"
 
 class MapsTest :

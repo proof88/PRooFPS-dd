@@ -12,12 +12,13 @@
 
 #include <chrono>  // requires cpp11
 
-#include "../../PGE/PGE/PGE.h"
-#include "../../PGE/PGE/Pure/include/external/Object3D/PureObject3DManager.h"
+#include "PGE.h"
+#include "Pure/include/external/Object3D/PureObject3DManager.h"
 
 #include "Consts.h"
 #include "Durations.h"
 #include "GameMode.h"
+#include "GUI.h"
 #include "InputHandling.h"
 #include "Maps.h"
 #include "Networking.h"
@@ -71,6 +72,9 @@ namespace proofps_dd
 
     private:
 
+        bool m_bInMenu;
+
+        proofps_dd::GUI m_gui;
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
         std::string m_sServerMapFilenameToLoad;                   /**< We set this as soon as we get to know which map we should load. */
@@ -111,7 +115,6 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
-        void mainMenu();
         void showLoadingScreen(int nProgress);
         void hideLoadingScreen();
         bool hasValidConnection() const;

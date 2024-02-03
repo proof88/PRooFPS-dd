@@ -19,7 +19,7 @@
 #endif
 #include "../../../PFL/PFL/winproof88.h"
 
-#include "../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "UnitTests/UnitTest.h"
 #include "../Consts.h"
 #include "../GameMode.h"
 #include "../SharedWithTest.h"

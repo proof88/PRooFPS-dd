@@ -13,8 +13,8 @@
 #include <chrono>
 #include <map>
 
-#include "../../PGE/PGE/Pure/include/external/Math/PureVector.h"
-#include "../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
+#include "Pure/include/external/Math/PureVector.h"
+#include "Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
 namespace proofps_dd
 {

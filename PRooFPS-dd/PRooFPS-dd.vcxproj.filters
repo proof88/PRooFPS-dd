@@ -58,6 +58,9 @@
     <Filter Include="Header Files\PFL">
       <UniqueIdentifier>{4ea71ac0-f6d4-4572-a969-16018786a1b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PGE\PURE\GUI">
+      <UniqueIdentifier>{5c439989-2d55-4562-924f-45f35f5edfe5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -282,6 +285,12 @@
     <ClInclude Include="Tests\RegTestMapChangeServerClient3Players.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\PURE\include\external\GUI\imgui-1.88\imgui.h">
+      <Filter>Header Files\PGE\PURE\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -330,6 +339,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SharedWithTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

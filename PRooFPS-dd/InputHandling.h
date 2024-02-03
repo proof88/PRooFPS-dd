@@ -13,7 +13,7 @@
 #include <map>
 #include "../../Console/CConsole/src/CConsole.h"
 
-#include "../../PGE/PGE/PGE.h"
+#include "PGE.h"
 
 #include "Durations.h"
 #include "GameMode.h"

@@ -2,10 +2,10 @@
 
 /*
     ###################################################################################
-    UserInterface.h
-    User interface handling for PRooFPS-dd
+    GUI.h
+    GUI for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
-    2023
+    2024
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
@@ -14,12 +14,10 @@
 
 #include "PGE.h"
 
-#include "Durations.h"
-
 namespace proofps_dd
 {
 
-    class UserInterface
+    class GUI
     {
     public:
 
@@ -29,24 +27,25 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
-        UserInterface(PGE& pge);
+        GUI(PGE& pge);
 
-        UserInterface(const UserInterface&) = delete;
-        UserInterface& operator=(const UserInterface&) = delete;
-        UserInterface(UserInterface&&) = delete;
-        UserInterface&& operator=(UserInterface&&) = delete;
+        GUI(const GUI&) = delete;
+        GUI& operator=(const GUI&) = delete;
+        GUI(GUI&&) = delete;
+        GUI&& operator=(GUI&&) = delete;
+
+        void initialize();
 
     protected:
 
-        void Text(const std::string& s, int x, int y) const;
-        void AddText(const std::string& s, int x, int y) const;
-
     private:
-
-        // ---------------------------------------------------------------------------
 
         PGE& m_pge;
 
-    }; // class UserInterface
+        // ---------------------------------------------------------------------------
+
+        static void drawMainMenuCb();
+
+    }; // class GUI
 
 } // namespace proofps_dd

@@ -14,8 +14,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "../../PGE/PGE/Network/PgePacket.h"
-#include "../../PGE/PGE/Weapons/WeaponManager.h" // for BulletId
+#include "Network/PgePacket.h"
+#include "Weapons/WeaponManager.h" // for BulletId
 
 #include "Strafe.h"
 

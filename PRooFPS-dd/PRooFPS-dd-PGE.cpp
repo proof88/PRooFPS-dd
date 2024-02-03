@@ -17,10 +17,10 @@
 #include <iomanip>     // std::setprecision() for displaying fps
 #include <utility>
 
-#include "../../PGE/PGE/Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
-#include "../../PGE/PGE/Pure/include/external/PureUiManager.h"
-#include "../../PGE/PGE/Pure/include/external/Display/PureWindow.h"
-#include "../../PGE/PGE/Pure/include/external/PureCamera.h"
+#include "Pure/include/external/Render/PureRendererHWfixedPipe.h"  // for rendering hints
+#include "Pure/include/external/PureUiManager.h"
+#include "Pure/include/external/Display/PureWindow.h"
+#include "Pure/include/external/PureCamera.h"
 #include "../../Console/CConsole/src/CConsole.h"
 
 using namespace std::chrono_literals;
@@ -102,6 +102,8 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_mapPlayers,
         m_maps,
         m_sounds),
+    m_bInMenu(true),
+    m_gui(*this),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
@@ -188,7 +190,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     setGameRunningFrequency(GAME_MAXFPS);
     getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
 
-    getPure().getUImanager().SetDefaultFontSize(20);
+    m_gui.initialize();
 
     getPure().getCamera().SetNearPlane(0.1f);
     getPure().getCamera().SetFarPlane(100.0f);
@@ -522,67 +524,76 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
     m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
-    // having valid connection means that server accepted the connection and we have initialized our player;
-    // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
-    if (hasValidConnection())
+    if (m_bInMenu)
     {
-        if (getNetwork().isServer())
-        {
-            serverUpdateWeapons(*m_gameMode);
-        }
-
-        // 1 TICK START
-        static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
-        const auto timeNow = std::chrono::steady_clock::now();
-        if (m_timeSimulation.time_since_epoch().count() == 0)
-        {
-            m_timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecsPerTick;
-        }
-        while (m_timeSimulation < timeNow)
-        {
-            // @TICKRATE
-            m_timeSimulation += DurationSimulationStepMicrosecsPerTick;
-            if (getNetwork().isServer())
-            {
-                mainLoopServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
-            }
-            else
-            {
-                mainLoopClientOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
-            }
-        }
-        // 1 TICK END
-
-        mainLoopShared(window);
-    } // endif validConnection
+        getPure().getWindow().SetCursorVisible(true);
+    }
     else
     {
-        // try connecting back
-        // we also need to wait for m_mapPlayers to become empty, it is important for server otherwise it will fail in handleUserConnected();
-        // it might take a while to bring down all clients one-by-one and let m_mapPlayers be empty, so we also need to check that here!
-        if (m_mapPlayers.empty() &&
-            (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay))
+        getPure().getWindow().SetCursorVisible(false);
+
+        // having valid connection means that server accepted the connection and we have initialized our player;
+        // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
+        if (hasValidConnection())
         {
-            if (connect())
+            if (getNetwork().isServer())
             {
-                m_pObjXHair->Show();
-                m_timeSimulation = {};  // reset tick-based simulation time as well
+                serverUpdateWeapons(*m_gameMode);
+            }
+
+            // 1 TICK START
+            static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
+            const auto timeNow = std::chrono::steady_clock::now();
+            if (m_timeSimulation.time_since_epoch().count() == 0)
+            {
+                m_timeSimulation = std::chrono::steady_clock::now() - DurationSimulationStepMicrosecsPerTick;
+            }
+            while (m_timeSimulation < timeNow)
+            {
+                // @TICKRATE
+                m_timeSimulation += DurationSimulationStepMicrosecsPerTick;
+                if (getNetwork().isServer())
+                {
+                    mainLoopServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
+                }
+                else
+                {
+                    mainLoopClientOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
+                }
+            }
+            // 1 TICK END
+
+            mainLoopShared(window);
+        } // endif validConnection
+        else
+        {
+            // try connecting back
+            // we also need to wait for m_mapPlayers to become empty, it is important for server otherwise it will fail in handleUserConnected();
+            // it might take a while to bring down all clients one-by-one and let m_mapPlayers be empty, so we also need to check that here!
+            if (m_mapPlayers.empty() &&
+                (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay))
+            {
+                if (connect())
+                {
+                    m_pObjXHair->Show();
+                    m_timeSimulation = {};  // reset tick-based simulation time as well
+                }
+                else
+                {
+                    // try again a bit later
+                    m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
+                }
             }
             else
             {
-                // try again a bit later
-                m_timeConnectionStateChangeInitiated = std::chrono::steady_clock::now();
-            }
-        }
-        else
-        {
-            Text("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
-                200,
-                getPure().getWindow().getClientHeight() / 2);
-            if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
-            {
-                m_timeLastPrintWaitConnection = std::chrono::steady_clock::now();
-                getConsole().EOLn("Waiting a bit before trying to connect back (pending clients to be disconnected: %u) ... ", m_mapPlayers.size());
+                Text("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
+                    200,
+                    getPure().getWindow().getClientHeight() / 2);
+                if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeLastPrintWaitConnection).count() >= 1)
+                {
+                    m_timeLastPrintWaitConnection = std::chrono::steady_clock::now();
+                    getConsole().EOLn("Waiting a bit before trying to connect back (pending clients to be disconnected: %u) ... ", m_mapPlayers.size());
+                }
             }
         }
     }
@@ -716,63 +727,6 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 // ############################### PRIVATE ###############################
 
-
-void proofps_dd::PRooFPSddPGE::mainMenu()
-{
-    /*
-        There should be a CVAR for enabling/disabling the menu.
-        Reg tests will disable it from command line.
-    
-        CREATE GAME
-         JOIN GAME
-         SETTINGS
-           EXIT
-
-        ---
-
-        CREATE GAME
-
-        Player Name - input box; max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-
-        Select Map - combobox, prefilled by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
-
-        Tickrate - radio group: high (60 Hz), low (20 Hz); CVAR: tickrate.
-
-        Client Updates - radio group: high (60 Hz), low (20 Hz); CVAR: cl_updaterate.
-
-        Mid-Air Strafe - radio group: full, moderate, off; CVAR: sv_allow_strafe_mid_air and sv_allow_strafe_mid_air_full.
-
-        START - When clicking on START, CVAR net_server should become true. Cfg file to be saved.
-        BACK - Cfg file to be saved.
-
-        ---
-
-        JOIN GAME
-
-        Player Name - input box; max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-        
-        Server IP: input box, to be validated for ip address format, CVAR: cl_server_ip.
-        
-        JOIN - When clicking on JOIN, CVAR net_server should become false. Cfg file to be saved.
-        BACK - Cfg file to be saved.
-
-        ---
-
-        SETTINGS
-
-        Fullscreen - checkbox; CVAR: gfx_windowed.
-
-        V-Sync - checkbox; CVAR: gfx_vsync.
-
-        Camera Target - radio group: xhair and player, player only; CVAR: gfx_cam_follows_xhair.
-
-        Camera Tilting - checkbox; CVAR: gfx_cam_tilting.
-
-        BACK - Cfg file to be saved.
-
-
-    */
-}
 
 void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 {

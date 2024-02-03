@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "../../Console/CConsole/src/CConsole.h"
-#include "../../PGE/PGE/Config/PGEcfgVariable.h"
-#include "../../PGE/PGE/Pure/include/external/PR00FsUltimateRenderingEngine.h"
+#include "Config/PGEcfgVariable.h"
+#include "Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
 #include "MapItem.h"
 

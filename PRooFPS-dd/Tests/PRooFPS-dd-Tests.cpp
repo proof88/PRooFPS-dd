@@ -10,7 +10,7 @@
 
 #include "stdafx.h"  // PCH
 
-#include "../../../PGE/PGE/UnitTests/UnitTest.h"
+#include "UnitTests/UnitTest.h"
 #include <memory>  // for std::unique_ptr; requires cpp11
 #include <vector>
 

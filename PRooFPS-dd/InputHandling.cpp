@@ -52,7 +52,7 @@ proofps_dd::InputHandling::InputHandling(
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
-    // But they can used in other functions.
+    // But they can be used in other functions.
 
     // Since this class is used to build up the PRooFPSddPGE class which is derived from PGE class, PGE is not yet initialized
     // when this ctor is invoked. PRooFPSddPGE initializes PGE later. Furthermore, even the pimpl object inside PGE might not
@@ -425,13 +425,6 @@ void proofps_dd::InputHandling::keyboard(
     if (m_pge.getInput().getKeyboard().isKeyPressed(VK_TAB))
     {
         gameMode.showObjectives(m_pge.getPure(), m_pge.getNetwork());
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_BACK))
-    {
-        m_bShowGuiDemo = !m_bShowGuiDemo;
-        m_pge.getPure().ShowGuiDemo(m_bShowGuiDemo);
-        m_pge.getPure().getWindow().SetCursorVisible(m_bShowGuiDemo);
     }
 
     if (m_bShowGuiDemo)
