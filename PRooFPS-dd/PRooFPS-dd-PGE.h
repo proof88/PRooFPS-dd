@@ -72,7 +72,7 @@ namespace proofps_dd
 
         bool m_bInMenu;
 
-        proofps_dd::GUI m_gui;
+        proofps_dd::GUI& m_gui;
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
         std::string m_sServerMapFilenameToLoad;                   /**< We set this as soon as we get to know which map we should load. */

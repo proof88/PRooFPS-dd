@@ -105,7 +105,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_bInMenu(true),
-    m_gui(*this),
+    m_gui(GUI::getGuiInstance(*this)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),

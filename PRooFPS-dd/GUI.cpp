@@ -22,6 +22,14 @@
 // ############################### PUBLIC ################################
 
 
+proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge)
+{
+    // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
+    static GUI m_guiInstance;
+    m_pPge = &pge;
+    return m_guiInstance;
+}
+
 const char* proofps_dd::GUI::getLoggerModuleName()
 {
     return "GUI";
@@ -32,8 +40,7 @@ CConsole& proofps_dd::GUI::getConsole() const
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-proofps_dd::GUI::GUI(PGE& pge) :
-    m_pge(pge),
+proofps_dd::GUI::GUI() :
     m_pObjLoadingScreenBg(nullptr),
     m_pObjLoadingScreenImg(nullptr)
 {
@@ -49,8 +56,22 @@ proofps_dd::GUI::~GUI()
 
 void proofps_dd::GUI::initialize()
 {
-    m_pge.getPure().getUImanager().setDefaultFontSizeLegacy(20);
-    m_pge.getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
+    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
+    m_pPge->getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
+
+    /*
+        Useful Dear ImGui links:
+         - https://github.com/ocornut/imgui/tree/master/docs
+         - https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
+         - https://github.com/ocornut/imgui/wiki/Useful-Extensions
+         - Interactive online manual: https://pthom.github.io/imgui_manual_online/manual/imgui_manual.html
+         - GUI Editors:
+           - online: https://raa.is/ImStudio/
+           - https://github.com/Half-People/HImGuiEditor/tree/main
+           - https://github.com/tpecholt/imrad
+           - https://github.com/Code-Building/ImGuiBuilder
+           - https://github.com/iamclint/ImGuiDesigner
+    */
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -107,28 +128,27 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
 
-    m_pObjLoadingScreenBg = m_pge.getPure().getObject3DManager().createPlane(
-        m_pge.getPure().getCamera().getViewport().size.width,
-        m_pge.getPure().getCamera().getViewport().size.height);
+    m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
+        m_pPge->getPure().getCamera().getViewport().size.width,
+        m_pPge->getPure().getCamera().getViewport().size.height);
     m_pObjLoadingScreenBg->SetStickedToScreen(true);
     m_pObjLoadingScreenBg->SetDoubleSided(true);
     m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
     m_pObjLoadingScreenBg->SetLit(false);
-    PureTexture* pTexBlack = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
+    PureTexture* pTexBlack = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
     m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
 
-    const auto fLoadingScreenImgWidth = m_pge.getPure().getCamera().getViewport().size.width * 0.8f;
-    m_pObjLoadingScreenImg = m_pge.getPure().getObject3DManager().createPlane(
+    const auto fLoadingScreenImgWidth = m_pPge->getPure().getCamera().getViewport().size.width * 0.8f;
+    m_pObjLoadingScreenImg = m_pPge->getPure().getObject3DManager().createPlane(
         fLoadingScreenImgWidth,
         (fLoadingScreenImgWidth * 0.5f) * 0.5f);
     m_pObjLoadingScreenImg->SetStickedToScreen(true);
     m_pObjLoadingScreenImg->SetDoubleSided(true);
     m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
     m_pObjLoadingScreenImg->SetLit(false);
-    PureTexture* pTexLoadingScreen = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
+    PureTexture* pTexLoadingScreen = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
     m_pObjLoadingScreenImg->getMaterial().setTexture(pTexLoadingScreen);
 
-    
 } // initialize()
 
 void proofps_dd::GUI::shutdown()
@@ -151,8 +171,8 @@ void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFi
         textForNextFrame(
             "Loading Map: " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
             200,
-            m_pge.getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
-        m_pge.getPure().getRenderer()->RenderScene();
+            m_pPge->getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
+        m_pPge->getPure().getRenderer()->RenderScene();
     }
 }
 
@@ -167,12 +187,12 @@ void proofps_dd::GUI::hideLoadingScreen()
 
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int x, int y) const
 {
-    m_pge.getPure().getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
+    m_pPge->getPure().getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
 }
 
 void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 {
-    m_pge.getPure().getUImanager().textPermanentLegacy(s, x, y)->SetDropShadow(true);
+    m_pPge->getPure().getUImanager().textPermanentLegacy(s, x, y)->SetDropShadow(true);
 }
 
 
@@ -182,34 +202,294 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 // ############################### PRIVATE ###############################
 
 
-//static float getCenterX(const std::string& text)
-//{
-//    return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
-//}
-//
+PGE* proofps_dd::GUI::m_pPge = nullptr;
+proofps_dd::GUI::Menu proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Menu::Main;
+
+
+float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
+{
+    return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
+}
+
+void proofps_dd::GUI::drawMainMenu()
+{
+    constexpr float fBtnWidth = 150.f;
+    constexpr float fBtnHeight = 20.f;
+    constexpr float fBtnStartY = 100.f;
+
+    // in case of buttons, remove size argument (ImVec2) to auto-resize
+
+    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY));
+    if (ImGui::Button("C R E A T E  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
+    {
+        m_currentMenu = Menu::CreateGame;
+    }
+
+    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 30));
+    if (ImGui::Button("J O I N  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
+    {
+        m_currentMenu = Menu::JoinGame;
+    }
+
+    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 60));
+    if (ImGui::Button("S E T T I N G S", ImVec2(fBtnWidth, fBtnHeight)))
+    {
+        m_currentMenu = Menu::Settings;
+    }
+
+    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 90));
+    if (ImGui::Button("E X I T", ImVec2(fBtnWidth, fBtnHeight)))
+    {
+        m_currentMenu = Menu::None;
+        m_pPge->getPure().getWindow().Close();
+    }
+
+    const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
+    ImGui::SetCursorPosX(getCenterPosXForText(sVersion));
+    ImGui::SetCursorPosY(fBtnStartY + 120);
+    ImGui::Text("%s", sVersion.c_str());
+}
+
+void proofps_dd::GUI::drawCreateGameMenu()
+{
+    ImGui::SetCursorPos(ImVec2(20, 38));
+    ImGui::Text("[  C R E A T E  G A M E  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    {
+        // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Player Name:");
+        ImGui::SameLine();
+        ImGui::PushItemWidth(200);
+        char szPlayerName[128] = "";
+        ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
+        ImGui::PopItemWidth();
+    } // end Player
+
+    ImGui::Separator();
+    ImGui::Text("[ Map Configuration ]");
+
+    ImGui::Indent();
+    {
+        const auto fBasePosX = ImGui::GetCursorPosX();
+
+        constexpr float fMapMoveBtnsWidth = 30;
+        constexpr float fMapMoveBtnsHeight = 19;
+        constexpr float fMapMoveBtnsVerticalDistanceFromListBoxes = 10;
+        constexpr float fMapMoveBtnsVerticalDistanceFromEachOther = fMapMoveBtnsHeight + 1;
+        constexpr float fMapListboxesWidth = 150;
+        constexpr int nMapListboxesHeightAsItemCount = 4;
+        const float fMapMoveBtnsPosX = fBasePosX + fMapListboxesWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
+        const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
+
+        ImGui::Text("Mapcycle:");
+        ImGui::SameLine(fMapsAvailListBoxX);
+        ImGui::Text("Available Maps:");
+
+        const auto fBasePosY = ImGui::GetCursorPosY();
+
+        // first I draw the 2 listboxes, and only after them I draw the move btns in between them
+        ImGui::PushItemWidth(fMapListboxesWidth);
+        int iActiveItemMapcycle = 0;
+        const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
+        ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
+       
+        ImGui::SameLine(fMapsAvailListBoxX);
+        int iActiveItemMapsAvailable = 0;
+        const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
+        ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
+        ImGui::PopItemWidth();
+        
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
+        ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
+        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
+        ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
+        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+
+        // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Force-Start on Map:");
+        ImGui::SameLine();
+        ImGui::PushItemWidth(150);
+        int iSelectMapStart = 0;
+        const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
+        ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
+        ImGui::PopItemWidth();
+        
+    } // end Map Config
+    ImGui::Unindent();
+
+    ImGui::Separator();
+
+    ImGui::Text("[ Miscellaneous ]");
+    ImGui::Indent();
+    {
+        ImGui::BeginGroup();
+        {
+            // TODO: CVAR: tickrate
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Tickrate:");
+            ImGui::SameLine();
+            ImGui::RadioButton("High (60 Hz)", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Low (20 Hz)", false);
+        }
+        ImGui::EndGroup();
+
+        ImGui::BeginGroup();
+        {
+            // TODO: CVAR: cl_updaterate.
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Client Updates:");
+            ImGui::SameLine();
+            ImGui::RadioButton("High (60 Hz)", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Low (20 Hz)", false);
+        }
+        ImGui::EndGroup();
+
+        ImGui::BeginGroup();
+        {
+            // TODO: CVAR: sv_allow_strafe_mid_air and sv_allow_strafe_mid_air_full.
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Mid-Air Strafe:");
+            ImGui::SameLine();
+            ImGui::RadioButton("Full", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Moderate", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Off", false);
+        }
+        ImGui::EndGroup();
+    } // end Misc
+    ImGui::Unindent();
+
+    ImGui::Separator();
+
+    // TODO: Cfg file to be saved.
+    if (ImGui::Button("< BACK"))
+    {
+        m_currentMenu = Menu::Main;
+    }
+    ImGui::SameLine();
+    // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
+    ImGui::Button("START >");
+
+    ImGui::Unindent();
+} // drawCreateGameMenu
+
+void proofps_dd::GUI::drawJoinGameMenu()
+{
+    ImGui::SetCursorPos(ImVec2(20, 38));
+    ImGui::Text("[  J O I N  G A M E  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Player Name:");
+    ImGui::SameLine();
+    const auto fInputBoxPosX = ImGui::GetCursorPosX();
+    ImGui::PushItemWidth(200);
+    char szPlayerName[128] = "";
+    ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
+    ImGui::PopItemWidth();
+
+    ImGui::Separator();
+
+    // TODO: to be validated for ip address format, CVAR: cl_server_ip.
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Server IP:");
+    ImGui::SameLine(fInputBoxPosX);
+    ImGui::PushItemWidth(200);
+    char szServerIP[128] = "";
+    ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP));
+    ImGui::PopItemWidth();
+
+    ImGui::Separator();
+
+    // TODO: Cfg file to be saved.
+    if (ImGui::Button("< BACK"))
+    {
+        m_currentMenu = Menu::Main;
+    }
+    ImGui::SameLine();
+    // TODO: CVAR net_server should become false. Cfg file to be saved.
+    ImGui::Button("JOIN >");
+
+    ImGui::Unindent();
+} // drawJoinGameMenu
+
+void proofps_dd::GUI::drawSettingsMenu()
+{
+    ImGui::SetCursorPos(ImVec2(20, 38));
+    ImGui::Text("[  S E T T I N G S  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    // TODO: CVAR: gfx_windowed.
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Fullscreen:");
+    ImGui::SameLine();
+    bool bFullscreen = false;
+    ImGui::Checkbox("##cbFullscreen", &bFullscreen);
+
+    // TODO: CVAR: gfx_vsync.
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("V-Sync:");
+    ImGui::SameLine();
+    bool bVSync = false;
+    ImGui::Checkbox("##cbVSync", &bVSync);
+
+    ImGui::BeginGroup();
+    {
+        // TODO: CVAR: CVAR: gfx_cam_follows_xhair
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Camera Follows:");
+        ImGui::SameLine();
+        ImGui::RadioButton("XHair and Player", false);
+        ImGui::SameLine();
+        ImGui::RadioButton("Player Only", false);
+    }
+    ImGui::EndGroup();
+
+    // TODO: CVAR: gfx_cam_tilting.
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Camera Tilting:");
+    ImGui::SameLine();
+    bool bCamTilt = false;
+    ImGui::Checkbox("##cbCamTilt", &bCamTilt);
+
+    ImGui::Separator();
+
+    // TODO: Cfg file to be saved.
+    if (ImGui::Button("< BACK"))
+    {
+        m_currentMenu = Menu::Main;
+    }
+
+    ImGui::Unindent();
+} // drawSettingsMenu
+
 void proofps_dd::GUI::drawMainMenuCb()
 {
-    /*
-        Useful Dear ImGui links:
-         - https://github.com/ocornut/imgui/tree/master/docs
-         - https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
-         - https://github.com/ocornut/imgui/wiki/Useful-Extensions
-         - Interactive online manual: https://pthom.github.io/imgui_manual_online/manual/imgui_manual.html
-         - GUI Editors:
-           - online: https://raa.is/ImStudio/
-           - https://github.com/Half-People/HImGuiEditor/tree/main
-           - https://github.com/tpecholt/imrad
-           - https://github.com/Code-Building/ImGuiBuilder
-           - https://github.com/iamclint/ImGuiDesigner
-    */
+
     /*
         There should be a CVAR for enabling/disabling the menu.
         Reg tests will disable it from command line.
     */
     //pge.getPure().getWindow().SetCursorVisible(true/false);
-
-    //bool bOpen = true;
-    //ImGui::ShowDemoWindow(&bOpen);
 
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y), ImGuiCond_FirstUseEver);
@@ -218,265 +498,25 @@ void proofps_dd::GUI::drawMainMenuCb()
     ImGui::Begin("WndMainMenu", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
     {
-        // main menu
-        //{
-        //    /*
-        //            CREATE GAME
-        //             JOIN GAME
-        //             SETTINGS
-        //               EXIT
-        //    */
-        //    constexpr float fBtnWidth = 150.f;
-        //    constexpr float fBtnHeight = 20.f;
-        //    constexpr float fBtnStartY = 100.f;
-        //    
-        //    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY));
-        //    ImGui::Button("C R E A T E  G A M E", ImVec2(fBtnWidth, fBtnHeight)); // remove size argument (ImVec2) to auto-resize
-        //    
-        //    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 30));
-        //    ImGui::Button("J O I N  G A M E", ImVec2(fBtnWidth, fBtnHeight));
-        //    
-        //    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 60));
-        //    ImGui::Button("S E T T I N G S", ImVec2(fBtnWidth, fBtnHeight));
-        //    
-        //    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 90));
-        //    ImGui::Button("E X I T", ImVec2(fBtnWidth, fBtnHeight));
-        //    
-        //    const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
-        //    ImGui::SetCursorPosX(getCenterX(sVersion));
-        //    ImGui::SetCursorPosY(fBtnStartY + 120);
-        //    ImGui::Text("%s", sVersion.c_str());
-        //} // end main menu
-
-        // create game
-        //{
-        //    ImGui::SetCursorPos(ImVec2(20, 38));
-        //    ImGui::Text("[  C R E A T E  G A M E  ]");
-        //
-        //    ImGui::Separator();
-        //    ImGui::Indent();
-        //
-        //    {
-        //        // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-        //        ImGui::AlignTextToFramePadding();
-        //        ImGui::Text("Player Name:");
-        //        ImGui::SameLine();
-        //        ImGui::PushItemWidth(200);
-        //        char szPlayerName[128] = "";
-        //        ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
-        //        ImGui::PopItemWidth();
-        //    } // end Player
-        //
-        //    ImGui::Separator();
-        //    ImGui::Text("[ Map Configuration ]");
-        //
-        //    ImGui::Indent();
-        //    {
-        //        const auto fBasePosX = ImGui::GetCursorPosX();
-        //
-        //        constexpr float fMapMoveBtnsWidth = 30;
-        //        constexpr float fMapMoveBtnsHeight = 19;
-        //        constexpr float fMapMoveBtnsVerticalDistanceFromListBoxes = 10;
-        //        constexpr float fMapMoveBtnsVerticalDistanceFromEachOther = fMapMoveBtnsHeight + 1;
-        //        constexpr float fMapListboxesWidth = 150;
-        //        constexpr int nMapListboxesHeightAsItemCount = 4;
-        //        const float fMapMoveBtnsPosX = fBasePosX + fMapListboxesWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
-        //        const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
-        //
-        //        ImGui::Text("Mapcycle:");
-        //        ImGui::SameLine(fMapsAvailListBoxX);
-        //        ImGui::Text("Available Maps:");
-        //
-        //        const auto fBasePosY = ImGui::GetCursorPosY();
-        //
-        //        // first I draw the 2 listboxes, and only after them I draw the move btns in between them
-        //        ImGui::PushItemWidth(fMapListboxesWidth);
-        //        int iActiveItemMapcycle = 0;
-        //        const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
-        //        ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
-        //       
-        //        ImGui::SameLine(fMapsAvailListBoxX);
-        //        int iActiveItemMapsAvailable = 0;
-        //        const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
-        //        ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
-        //        ImGui::PopItemWidth();
-        //        
-        //        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
-        //        ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        //
-        //        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
-        //        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        //
-        //        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
-        //        ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        //
-        //        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
-        //        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        //
-        //        // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
-        //        ImGui::AlignTextToFramePadding();
-        //        ImGui::Text("Force-Start on Map:");
-        //        ImGui::SameLine();
-        //        ImGui::PushItemWidth(150);
-        //        int iSelectMapStart = 0;
-        //        const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
-        //        ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
-        //        ImGui::PopItemWidth();
-        //        
-        //    } // end Map Config
-        //    ImGui::Unindent();
-        //
-        //    ImGui::Separator();
-        //
-        //    ImGui::Text("[ Miscellaneous ]");
-        //    ImGui::Indent();
-        //    {
-        //        ImGui::BeginGroup();
-        //        {
-        //            // TODO: CVAR: tickrate
-        //            ImGui::AlignTextToFramePadding();
-        //            ImGui::Text("Tickrate:");
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("High (60 Hz)", false);
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("Low (20 Hz)", false);
-        //        }
-        //        ImGui::EndGroup();
-        //
-        //        ImGui::BeginGroup();
-        //        {
-        //            // TODO: CVAR: cl_updaterate.
-        //            ImGui::AlignTextToFramePadding();
-        //            ImGui::Text("Client Updates:");
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("High (60 Hz)", false);
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("Low (20 Hz)", false);
-        //        }
-        //        ImGui::EndGroup();
-        //
-        //        ImGui::BeginGroup();
-        //        {
-        //            // TODO: CVAR: sv_allow_strafe_mid_air and sv_allow_strafe_mid_air_full.
-        //            ImGui::AlignTextToFramePadding();
-        //            ImGui::Text("Mid-Air Strafe:");
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("Full", false);
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("Moderate", false);
-        //            ImGui::SameLine();
-        //            ImGui::RadioButton("Off", false);
-        //        }
-        //        ImGui::EndGroup();
-        //    } // end Misc
-        //    ImGui::Unindent();
-        //
-        //    ImGui::Separator();
-        //
-        //    // TODO: Cfg file to be saved.
-        //    ImGui::Button("< BACK");
-        //    ImGui::SameLine();
-        //    // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
-        //    ImGui::Button("START >");
-        //
-        //    ImGui::Unindent();
-        //} // end create game
-
-        // join game
-        //{
-        //    ImGui::SetCursorPos(ImVec2(20, 38));
-        //    ImGui::Text("[  J O I N  G A M E  ]");
-        //
-        //    ImGui::Separator();
-        //    ImGui::Indent();
-        //
-        //    // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-        //    ImGui::AlignTextToFramePadding();
-        //    ImGui::Text("Player Name:");
-        //    ImGui::SameLine();
-        //    const auto fInputBoxPosX = ImGui::GetCursorPosX();
-        //    ImGui::PushItemWidth(200);
-        //    char szPlayerName[128] = "";
-        //    ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
-        //    ImGui::PopItemWidth();
-        //
-        //    ImGui::Separator();
-        //
-        //    // TODO: to be validated for ip address format, CVAR: cl_server_ip.
-        //    ImGui::AlignTextToFramePadding();
-        //    ImGui::Text("Server IP:");
-        //    ImGui::SameLine(fInputBoxPosX);
-        //    ImGui::PushItemWidth(200);
-        //    char szServerIP[128] = "";
-        //    ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP));
-        //    ImGui::PopItemWidth();
-        //
-        //    ImGui::Separator();
-        //
-        //    // TODO: Cfg file to be saved.
-        //    ImGui::Button("< BACK");
-        //    ImGui::SameLine();
-        //    // TODO: CVAR net_server should become false. Cfg file to be saved.
-        //    ImGui::Button("JOIN >");
-        //
-        //    ImGui::Unindent();
-        //} // end join game
-
-        // settings
+        switch (m_currentMenu)
         {
-            /*
-                Camera Target - radio group: xhair and player, player only; .
+        case Menu::CreateGame:
+            drawCreateGameMenu();
+            break;
+        case Menu::JoinGame:
+            drawJoinGameMenu();
+            break;
+        case Menu::Settings:
+            drawSettingsMenu();
+            break;
+        case Menu::Main:
+            drawMainMenu();
+            break;
+        default:
+            /* Menu::None */
+            break;
+        }
 
-                Camera Tilting - checkbox; CVAR: .
-
-                BACK - Cfg file to be saved.
-            */
-            ImGui::SetCursorPos(ImVec2(20, 38));
-            ImGui::Text("[  S E T T I N G S  ]");
-
-            ImGui::Separator();
-            ImGui::Indent();
-
-            // TODO: CVAR: gfx_windowed.
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text("Fullscreen:");
-            ImGui::SameLine();
-            bool bFullscreen = false;
-            ImGui::Checkbox("##cbFullscreen", &bFullscreen);
-
-            // TODO: CVAR: gfx_vsync.
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text("V-Sync:");
-            ImGui::SameLine();
-            bool bVSync = false;
-            ImGui::Checkbox("##cbVSync", &bVSync);
-
-            ImGui::BeginGroup();
-            {
-                // TODO: CVAR: CVAR: gfx_cam_follows_xhair
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Camera Follows:");
-                ImGui::SameLine();
-                ImGui::RadioButton("XHair and Player", false);
-                ImGui::SameLine();
-                ImGui::RadioButton("Player Only", false);
-            }
-            ImGui::EndGroup();
-
-            // TODO: CVAR: gfx_cam_tilting.
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text("Camera Tilting:");
-            ImGui::SameLine();
-            bool bCamTilt = false;
-            ImGui::Checkbox("##cbCamTilt", &bCamTilt);
-
-            ImGui::Separator();
-
-            // TODO: Cfg file to be saved.
-            ImGui::Button("< BACK");
-
-            ImGui::Unindent();
-        } // end settings
     }
     ImGui::End();
 } // drawMainMenuCb()

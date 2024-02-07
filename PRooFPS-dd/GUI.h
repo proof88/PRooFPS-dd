@@ -24,19 +24,13 @@ namespace proofps_dd
     {
     public:
 
+        static GUI& getGuiInstance(PGE& pge);   /**< Gets the singleton instance. */
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;
-
-        GUI(PGE& pge);
-        ~GUI();
-
-        GUI(const GUI&) = delete;
-        GUI& operator=(const GUI&) = delete;
-        GUI(GUI&&) = delete;
-        GUI&& operator=(GUI&&) = delete;
 
         void initialize();
         void shutdown();
@@ -53,14 +47,37 @@ namespace proofps_dd
 
     private:
 
-        PGE& m_pge;
+        enum class Menu
+        {
+            None,
+            Main,
+            CreateGame,
+            JoinGame,
+            Settings
+        };
+
+        static PGE* m_pPge;
+        static Menu m_currentMenu;
+
+        static float getCenterPosXForText(const std::string& text);
+        static void drawMainMenu();
+        static void drawCreateGameMenu();
+        static void drawJoinGameMenu();
+        static void drawSettingsMenu();
+        static void drawMainMenuCb();
+
+        // ---------------------------------------------------------------------------
 
         PureObject3D* m_pObjLoadingScreenBg;
         PureObject3D* m_pObjLoadingScreenImg;
 
-        // ---------------------------------------------------------------------------
+        GUI();
+        ~GUI();
 
-        static void drawMainMenuCb();
+        GUI(const GUI&) = delete;
+        GUI& operator=(const GUI&) = delete;
+        GUI(GUI&&) = delete;
+        GUI&& operator=(GUI&&) = delete;
 
     }; // class GUI
 
