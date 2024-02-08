@@ -162,6 +162,11 @@ void proofps_dd::GUI::shutdown()
     }
 }
 
+const proofps_dd::GUI::MenuState& proofps_dd::GUI::getMenuState() const
+{
+    return m_currentMenu;
+}
+
 void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
 {
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
@@ -203,7 +208,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 
 
 PGE* proofps_dd::GUI::m_pPge = nullptr;
-proofps_dd::GUI::Menu proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Menu::Main;
+proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
@@ -222,25 +227,25 @@ void proofps_dd::GUI::drawMainMenu()
     ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY));
     if (ImGui::Button("C R E A T E  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
     {
-        m_currentMenu = Menu::CreateGame;
+        m_currentMenu = MenuState::CreateGame;
     }
 
     ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 30));
     if (ImGui::Button("J O I N  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
     {
-        m_currentMenu = Menu::JoinGame;
+        m_currentMenu = MenuState::JoinGame;
     }
 
     ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 60));
     if (ImGui::Button("S E T T I N G S", ImVec2(fBtnWidth, fBtnHeight)))
     {
-        m_currentMenu = Menu::Settings;
+        m_currentMenu = MenuState::Settings;
     }
 
     ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 90));
     if (ImGui::Button("E X I T", ImVec2(fBtnWidth, fBtnHeight)))
     {
-        m_currentMenu = Menu::None;
+        m_currentMenu = MenuState::Exiting;
         m_pPge->getPure().getWindow().Close();
     }
 
@@ -378,11 +383,16 @@ void proofps_dd::GUI::drawCreateGameMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
-        m_currentMenu = Menu::Main;
+        m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
-    // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
-    ImGui::Button("START >");
+    
+    if (ImGui::Button("START >"))
+    {
+        // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
+        m_currentMenu = MenuState::None;
+        m_pPge->getPure().getWindow().SetCursorVisible(false);
+    }
 
     ImGui::Unindent();
 } // drawCreateGameMenu
@@ -421,11 +431,16 @@ void proofps_dd::GUI::drawJoinGameMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
-        m_currentMenu = Menu::Main;
+        m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
-    // TODO: CVAR net_server should become false. Cfg file to be saved.
-    ImGui::Button("JOIN >");
+    
+    if (ImGui::Button("JOIN >"))
+    {
+        // TODO: CVAR net_server should become false. Cfg file to be saved.
+        m_currentMenu = MenuState::None;
+        m_pPge->getPure().getWindow().SetCursorVisible(false);
+    }
 
     ImGui::Unindent();
 } // drawJoinGameMenu
@@ -476,7 +491,7 @@ void proofps_dd::GUI::drawSettingsMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
-        m_currentMenu = Menu::Main;
+        m_currentMenu = MenuState::Main;
     }
 
     ImGui::Unindent();
@@ -491,6 +506,13 @@ void proofps_dd::GUI::drawMainMenuCb()
     */
     //pge.getPure().getWindow().SetCursorVisible(true/false);
 
+    if ((m_currentMenu == MenuState::None) || (m_currentMenu == MenuState::Exiting))
+    {
+        return;
+    }
+
+    m_pPge->getPure().getWindow().SetCursorVisible(true);
+
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x, main_viewport->WorkSize.y), ImGuiCond_FirstUseEver);
@@ -500,20 +522,20 @@ void proofps_dd::GUI::drawMainMenuCb()
     {
         switch (m_currentMenu)
         {
-        case Menu::CreateGame:
+        case MenuState::CreateGame:
             drawCreateGameMenu();
             break;
-        case Menu::JoinGame:
+        case MenuState::JoinGame:
             drawJoinGameMenu();
             break;
-        case Menu::Settings:
+        case MenuState::Settings:
             drawSettingsMenu();
             break;
-        case Menu::Main:
+        case MenuState::Main:
             drawMainMenu();
             break;
         default:
-            /* Menu::None */
+            /* MenuState::None or MenuState::Exiting */
             break;
         }
 

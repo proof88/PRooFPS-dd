@@ -506,14 +506,13 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 
     m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
-    if (m_bInMenu)
-    {
-        getPure().getWindow().SetCursorVisible(true);
-    }
-    else
-    {
-        getPure().getWindow().SetCursorVisible(false);
+    // onGameRunning() is invoked by PGE in every frame no matter if we are in main menu or a game session.
+    // If we are in main menu, then basically GUI::drawMainMenuCb() is operating, since PURE is calling it back in every frame.
+    // In that case, there is not much to do here in onGameRunning().
+    // We expect the GUI to set MenuState::None as soon as the user wants to enter a game (either by creating or joining).
 
+    if (m_gui.getMenuState() == proofps_dd::GUI::MenuState::None)
+    {
         // having valid connection means that server accepted the connection and we have initialized our player;
         // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
         if (hasValidConnection())
@@ -577,8 +576,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                     getConsole().EOLn("Waiting a bit before trying to connect back (pending clients to be disconnected: %u) ... ", m_mapPlayers.size());
                 }
             }
-        }
-    }
+        } // end else validConnection
+    } // m_gui.getMenuState()
 
     updateFramesPerSecond(window);
 
@@ -790,7 +789,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
     // will be also removed from the map, leading to an empty map as expected.
     // As client, there will be a userDisconnected message for the server, for which we should delete all players.
     // So eventually all players will be also removed not only from m_mapPlayers but also from m_gameMode.
-    // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reasion is explained in hasValidConnection().
+    // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reason is explained in hasValidConnection().
 
     // we should hide all the players because actual deleting them will happen later once
     // game is processing each player disconnect, however they should not be visible from now as they would be visible

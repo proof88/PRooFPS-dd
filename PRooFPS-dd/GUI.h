@@ -24,6 +24,16 @@ namespace proofps_dd
     {
     public:
 
+        enum class MenuState
+        {
+            None,       /* Menu is not displayed (gaming) */
+            Main,
+            CreateGame,
+            JoinGame,
+            Settings,
+            Exiting     /* User requested closing the app */
+        };
+
         static GUI& getGuiInstance(PGE& pge);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
@@ -34,6 +44,8 @@ namespace proofps_dd
 
         void initialize();
         void shutdown();
+
+        const MenuState& getMenuState() const;
 
         void showLoadingScreen(
             int nProgress,
@@ -47,17 +59,8 @@ namespace proofps_dd
 
     private:
 
-        enum class Menu
-        {
-            None,
-            Main,
-            CreateGame,
-            JoinGame,
-            Settings
-        };
-
         static PGE* m_pPge;
-        static Menu m_currentMenu;
+        static MenuState m_currentMenu;
 
         static float getCenterPosXForText(const std::string& text);
         static void drawMainMenu();
