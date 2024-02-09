@@ -22,7 +22,10 @@ static const float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
 // ############################### PUBLIC ################################
 
 
-proofps_dd::Maps::Maps(PR00FsUltimateRenderingEngine& gfx) :
+proofps_dd::Maps::Maps(
+    PGEcfgProfiles& cfgProfiles,
+    PR00FsUltimateRenderingEngine& gfx) :
+    m_cfgProfiles(cfgProfiles),
     m_gfx(gfx),
     m_texRed(PGENULL),
     m_blocks(NULL),
@@ -96,6 +99,40 @@ void proofps_dd::Maps::shutdown()
         m_texRed = PGENULL;
     }
     getConsole().OOOLn("Maps::shutdown() done!");
+}
+
+std::string proofps_dd::Maps::getMapFilenameToLoad() const
+{
+    // PGEcfgProfiles allows the value of a CVAR be full of spaces (it is a valid case), which means that here we should trim
+    // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
+    {
+        // this is ridiculous, PFL still doesnt have std::string-compatible strClr() !!!
+        const std::string sOriginalMapName = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
+        char cLine[200]{};
+        strncpy_s(cLine, sizeof(cLine), sOriginalMapName.c_str(), sOriginalMapName.length());
+        PFL::strClr(cLine);
+        m_cfgProfiles.getVars()[CVAR_SV_MAP].Set(cLine);
+    }
+
+    std::string sMapToLoad;
+    if (m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString().empty())
+    {
+        sMapToLoad = mapcycleGetCurrent();
+        if (sMapToLoad.empty())
+        {
+            return ""; // error
+        }
+        else
+        {
+            getConsole().OLn("First map by mapcycle: %s", sMapToLoad.c_str());
+        }
+    }
+    else
+    {
+        sMapToLoad = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
+        getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, sMapToLoad.c_str());
+    }
+    return sMapToLoad;
 }
 
 bool proofps_dd::Maps::loaded() const

@@ -167,6 +167,12 @@ const proofps_dd::GUI::MenuState& proofps_dd::GUI::getMenuState() const
     return m_currentMenu;
 }
 
+void proofps_dd::GUI::resetMenuState()
+{
+    // TODO: if cfg allows Menu, we should go to Main, otherwise Exiting or None based on bool bExiting variable.
+    m_currentMenu = MenuState::Main;
+}
+
 void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
 {
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
@@ -391,6 +397,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
     {
         // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
         m_currentMenu = MenuState::None;
+
         m_pPge->getPure().getWindow().SetCursorVisible(false);
     }
 

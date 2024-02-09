@@ -38,7 +38,7 @@ static constexpr char* CVAR_TICKRATE = "tickrate";
 static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
 static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
 static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
-static constexpr char* CVAR_SV_MAP = "sv_map";
+
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
 static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
 static constexpr char* CVAR_SV_RECONNECT_DELAY = "sv_reconnect_delay";
@@ -109,7 +109,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
-    m_maps(getPure()),
+    m_maps(getConfigProfiles(), getPure()),
     m_nTickrate(GAME_TICKRATE_DEF),
     m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
     m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
@@ -168,7 +168,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitializing()
     return true;
 }
 
-/** 
+/**
     Loading game content here.
 */
 bool proofps_dd::PRooFPSddPGE::onGameInitialized()
@@ -264,36 +264,14 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
-        // PGEcfgProfiles allows the value of a CVAR be full of spaces (it is a valid case), which means that here we should trim
-        // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
+        m_sServerMapFilenameToLoad = m_maps.getMapFilenameToLoad();
+        if (m_sServerMapFilenameToLoad.empty())
         {
-            // this is ridiculous, PFL still doesnt have std::string-compatible strClr() !!!
-            const std::string sOriginalMapName = getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString();
-            char cLine[200]{};
-            strncpy_s(cLine, sizeof(cLine), sOriginalMapName.c_str(), sOriginalMapName.length());
-            PFL::strClr(cLine);
-            getConfigProfiles().getVars()[CVAR_SV_MAP].Set(cLine);
+            getConsole().EOLnOO("ERROR: Server is unable to select first map!");
+            PGE::showErrorDialog("Server is unable to select first map!");
+            return false;
         }
 
-        if (getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString().empty())
-        {
-            m_sServerMapFilenameToLoad = m_maps.mapcycleGetCurrent();
-            if (m_sServerMapFilenameToLoad.empty())
-            {
-                getConsole().EOLnOO("ERROR: Server is unable to select first map!");
-                PGE::showErrorDialog("Server is unable to select first map!");
-                return false;
-            }
-            else
-            {
-                getConsole().OLn("First map by mapcycle: %s", m_sServerMapFilenameToLoad.c_str());
-            }
-        }
-        else
-        {
-            m_sServerMapFilenameToLoad = getConfigProfiles().getVars()[CVAR_SV_MAP].getAsString();
-            getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, m_sServerMapFilenameToLoad.c_str());
-        }
         // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
     }
     else
@@ -867,7 +845,13 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
-        handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin);
+        if (handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin) ==
+            proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
+        {
+            disconnect();
+            m_gui.resetMenuState();
+            return;
+        }
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 

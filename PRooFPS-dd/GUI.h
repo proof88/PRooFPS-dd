@@ -46,6 +46,7 @@ namespace proofps_dd
         void shutdown();
 
         const MenuState& getMenuState() const;
+        void resetMenuState();
 
         void showLoadingScreen(
             int nProgress,

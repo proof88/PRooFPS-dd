@@ -74,7 +74,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
     proofps_dd::GameMode& gameMode,
     bool& won,
     proofps_dd::Player& player,
@@ -88,9 +88,14 @@ void proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
        in keyboard(), this is needed if only mouse() generates reason to send the pkt */
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
-    keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
-    mouse(gameMode, won, pkt, player, objXHair);
-    updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
+    const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
+        keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+    if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
+    {
+        mouse(gameMode, won, pkt, player, objXHair);
+        updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
+    }
+    return playerAppActionReq;
 }
 
 bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
@@ -403,7 +408,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 // ############################### PRIVATE ###############################
 
 
-void proofps_dd::InputHandling::keyboard(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboard(
     proofps_dd::GameMode& gameMode,
     bool& won,
     pge_network::PgePacket& pkt,
@@ -414,12 +419,12 @@ void proofps_dd::InputHandling::keyboard(
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
-        m_pge.getPure().getWindow().Close();
+        return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
     }
 
     if (gameMode.checkWinningConditions())
     {
-        return;
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressed(VK_TAB))
@@ -429,12 +434,12 @@ void proofps_dd::InputHandling::keyboard(
 
     if (m_bShowGuiDemo)
     {
-        return;
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
     if (player.getHealth() == 0)
     {
-        return;
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
     if (!won)
@@ -588,6 +593,8 @@ void proofps_dd::InputHandling::keyboard(
     {
 
     } // won
+
+    return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }
 
 bool proofps_dd::InputHandling::mouse(

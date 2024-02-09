@@ -29,13 +29,17 @@ namespace proofps_dd
     {
     public:
 
+        static constexpr char* CVAR_SV_MAP = "sv_map";
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;
 
-        Maps(PR00FsUltimateRenderingEngine& gfx);
+        Maps(
+            PGEcfgProfiles& cfgProfiles,
+            PR00FsUltimateRenderingEngine& gfx);
         virtual ~Maps();
 
         Maps(const Maps&) = delete;
@@ -46,6 +50,7 @@ namespace proofps_dd
         bool initialize();                                   /**< Initializes the map handler. */
         bool isInitialized() const;
         void shutdown();                                     /**< Shuts down the map handler. */
+        std::string getMapFilenameToLoad() const;
 
         /* Current map handling */
 
@@ -99,6 +104,7 @@ namespace proofps_dd
             '+', 'M', 'P', 'S'
         };
 
+        PGEcfgProfiles& m_cfgProfiles;
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
 

@@ -29,6 +29,12 @@ namespace proofps_dd
     {
     public:
 
+        enum PlayerAppActionRequest
+        {
+            None,
+            Exit
+        };
+
         static constexpr unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
         static constexpr unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 200;
         static constexpr unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
@@ -57,7 +63,7 @@ namespace proofps_dd
 
     protected:
 
-        void handleInputAndSendUserCmdMove(
+        PlayerAppActionRequest handleInputAndSendUserCmdMove(
             proofps_dd::GameMode& gameMode,
             bool& won,
             proofps_dd::Player& player,
@@ -94,7 +100,7 @@ namespace proofps_dd
         TPureFloat m_fLastPlayerAngleYSent;
         TPureFloat m_fLastWeaponAngleZSent;
 
-        void keyboard(
+        PlayerAppActionRequest keyboard(
             proofps_dd::GameMode& gameMode,
             bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
