@@ -90,6 +90,7 @@ void proofps_dd::Maps::shutdown()
     {
         /* Current map handling */
         unload();
+        m_sServerMapFilenameToLoad.clear();
 
         /* Mapcycle handling */
         m_mapcycle.clear();
@@ -101,7 +102,7 @@ void proofps_dd::Maps::shutdown()
     getConsole().OOOLn("Maps::shutdown() done!");
 }
 
-std::string proofps_dd::Maps::getMapFilenameToLoad() const
+const std::string& proofps_dd::Maps::serverDecideWhichMapToLoad()
 {
     // PGEcfgProfiles allows the value of a CVAR be full of spaces (it is a valid case), which means that here we should trim
     // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
@@ -114,25 +115,29 @@ std::string proofps_dd::Maps::getMapFilenameToLoad() const
         m_cfgProfiles.getVars()[CVAR_SV_MAP].Set(cLine);
     }
 
-    std::string sMapToLoad;
     if (m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString().empty())
     {
-        sMapToLoad = mapcycleGetCurrent();
-        if (sMapToLoad.empty())
+        m_sServerMapFilenameToLoad = mapcycleGetCurrent();
+        if (m_sServerMapFilenameToLoad.empty())
         {
-            return ""; // error
+            return m_sServerMapFilenameToLoad; // error
         }
         else
         {
-            getConsole().OLn("First map by mapcycle: %s", sMapToLoad.c_str());
+            getConsole().OLn("First map by mapcycle: %s", m_sServerMapFilenameToLoad.c_str());
         }
     }
     else
     {
-        sMapToLoad = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
-        getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, sMapToLoad.c_str());
+        m_sServerMapFilenameToLoad = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
+        getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, m_sServerMapFilenameToLoad.c_str());
     }
-    return sMapToLoad;
+    return m_sServerMapFilenameToLoad;
+}
+
+const std::string& proofps_dd::Maps::getWhichMapToLoad() const
+{
+    return m_sServerMapFilenameToLoad;
 }
 
 bool proofps_dd::Maps::loaded() const
@@ -156,6 +161,8 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         return false;
     }
 
+    cbDisplayProgressUpdate(0);
+
     // this wont be needed after we require unload() before consecutive load()
     proofps_dd::MapItem::ResetGlobalData();
 
@@ -177,6 +184,8 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         unload();
         return false;
     }
+
+    m_sServerMapFilenameToLoad = fname;
 
     const TPURE_ISO_TEX_FILTERING texFilterMinOriginal = m_gfx.getTextureManager().getDefaultMinFilteringMode();
     const TPURE_ISO_TEX_FILTERING texFilterMagOriginal = m_gfx.getTextureManager().getDefaultMagFilteringMode();
@@ -322,6 +331,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
 void proofps_dd::Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
+    m_sServerMapFilenameToLoad.clear();
     m_sRawName.clear();
     m_sFileName.clear();
     m_Block2Texture.clear();

@@ -45,8 +45,8 @@ protected:
 
         m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
         {
-            // no matter which test case we are in, whenever maps.load() invokes this cb, there should be a non-zero progress already
-            assertLess(0, nProgress);
+            // no matter which test case we are in, whenever maps.load() invokes this cb, there should be a non-negative progress
+            assertLequals(0, nProgress);
         };
 
         AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
@@ -56,7 +56,7 @@ protected:
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-        AddSubTest("test_map_get_map_filename_to_load", (PFNUNITSUBTEST)&MapsTest::test_map_get_map_filename_to_load);
+        AddSubTest("test_map_server_decide_which_map_to_load", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_which_map_to_load);
         AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
         AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
         AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
@@ -105,6 +105,7 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertFalse(maps.isInitialized(), "inited 1") &
             assertFalse(maps.loaded(), "loaded 1") &
+            assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 1") &
             assertTrue(maps.getFilename().empty(), "filename 1") &
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
@@ -124,6 +125,7 @@ private:
         b &= assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.isInitialized(), "inited 2") &
             assertFalse(maps.loaded(), "loaded 2") &
+            assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 2") &
             assertTrue(maps.getFilename().empty(), "filename 2") &
             assertEquals(0u, maps.width(), "width 2") &
             assertEquals(0u, maps.height(), "height 2") &
@@ -149,6 +151,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -180,6 +183,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -211,6 +215,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -242,6 +247,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename");
 
         // block and map boundaries
@@ -343,6 +349,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
+        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad 1");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 1");
 
         // block and map boundaries
@@ -389,6 +396,7 @@ private:
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getFilename().empty(), "filename 2");
+        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 2");
 
         // block and map boundaries
         b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2");
@@ -413,6 +421,7 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
+        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad 3");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 3");
 
         // block and map boundaries
@@ -466,13 +475,30 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertFalse(maps.isInitialized(), "initialized 2");
         b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle 2");
+        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
 
         return b;
     }
 
-    bool test_map_get_map_filename_to_load()
+    bool test_map_server_decide_which_map_to_load()
     {
-        return false;
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init") &
+            m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].getAsString().empty();
+
+        if (b)
+        {
+            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideWhichMapToLoad(), "server decide 1");
+            
+            maps.mapcycleNext();
+            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideWhichMapToLoad(), "server decide 2");
+
+            m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].Set("testtest.txt");
+            b &= assertEquals("testtest.txt", maps.serverDecideWhichMapToLoad(), "server decide 3");
+        }
+
+        return b;
     }
 
     bool test_map_get_random_spawnpoint()

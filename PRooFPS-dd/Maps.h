@@ -50,7 +50,8 @@ namespace proofps_dd
         bool initialize();                                   /**< Initializes the map handler. */
         bool isInitialized() const;
         void shutdown();                                     /**< Shuts down the map handler. */
-        std::string getMapFilenameToLoad() const;
+        const std::string& serverDecideWhichMapToLoad();
+        const std::string& getWhichMapToLoad() const;
 
         /* Current map handling */
 
@@ -107,6 +108,7 @@ namespace proofps_dd
         PGEcfgProfiles& m_cfgProfiles;
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
+        std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */
 
         /* Current map handling */
 

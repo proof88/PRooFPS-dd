@@ -75,7 +75,6 @@ namespace proofps_dd
         proofps_dd::GUI& m_gui;
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
-        std::string m_sServerMapFilenameToLoad;                   /**< We set this as soon as we get to know which map we should load. */
         
         /** Whenever we initiate a network connection or disconnection, we save the timestamp here.
             This is needed because then in the main game loop we can check the amount of time elapsed

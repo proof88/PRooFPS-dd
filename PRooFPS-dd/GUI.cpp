@@ -22,11 +22,12 @@
 // ############################### PUBLIC ################################
 
 
-proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge)
+proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge, proofps_dd::Maps& maps)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
     static GUI m_guiInstance;
     m_pPge = &pge;
+    m_pMaps = &maps;
     return m_guiInstance;
 }
 
@@ -35,7 +36,7 @@ const char* proofps_dd::GUI::getLoggerModuleName()
     return "GUI";
 }
 
-CConsole& proofps_dd::GUI::getConsole() const
+CConsole& proofps_dd::GUI::getConsole()
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
@@ -214,6 +215,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 
 
 PGE* proofps_dd::GUI::m_pPge = nullptr;
+proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
 
@@ -396,9 +398,16 @@ void proofps_dd::GUI::drawCreateGameMenu()
     if (ImGui::Button("START >"))
     {
         // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
-        m_currentMenu = MenuState::None;
-
-        m_pPge->getPure().getWindow().SetCursorVisible(false);
+        if (m_pMaps->serverDecideWhichMapToLoad().empty())
+        {            
+            getConsole().EOLn("ERROR: Server is unable to select first map!");
+            PGE::showErrorDialog("Server is unable to select first map!");
+        }
+        else
+        {
+            m_currentMenu = MenuState::None;
+            m_pPge->getPure().getWindow().SetCursorVisible(false);
+        }
     }
 
     ImGui::Unindent();

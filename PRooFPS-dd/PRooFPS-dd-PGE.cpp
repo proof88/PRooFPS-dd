@@ -105,7 +105,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_bInMenu(true),
-    m_gui(GUI::getGuiInstance(*this)),
+    m_gui(GUI::getGuiInstance(*this, m_maps)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
@@ -264,8 +264,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
         getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
 
-        m_sServerMapFilenameToLoad = m_maps.getMapFilenameToLoad();
-        if (m_sServerMapFilenameToLoad.empty())
+        if (m_maps.serverDecideWhichMapToLoad().empty())
         {
             getConsole().EOLnOO("ERROR: Server is unable to select first map!");
             PGE::showErrorDialog("Server is unable to select first map!");
@@ -489,6 +488,11 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     // In that case, there is not much to do here in onGameRunning().
     // We expect the GUI to set MenuState::None as soon as the user wants to enter a game (either by creating or joining).
 
+    // if we want to handle Create or Join event initiated from Main menu here, we should maintain a prevMenuState also, then
+    // the condition would look like this:
+    // if ((m_gui.getMenuState() == proofps_dd::GUI::MenuState::None) && (m_gui.getPrevMenuState() != proofps_dd::GUI::MenuState::None))
+    // This way we could decouple this logic from GUI code.
+
     if (m_gui.getMenuState() == proofps_dd::GUI::MenuState::None)
     {
         // having valid connection means that server accepted the connection and we have initialized our player;
@@ -670,7 +674,6 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     // TODO: check common parts with disconnect()
     m_mapPlayers.clear();       // Dtors of Player instances will be implicitly called
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
-    m_sServerMapFilenameToLoad.clear();
     m_maps.shutdown();
     m_gui.shutdown();
     delete m_pObjXHair;
@@ -688,7 +691,7 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 {
-    m_gui.showLoadingScreen(nProgress, m_sServerMapFilenameToLoad);
+    m_gui.showLoadingScreen(nProgress, m_maps.getWhichMapToLoad());
 }
 
 void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
@@ -783,7 +786,6 @@ void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
     }
 
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
-    m_sServerMapFilenameToLoad.clear();
     m_maps.unload();
 }
 
@@ -1392,7 +1394,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             if (m_maps.getFilename() != msg.m_szMapFilename)
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                m_cbDisplayMapLoadingProgressUpdate(0);
                 if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
@@ -1761,10 +1762,8 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // We would receive as many userDisconnected messages from the server as the number of players, however we don't receive it
     // because we also already closed the connection above.
     // But programmatically client's disconnect injects a MsgUserDisconnected pkt with server's connection handle, so the client will
-    // get informed about server's disconnect anyway in handleUserDisconnected() where it can delete all players.
+    // get informed about server's disconnect anyway in handleUserDisconnected() where it should delete all players.
 
-    m_sServerMapFilenameToLoad = msg.m_szMapFilename;
-    m_cbDisplayMapLoadingProgressUpdate(0);
     if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
@@ -1817,29 +1816,27 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         // server is processing its own birth
         if (m_mapPlayers.size() == 0)
         {
-            m_cbDisplayMapLoadingProgressUpdate(0);
-
             // server already loads the map for itself at this point
-            if (m_maps.getFilename() != m_sServerMapFilenameToLoad)
+            if (m_maps.getFilename() != m_maps.getWhichMapToLoad())
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                if (!m_maps.load(m_sServerMapFilenameToLoad.c_str(), m_cbDisplayMapLoadingProgressUpdate))
+                if (!m_maps.load(m_maps.getWhichMapToLoad().c_str(), m_cbDisplayMapLoadingProgressUpdate))
                 {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_sServerMapFilenameToLoad.c_str());
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_maps.getWhichMapToLoad().c_str());
                     assert(false);
                     return false;
                 }
             }
             else
             {
-                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_sServerMapFilenameToLoad.c_str());
+                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_maps.getWhichMapToLoad().c_str());
             }
 
             getConsole().OLn("PRooFPSddPGE::%s(): first (local) user connected and I'm server, so this is me (connHandleServerSide: %u)",
                 __func__, connHandleServerSide);
 
             pge_network::PgePacket newPktSetup;
-            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, msg.m_szIpAddress, m_sServerMapFilenameToLoad.c_str()))
+            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, msg.m_szIpAddress, m_maps.getWhichMapToLoad().c_str()))
             {
                 const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
                     m_maps.getLeftMostSpawnpoint() :

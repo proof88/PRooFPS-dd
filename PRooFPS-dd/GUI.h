@@ -17,6 +17,8 @@
 
 #include "PGE.h"
 
+#include "Maps.h"
+
 namespace proofps_dd
 {
 
@@ -34,13 +36,14 @@ namespace proofps_dd
             Exiting     /* User requested closing the app */
         };
 
-        static GUI& getGuiInstance(PGE& pge);   /**< Gets the singleton instance. */
+        static GUI& getGuiInstance(
+            PGE& pge,
+            proofps_dd::Maps& maps);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
+        static CConsole& getConsole();
 
         // ---------------------------------------------------------------------------
-
-        CConsole& getConsole() const;
 
         void initialize();
         void shutdown();
@@ -61,6 +64,7 @@ namespace proofps_dd
     private:
 
         static PGE* m_pPge;
+        static Maps* m_pMaps;
         static MenuState m_currentMenu;
 
         static float getCenterPosXForText(const std::string& text);
