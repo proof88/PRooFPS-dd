@@ -36,6 +36,8 @@ namespace proofps_dd
             Exiting     /* User requested closing the app */
         };
 
+        static constexpr char* CVAR_GUI_MAINMENU = "gui_mainmenu";
+
         static GUI& getGuiInstance(
             PGE& pge,
             proofps_dd::Maps& maps);   /**< Gets the singleton instance. */
@@ -49,7 +51,7 @@ namespace proofps_dd
         void shutdown();
 
         const MenuState& getMenuState() const;
-        void resetMenuState();
+        void resetMenuState(bool bExitingFromGameSession);
 
         void showLoadingScreen(
             int nProgress,

@@ -749,7 +749,7 @@ bool proofps_dd::PRooFPSddPGE::connect()
     return bRet;
 }
 
-void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
+void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::string& sExtraDebugText)
 {
     getPure().getUImanager().removeAllTextPermanentLegacy(); // cannot find better way to get rid of permanent texts
     const std::string sPrintText =
@@ -787,6 +787,11 @@ void proofps_dd::PRooFPSddPGE::disconnect(const std::string& sExtraDebugText)
 
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_maps.unload();
+
+    if (bExitFromGameSession)
+    {
+        m_gui.resetMenuState(bExitFromGameSession);
+    }
 }
 
 /**
@@ -850,8 +855,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
         if (handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin) ==
             proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
-            disconnect();
-            m_gui.resetMenuState();
+            disconnect(true);
             return;
         }
     } // window is active
@@ -1741,7 +1745,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
 
     // map change request may come anytime, so first we disconnect and clean up
-    disconnect("Map change: " + m_maps.getFilename() + " -> " + msg.m_szMapFilename);
+    disconnect(false, "Map change: " + m_maps.getFilename() + " -> " + msg.m_szMapFilename);
     // reason for disconnecting from the server (in case of client) or clients (in case of server) is the following:
     // - in case of server we stop listening because we are busy anyway with map loading, cannot process messages on the main thread,
     //   so even if we could turn off GNS heartbeat supervisioning we still could not receive client messages;

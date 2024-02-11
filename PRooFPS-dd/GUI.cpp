@@ -57,6 +57,8 @@ proofps_dd::GUI::~GUI()
 
 void proofps_dd::GUI::initialize()
 {
+    resetMenuState(false);
+
     m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
 
@@ -160,6 +162,8 @@ void proofps_dd::GUI::shutdown()
         delete m_pObjLoadingScreenImg;
         m_pObjLoadingScreenBg = nullptr;
         m_pObjLoadingScreenImg = nullptr;
+
+        // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
     }
 }
 
@@ -168,10 +172,31 @@ const proofps_dd::GUI::MenuState& proofps_dd::GUI::getMenuState() const
     return m_currentMenu;
 }
 
-void proofps_dd::GUI::resetMenuState()
+void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
 {
-    // TODO: if cfg allows Menu, we should go to Main, otherwise Exiting or None based on bool bExiting variable.
-    m_currentMenu = MenuState::Main;
+    if (bExitingFromGameSession)
+    {
+        if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
+        {
+            m_currentMenu = MenuState::Main;
+        }
+        else
+        {
+            m_currentMenu = MenuState::Exiting;
+            m_pPge->getPure().getWindow().Close();
+        }
+    }
+    else
+    {
+        if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
+        {
+            m_currentMenu = MenuState::Main;
+        }
+        else
+        {
+            m_currentMenu = MenuState::None;
+        }
+    }
 }
 
 void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
