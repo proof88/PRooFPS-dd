@@ -32,20 +32,8 @@ static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
 static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
-static constexpr char* CVAR_CL_NAME = "cl_name";
-
-static constexpr char* CVAR_TICKRATE = "tickrate";
-static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
-static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
-static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
-
-static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
-static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
 static constexpr char* CVAR_SV_RECONNECT_DELAY = "sv_reconnect_delay";
 static constexpr char* CVAR_CL_RECONNECT_DELAY = "cl_reconnect_delay";
-
-static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
-static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
 
 
 // ############################### PUBLIC ################################

@@ -84,4 +84,19 @@ namespace proofps_dd
     static constexpr char* GAME_AUDIO_DIR = "gamedata/audio/";
     static constexpr char* GAME_TEXTURES_DIR = "gamedata/textures/";
     static constexpr char* GAME_WEAPONS_DIR = "gamedata/weapons/";
+
+    static constexpr char* CVAR_CL_NAME = "cl_name";
+
+    static constexpr char* CVAR_TICKRATE = "tickrate";
+    static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
+    static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";
+
+    static constexpr char* CVAR_CL_SERVER_IP = "cl_server_ip";
+
+    static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
+    static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
+
+    static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
+    static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
+
 } // namespace proofps_dd

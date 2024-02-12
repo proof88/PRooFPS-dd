@@ -71,6 +71,7 @@ namespace proofps_dd
 
         static float getCenterPosXForText(const std::string& text);
         static void drawMainMenu();
+        static float drawPlayerNameInputBox();
         static void drawCreateGameMenu();
         static void drawJoinGameMenu();
         static void drawSettingsMenu();

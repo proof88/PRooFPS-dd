@@ -18,6 +18,7 @@
 #include "imgui.h"
 
 #include "Consts.h"
+#include "PRooFPS-dd-packet.h"
 
 // ############################### PUBLIC ################################
 
@@ -288,6 +289,31 @@ void proofps_dd::GUI::drawMainMenu()
     ImGui::Text("%s", sVersion.c_str());
 }
 
+float proofps_dd::GUI::drawPlayerNameInputBox()
+{
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Player Name:");
+    ImGui::SameLine();
+    const auto fInputBoxPosX = ImGui::GetCursorPosX();
+    
+    ImGui::PushItemWidth(200);
+
+    static char szPlayerName[MsgUserNameChange::nUserNameBufferLength];
+    strncpy_s(
+        szPlayerName,
+        MsgUserNameChange::nUserNameBufferLength,
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().c_str(),
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().length());
+    if (ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName)))
+    {
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].Set(szPlayerName);
+    }
+
+    ImGui::PopItemWidth();
+
+    return fInputBoxPosX;
+}
+
 void proofps_dd::GUI::drawCreateGameMenu()
 {
     ImGui::SetCursorPos(ImVec2(20, 38));
@@ -296,16 +322,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
     ImGui::Separator();
     ImGui::Indent();
 
-    {
-        // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Player Name:");
-        ImGui::SameLine();
-        ImGui::PushItemWidth(200);
-        char szPlayerName[128] = "";
-        ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
-        ImGui::PopItemWidth();
-    } // end Player
+    drawPlayerNameInputBox();
 
     ImGui::Separator();
     ImGui::Text("[ Map Configuration ]");
@@ -373,39 +390,72 @@ void proofps_dd::GUI::drawCreateGameMenu()
     {
         ImGui::BeginGroup();
         {
-            // TODO: CVAR: tickrate
+            const bool bTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() == 60u;
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Tickrate:");
             ImGui::SameLine();
-            ImGui::RadioButton("High (60 Hz)", false);
+            if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(60u);
+            }
+
             ImGui::SameLine();
-            ImGui::RadioButton("Low (20 Hz)", false);
+            if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(20u);
+            }
         }
         ImGui::EndGroup();
 
+        // TODO: we should force here the rules e.g. tickrate <= physics_rate_min
+
         ImGui::BeginGroup();
         {
-            // TODO: CVAR: cl_updaterate.
+            const bool bClUR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() == 60u;
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Client Updates:");
             ImGui::SameLine();
-            ImGui::RadioButton("High (60 Hz)", false);
+            if (ImGui::RadioButton("High (60 Hz)##clupdaterate", bClUR60Hz))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(60u);
+            }
+
             ImGui::SameLine();
-            ImGui::RadioButton("Low (20 Hz)", false);
+            if (ImGui::RadioButton("Low (20 Hz)##clupdaterate", !bClUR60Hz))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(20u);
+            }
         }
         ImGui::EndGroup();
 
         ImGui::BeginGroup();
         {
-            // TODO: CVAR: sv_allow_strafe_mid_air and sv_allow_strafe_mid_air_full.
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Mid-Air Strafe:");
             ImGui::SameLine();
-            ImGui::RadioButton("Full", false);
+            if (ImGui::RadioButton("Full##midairstrafe",
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() &&
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(true);
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(true);
+            }
+
             ImGui::SameLine();
-            ImGui::RadioButton("Moderate", false);
+            if (ImGui::RadioButton("Moderate##midairstrafe",
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() &&
+                !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(true);
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
+            }
+
             ImGui::SameLine();
-            ImGui::RadioButton("Off", false);
+            if (ImGui::RadioButton("Off##midairstrafe", !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool()))
+            {
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(false);
+                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
+            }
         }
         ImGui::EndGroup();
     } // end Misc
@@ -422,7 +472,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
     
     if (ImGui::Button("START >"))
     {
-        // TODO: When clicking on START, CVAR net_server should become true. Cfg file to be saved.
+        // TODO: Cfg file to be saved.
         if (m_pMaps->serverDecideWhichMapToLoad().empty())
         {            
             getConsole().EOLn("ERROR: Server is unable to select first map!");
@@ -430,6 +480,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
         }
         else
         {
+            m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(true);
             m_currentMenu = MenuState::None;
             m_pPge->getPure().getWindow().SetCursorVisible(false);
         }
@@ -446,25 +497,26 @@ void proofps_dd::GUI::drawJoinGameMenu()
     ImGui::Separator();
     ImGui::Indent();
 
-    // TODO: max length limited by MsgUserNameChange::nUserNameBufferLength; CVAR: cl_name.
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Player Name:");
-    ImGui::SameLine();
-    const auto fInputBoxPosX = ImGui::GetCursorPosX();
-    ImGui::PushItemWidth(200);
-    char szPlayerName[128] = "";
-    ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName));
-    ImGui::PopItemWidth();
+    const auto fInputBoxPosX = drawPlayerNameInputBox();
 
     ImGui::Separator();
 
     // TODO: to be validated for ip address format, CVAR: cl_server_ip.
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Server IP:");
+
     ImGui::SameLine(fInputBoxPosX);
+    static char szServerIP[16];
+    strncpy_s(
+        szServerIP,
+        sizeof(szServerIP),
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().c_str(),
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().length());
     ImGui::PushItemWidth(200);
-    char szServerIP[128] = "";
-    ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP));
+    if (ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP)))
+    {
+        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].Set(szServerIP);
+    }
     ImGui::PopItemWidth();
 
     ImGui::Separator();
@@ -478,7 +530,8 @@ void proofps_dd::GUI::drawJoinGameMenu()
     
     if (ImGui::Button("JOIN >"))
     {
-        // TODO: CVAR net_server should become false. Cfg file to be saved.
+        // TODO: Cfg file to be saved.
+        m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(false);
         m_currentMenu = MenuState::None;
         m_pPge->getPure().getWindow().SetCursorVisible(false);
     }
@@ -494,38 +547,50 @@ void proofps_dd::GUI::drawSettingsMenu()
     ImGui::Separator();
     ImGui::Indent();
 
-    // TODO: CVAR: gfx_windowed.
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Fullscreen:");
     ImGui::SameLine();
-    bool bFullscreen = false;
-    ImGui::Checkbox("##cbFullscreen", &bFullscreen);
+    bool bFullscreen = !m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].getAsBool();
+    if (ImGui::Checkbox("##cbFullscreen", &bFullscreen))
+    {
+        m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].Set(!bFullscreen);
+    }
 
-    // TODO: CVAR: gfx_vsync.
     ImGui::AlignTextToFramePadding();
     ImGui::Text("V-Sync:");
     ImGui::SameLine();
-    bool bVSync = false;
-    ImGui::Checkbox("##cbVSync", &bVSync);
+    bool bVSync = m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].getAsBool();
+    if (ImGui::Checkbox("##cbVSync", &bVSync))
+    {
+        m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].Set(bVSync);
+    }
 
     ImGui::BeginGroup();
     {
-        // TODO: CVAR: CVAR: gfx_cam_follows_xhair
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Camera Follows:");
         ImGui::SameLine();
-        ImGui::RadioButton("XHair and Player", false);
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("XHair and Player", m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool()))
+        {
+            m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].Set(true);
+        }
         ImGui::SameLine();
-        ImGui::RadioButton("Player Only", false);
+        if (ImGui::RadioButton("Player Only", !m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool()))
+        {
+            m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].Set(false);
+        }
     }
     ImGui::EndGroup();
 
-    // TODO: CVAR: gfx_cam_tilting.
+    bool bGfxCamTilting = m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Camera Tilting:");
     ImGui::SameLine();
-    bool bCamTilt = false;
-    ImGui::Checkbox("##cbCamTilt", &bCamTilt);
+    if (ImGui::Checkbox("##cbCamTilt", &bGfxCamTilting))
+    {
+        m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].Set(bGfxCamTilting);
+    }
 
     ImGui::Separator();
 
