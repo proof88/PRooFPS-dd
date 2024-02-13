@@ -489,6 +489,27 @@ void proofps_dd::GUI::drawCreateGameMenu()
     ImGui::Unindent();
 } // drawCreateGameMenu
 
+static int filterIPv4AddressCb(ImGuiInputTextCallbackData* data)
+{
+    if ((data->EventChar >= '0') && (data->EventChar <= '9') || (data->EventChar == '.'))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+static bool isValidIPv4(const char* IPAddress)
+{
+    // this is a low-effort validity checker, later when IPv6 will be supported I will simply use arpa/inet.h or winsock2.h and call
+    // the appropriate converter function to check for validity.
+    int a, b, c, d;
+    if (sscanf_s(IPAddress, "%d.%d.%d.%d", &a, &b, &c, &d) == 4)
+    {
+        return (a >= 0) && (b >= 0) && (c >= 0) && (d >= 0) && (a < 256) && (b < 256) && (c < 256) && (d < 256);
+    }
+    return false;
+}
+
 void proofps_dd::GUI::drawJoinGameMenu()
 {
     ImGui::SetCursorPos(ImVec2(20, 38));
@@ -501,7 +522,6 @@ void proofps_dd::GUI::drawJoinGameMenu()
 
     ImGui::Separator();
 
-    // TODO: to be validated for ip address format, CVAR: cl_server_ip.
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Server IP:");
 
@@ -513,9 +533,18 @@ void proofps_dd::GUI::drawJoinGameMenu()
         m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().c_str(),
         m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().length());
     ImGui::PushItemWidth(200);
-    if (ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP)))
+    const bool bIpAddrValid = isValidIPv4(szServerIP);
+    if (!bIpAddrValid)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+    }
+    if (ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP), ImGuiInputTextFlags_CallbackCharFilter, filterIPv4AddressCb))
     {
         m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].Set(szServerIP);
+    }
+    if (!bIpAddrValid)
+    {
+        ImGui::PopStyleColor();
     }
     ImGui::PopItemWidth();
 
