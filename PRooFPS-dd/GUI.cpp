@@ -600,10 +600,33 @@ void proofps_dd::GUI::drawSettingsMenu()
     ImGui::AlignTextToFramePadding();
     ImGui::Text("V-Sync:");
     ImGui::SameLine();
+    // TODO: VSync validation should be also moved to Config::validate(), however first the optional string argument support
+    // should be implemented for validate(), otherwise it looks bad we always validate everything and try set vsync just because any
+    // irrelevant config got changed!
+    const bool bVSyncSupported = m_pPge->getPure().getHardwareInfo().getVideo().isVSyncSupported();
+    if (!bVSyncSupported)
+    {
+        ImGui::BeginDisabled(true);
+    }
     bool bVSync = m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].getAsBool();
     if (ImGui::Checkbox("##cbVSync", &bVSync))
     {
-        m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].Set(bVSync);
+        const bool bPrevScreenLogState = getConsole().getLoggingState(m_pPge->getPure().getScreen().getLoggerModuleName());
+        getConsole().SetLoggingState(m_pPge->getPure().getScreen().getLoggerModuleName(), true);
+        const bool bSetVSyncRet = m_pPge->getPure().getScreen().setVSyncEnabled(bVSync);
+        getConsole().SetLoggingState(m_pPge->getPure().getScreen().getLoggerModuleName(), bPrevScreenLogState);
+
+        m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].Set(bSetVSyncRet);
+        if (bSetVSyncRet != bVSync)
+        {
+            getConsole().EOLn("ERROR: failed to set VSync to: %b, current state: %b!", bVSync, bSetVSyncRet);
+        }
+    }
+    if (!bVSyncSupported)
+    {
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        ImGui::Text("V-Sync is NOT supported on this hardware!");
     }
 
     ImGui::BeginGroup();
@@ -638,7 +661,9 @@ void proofps_dd::GUI::drawSettingsMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
-        m_pConfig->validate();
+        // since there is nothing in validate() relevant to this settings page, dont trigger it for now ... later I will move V-Sync
+        // validation to there too, then it will make sense to invoke it here!
+        //m_pConfig->validate();
         m_currentMenu = MenuState::Main;
     }
 
