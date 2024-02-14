@@ -44,11 +44,15 @@ CConsole& proofps_dd::Config::getConsole()
 
 void proofps_dd::Config::validate()
 {
+    // TODO: add an optional string argument containing the CVAR name, in that case only that CVAR and its dependers will be validated!
+
     // TODO: too much validation here, validation probably should be done by CVARS themselves.
     // Update this code after implementing: https://github.com/proof88/PRooFPS-dd/issues/251 .
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+    getConsole().OLnOI("Config validation ...");
 
     if (!m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
     {
@@ -161,6 +165,8 @@ void proofps_dd::Config::validate()
     
     m_bCamFollowsXHair = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
+
+    getConsole().OOOLn("Config validation finished!");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
 } // initialize()

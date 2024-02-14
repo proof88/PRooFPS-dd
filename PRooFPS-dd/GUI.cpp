@@ -379,21 +379,25 @@ void proofps_dd::GUI::drawCreateGameMenu()
     ImGui::Text("[ Miscellaneous ]");
     ImGui::Indent();
     {
+        bool bTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() == 60u;
         ImGui::BeginGroup();
         {
-            const bool bTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() == 60u;
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Tickrate:");
             ImGui::SameLine();
             if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
             {
                 m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(60u);
+                bTR60Hz = false;
+                m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
             {
                 m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(20u);
+                bTR60Hz = false;
+                m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }
         }
         ImGui::EndGroup();
@@ -406,15 +410,28 @@ void proofps_dd::GUI::drawCreateGameMenu()
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Client Updates:");
             ImGui::SameLine();
+            // this is configuration logic here forced on the GUI, I dont know how I could avoid this special disabling/enabling behavior here,
+            // but it is NOT mandatory since validate() forces all values to be correct, causing proper display of the radiobuttons too, just
+            // I want to disable the invalid option too!
+            if (!bTR60Hz)
+            {
+                ImGui::BeginDisabled(true);
+            }
             if (ImGui::RadioButton("High (60 Hz)##clupdaterate", bClUR60Hz))
             {
                 m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(60u);
+                m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
+            }
+            if (!bTR60Hz)
+            {
+                ImGui::EndDisabled();
             }
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Low (20 Hz)##clupdaterate", !bClUR60Hz))
             {
                 m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(20u);
+                m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
             }
         }
         ImGui::EndGroup();
