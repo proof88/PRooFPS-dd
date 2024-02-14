@@ -32,9 +32,6 @@ static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
 static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
-static constexpr char* CVAR_SV_RECONNECT_DELAY = "sv_reconnect_delay";
-static constexpr char* CVAR_CL_RECONNECT_DELAY = "cl_reconnect_delay";
-
 
 // ############################### PUBLIC ################################
 
@@ -92,17 +89,11 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_mapPlayers,
         m_maps,
         m_sounds),
-    m_bInMenu(true),
-    m_gui(GUI::getGuiInstance(*this, m_maps)),
+    m_config(Config::getConfigInstance(*this, m_maps)),
+    m_gui(GUI::getGuiInstance(*this, m_config, m_maps)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
-    m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
     m_maps(getConfigProfiles(), getPure()),
-    m_nTickrate(GAME_TICKRATE_DEF),
-    m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
-    m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
-    m_bCamFollowsXHair(true),
-    m_bCamTilting(true),
     m_fps(GAME_MAXFPS),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
@@ -287,108 +278,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
     }
 
-    // TODO: too much validation here, validation probably should be done by CVARS themselves.
-    // Update this code after implementing: https://github.com/proof88/PRooFPS-dd/issues/251 .
-    if (!getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
-    {
-        if ((getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() >= GAME_TICKRATE_MIN) &&
-            (getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() <= getGameRunningFrequency()))
-        {
-            m_nTickrate = getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
-            getConsole().OLn("Tickrate from config: %u Hz", m_nTickrate);
-        }
-        else
-        {
-            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing default: %u Hz",
-                getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
-                m_nTickrate);
-        }
-    }
-    else
-    {
-        getConsole().OLn("Missing Tickrate in config, forcing default: %u Hz", m_nTickrate);
-    }
-
-    if (!getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().empty())
-    {
-        if ((getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() >= m_nTickrate) &&
-            (getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() <= GAME_PHYSICS_RATE_MIN_MAX) &&
-            /* Physics update distribution in time must be constant/even if we do it more frequently than tickrate. */
-            (getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt() % m_nTickrate == 0u))
-        {
-            m_nPhysicsRateMin = getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsUInt();
-            getConsole().OLn("Min. physics rate from config: %u Hz", m_nPhysicsRateMin);
-        }
-        else
-        {
-            m_nPhysicsRateMin = m_nTickrate;
-            getConsole().EOLn("ERROR: Invalid Min. physics rate in config: %s, forcing tickrate: %u Hz",
-                getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().c_str(),
-                m_nTickrate);
-        }
-    }
-    else
-    {
-        getConsole().OLn("Missing Min. physics rate in config, forcing default: %u Hz", m_nPhysicsRateMin);
-    }
-
-    if (!getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().empty())
-    {
-        if ((getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsInt() >= GAME_CL_UPDATERATE_MIN) &&
-            (getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() <= m_nTickrate) &&
-            /* Clients should receive UPDATED physics results evenly distributed in time. */
-            (m_nTickrate % getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() == 0u))
-        {
-            m_nClientUpdateRate = getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt();
-            getConsole().OLn("Client update rate from config: %u Hz", m_nClientUpdateRate);
-        }
-        else
-        {
-            m_nClientUpdateRate = m_nTickrate;
-            getConsole().EOLn("ERROR: Invalid Client update rate in config: %s, forcing tickrate: %u Hz",
-                getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().c_str(),
-                m_nClientUpdateRate);
-        }
-    }
-    else
-    {
-        getConsole().OLn("Missing Client update rate in config, forcing default: %u Hz", m_nClientUpdateRate);
-    }
-
-    const char* const szCVarReconnectDelay = getNetwork().isServer() ? CVAR_SV_RECONNECT_DELAY : CVAR_CL_RECONNECT_DELAY;
-
-    if (!getConfigProfiles().getVars()[szCVarReconnectDelay].getAsString().empty())
-    {
-        if (getConfigProfiles().getVars()[szCVarReconnectDelay].getAsInt() >= 0)
-        {
-            m_nSecondsReconnectDelay = getConfigProfiles().getVars()[szCVarReconnectDelay].getAsUInt();
-            getConsole().OLn("%s from config: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
-        }
-        else
-        {
-            getConsole().EOLn("ERROR: Invalid %s in config: %s, forcing: %u seconds",
-                szCVarReconnectDelay, getConfigProfiles().getVars()[szCVarReconnectDelay].getAsString().c_str(),
-                m_nSecondsReconnectDelay);
-        }
-    }
-    else
-    {
-        getConsole().OLn("Missing %s, forcing default: %u seconds", szCVarReconnectDelay, m_nSecondsReconnectDelay);
-    }
-
-    serverSetAllowStrafeMidAir( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() );
-    
-    if (getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() &&
-        !getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool())
-    {
-        getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
-        getConsole().EOLn("ERROR: %s cannot be true when %s is false, forcing false!",
-            CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL, CVAR_SV_ALLOW_STRAFE_MID_AIR);
-    }
-    serverSetAllowStrafeMidAirFull( getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool() );
-
-    m_bCamFollowsXHair = getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
-    m_bCamTilting = getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
+    m_config.validate();
 
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
@@ -489,11 +379,18 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         {
             if (getNetwork().isServer())
             {
+                // TODO: very bad: physics stuff should not be set every frame, it should be done in config.validate(), however
+                // in that case Config would need the Physics definition which overall leads to circular including each other,
+                // leading to GameMode.cpp unable to compile.
+                // 1 way of fixing this would be to implement the prevMenuState stuff explained a few lines above, so that
+                // the main loop itself would be able to detect exiting from the menu and invoke stuff only once!
+                serverSetAllowStrafeMidAir(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool());
+                serverSetAllowStrafeMidAirFull(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool());
                 serverUpdateWeapons(*m_gameMode);
             }
 
             // 1 TICK START
-            static const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_nTickrate);
+            const auto DurationSimulationStepMicrosecsPerTick = std::chrono::microseconds((1000 * 1000) / m_config.getTickRate());
             const auto timeNow = std::chrono::steady_clock::now();
             if (m_timeSimulation.time_since_epoch().count() == 0)
             {
@@ -522,7 +419,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             // we also need to wait for m_mapPlayers to become empty, it is important for server otherwise it will fail in handleUserConnected();
             // it might take a while to bring down all clients one-by-one and let m_mapPlayers be empty, so we also need to check that here!
             if (m_mapPlayers.empty() &&
-                (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_nSecondsReconnectDelay))
+                (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_config.getReconnectDelaySeconds()))
             {
                 if (connect())
                 {
@@ -794,17 +691,24 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
     * If executed rarely i.e. with very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
     * To solve this, we might run multiple physics iterations (nPhysicsIterationsPerTick) so movements are
     * calculated in smaller steps, resulting in more precise results.
+    * However, it is highly recommended to keep tickrate high, because even though input is sampled at framerate, the
+    * sampled input for player movement is evaluated per tick, which with a low tickrate and high physics rate combo
+    * leads to less precise player movement. Considering a quick player able to hold key for strafing for only 18 ms,
+    * we need at least ~55 Hz fine-grade tickrate to make sure both the keypress and key up events are evaluated
+    * precisely by the ticks and not treated as longer strafe by longer ticks caused by lower tickrate.
+    * I think the ideal is 60 Hz tickrate with 60 Hz minPhysicsRate, where the latter could be changed to higher only
+    * if it is really required.
     */
-    static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
+    const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     if (!m_gameMode->checkWinningConditions())
     {
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-            serverGravity(*m_pObjXHair, m_nPhysicsRateMin);
-            serverPlayerCollisionWithWalls(m_bWon, m_nPhysicsRateMin);
+            serverGravity(*m_pObjXHair, m_config.getPhysicsRate());
+            serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_nPhysicsRateMin);
+            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate());
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
         }  // for iPhyIter
@@ -823,10 +727,10 @@ void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
     * This function is executed every tick.
     * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopServerOnlyOneTick(). 
     */
-    static const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_nPhysicsRateMin / m_nTickrate);
+    const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
-        clientUpdateBullets(m_nPhysicsRateMin);
+        clientUpdateBullets(m_config.getPhysicsRate());
     }
 }
 
@@ -840,7 +744,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
-        if (handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_nTickrate, m_nClientUpdateRate, m_nPhysicsRateMin) ==
+        if (handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
             proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -849,7 +753,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(player, m_bCamFollowsXHair, m_bCamTilting);
+    CameraMovement(player, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting());
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -891,15 +795,15 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
         if (getNetwork().isServer())
         {
             str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION <<
-                " Server :: Tickrate : " << m_nTickrate <<
-                " Hz :: MinPhyRate : " << m_nPhysicsRateMin <<
-                " Hz :: ClUpdRate : " << m_nClientUpdateRate <<
+                " Server :: Tickrate : " << m_config.getTickRate() <<
+                " Hz :: MinPhyRate : " << m_config.getPhysicsRate() <<
+                " Hz :: ClUpdRate : " << m_config.getClientUpdateRate() <<
                 " Hz :: FPS : " << ssFps.str();
         }
         else
         {
             str << proofps_dd::GAME_NAME << " " << proofps_dd::GAME_VERSION <<
-                " Client :: Tickrate : " << m_nTickrate <<
+                " Client :: Tickrate : " << m_config.getTickRate() <<
                 " Hz :: FPS : " << ssFps.str();
         }
         window.SetCaption(str.str());
@@ -1042,7 +946,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    static const unsigned int nSendClientUpdatesInEveryNthTick = m_nTickrate / m_nClientUpdateRate;
+    const unsigned int nSendClientUpdatesInEveryNthTick = m_config.getTickRate() / m_config.getClientUpdateRate();
     static unsigned int nSendClientUpdatesCntr = nSendClientUpdatesInEveryNthTick;
     const bool bSendUserUpdates = (nSendClientUpdatesCntr == nSendClientUpdatesInEveryNthTick);
 

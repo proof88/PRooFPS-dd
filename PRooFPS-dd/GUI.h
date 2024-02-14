@@ -17,6 +17,7 @@
 
 #include "PGE.h"
 
+#include "Config.h"
 #include "Maps.h"
 
 namespace proofps_dd
@@ -40,6 +41,7 @@ namespace proofps_dd
 
         static GUI& getGuiInstance(
             PGE& pge,
+            proofps_dd::Config& config,
             proofps_dd::Maps& maps);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
@@ -66,6 +68,7 @@ namespace proofps_dd
     private:
 
         static PGE* m_pPge;
+        static Config* m_pConfig;
         static Maps* m_pMaps;
         static MenuState m_currentMenu;
 

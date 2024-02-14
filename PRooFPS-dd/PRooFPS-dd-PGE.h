@@ -15,6 +15,7 @@
 #include "PGE.h"
 #include "Pure/include/external/Object3D/PureObject3DManager.h"
 
+#include "Config.h"
 #include "Consts.h"
 #include "Durations.h"
 #include "GameMode.h"
@@ -32,7 +33,9 @@ namespace proofps_dd
 {
 
     /**
-        The customized game engine class. This handles the game logic. Singleton.
+        The customized game engine class.
+        This handles the game logic.
+        Singleton.
     */
     class PRooFPSddPGE final :
         public PGE,
@@ -70,8 +73,7 @@ namespace proofps_dd
 
     private:
 
-        bool m_bInMenu;
-
+        proofps_dd::Config& m_config;
         proofps_dd::GUI& m_gui;
         proofps_dd::GameMode* m_gameMode;
         proofps_dd::DeathMatchMode* m_deathMatchMode;
@@ -81,17 +83,11 @@ namespace proofps_dd
             and then try reconnect automatically after a specific time. */
         std::chrono::time_point<std::chrono::steady_clock> m_timeConnectionStateChangeInitiated;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastPrintWaitConnection;
-        unsigned int m_nSecondsReconnectDelay;
 
         Maps m_maps;
         std::function<void(int)> m_cbDisplayMapLoadingProgressUpdate;
 
         std::chrono::time_point<std::chrono::steady_clock> m_timeSimulation;          /**< For stepping the time ahead in 1 single tick. */
-        unsigned int m_nTickrate;
-        unsigned int m_nPhysicsRateMin;
-        unsigned int m_nClientUpdateRate;
-        bool m_bCamFollowsXHair;
-        bool m_bCamTilting;
 
         float m_fps;
         unsigned int m_fps_counter;

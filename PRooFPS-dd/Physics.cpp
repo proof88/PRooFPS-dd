@@ -146,6 +146,16 @@ bool proofps_dd::Physics::Colliding3(
     );
 }
 
+void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
+{
+    m_bAllowStrafeMidAir = bAllow;
+}
+
+void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
+{
+    m_bAllowStrafeMidAirFull = bAllow;
+}
+
 void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate)
 {   
     /* Although I tried to make calculations to have same result with different tickrate, the
@@ -473,16 +483,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end XPos changed
     } // end for player
-}
-
-void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
-{
-    m_bAllowStrafeMidAir = bAllow;
-}
-
-void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
-{
-    m_bAllowStrafeMidAirFull = bAllow;
 }
 
 

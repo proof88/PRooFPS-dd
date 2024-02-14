@@ -23,11 +23,15 @@
 // ############################### PUBLIC ################################
 
 
-proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge, proofps_dd::Maps& maps)
+proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge, proofps_dd::Config& config, proofps_dd::Maps& maps)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
+    // Note that the following should not be touched here as they are not fully constructed when we are here:
+    // maps, pge
+    // But they can be used in other functions.
     static GUI m_guiInstance;
     m_pPge = &pge;
+    m_pConfig = &config;
     m_pMaps = &maps;
     return m_guiInstance;
 }
@@ -40,20 +44,6 @@ const char* proofps_dd::GUI::getLoggerModuleName()
 CConsole& proofps_dd::GUI::getConsole()
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
-}
-
-proofps_dd::GUI::GUI() :
-    m_pObjLoadingScreenBg(nullptr),
-    m_pObjLoadingScreenImg(nullptr)
-{
-    // note that the following should not be touched here as they are not fully constructed when we are here:
-    // pge
-    // But they can be used in other functions.
-}
-
-proofps_dd::GUI::~GUI()
-{
-    shutdown();
 }
 
 void proofps_dd::GUI::initialize()
@@ -241,6 +231,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 
 
 PGE* proofps_dd::GUI::m_pPge = nullptr;
+proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
@@ -466,6 +457,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
+        m_pConfig->validate();
         m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
@@ -473,6 +465,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
     if (ImGui::Button("START >"))
     {
         // TODO: Cfg file to be saved.
+        m_pConfig->validate();
         if (m_pMaps->serverDecideWhichMapToLoad().empty())
         {            
             getConsole().EOLn("ERROR: Server is unable to select first map!");
@@ -553,6 +546,7 @@ void proofps_dd::GUI::drawJoinGameMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
+        m_pConfig->validate();
         m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
@@ -560,6 +554,7 @@ void proofps_dd::GUI::drawJoinGameMenu()
     if (ImGui::Button("JOIN >"))
     {
         // TODO: Cfg file to be saved.
+        m_pConfig->validate();
         m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(false);
         m_currentMenu = MenuState::None;
         m_pPge->getPure().getWindow().SetCursorVisible(false);
@@ -626,6 +621,7 @@ void proofps_dd::GUI::drawSettingsMenu()
     // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
+        m_pConfig->validate();
         m_currentMenu = MenuState::Main;
     }
 
@@ -677,3 +673,15 @@ void proofps_dd::GUI::drawMainMenuCb()
     }
     ImGui::End();
 } // drawMainMenuCb()
+
+proofps_dd::GUI::GUI() :
+    m_pObjLoadingScreenBg(nullptr),
+    m_pObjLoadingScreenImg(nullptr)
+{
+
+}
+
+proofps_dd::GUI::~GUI()
+{
+    shutdown();
+}
