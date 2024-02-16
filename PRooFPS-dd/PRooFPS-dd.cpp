@@ -80,43 +80,49 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
 {
     proofps_dd::PRooFPSddPGE* const gameEngine = proofps_dd::PRooFPSddPGE::createAndGetPRooFPSddPGEinstance();
     
-    // Initializing the game engine.
-    int nResult = gameEngine->initializeGame(lpCmdLine);
-    
-    switch ( nResult )
-    {
-    case 0:
-    {   // Success, running the game.
-        nResult = gameEngine->runGame();  // <<< << << <<  <  -  <  -  <  -  -  -  HERE THE GAME RUNS! O.o 
+    int nResult = 0;
+    bool bRestartGame = false;
 
-        // Destroying the game engine.
-        nResult = gameEngine->destroyGame();
-        switch ( nResult )
+    do
+    {
+        // Initializing the game engine.
+        nResult = gameEngine->initializeGame(lpCmdLine);
+
+        switch (nResult)
         {
-        case 0: // Successful stop.
-            break;
-        case 1: // Error during GFX engine stop.
-            PGE::showErrorDialog( PGE_MSG_ERR_EXIT_GFX ); break;
-        case 2: // Error during SFX engine stop.
-            PGE::showErrorDialog( PGE_MSG_ERR_EXIT_SFX ); break;
-        case 3: // Error during NET engine stop.
-            PGE::showErrorDialog( PGE_MSG_ERR_EXIT_NET ); break;
+        case 0:
+        {   // Success, running the game.
+            bRestartGame = (gameEngine->runGame() == 1);
+
+            // Destroying the game engine.
+            nResult = gameEngine->destroyGame();
+            switch (nResult)
+            {
+            case 0: // Successful stop.
+                break;
+            case 1: // Error during GFX engine stop.
+                PGE::showErrorDialog(PGE_MSG_ERR_EXIT_GFX); break;
+            case 2: // Error during SFX engine stop.
+                PGE::showErrorDialog(PGE_MSG_ERR_EXIT_SFX); break;
+            case 3: // Error during NET engine stop.
+                PGE::showErrorDialog(PGE_MSG_ERR_EXIT_NET); break;
+            default:
+                PGE::showErrorDialog((std::string("General PGE destroy error, code ") + std::to_string(nResult)).c_str());
+            } // switch destroy
+        }
+        break;
+
+        // An error occured during initialization.
+        case 1: // The GFX engine failed.
+            PGE::showErrorDialog(PGE_MSG_ERR_INIT_GFX); break;
+        case 2: // The SFX engine failed.
+            PGE::showErrorDialog(PGE_MSG_ERR_INIT_SFX); break;
+        case 3: // The NET engine failed.
+            PGE::showErrorDialog(PGE_MSG_ERR_INIT_NET); break;
         default:
-            PGE::showErrorDialog((std::string("General PGE destroy error, code ") + std::to_string(nResult)).c_str());
-        } // switch destroy
-    }
-    break;
-    
-    // An error occured during initialization.
-    case 1: // The GFX engine failed.
-        PGE::showErrorDialog( PGE_MSG_ERR_INIT_GFX ); break;
-    case 2: // The SFX engine failed.
-        PGE::showErrorDialog( PGE_MSG_ERR_INIT_SFX ); break;
-    case 3: // The NET engine failed.
-        PGE::showErrorDialog( PGE_MSG_ERR_INIT_NET ); break;
-    default:
-        PGE::showErrorDialog((std::string("General PGE initialization error, code ") + std::to_string(nResult)).c_str());
-    } // switch initialize
+            PGE::showErrorDialog((std::string("General PGE initialization error, code ") + std::to_string(nResult)).c_str());
+        } // switch initialize
+    } while (bRestartGame);
 
     return nResult;
 } // WinMain()
