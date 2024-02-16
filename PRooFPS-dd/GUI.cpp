@@ -120,7 +120,7 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
-    style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
+    style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
 
     m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
         m_pPge->getPure().getCamera().getViewport().size.width,
@@ -594,7 +594,37 @@ void proofps_dd::GUI::drawSettingsMenu()
     bool bFullscreen = !m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].getAsBool();
     if (ImGui::Checkbox("##cbFullscreen", &bFullscreen))
     {
+        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox based on this
         m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].Set(!bFullscreen);
+
+        ImGui::OpenPopup("Apply Setting");
+    }
+
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("Apply Setting", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("The game will restart now to apply the new configuration.");
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            // TODO: dont forget to save the config file, maybe it will be caused anyway at shutdown ...
+            m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game
+            m_currentMenu = MenuState::Exiting;
+            m_pPge->getPure().getWindow().Close();
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            // flip the config that we proactively flipped earlier in checkbox handler above
+            m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].Set(bFullscreen);
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
     }
 
     ImGui::AlignTextToFramePadding();
