@@ -402,8 +402,6 @@ void proofps_dd::GUI::drawCreateGameMenu()
         }
         ImGui::EndGroup();
 
-        // TODO: we should force here the rules e.g. tickrate <= physics_rate_min
-
         ImGui::BeginGroup();
         {
             const bool bClUR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() == 60u;
@@ -471,17 +469,19 @@ void proofps_dd::GUI::drawCreateGameMenu()
 
     ImGui::Separator();
 
-    // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
         m_pConfig->validate();
+        if (!m_pPge->getConfigProfiles().writeConfiguration())
+        {
+            getConsole().EOLn("ERROR: failed to save current config profile!");
+        }
         m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
     
     if (ImGui::Button("START >"))
     {
-        // TODO: Cfg file to be saved.
         m_pConfig->validate();
         if (m_pMaps->serverDecideWhichMapToLoad().empty())
         {            
@@ -491,6 +491,14 @@ void proofps_dd::GUI::drawCreateGameMenu()
         else
         {
             m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(true);
+            if (!m_pPge->getConfigProfiles().writeConfiguration())
+            {
+                getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
+            if (!m_pPge->getNetwork().isServer() && !m_pPge->getNetwork().reinitialize())
+            {
+                getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from client to server mode!");
+            }
             m_currentMenu = MenuState::None;
             m_pPge->getPure().getWindow().SetCursorVisible(false);
         }
@@ -560,21 +568,34 @@ void proofps_dd::GUI::drawJoinGameMenu()
 
     ImGui::Separator();
 
-    // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
         m_pConfig->validate();
+        if (bIpAddrValid && !m_pPge->getConfigProfiles().writeConfiguration())
+        {
+            getConsole().EOLn("ERROR: failed to save current config profile!");
+        }
         m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
     
     if (ImGui::Button("JOIN >"))
     {
-        // TODO: Cfg file to be saved.
-        m_pConfig->validate();
-        m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(false);
-        m_currentMenu = MenuState::None;
-        m_pPge->getPure().getWindow().SetCursorVisible(false);
+        if (bIpAddrValid)
+        {
+            m_pConfig->validate();
+            m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(false);
+            if (!m_pPge->getConfigProfiles().writeConfiguration())
+            {
+                getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
+            if (m_pPge->getNetwork().isServer() && !m_pPge->getNetwork().reinitialize())
+            {
+                getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from server to client mode!");
+            }
+            m_currentMenu = MenuState::None;
+            m_pPge->getPure().getWindow().SetCursorVisible(false);
+        }
     }
 
     ImGui::Unindent();
@@ -608,7 +629,11 @@ void proofps_dd::GUI::drawSettingsMenu()
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
         {
-            // TODO: dont forget to save the config file, maybe it will be caused anyway at shutdown ...
+            getConsole().OLn("Initiating game restart to apply new settings ...");
+            if (!m_pPge->getConfigProfiles().writeConfiguration())
+            {
+                getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
             m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game
             m_currentMenu = MenuState::Exiting;
             m_pPge->getPure().getWindow().Close();
@@ -688,12 +713,15 @@ void proofps_dd::GUI::drawSettingsMenu()
 
     ImGui::Separator();
 
-    // TODO: Cfg file to be saved.
     if (ImGui::Button("< BACK"))
     {
         // since there is nothing in validate() relevant to this settings page, dont trigger it for now ... later I will move V-Sync
         // validation to there too, then it will make sense to invoke it here!
         //m_pConfig->validate();
+        if (!m_pPge->getConfigProfiles().writeConfiguration())
+        {
+            getConsole().EOLn("ERROR: failed to save current config profile!");
+        }
         m_currentMenu = MenuState::Main;
     }
 
