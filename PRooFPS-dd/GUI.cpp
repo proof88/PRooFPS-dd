@@ -18,6 +18,7 @@
 #include "imgui.h"
 
 #include "Consts.h"
+#include "Maps.h"
 #include "PRooFPS-dd-packet.h"
 
 // ############################### PUBLIC ################################
@@ -243,6 +244,22 @@ float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
 {
+    // 1st technique: this will add tooltip to the GUI control itself; invoke it after you draw the specific control!
+    //if (ImGui::IsItemHovered())
+    //{
+    //    if (sHint.empty())
+    //    {
+    //        sHint += cvar.getShortHint() + '\n' + '\n';
+    //        for (const auto& sLongHintLine : cvar.getLongHint())
+    //        {
+    //            sHint += sLongHintLine + '\n';
+    //        }
+    //    }
+    //    ImGui::SetTooltip("%s", sHint.c_str());
+    //}
+
+    // 2nd technique: this will add a grey (?) in front of the GUI control
+    ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered())
     {
         if (sHint.empty())
@@ -255,6 +272,7 @@ void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariab
         }
         ImGui::SetTooltip("%s", sHint.c_str());
     }
+    ImGui::SameLine();
 }
 
 void proofps_dd::GUI::drawMainMenu()
@@ -378,8 +396,13 @@ void proofps_dd::GUI::drawCreateGameMenu()
         ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
         // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
+        PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
+
         ImGui::AlignTextToFramePadding();
+        static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvMap, cvarSvMap);
         ImGui::Text("Force-Start on Map:");
+
         ImGui::SameLine();
         ImGui::PushItemWidth(150);
         int iSelectMapStart = 0;
@@ -395,19 +418,20 @@ void proofps_dd::GUI::drawCreateGameMenu()
     ImGui::Text("[ Miscellaneous ]");
     ImGui::Indent();
     {
-        PGEcfgVariable& cvarTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
-        bool bTR60Hz = cvarTR60Hz.getAsUInt() == 60u;
+        PGEcfgVariable& cvarTickrate = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
+        bool bTR60Hz = cvarTickrate.getAsUInt() == 60u;
+
         ImGui::BeginGroup();
         {
             ImGui::AlignTextToFramePadding();
+            static std::string sHintTickrate; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintTickrate, cvarTickrate);
             ImGui::Text("Tickrate:");
-            static std::string sHint; // static so it is built up by addHintToItemByCVar() only once
-            addHintToItemByCVar(sHint, cvarTR60Hz);
             
             ImGui::SameLine();
             if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
             {
-                cvarTR60Hz.Set(60u);
+                cvarTickrate.Set(60u);
                 bTR60Hz = false;
                 m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }
@@ -415,7 +439,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
             ImGui::SameLine();
             if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
             {
-                cvarTR60Hz.Set(20u);
+                cvarTickrate.Set(20u);
                 bTR60Hz = false;
                 m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }
@@ -424,9 +448,14 @@ void proofps_dd::GUI::drawCreateGameMenu()
 
         ImGui::BeginGroup();
         {
-            const bool bClUR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsUInt() == 60u;
+            PGEcfgVariable& cvarClientUpdateRate = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE];
+            const bool bClUR60Hz = cvarClientUpdateRate.getAsUInt() == 60u;
+
             ImGui::AlignTextToFramePadding();
+            static std::string sHintClientUpdateRate; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintClientUpdateRate, cvarClientUpdateRate);
             ImGui::Text("Client Updates:");
+
             ImGui::SameLine();
             // this is configuration logic here forced on the GUI, I dont know how I could avoid this special disabling/enabling behavior here,
             // but it is NOT mandatory since validate() forces all values to be correct, causing proper display of the radiobuttons too, just
@@ -437,7 +466,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
             }
             if (ImGui::RadioButton("High (60 Hz)##clupdaterate", bClUR60Hz))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(60u);
+                cvarClientUpdateRate.Set(60u);
                 m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
             }
             if (!bTR60Hz)
@@ -448,7 +477,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
             ImGui::SameLine();
             if (ImGui::RadioButton("Low (20 Hz)##clupdaterate", !bClUR60Hz))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(20u);
+                cvarClientUpdateRate.Set(20u);
                 m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
             }
         }
@@ -456,30 +485,35 @@ void proofps_dd::GUI::drawCreateGameMenu()
 
         ImGui::BeginGroup();
         {
+            PGEcfgVariable& cvarSvAllowStrafeMidAir = m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR];
+
             ImGui::AlignTextToFramePadding();
+            static std::string sHintMidAirStrafe; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintMidAirStrafe, cvarSvAllowStrafeMidAir);
             ImGui::Text("Mid-Air Strafe:");
+
             ImGui::SameLine();
             if (ImGui::RadioButton("Full##midairstrafe",
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() &&
+                cvarSvAllowStrafeMidAir.getAsBool() &&
                 m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(true);
+                cvarSvAllowStrafeMidAir.Set(true);
                 m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(true);
             }
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Moderate##midairstrafe",
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool() &&
+                cvarSvAllowStrafeMidAir.getAsBool() &&
                 !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(true);
+                cvarSvAllowStrafeMidAir.Set(true);
                 m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
             }
 
             ImGui::SameLine();
-            if (ImGui::RadioButton("Off##midairstrafe", !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool()))
+            if (ImGui::RadioButton("Off##midairstrafe", !cvarSvAllowStrafeMidAir.getAsBool()))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].Set(false);
+                cvarSvAllowStrafeMidAir.Set(false);
                 m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
             }
         }
@@ -672,7 +706,10 @@ void proofps_dd::GUI::drawSettingsMenu()
         ImGui::EndPopup();
     }
 
+    PGEcfgVariable& cvarGfxVSync = m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC];
     ImGui::AlignTextToFramePadding();
+    static std::string sHintGfxVSync; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGfxVSync, cvarGfxVSync);
     ImGui::Text("V-Sync:");
     ImGui::SameLine();
     // TODO: VSync validation should be also moved to Config::validate(), however first the optional string argument support
@@ -683,7 +720,7 @@ void proofps_dd::GUI::drawSettingsMenu()
     {
         ImGui::BeginDisabled(true);
     }
-    bool bVSync = m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].getAsBool();
+    bool bVSync = cvarGfxVSync.getAsBool();
     if (ImGui::Checkbox("##cbVSync", &bVSync))
     {
         const bool bPrevScreenLogState = getConsole().getLoggingState(m_pPge->getPure().getScreen().getLoggerModuleName());
@@ -691,7 +728,7 @@ void proofps_dd::GUI::drawSettingsMenu()
         const bool bSetVSyncRet = m_pPge->getPure().getScreen().setVSyncEnabled(bVSync);
         getConsole().SetLoggingState(m_pPge->getPure().getScreen().getLoggerModuleName(), bPrevScreenLogState);
 
-        m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC].Set(bSetVSyncRet);
+        cvarGfxVSync.Set(bSetVSyncRet);
         if (bSetVSyncRet != bVSync)
         {
             getConsole().EOLn("ERROR: failed to set VSync to: %b, current state: %b!", bVSync, bSetVSyncRet);
