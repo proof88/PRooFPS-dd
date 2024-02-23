@@ -241,6 +241,22 @@ float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
     return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
 }
 
+void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
+{
+    if (ImGui::IsItemHovered())
+    {
+        if (sHint.empty())
+        {
+            sHint += cvar.getShortHint() + '\n' + '\n';
+            for (const auto& sLongHintLine : cvar.getLongHint())
+            {
+                sHint += sLongHintLine + '\n';
+            }
+        }
+        ImGui::SetTooltip("%s", sHint.c_str());
+    }
+}
+
 void proofps_dd::GUI::drawMainMenu()
 {
     constexpr float fBtnWidth = 150.f;
@@ -379,15 +395,19 @@ void proofps_dd::GUI::drawCreateGameMenu()
     ImGui::Text("[ Miscellaneous ]");
     ImGui::Indent();
     {
-        bool bTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() == 60u;
+        PGEcfgVariable& cvarTR60Hz = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
+        bool bTR60Hz = cvarTR60Hz.getAsUInt() == 60u;
         ImGui::BeginGroup();
         {
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Tickrate:");
+            static std::string sHint; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHint, cvarTR60Hz);
+            
             ImGui::SameLine();
             if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(60u);
+                cvarTR60Hz.Set(60u);
                 bTR60Hz = false;
                 m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }
@@ -395,7 +415,7 @@ void proofps_dd::GUI::drawCreateGameMenu()
             ImGui::SameLine();
             if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
             {
-                m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE].Set(20u);
+                cvarTR60Hz.Set(20u);
                 bTR60Hz = false;
                 m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
             }

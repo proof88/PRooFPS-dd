@@ -73,6 +73,7 @@ namespace proofps_dd
         static MenuState m_currentMenu;
 
         static float getCenterPosXForText(const std::string& text);
+        static void addHintToItemByCVar(std::string& sLongHint, const PGEcfgVariable& cvar);
         static void drawMainMenu();
         static float drawPlayerNameInputBox();
         static void drawCreateGameMenu();
