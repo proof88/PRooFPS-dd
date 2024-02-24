@@ -399,7 +399,20 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     drawPlayerNameInputBox();
 
     ImGui::Separator();
+
     ImGui::Text("[ Map Configuration ]");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip(
+            "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip(
+            "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+    }
 
     ImGui::Indent();
     {
@@ -414,51 +427,54 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         const float fMapMoveBtnsPosX = fBasePosX + fMapListboxesWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
         const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
 
-        ImGui::Text("Mapcycle:");
-        ImGui::SameLine(fMapsAvailListBoxX);
-        ImGui::Text("Available Maps:");
+        ImGui::BeginDisabled(true);
 
-        const auto fBasePosY = ImGui::GetCursorPosY();
+            ImGui::Text("Mapcycle:");
+            ImGui::SameLine(fMapsAvailListBoxX);
+            ImGui::Text("Available Maps:");
 
-        // first I draw the 2 listboxes, and only after them I draw the move btns in between them
-        ImGui::PushItemWidth(fMapListboxesWidth);
-        int iActiveItemMapcycle = 0;
-        const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
-        ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
+            const auto fBasePosY = ImGui::GetCursorPosY();
+
+            // first I draw the 2 listboxes, and only after them I draw the move btns in between them
+            ImGui::PushItemWidth(fMapListboxesWidth);
+            int iActiveItemMapcycle = 0;
+            const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
+            ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
        
-        ImGui::SameLine(fMapsAvailListBoxX);
-        int iActiveItemMapsAvailable = 0;
-        const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
-        ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
-        ImGui::PopItemWidth();
+            ImGui::SameLine(fMapsAvailListBoxX);
+            int iActiveItemMapsAvailable = 0;
+            const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
+            ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
+            ImGui::PopItemWidth();
         
-        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
-        ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
+            ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
-        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
+            ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
-        ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
+            ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
-        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
+            ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-        // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
-        PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
+            // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
+            PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
 
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvMap, cvarSvMap);
-        ImGui::Text("Force-Start on Map:");
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvMap, cvarSvMap);
+            ImGui::Text("Force-Start on Map:");
 
-        ImGui::SameLine();
-        ImGui::PushItemWidth(150);
-        int iSelectMapStart = 0;
-        const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
-        ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
-        ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::PushItemWidth(150);
+            int iSelectMapStart = 0;
+            const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
+            ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
+            ImGui::PopItemWidth();
         
+        ImGui::EndDisabled();
     } // end Map Config
     ImGui::Unindent();
 
