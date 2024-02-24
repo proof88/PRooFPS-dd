@@ -116,11 +116,11 @@ namespace proofps_dd
         bool hasValidConnection() const;
         bool connect();
         void disconnect(bool bExitFromGameSession, const std::string& sExtraDebugText = "");
-        void mainLoopServerOnlyOneTick(
+        void mainLoopConnectedServerOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
-        void mainLoopClientOnlyOneTick(
+        void mainLoopConnectedClientOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only client executes this. */
-        void mainLoopShared(
+        void mainLoopConnectedShared(
             PureWindow& window);                                 /**< Both clients and listen-server executes this. */
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);

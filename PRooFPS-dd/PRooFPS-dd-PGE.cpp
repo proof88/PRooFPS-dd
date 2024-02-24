@@ -403,16 +403,16 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 m_timeSimulation += DurationSimulationStepMicrosecsPerTick;
                 if (getNetwork().isServer())
                 {
-                    mainLoopServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
+                    mainLoopConnectedServerOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
                 }
                 else
                 {
-                    mainLoopClientOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
+                    mainLoopConnectedClientOnlyOneTick(DurationSimulationStepMicrosecsPerTick.count());
                 }
             }
             // 1 TICK END
 
-            mainLoopShared(window);
+            mainLoopConnectedShared(window);
         } // endif validConnection
         else
         {
@@ -709,7 +709,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     Only server executes this.
     Good for either dedicated- or listen- server.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
+void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     const long long& /*durElapsedMicrosecs*/)
 {
     /*
@@ -746,12 +746,12 @@ void proofps_dd::PRooFPSddPGE::mainLoopServerOnlyOneTick(
 /**
     Only client executes this.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
+void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
     const long long& /*durElapsedMicrosecs*/)
 {
     /*
     * This function is executed every tick.
-    * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopServerOnlyOneTick(). 
+    * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopConnectedServerOnlyOneTick(). 
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
@@ -764,7 +764,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopClientOnlyOneTick(
     Both clients and listen-server executes this.
     Dedicated server won't need this.
 */
-void proofps_dd::PRooFPSddPGE::mainLoopShared(PureWindow& window)
+void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
 {
     std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
