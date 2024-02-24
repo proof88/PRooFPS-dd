@@ -337,7 +337,10 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
 
 float proofps_dd::GUI::drawPlayerNameInputBox()
 {
+    PGEcfgVariable& cvarClName = m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME];
     ImGui::AlignTextToFramePadding();
+    static std::string sHintClName; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClName, cvarClName);
     ImGui::Text("Player Name:");
     ImGui::SameLine();
     const auto fInputBoxPosX = ImGui::GetCursorPosX();
@@ -348,11 +351,11 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
     strncpy_s(
         szPlayerName,
         MsgUserNameChange::nUserNameBufferLength,
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().c_str(),
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString().length());
+        cvarClName.getAsString().c_str(),
+        cvarClName.getAsString().length());
     if (ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName)))
     {
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME].Set(szPlayerName);
+        cvarClName.Set(szPlayerName);
     }
 
     ImGui::PopItemWidth();
@@ -623,7 +626,11 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();
 
+    PGEcfgVariable& cvarClServerIp = m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP];
+
     ImGui::AlignTextToFramePadding();
+    static std::string sHintClServerIp; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClServerIp, cvarClServerIp);
     ImGui::Text("Server IP:");
 
     ImGui::SameLine(fInputBoxPosX);
@@ -631,8 +638,8 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     strncpy_s(
         szServerIP,
         sizeof(szServerIP),
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().c_str(),
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().length());
+        cvarClServerIp.getAsString().c_str(),
+        cvarClServerIp.getAsString().length());
     ImGui::PushItemWidth(200);
     const bool bIpAddrValid = isValidIPv4(szServerIP);
     if (!bIpAddrValid)
@@ -641,7 +648,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     }
     if (ImGui::InputText("##inputServerIP", szServerIP, IM_ARRAYSIZE(szServerIP), ImGuiInputTextFlags_CallbackCharFilter, filterIPv4AddressCb))
     {
-        m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].Set(szServerIP);
+        cvarClServerIp.Set(szServerIP);
     }
     if (!bIpAddrValid)
     {
