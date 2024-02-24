@@ -54,6 +54,32 @@ void proofps_dd::GUI::initialize()
     m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
 
+    // This bg plane is used to cover partially loaded/unloaded game objects such as map, players, etc.,
+    // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
+    m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
+        m_pPge->getPure().getCamera().getViewport().size.width,
+        m_pPge->getPure().getCamera().getViewport().size.height);
+    m_pObjLoadingScreenBg->SetStickedToScreen(true);
+    m_pObjLoadingScreenBg->SetDoubleSided(true);
+    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenBg->SetLit(false);
+    PureTexture* const pTexBlack = m_pPge->getPure().getTextureManager().createFromFile(
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
+    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
+
+    // Logo img size should have an upper limit, otherwise it looks blurry in big window!
+    const auto fLoadingScreenLogoImgWidth = std::min(825.f, m_pPge->getPure().getCamera().getViewport().size.width * 0.8f);
+    m_pObjLoadingScreenLogoImg = m_pPge->getPure().getObject3DManager().createPlane(
+        fLoadingScreenLogoImgWidth,
+        (fLoadingScreenLogoImgWidth * 0.5f) * 0.5f);
+    m_pObjLoadingScreenLogoImg->SetStickedToScreen(true);
+    m_pObjLoadingScreenLogoImg->SetDoubleSided(true);
+    m_pObjLoadingScreenLogoImg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenLogoImg->SetLit(false);
+    PureTexture* const pTexLoadingScreenLogoImg = m_pPge->getPure().getTextureManager().createFromFile(
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
+    m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
+
     /*
         Useful Dear ImGui links:
          - https://github.com/ocornut/imgui/tree/master/docs
@@ -68,6 +94,7 @@ void proofps_dd::GUI::initialize()
            - https://github.com/iamclint/ImGuiDesigner
     */
 
+    // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
@@ -122,41 +149,16 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
-
-    // This bg plane is used to cover partially loaded/unloaded game objects such as map, players, etc.,
-    // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
-    m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
-        m_pPge->getPure().getCamera().getViewport().size.width,
-        m_pPge->getPure().getCamera().getViewport().size.height);
-    m_pObjLoadingScreenBg->SetStickedToScreen(true);
-    m_pObjLoadingScreenBg->SetDoubleSided(true);
-    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenBg->SetLit(false);
-    PureTexture* pTexBlack = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
-    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
-
-    // Logo img size should have an upper limit, otherwise it looks blurry in big window!
-    const auto fLoadingScreenImgWidth = std::min(825.f, m_pPge->getPure().getCamera().getViewport().size.width * 0.8f);
-    m_pObjLoadingScreenImg = m_pPge->getPure().getObject3DManager().createPlane(
-        fLoadingScreenImgWidth,
-        (fLoadingScreenImgWidth * 0.5f) * 0.5f);
-    m_pObjLoadingScreenImg->SetStickedToScreen(true);
-    m_pObjLoadingScreenImg->SetDoubleSided(true);
-    m_pObjLoadingScreenImg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenImg->SetLit(false);
-    PureTexture* pTexLoadingScreen = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
-    m_pObjLoadingScreenImg->getMaterial().setTexture(pTexLoadingScreen);
-
 } // initialize()
 
 void proofps_dd::GUI::shutdown()
 {
-    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         delete m_pObjLoadingScreenBg;
-        delete m_pObjLoadingScreenImg;
+        delete m_pObjLoadingScreenLogoImg;
         m_pObjLoadingScreenBg = nullptr;
-        m_pObjLoadingScreenImg = nullptr;
+        m_pObjLoadingScreenLogoImg = nullptr;
 
         // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
     }
@@ -196,24 +198,24 @@ void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
 
 void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
 {
-    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         m_pObjLoadingScreenBg->Show();
-        m_pObjLoadingScreenImg->Show();
+        m_pObjLoadingScreenLogoImg->Show();
         textForNextFrame(
             "Loading Map: " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
             200,
-            m_pPge->getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenImg->getPosVec().getY() - m_pObjLoadingScreenImg->getSizeVec().getY() / 2.f));
+            m_pPge->getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenLogoImg->getPosVec().getY() - m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2.f));
         m_pPge->getPure().getRenderer()->RenderScene();
     }
 }
 
 void proofps_dd::GUI::hideLoadingScreen()
 {
-    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenImg)
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         m_pObjLoadingScreenBg->Hide();
-        m_pObjLoadingScreenImg->Hide();
+        m_pObjLoadingScreenLogoImg->Hide();
     }
 }
 
@@ -666,20 +668,22 @@ void proofps_dd::GUI::drawSettingsMenu()
     ImGui::Separator();
     ImGui::Indent();
 
+    PGEcfgVariable& cvarGfxFullscreen = m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED];
     ImGui::AlignTextToFramePadding();
+    static std::string sHintGfxFullscreen; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGfxFullscreen, cvarGfxFullscreen);
     ImGui::Text("Fullscreen:");
     ImGui::SameLine();
-    bool bFullscreen = !m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].getAsBool();
+    bool bFullscreen = !cvarGfxFullscreen.getAsBool();
     if (ImGui::Checkbox("##cbFullscreen", &bFullscreen))
     {
         // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox based on this
-        m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].Set(!bFullscreen);
+        cvarGfxFullscreen.Set(!bFullscreen);
 
         ImGui::OpenPopup("Apply Setting");
     }
 
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Apply Setting", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("The game will restart now to apply the new configuration.");
@@ -836,7 +840,7 @@ void proofps_dd::GUI::drawMainMenuCb()
 
 proofps_dd::GUI::GUI() :
     m_pObjLoadingScreenBg(nullptr),
-    m_pObjLoadingScreenImg(nullptr)
+    m_pObjLoadingScreenLogoImg(nullptr)
 {
 
 }

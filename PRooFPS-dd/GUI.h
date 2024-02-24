@@ -84,7 +84,7 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         PureObject3D* m_pObjLoadingScreenBg;
-        PureObject3D* m_pObjLoadingScreenImg;
+        PureObject3D* m_pObjLoadingScreenLogoImg;
 
         GUI();
         ~GUI();
