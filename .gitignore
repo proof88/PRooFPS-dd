@@ -334,32 +334,12 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
 *.html
 PRooFPS-dd/GameNetworkingSockets.dll
 PRooFPS-dd/libcrypto-3.dll
 PRooFPS-dd/libprotobufd.dll
-*.exe
 PRooFPS-dd/libprotobuf.dll
-PRooFPS-dd/RegTestDumpClient.txt
-PRooFPS-dd/RegTestDumpServer.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_20.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_20.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_20_cl_updaterate_20.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_20.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_20_cl_updaterate_20.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_20.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_20_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_60_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_20_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_60_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_20_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpClient_tickrate_60_cl_updaterate_60_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_20_cl_updaterate_20_physics_rate_min_60.txt
-PRooFPS-dd/RegTestDumpServer_tickrate_60_cl_updaterate_60_physics_rate_min_60.txt
+*.exe
+PRooFPS-dd/RegTestDump*
+
