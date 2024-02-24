@@ -123,6 +123,8 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
 
+    // This bg plane is used to cover partially loaded/unloaded game objects such as map, players, etc.,
+    // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
     m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
         m_pPge->getPure().getCamera().getViewport().size.width,
         m_pPge->getPure().getCamera().getViewport().size.height);
@@ -133,7 +135,8 @@ void proofps_dd::GUI::initialize()
     PureTexture* pTexBlack = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
     m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
 
-    const auto fLoadingScreenImgWidth = m_pPge->getPure().getCamera().getViewport().size.width * 0.8f;
+    // Logo img size should have an upper limit, otherwise it looks blurry in big window!
+    const auto fLoadingScreenImgWidth = std::min(825.f, m_pPge->getPure().getCamera().getViewport().size.width * 0.8f);
     m_pObjLoadingScreenImg = m_pPge->getPure().getObject3DManager().createPlane(
         fLoadingScreenImgWidth,
         (fLoadingScreenImgWidth * 0.5f) * 0.5f);
