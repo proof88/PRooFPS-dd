@@ -306,7 +306,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
         getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
     getPure().getWindow().SetCursorVisible(false);
-    m_pObjXHair->Show();
 
     m_deathMatchMode->setFragLimit(10);
     //m_deathMatchMode->setTimeLimitSecs(500);
@@ -423,7 +422,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             {
                 if (connect())
                 {
-                    m_pObjXHair->Show();
+                    showXHairInCenter();
                     m_timeSimulation = {};  // reset tick-based simulation time as well
                 }
                 else
@@ -562,7 +561,9 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     m_maps.shutdown();
     m_gui.shutdown();
     delete m_pObjXHair;
+    m_pObjXHair = nullptr;
     delete m_gameMode;
+    m_gameMode = nullptr;
     getPure().getObject3DManager().DeleteAll();
     getPure().getWindow().SetCursorVisible(true);
 
@@ -583,6 +584,26 @@ void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
 {
     m_gui.hideLoadingScreen();
     m_maps.UpdateVisibilitiesForRenderer();
+}
+
+void proofps_dd::PRooFPSddPGE::showXHairInCenter()
+{
+    if (!m_pObjXHair)
+    {
+        return;
+    }
+
+    // this is to get rid of all mouse move messages that were probably queued up in the meantime (e.g. during map loading), otherwise
+    // there is no use of setting cursor pos to center if enqueued messages will reposition it when PURE runs the window's processMessages().
+    getPure().getWindow().ProcessMessages();
+
+    // getInput().getMouse().SetCursorPos() is not triggering any mouse move event and nulls out pending raw input events as well!
+    getInput().getMouse().SetCursorPos(
+        getPure().getWindow().getX() + getPure().getWindow().getWidth() / 2,
+        getPure().getWindow().getY() + getPure().getWindow().getHeight() / 2);
+    
+    m_pObjXHair->getPosVec().Set(0, 0, 0); // reposition to viewport center so it won't appear at random places
+    m_pObjXHair->Show();
 }
 
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
@@ -1314,6 +1335,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             -proofps_dd::GAME_BLOCK_SIZE_Z);
 
         hideLoadingScreen();
+        showXHairInCenter();
+        
         getAudio().play(m_sounds.m_sndLetsgo);
     }
     else
@@ -1678,7 +1701,9 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
         getPure().getCamera().getPosVec().getX(),
         getPure().getCamera().getPosVec().getY(),
         -proofps_dd::GAME_BLOCK_SIZE_Z);
+
     hideLoadingScreen();
+    showXHairInCenter();
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,

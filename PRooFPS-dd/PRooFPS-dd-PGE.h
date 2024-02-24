@@ -108,6 +108,7 @@ namespace proofps_dd
 
         void showLoadingScreen(int nProgress);
         void hideLoadingScreen();
+        void showXHairInCenter();
 
         bool hasValidConnection() const;
         bool connect();
