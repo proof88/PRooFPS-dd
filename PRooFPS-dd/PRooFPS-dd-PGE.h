@@ -121,7 +121,9 @@ namespace proofps_dd
         void mainLoopConnectedClientOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only client executes this. */
         void mainLoopConnectedShared(
-            PureWindow& window);                                 /**< Both clients and listen-server executes this. */
+            PureWindow& window);                                        /**< Both clients and listen-server executes this. */
+        void mainLoopDisconnectedShared(
+            PureWindow& window);                                        /**< Both clients and listen-server executes this. */
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(

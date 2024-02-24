@@ -438,6 +438,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             }
             else
             {
+                mainLoopDisconnectedShared(window);
+
                 m_gui.textForNextFrame("Waiting for restoring connection (pending clients to be disconnected: " + std::to_string(m_mapPlayers.size()) + ") ...",
                     200,
                     getPure().getWindow().getClientHeight() / 2);
@@ -770,7 +772,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
-        if (handleInputAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
+        if (handleInputWhenConnectedAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
             proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -792,6 +794,22 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
             std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
             10, 150);
     }
+}
+
+/**
+    Both clients and listen-server executes this.
+    Dedicated server won't need this.
+*/
+void proofps_dd::PRooFPSddPGE::mainLoopDisconnectedShared(PureWindow& window)
+{
+    if (window.isActive())
+    {
+        if (handleInputWhenDisconnected() == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
+        {
+            disconnect(true);
+            return;
+        }
+    } // window is active
 }
 
 void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
@@ -1851,8 +1869,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        assert(false); // in debug mode, try to understand this scenario
+        // TEMPORARILY COMMENTED DUE TO: https://github.com/proof88/PRooFPS-dd/issues/261
+        // When we are trying to join a server but we get bored and user presses ESCAPE, client's disconnect is invoked, which
+        // actually starts disconnecting because it thinks we are connected to server, end injects this userDisconnected pkt.
+        // 
+        //getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        //assert(false); // in debug mode, try to understand this scenario
         return true; // in release mode, dont terminate
     }
 

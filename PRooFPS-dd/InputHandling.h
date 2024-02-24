@@ -63,7 +63,7 @@ namespace proofps_dd
 
     protected:
 
-        PlayerAppActionRequest handleInputAndSendUserCmdMove(
+        PlayerAppActionRequest handleInputWhenConnectedAndSendUserCmdMove(
             proofps_dd::GameMode& gameMode,
             bool& won,
             proofps_dd::Player& player,
@@ -71,6 +71,8 @@ namespace proofps_dd
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
             const unsigned int nPhysicsRateMin);
+
+        PlayerAppActionRequest handleInputWhenDisconnected();
 
         bool handleUserCmdMoveFromClient(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -98,13 +100,16 @@ namespace proofps_dd
         TPureFloat m_fLastPlayerAngleYSent;
         TPureFloat m_fLastWeaponAngleZSent;
 
-        PlayerAppActionRequest keyboard(
+        
+        PlayerAppActionRequest keyboardWhenConnected(
             proofps_dd::GameMode& gameMode,
             bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
             const unsigned int nPhysicsRateMin);
+
+        PlayerAppActionRequest keyboardWhenDisconnected();
 
         bool mouse(
             proofps_dd::GameMode& gameMode,

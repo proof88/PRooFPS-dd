@@ -73,7 +73,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputAndSendUserCmdMove(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputWhenConnectedAndSendUserCmdMove(
     proofps_dd::GameMode& gameMode,
     bool& won,
     proofps_dd::Player& player,
@@ -88,13 +88,18 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::han
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
-        keyboard(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+        keyboardWhenConnected(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
         mouse(gameMode, won, pkt, player, objXHair);
         updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
     }
     return playerAppActionReq;
+}
+
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputWhenDisconnected()
+{
+    return keyboardWhenDisconnected();
 }
 
 bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
@@ -407,7 +412,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 // ############################### PRIVATE ###############################
 
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboard(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboardWhenConnected(
     proofps_dd::GameMode& gameMode,
     bool& won,
     pge_network::PgePacket& pkt,
@@ -588,6 +593,15 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
 
     } // won
 
+    return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+}
+
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboardWhenDisconnected()
+{
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
+    {
+        return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
+    }
     return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }
 
