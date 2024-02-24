@@ -166,8 +166,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
        So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate.
        Note that originally I wanted to lerp GAME_JUMP_GRAVITY_START as commented at its definition. */
 
-    static const float GAME_GRAVITY_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    static const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
+    const float GAME_GRAVITY_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
     for (auto& playerPair : m_mapPlayers)
@@ -235,9 +235,9 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nPhysicsRate)
 {
-    static const float GAME_PLAYER_SPEED_WALK = 2.0f / nPhysicsRate;
-    static const float GAME_PLAYER_SPEED_RUN = 4.0f / nPhysicsRate;
-    static const float GAME_PLAYER_SPEED_CROUCH = 1.5f / nPhysicsRate;
+    const float GAME_PLAYER_SPEED_WALK = 2.0f / nPhysicsRate;
+    const float GAME_PLAYER_SPEED_RUN = 4.0f / nPhysicsRate;
+    const float GAME_PLAYER_SPEED_CROUCH = 1.5f / nPhysicsRate;
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -355,7 +355,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             }
         } // end if (player.getWantToStandup())
 
-        static unsigned int nContinuousStrafeCount = 0;
+        static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
         if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
             float fStrafeSpeed = player.getCrouchStateCurrent() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
@@ -381,7 +381,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                  ))
                )
             {
-                ++nContinuousStrafeCount;
+                ++nContinuousStrafeCountForDebugServerPlayerMovement;
                 //getConsole().EOLn("Tick Strafe");
 
                 if (m_bAllowStrafeMidAirFull)
@@ -402,10 +402,10 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         }
         else
         {
-            if (nContinuousStrafeCount > 0)
+            if (nContinuousStrafeCountForDebugServerPlayerMovement > 0)
             {
-                //getConsole().EOLn("Strafe stopped after: %u consecutive strafes", nContinuousStrafeCount);
-                nContinuousStrafeCount = 0;
+                //getConsole().EOLn("Strafe stopped after: %u consecutive strafes", nContinuousStrafeCountForDebugServerPlayerMovement);
+                nContinuousStrafeCountForDebugServerPlayerMovement = 0;
             }
         }
 

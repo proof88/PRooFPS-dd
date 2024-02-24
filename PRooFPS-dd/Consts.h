@@ -27,7 +27,7 @@ namespace proofps_dd
     static constexpr int   GAME_TICKRATE_MAX = GAME_MAXFPS;
     static_assert(GAME_TICKRATE_MAX == GAME_MAXFPS, "Max tickrate is limited by max FPS since onGameRunning() freq is same as max FPS.");
     static_assert(0 < GAME_TICKRATE_MIN, "Min tickrate should be positive.");
-    static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_MAX, "Min tickrate should not be greater than max tickrate.");
+    static_assert(GAME_TICKRATE_MIN < GAME_TICKRATE_MAX, "Min tickrate should not less than max tickrate (if equal, division by zero happens in Physics::serverGravity()).");
     static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_DEF, "Min tickrate should not be greater than default tickrate.");
     static_assert(GAME_TICKRATE_DEF <= GAME_TICKRATE_MAX, "Max tickrate should not be smaller than default tickrate.");
 
