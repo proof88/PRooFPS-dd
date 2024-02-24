@@ -73,18 +73,19 @@ namespace proofps_dd
         static MenuState m_currentMenu;
 
         static float getCenterPosXForText(const std::string& text);
-        static void addHintToItemByCVar(std::string& sLongHint, const PGEcfgVariable& cvar);
-        static void drawMainMenu();
+        static void addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar);
+        static float calcContentStartY(const float& fContentHeight, const float& fRemainingSpaceY);
+        static void drawMainMenu(const float& fRemainingSpaceY);
         static float drawPlayerNameInputBox();
-        static void drawCreateGameMenu();
-        static void drawJoinGameMenu();
-        static void drawSettingsMenu();
-        static void drawMainMenuCb();
+        static void drawCreateGameMenu(const float& fRemainingSpaceY);
+        static void drawJoinGameMenu(const float& fRemainingSpaceY);
+        static void drawSettingsMenu(const float& fRemainingSpaceY);
+        static void drawMainMenuCb(); // this needs to be static, causing a lot of other members also need to be static
 
         // ---------------------------------------------------------------------------
 
-        PureObject3D* m_pObjLoadingScreenBg;
-        PureObject3D* m_pObjLoadingScreenLogoImg;
+        static PureObject3D* m_pObjLoadingScreenBg;
+        static PureObject3D* m_pObjLoadingScreenLogoImg;
 
         GUI();
         ~GUI();

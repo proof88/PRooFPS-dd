@@ -72,6 +72,8 @@ void proofps_dd::GUI::initialize()
     m_pObjLoadingScreenLogoImg = m_pPge->getPure().getObject3DManager().createPlane(
         fLoadingScreenLogoImgWidth,
         (fLoadingScreenLogoImgWidth * 0.5f) * 0.5f);
+    m_pObjLoadingScreenLogoImg->getPosVec().SetY(
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2) - (m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2));
     m_pObjLoadingScreenLogoImg->SetStickedToScreen(true);
     m_pObjLoadingScreenLogoImg->SetDoubleSided(true);
     m_pObjLoadingScreenLogoImg->SetTestingAgainstZBuffer(false);
@@ -241,6 +243,9 @@ proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
+PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
+PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
+
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
 {
@@ -280,33 +285,44 @@ void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariab
     ImGui::SameLine();
 }
 
-void proofps_dd::GUI::drawMainMenu()
+float proofps_dd::GUI::calcContentStartY(const float& fContentHeight, const float& fRemainingSpaceY)
+{
+    const auto& fRenderAreaHeight = m_pPge->getPure().getCamera().getViewport().size.height;
+    return (fRenderAreaHeight / 2 < (fRenderAreaHeight - fRemainingSpaceY)) ?
+        0 : ((fContentHeight >= fRemainingSpaceY) ?
+             0 : (fRenderAreaHeight / 2 - fContentHeight / 2) - (fRenderAreaHeight- fRemainingSpaceY));
+}
+
+void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
 {
     constexpr float fBtnWidth = 150.f;
     constexpr float fBtnHeight = 20.f;
-    constexpr float fBtnStartY = 100.f;
+    constexpr float fBtnSpacingY = 30.f;
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + 20 /* this should be version text size Y */;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     // in case of buttons, remove size argument (ImVec2) to auto-resize
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY));
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x/2 - fBtnWidth/2, fContentStartY));
     if (ImGui::Button("C R E A T E  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
     {
         m_currentMenu = MenuState::CreateGame;
     }
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 30));
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY));
     if (ImGui::Button("J O I N  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
     {
         m_currentMenu = MenuState::JoinGame;
     }
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 60));
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY*2));
     if (ImGui::Button("S E T T I N G S", ImVec2(fBtnWidth, fBtnHeight)))
     {
         m_currentMenu = MenuState::Settings;
     }
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetMainViewport()->GetCenter().x - fBtnWidth / 2.f, fBtnStartY + 90));
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY*3));
     if (ImGui::Button("E X I T", ImVec2(fBtnWidth, fBtnHeight)))
     {
         m_currentMenu = MenuState::Exiting;
@@ -315,7 +331,7 @@ void proofps_dd::GUI::drawMainMenu()
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
     ImGui::SetCursorPosX(getCenterPosXForText(sVersion));
-    ImGui::SetCursorPosY(fBtnStartY + 120);
+    ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
     ImGui::Text("%s", sVersion.c_str());
 }
 
@@ -344,9 +360,13 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
     return fInputBoxPosX;
 }
 
-void proofps_dd::GUI::drawCreateGameMenu()
+void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 {
-    ImGui::SetCursorPos(ImVec2(20, 38));
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 315.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
     ImGui::Text("[  C R E A T E  G A M E  ]");
 
     ImGui::Separator();
@@ -587,9 +607,13 @@ static bool isValidIPv4(const char* IPAddress)
     return false;
 }
 
-void proofps_dd::GUI::drawJoinGameMenu()
+void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
 {
-    ImGui::SetCursorPos(ImVec2(20, 38));
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 105.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
     ImGui::Text("[  J O I N  G A M E  ]");
 
     ImGui::Separator();
@@ -660,9 +684,13 @@ void proofps_dd::GUI::drawJoinGameMenu()
     ImGui::Unindent();
 } // drawJoinGameMenu
 
-void proofps_dd::GUI::drawSettingsMenu()
+void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
-    ImGui::SetCursorPos(ImVec2(20, 38));
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 145.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
     ImGui::Text("[  S E T T I N G S  ]");
 
     ImGui::Separator();
@@ -808,9 +836,16 @@ void proofps_dd::GUI::drawMainMenuCb()
 
     m_pPge->getPure().getWindow().SetCursorVisible(true);
 
-    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x, main_viewport->WorkSize.y), ImGuiCond_FirstUseEver);
+    // Dear ImGui coordinates are the same as OS desktop/native coordinates which means that operating with ImGui::GetMainViewport() is
+    // different than operating with getPure().getCamera().getViewport():
+    // - PURE 2D viewport (0,0) is the CENTER, and positive Y goes UPWARDS from CENTER;
+    // - Dear ImGui viewport (0,0) is the TOP LEFT, and positive Y goes DOWNWARDS from the TOP.
+    const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
+    const float fLogoImgHeight = m_pObjLoadingScreenLogoImg->getSizeVec().getY();
+    constexpr float fMenuWndWidth = 470.f; // just put here the widest submenu's required width
+    const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight;
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x/2 - fMenuWndWidth/2, fLogoImgHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("WndMainMenu", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
@@ -818,16 +853,16 @@ void proofps_dd::GUI::drawMainMenuCb()
         switch (m_currentMenu)
         {
         case MenuState::CreateGame:
-            drawCreateGameMenu();
+            drawCreateGameMenu(fMenuWndHeight);
             break;
         case MenuState::JoinGame:
-            drawJoinGameMenu();
+            drawJoinGameMenu(fMenuWndHeight);
             break;
         case MenuState::Settings:
-            drawSettingsMenu();
+            drawSettingsMenu(fMenuWndHeight);
             break;
         case MenuState::Main:
-            drawMainMenu();
+            drawMainMenu(fMenuWndHeight);
             break;
         default:
             /* MenuState::None or MenuState::Exiting */
@@ -838,9 +873,7 @@ void proofps_dd::GUI::drawMainMenuCb()
     ImGui::End();
 } // drawMainMenuCb()
 
-proofps_dd::GUI::GUI() :
-    m_pObjLoadingScreenBg(nullptr),
-    m_pObjLoadingScreenLogoImg(nullptr)
+proofps_dd::GUI::GUI()
 {
 
 }
