@@ -54,7 +54,7 @@ void proofps_dd::GUI::initialize()
     m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
 
-    // This bg plane is used to cover partially loaded/unloaded game objects such as map, players, etc.,
+    // This bg plane is used to cover game objects such as map, players, etc.,
     // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
     m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
         m_pPge->getPure().getCamera().getViewport().size.width,
@@ -175,6 +175,7 @@ void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
 {
     if (bExitingFromGameSession)
     {
+        showBgWithLogo();
         if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
         {
             m_currentMenu = MenuState::Main;
@@ -190,35 +191,55 @@ void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
         if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
         {
             m_currentMenu = MenuState::Main;
+            showBgWithLogo();
         }
         else
         {
             m_currentMenu = MenuState::None;
+            hideBgWithLogo();
         }
     }
 }
 
 void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFilename)
 {
-    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
+    if ( showBgWithLogo() )
     {
-        m_pObjLoadingScreenBg->Show();
-        m_pObjLoadingScreenLogoImg->Show();
         textForNextFrame(
             "Loading Map: " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
             200,
-            m_pPge->getPure().getWindow().getClientHeight() / 2 + static_cast<int>(m_pObjLoadingScreenLogoImg->getPosVec().getY() - m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2.f));
+            m_pPge->getPure().getWindow().getClientHeight() / 2 +
+            static_cast<int>(m_pObjLoadingScreenLogoImg->getPosVec().getY() -
+                m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2.f));
         m_pPge->getPure().getRenderer()->RenderScene();
     }
 }
 
 void proofps_dd::GUI::hideLoadingScreen()
 {
+    hideBgWithLogo();
+}
+
+bool proofps_dd::GUI::showBgWithLogo()
+{
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
+    {
+        m_pObjLoadingScreenBg->Show();
+        m_pObjLoadingScreenLogoImg->Show();
+        return true;
+    }
+    return false;
+}
+
+bool proofps_dd::GUI::hideBgWithLogo()
+{
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         m_pObjLoadingScreenBg->Hide();
         m_pObjLoadingScreenLogoImg->Hide();
+        return true;
     }
+    return false;
 }
 
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int x, int y) const

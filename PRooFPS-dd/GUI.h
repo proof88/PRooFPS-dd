@@ -59,6 +59,8 @@ namespace proofps_dd
             int nProgress,
             const std::string& sMapFilename);
         void hideLoadingScreen();
+        bool showBgWithLogo();
+        bool hideBgWithLogo();
 
         void textForNextFrame(const std::string& s, int x, int y) const;
         void textPermanent(const std::string& s, int x, int y) const;
