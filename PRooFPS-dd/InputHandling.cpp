@@ -40,7 +40,6 @@ proofps_dd::InputHandling::InputHandling(
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
-    m_bShowGuiDemo(false),
     m_prevStrafe(proofps_dd::Strafe::NONE),
     m_strafe(proofps_dd::Strafe::NONE),
     m_bPrevAttack(false),
@@ -432,11 +431,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
         gameMode.showObjectives(m_pge.getPure(), m_pge.getNetwork());
     }
 
-    if (m_bShowGuiDemo)
-    {
-        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-    }
-
     if (player.getHealth() == 0)
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
@@ -597,6 +591,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
     return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }
 
+/**
+    @return True in case there was mouse (xhair) movement, false otherwise.
+*/
 bool proofps_dd::InputHandling::mouse(
     proofps_dd::GameMode& gameMode,
     bool& /*won*/,
@@ -609,11 +606,6 @@ bool proofps_dd::InputHandling::mouse(
     const short int nMouseWheelChange = m_pge.getInput().getMouse().getWheel();
 
     if (gameMode.checkWinningConditions())
-    {
-        return false;
-    }
-
-    if (m_bShowGuiDemo)
     {
         return false;
     }
@@ -675,41 +667,49 @@ bool proofps_dd::InputHandling::mouse(
     const int dx = oldmx - m_pge.getInput().getMouse().getCursorPosX();
     const int dy = oldmy - m_pge.getInput().getMouse().getCursorPosY();
 
+    static bool bInitialXHairPosForTestingApplied = false;
+    static std::chrono::time_point<std::chrono::steady_clock> timeInitialXHairPosForTestingApplied;
+    if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
+    {
+        const auto nSecsSinceInitialXHairPosForTestingApplied =
+            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeInitialXHairPosForTestingApplied).count());
+        // if we immediately apply cursor pos, it might be changed to center a few moments later at startup so we need to wait a bit
+        if (nSecsSinceInitialXHairPosForTestingApplied >= 2)
+        {
+            getConsole().EOLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
+            bInitialXHairPosForTestingApplied = true;
+            timeInitialXHairPosForTestingApplied = std::chrono::steady_clock::now();
+            if (m_pge.getNetwork().isServer())
+            {
+                objXHair.getPosVec().Set(100.f, -100.f, objXHair.getPosVec().getZ());
+            }
+            else
+            {
+                objXHair.getPosVec().Set(-100.f, -100.f, objXHair.getPosVec().getZ());
+            }
+            return true;
+        }
+        return false;
+    }
+
     if ((dx == 0) && (dy == 0))
     {
         return false;
     }
 
-    static bool bInitialXHairPosForTestingApplied = false;
-    if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
-    {
-        getConsole().OLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
-        bInitialXHairPosForTestingApplied = true;
-        if (m_pge.getNetwork().isServer())
-        {
-            objXHair.getPosVec().Set(100.f, -100.f, objXHair.getPosVec().getZ());
-        }
-        else
-        {
-            objXHair.getPosVec().Set(-100.f, -100.f, objXHair.getPosVec().getZ());
-        }
-    }
-    else
-    {
-        const float fCursorNewX = std::min(
-            static_cast<float>(window.getClientWidth() / 2),
-            std::max(-static_cast<float>(window.getClientWidth() / 2), objXHair.getPosVec().getX() + dx));
+    // I'm thinking we should not come here at all if testing CVAR is set.
 
-        const float fCursorNewY = std::min(
-            static_cast<float>(window.getClientHeight() / 2),
-            std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
+    // at this point, we are not under testing, there was real mouse move we need to apply to xhair
+    const float fCursorNewX = std::min(
+        static_cast<float>(window.getClientWidth() / 2),
+        std::max(-static_cast<float>(window.getClientWidth() / 2), objXHair.getPosVec().getX() + dx));
 
-        //getConsole().EOLn("InputHandling::%s(): objXHair x: %f, y: %f!", __func__, fCursorNewX, fCursorNewY);
-        objXHair.getPosVec().Set(
-            fCursorNewX,
-            fCursorNewY,
-            0.f);
-    }
+    const float fCursorNewY = std::min(
+        static_cast<float>(window.getClientHeight() / 2),
+        std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
+
+    //getConsole().EOLn("InputHandling::%s(): objXHair x: %f, y: %f!", __func__, fCursorNewX, fCursorNewY);
+    objXHair.getPosVec().Set(fCursorNewX, fCursorNewY, 0.f);
 
     return true;
 }

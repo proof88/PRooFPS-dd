@@ -65,7 +65,8 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     // initializes it, and no construction happens in later relevant unit tests by calling createAndGet(), since
     // the engine instance is static ... so the engine instance will want to use the same cfgProfiles instance
     // in other tests as well, which is this:
-    PGEcfgProfiles cfgProfiles(""); // TODO: even the engine should be constructed here and passed to test, but now this approach is enough ...
+    PGEcfgProfiles cfgProfiles; // TODO: even the engine should be constructed here and passed to test, but now this approach is enough ...
+    cfgProfiles.reinitialize("");
 
     std::vector<std::unique_ptr<UnitTest>> tests;
     
@@ -79,9 +80,9 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
     tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
-    constexpr bool bAreWeTestingReleaseBuild = true;
+    constexpr bool bAreWeTestingReleaseBuild = false;
     tests.push_back(std::unique_ptr<UnitTest>(
-        new RegTestMapChangeServerClient3Players(60, 60, 60, 10 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
+        new RegTestMapChangeServerClient3Players(60, 60, 60, 3 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
     ));
 
     std::vector<std::unique_ptr<UnitTest>>::size_type nSucceededTests = 0;

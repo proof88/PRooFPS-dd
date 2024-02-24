@@ -89,8 +89,6 @@ namespace proofps_dd
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
 
-        bool m_bShowGuiDemo;
-
         proofps_dd::Strafe m_prevStrafe;
         proofps_dd::Strafe m_strafe;
         bool m_bPrevAttack;
