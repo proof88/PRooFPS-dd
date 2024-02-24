@@ -113,7 +113,7 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
 
 proofps_dd::MapItem::~MapItem()
 {
-    // no need to delete the static objects stored in m_mapReferenceObjects, they can exist until destroying the game, engine takes care of it!
+    // m_mapReferenceObjects is cleared when Maps invokes ResetGlobalData()
     if (m_obj)
     {
         delete m_obj;

@@ -100,7 +100,9 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bFpsFirstMeasure(true),
     m_pObjXHair(NULL),
     m_bWon(false),
-    m_fCameraMinY(0.0f)
+    m_fCameraMinY(0.0f),
+    m_nSendClientUpdatesInEveryNthTick(1),
+    m_nSendClientUpdatesCntr(m_nSendClientUpdatesInEveryNthTick)
 {
 }
 
@@ -423,6 +425,9 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 if (connect())
                 {
                     showXHairInCenter();
+                    // Config::validate() makes sure neither getTickRate() nor getClientUpdateRate() return 0
+                    m_nSendClientUpdatesInEveryNthTick = m_config.getTickRate() / m_config.getClientUpdateRate();
+                    m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
                     m_timeSimulation = {};  // reset tick-based simulation time as well
                 }
                 else
@@ -966,10 +971,7 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
     }
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    const unsigned int nSendClientUpdatesInEveryNthTick = m_config.getTickRate() / m_config.getClientUpdateRate();
-    static unsigned int nSendClientUpdatesCntr = nSendClientUpdatesInEveryNthTick;
-    const bool bSendUserUpdates = (nSendClientUpdatesCntr == nSendClientUpdatesInEveryNthTick);
+    const bool bSendUserUpdates = (m_nSendClientUpdatesCntr == m_nSendClientUpdatesInEveryNthTick);
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -1013,12 +1015,12 @@ void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
 
     if (bSendUserUpdates)
     {
-        nSendClientUpdatesCntr = 0;
+        m_nSendClientUpdatesCntr = 0;
         // measure duration only if we really sent the user updates to clients
         m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     }
 
-    ++nSendClientUpdatesCntr;
+    ++m_nSendClientUpdatesCntr;
 }
 
 void proofps_dd::PRooFPSddPGE::RestartGame()

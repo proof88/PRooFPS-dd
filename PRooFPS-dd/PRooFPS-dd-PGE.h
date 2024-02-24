@@ -104,6 +104,9 @@ namespace proofps_dd
         proofps_dd::Durations m_durations;
         proofps_dd::Sounds m_sounds;
 
+        unsigned int m_nSendClientUpdatesInEveryNthTick;
+        unsigned int m_nSendClientUpdatesCntr;
+
         // ---------------------------------------------------------------------------
 
         void showLoadingScreen(int nProgress);
