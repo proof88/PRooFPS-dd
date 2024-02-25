@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include "Networking.h"
+#include "PRooFPS-dd-packet.h"
 
 
 // ############################### PUBLIC ################################
@@ -34,6 +35,16 @@ proofps_dd::Networking::Networking(
     // when this ctor is invoked. PRooFPSddPGE initializes PGE later. Furthermore, even the pimpl object inside PGE might not
     // be existing at this point, only isGameRunning() is safe to call. The following assertion is reminding me of that:
     assert(!pge.isGameRunning());
+}
+
+bool proofps_dd::Networking::reinitialize()
+{
+    return m_pge.getNetwork().reinitialize();
+}
+
+bool proofps_dd::Networking::isServer() const
+{
+    return m_pge.getNetwork().isServer();
 }
 
 CConsole& proofps_dd::Networking::getConsole() const
@@ -57,6 +68,44 @@ bool proofps_dd::Networking::isMyConnection(const pge_network::PgeNetworkConnect
     // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
     // is our connection or not.
     return m_nServerSideConnectionHandle == connHandleServerSide;
+}
+
+void proofps_dd::Networking::allowListAppMessages()
+{
+    m_pge.getNetwork().getClient().getAllowListedAppMessages().clear();
+    m_pge.getNetwork().getServer().getAllowListedAppMessages().clear();
+    
+    // following messages are received/sent by both clients and server over network:
+    m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
+    m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
+
+    if (m_pge.getNetwork().isServer())
+    {
+        m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
+    }
+    else
+    {
+        // MsgMapChangeFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgMapChangeFromServer MUST NOT be received by server over network!
+        // MsgMapChangeFromServer is received only by clients over network!
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapChangeFromServer::id));
+
+        // MsgUserSetupFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserSetupFromServer MUST NOT be received by server over network!
+        // MsgUserSetupFromServer is received only by clients over network!
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserSetupFromServer::id));
+
+        // MsgUserUpdateFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgUserUpdateFromServer MUST NOT be received by server over network!
+        // MsgUserUpdateFromServer is received only by clients over network!
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
+
+        // following messages are received only by clients over network:
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
+    }
 }
 
 

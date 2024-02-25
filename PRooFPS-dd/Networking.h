@@ -38,6 +38,9 @@ namespace proofps_dd
         Networking(Networking&&) = delete;
         Networking&& operator=(Networking&&) = delete;
 
+        bool reinitialize();
+        bool isServer() const;
+
     protected:
 
         pge_network::PgeNetworkConnectionHandle m_nServerSideConnectionHandle;   /**< Server-side connection handle received from server in PgePktUserConnected
@@ -45,6 +48,7 @@ namespace proofps_dd
                                                                                       Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
 
         bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
+        void allowListAppMessages();
 
 
     private:

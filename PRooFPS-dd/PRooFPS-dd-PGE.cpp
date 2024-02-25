@@ -90,7 +90,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_config(Config::getConfigInstance(*this, m_maps)),
-    m_gui(GUI::getGuiInstance(*this, m_config, m_maps)),
+    m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_maps(getConfigProfiles(), getPure()),
@@ -237,47 +237,18 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         );
     }
 
-    // following messages are received/sent by both clients and server over network:
-    getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
+    // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
+
+    allowListAppMessages();
 
     if (getNetwork().isServer())
     {
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
-        getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
-
         if (m_maps.serverDecideWhichMapToLoad().empty())
         {
             getConsole().EOLnOO("ERROR: Server is unable to select first map!");
             PGE::showErrorDialog("Server is unable to select first map!");
             return false;
         }
-
-        // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
-    }
-    else
-    {
-        // MsgMapChangeFromServer is also processed by server, but it injects this pkt into its own queue when needed.
-        // MsgMapChangeFromServer MUST NOT be received by server over network!
-        // MsgMapChangeFromServer is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapChangeFromServer::id));
-
-        // MsgUserSetupFromServer is also processed by server, but it injects this pkt into its own queue when needed.
-        // MsgUserSetupFromServer MUST NOT be received by server over network!
-        // MsgUserSetupFromServer is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserSetupFromServer::id));
-
-        // MsgUserUpdateFromServer is also processed by server, but it injects this pkt into its own queue when needed.
-        // MsgUserUpdateFromServer MUST NOT be received by server over network!
-        // MsgUserUpdateFromServer is received only by clients over network!
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
-
-        // following messages are received only by clients over network:
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
-        getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
-
-        // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
     }
 
     m_config.validate();

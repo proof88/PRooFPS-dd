@@ -24,16 +24,21 @@
 // ############################### PUBLIC ################################
 
 
-proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(PGE& pge, proofps_dd::Config& config, proofps_dd::Maps& maps)
+proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
+    PGE& pge,
+    proofps_dd::Config& config,
+    proofps_dd::Maps& maps,
+    proofps_dd::Networking& networking)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
     // Note that the following should not be touched here as they are not fully constructed when we are here:
-    // maps, pge
+    // config, maps, networking, pge
     // But they can be used in other functions.
     static GUI m_guiInstance;
     m_pPge = &pge;
     m_pConfig = &config;
     m_pMaps = &maps;
+    m_pNetworking = &networking;
     return m_guiInstance;
 }
 
@@ -262,6 +267,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 PGE* proofps_dd::GUI::m_pPge = nullptr;
 proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
+proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
@@ -614,7 +620,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
             }
-            if (!m_pPge->getNetwork().isServer() && !m_pPge->getNetwork().reinitialize())
+            if (!m_pNetworking->isServer() && !m_pNetworking->reinitialize())
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from client to server mode!");
             }
@@ -716,7 +722,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
             }
-            if (m_pPge->getNetwork().isServer() && !m_pPge->getNetwork().reinitialize())
+            if (m_pNetworking->isServer() && !m_pNetworking->reinitialize())
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from server to client mode!");
             }

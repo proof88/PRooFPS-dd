@@ -19,6 +19,7 @@
 
 #include "Config.h"
 #include "Maps.h"
+#include "Networking.h"
 
 namespace proofps_dd
 {
@@ -42,7 +43,8 @@ namespace proofps_dd
         static GUI& getGuiInstance(
             PGE& pge,
             proofps_dd::Config& config,
-            proofps_dd::Maps& maps);   /**< Gets the singleton instance. */
+            proofps_dd::Maps& maps,
+            proofps_dd::Networking& networking);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
         static CConsole& getConsole();
@@ -72,6 +74,7 @@ namespace proofps_dd
         static PGE* m_pPge;
         static Config* m_pConfig;
         static Maps* m_pMaps;
+        static Networking* m_pNetworking;
         static MenuState m_currentMenu;
 
         static float getCenterPosXForText(const std::string& text);
