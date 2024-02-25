@@ -39,7 +39,12 @@ proofps_dd::Networking::Networking(
 
 bool proofps_dd::Networking::reinitialize()
 {
-    return m_pge.getNetwork().reinitialize();
+    bool bRet = m_pge.getNetwork().reinitialize();
+    if (bRet)
+    {
+        allowListAppMessages();
+    }
+    return bRet;
 }
 
 bool proofps_dd::Networking::isServer() const
