@@ -282,11 +282,20 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
         // items
-        b &= assertEquals(5u, maps.getItems().size(), "item count");
-        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(6u, maps.getItems().size(), "item count");
+        b &= assertEquals(6u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         if (b)
         {
             auto it = maps.getItems().begin();
+            b &= assertNotNull(it->second, "item 0") &&
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, it->second->getType(), "item 0 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 0 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 0 tex");
+            }
+
+            it++;
             b &= assertNotNull(it->second, "item 1") &&
                 assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
@@ -384,8 +393,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
 
         // items
-        b &= assertEquals(5u, maps.getItems().size(), "item count 1");
-        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        b &= assertEquals(6u, maps.getItems().size(), "item count 1");
+        b &= assertEquals(6u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         
         // ################################# TRY LOAD AGAIN ###################################
         b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 2");
@@ -454,8 +463,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         // items
-        b &= assertEquals(5u, maps.getItems().size(), "item count 3");
-        b &= assertEquals(5u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        b &= assertEquals(6u, maps.getItems().size(), "item count 3");
+        b &= assertEquals(6u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
 
         return b;
     }

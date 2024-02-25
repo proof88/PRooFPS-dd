@@ -330,6 +330,10 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 {
                     m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
                 }
+                else if (wpn->getFilename() == "bazooka.txt")
+                {
+                    m_pge.getAudio().play(m_sounds.m_sndShootBazooka);
+                }
                 else
                 {
                     getConsole().EOLn("WeaponHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
@@ -427,6 +431,10 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
                 else if (wpn->getFilename() == "machinegun.txt")
                 {
                     m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
+                }
+                else if (wpn->getFilename() == "bazooka.txt")
+                {
+                    m_pge.getAudio().play(m_sounds.m_sndShootBazooka);
                 }
                 else
                 {

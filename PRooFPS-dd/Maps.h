@@ -100,9 +100,9 @@ namespace proofps_dd
         };
 
         const std::set<char> backgroundBlocks = {
-            'a', 'c', 'e', 'n', 'n', 'o', 'r', 'v', 'u', 'w', 'x', 'y', 'z',
+            'a', 'c', 'e', 'n', 'n', 'o', 'r', 'v', 'u', 'w', 'x', 'y',
             /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
-            '+', 'M', 'P', 'S'
+            '+', 'M', 'P', 'Z', 'S'
         };
 
         PGEcfgProfiles& m_cfgProfiles;

@@ -23,10 +23,13 @@ namespace proofps_dd
         SoLoud::Wav m_sndReloadFinish;
         SoLoud::Wav m_sndShootPistol;
         SoLoud::Wav m_sndShootMchgun;
+        SoLoud::Wav m_sndShootBazooka;
+        SoLoud::Wav m_sndReloadBazooka;
         SoLoud::Wav m_sndShootDryPistol;
         SoLoud::Wav m_sndShootDryMchgun;
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;
+        SoLoud::Wav m_sndExplosion;
     };
 
 } // namespace proofps_dd

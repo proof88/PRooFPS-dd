@@ -39,7 +39,7 @@ J = crate.bmp
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
 # acnor
-# Remaining chars to be used as background blocks: esuvwxyz
+# Remaining chars to be used as background blocks: esuvwxy
 
 a = brick1.bmp
 c = brick2.bmp
@@ -50,6 +50,7 @@ r = brick1.bmp
 # Pickupable items:
 # 'P' char represents pistol.
 # 'M' char represents machine gun.
+# 'Z' char represents bazooka.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
@@ -77,7 +78,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 ooooacnooooooooooooooooooooooo  oooooooo
-nnnnnnnnnnnnnnnnnnnnnnnnnnnnnn  nnnnnnnn
+nnnnnnnnnnnZnnnnnnnnnnnnnnnnnn  nnnnnnnn
 oSoooooooooJoooooSoooooooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrrrrrrrrrrrr  rrrrrrrr
 aaa##aaaaJJJJaaaaaaaPaMa+aaaaa  aaaaaaaa P +

@@ -39,7 +39,7 @@ I = dirt2light.bmp
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
 # acenorvu
-# Remaining chars to be used as background blocks: z
+# Remaining chars to be used as background blocks: (no remaining)
 
 a = conc02.bmp
 c = brick2.bmp
@@ -56,6 +56,7 @@ y = paperboxes.bmp
 # Pickupable items:
 # 'P' char represents pistol.
 # 'M' char represents machine gun.
+# 'Z' char represents bazooka.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block

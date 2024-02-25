@@ -18,7 +18,7 @@ Gravity = 2.0
 # Textures should be placed in a separate directory specific to this map,
 # within gamedata/textures directory. The specific directory name should be
 # the same as the map file name without the extension part.
-# In this case the directory is: gamedata/textures/map_test_good/
+# In this case the directory is: gamedata/textures/map_warena/
 
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
@@ -39,7 +39,7 @@ D = dirt2light.bmp
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks:
 # acnor
-# Remaining chars to be used as background blocks: esuvwxyz
+# Remaining chars to be used as background blocks: esuvwxy
 
 a = brick1.bmp
 c = dirt2.bmp
@@ -50,6 +50,7 @@ c = dirt2.bmp
 # Pickupable items:
 # 'P' char represents pistol.
 # 'M' char represents machine gun.
+# 'Z' char represents bazooka.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block

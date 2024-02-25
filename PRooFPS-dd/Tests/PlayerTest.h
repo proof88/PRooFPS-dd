@@ -115,6 +115,7 @@ private:
         bool b = assertTrue(player.getWeaponManager().load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol");
         b &= assertTrue(player.getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn");
         b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/bazooka.txt", 0), "wm wpn load bazooka");
 
         for (const auto pSrcWpn : player.getWeaponManager().getWeapons())
         {
@@ -846,6 +847,8 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
+        const proofps_dd::MapItem miMchgun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        const proofps_dd::MapItem miBazooka(*engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
@@ -855,6 +858,9 @@ private:
 
         player.getWeaponManager().getWeapons()[0]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[0]->getVars()["cap_max"].getAsInt());
         b &= assertFalse(player.canTakeItem(miPistol), "2");
+
+        b &= assertTrue(player.canTakeItem(miMchgun), "3");
+        b &= assertTrue(player.canTakeItem(miBazooka), "4");
 
         return b;
     }
@@ -879,6 +885,7 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         proofps_dd::MapItem miPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
+        proofps_dd::MapItem miBazooka(*engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
         pge_network::PgePacket pktWpnUpdate;
         
         // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
@@ -932,6 +939,29 @@ private:
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 2 mag") &
             assertEquals(0 /* we didnt have machinegun yet, so we expect unmag count to be 0 in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 2 unmag");
+
+        player.TakeItem(miBazooka, pktWpnUpdate);
+        bStrSafeChecked = strncmp(
+            player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
+            msgWpnUpdate.m_szWpnName,
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
+
+        b &= assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[2]->getMagBulletCount()), "wpn 3 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[2]->isAvailable(), "wpn 3 available") &
+            assertTrue(miBazooka.isTaken(), "item 3 taken") &
+            assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
+                "pkt 3 id") &
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
+                "msg 3 id") &
+            assertTrue(bStrSafeChecked, "msg 3 sWeaponBecomingAvailable") &
+            assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 3 becoming available") &
+            assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+                static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 3 mag") &
+            assertEquals(0 /* we didnt have bazooka yet, so we expect unmag count to be 0 in msg */,
+                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 3 unmag");
 
         return b;
     }
