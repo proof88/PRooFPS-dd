@@ -1,1 +1,1 @@
-%cd%/PRooFPS-dd.exe --net_server=false
+%cd%/PRooFPS-dd.exe --gui_mainmenu=false --net_server=false

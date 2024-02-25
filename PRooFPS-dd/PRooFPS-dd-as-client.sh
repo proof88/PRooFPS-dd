@@ -1,2 +1,2 @@
 #!/bin/sh
-./PRooFPS-dd.exe --net_server=false
+./PRooFPS-dd.exe --gui_mainmenu=false --net_server=false
