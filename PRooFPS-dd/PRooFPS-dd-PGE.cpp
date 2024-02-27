@@ -222,12 +222,11 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     getPure().WriteList();
 
-    // Which key should switch to which weapon
-    WeaponManager::getKeypressToWeaponMap() = {
-        {'2', "pistol.txt"},
-        {'3', "machinegun.txt"},
-        {'4', "bazooka.txt"}
-    };
+    if (!initializeWeaponHandling())
+    {
+        getConsole().EOLnOO("ERROR: initializeWeaponHandling() failed!");
+        return false;
+    }
 
     // We tell the names of our app messages to the network engine so it can properly log message stats with message names
     for (const auto& msgAppId2StringPair : MapMsgAppId2String)

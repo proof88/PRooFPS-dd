@@ -158,18 +158,19 @@ bullet_fragile = true
 #####################################
 
 # Damage to health when hit directly.
-# If firing mode is "proj" or "burst", each hitting bullet or projectile takes this amount of damage.
+# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
 damage_hp = 20
 
 # Damage to armor when hit directly.
-# If firing mode is "proj" or "burst", each hitting bullet or projectile takes this amount of damage.
+# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
 damage_ap = 10
 
 # Area damage.
-# Size of area within damage is taken by player
-# 0 means no area damage (only direct hit takes damage).
-# HP and AP are both affected in area damage too.
-damage_area_size = 5.0
+# Radius of circular area within damage is taken by player.
+# 0 means no area damage (only direct hit causes damage).
+# A positive area damage triggers an explosion.
+# HP and AP are both affected by area damage.
+damage_area_size = 0.0
 
 # How area damage should be calculated?
 # No effect when damage_area_size is 0.
@@ -179,5 +180,5 @@ damage_area_size = 5.0
 damage_area_effect = linear
 
 # Amount of force applied to players within damage area.
-# No effect when damage_area_size is 0.
-damage_area_pulse = 20.0
+# Must be zero if damage_area_size is zero. 
+damage_area_pulse = 0.0

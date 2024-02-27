@@ -1,7 +1,7 @@
 /*
     ###################################################################################
     WeaponHandling.cpp
-    Weapon handling for PRooFPS-dd
+    Weapon and explosion handling for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
@@ -14,6 +14,222 @@
 #include <chrono>
 
 #include "WeaponHandling.h"
+
+
+/*
+   Explosion
+   ###########################################################################
+*/
+
+
+// ############################### PUBLIC ################################
+
+
+const char* proofps_dd::Explosion::getLoggerModuleName()
+{
+    return "Explosion";
+}
+
+proofps_dd::Explosion::ExplosionId proofps_dd::Explosion::getGlobalExplosionId()
+{
+    return m_globalExplosionId;
+}
+
+void proofps_dd::Explosion::ResetGlobalExplosionId()
+{
+    m_globalExplosionId = 0;
+}
+
+bool proofps_dd::Explosion::initExplosionsReference(PGE& pge)
+{
+    m_pReferenceObjExplosion = pge.getPure().getObject3DManager().createFromFile((std::string(GAME_MODELS_DIR) + "rocketl_xpl.obj").c_str());
+    if (!m_pReferenceObjExplosion)
+    {
+        return false;
+    }
+
+    m_pReferenceObjExplosion->SetDoubleSided(true);
+    m_pReferenceObjExplosion->SetLit(false);
+    // radius of rocketl_xpl.obj is 8 units, so to have a diameter of 1 unit, its scaling should be 1/16;
+    // however we need to set initial scaling here, which is the beginning of explosion animation, and that should be
+    // max 0.25 units, which is scaling 1/64 = 
+    m_pReferenceObjExplosion->SetScaling(0.015625f);
+    m_pReferenceObjExplosion->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
+    //m_pReferenceObjExplosion->getPosVec().Set(2, -2, -1);
+    m_pReferenceObjExplosion->Hide();
+
+    return true;
+}
+
+void proofps_dd::Explosion::destroyExplosionsReference()
+{
+    if (m_pReferenceObjExplosion)
+    {
+        delete m_pReferenceObjExplosion; // will detach from manager
+        m_pReferenceObjExplosion = nullptr;
+    }
+}
+
+/**
+    Ctor to be used by PGE server instance: bullet id will be assigned within the ctor.
+*/
+proofps_dd::Explosion::Explosion(
+    PR00FsUltimateRenderingEngine& gfx,
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos) :
+    m_id(m_globalExplosionId++),
+    m_gfx(gfx),
+    m_connHandle(connHandle),
+    m_objPrimary(nullptr),
+    m_objSecondary(nullptr),
+    m_bCreateSentToClients(false)
+{
+    // TODO throw exception if cant create!
+    m_objPrimary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = pos;
+
+    m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary->Show();
+    m_objSecondary->getPosVec() = pos;
+}
+
+/**
+    Ctor to be used by PGE client instance: bullet id as received from server.
+*/
+proofps_dd::Explosion::Explosion(
+    PR00FsUltimateRenderingEngine& gfx,
+    const Explosion::ExplosionId& id,
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos) :
+    m_id(id),
+    m_gfx(gfx),
+    m_connHandle(connHandle),
+    m_objPrimary(nullptr),
+    m_objSecondary(nullptr),
+    m_bCreateSentToClients(true) /* irrelevant for this client-side ctor but we are client so yes it is sent :) */
+{
+    // TODO throw exception if cant create!
+    m_objPrimary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = pos;
+
+    m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary->Show();
+    m_objSecondary->getPosVec() = pos;
+}
+
+proofps_dd::Explosion::Explosion(const proofps_dd::Explosion& other) :
+    m_id(other.m_id),
+    m_gfx(other.m_gfx),
+    m_connHandle(other.m_connHandle),
+    m_bCreateSentToClients(other.m_bCreateSentToClients)
+{
+    // TODO throw exception if cant create!
+    m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
+    m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+
+    m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary->Show();
+    m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
+    m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+}
+
+proofps_dd::Explosion& proofps_dd::Explosion::operator=(const proofps_dd::Explosion& other)
+{
+    m_id = other.m_id;
+    m_gfx = other.m_gfx;
+    m_connHandle = other.m_connHandle;
+    m_bCreateSentToClients = other.m_bCreateSentToClients;
+
+    // TODO throw exception if cant create!
+    m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
+    m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+
+    m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary->Show();
+    m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
+    m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+
+    return *this;
+}
+
+proofps_dd::Explosion::~Explosion()
+{
+    if (m_objPrimary)
+    {
+        m_gfx.getObject3DManager().DeleteAttachedInstance(*m_objPrimary);
+    }
+    if (m_objSecondary)
+    {
+        m_gfx.getObject3DManager().DeleteAttachedInstance(*m_objSecondary);
+    }
+}
+
+CConsole& proofps_dd::Explosion::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
+proofps_dd::Explosion::ExplosionId proofps_dd::Explosion::getId() const
+{
+    return m_id;
+}
+
+pge_network::PgeNetworkConnectionHandle proofps_dd::Explosion::getOwner() const
+{
+    return m_connHandle;
+}
+
+bool& proofps_dd::Explosion::isCreateSentToClients()
+{
+    return m_bCreateSentToClients;
+}
+
+void proofps_dd::Explosion::Update(const unsigned int& /*nFactor*/)
+{
+    // TODO
+}
+
+PureObject3D& proofps_dd::Explosion::getPrimaryObject3D()
+{
+    return *m_objPrimary;
+}
+
+const PureObject3D& proofps_dd::Explosion::getPrimaryObject3D() const
+{
+    return *m_objPrimary;
+}
+
+PureObject3D& proofps_dd::Explosion::getSecondaryObject3D()
+{
+    return *m_objSecondary;
+}
+
+const PureObject3D& proofps_dd::Explosion::getSecondaryObject3D() const
+{
+    return *m_objSecondary;
+}
+
+
+// ############################## PROTECTED ##############################
+
+
+// ############################### PRIVATE ###############################
+
+
+proofps_dd::Explosion::ExplosionId proofps_dd::Explosion::m_globalExplosionId = 0;
+PureObject3D* proofps_dd::Explosion::m_pReferenceObjExplosion = nullptr;
+
+
+/*
+   WeaponHandling
+   ###########################################################################
+*/
 
 
 // ############################### PUBLIC ################################
@@ -207,6 +423,15 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         if (bDeleteBullet)
         {
+            // make explosion first if required
+            if (!bEndGame)
+            {
+                if (bullet.getAreaDamageSize() > 0.f)
+                {
+                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec());
+                }
+            }
+
             // TODO: we should have a separate msg for deleting Bullet because its size would be much less than this msg!
             proofps_dd::MsgBulletUpdateFromServer::initPktForDeleting_WithGarbageValues(
                 newPktBulletUpdate,
@@ -236,7 +461,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     bullet.getObject3D().getSizeVec().getZ(),
                     bullet.getSpeed(),
                     bullet.getGravity(),
-                    bullet.getDrag());
+                    bullet.getDrag(),
+                    bullet.getAreaDamageSize());
                 m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
             }
             // bullet didn't touch anything, go to next
@@ -280,8 +506,53 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
     }
 }
 
+bool proofps_dd::WeaponHandling::initializeWeaponHandling()
+{
+    // Which key should switch to which weapon
+    WeaponManager::getKeypressToWeaponMap() = {
+        {'2', "pistol.txt"},
+        {'3', "machinegun.txt"},
+        {'4', "bazooka.txt"}
+    };
+
+    Explosion::ResetGlobalExplosionId();
+    return Explosion::initExplosionsReference(m_pge);
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos)
+{
+    m_explosions.push_back(
+        Explosion(
+            m_pge.getPure(),
+            connHandle,
+            pos));
+    
+    return m_explosions.back();
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
+    const proofps_dd::Explosion::ExplosionId& id,
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos)
+{
+    m_explosions.push_back(
+        Explosion(
+            m_pge.getPure(),
+            id,
+            connHandle,
+            pos));
+
+    return m_explosions.back();
+}
+
 void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
 {
+    m_explosions.clear();
+    Explosion::destroyExplosionsReference();
+    Explosion::ResetGlobalExplosionId();
+
     m_pge.getBullets().clear();
     Bullet::ResetGlobalBulletId();
 }
@@ -452,7 +723,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z,
-                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag));
+                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_fDamageAreaSize));
         pBullet = &(m_pge.getBullets().back());
         it = m_pge.getBullets().end();
         it--; // iterator points to this newly inserted last bullet

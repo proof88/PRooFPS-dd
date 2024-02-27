@@ -82,6 +82,7 @@ namespace proofps_dd
     static constexpr char* GAME_WPN_DEFAULT = "pistol.txt";
 
     static constexpr char* GAME_AUDIO_DIR = "gamedata/audio/";
+    static constexpr char* GAME_MODELS_DIR = "gamedata/models/";
     static constexpr char* GAME_TEXTURES_DIR = "gamedata/textures/";
     static constexpr char* GAME_WEAPONS_DIR = "gamedata/weapons/";
 
