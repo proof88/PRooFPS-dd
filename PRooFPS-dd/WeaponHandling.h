@@ -47,14 +47,16 @@ namespace proofps_dd
         Explosion(
             PR00FsUltimateRenderingEngine& gfx,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos);
+            const PureVector& pos,
+            const TPureFloat& fDamageAreaSize);
 
         /** Ctor to be used by PGE client instance: bullet id as received from server. */
         Explosion(
             PR00FsUltimateRenderingEngine& gfx,
             const ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos);
+            const PureVector& pos,
+            const TPureFloat& fDamageAreaSize);
 
         Explosion(const Explosion& other);            // TODO check if we really cannot live with just compiler generated copy ctor?
 
@@ -70,12 +72,14 @@ namespace proofps_dd
 
         bool& isCreateSentToClients();
 
-        void Update(const unsigned int& nFactor);
+        void update(const unsigned int& nFactor);
 
         PureObject3D& getPrimaryObject3D();
         const PureObject3D& getPrimaryObject3D() const;
         PureObject3D& getSecondaryObject3D();
         const PureObject3D& getSecondaryObject3D() const;
+
+        bool shouldBeDeleted() const;
 
     protected:
 
@@ -87,9 +91,12 @@ namespace proofps_dd
         ExplosionId m_id;                                      /**< Unique explosion id for identifying. Used by PGE server and client instances. */
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeNetworkConnectionHandle m_connHandle;  /**< Owner (caused by) of this explosion. Used by PGE server instance only. */
+        TPureFloat m_fDamageAreaSize;                          /**< Originating bullet's fDamageAreaSize. Used by PGE server and client instances. */
 
         PureObject3D* m_objPrimary;                            /**< Associated Primary Pure object to be rendered. Used by PGE server and client instances. TODO: shared ptr. */
         PureObject3D* m_objSecondary;                          /**< Associated Secondary Pure object to be rendered. Used by PGE server and client instances. TODO: shared ptr. */
+        TPureFloat m_fScalingPrimary;                          /**< To be increased during animation. */
+        TPureFloat m_fScalingSecondary;                        /**< To be increased during animation. */
         bool m_bCreateSentToClients;                           /**< Server should send update to clients about creation of new explosions. By default false. */
 
         // ---------------------------------------------------------------------------
@@ -124,11 +131,13 @@ namespace proofps_dd
         bool initializeWeaponHandling();
         Explosion& createExplosionServer(
             const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos);
+            const PureVector& pos,
+            const TPureFloat& fDamageAreaSize);
         Explosion& createExplosionClient(
             const proofps_dd::Explosion::ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos);
+            const PureVector& pos,
+            const TPureFloat& fDamageAreaSize);
 
     protected:
 
@@ -142,6 +151,10 @@ namespace proofps_dd
             PureObject3D& objXHair,
             const unsigned int& nPhysicsRate);
         void clientUpdateBullets(const unsigned int& nPhysicsRate);
+        void serverUpdateExplosions(
+            proofps_dd::GameMode& gameMode,
+            const unsigned int& nPhysicsRate);
+        void clientUpdateExplosions(const unsigned int& nPhysicsRate);
         
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

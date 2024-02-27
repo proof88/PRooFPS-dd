@@ -16,6 +16,7 @@
 #include "WeaponHandling.h"
 
 
+
 /*
    Explosion
    ###########################################################################
@@ -50,12 +51,11 @@ bool proofps_dd::Explosion::initExplosionsReference(PGE& pge)
 
     m_pReferenceObjExplosion->SetDoubleSided(true);
     m_pReferenceObjExplosion->SetLit(false);
-    // radius of rocketl_xpl.obj is 8 units, so to have a diameter of 1 unit, its scaling should be 1/16;
-    // however we need to set initial scaling here, which is the beginning of explosion animation, and that should be
-    // max 0.25 units, which is scaling 1/64 = 
-    m_pReferenceObjExplosion->SetScaling(0.015625f);
+    // We want the animation to start with 0.1 unit size so we set scaling with this formula.
+    // For example, diameter of rocketl_xpl.obj is 16 units, so to have a diameter of 1 unit, its scaling should be 1/16,
+    // we use getSizeVec().getX() as diameter, considering the model object is always a sphere.
+    m_pReferenceObjExplosion->SetScaling(1 / m_pReferenceObjExplosion->getSizeVec().getX() / 10.f);
     m_pReferenceObjExplosion->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    //m_pReferenceObjExplosion->getPosVec().Set(2, -2, -1);
     m_pReferenceObjExplosion->Hide();
 
     return true;
@@ -76,12 +76,16 @@ void proofps_dd::Explosion::destroyExplosionsReference()
 proofps_dd::Explosion::Explosion(
     PR00FsUltimateRenderingEngine& gfx,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos) :
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize) :
     m_id(m_globalExplosionId++),
     m_gfx(gfx),
     m_connHandle(connHandle),
+    m_fDamageAreaSize(fDamageAreaSize),
     m_objPrimary(nullptr),
     m_objSecondary(nullptr),
+    m_fScalingPrimary(m_pReferenceObjExplosion->getScaling().getX()),
+    m_fScalingSecondary(m_pReferenceObjExplosion->getScaling().getX()),
     m_bCreateSentToClients(false)
 {
     // TODO throw exception if cant create!
@@ -90,7 +94,7 @@ proofps_dd::Explosion::Explosion(
     m_objPrimary->getPosVec() = pos;
 
     m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objSecondary->Show();
+    m_objSecondary->Hide();
     m_objSecondary->getPosVec() = pos;
 }
 
@@ -101,12 +105,16 @@ proofps_dd::Explosion::Explosion(
     PR00FsUltimateRenderingEngine& gfx,
     const Explosion::ExplosionId& id,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos) :
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize) :
     m_id(id),
     m_gfx(gfx),
     m_connHandle(connHandle),
+    m_fDamageAreaSize(fDamageAreaSize),
     m_objPrimary(nullptr),
     m_objSecondary(nullptr),
+    m_fScalingPrimary(m_pReferenceObjExplosion->getScaling().getX()),
+    m_fScalingSecondary(m_pReferenceObjExplosion->getScaling().getX()),
     m_bCreateSentToClients(true) /* irrelevant for this client-side ctor but we are client so yes it is sent :) */
 {
     // TODO throw exception if cant create!
@@ -115,7 +123,7 @@ proofps_dd::Explosion::Explosion(
     m_objPrimary->getPosVec() = pos;
 
     m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objSecondary->Show();
+    m_objSecondary->Hide();
     m_objSecondary->getPosVec() = pos;
 }
 
@@ -123,18 +131,35 @@ proofps_dd::Explosion::Explosion(const proofps_dd::Explosion& other) :
     m_id(other.m_id),
     m_gfx(other.m_gfx),
     m_connHandle(other.m_connHandle),
+    m_fDamageAreaSize(other.m_fDamageAreaSize),
+    m_fScalingPrimary(other.m_fScalingPrimary),
+    m_fScalingSecondary(other.m_fScalingSecondary),
     m_bCreateSentToClients(other.m_bCreateSentToClients)
 {
     // TODO throw exception if cant create!
-    m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objPrimary->Show();
-    m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
-    m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+    if (other.m_objPrimary)
+    {
+        m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objPrimary->SetRenderingAllowed(other.m_objPrimary->isRenderingAllowed());
+        m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
+        m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+    }
+    else
+    {
+        m_objPrimary = nullptr;
+    }
 
-    m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objSecondary->Show();
-    m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
-    m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+    if (other.m_objSecondary)
+    {
+        m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objSecondary->SetRenderingAllowed(other.m_objSecondary->isRenderingAllowed());
+        m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
+        m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+    }
+    else
+    {
+        m_objSecondary = nullptr;
+    }
 }
 
 proofps_dd::Explosion& proofps_dd::Explosion::operator=(const proofps_dd::Explosion& other)
@@ -142,18 +167,35 @@ proofps_dd::Explosion& proofps_dd::Explosion::operator=(const proofps_dd::Explos
     m_id = other.m_id;
     m_gfx = other.m_gfx;
     m_connHandle = other.m_connHandle;
+    m_fDamageAreaSize = other.m_fDamageAreaSize;
+    m_fScalingPrimary = other.m_fScalingPrimary;
+    m_fScalingSecondary = other.m_fScalingSecondary;
     m_bCreateSentToClients = other.m_bCreateSentToClients;
 
     // TODO throw exception if cant create!
-    m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objPrimary->Show();
-    m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
-    m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+    if (other.m_objPrimary)
+    {
+        m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objPrimary->SetRenderingAllowed(other.m_objPrimary->isRenderingAllowed());
+        m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
+        m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+    }
+    else
+    {
+        m_objPrimary = nullptr;
+    }
 
-    m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
-    m_objSecondary->Show();
-    m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
-    m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+    if (other.m_objSecondary)
+    {
+        m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objSecondary->SetRenderingAllowed(other.m_objSecondary->isRenderingAllowed());
+        m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
+        m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+    }
+    else
+    {
+        m_objSecondary = nullptr;
+    }
 
     return *this;
 }
@@ -190,9 +232,64 @@ bool& proofps_dd::Explosion::isCreateSentToClients()
     return m_bCreateSentToClients;
 }
 
-void proofps_dd::Explosion::Update(const unsigned int& /*nFactor*/)
+void proofps_dd::Explosion::update(const unsigned int& nFactor)
 {
-    // TODO
+    if (m_objPrimary)
+    {
+        m_fScalingPrimary += 1.5f / static_cast<TPureFloat>(nFactor);
+        // either we are scaling in all dimensions or just in XY directions, not sure which looks better!
+        //m_objPrimary->SetScaling(m_fScalingPrimary);
+        m_objPrimary->SetScaling(PureVector(m_fScalingPrimary, m_fScalingPrimary, m_objPrimary->getScaling().getZ()));
+
+        // the scaling animation should end when we reached the damage area size, which is the radius of damage,
+        // thus we should stop at m_fDamageAreaSize * 2, however I use *3 because the transparency is also increasing:
+        const float fTargetDiameter = m_fDamageAreaSize * 3;
+        const float fCurrentDiameter = m_objPrimary->getSizeVec().getX() * m_fScalingPrimary;
+
+        if (fCurrentDiameter > fTargetDiameter)
+        {
+            delete m_objPrimary;
+            m_objPrimary = nullptr;
+        }
+        else
+        {
+            const float fAnimationProgress = fCurrentDiameter / fTargetDiameter;
+            if (m_objSecondary && !m_objSecondary->isRenderingAllowed())
+            {
+                if (fAnimationProgress >= 0.4f)
+                {
+                    m_objSecondary->Show();
+                }
+            }
+            const float fTargetTransparency = 1 - fAnimationProgress;
+            m_objPrimary->getMaterial(false).getTextureEnvColor().SetAsFloats(fTargetTransparency, fTargetTransparency, fTargetTransparency, 1.f);
+        }
+    }
+
+    // copy-paste code, not nice ...
+    if (m_objSecondary && m_objSecondary->isRenderingAllowed())
+    {
+        m_fScalingSecondary += 1.5f / static_cast<TPureFloat>(nFactor);
+        // either we are scaling in all dimensions or just in XY directions, not sure which looks better!
+        //m_objSecondary->SetScaling(m_fScalingSecondary);
+        m_objSecondary->SetScaling(PureVector(m_fScalingSecondary, m_fScalingSecondary, m_objSecondary->getScaling().getZ()));
+
+        // the scaling animation should end when we reached the damage area size, which is the radius of damage,
+        // thus we should stop at m_fDamageAreaSize * 2, however I use *3 because the transparency is also increasing:
+        const float fTargetDiameter = m_fDamageAreaSize * 3;
+        const float fCurrentDiameter = m_objSecondary->getSizeVec().getX() * m_fScalingSecondary;
+
+        if (fCurrentDiameter > fTargetDiameter)
+        {
+            delete m_objSecondary;
+            m_objSecondary = nullptr;
+        }
+        else
+        {
+            const float fTargetTransparency = 1 - (fCurrentDiameter / fTargetDiameter);
+            m_objSecondary->getMaterial(false).getTextureEnvColor().SetAsFloats(fTargetTransparency, fTargetTransparency, fTargetTransparency, 1.f);
+        }
+    }
 }
 
 PureObject3D& proofps_dd::Explosion::getPrimaryObject3D()
@@ -213,6 +310,11 @@ PureObject3D& proofps_dd::Explosion::getSecondaryObject3D()
 const PureObject3D& proofps_dd::Explosion::getSecondaryObject3D() const
 {
     return *m_objSecondary;
+}
+
+bool proofps_dd::Explosion::shouldBeDeleted() const
+{
+    return !m_objPrimary && !m_objSecondary;
 }
 
 
@@ -428,7 +530,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 if (bullet.getAreaDamageSize() > 0.f)
                 {
-                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec());
+                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize());
                 }
             }
 
@@ -467,7 +569,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             }
             // bullet didn't touch anything, go to next
             it++;
-            // since v.0.1.4, server doesn't send the bullet travel updates to clients since clients simulate the travel in clientUpdateBullets()
+            // since v0.1.4, server doesn't send the bullet travel updates to clients since clients simulate the travel in clientUpdateBullets()
         }
 
         // 'it' is referring to next bullet, don't use it from here!
@@ -506,6 +608,37 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
     }
 }
 
+void proofps_dd::WeaponHandling::serverUpdateExplosions(proofps_dd::GameMode& gameMode, const unsigned int& nPhysicsRate)
+{
+    // on the long run this function needs to be part of the game engine itself, however first serverUpdateBullets() should be moved there!
+
+    const bool bEndGame = gameMode.checkWinningConditions();
+    auto it = m_explosions.begin();
+    while (it != m_explosions.end())
+    {
+        auto& xpl = *it;
+        xpl.update(nPhysicsRate);
+
+        if (xpl.shouldBeDeleted())
+        {
+            it = m_explosions.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
+
+    if (bEndGame && (Explosion::getGlobalExplosionId() > 0))
+    {
+        Explosion::ResetGlobalExplosionId();
+    }
+}
+
+void proofps_dd::WeaponHandling::clientUpdateExplosions(const unsigned int& /*nPhysicsRate*/)
+{
+}
+
 bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 {
     // Which key should switch to which weapon
@@ -521,13 +654,15 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos)
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize)
 {
     m_explosions.push_back(
         Explosion(
             m_pge.getPure(),
             connHandle,
-            pos));
+            pos,
+            fDamageAreaSize));
     
     return m_explosions.back();
 }
@@ -535,14 +670,16 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const proofps_dd::Explosion::ExplosionId& id,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos)
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize)
 {
     m_explosions.push_back(
         Explosion(
             m_pge.getPure(),
             id,
             connHandle,
-            pos));
+            pos,
+            fDamageAreaSize));
 
     return m_explosions.back();
 }

@@ -711,6 +711,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate());
+            serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
         }  // for iPhyIter
