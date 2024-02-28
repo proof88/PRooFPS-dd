@@ -734,6 +734,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
         clientUpdateBullets(m_config.getPhysicsRate());
+        clientUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
     }
 }
 

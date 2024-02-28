@@ -525,7 +525,9 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         if (bDeleteBullet)
         {
-            // make explosion first if required
+            // make explosion first if required;
+            // server does not send specific message to client about creating explosion, it is client's responsibility to create explosion
+            // when it receives MsgBulletUpdateFromServer with bDelete flag set, if bullet has area damage!
             if (!bEndGame)
             {
                 if (bullet.getAreaDamageSize() > 0.f)
@@ -538,7 +540,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             proofps_dd::MsgBulletUpdateFromServer::initPktForDeleting_WithGarbageValues(
                 newPktBulletUpdate,
                 pge_network::ServerConnHandle,
-                bullet.getId()); // clients will also delete this bullet on their side because we set pkt's delete flag here
+                bullet.getId(),
+                fBulletPosX,
+                fBulletPosY,
+                bullet.getObject3D().getPosVec().getZ()
+                ); // clients will also delete this bullet on their side because we set pkt's delete flag here
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
             m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
         }
@@ -635,8 +641,12 @@ void proofps_dd::WeaponHandling::serverUpdateExplosions(proofps_dd::GameMode& ga
     }
 }
 
-void proofps_dd::WeaponHandling::clientUpdateExplosions(const unsigned int& /*nPhysicsRate*/)
+void proofps_dd::WeaponHandling::clientUpdateExplosions(proofps_dd::GameMode& gameMode, const unsigned int& nPhysicsRate)
 {
+    // remember that on client-side, all explosions have id 0 because we simply do not set anything;
+    // for now we can do exactly what server does with explosions
+
+    serverUpdateExplosions(gameMode, nPhysicsRate);
 }
 
 bool proofps_dd::WeaponHandling::initializeWeaponHandling()
@@ -668,7 +678,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 }
 
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
-    const proofps_dd::Explosion::ExplosionId& id,
+    const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize)
@@ -676,7 +686,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     m_explosions.push_back(
         Explosion(
             m_pge.getPure(),
-            id,
+            id /* explosion id is not used on client-side */,
             connHandle,
             pos,
             fDamageAreaSize));
@@ -879,6 +889,20 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
 
     if (msg.m_bDelete)
     {
+        // make explosion first if required;
+        // unlike server, client makes explosion when server says a bullet should be deleted, in such case client's job is to make explosion
+        // with same parameters as server makes it based on bullet properties such as position, area damage size, etc., this is why it is important
+        // that server sends bullet position also when bDelete flag is set, so the explosion position will be the same as on server side!
+        if (it->getAreaDamageSize() > 0.f)
+        {
+            createExplosionClient(
+                0 /* explosion id is not used on client-side */,
+                connHandleServerSide,
+                /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
+                PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
+                it->getAreaDamageSize());
+        }
+
         m_pge.getBullets().erase(it);
         return true;
     }

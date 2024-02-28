@@ -154,7 +154,9 @@ namespace proofps_dd
         void serverUpdateExplosions(
             proofps_dd::GameMode& gameMode,
             const unsigned int& nPhysicsRate);
-        void clientUpdateExplosions(const unsigned int& nPhysicsRate);
+        void clientUpdateExplosions(
+            proofps_dd::GameMode& gameMode,
+            const unsigned int& nPhysicsRate);
         
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

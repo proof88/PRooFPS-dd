@@ -589,7 +589,10 @@ namespace proofps_dd
         static bool initPktForDeleting_WithGarbageValues(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
-            const Bullet::BulletId bulletId)
+            const Bullet::BulletId bulletId,
+            const TPureFloat px,
+            const TPureFloat py,
+            const TPureFloat pz)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -606,6 +609,9 @@ namespace proofps_dd
 
             proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(*pMsgAppData);
             msgBulletUpdate.m_bulletId = bulletId;
+            msgBulletUpdate.m_pos.x = px;
+            msgBulletUpdate.m_pos.y = py;
+            msgBulletUpdate.m_pos.z = pz;
             msgBulletUpdate.m_bDelete = true;
 
             return true;
