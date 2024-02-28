@@ -123,6 +123,47 @@ bool proofps_dd::Physics::Colliding2_NoZ(
         );
 }
 
+float proofps_dd::Physics::distance_NoZ(
+    float o1px, float o1py,
+    float o2px, float o2py)
+{
+    const float fLengthX = o1px - o2px;
+    const float fLengthY = o1py - o2py;
+    return sqrt(fLengthX * fLengthX + fLengthY * fLengthY);
+}
+
+float proofps_dd::Physics::distance_NoZ(float o1px, float o1py, float o1sx, float o1sy, float o2px, float o2py)
+{
+    // first we check if O1 is colliding with O2, if yes then their distance is 0
+    if (Colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
+    {
+        return 0.f;
+    }
+
+    // if they are not colliding, we check the 4 points of O1 and return the distance to position of O2 center.
+    // This could be further improved by using the 4 points of O2 too, however for now this is enough.
+    float fRet = distance_NoZ(o1px + o1sx / 2.f, o1py + o1sy / 2.f, o2px, o2py);
+    float fTmp = distance_NoZ(o1px + o1sx / 2.f, o1py - o1sy / 2.f, o2px, o2py);
+    if (fTmp < fRet)
+    {
+        fRet = fTmp;
+    }
+
+    fTmp = distance_NoZ(o1px - o1sx / 2.f, o1py + o1sy / 2.f, o2px, o2py);
+    if (fTmp < fRet)
+    {
+        fRet = fTmp;
+    }
+
+    fTmp = distance_NoZ(o1px - o1sx / 2.f, o1py - o1sy / 2.f, o2px, o2py);
+    if (fTmp < fRet)
+    {
+        fRet = fTmp;
+    }
+
+    return fRet;
+}
+
 bool proofps_dd::Physics::Colliding3(
     const PureVector& vecPosMin, const PureVector& vecPosMax,
     const PureVector& vecObjPos, const PureVector& vecObjSize)

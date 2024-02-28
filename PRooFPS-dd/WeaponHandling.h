@@ -79,6 +79,11 @@ namespace proofps_dd
         PureObject3D& getSecondaryObject3D();
         const PureObject3D& getSecondaryObject3D() const;
 
+        const float& getDamageAreaSize() const;
+        float getDamageAtDistance(
+            const float& fDistance,
+            const int& nDamageHp) const;
+
         bool shouldBeDeleted() const;
 
     protected:
@@ -132,7 +137,9 @@ namespace proofps_dd
         Explosion& createExplosionServer(
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
-            const TPureFloat& fDamageAreaSize);
+            const TPureFloat& fDamageAreaSize,
+            const int& nDamageHp,
+            PureObject3D& objXHair);
         Explosion& createExplosionClient(
             const proofps_dd::Explosion::ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,

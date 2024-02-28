@@ -312,6 +312,23 @@ const PureObject3D& proofps_dd::Explosion::getSecondaryObject3D() const
     return *m_objSecondary;
 }
 
+const float& proofps_dd::Explosion::getDamageAreaSize() const
+{
+    return m_fDamageAreaSize;
+}
+
+float proofps_dd::Explosion::getDamageAtDistance(
+    const float& fDistance,
+    const int& nDamageHp) const
+{
+    // fDistance is distance between explosion center and other entity's center,
+    // m_fDamageAreaSize is radius
+    assert(fDistance >= 0.f);
+    assert(m_fDamageAreaSize > 0.f);
+
+    return nDamageHp * std::max(0.f, (1 - (fDistance / m_fDamageAreaSize)));
+}
+
 bool proofps_dd::Explosion::shouldBeDeleted() const
 {
     return !m_objPrimary && !m_objSecondary;
@@ -448,24 +465,28 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getObject3D().getSizeVec().getX(), bullet.getObject3D().getSizeVec().getY()))
                 {
                     bDeleteBullet = true;
-                    player.DoDamage(bullet.getDamageHp());
-                    if (player.getHealth() == 0)
+                    if (bullet.getAreaDamageSize() == 0.f)
                     {
-                        const auto itKiller = m_mapPlayers.find(bullet.getOwner());
-                        if (itKiller == m_mapPlayers.end())
+                        // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
+                        player.DoDamage(bullet.getDamageHp());
+                        if (player.getHealth() == 0)
                         {
-                            //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                            //    __func__, playerPair.first.c_str());
+                            const auto itKiller = m_mapPlayers.find(bullet.getOwner());
+                            if (itKiller == m_mapPlayers.end())
+                            {
+                                //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                                //    __func__, playerPair.first.c_str());
+                            }
+                            else
+                            {
+                                itKiller->second.getFrags()++;
+                                bEndGame = gameMode.checkWinningConditions();
+                                //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                                //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                            }
+                            // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                            HandlePlayerDied(player, objXHair);
                         }
-                        else
-                        {
-                            itKiller->second.getFrags()++;
-                            bEndGame = gameMode.checkWinningConditions();
-                            //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                            //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
-                        }
-                        // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                        HandlePlayerDied(player, objXHair);
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
                 }
@@ -532,7 +553,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 if (bullet.getAreaDamageSize() > 0.f)
                 {
-                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize());
+                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize(), bullet.getDamageHp(), objXHair);
                 }
             }
 
@@ -665,7 +686,9 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
-    const TPureFloat& fDamageAreaSize)
+    const TPureFloat& fDamageAreaSize,
+    const int& nDamageHp,
+    PureObject3D& objXHair)
 {
     m_explosions.push_back(
         Explosion(
@@ -674,6 +697,57 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             pos,
             fDamageAreaSize));
     
+    const Explosion& xpl = m_explosions.back();
+
+    // apply area damage to players
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+
+        if (player.getHealth() > 0)
+        {
+            const float fRadiusDamage = xpl.getDamageAtDistance(
+                distance_NoZ(
+                    player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+                    player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+                    xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY()),
+                nDamageHp
+            );
+            
+            if (fRadiusDamage > 0.f)
+            {
+                player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+                //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+                if (player.getHealth() == 0)
+                {
+                    const auto itKiller = m_mapPlayers.find(xpl.getOwner());
+                    if (itKiller == m_mapPlayers.end())
+                    {
+                        //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                        //    __func__, playerPair.first.c_str());
+                    }
+                    else
+                    {
+                        // unlike in serverUpdateBullets(), here the owner of the explosion can kill even theirself, so
+                        // in that case frags should be decremented!
+                        if (player.getServerSideConnectionHandle() == xpl.getOwner())
+                        {
+                            itKiller->second.getFrags()--;
+                        }
+                        else
+                        {
+                            itKiller->second.getFrags()++;
+                        }
+                        //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                        //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                    }
+                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                    HandlePlayerDied(player, objXHair);
+                }
+            }
+        }
+    }
+
     return m_explosions.back();
 }
 

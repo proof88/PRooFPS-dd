@@ -64,6 +64,15 @@ namespace proofps_dd
         static bool Colliding3(
             const PureVector& vecPosMin, const PureVector& vecPosMax,
             const PureVector& vecObjPos, const PureVector& vecObjSize);
+        static float distance_NoZ(
+            float o1px, float o1py,
+            float o2px, float o2py);
+        static float distance_NoZ(
+            float o1px, float o1py,
+            float o1sx, float o1sy,
+            float o2px, float o2py
+        );
+
         
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
