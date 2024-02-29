@@ -72,6 +72,12 @@ namespace proofps_dd
             float o1sx, float o1sy,
             float o2px, float o2py
         );
+        static float distance_NoZ_with_distancePerAxis(
+            float o1px, float o1py,
+            float o1sx, float o1sy,
+            float o2px, float o2py,
+            PureVector& vDirPerAxis,
+            PureVector& vDistancePerAxis);
 
         
         void serverSetAllowStrafeMidAir(bool bAllow);

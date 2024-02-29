@@ -711,24 +711,33 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
         if (player.getHealth() > 0)
         {
-            const float fDistance = distance_NoZ(
+            PureVector vDirPerAxis;
+            PureVector vDistancePerAxis;
+            const float fDistance = distance_NoZ_with_distancePerAxis(
                 player.getPos().getNew().getX(), player.getPos().getNew().getY(),
                 player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-                xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY());
+                xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
+                vDirPerAxis, vDistancePerAxis);
             
             const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
             
             if (fRadiusDamage > 0.f)
             {
-                const float fForceMultiplier = std::max(0.f, (1 - (fDistance / xpl.getDamageAreaSize()))) / 2.f;
-                /* TODO: xpl.getImpactAtDistance() */
+                // to determine the direction of impact, we should use the center positions of player and explosion, however
+                // to determine the magnitude of impact, we should use the edges/corners of players and explosion center per axis.
+                // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+                /* TODO: make an xpl.getImpactAtDistance()* /
+                /* TODO: multiplier might be modified later with Physics ImpactForce tweaking */
+                const float fImpactX = 0.3f * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+                const float fImpactY = 0.3f * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+                getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
                 PureVector vecImpact(
-                    (player.getPos().getNew().getX() - xpl.getPrimaryObject3D().getPosVec().getX()) * fForceMultiplier,
-                    (player.getPos().getNew().getY() - xpl.getPrimaryObject3D().getPosVec().getY()) * fForceMultiplier,
+                    fImpactX,
+                    fImpactY,
                     0.f);
                 player.getImpactForce() += vecImpact;
                 //player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
-                //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+                getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
                 if (player.getHealth() == 0)
                 {
                     const auto itKiller = m_mapPlayers.find(xpl.getOwner());
@@ -739,7 +748,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     }
                     else
                     {
-                        // unlike in serverUpdateBullets(), here the owner of the explosion can kill even theirself, so
+                        // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
                         // in that case frags should be decremented!
                         if (player.getServerSideConnectionHandle() == xpl.getOwner())
                         {

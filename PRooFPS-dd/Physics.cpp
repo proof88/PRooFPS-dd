@@ -164,6 +164,48 @@ float proofps_dd::Physics::distance_NoZ(float o1px, float o1py, float o1sx, floa
     return fRet;
 }
 
+float proofps_dd::Physics::distance_NoZ_with_distancePerAxis(float o1px, float o1py, float o1sx, float o1sy, float o2px, float o2py, PureVector& vDirPerAxis, PureVector& vDistancePerAxis)
+{
+    vDirPerAxis.SetZ(0);
+    vDirPerAxis.SetX( o1px - o2px );
+    vDirPerAxis.SetY( o1py - o2py );
+    vDirPerAxis.Normalize();
+
+    // first we check if O1 is colliding with O2, if yes then their distance is 0
+    if (Colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
+    {
+        vDistancePerAxis.SetZero();
+        return 0.f;
+    }
+
+    // if they are not colliding, we check the 4 points of O1 and return the distance to position of O2 center.
+    // This could be further improved by using the 4 points of O2 too, however for now this is enough.
+    float fRetCenterDistance = distance_NoZ(o1px + o1sx / 2.f, o1py + o1sy / 2.f, o2px, o2py);
+    vDistancePerAxis.Set(abs(o1px + o1sx / 2.f - o2px), abs(o1py + o1sy / 2.f - o2py), 0.f);
+    float fTmpCenterDistance = distance_NoZ(o1px + o1sx / 2.f, o1py - o1sy / 2.f, o2px, o2py);
+    if (fTmpCenterDistance < fRetCenterDistance)
+    {
+        fRetCenterDistance = fTmpCenterDistance;
+        vDistancePerAxis.Set(abs(o1px + o1sx / 2.f - o2px), abs(o1py - o1sy / 2.f - o2py), 0.f);
+    }
+
+    fTmpCenterDistance = distance_NoZ(o1px - o1sx / 2.f, o1py + o1sy / 2.f, o2px, o2py);
+    if (fTmpCenterDistance < fRetCenterDistance)
+    {
+        fRetCenterDistance = fTmpCenterDistance;
+        vDistancePerAxis.Set(abs(o1px - o1sx / 2.f - o2px), abs(o1py + o1sy / 2.f - o2py), 0.f);
+    }
+
+    fTmpCenterDistance = distance_NoZ(o1px - o1sx / 2.f, o1py - o1sy / 2.f, o2px, o2py);
+    if (fTmpCenterDistance < fRetCenterDistance)
+    {
+        fRetCenterDistance = fTmpCenterDistance;
+        vDistancePerAxis.Set(abs(o1px - o1sx / 2.f - o2px), abs(o1py - o1sy / 2.f - o2py), 0.f);
+    }
+
+    return fRetCenterDistance;
+}
+
 bool proofps_dd::Physics::Colliding3(
     const PureVector& vecPosMin, const PureVector& vecPosMax,
     const PureVector& vecObjPos, const PureVector& vecObjSize)
@@ -217,6 +259,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
 
         if (player.getImpactForce().getY() > 0.f)
         {
+            /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
             player.getImpactForce().SetY(player.getImpactForce().getY() - 0.01f);
             if (player.getImpactForce().getY() < 0.f)
             {
@@ -496,6 +539,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
         if (player.getImpactForce().getX() > 0.f)
         {
+            /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
             player.getImpactForce().SetX(player.getImpactForce().getX() - 0.01f);
             if (player.getImpactForce().getX() < 0.f)
             {
