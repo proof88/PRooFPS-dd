@@ -43,6 +43,11 @@ void proofps_dd::Explosion::ResetGlobalExplosionId()
 
 bool proofps_dd::Explosion::initExplosionsReference(PGE& pge)
 {
+    if (m_pReferenceObjExplosion)
+    {
+        return true;
+    }
+
     m_pReferenceObjExplosion = pge.getPure().getObject3DManager().createFromFile((std::string(GAME_MODELS_DIR) + "rocketl_xpl.obj").c_str());
     if (!m_pReferenceObjExplosion)
     {

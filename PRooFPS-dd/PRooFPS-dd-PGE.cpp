@@ -603,6 +603,7 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 
 bool proofps_dd::PRooFPSddPGE::connect()
 {
+    initializeWeaponHandling();
     bool bRet;
     if (getNetwork().isServer())
     {
