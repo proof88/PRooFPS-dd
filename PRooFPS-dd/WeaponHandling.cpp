@@ -730,14 +730,14 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 /* TODO: multiplier might be modified later with Physics ImpactForce tweaking */
                 const float fImpactX = 20.f * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
                 const float fImpactY = 30.f * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-                getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+                //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
                 PureVector vecImpact(
                     fImpactX,
                     fImpactY,
                     0.f);
                 player.getImpactForce() += vecImpact;
-                //player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
-                getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+                player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+                //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
                 if (player.getHealth() == 0)
                 {
                     const auto itKiller = m_mapPlayers.find(xpl.getOwner());
