@@ -706,17 +706,23 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
         if (player.getHealth() > 0)
         {
-            const float fRadiusDamage = xpl.getDamageAtDistance(
-                distance_NoZ(
-                    player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-                    player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-                    xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY()),
-                nDamageHp
-            );
+            const float fDistance = distance_NoZ(
+                player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+                player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+                xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY());
+            
+            const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
             
             if (fRadiusDamage > 0.f)
             {
-                player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+                const float fForceMultiplier = std::max(0.f, (1 - (fDistance / xpl.getDamageAreaSize()))) / 2.f;
+                /* TODO: xpl.getImpactAtDistance() */
+                PureVector vecImpact(
+                    (player.getPos().getNew().getX() - xpl.getPrimaryObject3D().getPosVec().getX()) * fForceMultiplier,
+                    (player.getPos().getNew().getY() - xpl.getPrimaryObject3D().getPosVec().getY()) * fForceMultiplier,
+                    0.f);
+                player.getImpactForce() += vecImpact;
+                //player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
                 //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
                 if (player.getHealth() == 0)
                 {

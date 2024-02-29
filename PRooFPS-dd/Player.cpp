@@ -112,6 +112,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_vecOldNewValues(other.m_vecOldNewValues),
     m_bNetDirty(other.m_bNetDirty),
     m_vecJumpForce(other.m_vecJumpForce),
+    m_vecImpactForce(other.m_vecImpactForce),
     m_pObj(PGENULL),
     m_pTexPlayerStand(PGENULL),
     m_pTexPlayerCrouch(PGENULL),
@@ -147,6 +148,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_bNetDirty = other.m_bNetDirty;
     m_vecJumpForce = other.m_vecJumpForce;
+    m_vecImpactForce = other.m_vecImpactForce;
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
@@ -460,6 +462,11 @@ bool proofps_dd::Player::attack()
 PureVector& proofps_dd::Player::getJumpForce()
 {
     return m_vecJumpForce;
+}
+
+PureVector& proofps_dd::Player::getImpactForce()
+{
+    return m_vecImpactForce;
 }
 
 bool proofps_dd::Player::isExpectingStartPos() const

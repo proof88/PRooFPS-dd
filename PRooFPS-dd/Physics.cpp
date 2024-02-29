@@ -215,6 +215,23 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     {
         auto& player = playerPair.second;
 
+        if (player.getImpactForce().getY() > 0.f)
+        {
+            player.getImpactForce().SetY(player.getImpactForce().getY() - 0.01f);
+            if (player.getImpactForce().getY() < 0.f)
+            {
+                player.getImpactForce().SetY(0.f);
+            }
+        }
+        else if (player.getImpactForce().getY() < 0.f)
+        {
+            player.getImpactForce().SetY(player.getImpactForce().getY() + 0.01f);
+            if (player.getImpactForce().getY() > 0.f)
+            {
+                player.getImpactForce().SetY(0.f);
+            }
+        }
+
         player.getHasJustStartedFallingNaturallyInThisTick() = false;
         player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = false;
         const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
@@ -262,7 +279,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate,
+                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY(),
                 player.getPos().getNew().getZ()
             ));
 
@@ -473,6 +490,31 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                apply the force here for last time - hence we use the original force at the beginning of function. */
             PureVector(
                 player.getPos().getNew().getX() + vecOriginalJumpForce.getX(),
+                player.getPos().getNew().getY(),
+                player.getPos().getNew().getZ()
+            ));
+
+        if (player.getImpactForce().getX() > 0.f)
+        {
+            player.getImpactForce().SetX(player.getImpactForce().getX() - 0.01f);
+            if (player.getImpactForce().getX() < 0.f)
+            {
+                player.getImpactForce().SetX(0.f);
+            }
+        }
+        else if (player.getImpactForce().getX() < 0.f)
+        {
+            player.getImpactForce().SetX(player.getImpactForce().getX() + 0.01f);
+            if (player.getImpactForce().getX() > 0.f)
+            {
+                player.getImpactForce().SetX(0.f);
+            }
+        }
+
+        // PPPKKKGGGGGG
+        player.getPos().set(
+            PureVector(
+                player.getPos().getNew().getX() + player.getImpactForce().getX(),
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ()
             ));

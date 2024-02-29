@@ -110,6 +110,7 @@ namespace proofps_dd
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
         PureVector& getJumpForce();
+        PureVector& getImpactForce();
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
         PgeOldNewValue<PureVector>& getWeaponAngle();
@@ -176,6 +177,7 @@ namespace proofps_dd
         bool m_bNetDirty;
 
         PureVector m_vecJumpForce;
+        PureVector m_vecImpactForce;
         PureObject3D* m_pObj;
         PureTexture* m_pTexPlayerStand;
         PureTexture* m_pTexPlayerCrouch;

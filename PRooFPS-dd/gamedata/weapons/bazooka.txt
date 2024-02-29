@@ -25,12 +25,12 @@ cap_max = 999
 # This can be also understood as magazine capacity.
 # If 0, it is not reloadable (e.g. rail gun).
 # Cannot be bigger than cap_max.
-reloadable = 3
+reloadable = 10
 
 # By default we have this amount of bullets with this weapon
 # If weapon is reloadable, this amount will be loaded, thus it
 # cannot be greater than "reloadable"
-bullets_default = 3
+bullets_default = 10
 
 # If true, reload is per-magazine, not per-bullet.
 # No effect if reloadable is 0.
