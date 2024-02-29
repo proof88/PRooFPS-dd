@@ -249,15 +249,17 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
        So I decided to define GAME_GRAVITY_CONST at runtime based on tickrate.
        Note that originally I wanted to lerp GAME_JUMP_GRAVITY_START as commented at its definition. */
 
-    const float GAME_GRAVITY_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_GRAVITY_LERP_FACTOR);
+    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
+
+    const float GAME_IMPACT_FORCE_Y_CHANGE = PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
 
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
 
-        const float fPlayerImpactForceYChangePerTick = 36.f / nPhysicsRate;
+        const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
             /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
@@ -538,7 +540,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 player.getPos().getNew().getZ()
             ));
 
-        const float fPlayerImpactForceXChangePerTick = 25.f / nPhysicsRate;
+        const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+        const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
+        const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getX() > 0.f)
         {
             /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
