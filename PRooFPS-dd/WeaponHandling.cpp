@@ -728,8 +728,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
                 /* TODO: make an xpl.getImpactAtDistance()* /
                 /* TODO: multiplier might be modified later with Physics ImpactForce tweaking */
-                const float fImpactX = 0.3f * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-                const float fImpactY = 0.3f * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+                const float fImpactX = 20.f * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+                const float fImpactY = 30.f * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
                 getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
                 PureVector vecImpact(
                     fImpactX,

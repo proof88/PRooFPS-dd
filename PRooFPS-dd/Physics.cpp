@@ -257,10 +257,11 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
     {
         auto& player = playerPair.second;
 
+        const float fPlayerImpactForceYChangePerTick = 36.f / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
             /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
-            player.getImpactForce().SetY(player.getImpactForce().getY() - 0.01f);
+            player.getImpactForce().SetY(player.getImpactForce().getY() - fPlayerImpactForceYChangePerTick);
             if (player.getImpactForce().getY() < 0.f)
             {
                 player.getImpactForce().SetY(0.f);
@@ -268,7 +269,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         }
         else if (player.getImpactForce().getY() < 0.f)
         {
-            player.getImpactForce().SetY(player.getImpactForce().getY() + 0.01f);
+            player.getImpactForce().SetY(player.getImpactForce().getY() + fPlayerImpactForceYChangePerTick);
             if (player.getImpactForce().getY() > 0.f)
             {
                 player.getImpactForce().SetY(0.f);
@@ -322,7 +323,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY(),
+                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY() / nPhysicsRate,
                 player.getPos().getNew().getZ()
             ));
 
@@ -537,10 +538,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 player.getPos().getNew().getZ()
             ));
 
+        const float fPlayerImpactForceXChangePerTick = 25.f / nPhysicsRate;
         if (player.getImpactForce().getX() > 0.f)
         {
             /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
-            player.getImpactForce().SetX(player.getImpactForce().getX() - 0.01f);
+            player.getImpactForce().SetX(player.getImpactForce().getX() - fPlayerImpactForceXChangePerTick);
             if (player.getImpactForce().getX() < 0.f)
             {
                 player.getImpactForce().SetX(0.f);
@@ -548,7 +550,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         }
         else if (player.getImpactForce().getX() < 0.f)
         {
-            player.getImpactForce().SetX(player.getImpactForce().getX() + 0.01f);
+            player.getImpactForce().SetX(player.getImpactForce().getX() + fPlayerImpactForceXChangePerTick);
             if (player.getImpactForce().getX() > 0.f)
             {
                 player.getImpactForce().SetX(0.f);
@@ -558,7 +560,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // PPPKKKGGGGGG
         player.getPos().set(
             PureVector(
-                player.getPos().getNew().getX() + player.getImpactForce().getX(),
+                player.getPos().getNew().getX() + player.getImpactForce().getX() / nPhysicsRate,
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ()
             ));
