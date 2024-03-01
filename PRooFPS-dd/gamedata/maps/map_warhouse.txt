@@ -80,16 +80,16 @@ y = paperboxes.bmp
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   P            +       S    M           P          S c+cccc
+ccS   P            +  Z    S Z  M           P          S c+cccc
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF
 FFFFFFFFFFFFHHaPHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaacPPcccccccFF
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF
 cFFF+cccccccaaaaaaaaavPvaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF
-FFFFccScMcccaaaaaaaaavvvaaaMaauSuaaaaaaaaaaaSaaaPaaccccFFFMFFFF
+FFFFccScMcccaaaaaaaaavvvaaaMaauSuaaaaaaaaaaaSaaaPZaccccFFFMFFFF
 FFFFccccFFFFa  SaaMaavDvaa+aaauuuaaaPMaaaaPaaaGGGGGFFcccFFMFFFF
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaaMaaaGGGGGGGFFc+ccFcFFFF
-ccccccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHcccccMccFFFF
+ccZcccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHcccccMccFFFF
 FFFFccc+cFFFaaaaaaaaavvvaaPaaauuuaaMaaaaaaaaaaaaaaaccccccPcFFFF
 FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF
 FFFFFFcccFFFyDaPaoraDvDvaPaaMGGuuaPaaaaaaGPaaaaorDyFFFcc+cPFFFF
@@ -98,7 +98,7 @@ BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB
 IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII
 IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII
 IIIIIIIIIIIxxxxxxxxMIIIIIMxIIIIIMxxPIIIIIIII+xxIIIIIIIxIIIIIIII
-IIIIIIIIIIIxxxxMIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIxxZxMIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
