@@ -11,8 +11,11 @@
 #include "stdafx.h"  // PCH
 
 #include <cassert>
+#include <filesystem>
+
 #include "Consts.h"
 #include "Maps.h"
+#include "PRooFPS-dd-packet.h"
 
 static constexpr char* GAME_MAPS_DIR = "gamedata/maps/";
 static constexpr char* GAME_MAPS_MAPCYCLE = "gamedata/maps/mapcycle.txt";
@@ -68,8 +71,14 @@ bool proofps_dd::Maps::initialize()
         return true;
     }
 
-    mapcycleReload();
-    m_texRed = m_gfx.getTextureManager().createFromFile( (std::string(proofps_dd::GAME_TEXTURES_DIR) + "red.bmp").c_str() );
+    m_texRed = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "red.bmp").c_str());
+
+    if (m_texRed)
+    {
+        mapcycleReload();
+        refreshAvailableMaps();
+    }
+    
     return m_texRed != PGENULL;
 }
 
@@ -88,6 +97,8 @@ void proofps_dd::Maps::shutdown()
     getConsole().OLnOI("Maps::shutdown() ...");
     if (isInitialized())
     {
+        m_availableMaps.clear();
+
         /* Current map handling */
         unload();
         m_sServerMapFilenameToLoad.clear();
@@ -138,6 +149,36 @@ const std::string& proofps_dd::Maps::serverDecideWhichMapToLoad()
 const std::string& proofps_dd::Maps::getWhichMapToLoad() const
 {
     return m_sServerMapFilenameToLoad;
+}
+
+void proofps_dd::Maps::refreshAvailableMaps()
+{
+    m_availableMaps.clear();
+
+    for (const auto& entry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
+        if (entry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, entry.path().string().c_str());
+            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
+        }
+
+        if (entry.path().extension().string() == ".txt")
+        {
+            // TODO: should invoke a tryLoad() function to quickly validate
+            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
+            if ((entry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (entry.path().filename().string().substr(0, 4) == "map_"))
+            {
+                m_availableMaps.push_back(entry.path().filename().string() /*PFL::getFilename(fname)*/);
+            }
+        }
+    }
+}
+
+const std::vector<std::string>& proofps_dd::Maps::getAvailableMaps() const
+{
+    return m_availableMaps;
 }
 
 bool proofps_dd::Maps::loaded() const

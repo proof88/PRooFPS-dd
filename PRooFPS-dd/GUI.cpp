@@ -87,6 +87,15 @@ void proofps_dd::GUI::initialize()
         (std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
     m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
 
+    m_sAvailableMapsList.clear();
+    // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
+    // We are force-inserting the extra NULL characters into the string because this will be actually handled by a multi-element array by Dear ImGUI
+    m_sAvailableMapsList += std::string(" ") + '\0'; // this first elem represents the not-selected map
+    for (const auto& sMapName : m_pMaps->getAvailableMaps())
+    {
+        m_sAvailableMapsList += sMapName + '\0';
+    }
+
     /*
         Useful Dear ImGui links:
          - https://github.com/ocornut/imgui/tree/master/docs
@@ -272,6 +281,7 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
+std::string proofps_dd::GUI::m_sAvailableMapsList;
 
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
@@ -407,18 +417,6 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     ImGui::Separator();
 
     ImGui::Text("[ Map Configuration ]");
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::SetTooltip(
-            "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::SetTooltip(
-            "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
-    }
 
     ImGui::Indent();
     {
@@ -433,54 +431,84 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         const float fMapMoveBtnsPosX = fBasePosX + fMapListboxesWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
         const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
 
-        ImGui::BeginDisabled(true);
+        ImGui::Text("Mapcycle:");
+        ImGui::SameLine(fMapsAvailListBoxX);
+        ImGui::Text("Available Maps:");
 
-            ImGui::Text("Mapcycle:");
-            ImGui::SameLine(fMapsAvailListBoxX);
-            ImGui::Text("Available Maps:");
+        const auto fBasePosY = ImGui::GetCursorPosY();
 
-            const auto fBasePosY = ImGui::GetCursorPosY();
-
-            // first I draw the 2 listboxes, and only after them I draw the move btns in between them
-            ImGui::PushItemWidth(fMapListboxesWidth);
-            int iActiveItemMapcycle = 0;
-            const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
-            ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
+        // first I draw the 2 listboxes, and only after them I draw the move btns in between them
+        ImGui::PushItemWidth(fMapListboxesWidth);
+        int iActiveItemMapcycle = 0;
+        const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
+        ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
        
-            ImGui::SameLine(fMapsAvailListBoxX);
-            int iActiveItemMapsAvailable = 0;
-            const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
-            ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
-            ImGui::PopItemWidth();
+        ImGui::SameLine(fMapsAvailListBoxX);
+        int iActiveItemMapsAvailable = 0;
+        const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
+        ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
+        ImGui::PopItemWidth();
         
-            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
-            ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
+        ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
-            ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
+        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
-            ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
+        ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-            ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
-            ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
+        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
 
-            // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
-            PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
+        // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
+        PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
 
-            ImGui::AlignTextToFramePadding();
-            static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
-            addHintToItemByCVar(sHintSvMap, cvarSvMap);
-            ImGui::Text("Force-Start on Map:");
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvMap, cvarSvMap);
+        ImGui::Text("Force-Start on Map:");
 
-            ImGui::SameLine();
-            ImGui::PushItemWidth(150);
-            int iSelectMapStart = 0;
-            const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
-            ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
-            ImGui::PopItemWidth();
+        ImGui::SameLine();
+        ImGui::PushItemWidth(150);
+        static int iSelectMapStart = -1;
+        //const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
+        //ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
         
-        ImGui::EndDisabled();
+        if (iSelectMapStart == -1)
+        {
+            // initialize current item of comboForceMapStart to what is already set it CVAR
+            iSelectMapStart = 0;
+            if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
+            {
+                for (int i = 0; i < static_cast<int>(m_pMaps->getAvailableMaps().size()); i++)
+                {
+                    if (m_pMaps->getAvailableMaps()[i] == cvarSvMap.getAsString())
+                    {
+                        iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsList
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (ImGui::Combo("##comboForceMapStart", &iSelectMapStart, m_sAvailableMapsList.c_str(), m_sAvailableMapsList.size() + 1 /* +1 is the first empty item */))
+        {
+            if (iSelectMapStart == 0)
+            {
+                cvarSvMap.Set("");
+            }
+            else if (iSelectMapStart <= static_cast<int>(m_pMaps->getAvailableMaps().size()) /* first empty item as index 0 is NOT in getAvailableMaps(), that is why index can be == size() */)
+            {
+                cvarSvMap.Set(m_pMaps->getAvailableMaps()[iSelectMapStart-1]);
+            }
+            else
+            {
+                getConsole().EOLn("ERROR: comboForceMapStart invalid index: %d!", iSelectMapStart);
+            }
+        }
+        ImGui::PopItemWidth();
+        
     } // end Map Config
     ImGui::Unindent();
 

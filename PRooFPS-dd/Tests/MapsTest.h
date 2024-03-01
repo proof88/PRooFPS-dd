@@ -64,6 +64,8 @@ protected:
         AddSubTest("test_map_mapcycle_reload", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_reload);
         AddSubTest("test_map_mapcycle_next", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_next);
         AddSubTest("test_map_mapcycle_rewind", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind);
+        AddSubTest("test_map_get_available_maps", (PFNUNITSUBTEST)&MapsTest::test_map_get_available_maps);
+        AddSubTest("test_map_refresh_available_maps", (PFNUNITSUBTEST)&MapsTest::test_map_refresh_available_maps);
     }
 
     virtual bool setUp() override
@@ -120,7 +122,8 @@ private:
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
             assertEquals(0u, maps.getItems().size(), "item count 1") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
-            assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
+            assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1") &
+            assertTrue(maps.getAvailableMaps().empty(), "available maps empty 1");
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.isInitialized(), "inited 2") &
@@ -141,7 +144,8 @@ private:
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
             assertEquals(0u, maps.getItems().size(), "item count 2") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
-            assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2");
+            assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2") &
+            assertFalse(maps.getAvailableMaps().empty(), "available maps empty 2");
         return b;
     }
 
@@ -478,6 +482,7 @@ private:
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertFalse(maps.mapcycleGet().empty(), "mapcycle");
+        b &= assertFalse(maps.getAvailableMaps().empty(), "available maps empty 1");
 
         maps.shutdown();
 
@@ -486,6 +491,7 @@ private:
         b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle 2");
         b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
         b &= assertTrue(maps.getFilename().empty(), "filename");
+        b &= assertTrue(maps.getAvailableMaps().empty(), "available maps empty 2");
 
         return b;
     }
@@ -685,6 +691,78 @@ private:
             maps.mapcycleRewind();
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
         }
+
+        return b;
+    }
+
+    bool test_map_get_available_maps()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        std::set<std::string> vExpectedAvailableMaps = {
+            "map_test_bad_assignment.txt",
+            "map_test_bad_order.txt",
+            "map_test_good.txt",
+            "map_warena.txt",
+            "map_warhouse.txt"
+        };
+
+        const std::vector<std::string>& vFoundAvailableMaps = maps.getAvailableMaps();
+        for (const auto& sMapName : vFoundAvailableMaps)
+        {
+            const auto itFound = vExpectedAvailableMaps.find(sMapName);
+            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
+            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            if (itFound != vExpectedAvailableMaps.end())
+            {
+                vExpectedAvailableMaps.erase(sMapName);
+            }
+        }
+        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
+
+        return b;
+    }
+
+    bool test_map_refresh_available_maps()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        // trick to clear out available maps, we can refresh them without initializing Maps actually ...
+        maps.shutdown();
+        maps.refreshAvailableMaps();
+
+        std::set<std::string> vExpectedAvailableMaps = {
+            "map_test_bad_assignment.txt",
+            "map_test_bad_order.txt",
+            "map_test_good.txt",
+            "map_warena.txt",
+            "map_warhouse.txt"
+        };
+
+        const std::vector<std::string>& vFoundAvailableMaps = maps.getAvailableMaps();
+        for (const auto& sMapName : vFoundAvailableMaps)
+        {
+            const auto itFound = vExpectedAvailableMaps.find(sMapName);
+            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
+            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            if (itFound != vExpectedAvailableMaps.end())
+            {
+                vExpectedAvailableMaps.erase(sMapName);
+            }
+        }
+        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
 
         return b;
     }
