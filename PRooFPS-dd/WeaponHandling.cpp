@@ -704,6 +704,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     
     const Explosion& xpl = m_explosions.back();
 
+    m_pge.getAudio().play(m_sounds.m_sndExplosion);
+
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
     {
@@ -784,6 +786,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
             connHandle,
             pos,
             fDamageAreaSize));
+
+    m_pge.getAudio().play(m_sounds.m_sndExplosion);
 
     return m_explosions.back();
 }
