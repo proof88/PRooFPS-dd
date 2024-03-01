@@ -102,7 +102,18 @@ void proofps_dd::GUI::initialize()
     size_t i = 0;
     for (const auto& sMapName : m_pMaps->getAvailableMaps())
     {
+        // TODO: buffer overrun is detected probably because static analyzer not understanding the connection between i and size(),
+        // I think changing this to conventional for-loop will solve.
         m_vszAvailableMapsListForMapcycleListBox[i++] = sMapName.c_str();
+    }
+
+    m_vszSelectedMapsListForMapcycleListBox = new const char* [m_pMaps->mapcycleGet().size()];
+    i = 0;
+    for (const auto& sMapName : m_pMaps->mapcycleGet())
+    {
+        // TODO: buffer overrun is detected probably because static analyzer not understanding the connection between i and size(),
+        // I think changing this to conventional for-loop will solve.
+        m_vszSelectedMapsListForMapcycleListBox[i++] = sMapName.c_str();
     }
 
     /*
@@ -178,6 +189,17 @@ void proofps_dd::GUI::initialize()
 
 void proofps_dd::GUI::shutdown()
 {
+    if (m_vszAvailableMapsListForMapcycleListBox)
+    {
+        delete m_vszAvailableMapsListForMapcycleListBox;
+        m_vszAvailableMapsListForMapcycleListBox = nullptr;
+        m_sAvailableMapsListForForceSelectComboBox.clear();
+    }
+    if (m_vszSelectedMapsListForMapcycleListBox)
+    {
+        delete m_vszSelectedMapsListForMapcycleListBox;
+        m_vszSelectedMapsListForMapcycleListBox = nullptr;
+    }
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         delete m_pObjLoadingScreenBg;
@@ -293,6 +315,7 @@ PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 //std::string proofps_dd::GUI::m_sAvailableMapsListForMapcycleListBox;
 const char** proofps_dd::GUI::m_vszAvailableMapsListForMapcycleListBox = nullptr;
+const char** proofps_dd::GUI::m_vszSelectedMapsListForMapcycleListBox = nullptr;
 
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
@@ -443,6 +466,14 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
 
         ImGui::Text("Mapcycle:");
+        ImGui::SameLine();
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(
+                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+        }
+
         ImGui::SameLine(fMapsAvailListBoxX);
         ImGui::Text("Available Maps:");
 
@@ -450,10 +481,17 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
         // first I draw the 2 listboxes, and only after them I draw the move btns in between them
         ImGui::PushItemWidth(fMapListboxesWidth);
-        int iActiveItemMapcycle = 0;
-        const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
-        ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
-       
+        static int iActiveItemMapcycle = 0;
+        //const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
+        //ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
+        ImGui::ListBox(
+            "##listBoxMapcycle",
+            &iActiveItemMapcycle,
+            m_vszSelectedMapsListForMapcycleListBox,
+            static_cast<int>(m_pMaps->mapcycleGet().size()),
+            nMapListboxesHeightAsItemCount);
+        
+
         ImGui::SameLine(fMapsAvailListBoxX);
         static int iActiveItemMapsAvailable = 0;
         //const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
@@ -470,20 +508,39 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         
 
         ImGui::PopItemWidth();
-        
+
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
         ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(
+                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+        }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
         ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(
+                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+        }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
         ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(
+                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+        }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
         ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(
+                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+        }
 
-        // TODO: prefill by found maps; if left empty then mapcycle will govern it; CVAR: sv_map.
         PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
 
         ImGui::AlignTextToFramePadding();
