@@ -274,6 +274,7 @@ private:
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
+            assertEquals(PureVector(), player.getImpactForce(), "impact force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
             assertFalse(player.getPos().isDirty(), "old pos") &
@@ -578,6 +579,7 @@ private:
         // "# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
         //  # tunnel where only crouching would be available is considered as map design error."
         player.getCrouchStateCurrent() = true;  // respawn event is allowed to set it to false
+        player.getImpactForce().Set(1,2,3);
 
         player.Die(true, bServer);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
@@ -587,7 +589,8 @@ private:
             assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
             assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
-            assertTrue(player.getWantToStandup(), "wantstandup");
+            assertTrue(player.getWantToStandup(), "wantstandup") &
+            assertEquals(PureVector(), player.getImpactForce(), "impact force");
     }
 
     bool test_jump()
