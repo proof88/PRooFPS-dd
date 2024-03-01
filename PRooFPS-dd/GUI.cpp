@@ -87,13 +87,13 @@ void proofps_dd::GUI::initialize()
         (std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
     m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
 
-    m_sAvailableMapsList.clear();
+    m_sAvailableMapsListForForceSelectComboBox.clear();
     // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
     // We are force-inserting the extra NULL characters into the string because this will be actually handled by a multi-element array by Dear ImGUI
-    m_sAvailableMapsList += std::string(" ") + '\0'; // this first elem represents the not-selected map
+    m_sAvailableMapsListForForceSelectComboBox += std::string(" ") + '\0'; // this first elem represents the not-selected map
     for (const auto& sMapName : m_pMaps->getAvailableMaps())
     {
-        m_sAvailableMapsList += sMapName + '\0';
+        m_sAvailableMapsListForForceSelectComboBox += sMapName + '\0';
     }
 
     /*
@@ -281,7 +281,7 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
-std::string proofps_dd::GUI::m_sAvailableMapsList;
+std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
@@ -485,14 +485,14 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
                 {
                     if (m_pMaps->getAvailableMaps()[i] == cvarSvMap.getAsString())
                     {
-                        iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsList
+                        iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsListForForceSelectComboBox
                         break;
                     }
                 }
             }
         }
 
-        if (ImGui::Combo("##comboForceMapStart", &iSelectMapStart, m_sAvailableMapsList.c_str(), m_sAvailableMapsList.size() + 1 /* +1 is the first empty item */))
+        if (ImGui::Combo("##comboForceMapStart", &iSelectMapStart, m_sAvailableMapsListForForceSelectComboBox.c_str(), m_sAvailableMapsListForForceSelectComboBox.size() + 1 /* +1 is the first empty item */))
         {
             if (iSelectMapStart == 0)
             {

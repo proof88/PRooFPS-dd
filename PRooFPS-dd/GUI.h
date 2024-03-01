@@ -91,7 +91,7 @@ namespace proofps_dd
 
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
-        static std::string m_sAvailableMapsList;
+        static std::string m_sAvailableMapsListForForceSelectComboBox;
 
         GUI();
         ~GUI();
