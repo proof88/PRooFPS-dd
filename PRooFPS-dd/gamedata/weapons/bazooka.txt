@@ -25,12 +25,12 @@ cap_max = 999
 # This can be also understood as magazine capacity.
 # If 0, it is not reloadable (e.g. rail gun).
 # Cannot be bigger than cap_max.
-reloadable = 10
+reloadable = 3
 
 # By default we have this amount of bullets with this weapon
 # If weapon is reloadable, this amount will be loaded, thus it
 # cannot be greater than "reloadable"
-bullets_default = 10
+bullets_default = 3
 
 # If true, reload is per-magazine, not per-bullet.
 # No effect if reloadable is 0.
@@ -38,7 +38,7 @@ bullets_default = 10
 # Per-bullet examples are some shotguns or legacy PR00FPS bazooka.
 # Note that per-bullet weapons can be fired also during the reload process,
 # while per-magazine weapons obviously cannot be fired during reload.
-reload_per_mag = true
+reload_per_mag = false
 
 # If true, player loses all bullets of the disposed magazine (realistic).
 # No effect if reload_per_mag is false.
@@ -47,7 +47,7 @@ reload_whole_mag = false
 # Reload time in millisecs.
 # If reload_per_mag is true, this time means the complete reload process.
 # If reload_per_mag is false, this time meant to be per-bullet!
-reload_time = 1500
+reload_time = 1000
 
 #################
 #               #
