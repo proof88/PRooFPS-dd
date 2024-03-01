@@ -97,6 +97,7 @@ namespace proofps_dd
         PureObject3D* m_pObjXHair;
         bool m_bWon;
         float m_fCameraMinY;
+        PureVector m_vecCamShakeForce;
 
         std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                       Key is server-side connection handle. */

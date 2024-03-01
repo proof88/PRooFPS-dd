@@ -489,7 +489,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgBulletUpdateFromServer::id:
             bRet = handleBulletUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgBulletUpdateFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgBulletUpdateFromServer>(pkt),
+                m_vecCamShakeForce);
             break;
         case proofps_dd::MsgMapItemUpdateFromServer::id:
             bRet = handleMapItemUpdateFromServer(
@@ -711,7 +712,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverGravity(*m_pObjXHair, m_config.getPhysicsRate());
             serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate());
+            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), m_vecCamShakeForce);
             serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
@@ -944,12 +945,41 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
         GAME_CAM_Z
     };
 
+    static float fShakeDegree = 0.f;
+    fShakeDegree += 20.f;
+    if (fShakeDegree >= 360.f)
+    {
+        fShakeDegree = 0.f;
+    }
+    float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
+    
+    if (m_vecCamShakeForce.getX() > 0.f)
+    {
+        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - 0.01f);
+        if (m_vecCamShakeForce.getX() < 0.f)
+        {
+            m_vecCamShakeForce.SetX(0.f);
+        }
+    }
+    /*else if (m_vecCamShakeForce.getX() < 0.f)
+    {
+        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() + 0.05f);
+        if (m_vecCamShakeForce.getX() > 0.f)
+        {
+            m_vecCamShakeForce.SetX(0.f);
+        }
+    } */
+    
+    float fShakeFactor = fShakeSine * m_vecCamShakeForce.getX();
+
     camera.getPosVec() = vecCamPos;
+    camera.getPosVec().SetX(camera.getPosVec().getX() + fShakeFactor);
     camera.getTargetVec().Set(
         bCamTilting ? ((vecCamPos.getX() + fCamTargetX) / 2.f) : vecCamPos.getX(),
         bCamTilting ? ((vecCamPos.getY() + fCamTargetY) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
+    camera.getTargetVec().SetX(camera.getTargetVec().getX() + fShakeFactor);
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 

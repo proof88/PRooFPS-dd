@@ -139,12 +139,14 @@ namespace proofps_dd
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize,
             const int& nDamageHp,
-            PureObject3D& objXHair);
+            PureObject3D& objXHair,
+            PureVector& vecCamShakeForce);
         Explosion& createExplosionClient(
             const proofps_dd::Explosion::ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
-            const TPureFloat& fDamageAreaSize);
+            const TPureFloat& fDamageAreaSize,
+            PureVector& vecCamShakeForce);
 
     protected:
 
@@ -156,7 +158,8 @@ namespace proofps_dd
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             PureObject3D& objXHair,
-            const unsigned int& nPhysicsRate);
+            const unsigned int& nPhysicsRate,
+            PureVector& vecCamShakeForce);
         void clientUpdateBullets(const unsigned int& nPhysicsRate);
         void serverUpdateExplosions(
             proofps_dd::GameMode& gameMode,
@@ -167,7 +170,8 @@ namespace proofps_dd
         
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgBulletUpdateFromServer& msg);
+            const proofps_dd::MsgBulletUpdateFromServer& msg,
+            PureVector& vecCamShakeForce);
         bool handleWpnUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgWpnUpdateFromServer& msg);

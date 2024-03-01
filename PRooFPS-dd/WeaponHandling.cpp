@@ -419,7 +419,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
-void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nPhysicsRate)
+void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -558,7 +558,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 if (bullet.getAreaDamageSize() > 0.f)
                 {
-                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize(), bullet.getDamageHp(), objXHair);
+                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize(), bullet.getDamageHp(), objXHair, vecCamShakeForce);
                 }
             }
 
@@ -693,7 +693,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize,
     const int& nDamageHp,
-    PureObject3D& objXHair)
+    PureObject3D& objXHair,
+    PureVector& vecCamShakeForce)
 {
     m_explosions.push_back(
         Explosion(
@@ -738,6 +739,15 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     fImpactY,
                     0.f);
                 player.getImpactForce() += vecImpact;
+                
+                if (player.getServerSideConnectionHandle() == 0)
+                {
+                    // this is server player so shake camera!
+                    vecCamShakeForce.SetX(fRadiusDamage / 100.f);
+                }
+                //vecCamShakeForce.SetX(abs(vecImpact.getX()) / 20.f);
+                //vecCamShakeForce.SetY(abs(vecImpact.getY()) / 20.f);
+                
                 player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
                 //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
                 if (player.getHealth() == 0)
@@ -777,7 +787,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
-    const TPureFloat& fDamageAreaSize)
+    const TPureFloat& fDamageAreaSize,
+    PureVector& vecCamShakeForce)
 {
     m_explosions.push_back(
         Explosion(
@@ -786,6 +797,26 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
             connHandle,
             pos,
             fDamageAreaSize));
+
+    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
+    if (playerIt == m_mapPlayers.end())
+    {
+        // must always find self player
+        return m_explosions.back();
+    }
+
+    const float fDistance = distance_NoZ(
+        pos.getX(),
+        pos.getY(),
+        playerIt->second.getObject3D()->getPosVec().getX(),
+        playerIt->second.getObject3D()->getPosVec().getY());
+    
+    if (fDistance <= fDamageAreaSize)
+    {
+        // close enough, shake camera!
+        const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, 90);
+        vecCamShakeForce.SetX(fRadiusDamage / 100.f);
+    }
 
     m_pge.getAudio().play(m_sounds.m_sndExplosion);
 
@@ -884,7 +915,10 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
-bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgBulletUpdateFromServer& msg)
+bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
+    pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+    const proofps_dd::MsgBulletUpdateFromServer& msg,
+    PureVector& vecCamShakeForce)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -998,7 +1032,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(pge_network::PgeNe
                 connHandleServerSide,
                 /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
                 PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
-                it->getAreaDamageSize());
+                it->getAreaDamageSize(),
+                vecCamShakeForce);
         }
 
         m_pge.getBullets().erase(it);
