@@ -54,8 +54,11 @@ namespace proofps_dd
         const std::string& serverDecideFirstMapAndUpdateNextMapToBeLoaded();
         const std::string& getNextMapToBeLoaded() const;
 
+        /* Available maps handling */
+
         void refreshAvailableMaps();
         const std::vector<std::string>& getAvailableMaps() const;
+        const char** getAvailableMapsAsCharPtrArray() const;
 
         /* Current map handling */
 
@@ -87,6 +90,7 @@ namespace proofps_dd
         /* Mapcycle handling */
         
         const std::vector<std::string>& mapcycleGet() const;
+        const char** mapcycleGetAsCharPtrArray() const;
         std::string mapcycleGetCurrent() const;
         bool mapcycleIsCurrentLast() const;
         bool mapcycleReload();
@@ -116,7 +120,10 @@ namespace proofps_dd
         PureTexture* m_texRed;  // TODO: unique_ptr
         std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */
 
+        /* Available maps handling */
+
         std::vector<std::string> m_availableMaps;
+        const char** m_vszAvailableMaps;
 
         /* Current map handling */
 
@@ -143,6 +150,7 @@ namespace proofps_dd
 
         std::vector<std::string> m_mapcycle;
         std::vector<std::string>::iterator m_mapcycleItCurrent;
+        const char** m_vszMapcycle;
 
         // ---------------------------------------------------------------------------
 

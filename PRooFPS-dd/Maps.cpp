@@ -11,7 +11,7 @@
 #include "stdafx.h"  // PCH
 
 #include <cassert>
-#include <filesystem>
+#include <filesystem>  // requires Cpp17
 
 #include "Consts.h"
 #include "Maps.h"
@@ -31,13 +31,15 @@ proofps_dd::Maps::Maps(
     m_cfgProfiles(cfgProfiles),
     m_gfx(gfx),
     m_texRed(PGENULL),
+    m_vszAvailableMaps(nullptr),
     m_blocks(NULL),
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
     m_foregroundBlocks_h(0),
     m_width(0),
     m_height(0),
-    m_mapcycleItCurrent(m_mapcycle.end())
+    m_mapcycleItCurrent(m_mapcycle.end()),
+    m_vszMapcycle(nullptr)
 {
     proofps_dd::MapItem::ResetGlobalData();
 }
@@ -97,6 +99,9 @@ void proofps_dd::Maps::shutdown()
     getConsole().OLnOI("Maps::shutdown() ...");
     if (isInitialized())
     {
+        /* Available maps handling */
+        delete m_vszAvailableMaps;
+        m_vszAvailableMaps = nullptr;
         m_availableMaps.clear();
 
         /* Current map handling */
@@ -104,6 +109,8 @@ void proofps_dd::Maps::shutdown()
         m_sServerMapFilenameToLoad.clear();
 
         /* Mapcycle handling */
+        delete m_vszMapcycle;
+        m_vszMapcycle = nullptr;
         m_mapcycle.clear();
         m_mapcycleItCurrent = m_mapcycle.end();
 
@@ -157,6 +164,8 @@ const std::string& proofps_dd::Maps::getNextMapToBeLoaded() const
 
 void proofps_dd::Maps::refreshAvailableMaps()
 {
+    delete m_vszAvailableMaps;
+    m_vszAvailableMaps = nullptr;
     m_availableMaps.clear();
 
     for (const auto& entry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
@@ -178,11 +187,26 @@ void proofps_dd::Maps::refreshAvailableMaps()
             }
         }
     }
+
+    if (!m_availableMaps.empty())
+    {
+        const size_t nArraySize = m_availableMaps.size(); // this way static analyzer won't warn about possible buffer overrun
+        m_vszAvailableMaps = new const char*[nArraySize];
+        for (size_t i = 0; i < nArraySize; i++)
+        {
+            m_vszAvailableMaps[i] = m_availableMaps[i].c_str();
+        }
+    }
 }
 
 const std::vector<std::string>& proofps_dd::Maps::getAvailableMaps() const
 {
     return m_availableMaps;
+}
+
+const char** proofps_dd::Maps::getAvailableMapsAsCharPtrArray() const
+{
+    return m_vszAvailableMaps;
 }
 
 bool proofps_dd::Maps::loaded() const
@@ -599,6 +623,15 @@ const std::vector<std::string>& proofps_dd::Maps::mapcycleGet() const
     return m_mapcycle;
 }
 
+/**
+    This is convenience function to be used with GUI: Dear ImGUI requires this kind of array
+    as source of items of Listbox. It is better if Maps provide it so we can avoid inconsistency.
+*/
+const char** proofps_dd::Maps::mapcycleGetAsCharPtrArray() const
+{
+    return m_vszMapcycle;
+}
+
 std::string proofps_dd::Maps::mapcycleGetCurrent() const
 {
     return (m_mapcycleItCurrent == m_mapcycle.end()) ?
@@ -617,6 +650,8 @@ bool proofps_dd::Maps::mapcycleReload()
 
     m_mapcycle.clear();
     m_mapcycleItCurrent = m_mapcycle.end();
+    delete m_vszMapcycle;
+    m_vszMapcycle = nullptr;
 
     std::ifstream f;
     f.open(GAME_MAPS_MAPCYCLE, std::ifstream::in);
@@ -661,6 +696,14 @@ bool proofps_dd::Maps::mapcycleReload()
     }
 
     m_mapcycleItCurrent = m_mapcycle.begin();
+
+    const size_t nArraySize = m_mapcycle.size(); // this way static analyzer won't warn about possible buffer overrun
+    m_vszMapcycle = new const char*[nArraySize];
+    for (size_t i = 0; i < nArraySize; i++)
+    {
+        m_vszMapcycle[i] = m_mapcycle[i].c_str();
+    }
+
     getConsole().SOLnOO("> Mapcycle loaded with %u maps!", m_mapcycle.size());
     return true;
 }  // mapcycleReload()
@@ -950,6 +993,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             break;
         }
         default: /* NOP */;
+            break;
         }
 
         PureObject3D* pNewBlockObj = nullptr;

@@ -98,24 +98,6 @@ void proofps_dd::GUI::initialize()
         //m_sAvailableMapsListForMapcycleListBox += sMapName + '\0';
     }
 
-    m_vszAvailableMapsListForMapcycleListBox = new const char* [m_pMaps->getAvailableMaps().size()];
-    size_t i = 0;
-    for (const auto& sMapName : m_pMaps->getAvailableMaps())
-    {
-        // TODO: buffer overrun is detected probably because static analyzer not understanding the connection between i and size(),
-        // I think changing this to conventional for-loop will solve.
-        m_vszAvailableMapsListForMapcycleListBox[i++] = sMapName.c_str();
-    }
-
-    m_vszSelectedMapsListForMapcycleListBox = new const char* [m_pMaps->mapcycleGet().size()];
-    i = 0;
-    for (const auto& sMapName : m_pMaps->mapcycleGet())
-    {
-        // TODO: buffer overrun is detected probably because static analyzer not understanding the connection between i and size(),
-        // I think changing this to conventional for-loop will solve.
-        m_vszSelectedMapsListForMapcycleListBox[i++] = sMapName.c_str();
-    }
-
     /*
         Useful Dear ImGui links:
          - https://github.com/ocornut/imgui/tree/master/docs
@@ -189,17 +171,8 @@ void proofps_dd::GUI::initialize()
 
 void proofps_dd::GUI::shutdown()
 {
-    if (m_vszAvailableMapsListForMapcycleListBox)
-    {
-        delete m_vszAvailableMapsListForMapcycleListBox;
-        m_vszAvailableMapsListForMapcycleListBox = nullptr;
-        m_sAvailableMapsListForForceSelectComboBox.clear();
-    }
-    if (m_vszSelectedMapsListForMapcycleListBox)
-    {
-        delete m_vszSelectedMapsListForMapcycleListBox;
-        m_vszSelectedMapsListForMapcycleListBox = nullptr;
-    }
+    m_sAvailableMapsListForForceSelectComboBox.clear();
+
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
         delete m_pObjLoadingScreenBg;
@@ -313,9 +286,6 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
-//std::string proofps_dd::GUI::m_sAvailableMapsListForMapcycleListBox;
-const char** proofps_dd::GUI::m_vszAvailableMapsListForMapcycleListBox = nullptr;
-const char** proofps_dd::GUI::m_vszSelectedMapsListForMapcycleListBox = nullptr;
 
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
@@ -482,27 +452,20 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         // first I draw the 2 listboxes, and only after them I draw the move btns in between them
         ImGui::PushItemWidth(fMapListboxesWidth);
         static int iActiveItemMapcycle = 0;
-        //const char* pszMapcycleItems[] = { "Map 1", "Map 2" };
-        //ImGui::ListBox("##listBoxMapcycle", &iActiveItemMapcycle, pszMapcycleItems, IM_ARRAYSIZE(pszMapcycleItems), nMapListboxesHeightAsItemCount);
         ImGui::ListBox(
             "##listBoxMapcycle",
             &iActiveItemMapcycle,
-            m_vszSelectedMapsListForMapcycleListBox,
+            m_pMaps->mapcycleGetAsCharPtrArray(),
             static_cast<int>(m_pMaps->mapcycleGet().size()),
             nMapListboxesHeightAsItemCount);
         
 
         ImGui::SameLine(fMapsAvailListBoxX);
         static int iActiveItemMapsAvailable = 0;
-        //const char* pszMapsAvailableItems[] = { "Map 1", "Map 2" };
-        //ImGui::ListBox("##listBoxAvailMaps", &iActiveItemMapsAvailable, pszMapsAvailableItems, IM_ARRAYSIZE(pszMapsAvailableItems), nMapListboxesHeightAsItemCount);
-        //const char* label, int* current_item, const char* const items[], int items_count, int height_items
-
-        //const char* pm_sAvailableMapsListForMapcycleListBox[] = m_sAvailableMapsListForMapcycleListBox.c_str();
         ImGui::ListBox(
             "##listBoxAvailMaps",
             &iActiveItemMapsAvailable,
-            m_vszAvailableMapsListForMapcycleListBox,
+            m_pMaps->getAvailableMapsAsCharPtrArray(),
             static_cast<int>(m_pMaps->getAvailableMaps().size()),
             nMapListboxesHeightAsItemCount);
         
@@ -550,13 +513,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
         ImGui::SameLine();
         ImGui::PushItemWidth(150);
-        static int iSelectMapStart = -1;
-        //const char* pszSelectMapStart[] = { "Map 1", "Map 2" };
-        //ImGui::Combo("##comboForceMapStart", &iSelectMapStart, pszSelectMapStart, IM_ARRAYSIZE(pszSelectMapStart));
-        
+        static int iSelectMapStart = -1;       
         if (iSelectMapStart == -1)
         {
-            // initialize current item of comboForceMapStart to what is already set it CVAR
+            // initialize current item of comboForceMapStart to what is already set in the CVAR
             iSelectMapStart = 0;
             if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
             {
@@ -570,8 +530,11 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
                 }
             }
         }
-
-        if (ImGui::Combo("##comboForceMapStart", &iSelectMapStart, m_sAvailableMapsListForForceSelectComboBox.c_str(), m_sAvailableMapsListForForceSelectComboBox.size() + 1 /* +1 is the first empty item */))
+        
+        if (ImGui::Combo( /* this is the items_separated_by_zeros version where we don't specify item count */
+            "##comboForceMapStart",
+            &iSelectMapStart,
+            m_sAvailableMapsListForForceSelectComboBox.c_str()))
         {
             if (iSelectMapStart == 0)
             {

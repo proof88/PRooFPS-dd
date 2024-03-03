@@ -124,7 +124,9 @@ private:
             assertEquals(0u, maps.getItems().size(), "item count 1") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
             assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1") &
-            assertTrue(maps.getAvailableMaps().empty(), "available maps empty 1");
+            assertNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
+            assertTrue(maps.getAvailableMaps().empty(), "available maps empty 1") &
+            assertNull(maps.getAvailableMapsAsCharPtrArray(), "available maps charptrarray 1");
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.isInitialized(), "inited 2") &
@@ -146,7 +148,26 @@ private:
             assertEquals(0u, maps.getItems().size(), "item count 2") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
             assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2") &
-            assertFalse(maps.getAvailableMaps().empty(), "available maps empty 2");
+            assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
+            assertFalse(maps.getAvailableMaps().empty(), "available maps empty 2") &
+            assertNotNull(maps.getAvailableMapsAsCharPtrArray(), "available maps charptrarray 2");
+
+        for (size_t i = 0; i < maps.mapcycleGet().size(); i++)
+        {
+            b &= assertEquals(
+                maps.mapcycleGet()[i].c_str(),
+                maps.mapcycleGetAsCharPtrArray()[i],
+                (std::string("mapcycleGetAsCharPtrArray() 1 elem ") + std::to_string(i)).c_str());
+        }
+
+        for (size_t i = 0; i < maps.getAvailableMaps().size(); i++)
+        {
+            b &= assertEquals(
+                maps.getAvailableMaps()[i].c_str(),
+                maps.getAvailableMapsAsCharPtrArray()[i],
+                (std::string("getAvailableMapsAsCharPtrArray() 1 elem ") + std::to_string(i)).c_str());
+        }
+
         return b;
     }
 
@@ -483,16 +504,20 @@ private:
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertFalse(maps.mapcycleGet().empty(), "mapcycle");
+        b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1");
         b &= assertFalse(maps.getAvailableMaps().empty(), "available maps empty 1");
+        b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "available maps charptrarray 1");
 
         maps.shutdown();
 
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertFalse(maps.isInitialized(), "initialized 2");
         b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle 2");
+        b &= assertNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2");
         b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
         b &= assertTrue(maps.getAvailableMaps().empty(), "available maps empty 2");
+        b &= assertNull(maps.mapcycleGetAsCharPtrArray(), "available maps charptrarray 2");
 
         return b;
     }
@@ -642,6 +667,14 @@ private:
         // negative test before initialize(), positive tests after initialize()
         // update: even before initialize(), this works, and I'm not changing that now.
         bool b = assertTrue(maps.mapcycleReload(), "reload 1");
+        b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1");
+        for (size_t i = 0; i < maps.mapcycleGet().size(); i++)
+        {
+            b &= assertEquals(
+                maps.mapcycleGet()[i].c_str(),
+                maps.mapcycleGetAsCharPtrArray()[i],
+                (std::string("mapcycleGetAsCharPtrArray() 1 elem ") + std::to_string(i)).c_str());
+        }
 
         b &= assertTrue(maps.initialize(), "init");
         const auto originalMapcycle = maps.mapcycleGet();
@@ -657,6 +690,14 @@ private:
             b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
 
             b &= assertTrue(maps.mapcycleReload(), "reload 2");
+            b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2");
+            for (size_t i = 0; i < maps.mapcycleGet().size(); i++)
+            {
+                b &= assertEquals(
+                    maps.mapcycleGet()[i].c_str(),
+                    maps.mapcycleGetAsCharPtrArray()[i],
+                    (std::string("mapcycleGetAsCharPtrArray() 2 elem ") + std::to_string(i)).c_str());
+            }
             b &= assertTrue(originalMapcycle == maps.mapcycleGet(), "equals");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
             b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
@@ -818,6 +859,17 @@ private:
             }
         }
         b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
+
+        if (b)
+        {
+            for (size_t i = 0; i < maps.getAvailableMaps().size(); i++)
+            {
+                b &= assertEquals(
+                    maps.getAvailableMaps()[i].c_str(),
+                    maps.getAvailableMapsAsCharPtrArray()[i],
+                    (std::string("getAvailableMapsAsCharPtrArray() 1 elem ") + std::to_string(i)).c_str());
+            }
+        }
 
         return b;
     }
