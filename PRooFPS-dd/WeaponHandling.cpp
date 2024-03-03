@@ -603,7 +603,9 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     bullet.getSpeed(),
                     bullet.getGravity(),
                     bullet.getDrag(),
-                    bullet.getAreaDamageSize());
+                    bullet.getDamageHp(),
+                    bullet.getAreaDamageSize(),
+                    bullet.getAreaDamagePulse());
                 m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
             }
             // bullet didn't touch anything, go to next
@@ -794,7 +796,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
+    const int& nDamageHp,
     const TPureFloat& fDamageAreaSize,
+    const TPureFloat& fDamageAreaPulse,
     PureVector& vecCamShakeForce)
 {
     m_explosions.push_back(
@@ -819,11 +823,11 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
         playerIt->second.getObject3D()->getPosVec().getX(),
         playerIt->second.getObject3D()->getPosVec().getY());
     
-    const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, 90);
+    const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, nDamageHp);
     if (fRadiusDamage > 0.f)
     {
         // close enough, shake camera!
-        vecCamShakeForce.SetX(fRadiusDamage / 100.f);
+        vecCamShakeForce.SetX(fDamageAreaPulse / 100.f);
     }
 
     m_pge.getAudio().play(m_sounds.m_sndExplosion);
@@ -963,6 +967,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         if (playerIt == m_mapPlayers.end())
         {
             // must always find self player
+            assert(false);
             return false;
         }
 
@@ -1010,7 +1015,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z,
-                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_fDamageAreaSize));
+                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_nDamageHp,
+                msg.m_fDamageAreaSize, msg.m_fDamageAreaPulse));
         pBullet = &(m_pge.getBullets().back());
         it = m_pge.getBullets().end();
         it--; // iterator points to this newly inserted last bullet
@@ -1040,7 +1046,9 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
                 connHandleServerSide,
                 /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
                 PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
+                it->getDamageHp(),
                 it->getAreaDamageSize(),
+                it->getAreaDamagePulse(),
                 vecCamShakeForce);
         }
 

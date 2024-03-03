@@ -146,7 +146,9 @@ namespace proofps_dd
             const proofps_dd::Explosion::ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
+            const int& nDamageHp,
             const TPureFloat& fDamageAreaSize,
+            const TPureFloat& fDamageAreaPulse,
             PureVector& vecCamShakeForce);
 
     protected:
