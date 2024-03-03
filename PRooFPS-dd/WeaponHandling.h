@@ -138,6 +138,7 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize,
+            const TPureFloat& fDamageAreaPulse,
             const int& nDamageHp,
             PureObject3D& objXHair,
             PureVector& vecCamShakeForce);

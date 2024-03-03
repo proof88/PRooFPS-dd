@@ -558,7 +558,14 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 if (bullet.getAreaDamageSize() > 0.f)
                 {
-                    createExplosionServer(bullet.getOwner(), bullet.getObject3D().getPosVec(), bullet.getAreaDamageSize(), bullet.getDamageHp(), objXHair, vecCamShakeForce);
+                    createExplosionServer(
+                        bullet.getOwner(),
+                        bullet.getObject3D().getPosVec(),
+                        bullet.getAreaDamageSize(),
+                        bullet.getAreaDamagePulse(),
+                        bullet.getDamageHp(),
+                        objXHair,
+                        vecCamShakeForce);
                 }
             }
 
@@ -692,6 +699,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize,
+    const TPureFloat& fDamageAreaPulse,
     const int& nDamageHp,
     PureObject3D& objXHair,
     PureVector& vecCamShakeForce)
@@ -712,70 +720,69 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     {
         auto& player = playerPair.second;
 
-        if (player.getHealth() > 0)
+        if (player.getHealth() <= 0)
         {
-            PureVector vDirPerAxis;
-            PureVector vDistancePerAxis;
-            const float fDistance = distance_NoZ_with_distancePerAxis(
-                player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-                player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-                xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
-                vDirPerAxis, vDistancePerAxis);
+            continue;
+        }
+
+        PureVector vDirPerAxis;
+        PureVector vDistancePerAxis;
+        const float fDistance = distance_NoZ_with_distancePerAxis(
+            player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+            player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+            xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
+            vDirPerAxis, vDistancePerAxis);
+        
+        const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
+        if (fRadiusDamage > 0.f)
+        {
+            // to determine the direction of impact, we should use the center positions of player and explosion, however
+            // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
+            // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+            const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
+            const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+            const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+            //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+            PureVector vecImpact(
+                fImpactX,
+                fImpactY,
+                0.f);
+            /* player.getImpactForce() is decreased in Physics */
+            player.getImpactForce() += vecImpact;
             
-            const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
-            
-            if (fRadiusDamage > 0.f)
+            if (player.getServerSideConnectionHandle() == 0)
             {
-                // to determine the direction of impact, we should use the center positions of player and explosion, however
-                // to determine the magnitude of impact, we should use the edges/corners of players and explosion center per axis.
-                // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
-                /* TODO: make an xpl.getImpactAtDistance()* /
-                /* TODO: multiplier might be modified later with Physics ImpactForce tweaking */
-                const float fImpactX = 20.f * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-                const float fImpactY = 30.f * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-                //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
-                PureVector vecImpact(
-                    fImpactX,
-                    fImpactY,
-                    0.f);
-                player.getImpactForce() += vecImpact;
-                
-                if (player.getServerSideConnectionHandle() == 0)
+                // this is server player so shake camera!
+                vecCamShakeForce.SetX(fDamageAreaPulse / 100.f);
+            }
+            
+            player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+            if (player.getHealth() == 0)
+            {
+                const auto itKiller = m_mapPlayers.find(xpl.getOwner());
+                if (itKiller == m_mapPlayers.end())
                 {
-                    // this is server player so shake camera!
-                    vecCamShakeForce.SetX(fRadiusDamage / 100.f);
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                    //    __func__, playerPair.first.c_str());
                 }
-                //vecCamShakeForce.SetX(abs(vecImpact.getX()) / 20.f);
-                //vecCamShakeForce.SetY(abs(vecImpact.getY()) / 20.f);
-                
-                player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
-                //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
-                if (player.getHealth() == 0)
+                else
                 {
-                    const auto itKiller = m_mapPlayers.find(xpl.getOwner());
-                    if (itKiller == m_mapPlayers.end())
+                    // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
+                    // in that case frags should be decremented!
+                    if (player.getServerSideConnectionHandle() == xpl.getOwner())
                     {
-                        //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                        //    __func__, playerPair.first.c_str());
+                        itKiller->second.getFrags()--;
                     }
                     else
                     {
-                        // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
-                        // in that case frags should be decremented!
-                        if (player.getServerSideConnectionHandle() == xpl.getOwner())
-                        {
-                            itKiller->second.getFrags()--;
-                        }
-                        else
-                        {
-                            itKiller->second.getFrags()++;
-                        }
-                        //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                        //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                        itKiller->second.getFrags()++;
                     }
-                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                    HandlePlayerDied(player, objXHair);
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                    //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                 }
+                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                HandlePlayerDied(player, objXHair);
             }
         }
     }
@@ -802,6 +809,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     if (playerIt == m_mapPlayers.end())
     {
         // must always find self player
+        assert(false);
         return m_explosions.back();
     }
 
@@ -811,10 +819,10 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
         playerIt->second.getObject3D()->getPosVec().getX(),
         playerIt->second.getObject3D()->getPosVec().getY());
     
-    if (fDistance <= fDamageAreaSize)
+    const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, 90);
+    if (fRadiusDamage > 0.f)
     {
         // close enough, shake camera!
-        const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, 90);
         vecCamShakeForce.SetX(fRadiusDamage / 100.f);
     }
 

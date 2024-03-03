@@ -178,7 +178,7 @@ float proofps_dd::Physics::distance_NoZ_with_distancePerAxis(float o1px, float o
         return 0.f;
     }
 
-    // if they are not colliding, we check the 4 points of O1 and return the distance to position of O2 center.
+    // if they are not colliding, we check the 4 points of O1 and return their closest distance to position of O2 center.
     // This could be further improved by using the 4 points of O2 too, however for now this is enough.
     float fRetCenterDistance = distance_NoZ(o1px + o1sx / 2.f, o1py + o1sy / 2.f, o2px, o2py);
     vDistancePerAxis.Set(abs(o1px + o1sx / 2.f - o2px), abs(o1py + o1sy / 2.f - o2py), 0.f);
@@ -262,7 +262,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
-            /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
+            /* player.getImpactForce() is set in WeaponHandling::createExplosionServer() */
             player.getImpactForce().SetY(player.getImpactForce().getY() - fPlayerImpactForceYChangePerTick);
             if (player.getImpactForce().getY() < 0.f)
             {
@@ -545,7 +545,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getX() > 0.f)
         {
-            /* TODO: amount of decrease/increase of impact force here might be modified later with fForceMultiplier tweaking in createExplosionServer */
+            /* player.getImpactForce() is set in WeaponHandling::createExplosionServer() */
             player.getImpactForce().SetX(player.getImpactForce().getX() - fPlayerImpactForceXChangePerTick);
             if (player.getImpactForce().getX() < 0.f)
             {

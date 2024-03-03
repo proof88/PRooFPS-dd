@@ -181,4 +181,4 @@ damage_area_effect = linear
 
 # Amount of force applied to players within damage area.
 # No effect when damage_area_size is 0.
-damage_area_pulse = 20.0
+damage_area_pulse = 30.0
