@@ -51,8 +51,8 @@ namespace proofps_dd
         bool isInitialized() const;
         void shutdown();                                     /**< Shuts down the map handler. */
         
-        const std::string& serverDecideWhichMapToLoad();
-        const std::string& getWhichMapToLoad() const;
+        const std::string& serverDecideFirstMapAndUpdateNextMapToBeLoaded();
+        const std::string& getNextMapToBeLoaded() const;
 
         void refreshAvailableMaps();
         const std::vector<std::string>& getAvailableMaps() const;
@@ -87,10 +87,12 @@ namespace proofps_dd
         /* Mapcycle handling */
         
         const std::vector<std::string>& mapcycleGet() const;
-        const std::string mapcycleGetCurrent() const;
+        std::string mapcycleGetCurrent() const;
+        bool mapcycleIsCurrentLast() const;
         bool mapcycleReload();
-        void mapcycleNext();
-        void mapcycleRewind();
+        std::string mapcycleNext();
+        std::string mapcycleRewindToFirst();
+        std::string mapcycleForwardToLast();
 
     protected:
 

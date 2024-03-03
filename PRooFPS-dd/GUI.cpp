@@ -715,7 +715,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     if (ImGui::Button("START >"))
     {
         m_pConfig->validate();
-        if (m_pMaps->serverDecideWhichMapToLoad().empty())
+        if (m_pMaps->serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {            
             getConsole().EOLn("ERROR: Server is unable to select first map!");
             PGE::showErrorDialog("Server is unable to select first map!");

@@ -63,7 +63,8 @@ protected:
         AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
         AddSubTest("test_map_mapcycle_reload", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_reload);
         AddSubTest("test_map_mapcycle_next", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_next);
-        AddSubTest("test_map_mapcycle_rewind", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind);
+        AddSubTest("test_map_mapcycle_rewind_to_first", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind_to_first);
+        AddSubTest("test_map_mapcycle_forward_to_last", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_forward_to_last);
         AddSubTest("test_map_get_available_maps", (PFNUNITSUBTEST)&MapsTest::test_map_get_available_maps);
         AddSubTest("test_map_refresh_available_maps", (PFNUNITSUBTEST)&MapsTest::test_map_refresh_available_maps);
     }
@@ -107,7 +108,7 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertFalse(maps.isInitialized(), "inited 1") &
             assertFalse(maps.loaded(), "loaded 1") &
-            assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 1") &
+            assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 1") &
             assertTrue(maps.getFilename().empty(), "filename 1") &
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
@@ -128,7 +129,7 @@ private:
         b &= assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.isInitialized(), "inited 2") &
             assertFalse(maps.loaded(), "loaded 2") &
-            assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 2") &
+            assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 2") &
             assertTrue(maps.getFilename().empty(), "filename 2") &
             assertEquals(0u, maps.width(), "width 2") &
             assertEquals(0u, maps.height(), "height 2") &
@@ -155,7 +156,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -187,7 +188,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -219,7 +220,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
 
         // block and map boundaries
@@ -251,7 +252,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
-        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad");
+        b &= assertEquals("map_test_good.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename");
 
         // block and map boundaries
@@ -362,7 +363,7 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
-        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad 1");
+        b &= assertEquals("map_test_good.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded 1");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 1");
 
         // block and map boundaries
@@ -409,7 +410,7 @@ private:
         b &= assertEquals(0u, maps.width(), "width 2");
         b &= assertEquals(0u, maps.height(), "height 2");
         b &= assertTrue(maps.getFilename().empty(), "filename 2");
-        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad 2");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 2");
 
         // block and map boundaries
         b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2");
@@ -434,7 +435,7 @@ private:
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
-        b &= assertEquals("map_test_good.txt", maps.getWhichMapToLoad(), "getWhichMapToLoad 3");
+        b &= assertEquals("map_test_good.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded 3");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 3");
 
         // block and map boundaries
@@ -489,7 +490,7 @@ private:
         b &= assertFalse(maps.loaded(), "loaded 2");
         b &= assertFalse(maps.isInitialized(), "initialized 2");
         b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle 2");
-        b &= assertTrue(maps.getWhichMapToLoad().empty(), "getWhichMapToLoad");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
         b &= assertTrue(maps.getFilename().empty(), "filename");
         b &= assertTrue(maps.getAvailableMaps().empty(), "available maps empty 2");
 
@@ -499,18 +500,22 @@ private:
     bool test_map_server_decide_which_map_to_load()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init") &
+        bool b = assertEquals("", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 1");
+
+        b &= assertTrue(maps.initialize(), "init") &
             m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].getAsString().empty();
 
         if (b)
         {
-            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideWhichMapToLoad(), "server decide 1");
+            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 2");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 1");
             
-            maps.mapcycleNext();
-            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideWhichMapToLoad(), "server decide 2");
-
             m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].Set("testtest.txt");
-            b &= assertEquals("testtest.txt", maps.serverDecideWhichMapToLoad(), "server decide 3");
+            b &= assertEquals("testtest.txt", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 4");
+            
+            // by design we require to fast-forward to last map, because this way the game will switch to the FIRST mapcycle map AFTER
+            // playing on CVAR_SV_MAP
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
         }
 
         return b;
@@ -633,20 +638,28 @@ private:
     bool test_map_mapcycle_reload()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
+
+        // negative test before initialize(), positive tests after initialize()
+        // update: even before initialize(), this works, and I'm not changing that now.
+        bool b = assertTrue(maps.mapcycleReload(), "reload 1");
+
+        b &= assertTrue(maps.initialize(), "init");
         const auto originalMapcycle = maps.mapcycleGet();
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
         b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+        b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
 
         if (b)
         {
             // just make sure our current is also changed, we are testing it to be the original after reload
             maps.mapcycleNext();
             b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
 
-            b &= assertTrue(maps.mapcycleReload(), "reload");
+            b &= assertTrue(maps.mapcycleReload(), "reload 2");
             b &= assertTrue(originalMapcycle == maps.mapcycleGet(), "equals");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
         }
 
         return b;
@@ -655,7 +668,11 @@ private:
     bool test_map_mapcycle_next()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
+
+        // negative test before initialize(), positive tests after initialize()
+        bool b = assertEquals("", maps.mapcycleNext(), "next 1");
+
+        b &= assertTrue(maps.initialize(), "init");
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
         b &= assertFalse(sFirstMapName.empty(), "empty");
         b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
@@ -666,7 +683,8 @@ private:
             do
             {
                 ++nNextCount;
-                maps.mapcycleNext();
+                const std::string sCurrent = maps.mapcycleNext();
+                b &= assertEquals(maps.mapcycleGetCurrent(), sCurrent, "next ret in loop");
             } while ((maps.mapcycleGetCurrent() != sFirstMapName) && (nNextCount < 100u));
             b &= assertNotEquals(100u, nNextCount, "nNextCount 1");
             b &= assertEquals(maps.mapcycleGet().size(), nNextCount, "nNextCount 2");
@@ -675,21 +693,58 @@ private:
         return b;
     }
 
-    bool test_map_mapcycle_rewind()
+    bool test_map_mapcycle_rewind_to_first()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
+
+        // negative test before initialize(), positive tests after initialize()
+        bool b = assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
+        b &= assertEquals("", maps.mapcycleRewindToFirst(), "mapcycle rewind to first 1");
+
+        b &= assertTrue(maps.initialize(), "init");
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
         b &= assertFalse(sFirstMapName.empty(), "empty");
         b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+        b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
 
         if (b)
         {
             maps.mapcycleNext();
             b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
 
-            maps.mapcycleRewind();
+            const std::string sAllegedFirstMapName = maps.mapcycleRewindToFirst();
+            b &= assertFalse(sAllegedFirstMapName.empty(), "mapcycle rewind to first 2 a");
+            b &= assertEquals(sFirstMapName, sAllegedFirstMapName, "mapcycle rewind to first 2 b");
+            b &= assertEquals("map_warhouse.txt", sAllegedFirstMapName, "mapcycle rewind to first 2 c specific name");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_forward_to_last()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+
+        // negative test before initialize(), positive tests after initialize()
+        bool b = assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
+        b &= assertEquals("", maps.mapcycleForwardToLast(), "mapcycle forward to last 1");
+
+        b &= assertTrue(maps.initialize(), "init");
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+        b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size");  // should be at least 2 maps there
+        b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        if (b)
+        {
+            const std::string sLastMapName = maps.mapcycleForwardToLast();
+            b &= assertFalse(sLastMapName.empty(), "mapcycle forward to last 2 a");
+            b &= assertNotEquals(sFirstMapName, sLastMapName, "mapcycle forward to last 2 b");
+            b &= assertEquals("map_warena.txt", sLastMapName, "mapcycle forward to last 2 c specific name");
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
         }
 
         return b;

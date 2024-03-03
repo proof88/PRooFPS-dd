@@ -241,9 +241,9 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     allowListAppMessages();
 
-    if (getNetwork().isServer())
+    if (getNetwork().isServer() && !getConfigProfiles().getVars()[proofps_dd::GUI::CVAR_GUI_MAINMENU].getAsBool())
     {
-        if (m_maps.serverDecideWhichMapToLoad().empty())
+        if (m_maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {
             getConsole().EOLnOO("ERROR: Server is unable to select first map!");
             PGE::showErrorDialog("Server is unable to select first map!");
@@ -559,7 +559,7 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
 
 void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 {
-    m_gui.showLoadingScreen(nProgress, m_maps.getWhichMapToLoad());
+    m_gui.showLoadingScreen(nProgress, m_maps.getNextMapToBeLoaded());
 }
 
 void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
@@ -1765,26 +1765,26 @@ bool proofps_dd::PRooFPSddPGE::handleUserConnected(pge_network::PgeNetworkConnec
         if (m_mapPlayers.size() == 0)
         {
             // server already loads the map for itself at this point
-            if (m_maps.getFilename() != m_maps.getWhichMapToLoad())
+            if (m_maps.getFilename() != m_maps.getNextMapToBeLoaded())
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                if (!m_maps.load(m_maps.getWhichMapToLoad().c_str(), m_cbDisplayMapLoadingProgressUpdate))
+                if (!m_maps.load(m_maps.getNextMapToBeLoaded().c_str(), m_cbDisplayMapLoadingProgressUpdate))
                 {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_maps.getWhichMapToLoad().c_str());
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_maps.getNextMapToBeLoaded().c_str());
                     assert(false);
                     return false;
                 }
             }
             else
             {
-                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_maps.getWhichMapToLoad().c_str());
+                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_maps.getNextMapToBeLoaded().c_str());
             }
 
             getConsole().OLn("PRooFPSddPGE::%s(): first (local) user connected and I'm server, so this is me (connHandleServerSide: %u)",
                 __func__, connHandleServerSide);
 
             pge_network::PgePacket newPktSetup;
-            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, msg.m_szIpAddress, m_maps.getWhichMapToLoad().c_str()))
+            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, msg.m_szIpAddress, m_maps.getNextMapToBeLoaded().c_str()))
             {
                 const PureVector& vecStartPos = getConfigProfiles().getVars()["testing"].getAsBool() ?
                     m_maps.getLeftMostSpawnpoint() :

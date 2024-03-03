@@ -113,7 +113,7 @@ void proofps_dd::Maps::shutdown()
     getConsole().OOOLn("Maps::shutdown() done!");
 }
 
-const std::string& proofps_dd::Maps::serverDecideWhichMapToLoad()
+const std::string& proofps_dd::Maps::serverDecideFirstMapAndUpdateNextMapToBeLoaded()
 {
     // PGEcfgProfiles allows the value of a CVAR be full of spaces (it is a valid case), which means that here we should trim
     // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
@@ -142,11 +142,15 @@ const std::string& proofps_dd::Maps::serverDecideWhichMapToLoad()
     {
         m_sServerMapFilenameToLoad = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
         getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, m_sServerMapFilenameToLoad.c_str());
+
+        // we go to last map in mapcycle so that when server switches from CVAR_SV_MAP to next map, it will be the
+        // first map in mapcycle, this is how it will properly start looping mapcycle.
+        mapcycleForwardToLast();
     }
     return m_sServerMapFilenameToLoad;
 }
 
-const std::string& proofps_dd::Maps::getWhichMapToLoad() const
+const std::string& proofps_dd::Maps::getNextMapToBeLoaded() const
 {
     return m_sServerMapFilenameToLoad;
 }
@@ -595,11 +599,16 @@ const std::vector<std::string>& proofps_dd::Maps::mapcycleGet() const
     return m_mapcycle;
 }
 
-const std::string proofps_dd::Maps::mapcycleGetCurrent() const
+std::string proofps_dd::Maps::mapcycleGetCurrent() const
 {
     return (m_mapcycleItCurrent == m_mapcycle.end()) ?
         "" :
         *m_mapcycleItCurrent;
+}
+
+bool proofps_dd::Maps::mapcycleIsCurrentLast() const
+{
+    return ((m_mapcycleItCurrent == m_mapcycle.end()) || ((m_mapcycleItCurrent+1) == m_mapcycle.end()));
 }
 
 bool proofps_dd::Maps::mapcycleReload()
@@ -657,12 +666,12 @@ bool proofps_dd::Maps::mapcycleReload()
 }  // mapcycleReload()
 
 
-void proofps_dd::Maps::mapcycleNext()
+std::string proofps_dd::Maps::mapcycleNext()
 {
     if (m_mapcycleItCurrent == m_mapcycle.end())
     {
         // no valid mapcycle
-        return;
+        return "";
     }
 
     ++m_mapcycleItCurrent;
@@ -671,16 +680,31 @@ void proofps_dd::Maps::mapcycleNext()
         // with valid mapcycle, it never stays on end(), it should automatically go back to the beginning
         m_mapcycleItCurrent = m_mapcycle.begin();
     }
+    return *m_mapcycleItCurrent;
 }
 
-void proofps_dd::Maps::mapcycleRewind()
+std::string proofps_dd::Maps::mapcycleRewindToFirst()
 {
     if (m_mapcycleItCurrent == m_mapcycle.end())
     {
         // no valid mapcycle
-        return;
+        return "";
     }
     m_mapcycleItCurrent = m_mapcycle.begin();
+    return *m_mapcycleItCurrent;
+}
+
+std::string proofps_dd::Maps::mapcycleForwardToLast()
+{
+    if (m_mapcycleItCurrent == m_mapcycle.end())
+    {
+        // no valid mapcycle
+        return "";
+    }
+
+    m_mapcycleItCurrent = m_mapcycle.end();
+    --m_mapcycleItCurrent;
+    return *m_mapcycleItCurrent;
 }
 
 
