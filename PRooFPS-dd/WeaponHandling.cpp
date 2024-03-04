@@ -570,14 +570,30 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             }
 
             // TODO: we should have a separate msg for deleting Bullet because its size would be much less than this msg!
-            proofps_dd::MsgBulletUpdateFromServer::initPktForDeleting_WithGarbageValues(
+            // But now we have to stick to this because explosion create on client-side requires all values, see details in:
+            // handleBulletUpdateFromServer
+            proofps_dd::MsgBulletUpdateFromServer::initPkt(
                 newPktBulletUpdate,
-                pge_network::ServerConnHandle,
+                bullet.getOwner(),
                 bullet.getId(),
                 fBulletPosX,
                 fBulletPosY,
-                bullet.getObject3D().getPosVec().getZ()
-                ); // clients will also delete this bullet on their side because we set pkt's delete flag here
+                bullet.getObject3D().getPosVec().getZ(),
+                bullet.getObject3D().getAngleVec().getX(),
+                bullet.getObject3D().getAngleVec().getY(),
+                bullet.getObject3D().getAngleVec().getZ(),
+                bullet.getObject3D().getSizeVec().getX(),
+                bullet.getObject3D().getSizeVec().getY(),
+                bullet.getObject3D().getSizeVec().getZ(),
+                bullet.getSpeed(),
+                bullet.getGravity(),
+                bullet.getDrag(),
+                bullet.getDamageHp(),
+                bullet.getAreaDamageSize(),
+                bullet.getAreaDamagePulse()
+                );
+            // clients will also delete this bullet on their side because we set pkt's delete flag here
+            proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = true;
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
             m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
         }
@@ -962,6 +978,31 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         return false;
     }
 
+    if (msg.m_bDelete)
+    {
+        // Make explosion first if required;
+        // unlike server, client makes explosion when server says a bullet should be deleted, in such case client's job is to make explosion
+        // with same parameters as server makes it, based on bullet properties such as position, area damage size, etc., this is why it is important
+        // that server sends bullet position also when bDelete flag is set, so the explosion position will be the same as on server side!
+        // Since client simulates bullet travel for visual purpose only, not doing collision check, it relies on server to know when a hit happened,
+        // and for that obviously we need the server-side position of bullet at the moment of hit.
+        // Also, we actually require other bullet parameters as well for making the explosion, because we might not have the bullet in getBullets() on
+        // our side: when 2 players are almost at the same position (partially overlapping), one fires the weapon, then bullet will immediately hit on
+        // the other player on server-side, we will receive a bullet delete request only from server in that case without any bullet create request prior to it!
+        if (msg.m_fDamageAreaSize > 0.f)
+        {
+            createExplosionClient(
+                0 /* explosion id is not used on client-side */,
+                connHandleServerSide,
+                /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
+                PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
+                msg.m_nDamageHp,
+                msg.m_fDamageAreaSize,
+                msg.m_fDamageAreaPulse,
+                vecCamShakeForce);
+        }
+    }
+
     Bullet* pBullet = nullptr;
 
     auto it = m_pge.getBullets().begin();
@@ -978,9 +1019,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
     {
         if (msg.m_bDelete)
         {
-            // this is valid scenario: when 2 players are at almost same position (partially overlapping), the bullet will immediately hit the other player
-            // when being fired. In such case, we can just ignore doing anything here on client side.
-            // TODO: btw why does sender send the message like this anyway to clients?!
+            // this is valid scenario: explained a few lines earlier
             return true;
         }
         // need to create this new bullet first on our side
@@ -1047,36 +1086,15 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
     else
     {
         //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: old bullet id %u", __func__, msg.m_bulletId);
-        pBullet = &(*it);
+        //pBullet = &(*it);
 
         if (!msg.m_bDelete)
         {
             // for a known bullet, client should not receive position updates from server, so log error!
             getConsole().EOLn("WeaponHandling::%s(): received non-delete update for already known bullet, MUST NOT HAPPEN!", __func__);
         }
-    }
-
-    if (msg.m_bDelete)
-    {
-        // make explosion first if required;
-        // unlike server, client makes explosion when server says a bullet should be deleted, in such case client's job is to make explosion
-        // with same parameters as server makes it based on bullet properties such as position, area damage size, etc., this is why it is important
-        // that server sends bullet position also when bDelete flag is set, so the explosion position will be the same as on server side!
-        if (it->getAreaDamageSize() > 0.f)
-        {
-            createExplosionClient(
-                0 /* explosion id is not used on client-side */,
-                connHandleServerSide,
-                /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
-                PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
-                it->getDamageHp(),
-                it->getAreaDamageSize(),
-                it->getAreaDamagePulse(),
-                vecCamShakeForce);
-        }
 
         m_pge.getBullets().erase(it);
-        return true;
     }
 
     return true;
