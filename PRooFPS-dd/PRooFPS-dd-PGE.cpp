@@ -1945,19 +1945,17 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
     {
         it->second.SetExpectingStartPos(false);
         // PPPKKKGGGGGG
-        it->second.getPos().set(
-            PureVector(
-                msg.m_pos.x, msg.m_pos.y, msg.m_pos.z
-            ));
-        it->second.getPos().commit();
+        it->second.getPos().set( PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z) );
+        it->second.getPos().commit(); // both server and client commits in this case
     }
 
+    it->second.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
     it->second.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
     it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
-        //it->second.getAngleY() = msg.m_fPlayerAngleY;
+        //it->second.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
         it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
 
