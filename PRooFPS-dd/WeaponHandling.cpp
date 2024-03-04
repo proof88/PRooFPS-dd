@@ -792,7 +792,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
             }
             
-            //player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
             if (player.getHealth() == 0)
             {
