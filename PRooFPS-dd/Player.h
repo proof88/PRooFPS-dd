@@ -172,7 +172,7 @@ namespace proofps_dd
                 {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()},
                 /** Current state of player crouch input, regardless of current crouching state.
-                    Player is setting in as per input.
+                    Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvCrouch,   PgeOldNewValue<bool>(false)},
         };

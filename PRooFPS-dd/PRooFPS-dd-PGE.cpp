@@ -881,7 +881,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
     auto& camera = getPure().getCamera();
-    float fCamTargetX, fCamTargetY;
+    float fCamPosXTarget, fCamPosYTarget;
     if (bCamFollowsXHair)
     {
         /* Unsure about if we really need to unproject the 2D xhair's position.
@@ -915,68 +915,78 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
             //    vecUnprojected.getX(), vecUnprojected.getY());
         }
 
-        fCamTargetX = std::min(
+        fCamPosXTarget = std::min(
             fCamMaxAllowedPosX,
             std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + vecUnprojected.getX())/2));
         
-        fCamTargetY = std::min(
+        fCamPosYTarget = std::min(
             fCamMaxAllowedPosY,
             std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + vecUnprojected.getY())/2));
     }
     else
     {
-        fCamTargetX = std::min(
+        fCamPosXTarget = std::min(
             fCamMaxAllowedPosX,
             std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
 
-        fCamTargetY = std::min(
+        fCamPosYTarget = std::min(
             fCamMaxAllowedPosY,
             std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
     }
 
-    const PureVector vecCamPos{
-        PFL::smooth(
-            camera.getPosVec().getX(), fCamTargetX, GAME_CAM_SPEED_X * m_fps),
-        PFL::smooth(
-            camera.getPosVec().getY(),
-            fCamTargetY,
-            /* if we are not following xhair, we want an eased vertical camera movement because it looks nice */
-            (bCamFollowsXHair ? (GAME_CAM_SPEED_X * m_fps) : (GAME_CAM_SPEED_Y * m_fps))),
-        GAME_CAM_Z
-    };
-
     static float fShakeDegree = 0.f;
-    // updateFramesPerSecond() makes sure m_fps is never 0
+    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
     fShakeDegree += 1200 / m_fps;
     while (fShakeDegree >= 360.f)
     {
         fShakeDegree -= 360.f;
     }
     float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
-    
+
+    const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_IMPACT_FORCE_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
+    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
+    const float fCamShakeForceChangePerFrame = GAME_IMPACT_FORCE_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
     if (m_vecCamShakeForce.getX() > 0.f)
     {
-        const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-        const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
-        assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
-        const float fCamShakeForceXChangePerFrame = GAME_IMPACT_FORCE_X_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
-        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceXChangePerFrame);
+        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceChangePerFrame);
         if (m_vecCamShakeForce.getX() < 0.f)
         {
             m_vecCamShakeForce.SetX(0.f);
         }
     }
-    
-    float fShakeFactor = fShakeSine * m_vecCamShakeForce.getX();
+    if (m_vecCamShakeForce.getY() > 0.f)
+    {
+        m_vecCamShakeForce.SetY(m_vecCamShakeForce.getY() - fCamShakeForceChangePerFrame);
+        if (m_vecCamShakeForce.getY() < 0.f)
+        {
+            m_vecCamShakeForce.SetY(0.f);
+        }
+    }
+
+    float fShakeFactorX = fShakeSine * m_vecCamShakeForce.getX() / m_fps;
+    float fShakeFactorY = fShakeSine * m_vecCamShakeForce.getY() / m_fps;
+
+    fCamPosXTarget += fShakeFactorX;
+    fCamPosYTarget += fShakeFactorY;
+
+    PureVector vecCamPos{
+        PFL::smooth(
+            camera.getPosVec().getX() + fShakeFactorX, fCamPosXTarget, GAME_CAM_SPEED_X * m_fps),
+        PFL::smooth(
+            camera.getPosVec().getY() + fShakeFactorY,
+            fCamPosYTarget,
+            /* if we are not following xhair, we want an eased vertical camera movement because it looks nice */
+            (bCamFollowsXHair ? (GAME_CAM_SPEED_X * m_fps) : (GAME_CAM_SPEED_Y * m_fps))),
+        GAME_CAM_Z
+    };
 
     camera.getPosVec() = vecCamPos;
-    camera.getPosVec().SetX(camera.getPosVec().getX() + fShakeFactor / m_fps);
     camera.getTargetVec().Set(
-        bCamTilting ? ((vecCamPos.getX() + fCamTargetX) / 2.f) : vecCamPos.getX(),
-        bCamTilting ? ((vecCamPos.getY() + fCamTargetY) / 2.f) : vecCamPos.getY(),
+        bCamTilting ? ((vecCamPos.getX() + fCamPosXTarget) / 2.f) : vecCamPos.getX(),
+        bCamTilting ? ((vecCamPos.getY() + fCamPosYTarget) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
-    camera.getTargetVec().SetX(camera.getTargetVec().getX() + fShakeFactor / m_fps);
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 

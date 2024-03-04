@@ -772,11 +772,11 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             if (player.getServerSideConnectionHandle() == 0)
             {
                 // this is server player so shake camera!
-                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 2);
+                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
                 vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
             }
             
-            player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            //player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
             if (player.getHealth() == 0)
             {
@@ -850,7 +850,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
         if (fRadiusDamage > 0.f)
         {
             // close enough, shake camera!
-            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 2);
+            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
             vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
         }
     }
