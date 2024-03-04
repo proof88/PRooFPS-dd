@@ -744,7 +744,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
             const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
             const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-            //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+            getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
             PureVector vecImpact(
                 fImpactX,
                 fImpactY,
@@ -755,7 +755,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             if (player.getServerSideConnectionHandle() == 0)
             {
                 // this is server player so shake camera!
-                vecCamShakeForce.SetX(fDamageAreaPulse / 100.f);
+                vecCamShakeForce.SetX(abs(fImpactX)*2);
             }
             
             player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));

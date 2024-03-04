@@ -179,6 +179,6 @@ damage_area_size = 0.0
 #  - linear  : damage is decreasing within area towards the edges from its center.
 damage_area_effect = linear
 
-# Amount of force applied to players within damage area.
+# Amount of push force applied to players within damage area.
 # Must be zero if damage_area_size is zero.
 damage_area_pulse = 0.0

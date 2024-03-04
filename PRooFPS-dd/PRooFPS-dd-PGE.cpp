@@ -946,40 +946,37 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
     };
 
     static float fShakeDegree = 0.f;
-    fShakeDegree += 20.f;
-    if (fShakeDegree >= 360.f)
+    // updateFramesPerSecond() makes sure m_fps is never 0
+    fShakeDegree += 1200 / m_fps;
+    while (fShakeDegree >= 360.f)
     {
-        fShakeDegree = 0.f;
+        fShakeDegree -= 360.f;
     }
     float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
     
     if (m_vecCamShakeForce.getX() > 0.f)
     {
-        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - 0.01f);
+        const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+        const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
+        // updateFramesPerSecond() makes sure m_fps is never 0
+        const float fCamShakeForceXChangePerFrame = GAME_IMPACT_FORCE_X_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
+        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceXChangePerFrame);
         if (m_vecCamShakeForce.getX() < 0.f)
         {
             m_vecCamShakeForce.SetX(0.f);
         }
     }
-    /*else if (m_vecCamShakeForce.getX() < 0.f)
-    {
-        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() + 0.05f);
-        if (m_vecCamShakeForce.getX() > 0.f)
-        {
-            m_vecCamShakeForce.SetX(0.f);
-        }
-    } */
     
     float fShakeFactor = fShakeSine * m_vecCamShakeForce.getX();
 
     camera.getPosVec() = vecCamPos;
-    camera.getPosVec().SetX(camera.getPosVec().getX() + fShakeFactor);
+    camera.getPosVec().SetX(camera.getPosVec().getX() + fShakeFactor / m_fps);
     camera.getTargetVec().Set(
         bCamTilting ? ((vecCamPos.getX() + fCamTargetX) / 2.f) : vecCamPos.getX(),
         bCamTilting ? ((vecCamPos.getY() + fCamTargetY) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
-    camera.getTargetVec().SetX(camera.getTargetVec().getX() + fShakeFactor);
+    camera.getTargetVec().SetX(camera.getTargetVec().getX() + fShakeFactor / m_fps);
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
