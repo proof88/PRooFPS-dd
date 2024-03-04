@@ -697,6 +697,39 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
     return Explosion::initExplosionsReference(m_pge);
 }
 
+
+float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
+    const Player& player,
+    const Explosion& xpl,
+    const TPureFloat& fDamageAreaPulse,
+    const int& nDamageHp,
+    PureVector& vecImpactForce)
+{
+    PureVector vDirPerAxis;
+    PureVector vDistancePerAxis;
+    const float fDistance = distance_NoZ_with_distancePerAxis(
+        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+        xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
+        vDirPerAxis, vDistancePerAxis);
+
+    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
+
+    if (fRadiusDamage > 0.f)
+    {
+        // to determine the direction of impact, we should use the center positions of player and explosion, however
+        // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
+        // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
+        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+        getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+        vecImpactForce.Set(fImpactX, fImpactY, 0.f);
+    }
+
+    return fRadiusDamage;
+}
+
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
@@ -727,35 +760,20 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             continue;
         }
 
-        PureVector vDirPerAxis;
-        PureVector vDistancePerAxis;
-        const float fDistance = distance_NoZ_with_distancePerAxis(
-            player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-            player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-            xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
-            vDirPerAxis, vDistancePerAxis);
-        
-        const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
+        PureVector vecImpactForce;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            player, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+        );
         if (fRadiusDamage > 0.f)
         {
-            // to determine the direction of impact, we should use the center positions of player and explosion, however
-            // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
-            // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
-            const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
-            const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-            const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-            getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
-            PureVector vecImpact(
-                fImpactX,
-                fImpactY,
-                0.f);
             /* player.getImpactForce() is decreased in Physics */
-            player.getImpactForce() += vecImpact;
+            player.getImpactForce() += vecImpactForce;
             
             if (player.getServerSideConnectionHandle() == 0)
             {
                 // this is server player so shake camera!
-                vecCamShakeForce.SetX(abs(fImpactX)*2);
+                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 2);
+                vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
             }
             
             player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
@@ -809,30 +827,35 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
             pos,
             fDamageAreaSize));
 
+    Explosion& xpl = m_explosions.back();
+
+    m_pge.getAudio().play(m_sounds.m_sndExplosion);
+
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
     {
         // must always find self player
         assert(false);
-        return m_explosions.back();
+        return xpl;
     }
 
-    const float fDistance = distance_NoZ(
-        pos.getX(),
-        pos.getY(),
-        playerIt->second.getObject3D()->getPosVec().getX(),
-        playerIt->second.getObject3D()->getPosVec().getY());
-    
-    const float fRadiusDamage = m_explosions.back().getDamageAtDistance(fDistance, nDamageHp);
-    if (fRadiusDamage > 0.f)
+    if (playerIt->second.getHealth() > 0)
     {
-        // close enough, shake camera!
-        vecCamShakeForce.SetX(fDamageAreaPulse / 100.f);
+        // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
+        PureVector vecImpactForce;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            playerIt->second, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+        );
+
+        if (fRadiusDamage > 0.f)
+        {
+            // close enough, shake camera!
+            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 2);
+            vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
+        }
     }
 
-    m_pge.getAudio().play(m_sounds.m_sndExplosion);
-
-    return m_explosions.back();
+    return xpl;
 }
 
 void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()

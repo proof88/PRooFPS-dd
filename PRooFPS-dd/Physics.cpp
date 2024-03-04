@@ -167,6 +167,7 @@ float proofps_dd::Physics::distance_NoZ(float o1px, float o1py, float o1sx, floa
 float proofps_dd::Physics::distance_NoZ_with_distancePerAxis(float o1px, float o1py, float o1sx, float o1sy, float o2px, float o2py, PureVector& vDirPerAxis, PureVector& vDistancePerAxis)
 {
     vDirPerAxis.SetZ(0);
+    // this could be cos()
     vDirPerAxis.SetX( o1px - o2px );
     vDirPerAxis.SetY( o1py - o2py );
     vDirPerAxis.Normalize();

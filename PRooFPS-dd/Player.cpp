@@ -302,7 +302,19 @@ PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
     return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvPos));
 }
 
+const PgeOldNewValue<PureVector>& proofps_dd::Player::getPos() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvPos));
+}
+
 PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleY));
+}
+
+const PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleY));

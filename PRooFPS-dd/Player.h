@@ -81,7 +81,9 @@ namespace proofps_dd
         PgeOldNewValue<int>& getHealth();
         const PgeOldNewValue<int>& getHealth() const;
         PgeOldNewValue<PureVector>& getPos();
+        const PgeOldNewValue<PureVector>& getPos() const;
         PgeOldNewValue<TPureFloat>& getAngleY();
+        const PgeOldNewValue<TPureFloat>& getAngleY() const;
         PureObject3D* getObject3D() const;
         float getGravity() const;
         bool isJumping() const;

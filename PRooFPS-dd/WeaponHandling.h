@@ -134,6 +134,12 @@ namespace proofps_dd
         WeaponHandling&& operator=(WeaponHandling&&) = delete;
 
         bool initializeWeaponHandling();
+        float getDamageAndImpactForceAtDistance(
+            const Player& player,
+            const Explosion& xpl,
+            const TPureFloat& fDamageAreaPulse,
+            const int& nDamageHp,
+            PureVector& vecImpactForce);
         Explosion& createExplosionServer(
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,

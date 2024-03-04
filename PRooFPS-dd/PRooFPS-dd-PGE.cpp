@@ -958,7 +958,7 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
     {
         const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
         const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
-        // updateFramesPerSecond() makes sure m_fps is never 0
+        assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
         const float fCamShakeForceXChangePerFrame = GAME_IMPACT_FORCE_X_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
         m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceXChangePerFrame);
         if (m_vecCamShakeForce.getX() < 0.f)
