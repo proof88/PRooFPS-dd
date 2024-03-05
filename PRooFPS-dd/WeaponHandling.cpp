@@ -739,7 +739,7 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
         const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
         const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-        getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
         vecImpactForce.Set(fImpactX, fImpactY, 0.f);
     }
 

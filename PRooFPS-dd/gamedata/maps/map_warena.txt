@@ -1,10 +1,12 @@
-# Lines starting with hashtag are comments and ignored by loader
+# Lines starting with hashtag are comments and ignored by loader.
 
-# Blank lines are also ignored by loader
+# Blank lines are also ignored by loader.
 
-# Variable name are case-sensitive!
+# Variable names are case-sensitive!
 
-# Name of the map is that will be displayed in map select submenu
+# If opened in Notepad++, I recommend setting INI or Makefile syntax highlighting in Language menu.
+
+# Name of the map is that will be displayed in map select submenu.
 Name = WARena
 
 Gravity = 2.0
@@ -23,34 +25,26 @@ Gravity = 2.0
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
 # the players will collide with them.
-# The following chars are used for defining foreground blocks:
-# BDFGHIJ
-# Remaining chars to be used as foreground blocks: KLQT
+# The following chars are used for defining foreground blocks in this map:
+# BD
+# Remaining chars to be used as foreground blocks in this map: FGHIJKLQT
 
 B = brick1light.bmp
 D = dirt2light.bmp
-#F = brick1.bmp
-#G = floor.bmp
-#H = floor.bmp
-#I = floor.bmp
-#J = crate.bmp
 
-# Background blocks are 1 depth away from the players towards
+# Background blocks are 1 unit away from the players' depth towards
 # the background, they can be used as background walls.
-# The following chars are used for defining background blocks:
-# acnor
-# Remaining chars to be used as background blocks: esuvwxy
+# The following chars are used for defining background blocks in this map:
+# ac
+# Remaining chars to be used as background blocks in this map: emnoprsuvwxyz
 
 a = brick1.bmp
 c = dirt2.bmp
-#n = aztec01.bmp
-#o = brick1.bmp
-#r = brick1.bmp
 
 # Pickupable items:
-# 'P' char represents pistol.
-# 'M' char represents machine gun.
-# 'Z' char represents bazooka.
+# '2' char represents pistol.
+# '3' char represents machine gun.
+# '4' char represents bazooka.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
@@ -65,8 +59,8 @@ c = dirt2.bmp
 # Since a player can spawn only in standing position, placing a spawnpoint to a low-height
 # tunnel where only crouching would be available is considered as map design error.
 
-# If not '=' char and not ignored line, it is treated as
-# layout definition. 
+# If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
+# layout line. 
 # Map layout consists of lines of chars not containing either '#' or
 # '=' chars. The map layout contains the blocks a.k.a. the elements
 # of the map in multiple lines.
@@ -74,16 +68,16 @@ c = dirt2.bmp
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-BBBB                                            SMSZSZSMS                                            BBBB
-BBBB                                            aMMMMMMMa                                            BBBB
+BBBB                                            S3S4S4S3S                                            BBBB
+BBBB                                            a3333333a                                            BBBB
 BBBB                                           aBBBBBBaBBa                                           BBBB
-BBBB    SSSSSSZ                               aMaaaaaaaaaMa                               ZSSSSSS    BBBB
-BBBBaMaaMMMMMMa                               a  aaaaaBa  a                               aMMMMMMaaMaBBBB
+BBBB    SSSSSS4                               a3aaaaaaaaa3a                               4SSSSSS    BBBB
+BBBBa3aa333333a                               a  aaaaaBa  a                               a333333aa3aBBBB
 BBBBaaaaBBBBBBa                              aa   aa aa   aa                              aBBBBBBaaaaBBBB
-BBBBBaPaaaBaaaa                              aa   aaBaa   aa                              aaaaBaaaPaBBBBB
-BBBBBBaaaaaaaaa          ccccZccccc          aa  aBaaaaa  aa          cccccZcccc          aaaaaaaaaBBBBBB
+BBBBBa2aaaBaaaa                              aa   aaBaa   aa                              aaaaBaaa2aBBBBB
+BBBBBBaaaaaaaaa          cccc4ccccc          aa  aBaaaaa  aa          ccccc4cccc          aaaaaaaaaBBBBBB
 BBBBBBBaaSSSaaa        cccDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDccc        aaaSSSaaBBBBBBB
-BBBBBBBBa++++BacccccZM+cDDDDDDDDDDDDcccccccaaaaBaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+MZcccccaB++++aBBBBBBBB
+BBBBBBBBa++++Baccccc43+cDDDDDDDDDDDDcccccccaaaaBaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+34cccccaB++++aBBBBBBBB
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD

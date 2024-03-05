@@ -931,18 +931,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
-        case 'M':
-        {
-            if (bDryRun)
-            {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
-            }
-            bSpecialBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
-        case 'P':
+        case '2':
         {
             if (bDryRun)
             {
@@ -953,7 +942,18 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
-        case 'Z':
+        case '3':
+        {
+            if (bDryRun)
+            {
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
+            bSpecialBlock = true;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
+            break;
+        }
+        case '4':
         {
             if (bDryRun)
             {

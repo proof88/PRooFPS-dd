@@ -1,10 +1,12 @@
-# Lines starting with hashtag are comments and ignored by loader
+# Lines starting with hashtag are comments and ignored by loader.
 
-# Blank lines are also ignored by loader
+# Blank lines are also ignored by loader.
 
-# Variable name are case-insensitive, so "Name =" is same as "name =" or "NAME ="
+# Variable name are case-insensitive, so "Name =" is same as "name =" or "NAME =".
 
-# Name of the weapon is that will be displayed in GUI
+# If opened in Notepad++, I recommend setting INI or Makefile syntax highlighting in Language menu.
+
+# Name of the weapon is that will be displayed in GUI.
 Name = Pistol
 
 # Preview Image is not needed to be explicitly defined here, as

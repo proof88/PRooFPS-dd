@@ -103,16 +103,16 @@ namespace proofps_dd
     private:
 
         const float GAME_PLAYERS_POS_Z = -1.2f;
-        const float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;
+        const float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
 
         const std::set<char> foregroundBlocks = {
             'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T'
         };
 
         const std::set<char> backgroundBlocks = {
-            'a', 'c', 'e', 'n', 'n', 'o', 'r', 'v', 'u', 'w', 'x', 'y',
+            'a', 'c', 'e', 'm', 'n', 'p', 'o', 'r', 'u', 'v', 'w', 'x', 'y', 'z',
             /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
-            '+', 'M', 'P', 'Z', 'S'
+            '+', '2', '3', '4', 'S'
         };
 
         PGEcfgProfiles& m_cfgProfiles;
