@@ -135,6 +135,7 @@ const std::string& proofps_dd::Maps::serverDecideFirstMapAndUpdateNextMapToBeLoa
 
     if (m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString().empty())
     {
+        mapcycleRewindToFirst();
         m_sServerMapFilenameToLoad = mapcycleGetCurrent();
         if (m_sServerMapFilenameToLoad.empty())
         {

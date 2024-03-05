@@ -56,7 +56,7 @@ protected:
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-        AddSubTest("test_map_server_decide_which_map_to_load", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_which_map_to_load);
+        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
         AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
         AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
         AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
@@ -522,25 +522,38 @@ private:
         return b;
     }
 
-    bool test_map_server_decide_which_map_to_load()
+    bool test_map_server_decide_first_map_to_be_loaded()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertEquals("", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 1");
+        b &= assertEquals("", maps.getNextMapToBeLoaded(), "next map to load 1");
 
         b &= assertTrue(maps.initialize(), "init") &
             m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].getAsString().empty();
 
         if (b)
         {
-            b &= assertEquals(maps.mapcycleGetCurrent(), maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 2");
+            std::string sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
+            b &= assertEquals(maps.mapcycleGetCurrent(), sRet, "server decide 2");
+            b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 2");
             b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 1");
+
+            // intentionally changing mapcycle position
+            maps.mapcycleNext();
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
+            sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
+            b &= assertEquals(maps.mapcycleGetCurrent(), sRet, "server decide 3");
+            b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 3");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 3");
             
             m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].Set("testtest.txt");
-            b &= assertEquals("testtest.txt", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 4");
+            sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
+            b &= assertEquals("testtest.txt", sRet, "server decide 4");
+            b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 4");
             
             // by design we require to fast-forward to last map, because this way the game will switch to the FIRST mapcycle map AFTER
             // playing on CVAR_SV_MAP
-            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 4");
         }
 
         return b;
