@@ -377,13 +377,15 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
     wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
 
-    if (pktUserCmdMove.m_bRequestReload || (wpn->getState() != Weapon::State::WPN_READY) || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
+    if (pktUserCmdMove.m_bRequestReload || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
         // TODO: not nice: an object should be used, which is destructed upon return, its dtor adds the time elapsed since its ctor!
         m_durations.m_nHandleUserCmdMoveDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         return true; // don't check anything related to shooting in case of either of these actions
     }
 
+    // we should be allowed to come here if current wpn's state is NOT ready, because in some cases it is allowed to shoot: for example,
+    // if wpn has per-bullet reload, shooting can cancel the reloading state!
     if (pktUserCmdMove.m_bShootAction)
     {
         const auto nSecsSinceLastWeaponSwitch =
@@ -399,6 +401,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         }
         else
         {
+            //getConsole().EOLn("InputHandling::%s(): m_bShootAction true and accepted!", __func__);
             player.getAttack() = true;
         }
     }
@@ -539,6 +542,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
         bool bRequestReload = false;
         if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
         {
+            //getConsole().EOLn("InputHandling::%s(): bRequestReload became true!", __func__);
             bRequestReload = true;
         }
 
