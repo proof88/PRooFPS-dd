@@ -54,12 +54,6 @@ namespace proofps_dd
         const std::string& serverDecideFirstMapAndUpdateNextMapToBeLoaded();
         const std::string& getNextMapToBeLoaded() const;
 
-        /* Available maps handling */
-
-        void refreshAvailableMaps();
-        const std::vector<std::string>& getAvailableMaps() const;
-        const char** getAvailableMapsAsCharPtrArray() const;
-
         /* Current map handling */
 
         bool loaded() const;
@@ -97,6 +91,31 @@ namespace proofps_dd
         std::string mapcycleNext();
         std::string mapcycleRewindToFirst();
         std::string mapcycleForwardToLast();
+        bool mapcycleAdd(const std::string& sMapFilename);
+        bool mapcycleAdd(const std::vector<std::string>& vMapFilenames);
+        bool mapcycleRemove(const std::string& sMapFilename);
+        bool mapcycleRemove(const size_t& index);
+        bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
+        void mapcycleClear();
+
+        /* Available maps handling */
+
+        void availableMapsRefresh();
+        const std::vector<std::string>& availableMapsGet() const;
+        const char** availableMapsGetAsCharPtrArray() const;
+        bool availableMapsAdd(const std::string& sMapFilename);
+        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
+        bool availableMapsRemove(const std::string& sMapFilename);
+        bool availableMapsRemove(const size_t& index);
+        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+
+        /* Available maps and Mapcycle handling together */
+
+        bool mapcycleAdd_availableMapsRemove(const std::string& sMapFilename);
+        bool mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+        bool mapcycleRemove_availableMapsAdd(const std::string& sMapFilename);
+        bool mapcycleRemove_availableMapsAdd(const size_t& index);
+
 
     protected:
 
@@ -119,11 +138,6 @@ namespace proofps_dd
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
         std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */
-
-        /* Available maps handling */
-
-        std::vector<std::string> m_availableMaps;
-        const char** m_vszAvailableMaps;
 
         /* Current map handling */
 
@@ -148,9 +162,18 @@ namespace proofps_dd
 
         /* Mapcycle handling */
 
+        // I want unique elements in mapcycle. Yes, std::set would be trivial, but:
+        // - I don't want elements to be sorted;
+        // - I'm not sure if uniqueness will be forever, maybe I want to allow repeating maps!
+        // Yes I know about std::unordered_multiset, but for some reason I wanted to stick for vector for now.
         std::vector<std::string> m_mapcycle;
         std::vector<std::string>::iterator m_mapcycleItCurrent;
         const char** m_vszMapcycle;
+
+        /* Available maps handling */
+
+        std::vector<std::string> m_availableMaps;
+        const char** m_vszAvailableMaps;
 
         // ---------------------------------------------------------------------------
 
@@ -159,6 +182,15 @@ namespace proofps_dd
 
         void lineHandleAssignment(std::string& sVar, std::string& sValue);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
+
+        bool mapFilenameAddToVector_NoDuplicatesAllowed(
+            const std::string& sMapFilename,
+            std::vector<std::string>& vec);
+        bool mapFilenameRemoveFromVector(
+            const std::string& sMapFilename,
+            std::vector<std::string>& vec);
+        void availableMapsRefreshCharPtrArray();
+        void mapcycleRefreshCharPtrArray();
 
     }; // class Maps
 

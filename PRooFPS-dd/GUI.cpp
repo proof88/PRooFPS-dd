@@ -92,7 +92,7 @@ void proofps_dd::GUI::initialize()
     // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
     // We are force-inserting the extra NULL characters into the string because this will be actually handled by a multi-element array by Dear ImGUI
     m_sAvailableMapsListForForceSelectComboBox += std::string(" ") + '\0'; // this first elem represents the not-selected map
-    for (const auto& sMapName : m_pMaps->getAvailableMaps())
+    for (const auto& sMapName : m_pMaps->availableMapsGet())
     {
         m_sAvailableMapsListForForceSelectComboBox += sMapName + '\0';
         //m_sAvailableMapsListForMapcycleListBox += sMapName + '\0';
@@ -436,13 +436,6 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
 
         ImGui::Text("Mapcycle:");
-        ImGui::SameLine();
-        ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip(
-                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
-        }
 
         ImGui::SameLine(fMapsAvailListBoxX);
         ImGui::Text("Available Maps:");
@@ -465,43 +458,53 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::ListBox(
             "##listBoxAvailMaps",
             &iActiveItemMapsAvailable,
-            m_pMaps->getAvailableMapsAsCharPtrArray(),
-            static_cast<int>(m_pMaps->getAvailableMaps().size()),
+            m_pMaps->availableMapsGetAsCharPtrArray(),
+            static_cast<int>(m_pMaps->availableMapsGet().size()),
             nMapListboxesHeightAsItemCount);
         
 
         ImGui::PopItemWidth();
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY));
-        ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        if (ImGui::IsItemHovered())
+        if (ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            ImGui::SetTooltip(
-                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+            // not sure if it can be -1 but check always anyway!
+            if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
+            {
+                // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
+                m_pMaps->mapcycleAdd(m_pMaps->availableMapsGet()[iActiveItemMapsAvailable]);
+            }
+            else
+            {
+                getConsole().EOLn("ERROR: iActiveItemMapsAvailable invalid index: %d!", iActiveItemMapsAvailable);
+            }
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
-        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        if (ImGui::IsItemHovered())
+        if (ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            ImGui::SetTooltip(
-                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+            m_pMaps->mapcycleAdd(m_pMaps->availableMapsGet());
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
-        ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        if (ImGui::IsItemHovered())
+        if (ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            ImGui::SetTooltip(
-                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+            // not sure if it can be -1 but check always anyway!
+            if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->mapcycleGet().size())))
+            {
+                // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
+                m_pMaps->mapcycleRemove(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
+            }
+            else
+            {
+                getConsole().EOLn("ERROR: iActiveItemMapcycle invalid index: %d!", iActiveItemMapcycle);
+            }
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
-        ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight));
-        if (ImGui::IsItemHovered())
+        if (ImGui::Button(">>", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            ImGui::SetTooltip(
-                "Sorry, but map configuration is unavailable in this version.\nYou need to manually edit gamedata/maps/mapcycle.txt.");
+            m_pMaps->mapcycleClear();
         }
 
         PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
@@ -520,9 +523,9 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             iSelectMapStart = 0;
             if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
             {
-                for (int i = 0; i < static_cast<int>(m_pMaps->getAvailableMaps().size()); i++)
+                for (int i = 0; i < static_cast<int>(m_pMaps->availableMapsGet().size()); i++)
                 {
-                    if (m_pMaps->getAvailableMaps()[i] == cvarSvMap.getAsString())
+                    if (m_pMaps->availableMapsGet()[i] == cvarSvMap.getAsString())
                     {
                         iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsListForForceSelectComboBox
                         break;
@@ -540,9 +543,9 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 cvarSvMap.Set("");
             }
-            else if (iSelectMapStart <= static_cast<int>(m_pMaps->getAvailableMaps().size()) /* first empty item as index 0 is NOT in getAvailableMaps(), that is why index can be == size() */)
+            else if (iSelectMapStart <= static_cast<int>(m_pMaps->availableMapsGet().size()) /* first empty item as index 0 is NOT in availableMapsGet(), that is why index can be == size() */)
             {
-                cvarSvMap.Set(m_pMaps->getAvailableMaps()[iSelectMapStart-1]);
+                cvarSvMap.Set(m_pMaps->availableMapsGet()[iSelectMapStart-1]);
             }
             else
             {

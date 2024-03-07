@@ -31,7 +31,6 @@ proofps_dd::Maps::Maps(
     m_cfgProfiles(cfgProfiles),
     m_gfx(gfx),
     m_texRed(PGENULL),
-    m_vszAvailableMaps(nullptr),
     m_blocks(NULL),
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
@@ -39,7 +38,8 @@ proofps_dd::Maps::Maps(
     m_width(0),
     m_height(0),
     m_mapcycleItCurrent(m_mapcycle.end()),
-    m_vszMapcycle(nullptr)
+    m_vszMapcycle(nullptr),
+    m_vszAvailableMaps(nullptr)
 {
     proofps_dd::MapItem::ResetGlobalData();
 }
@@ -78,7 +78,7 @@ bool proofps_dd::Maps::initialize()
     if (m_texRed)
     {
         mapcycleReload();
-        refreshAvailableMaps();
+        availableMapsRefresh();
     }
     
     return m_texRed != PGENULL;
@@ -109,10 +109,7 @@ void proofps_dd::Maps::shutdown()
         m_sServerMapFilenameToLoad.clear();
 
         /* Mapcycle handling */
-        delete m_vszMapcycle;
-        m_vszMapcycle = nullptr;
-        m_mapcycle.clear();
-        m_mapcycleItCurrent = m_mapcycle.end();
+        mapcycleClear();
 
         delete m_texRed;
         m_texRed = PGENULL;
@@ -161,53 +158,6 @@ const std::string& proofps_dd::Maps::serverDecideFirstMapAndUpdateNextMapToBeLoa
 const std::string& proofps_dd::Maps::getNextMapToBeLoaded() const
 {
     return m_sServerMapFilenameToLoad;
-}
-
-void proofps_dd::Maps::refreshAvailableMaps()
-{
-    delete m_vszAvailableMaps;
-    m_vszAvailableMaps = nullptr;
-    m_availableMaps.clear();
-
-    for (const auto& entry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
-        if (entry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, entry.path().string().c_str());
-            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
-        }
-
-        if (entry.path().extension().string() == ".txt")
-        {
-            // TODO: should invoke a tryLoad() function to quickly validate
-            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
-            if ((entry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (entry.path().filename().string().substr(0, 4) == "map_"))
-            {
-                m_availableMaps.push_back(entry.path().filename().string() /*PFL::getFilename(fname)*/);
-            }
-        }
-    }
-
-    if (!m_availableMaps.empty())
-    {
-        const size_t nArraySize = m_availableMaps.size(); // this way static analyzer won't warn about possible buffer overrun
-        m_vszAvailableMaps = new const char*[nArraySize];
-        for (size_t i = 0; i < nArraySize; i++)
-        {
-            m_vszAvailableMaps[i] = m_availableMaps[i].c_str();
-        }
-    }
-}
-
-const std::vector<std::string>& proofps_dd::Maps::getAvailableMaps() const
-{
-    return m_availableMaps;
-}
-
-const char** proofps_dd::Maps::getAvailableMapsAsCharPtrArray() const
-{
-    return m_vszAvailableMaps;
 }
 
 bool proofps_dd::Maps::loaded() const
@@ -698,12 +648,7 @@ bool proofps_dd::Maps::mapcycleReload()
 
     m_mapcycleItCurrent = m_mapcycle.begin();
 
-    const size_t nArraySize = m_mapcycle.size(); // this way static analyzer won't warn about possible buffer overrun
-    m_vszMapcycle = new const char*[nArraySize];
-    for (size_t i = 0; i < nArraySize; i++)
-    {
-        m_vszMapcycle[i] = m_mapcycle[i].c_str();
-    }
+    mapcycleRefreshCharPtrArray();
 
     getConsole().SOLnOO("> Mapcycle loaded with %u maps!", m_mapcycle.size());
     return true;
@@ -749,6 +694,281 @@ std::string proofps_dd::Maps::mapcycleForwardToLast()
     m_mapcycleItCurrent = m_mapcycle.end();
     --m_mapcycleItCurrent;
     return *m_mapcycleItCurrent;
+}
+
+bool proofps_dd::Maps::mapcycleAdd(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_mapcycle);
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleAdd(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty vector!", __func__);
+        return false;
+
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_mapcycle);
+    }
+
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameRemoveFromVector(sMapFilename, m_mapcycle);
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove(const size_t& index)
+{
+    if (index >= m_mapcycle.size())
+    {
+        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
+        return false;
+    }
+
+    m_mapcycle.erase(m_mapcycle.begin() + index);
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return true;
+}
+
+bool proofps_dd::Maps::mapcycleRemove(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty vector!", __func__);
+        return false;
+
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameRemoveFromVector(sMapFilename, m_mapcycle);
+    }
+
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return bRet;
+}
+
+void proofps_dd::Maps::mapcycleClear()
+{
+    delete m_vszMapcycle;
+    m_vszMapcycle = nullptr;
+    m_mapcycle.clear();
+    m_mapcycleItCurrent = m_mapcycle.end();
+}
+
+void proofps_dd::Maps::availableMapsRefresh()
+{
+    delete m_vszAvailableMaps;
+    m_vszAvailableMaps = nullptr;
+    m_availableMaps.clear();
+
+    for (const auto& entry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
+        if (entry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, entry.path().string().c_str());
+            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
+        }
+
+        if (entry.path().extension().string() == ".txt")
+        {
+            // TODO: should invoke a tryLoad() function to quickly validate
+            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
+            if ((entry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (entry.path().filename().string().substr(0, 4) == "map_"))
+            {
+                m_availableMaps.push_back(entry.path().filename().string() /*PFL::getFilename(fname)*/);
+            }
+        }
+    }
+
+    availableMapsRefreshCharPtrArray();
+}
+
+const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
+{
+    return m_availableMaps;
+}
+
+const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
+{
+    return m_vszAvailableMaps;
+}
+
+bool proofps_dd::Maps::availableMapsAdd(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+    }
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const size_t& index)
+{
+    if (index >= m_availableMaps.size())
+    {
+        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
+        return false;
+    }
+
+    m_availableMaps.erase(m_availableMaps.begin() + index);
+
+    availableMapsRefreshCharPtrArray();
+
+    return true;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+    }
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::string& sMapFilename)
+{
+    bool bRet = mapcycleAdd(sMapFilename);
+    if (bRet)
+    {
+        bRet = availableMapsRemove(sMapFilename);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+        }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: mapcycleAdd failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames)
+{
+    bool bRet = mapcycleAdd(vMapFilenames);
+    if (bRet)
+    {
+        bRet = availableMapsRemove(vMapFilenames);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+        }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: mapcycleAdd failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::string& sMapFilename)
+{
+    bool bRet = mapcycleRemove(sMapFilename);
+    if (bRet)
+    {
+        bRet = availableMapsAdd(sMapFilename);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+        }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const size_t& indexToMapcycle)
+{
+    const std::string sRemoved = (indexToMapcycle < mapcycleGet().size()) ? mapcycleGet()[indexToMapcycle] : "";
+    bool bRet = mapcycleRemove(indexToMapcycle);
+    if (bRet)
+    {
+        bRet = availableMapsAdd(sRemoved);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+        }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+    }
+
+    return bRet;
 }
 
 
@@ -1077,3 +1297,73 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     y = y - proofps_dd::GAME_BLOCK_SIZE_Y;
     return true;
 }  // lineHandleLayout()
+
+bool proofps_dd::Maps::mapFilenameAddToVector_NoDuplicatesAllowed(const std::string& sMapFilename, std::vector<std::string>& vec)
+{
+    if (sMapFilename.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    auto itFound = std::find(vec.begin(), vec.end(), sMapFilename);
+    if (itFound != vec.end())
+    {
+        getConsole().EOLn("ERROR: %s filename %s already present!", __func__, sMapFilename.c_str());
+        return false; // maybe this could be success too
+    }
+
+    vec.push_back(sMapFilename);
+    return true;
+}
+
+bool proofps_dd::Maps::mapFilenameRemoveFromVector(const std::string& sMapFilename, std::vector<std::string>& vec)
+{
+    if (sMapFilename.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    auto itFound = std::find(vec.begin(), vec.end(), sMapFilename);
+    if (itFound == vec.end())
+    {
+        getConsole().EOLn("ERROR: %s filename %s was not found!", __func__, sMapFilename.c_str());
+        return false; // maybe this could be success too
+    }
+
+    vec.erase(itFound);
+    return true;
+}
+
+void proofps_dd::Maps::availableMapsRefreshCharPtrArray()
+{
+    delete m_vszAvailableMaps;
+    m_vszAvailableMaps = nullptr;
+
+    const size_t nArraySize = m_availableMaps.size(); // this way static analyzer won't warn about possible buffer overrun
+    if (nArraySize > 0)
+    {
+        m_vszAvailableMaps = new const char* [nArraySize];
+        for (size_t i = 0; i < nArraySize; i++)
+        {
+            m_vszAvailableMaps[i] = m_availableMaps[i].c_str();
+        }
+    }
+}
+
+void proofps_dd::Maps::mapcycleRefreshCharPtrArray()
+{
+    delete m_vszMapcycle;
+    m_vszMapcycle = nullptr;
+
+    const size_t nArraySize = m_mapcycle.size(); // this way static analyzer won't warn about possible buffer overrun
+    if (nArraySize > 0)
+    {
+        m_vszMapcycle = new const char* [nArraySize];
+        for (size_t i = 0; i < nArraySize; i++)
+        {
+            m_vszMapcycle[i] = m_mapcycle[i].c_str();
+        }
+    }
+}
