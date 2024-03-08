@@ -82,6 +82,7 @@ namespace proofps_dd
         void Update(const float& fps);
 
         /* Mapcycle handling */
+        /* Logic is restricted to mapcycle, not impacting available maps. */
         
         const std::vector<std::string>& mapcycleGet() const;
         const char** mapcycleGetAsCharPtrArray() const;
@@ -99,6 +100,7 @@ namespace proofps_dd
         void mapcycleClear();
 
         /* Available maps handling */
+        /* Logic is restricted to available maps, not impacting mapcycle. */
 
         void availableMapsRefresh();
         const std::vector<std::string>& availableMapsGet() const;
@@ -110,11 +112,13 @@ namespace proofps_dd
         bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
 
         /* Available maps and Mapcycle handling together */
+        /* Here we tie both together, these complex functions are recommended to be used by GUI. */
 
         bool mapcycleAdd_availableMapsRemove(const std::string& sMapFilename);
         bool mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames);
         bool mapcycleRemove_availableMapsAdd(const std::string& sMapFilename);
-        bool mapcycleRemove_availableMapsAdd(const size_t& index);
+        bool mapcycleRemove_availableMapsAdd(const size_t& indexToMapcycle);
+        bool mapcycleRemove_availableMapsAdd(const std::vector<std::string>& vMapFilenames);
 
 
     protected:
@@ -172,6 +176,9 @@ namespace proofps_dd
 
         /* Available maps handling */
 
+        // here an std::set would be a more proper choice since available maps is basically built up from the filesystem,
+        // and all items are expected to be unique, and actually we would like them to be sorted.
+        // Probably soon I will switch to set.
         std::vector<std::string> m_availableMaps;
         const char** m_vszAvailableMaps;
 

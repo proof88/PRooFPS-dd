@@ -81,10 +81,11 @@ protected:
         AddSubTest("test_map_available_maps_remove_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_by_index);
         AddSubTest("test_map_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_multi_elem);
 
-//        AddSubTest("test_map_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_by_name);
-//        AddSubTest("test_map_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_multi_elem);
-//        AddSubTest("test_map_mapcycle_remove_available_maps_add_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_by_name);
-//        AddSubTest("test_map_mapcycle_remove_available_maps_add_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_by_index);
+        AddSubTest("test_map_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_by_name);
+        AddSubTest("test_map_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_multi_elem);
+        AddSubTest("test_map_mapcycle_remove_available_maps_add_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_by_name);
+        AddSubTest("test_map_mapcycle_remove_available_maps_add_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_by_index);
+        AddSubTest("test_map_mapcycle_remove_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_multi_elem);
     }
 
     virtual bool setUp() override
@@ -1260,6 +1261,288 @@ private:
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_add_available_maps_remove_by_name()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+
+        const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSizeMapCycle, 1u, "size mapcycle 1");  // should be at least 2 maps there
+        maps.mapcycleForwardToLast();
+        b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            // should fail because map is empty
+            b &= assertFalse(maps.mapcycleAdd_availableMapsRemove(""), "add neg 1");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 2");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 2");
+
+            // should fail because map is already in mapcycle
+            b &= assertFalse(maps.mapcycleAdd_availableMapsRemove("map_warhouse.txt"), "add neg 2");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 3");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 3");
+            
+            b &= assertTrue(maps.mapcycleAdd_availableMapsRemove("map_test_good.txt"), "add 1");
+            b &= assertEquals(nOriginalSizeMapCycle + 1, maps.mapcycleGet().size(), "size mapcycle 4");
+            b &= assertEquals(nOriginalSizeAvailableMaps - 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
+            b &= assertTrue(
+                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_test_good.txt") == maps.availableMapsGet().end(),
+                "can find deleted item in available maps");
+            b &= assertFalse(
+                std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), "map_test_good.txt") == maps.mapcycleGet().end(),
+                "cannot find deleted item in mapcycle");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
+                "mapcycleGetAsCharPtrArray()");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray()");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_add_available_maps_remove_multi_elem()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+
+        const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSizeMapCycle, 1u, "size mapcycle 1");  // should be at least 2 maps there
+        maps.mapcycleForwardToLast();
+        b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            const std::vector<std::string> vAddRemoveThese_Fail = {
+               "map_warhouse.txt",
+               "map_warena.txt"
+            };
+
+            // should fail because maps are already in mapcycle
+            b &= assertFalse(maps.mapcycleAdd_availableMapsRemove(vAddRemoveThese_Fail), "add neg 1");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 2");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 2");
+
+            const std::vector<std::string> vAddRemoveThese_Fail2 = {
+               ""
+            };
+            // should fail because of empty string
+            b &= assertFalse(maps.mapcycleAdd_availableMapsRemove(vAddRemoveThese_Fail2), "add neg 2");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 3");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 3");
+
+            const std::vector<std::string> vAddRemoveThese_Pass = {
+               "map_test_bad_assignment.txt",
+               "map_test_bad_order.txt",
+               "map_test_good.txt"
+            };
+
+            b &= assertTrue(maps.mapcycleAdd_availableMapsRemove(vAddRemoveThese_Pass), "add 1");
+            b &= assertEquals(nOriginalSizeMapCycle + vAddRemoveThese_Pass.size(), maps.mapcycleGet().size(), "size mapcycle 4");
+            b &= assertEquals(nOriginalSizeAvailableMaps - vAddRemoveThese_Pass.size(), maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
+            for (const auto& sMapCheck : vAddRemoveThese_Pass)
+            {
+                b &= assertTrue(
+                    std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapCheck) == maps.availableMapsGet().end(),
+                    "can find deleted item in available maps");
+                b &= assertFalse(
+                    std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), sMapCheck) == maps.mapcycleGet().end(),
+                    "cannot find deleted item in mapcycle");
+            }
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
+                "mapcycleGetAsCharPtrArray()");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray()");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_remove_available_maps_add_by_name()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        // add this elem so we will have a valid thing to make positive test for
+        b &= assertTrue(maps.mapcycleAdd("map_asdasd.txt"), "extend");
+        
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+
+        const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSizeMapCycle, 1u, "size mapcycle 1");  // should be at least 2 maps there
+        maps.mapcycleForwardToLast();
+        b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            // should fail because map is empty
+            b &= assertFalse(maps.mapcycleRemove_availableMapsAdd(""), "add neg 1");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 2");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 2");
+
+            // should fail because map is NOT in mapcycle
+            b &= assertFalse(maps.mapcycleRemove_availableMapsAdd("map_test_good.txt"), "add neg 2");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 3");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 3");
+
+            b &= assertTrue(maps.mapcycleRemove_availableMapsAdd("map_asdasd.txt"), "add 1");
+            b &= assertEquals(nOriginalSizeMapCycle - 1, maps.mapcycleGet().size(), "size mapcycle 4");
+            b &= assertEquals(nOriginalSizeAvailableMaps + 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
+            b &= assertFalse(
+                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_asdasd.txt") == maps.availableMapsGet().end(),
+                "cannot find deleted item in available maps");
+            b &= assertTrue(
+                std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), "map_asdasd.txt") == maps.mapcycleGet().end(),
+                "can find deleted item in mapcycle");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
+                "mapcycleGetAsCharPtrArray()");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray()");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_remove_available_maps_add_by_index()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        // add this elem so we will have a valid thing to make positive test for
+        b &= assertTrue(maps.mapcycleAdd("map_asdasd.txt"), "extend");
+
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+
+        const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSizeMapCycle, 1u, "size mapcycle 1");  // should be at least 2 maps there
+        maps.mapcycleForwardToLast();
+        b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            // should fail because of bad index
+            b &= assertFalse(maps.mapcycleRemove_availableMapsAdd(maps.mapcycleGet().size()), "add neg 1");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 2");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 2");
+
+            b &= assertTrue(maps.mapcycleRemove_availableMapsAdd(maps.mapcycleGet().size() - 1), "add 1");
+            b &= assertEquals(nOriginalSizeMapCycle - 1, maps.mapcycleGet().size(), "size mapcycle 4");
+            b &= assertEquals(nOriginalSizeAvailableMaps + 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
+            b &= assertFalse(
+                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_asdasd.txt") == maps.availableMapsGet().end(),
+                "cannot find deleted item in available maps");
+            b &= assertTrue(
+                std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), "map_asdasd.txt") == maps.mapcycleGet().end(),
+                "can find deleted item in mapcycle");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
+                "mapcycleGetAsCharPtrArray()");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray()");
+        }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_remove_available_maps_add_multi_elem()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        const std::vector<std::string> vRemoveAddThese_Pass = {
+               "msp_asdasd.txt",
+               "msp_asdasd_2.txt"
+        };
+        for (const auto& sMapCheck : vRemoveAddThese_Pass)
+        {
+            // add this elem so we will have a valid thing to make positive test for
+            b &= assertTrue(maps.mapcycleAdd(sMapCheck), "extend");
+        }
+
+        const std::string sFirstMapName = maps.mapcycleGetCurrent();
+        b &= assertFalse(sFirstMapName.empty(), "empty");
+
+        const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSizeMapCycle, 1u, "size mapcycle 1");  // should be at least 2 maps there
+        maps.mapcycleForwardToLast();
+        b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
+
+        const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            const std::vector<std::string> vAddRemoveThese_Fail = {
+               ""
+            };
+            // should fail because map is empty
+            b &= assertFalse(maps.mapcycleRemove_availableMapsAdd(vAddRemoveThese_Fail), "add neg 1");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 2");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 2");
+
+            const std::vector<std::string> vAddRemoveThese_Fail2 = {
+               "map_test_good.txt"
+            };
+            // should fail because map is NOT in mapcycle
+            b &= assertFalse(maps.mapcycleRemove_availableMapsAdd(vAddRemoveThese_Fail2), "add neg 2");
+            b &= assertEquals(nOriginalSizeMapCycle, maps.mapcycleGet().size(), "size mapcycle 3");
+            b &= assertEquals(nOriginalSizeAvailableMaps, maps.availableMapsGet().size(), "size available maps 3");
+
+            b &= assertTrue(maps.mapcycleRemove_availableMapsAdd(vRemoveAddThese_Pass), "add 1");
+            b &= assertEquals(nOriginalSizeMapCycle - vRemoveAddThese_Pass.size(), maps.mapcycleGet().size(), "size mapcycle 4");
+            b &= assertEquals(nOriginalSizeAvailableMaps + vRemoveAddThese_Pass.size(), maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
+            for (const auto& sMapCheck : vRemoveAddThese_Pass)
+            {
+                b &= assertFalse(
+                    std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapCheck) == maps.availableMapsGet().end(),
+                    "cannot find deleted item in available maps");
+                b &= assertTrue(
+                    std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), sMapCheck) == maps.mapcycleGet().end(),
+                    "can find deleted item in mapcycle");
+            }
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
+                "mapcycleGetAsCharPtrArray()");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray()");
         }
 
         return b;

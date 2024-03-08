@@ -940,12 +940,12 @@ bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::string& sMapFi
         bRet = availableMapsAdd(sMapFilename);
         if (!bRet)
         {
-            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
         }
     }
     else
     {
-        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
     }
 
     return bRet;
@@ -960,12 +960,31 @@ bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const size_t& indexToMapc
         bRet = availableMapsAdd(sRemoved);
         if (!bRet)
         {
-            getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
+            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
         }
     }
     else
     {
-        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::vector<std::string>& vMapFilenames)
+{
+    bool bRet = mapcycleRemove(vMapFilenames);
+    if (bRet)
+    {
+        bRet = availableMapsAdd(vMapFilenames);
+        if (!bRet)
+        {
+            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+        }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
     }
 
     return bRet;
