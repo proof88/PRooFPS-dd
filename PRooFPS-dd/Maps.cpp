@@ -986,18 +986,18 @@ bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::vector<std::st
 
 bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::string& sMapFilename)
 {
-    bool bRet = mapcycleRemove(sMapFilename);
-    if (bRet)
+    bool bRet = availableMapsAdd(sMapFilename);
+    if (bRet)                                                     
     {
-        bRet = availableMapsAdd(sMapFilename);
+        bRet = mapcycleRemove(sMapFilename);
         if (!bRet)
         {
-            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+            getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
         }
     }
     else
     {
-        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
+        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
     }
 
     return bRet;
@@ -1006,18 +1006,18 @@ bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::string& sMapFi
 bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const size_t& indexToMapcycle)
 {
     const std::string sRemoved = (indexToMapcycle < mapcycleGet().size()) ? mapcycleGet()[indexToMapcycle] : "";
-    bool bRet = mapcycleRemove(indexToMapcycle);
+    bool bRet = availableMapsAdd(sRemoved);
     if (bRet)
     {
-        bRet = availableMapsAdd(sRemoved);
+        bRet = mapcycleRemove(indexToMapcycle);
         if (!bRet)
         {
-            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+            getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
         }
     }
     else
     {
-        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
+        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
     }
 
     return bRet;
@@ -1025,18 +1025,18 @@ bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const size_t& indexToMapc
 
 bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::vector<std::string>& vMapFilenames)
 {
-    bool bRet = mapcycleRemove(vMapFilenames);
+    bool bRet = availableMapsAdd(vMapFilenames);
     if (bRet)
     {
-        bRet = availableMapsAdd(vMapFilenames);
+        bRet = mapcycleRemove(vMapFilenames);
         if (!bRet)
         {
-            getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+            getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
         }
     }
     else
     {
-        getConsole().EOLn("ERROR: %s: mapcycleRemove failed!", __func__);
+        getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
     }
 
     return bRet;

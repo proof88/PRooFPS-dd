@@ -472,7 +472,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
-                m_pMaps->mapcycleAdd(m_pMaps->availableMapsGet()[iActiveItemMapsAvailable]);
+                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGet()[iActiveItemMapsAvailable]);
             }
             else
             {
@@ -483,7 +483,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
         if (ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleAdd(m_pMaps->availableMapsGet());
+            m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGet());
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
@@ -493,7 +493,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->mapcycleGet().size())))
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
-                m_pMaps->mapcycleRemove(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
+                m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
             }
             else
             {
@@ -504,7 +504,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
         if (ImGui::Button(">>", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleClear();
+            m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet());
         }
 
         PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
