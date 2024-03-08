@@ -37,9 +37,9 @@ proofps_dd::Maps::Maps(
     m_foregroundBlocks_h(0),
     m_width(0),
     m_height(0),
+    m_vszAvailableMaps(nullptr),
     m_mapcycleItCurrent(m_mapcycle.end()),
-    m_vszMapcycle(nullptr),
-    m_vszAvailableMaps(nullptr)
+    m_vszMapcycle(nullptr)
 {
     proofps_dd::MapItem::ResetGlobalData();
 }
@@ -77,8 +77,8 @@ bool proofps_dd::Maps::initialize()
 
     if (m_texRed)
     {
-        mapcycleReload();
         availableMapsRefresh();
+        mapcycleReload();
     }
     
     return m_texRed != PGENULL;
@@ -99,17 +99,17 @@ void proofps_dd::Maps::shutdown()
     getConsole().OLnOI("Maps::shutdown() ...");
     if (isInitialized())
     {
-        /* Available maps handling */
-        delete m_vszAvailableMaps;
-        m_vszAvailableMaps = nullptr;
-        m_availableMaps.clear();
-
         /* Current map handling */
         unload();
         m_sServerMapFilenameToLoad.clear();
 
         /* Mapcycle handling */
         mapcycleClear();
+
+        /* Available maps handling */
+        delete m_vszAvailableMaps;
+        m_vszAvailableMaps = nullptr;
+        m_availableMaps.clear();
 
         delete m_texRed;
         m_texRed = PGENULL;
@@ -569,6 +569,116 @@ void proofps_dd::Maps::Update(const float& fps)
     }
 }
 
+void proofps_dd::Maps::availableMapsRefresh()
+{
+    delete m_vszAvailableMaps;
+    m_vszAvailableMaps = nullptr;
+    m_availableMaps.clear();
+
+    for (const auto& fileEntry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, fileEntry.path().filename().string().c_str());
+        if (fileEntry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, fileEntry.path().string().c_str());
+            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
+        }
+
+        if (fileEntry.path().extension().string() == ".txt")
+        {
+            // TODO: should invoke a tryLoad() function to quickly validate
+            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
+            if ((fileEntry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (fileEntry.path().filename().string().substr(0, 4) == "map_"))
+            {
+                m_availableMaps.push_back(fileEntry.path().filename().string() /*PFL::getFilename(fname)*/);
+            }
+        }
+    }
+
+    availableMapsRefreshCharPtrArray();
+}
+
+const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
+{
+    return m_availableMaps;
+}
+
+const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
+{
+    return m_vszAvailableMaps;
+}
+
+bool proofps_dd::Maps::availableMapsAdd(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+    }
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const std::string& sMapFilename)
+{
+    const bool bRet = mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const size_t& index)
+{
+    if (index >= m_availableMaps.size())
+    {
+        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
+        return false;
+    }
+
+    m_availableMaps.erase(m_availableMaps.begin() + index);
+
+    availableMapsRefreshCharPtrArray();
+
+    return true;
+}
+
+bool proofps_dd::Maps::availableMapsRemove(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+    }
+
+    availableMapsRefreshCharPtrArray();
+
+    return bRet;
+}
+
 const std::vector<std::string>& proofps_dd::Maps::mapcycleGet() const
 {
     return m_mapcycle;
@@ -784,114 +894,44 @@ void proofps_dd::Maps::mapcycleClear()
     m_mapcycleItCurrent = m_mapcycle.end();
 }
 
-void proofps_dd::Maps::availableMapsRefresh()
-{
-    delete m_vszAvailableMaps;
-    m_vszAvailableMaps = nullptr;
-    m_availableMaps.clear();
+/**
+    Removes items from mapcycle that are referring to non-existing files in the current filesystem.
+    
+    It can happen that someone manually edits the mapcycle file, or someone
+    copies another mapcycle file over our file, leading to having entries that are invalid
+    in the current filesystem. So this function is making sure the mapcycle is
+    valid.
 
-    for (const auto& entry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
+    It uses availableMaps so it is recommended to invoke availableMapsRefresh() first!
+
+    @return The number of removed items.
+*/
+size_t proofps_dd::Maps::mapcycleRemoveNonExisting()
+{
+    size_t nDeleted = 0;
+    bool bFound;
+    auto itMapcycle = m_mapcycle.begin();
+    while (itMapcycle != m_mapcycle.end())
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
-        if (entry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+        bFound = std::find(m_availableMaps.begin(), m_availableMaps.end(), *itMapcycle) != m_availableMaps.end();
+        if (!bFound)
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, entry.path().string().c_str());
-            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
+            getConsole().OLn("%s Warning: removed: %s!", __func__, (*itMapcycle).c_str());
+            itMapcycle = m_mapcycle.erase(itMapcycle);
+            nDeleted++;
         }
-
-        if (entry.path().extension().string() == ".txt")
+        else
         {
-            // TODO: should invoke a tryLoad() function to quickly validate
-            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
-            if ((entry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (entry.path().filename().string().substr(0, 4) == "map_"))
-            {
-                m_availableMaps.push_back(entry.path().filename().string() /*PFL::getFilename(fname)*/);
-            }
+            itMapcycle++;
         }
     }
 
-    availableMapsRefreshCharPtrArray();
-}
-
-const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
-{
-    return m_availableMaps;
-}
-
-const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
-{
-    return m_vszAvailableMaps;
-}
-
-bool proofps_dd::Maps::availableMapsAdd(const std::string& sMapFilename)
-{
-    const bool bRet = mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
-
-    availableMapsRefreshCharPtrArray();
-
-    return bRet;
-}
-
-bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFilenames)
-{
-    if (vMapFilenames.empty())
+    if (nDeleted > 0)
     {
-        getConsole().EOLn("ERROR: %s empty filename!", __func__);
-        return false;
+        m_mapcycleItCurrent = m_mapcycle.begin();
     }
 
-    bool bRet = true;
-    for (const auto& sMapFilename : vMapFilenames)
-    {
-        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
-    }
-
-    availableMapsRefreshCharPtrArray();
-
-    return bRet;
-}
-
-bool proofps_dd::Maps::availableMapsRemove(const std::string& sMapFilename)
-{
-    const bool bRet = mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
-
-    availableMapsRefreshCharPtrArray();
-
-    return bRet;
-}
-
-bool proofps_dd::Maps::availableMapsRemove(const size_t& index)
-{
-    if (index >= m_availableMaps.size())
-    {
-        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
-        return false;
-    }
-
-    m_availableMaps.erase(m_availableMaps.begin() + index);
-
-    availableMapsRefreshCharPtrArray();
-
-    return true;
-}
-
-bool proofps_dd::Maps::availableMapsRemove(const std::vector<std::string>& vMapFilenames)
-{
-    if (vMapFilenames.empty())
-    {
-        getConsole().EOLn("ERROR: %s empty filename!", __func__);
-        return false;
-    }
-
-    bool bRet = true;
-    for (const auto& sMapFilename : vMapFilenames)
-    {
-        bRet &= mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
-    }
-
-    availableMapsRefreshCharPtrArray();
-
-    return bRet;
+    return nDeleted;
 }
 
 bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::string& sMapFilename)

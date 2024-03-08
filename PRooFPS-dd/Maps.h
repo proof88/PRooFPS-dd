@@ -81,6 +81,18 @@ namespace proofps_dd
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         void Update(const float& fps);
 
+        /* Available maps handling */
+        /* Logic is restricted to available maps, not impacting mapcycle. */
+
+        void availableMapsRefresh();
+        const std::vector<std::string>& availableMapsGet() const;
+        const char** availableMapsGetAsCharPtrArray() const;
+        bool availableMapsAdd(const std::string& sMapFilename);
+        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
+        bool availableMapsRemove(const std::string& sMapFilename);
+        bool availableMapsRemove(const size_t& index);
+        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+
         /* Mapcycle handling */
         /* Logic is restricted to mapcycle, not impacting available maps. */
         
@@ -98,18 +110,7 @@ namespace proofps_dd
         bool mapcycleRemove(const size_t& index);
         bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
         void mapcycleClear();
-
-        /* Available maps handling */
-        /* Logic is restricted to available maps, not impacting mapcycle. */
-
-        void availableMapsRefresh();
-        const std::vector<std::string>& availableMapsGet() const;
-        const char** availableMapsGetAsCharPtrArray() const;
-        bool availableMapsAdd(const std::string& sMapFilename);
-        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
-        bool availableMapsRemove(const std::string& sMapFilename);
-        bool availableMapsRemove(const size_t& index);
-        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+        size_t mapcycleRemoveNonExisting();
 
         /* Available maps and Mapcycle handling together */
         /* Here we tie both together, these complex functions are recommended to be used by GUI. */
@@ -164,6 +165,14 @@ namespace proofps_dd
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
 
+        /* Available maps handling */
+
+        // here an std::set would be a more proper choice since available maps is basically built up from the filesystem,
+        // and all items are expected to be unique, and actually we would like them to be sorted.
+        // Probably soon I will switch to set.
+        std::vector<std::string> m_availableMaps;
+        const char** m_vszAvailableMaps;
+
         /* Mapcycle handling */
 
         // I want unique elements in mapcycle. Yes, std::set would be trivial, but:
@@ -173,14 +182,6 @@ namespace proofps_dd
         std::vector<std::string> m_mapcycle;
         std::vector<std::string>::iterator m_mapcycleItCurrent;
         const char** m_vszMapcycle;
-
-        /* Available maps handling */
-
-        // here an std::set would be a more proper choice since available maps is basically built up from the filesystem,
-        // and all items are expected to be unique, and actually we would like them to be sorted.
-        // Probably soon I will switch to set.
-        std::vector<std::string> m_availableMaps;
-        const char** m_vszAvailableMaps;
 
         // ---------------------------------------------------------------------------
 

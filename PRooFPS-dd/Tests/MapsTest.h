@@ -62,6 +62,14 @@ protected:
 //        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
 //        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
         
+        AddSubTest("test_map_available_maps_get", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_get);
+        AddSubTest("test_map_available_maps_refresh", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_refresh);
+        AddSubTest("test_map_available_maps_add_single_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_add_single_elem);
+        AddSubTest("test_map_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_add_multi_elem);
+        AddSubTest("test_map_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_by_name);
+        AddSubTest("test_map_available_maps_remove_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_by_index);
+        AddSubTest("test_map_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_multi_elem);
+        
         AddSubTest("test_map_mapcycle_reload", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_reload);
         AddSubTest("test_map_mapcycle_next", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_next);
         AddSubTest("test_map_mapcycle_rewind_to_first", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind_to_first);
@@ -72,14 +80,7 @@ protected:
         AddSubTest("test_map_mapcycle_remove_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_by_index);
         AddSubTest("test_map_mapcycle_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_multi_elem);
         AddSubTest("test_map_mapcycle_clear", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_clear);
-        AddSubTest("test_map_available_maps_get", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_get);
-        AddSubTest("test_map_available_maps_refresh", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_refresh);
-
-        AddSubTest("test_map_available_maps_add_single_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_add_single_elem);
-        AddSubTest("test_map_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_add_multi_elem);
-        AddSubTest("test_map_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_by_name);
-        AddSubTest("test_map_available_maps_remove_by_index", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_by_index);
-        AddSubTest("test_map_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_multi_elem);
+        AddSubTest("test_map_mapcycle_remove_non_existing", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_non_existing);
 
         AddSubTest("test_map_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_by_name);
         AddSubTest("test_map_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_multi_elem);
@@ -708,6 +709,230 @@ private:
         return b;
     }
 
+    bool test_map_available_maps_get()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        std::set<std::string> vExpectedAvailableMaps = {
+            "map_test_bad_assignment.txt",
+            "map_test_bad_order.txt",
+            "map_test_good.txt",
+            "map_warena.txt",
+            "map_warhouse.txt"
+        };
+
+        const std::vector<std::string>& vFoundAvailableMaps = maps.availableMapsGet();
+        for (const auto& sMapName : vFoundAvailableMaps)
+        {
+            const auto itFound = vExpectedAvailableMaps.find(sMapName);
+            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
+            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            if (itFound != vExpectedAvailableMaps.end())
+            {
+                vExpectedAvailableMaps.erase(sMapName);
+            }
+        }
+        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
+        b &= assertTrue(
+            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+            "availableMapsGetAsCharPtrArray()");
+
+        return b;
+    }
+
+    bool test_map_available_maps_refresh()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        // trick to clear out available maps, we can refresh them without initializing Maps actually ...
+        maps.shutdown();
+        maps.availableMapsRefresh();
+
+        std::set<std::string> vExpectedAvailableMaps = {
+            "map_test_bad_assignment.txt",
+            "map_test_bad_order.txt",
+            "map_test_good.txt",
+            "map_warena.txt",
+            "map_warhouse.txt"
+        };
+
+        const std::vector<std::string>& vFoundAvailableMaps = maps.availableMapsGet();
+        for (const auto& sMapName : vFoundAvailableMaps)
+        {
+            const auto itFound = vExpectedAvailableMaps.find(sMapName);
+            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
+            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            if (itFound != vExpectedAvailableMaps.end())
+            {
+                vExpectedAvailableMaps.erase(sMapName);
+            }
+        }
+        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
+        b &= assertTrue(
+            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+            "availableMapsGetAsCharPtrArray()");
+
+        return b;
+    }
+
+    bool test_map_available_maps_add_single_elem()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertFalse(maps.availableMapsAdd("map_warhouse.txt"), "add 1");
+        b &= assertTrue(maps.availableMapsAdd("asdasdasd.txt"), "add 2");
+        b &= assertEquals(nOriginalSize + 1, maps.availableMapsGet().size(), "size 2");
+        b &= assertTrue(
+            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+            "availableMapsGetAsCharPtrArray()");
+
+        return b;
+    }
+
+    bool test_map_available_maps_add_multi_elem()
+    {
+        const std::vector<std::string> vAddThese = {
+            "asdasd.txt",
+            "asdasdasd.txt"
+        };
+
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertTrue(maps.availableMapsAdd(vAddThese), "add 1");
+        b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 2");
+        b &= assertTrue(
+            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+            "availableMapsGetAsCharPtrArray() 1");
+
+        if (b)
+        {
+            // try adding same elements again, should fail
+            b &= assertFalse(maps.availableMapsAdd(vAddThese), "add 2");
+            b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 3");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_available_maps_remove_by_name()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            b &= assertFalse(maps.availableMapsRemove(""), "remove 1");
+            b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 1");
+
+            b &= assertTrue(maps.availableMapsRemove("map_warhouse.txt"), "remove 2");
+            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_available_maps_remove_by_index()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            b &= assertFalse(maps.availableMapsRemove(maps.availableMapsGet().size()), "remove 1");
+            b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 1");
+
+            const std::string sMapDeleted = maps.availableMapsGet()[0];
+            b &= assertTrue(maps.availableMapsRemove(0), "remove 2");
+            b &= assertTrue(
+                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapDeleted) == maps.availableMapsGet().end(),
+                "cannot find deleted item");
+            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 2");
+        }
+
+        return b;
+    }
+
+    bool test_map_available_maps_remove_multi_elem()
+    {
+        const std::vector<std::string> vRemoveThese = {
+           "map_warhouse.txt",
+           "map_warena.txt"
+        };
+
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.availableMapsGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        if (b)
+        {
+            b &= assertTrue(maps.availableMapsRemove(vRemoveThese), "remove 1");
+            b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 2");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 1");
+        }
+
+        if (b)
+        {
+            // deleting the same should not succeed for the 2nd time
+            b &= assertFalse(maps.availableMapsRemove(vRemoveThese), "remove 2");
+            b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 3");
+            b &= assertTrue(
+                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
+                "availableMapsGetAsCharPtrArray() 2");
+        }
+
+        return b;
+    }
+
     bool test_map_mapcycle_reload()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
@@ -1042,226 +1267,23 @@ private:
         return b;
     }
 
-    bool test_map_available_maps_get()
+    bool test_map_mapcycle_remove_non_existing()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
+
         bool b = assertTrue(maps.initialize(), "init");
 
-        if (!b)
-        {
-            return false;
-        }
-
-        std::set<std::string> vExpectedAvailableMaps = {
-            "map_test_bad_assignment.txt",
-            "map_test_bad_order.txt",
-            "map_test_good.txt",
-            "map_warena.txt",
-            "map_warhouse.txt"
-        };
-
-        const std::vector<std::string>& vFoundAvailableMaps = maps.availableMapsGet();
-        for (const auto& sMapName : vFoundAvailableMaps)
-        {
-            const auto itFound = vExpectedAvailableMaps.find(sMapName);
-            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
-            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
-            if (itFound != vExpectedAvailableMaps.end())
-            {
-                vExpectedAvailableMaps.erase(sMapName);
-            }
-        }
-        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
-        b &= assertTrue(
-            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-            "availableMapsGetAsCharPtrArray()");
-
-        return b;
-    }
-
-    bool test_map_available_maps_refresh()
-    {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-
-        if (!b)
-        {
-            return false;
-        }
-
-        // trick to clear out available maps, we can refresh them without initializing Maps actually ...
-        maps.shutdown();
-        maps.availableMapsRefresh();
-
-        std::set<std::string> vExpectedAvailableMaps = {
-            "map_test_bad_assignment.txt",
-            "map_test_bad_order.txt",
-            "map_test_good.txt",
-            "map_warena.txt",
-            "map_warhouse.txt"
-        };
-
-        const std::vector<std::string>& vFoundAvailableMaps = maps.availableMapsGet();
-        for (const auto& sMapName : vFoundAvailableMaps)
-        {
-            const auto itFound = vExpectedAvailableMaps.find(sMapName);
-            /* mapcycle.txt must not be found, as we require map name to start with "map_" */
-            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
-            if (itFound != vExpectedAvailableMaps.end())
-            {
-                vExpectedAvailableMaps.erase(sMapName);
-            }
-        }
-        b &= assertTrue(vExpectedAvailableMaps.empty(), "Not found all expected maps!");
-        b &= assertTrue(
-            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-            "availableMapsGetAsCharPtrArray()");
-
-        return b;
-    }
-
-    bool test_map_available_maps_add_single_elem()
-    {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-        const auto nOriginalSize = maps.availableMapsGet().size();
+        const auto nOriginalSize = maps.mapcycleGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
 
-        if (!b)
-        {
-            return false;
-        }
+        b &= assertEquals(0u, maps.mapcycleRemoveNonExisting(), "remove nonexisting 1");
+        b &= assertEquals(nOriginalSize, maps.mapcycleGet().size(), "size 2");
 
-        b &= assertFalse(maps.availableMapsAdd("map_warhouse.txt"), "add 1");
-        b &= assertTrue(maps.availableMapsAdd("asdasdasd.txt"), "add 2");
-        b &= assertEquals(nOriginalSize + 1, maps.availableMapsGet().size(), "size 2");
-        b &= assertTrue(
-            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-            "availableMapsGetAsCharPtrArray()");
+        b &= assertTrue(maps.mapcycleAdd("map_asdasdasd.txt"), "add");
+        b &= assertEquals(nOriginalSize + 1, maps.mapcycleGet().size(), "size 3");
 
-        return b;
-    }
-    
-    bool test_map_available_maps_add_multi_elem()
-    {
-        const std::vector<std::string> vAddThese = {
-            "asdasd.txt",
-            "asdasdasd.txt"
-        };
-
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-        const auto nOriginalSize = maps.availableMapsGet().size();
-        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
-
-        if (!b)
-        {
-            return false;
-        }
-
-        b &= assertTrue(maps.availableMapsAdd(vAddThese), "add 1");
-        b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 2");
-        b &= assertTrue(
-            checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-            "availableMapsGetAsCharPtrArray() 1");
-
-        if (b)
-        {
-            // try adding same elements again, should fail
-            b &= assertFalse(maps.availableMapsAdd(vAddThese), "add 2");
-            b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 3");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 2");
-        }
-
-        return b;
-    }
-
-    bool test_map_available_maps_remove_by_name()
-    {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-        const auto nOriginalSize = maps.availableMapsGet().size();
-        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
-
-        if (b)
-        {
-            b &= assertFalse(maps.availableMapsRemove(""), "remove 1");
-            b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 1");
-
-            b &= assertTrue(maps.availableMapsRemove("map_warhouse.txt"), "remove 2");
-            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 2");
-        }
-
-        return b;
-    }
-
-    bool test_map_available_maps_remove_by_index()
-    {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-        const auto nOriginalSize = maps.availableMapsGet().size();
-        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
-
-        if (b)
-        {
-            b &= assertFalse(maps.availableMapsRemove(maps.availableMapsGet().size()), "remove 1");
-            b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 1");
-
-            const std::string sMapDeleted = maps.availableMapsGet()[0];
-            b &= assertTrue(maps.availableMapsRemove(0), "remove 2");
-            b &= assertTrue(
-                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapDeleted) == maps.availableMapsGet().end(),
-                "cannot find deleted item");
-            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 2");
-        }
-
-        return b;
-    }
-
-    bool test_map_available_maps_remove_multi_elem()
-    {
-        const std::vector<std::string> vRemoveThese = {
-           "map_warhouse.txt",
-           "map_warena.txt"
-        };
-
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
-        const auto nOriginalSize = maps.availableMapsGet().size();
-        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
-
-        if (b)
-        {
-            b &= assertTrue(maps.availableMapsRemove(vRemoveThese), "remove 1");
-            b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 2");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 1");
-        }
-
-        if (b)
-        {
-            // deleting the same should not succeed for the 2nd time
-            b &= assertFalse(maps.availableMapsRemove(vRemoveThese), "remove 2");
-            b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 3");
-            b &= assertTrue(
-                checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
-                "availableMapsGetAsCharPtrArray() 2");
-        }
+        b &= assertEquals(1u, maps.mapcycleRemoveNonExisting(), "remove nonexisting 2");
+        b &= assertEquals(nOriginalSize, maps.mapcycleGet().size(), "size 4");
 
         return b;
     }
