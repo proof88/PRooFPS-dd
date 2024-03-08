@@ -49,18 +49,18 @@ protected:
             assertLequals(0, nProgress);
         };
 
-//        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
-//        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
-//        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
-//        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
-//        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
-//        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
-//        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-//        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
-//        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
-//        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
-//        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
-//        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
+        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
+        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
+        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
+        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
+        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
+        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
+        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
+        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
+        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
         
         AddSubTest("test_map_available_maps_get", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_get);
         AddSubTest("test_map_available_maps_refresh", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_refresh);
@@ -801,7 +801,7 @@ private:
         }
 
         b &= assertFalse(maps.availableMapsAdd("map_warhouse.txt"), "add 1");
-        b &= assertTrue(maps.availableMapsAdd("asdasdasd.txt"), "add 2");
+        b &= assertTrue(maps.availableMapsAdd("map_asdasdasd.txt"), "add 2");
         b &= assertEquals(nOriginalSize + 1, maps.availableMapsGet().size(), "size 2");
         b &= assertTrue(
             checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
@@ -813,8 +813,8 @@ private:
     bool test_map_available_maps_add_multi_elem()
     {
         const std::vector<std::string> vAddThese = {
-            "asdasd.txt",
-            "asdasdasd.txt"
+            "map_asdasd.txt",
+            "map_asdasdasd.txt"
         };
 
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
@@ -1071,7 +1071,7 @@ private:
 
         // even before initialize(), this is working
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
-        b &= assertTrue(maps.mapcycleAdd("asdasdasd.txt"), "add 1");
+        b &= assertTrue(maps.mapcycleAdd("map_asdasdasd.txt"), "add 1");
         b &= assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2");
 
         b &= assertTrue(maps.initialize(), "init");
@@ -1085,7 +1085,7 @@ private:
         if (b)
         {
             b &= assertFalse(maps.mapcycleAdd("map_warhouse.txt"), "add neg");
-            b &= assertTrue(maps.mapcycleAdd("asdasdasd.txt"), "add 2");
+            b &= assertTrue(maps.mapcycleAdd("map_asdasdasd.txt"), "add 2");
             b &= assertEquals(nOriginalSize + 1, maps.mapcycleGet().size(), "size 2");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertTrue(
@@ -1099,8 +1099,8 @@ private:
     bool test_map_mapcycle_add_multi_elem()
     {
         const std::vector<std::string> vAddThese = {
-            "asdasd.txt",
-            "asdasdasd.txt"
+            "map_asdasd.txt",
+            "map_asdasdasd.txt"
         };
 
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
@@ -1147,7 +1147,7 @@ private:
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
-        b &= assertFalse(maps.mapcycleRemove("asdasdasd.txt"), "remove 1");
+        b &= assertFalse(maps.mapcycleRemove("map_asdasdasd.txt"), "remove 1");
         b &= assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 2");
 
         b &= assertTrue(maps.initialize(), "init");
