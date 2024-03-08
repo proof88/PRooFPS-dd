@@ -934,6 +934,18 @@ size_t proofps_dd::Maps::mapcycleRemoveNonExisting()
     return nDeleted;
 }
 
+/**
+    This one is recommended during initialization, after both mapcycle and available maps are loaded.
+    This function make sure they become disjoint sets.
+*/
+void proofps_dd::Maps::mapcycle_availableMaps_Synchronize()
+{
+    // First we remove invalid items from mapcycle, then we remove the remanining elements from available maps.
+    // Then the 2 lists are disjoint sets, and can be presented to the application/GUI.
+    mapcycleRemoveNonExisting();
+    availableMapsRemove(m_mapcycle);
+}
+
 bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::string& sMapFilename)
 {
     bool bRet = mapcycleAdd(sMapFilename);

@@ -82,6 +82,7 @@ protected:
         AddSubTest("test_map_mapcycle_clear", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_clear);
         AddSubTest("test_map_mapcycle_remove_non_existing", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_non_existing);
 
+        AddSubTest("test_map_mapcycle_available_maps_synchronize", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_available_maps_synchronize);
         AddSubTest("test_map_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_by_name);
         AddSubTest("test_map_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_add_available_maps_remove_multi_elem);
         AddSubTest("test_map_mapcycle_remove_available_maps_add_by_name", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_remove_available_maps_add_by_name);
@@ -1284,6 +1285,46 @@ private:
 
         b &= assertEquals(1u, maps.mapcycleRemoveNonExisting(), "remove nonexisting 2");
         b &= assertEquals(nOriginalSize, maps.mapcycleGet().size(), "size 4");
+
+        return b;
+    }
+
+    bool test_map_mapcycle_available_maps_synchronize()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto nOriginalSize = maps.mapcycleGet().size();
+        b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
+
+        for (const auto& sMapcycleMap : maps.mapcycleGet())
+        {
+            b &= assertFalse(
+                std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapcycleMap) == maps.availableMapsGet().end(),
+                "mapcycle item NOT in available maps");
+        }
+
+        b &= assertTrue(maps.mapcycleAdd("map_asdasdasd.txt"), "add");
+        b &= assertEquals(nOriginalSize + 1, maps.mapcycleGet().size(), "size 2");
+
+        if (b)
+        {
+            maps.mapcycle_availableMaps_Synchronize();
+            
+            // fictive map should disappear from mapcycle
+            b &= assertEquals(nOriginalSize, maps.mapcycleGet().size(), "size 3");
+            b &= assertTrue(
+                std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), "map_asdasdasd.txt") == maps.mapcycleGet().end(),
+                "fictive mapcycle item");
+
+            // available maps should not contain any item present in mapcycle
+            for (const auto& sMapcycleMap : maps.mapcycleGet())
+            {
+                b &= assertTrue(
+                    std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapcycleMap) == maps.availableMapsGet().end(),
+                    "mapcycle item in available maps");
+            }
+        }
 
         return b;
     }

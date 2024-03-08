@@ -115,6 +115,7 @@ namespace proofps_dd
         /* Available maps and Mapcycle handling together */
         /* Here we tie both together, these complex functions are recommended to be used by GUI. */
 
+        void mapcycle_availableMaps_Synchronize();
         bool mapcycleAdd_availableMapsRemove(const std::string& sMapFilename);
         bool mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames);
         bool mapcycleRemove_availableMapsAdd(const std::string& sMapFilename);
