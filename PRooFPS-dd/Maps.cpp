@@ -77,8 +77,7 @@ bool proofps_dd::Maps::initialize()
 
     if (m_texRed)
     {
-        availableMapsRefresh();
-        mapcycleReload();
+        mapcycle_availableMaps_Synchronize();
     }
     
     return m_texRed != PGENULL;
@@ -603,6 +602,15 @@ const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
     return m_availableMaps;
 }
 
+/**
+    This is convenience function to be used with GUI: Dear ImGUI requires this kind of array
+    as source of items of Listbox. It is better if Maps provide it so we can avoid inconsistency.
+    The elements are the same as in the availableMapsGet() container.
+
+    @return A char array with same size as the availableMapsGet() container, where all elements point to the corresponding
+            null-terminated string of the string object of the availableMapsGet() container.
+            Null when size of availableMapsGet() container is 0.
+*/
 const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
 {
     return m_vszAvailableMaps;
@@ -621,8 +629,8 @@ bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFile
 {
     if (vMapFilenames.empty())
     {
-        getConsole().EOLn("ERROR: %s empty filename!", __func__);
-        return false;
+        //getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return true;
     }
 
     bool bRet = true;
@@ -664,8 +672,8 @@ bool proofps_dd::Maps::availableMapsRemove(const std::vector<std::string>& vMapF
 {
     if (vMapFilenames.empty())
     {
-        getConsole().EOLn("ERROR: %s empty filename!", __func__);
-        return false;
+        //getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return true;
     }
 
     bool bRet = true;
@@ -687,6 +695,11 @@ const std::vector<std::string>& proofps_dd::Maps::mapcycleGet() const
 /**
     This is convenience function to be used with GUI: Dear ImGUI requires this kind of array
     as source of items of Listbox. It is better if Maps provide it so we can avoid inconsistency.
+    The elements are the same as in the mapcycleGet() container.
+
+    @return A char array with same size as the mapcycleGet() container, where all elements point to the corresponding
+            null-terminated string of the string object of the mapcycleGet() container.
+            Null when size of mapcycleGet() container is 0.
 */
 const char** proofps_dd::Maps::mapcycleGetAsCharPtrArray() const
 {
@@ -820,9 +833,8 @@ bool proofps_dd::Maps::mapcycleAdd(const std::vector<std::string>& vMapFilenames
 {
     if (vMapFilenames.empty())
     {
-        getConsole().EOLn("ERROR: %s empty vector!", __func__);
-        return false;
-
+        //getConsole().EOLn("ERROR: %s empty vector!", __func__);
+        return true;
     }
 
     bool bRet = true;
@@ -868,9 +880,8 @@ bool proofps_dd::Maps::mapcycleRemove(const std::vector<std::string>& vMapFilena
 {
     if (vMapFilenames.empty())
     {
-        getConsole().EOLn("ERROR: %s empty vector!", __func__);
-        return false;
-
+        //getConsole().EOLn("ERROR: %s empty vector!", __func__);
+        return true;
     }
 
     bool bRet = true;
@@ -903,6 +914,8 @@ void proofps_dd::Maps::mapcycleClear()
     valid.
 
     It uses availableMaps so it is recommended to invoke availableMapsRefresh() first!
+    Make sure you never invoke this function without calling availableMapsRefresh() first, otherwise
+    even the on-disk mapcycle items will be also removed from mapcycle.
 
     @return The number of removed items.
 */
@@ -935,11 +948,13 @@ size_t proofps_dd::Maps::mapcycleRemoveNonExisting()
 }
 
 /**
-    This one is recommended during initialization, after both mapcycle and available maps are loaded.
-    This function make sure they become disjoint sets.
+    This one is recommended during initialization, since it reloads both the mapcycle and available maps list, and
+    makes sure they become disjoint sets.
 */
 void proofps_dd::Maps::mapcycle_availableMaps_Synchronize()
 {
+    availableMapsRefresh();
+    mapcycleReload();
     // First we remove invalid items from mapcycle, then we remove the remanining elements from available maps.
     // Then the 2 lists are disjoint sets, and can be presented to the application/GUI.
     mapcycleRemoveNonExisting();
@@ -975,6 +990,22 @@ bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove(const std::vector<std::st
         {
             getConsole().EOLn("ERROR: %s: availableMapsRemove failed!", __func__);
         }
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: mapcycleAdd failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleAdd_availableMapsRemove()
+{
+    bool bRet = mapcycleAdd(m_availableMaps);
+    if (bRet)
+    {
+        m_availableMaps.clear();
+        availableMapsRefreshCharPtrArray();
     }
     else
     {
@@ -1037,6 +1068,23 @@ bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd(const std::vector<std::st
     else
     {
         getConsole().EOLn("ERROR: %s: availableMapsAdd failed!", __func__);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleRemove_availableMapsAdd()
+{
+    bool bRet = availableMapsAdd(m_mapcycle);
+    if (bRet)
+    {
+        m_mapcycle.clear();
+        m_mapcycleItCurrent = m_mapcycle.end();
+        mapcycleRefreshCharPtrArray();
+    }
+    else
+    {
+        getConsole().EOLn("ERROR: %s: mapcycleAdd failed!", __func__);
     }
 
     return bRet;
@@ -1373,7 +1421,7 @@ bool proofps_dd::Maps::mapFilenameAddToVector_NoDuplicatesAllowed(const std::str
 {
     if (sMapFilename.empty())
     {
-        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        //getConsole().EOLn("ERROR: %s empty filename!", __func__);
         return false;
     }
 

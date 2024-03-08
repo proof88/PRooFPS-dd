@@ -474,16 +474,16 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
                 m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGet()[iActiveItemMapsAvailable]);
             }
-            else
-            {
-                getConsole().EOLn("ERROR: iActiveItemMapsAvailable invalid index: %d!", iActiveItemMapsAvailable);
-            }
+            //else
+            //{
+            //    getConsole().EOLn("ERROR: iActiveItemMapsAvailable invalid index: %d!", iActiveItemMapsAvailable);
+            //}
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
         if (ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGet());
+            m_pMaps->mapcycleAdd_availableMapsRemove();
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
@@ -495,16 +495,16 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
                 m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
             }
-            else
-            {
-                getConsole().EOLn("ERROR: iActiveItemMapcycle invalid index: %d!", iActiveItemMapcycle);
-            }
+            //else
+            //{
+            //    getConsole().EOLn("ERROR: iActiveItemMapcycle invalid index: %d!", iActiveItemMapcycle);
+            //}
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
         if (ImGui::Button(">>", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet());
+            m_pMaps->mapcycleRemove_availableMapsAdd();
         }
 
         PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];

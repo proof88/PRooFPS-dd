@@ -118,10 +118,11 @@ namespace proofps_dd
         void mapcycle_availableMaps_Synchronize();
         bool mapcycleAdd_availableMapsRemove(const std::string& sMapFilename);
         bool mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+        bool mapcycleAdd_availableMapsRemove();
         bool mapcycleRemove_availableMapsAdd(const std::string& sMapFilename);
         bool mapcycleRemove_availableMapsAdd(const size_t& indexToMapcycle);
         bool mapcycleRemove_availableMapsAdd(const std::vector<std::string>& vMapFilenames);
-
+        bool mapcycleRemove_availableMapsAdd();
 
     protected:
 
