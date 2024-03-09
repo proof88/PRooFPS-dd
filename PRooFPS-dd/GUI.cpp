@@ -88,11 +88,10 @@ void proofps_dd::GUI::initialize()
     m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
 
     m_sAvailableMapsListForForceSelectComboBox.clear();
-    //m_sAvailableMapsListForMapcycleListBox.clear();
     // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
     // We are force-inserting the extra NULL characters into the string because this will be actually handled by a multi-element array by Dear ImGUI
     m_sAvailableMapsListForForceSelectComboBox += std::string(" ") + '\0'; // this first elem represents the not-selected map
-    for (const auto& sMapName : m_pMaps->availableMapsGet())
+    for (const auto& sMapName : m_pMaps->availableMapsNoChangingGet())
     {
         m_sAvailableMapsListForForceSelectComboBox += sMapName + '\0';
         //m_sAvailableMapsListForMapcycleListBox += sMapName + '\0';
@@ -523,9 +522,9 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             iSelectMapStart = 0;
             if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
             {
-                for (int i = 0; i < static_cast<int>(m_pMaps->availableMapsGet().size()); i++)
+                for (int i = 0; i < static_cast<int>(m_pMaps->availableMapsNoChangingGet().size()); i++)
                 {
-                    if (m_pMaps->availableMapsGet()[i] == cvarSvMap.getAsString())
+                    if (m_pMaps->availableMapsNoChangingGet()[i] == cvarSvMap.getAsString())
                     {
                         iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsListForForceSelectComboBox
                         break;
@@ -543,9 +542,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 cvarSvMap.Set("");
             }
-            else if (iSelectMapStart <= static_cast<int>(m_pMaps->availableMapsGet().size()) /* first empty item as index 0 is NOT in availableMapsGet(), that is why index can be == size() */)
+            else if (iSelectMapStart <= static_cast<int>(m_pMaps->availableMapsNoChangingGet().size()))
             {
-                cvarSvMap.Set(m_pMaps->availableMapsGet()[iSelectMapStart-1]);
+                /* first empty item as index 0 is NOT in availableMapsNoChangingGet(), that is why index can be == size() */
+                cvarSvMap.Set(m_pMaps->availableMapsNoChangingGet()[iSelectMapStart-1]);
             }
             else
             {

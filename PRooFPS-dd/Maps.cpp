@@ -106,6 +106,7 @@ void proofps_dd::Maps::shutdown()
         mapcycleClear();
 
         /* Available maps handling */
+        m_availableMapsNoChanging.clear();
         delete m_vszAvailableMaps;
         m_vszAvailableMaps = nullptr;
         m_availableMaps.clear();
@@ -573,6 +574,7 @@ void proofps_dd::Maps::availableMapsRefresh()
     delete m_vszAvailableMaps;
     m_vszAvailableMaps = nullptr;
     m_availableMaps.clear();
+    m_availableMapsNoChanging.clear();
 
     for (const auto& fileEntry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
     {
@@ -593,6 +595,7 @@ void proofps_dd::Maps::availableMapsRefresh()
             }
         }
     }
+    m_availableMapsNoChanging = m_availableMaps;
 
     availableMapsRefreshCharPtrArray();
 }
@@ -614,6 +617,11 @@ const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
 const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
 {
     return m_vszAvailableMaps;
+}
+
+const std::vector<std::string>& proofps_dd::Maps::availableMapsNoChangingGet() const
+{
+    return m_availableMapsNoChanging;
 }
 
 bool proofps_dd::Maps::availableMapsAdd(const std::string& sMapFilename)

@@ -49,18 +49,18 @@ protected:
             assertLequals(0, nProgress);
         };
 
-//        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
-//        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
-//        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
-//        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
-//        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
-//        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
-//        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-//        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
-//        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
-//        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
-//        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
-//        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
+        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
+        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
+        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
+        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
+        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
+        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
+        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
+        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
+        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
         
         AddSubTest("test_map_available_maps_get", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_get);
         AddSubTest("test_map_available_maps_refresh", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_refresh);
@@ -152,8 +152,8 @@ private:
             assertEquals(0u, maps.width(), "width 1") &
             assertEquals(0u, maps.height(), "height 1") &
             assertTrue(maps.getVars().empty(), "getVars 1") &
-            assertEquals(PureVector(0,0,0), maps.getBlockPosMin(), "objects Min 1") &
-            assertEquals(PureVector(0,0,0), maps.getBlockPosMax(), "objects Max 1") &
+            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 1") &
+            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 1") &
             assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 1") &
             assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 1") &
             assertNull(maps.getBlocks(), "blocks 1") &
@@ -165,7 +165,8 @@ private:
             assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1") &
             assertNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
             assertTrue(maps.availableMapsGet().empty(), "available maps empty 1") &
-            assertNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 1");
+            assertNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 1") &
+            assertTrue(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 1");
         
         b &= assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.isInitialized(), "inited 2") &
@@ -189,7 +190,8 @@ private:
             assertFalse(maps.mapcycleGet().empty(), "mapcycle empty 2") &
             assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
             assertFalse(maps.availableMapsGet().empty(), "available maps empty 2") &
-            assertNotNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 2");
+            assertNotNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 2") &
+            assertFalse(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 2");
 
         for (size_t i = 0; i < maps.mapcycleGet().size(); i++)
         {
@@ -546,6 +548,7 @@ private:
         b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1");
         b &= assertFalse(maps.availableMapsGet().empty(), "available maps empty 1");
         b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "available maps charptrarray 1");
+        b &= assertFalse(maps.availableMapsGet().empty(), "available maps no changing empty 1");
 
         maps.shutdown();
 
@@ -557,6 +560,7 @@ private:
         b &= assertTrue(maps.getFilename().empty(), "filename");
         b &= assertTrue(maps.availableMapsGet().empty(), "available maps empty 2");
         b &= assertNull(maps.mapcycleGetAsCharPtrArray(), "available maps charptrarray 2");
+        b &= assertTrue(maps.availableMapsGet().empty(), "available maps no changing empty 2");
 
         return b;
     }
@@ -822,6 +826,7 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
 
         if (!b)
@@ -831,6 +836,7 @@ private:
 
         b &= assertTrue(maps.availableMapsAdd(vAddThese), "add 1");
         b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 2");
+        b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 3");
         b &= assertTrue(
             checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
             "availableMapsGetAsCharPtrArray() 1");
@@ -839,7 +845,8 @@ private:
         {
             // try adding same elements again, should fail
             b &= assertFalse(maps.availableMapsAdd(vAddThese), "add 2");
-            b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 3");
+            b &= assertEquals(nOriginalSize + vAddThese.size(), maps.availableMapsGet().size(), "size 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 5");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 2");
@@ -853,18 +860,21 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
 
         if (b)
         {
             b &= assertFalse(maps.availableMapsRemove(""), "remove 1");
             b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 3");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 1");
 
             b &= assertTrue(maps.availableMapsRemove("map_test_good.txt"), "remove 2");
-            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
+            b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 5");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 2");
@@ -878,12 +888,14 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
 
         if (b)
         {
             b &= assertFalse(maps.availableMapsRemove(maps.availableMapsGet().size()), "remove 1");
             b &= assertEquals(nOriginalSize, maps.availableMapsGet().size(), "size 2");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 3");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 1");
@@ -894,6 +906,7 @@ private:
                 std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), sMapDeleted) == maps.availableMapsGet().end(),
                 "cannot find deleted item");
             b &= assertEquals(nOriginalSize - 1, maps.availableMapsGet().size(), "size 3");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 4");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 2");
@@ -912,12 +925,14 @@ private:
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
 
         if (b)
         {
             b &= assertTrue(maps.availableMapsRemove(vRemoveThese), "remove 1");
             b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 2");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 3");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 1");
@@ -928,6 +943,7 @@ private:
             // deleting the same should not succeed for the 2nd time
             b &= assertFalse(maps.availableMapsRemove(vRemoveThese), "remove 2");
             b &= assertEquals(nOriginalSize - vRemoveThese.size(), maps.availableMapsGet().size(), "size 3");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 4");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.availableMapsGet(), maps.availableMapsGetAsCharPtrArray()),
                 "availableMapsGetAsCharPtrArray() 2");
@@ -1298,6 +1314,7 @@ private:
 
         b &= assertTrue(maps.mapcycleAdd("map_asdasdasd.txt"), "add");
         b &= assertEquals(nOriginalSize + 1, maps.mapcycleGet().size(), "size 2");
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1305,6 +1322,7 @@ private:
             
             // fictive map should disappear from mapcycle
             b &= assertEquals(nOriginalSize, maps.mapcycleGet().size(), "size 3");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size 4");
             b &= assertTrue(
                 std::find(maps.mapcycleGet().begin(), maps.mapcycleGet().end(), "map_asdasdasd.txt") == maps.mapcycleGet().end(),
                 "fictive mapcycle item");
@@ -1343,6 +1361,7 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1359,6 +1378,7 @@ private:
             b &= assertTrue(maps.mapcycleAdd_availableMapsRemove("map_test_good.txt"), "add 1");
             b &= assertEquals(nOriginalSizeMapCycle + 1, maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps - 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertTrue(
                 std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_test_good.txt") == maps.availableMapsGet().end(),
@@ -1392,6 +1412,7 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1422,6 +1443,7 @@ private:
             b &= assertTrue(maps.mapcycleAdd_availableMapsRemove(vAddRemoveThese_Pass), "add 1");
             b &= assertEquals(nOriginalSizeMapCycle + vAddRemoveThese_Pass.size(), maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps - vAddRemoveThese_Pass.size(), maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             for (const auto& sMapCheck : vAddRemoveThese_Pass)
             {
@@ -1455,12 +1477,14 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
             b &= assertTrue(maps.mapcycleAdd_availableMapsRemove(), "add");
             b &= assertEquals(nOriginalSizeMapCycle + nOriginalSizeAvailableMaps, maps.mapcycleGet().size(), "size mapcycle 2");
             b &= assertEquals(0u, maps.availableMapsGet().size(), "size available maps 2");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(maps.mapcycleGet()[0u], maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
@@ -1491,6 +1515,7 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1507,6 +1532,7 @@ private:
             b &= assertTrue(maps.mapcycleRemove_availableMapsAdd("map_asdasd.txt"), "add 1");
             b &= assertEquals(nOriginalSizeMapCycle - 1, maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps + 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertFalse(
                 std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_asdasd.txt") == maps.availableMapsGet().end(),
@@ -1543,6 +1569,7 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1554,6 +1581,7 @@ private:
             b &= assertTrue(maps.mapcycleRemove_availableMapsAdd(maps.mapcycleGet().size() - 1), "add 1");
             b &= assertEquals(nOriginalSizeMapCycle - 1, maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps + 1, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertFalse(
                 std::find(maps.availableMapsGet().begin(), maps.availableMapsGet().end(), "map_asdasd.txt") == maps.availableMapsGet().end(),
@@ -1597,6 +1625,7 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
@@ -1619,6 +1648,7 @@ private:
             b &= assertTrue(maps.mapcycleRemove_availableMapsAdd(vRemoveAddThese_Pass), "add 1");
             b &= assertEquals(nOriginalSizeMapCycle - vRemoveAddThese_Pass.size(), maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps + vRemoveAddThese_Pass.size(), maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "rewind to first");
             for (const auto& sMapCheck : vRemoveAddThese_Pass)
             {
@@ -1652,12 +1682,14 @@ private:
 
         const auto nOriginalSizeAvailableMaps = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSizeAvailableMaps, 1u, "size available maps 1");  // should be at least 2 maps there
+        const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
 
         if (b)
         {
             b &= assertTrue(maps.mapcycleRemove_availableMapsAdd(), "add");
             b &= assertEquals(0u, maps.mapcycleGet().size(), "size mapcycle 4");
             b &= assertEquals(nOriginalSizeAvailableMaps + nOriginalSizeMapCycle, maps.availableMapsGet().size(), "size available maps 4");
+            b &= assertEquals(nOriginalSizeAvailableMapsNoChanging, maps.availableMapsNoChangingGet().size(), "size available maps nochanging");
             b &= assertEquals("", maps.mapcycleGetCurrent(), "rewind to first");
             b &= assertTrue(
                 checkConstCharPtrArrayElemsPointingToVectorElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),

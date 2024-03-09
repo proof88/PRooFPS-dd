@@ -87,6 +87,7 @@ namespace proofps_dd
         void availableMapsRefresh();
         const std::vector<std::string>& availableMapsGet() const;
         const char** availableMapsGetAsCharPtrArray() const;
+        const std::vector<std::string>& availableMapsNoChangingGet() const;
         bool availableMapsAdd(const std::string& sMapFilename);
         bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
         bool availableMapsRemove(const std::string& sMapFilename);
@@ -174,6 +175,8 @@ namespace proofps_dd
         // Probably soon I will switch to set.
         std::vector<std::string> m_availableMaps;
         const char** m_vszAvailableMaps;
+
+        std::vector<std::string> m_availableMapsNoChanging;
 
         /* Mapcycle handling */
 
