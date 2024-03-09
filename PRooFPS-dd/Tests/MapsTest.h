@@ -12,6 +12,7 @@
 
 #include "UnitTests/UnitTest.h"
 #include "../Maps.h"
+#include "../PRooFPS-dd-packet.h"
 
 class MapsTest :
     public UnitTest
@@ -49,19 +50,21 @@ protected:
             assertLequals(0, nProgress);
         };
 
-//        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
-//        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
-//        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
-//        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
-//        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
-//        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
-//        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-//        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
-//        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
-//        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
-//        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
-//        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
-//        
+        AddSubTest("test_is_valid_map_filename", (PFNUNITSUBTEST)&MapsTest::test_is_valid_map_filename);
+
+        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
+        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
+        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
+        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
+        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
+        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
+        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
+        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
+        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
+        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        
         AddSubTest("test_map_available_maps_get", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_get);
         AddSubTest("test_map_available_maps_refresh", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_refresh);
         AddSubTest("test_map_available_maps_add_single_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_add_single_elem);
@@ -159,6 +162,19 @@ private:
             it++;
         }
         return bRet;
+    }
+
+    bool test_is_valid_map_filename()
+    {
+        std::string sTooLooongFilename(proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength, 'a');
+        return assertFalse(proofps_dd::Maps::isValidMapFilename("map.txt"), "map.txt") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename("map_.tx"), "map_.tx") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename("_map.txt"), "_map.txt") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename("maps.txt"), "maps.txt") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename("mapcycle.txt"), "mapcycle.txt") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename("map.txt"), "map.txt") &
+            assertFalse(proofps_dd::Maps::isValidMapFilename(sTooLooongFilename), "too long") &
+            assertTrue(proofps_dd::Maps::isValidMapFilename("map_.txt"), "ok");
     }
 
     bool test_initially_empty()

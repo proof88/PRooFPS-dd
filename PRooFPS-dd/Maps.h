@@ -33,6 +33,8 @@ namespace proofps_dd
 
         static const char* getLoggerModuleName();
 
+        static bool isValidMapFilename(const std::string& sFilename);
+
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;

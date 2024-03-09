@@ -59,6 +59,34 @@ const char* proofps_dd::Maps::getLoggerModuleName()
     return "Maps";
 }
 
+bool proofps_dd::Maps::isValidMapFilename(const std::string& sFilename)
+{
+    // we assume the given string is valid filename, so we are not checking for general filename validity,
+    // such as illegal characters like '?', we just check for validity from Maps perspective.
+
+    if (sFilename.length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+    {
+        return false;
+    }
+
+    if (sFilename.length() < 8 /* minimum name: map_.txt */)
+    {
+        return false;
+    }
+
+    if (PFL::getExtension(sFilename.c_str()) != "txt")
+    {
+        return false;
+    }
+
+    if (sFilename.substr(0, 4) != "map_")
+    {
+        return false;
+    }
+
+    return true;
+}
+
 /**
     Initializes the map handler.
     Reads the mapcycle file if it exists.
@@ -579,21 +607,13 @@ void proofps_dd::Maps::availableMapsRefresh()
     for (const auto& fileEntry : std::filesystem::directory_iterator(GAME_MAPS_DIR))
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, fileEntry.path().filename().string().c_str());
-        if (fileEntry.path().filename().string().length() >= proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength)
+        if (!isValidMapFilename(fileEntry.path().filename().string()))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): skip map due to long filename: %s!", __func__, fileEntry.path().string().c_str());
-            continue; // otherwise multiple maps with same first nMapFilenameMaxLength-1 chars would be mixed up in pkts
+            getConsole().EOLn("PRooFPSddPGE::%s(): skip filename: %s!", __func__, fileEntry.path().string().c_str());
+            continue;
         }
 
-        if (fileEntry.path().extension().string() == ".txt")
-        {
-            // TODO: should invoke a tryLoad() function to quickly validate
-            // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
-            if ((fileEntry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (fileEntry.path().filename().string().substr(0, 4) == "map_"))
-            {
-                m_availableMaps.insert(fileEntry.path().filename().string() /*PFL::getFilename(fname)*/);
-            }
-        }
+        m_availableMaps.insert(fileEntry.path().filename().string() /*PFL::getFilename(fname)*/);
     }
     m_availableMapsNoChanging = m_availableMaps;
 
