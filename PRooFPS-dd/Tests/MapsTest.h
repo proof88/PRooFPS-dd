@@ -71,6 +71,7 @@ protected:
         AddSubTest("test_map_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapsTest::test_map_available_maps_remove_multi_elem);
         
         AddSubTest("test_map_mapcycle_reload", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_reload);
+        AddSubTest("test_map_mapcycle_save_to_file", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_save_to_file);
         AddSubTest("test_map_mapcycle_next", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_next);
         AddSubTest("test_map_mapcycle_rewind_to_first", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_rewind_to_first);
         AddSubTest("test_map_mapcycle_forward_to_last", (PFNUNITSUBTEST)&MapsTest::test_map_mapcycle_forward_to_last);
@@ -995,6 +996,29 @@ private:
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
             b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
         }
+
+        return b;
+    }
+
+    bool test_map_mapcycle_save_to_file()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        const auto originalMapcycle = maps.mapcycleGet();
+
+        b &= assertGreater(maps.mapcycleGet().size(), 1u, "mapcycle size 1");  // should be at least 2 maps there
+        maps.mapcycleClear();
+        b &= assertEquals(0u, maps.mapcycleGet().size(), "mapcycle size 2");
+        b &= assertTrue(maps.mapcycleSaveToFile(), "save 1");
+
+        b &= assertFalse(maps.mapcycleReload(), "reload 1"); // false due to empty file
+        b &= assertEquals(0u, maps.mapcycleGet().size(), "mapcycle size 3");
+        b &= assertTrue(maps.mapcycleAdd(originalMapcycle), "add");
+        b &= assertTrue(maps.mapcycleSaveToFile(), "save 2");
+
+        maps.mapcycleClear();
+        b &= assertTrue(maps.mapcycleReload(), "reload 2");
+        b &= assertTrue(originalMapcycle == maps.mapcycleGet(), "final equals");
 
         return b;
     }

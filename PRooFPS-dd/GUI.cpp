@@ -417,7 +417,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
     drawPlayerNameInputBox();
 
-    ImGui::Separator();
+    ImGui::Separator();  // in newer Dear ImGUI there is another separator that can contain a text too!
 
     ImGui::Text("[ Map Configuration ]");
 
@@ -451,7 +451,6 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             static_cast<int>(m_pMaps->mapcycleGet().size()),
             nMapListboxesHeightAsItemCount);
         
-
         ImGui::SameLine(fMapsAvailListBoxX);
         static int iActiveItemMapsAvailable = 0;
         ImGui::ListBox(
@@ -460,7 +459,6 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             m_pMaps->availableMapsGetAsCharPtrArray(),
             static_cast<int>(m_pMaps->availableMapsGet().size()),
             nMapListboxesHeightAsItemCount);
-        
 
         ImGui::PopItemWidth();
 
@@ -676,6 +674,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         {
             getConsole().EOLn("ERROR: failed to save current config profile!");
         }
+        if (!m_pMaps->mapcycleSaveToFile())
+        {
+            getConsole().EOLn("ERROR: failed to save mapcycle!");
+        }
         m_currentMenu = MenuState::Main;
     }
     ImGui::SameLine();
@@ -694,6 +696,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             if (!m_pPge->getConfigProfiles().writeConfiguration())
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
+            if (!m_pMaps->mapcycleSaveToFile())
+            {
+                getConsole().EOLn("ERROR: failed to save mapcycle!");
             }
             if (!m_pNetworking->isServer() && !m_pNetworking->reinitialize())
             {

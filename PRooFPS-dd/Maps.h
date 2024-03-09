@@ -104,6 +104,7 @@ namespace proofps_dd
         std::string mapcycleGetCurrent() const;
         bool mapcycleIsCurrentLast() const;
         bool mapcycleReload();
+        bool mapcycleSaveToFile();
         std::string mapcycleNext();
         std::string mapcycleRewindToFirst();
         std::string mapcycleForwardToLast();

@@ -1,6 +1,4 @@
-# This is a sample comment line.
-# Mapcycle can contain such comment lines, for example if you want to temporarily disable a map,
-# you dont need to delete that line, just simply comment it out.
+# Do not put comment lines into this file like this one, the game is not preserving them!
 
 map_warhouse.txt
 map_warena.txt

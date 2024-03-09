@@ -816,6 +816,38 @@ bool proofps_dd::Maps::mapcycleReload()
     return true;
 }  // mapcycleReload()
 
+bool proofps_dd::Maps::mapcycleSaveToFile()
+{
+    std::ofstream f;
+    f.open(GAME_MAPS_MAPCYCLE, std::ofstream::out);
+    if (!f.good())
+    {
+        getConsole().EOLn("%s ERROR: failed to open file %s!", __func__, GAME_MAPS_MAPCYCLE);
+        return false;
+    }
+
+    f << "# Do not put comment lines into this file like this one, the game is not preserving them!" << std::endl << std::endl;
+
+    bool bRet = f.good();
+    for (const auto& sMapcycleItem : m_mapcycle)
+    {
+        f << sMapcycleItem << std::endl;
+        if (!f.good())
+        {
+            getConsole().EOLn("%s ERROR: failed to write file: %s, might be partially saved and corrupted!", __func__, GAME_MAPS_MAPCYCLE);
+            bRet = false;
+            break;
+        }
+    }
+    f.close();
+
+    if (bRet)
+    {
+        getConsole().SOLn("%s done!", __func__);
+    }
+
+    return bRet;
+} // mapcycleSaveToFile()
 
 std::string proofps_dd::Maps::mapcycleNext()
 {
