@@ -496,7 +496,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
 
         if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
         {
-            if (m_pge.getNetwork().isServer())
+            if (m_pge.getNetwork().isServer() && !m_maps.mapcycleGet().empty())
             {
                 m_maps.mapcycleNext();
                 pge_network::PgePacket newPktMapChange;
