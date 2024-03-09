@@ -85,9 +85,11 @@ namespace proofps_dd
         /* Logic is restricted to available maps, not impacting mapcycle. */
 
         void availableMapsRefresh();
-        const std::vector<std::string>& availableMapsGet() const;
+        const std::set<std::string>& availableMapsGet() const;
+        const std::string& availableMapsGetElem(const size_t& index) const;
         const char** availableMapsGetAsCharPtrArray() const;
-        const std::vector<std::string>& availableMapsNoChangingGet() const;
+        const std::set<std::string>& availableMapsNoChangingGet() const;
+        const std::string& availableMapsNoChangingGetElem(const size_t& index) const;
         bool availableMapsAdd(const std::string& sMapFilename);
         bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
         bool availableMapsRemove(const std::string& sMapFilename);
@@ -107,6 +109,7 @@ namespace proofps_dd
         std::string mapcycleForwardToLast();
         bool mapcycleAdd(const std::string& sMapFilename);
         bool mapcycleAdd(const std::vector<std::string>& vMapFilenames);
+        bool mapcycleAdd(const std::set<std::string>& vMapFilenames);
         bool mapcycleRemove(const std::string& sMapFilename);
         bool mapcycleRemove(const size_t& index);
         bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
@@ -170,13 +173,11 @@ namespace proofps_dd
 
         /* Available maps handling */
 
-        // here an std::set would be a more proper choice since available maps is basically built up from the filesystem,
-        // and all items are expected to be unique, and actually we would like them to be sorted.
-        // Probably soon I will switch to set.
-        std::vector<std::string> m_availableMaps;
+        std::set<std::string> m_availableMaps;
         const char** m_vszAvailableMaps;
 
-        std::vector<std::string> m_availableMapsNoChanging;
+        std::set<std::string> m_availableMapsNoChanging;
+        std::string m_sEmptyStringToReturn;
 
         /* Mapcycle handling */
 
@@ -199,9 +200,15 @@ namespace proofps_dd
         bool mapFilenameAddToVector_NoDuplicatesAllowed(
             const std::string& sMapFilename,
             std::vector<std::string>& vec);
+        bool mapFilenameAddToSet_NoDuplicatesAllowed(
+            const std::string& sMapFilename,
+            std::set<std::string>& settt);
         bool mapFilenameRemoveFromVector(
             const std::string& sMapFilename,
             std::vector<std::string>& vec);
+        bool mapFilenameRemoveFromSet(
+            const std::string& sMapFilename,
+            std::set<std::string>& settt);
         void availableMapsRefreshCharPtrArray();
         void mapcycleRefreshCharPtrArray();
 

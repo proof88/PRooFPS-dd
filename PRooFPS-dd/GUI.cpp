@@ -471,7 +471,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
-                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGet()[iActiveItemMapsAvailable]);
+                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGetElem(iActiveItemMapsAvailable));
             }
             //else
             //{
@@ -522,13 +522,15 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             iSelectMapStart = 0;
             if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
             {
-                for (int i = 0; i < static_cast<int>(m_pMaps->availableMapsNoChangingGet().size()); i++)
+                int i = 0;
+                for (const auto& sTmp : m_pMaps->availableMapsNoChangingGet())
                 {
-                    if (m_pMaps->availableMapsNoChangingGet()[i] == cvarSvMap.getAsString())
+                    if (sTmp == cvarSvMap.getAsString())
                     {
                         iSelectMapStart = i + 1; // +1 because iSelectMapStart 0 represents first " " elem in m_sAvailableMapsListForForceSelectComboBox
                         break;
                     }
+                    i++;
                 }
             }
         }
@@ -545,7 +547,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             else if (iSelectMapStart <= static_cast<int>(m_pMaps->availableMapsNoChangingGet().size()))
             {
                 /* first empty item as index 0 is NOT in availableMapsNoChangingGet(), that is why index can be == size() */
-                cvarSvMap.Set(m_pMaps->availableMapsNoChangingGet()[iSelectMapStart-1]);
+                cvarSvMap.Set(m_pMaps->availableMapsNoChangingGetElem(iSelectMapStart-1));
             }
             else
             {

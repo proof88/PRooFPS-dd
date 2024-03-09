@@ -591,7 +591,7 @@ void proofps_dd::Maps::availableMapsRefresh()
             // also, tryLoad() should fetch Name from txt so we could display the proper map name, not the filename!
             if ((fileEntry.path().filename().string().length() >= 8 /* minimum name: map_.txt */) && (fileEntry.path().filename().string().substr(0, 4) == "map_"))
             {
-                m_availableMaps.push_back(fileEntry.path().filename().string() /*PFL::getFilename(fname)*/);
+                m_availableMaps.insert(fileEntry.path().filename().string() /*PFL::getFilename(fname)*/);
             }
         }
     }
@@ -600,9 +600,22 @@ void proofps_dd::Maps::availableMapsRefresh()
     availableMapsRefreshCharPtrArray();
 }
 
-const std::vector<std::string>& proofps_dd::Maps::availableMapsGet() const
+const std::set<std::string>& proofps_dd::Maps::availableMapsGet() const
 {
     return m_availableMaps;
+}
+
+const std::string& proofps_dd::Maps::availableMapsGetElem(const size_t& index) const
+{
+    if (index >= m_availableMaps.size())
+    {
+        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
+        return m_sEmptyStringToReturn;
+    }
+
+    auto it = m_availableMaps.begin();
+    std::advance(it, index);
+    return *it;
 }
 
 /**
@@ -619,14 +632,27 @@ const char** proofps_dd::Maps::availableMapsGetAsCharPtrArray() const
     return m_vszAvailableMaps;
 }
 
-const std::vector<std::string>& proofps_dd::Maps::availableMapsNoChangingGet() const
+const std::set<std::string>& proofps_dd::Maps::availableMapsNoChangingGet() const
 {
     return m_availableMapsNoChanging;
 }
 
+const std::string& proofps_dd::Maps::availableMapsNoChangingGetElem(const size_t& index) const
+{
+    if (index >= m_availableMapsNoChanging.size())
+    {
+        getConsole().EOLn("ERROR: %s invalid index: %u!", __func__, index);
+        return m_sEmptyStringToReturn;
+    }
+
+    auto it = m_availableMapsNoChanging.begin();
+    std::advance(it, index);
+    return *it;
+}
+
 bool proofps_dd::Maps::availableMapsAdd(const std::string& sMapFilename)
 {
-    const bool bRet = mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+    const bool bRet = mapFilenameAddToSet_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
 
     availableMapsRefreshCharPtrArray();
 
@@ -644,7 +670,7 @@ bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFile
     bool bRet = true;
     for (const auto& sMapFilename : vMapFilenames)
     {
-        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
+        bRet &= mapFilenameAddToSet_NoDuplicatesAllowed(sMapFilename, m_availableMaps);
     }
 
     availableMapsRefreshCharPtrArray();
@@ -654,7 +680,7 @@ bool proofps_dd::Maps::availableMapsAdd(const std::vector<std::string>& vMapFile
 
 bool proofps_dd::Maps::availableMapsRemove(const std::string& sMapFilename)
 {
-    const bool bRet = mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+    const bool bRet = mapFilenameRemoveFromSet(sMapFilename, m_availableMaps);
 
     availableMapsRefreshCharPtrArray();
 
@@ -669,7 +695,12 @@ bool proofps_dd::Maps::availableMapsRemove(const size_t& index)
         return false;
     }
 
-    m_availableMaps.erase(m_availableMaps.begin() + index);
+    // std::vector solution:
+    //m_availableMaps.erase(m_availableMaps.begin() + index);
+
+    auto it = m_availableMaps.begin();
+    std::advance(it, index);
+    m_availableMaps.erase(it);
 
     availableMapsRefreshCharPtrArray();
 
@@ -687,7 +718,7 @@ bool proofps_dd::Maps::availableMapsRemove(const std::vector<std::string>& vMapF
     bool bRet = true;
     for (const auto& sMapFilename : vMapFilenames)
     {
-        bRet &= mapFilenameRemoveFromVector(sMapFilename, m_availableMaps);
+        bRet &= mapFilenameRemoveFromSet(sMapFilename, m_availableMaps);
     }
 
     availableMapsRefreshCharPtrArray();
@@ -838,6 +869,27 @@ bool proofps_dd::Maps::mapcycleAdd(const std::string& sMapFilename)
 }
 
 bool proofps_dd::Maps::mapcycleAdd(const std::vector<std::string>& vMapFilenames)
+{
+    if (vMapFilenames.empty())
+    {
+        //getConsole().EOLn("ERROR: %s empty vector!", __func__);
+        return true;
+    }
+
+    bool bRet = true;
+    for (const auto& sMapFilename : vMapFilenames)
+    {
+        bRet &= mapFilenameAddToVector_NoDuplicatesAllowed(sMapFilename, m_mapcycle);
+    }
+
+    m_mapcycleItCurrent = m_mapcycle.begin();
+
+    mapcycleRefreshCharPtrArray();
+
+    return bRet;
+}
+
+bool proofps_dd::Maps::mapcycleAdd(const std::set<std::string>& vMapFilenames)
 {
     if (vMapFilenames.empty())
     {
@@ -1444,6 +1496,25 @@ bool proofps_dd::Maps::mapFilenameAddToVector_NoDuplicatesAllowed(const std::str
     return true;
 }
 
+bool proofps_dd::Maps::mapFilenameAddToSet_NoDuplicatesAllowed(const std::string& sMapFilename, std::set<std::string>& settt)
+{
+    if (sMapFilename.empty())
+    {
+        //getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    // std::set provides item uniqueness
+    const auto pairInserted = settt.insert(sMapFilename);
+    if (!pairInserted.second)
+    {
+        getConsole().EOLn("ERROR: %s filename %s already present!", __func__, sMapFilename.c_str());
+        return false; // maybe this could be success too
+    }
+
+    return true;
+}
+
 bool proofps_dd::Maps::mapFilenameRemoveFromVector(const std::string& sMapFilename, std::vector<std::string>& vec)
 {
     if (sMapFilename.empty())
@@ -1463,6 +1534,23 @@ bool proofps_dd::Maps::mapFilenameRemoveFromVector(const std::string& sMapFilena
     return true;
 }
 
+bool proofps_dd::Maps::mapFilenameRemoveFromSet(const std::string& sMapFilename, std::set<std::string>& settt)
+{
+    if (sMapFilename.empty())
+    {
+        getConsole().EOLn("ERROR: %s empty filename!", __func__);
+        return false;
+    }
+
+    const size_t nErased = settt.erase(sMapFilename);
+    if (nErased == 0)
+    {
+        getConsole().EOLn("ERROR: %s filename %s was not found!", __func__, sMapFilename.c_str());
+        return false; // maybe this could be success too
+    }
+    return true;
+}
+
 void proofps_dd::Maps::availableMapsRefreshCharPtrArray()
 {
     delete m_vszAvailableMaps;
@@ -1472,9 +1560,11 @@ void proofps_dd::Maps::availableMapsRefreshCharPtrArray()
     if (nArraySize > 0)
     {
         m_vszAvailableMaps = new const char* [nArraySize];
+        auto it = m_availableMaps.begin();
         for (size_t i = 0; i < nArraySize; i++)
         {
-            m_vszAvailableMaps[i] = m_availableMaps[i].c_str();
+            m_vszAvailableMaps[i] = it->c_str();
+            it++;
         }
     }
 }
