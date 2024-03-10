@@ -102,6 +102,8 @@ void proofps_dd::GUI::initialize()
          - https://github.com/ocornut/imgui/tree/master/docs
          - https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
          - https://github.com/ocornut/imgui/wiki/Useful-Extensions
+         - https://github.com/pthom/imgui_bundle/
+         - https://github.com/pthom/hello_imgui
          - Interactive online manual: https://pthom.github.io/imgui_manual_online/manual/imgui_manual.html
          - GUI Editors:
            - online: https://raa.is/ImStudio/
@@ -444,21 +446,85 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         // first I draw the 2 listboxes, and only after them I draw the move btns in between them
         ImGui::PushItemWidth(fMapListboxesWidth);
         static int iActiveItemMapcycle = 0;
+        ImGui::PushID("listBoxMapcycle"); // TODO: this I also put here as workaround for the BeginDragDropSource() assertion failure (but didnt work)
         ImGui::ListBox(
             "##listBoxMapcycle",
             &iActiveItemMapcycle,
             m_pMaps->mapcycleGetAsCharPtrArray(),
             static_cast<int>(m_pMaps->mapcycleGet().size()),
             nMapListboxesHeightAsItemCount);
-        
+
+        // start dragging from mapcycle to available maps
+        if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->mapcycleGet().size())))
+        {
+            // TODO: I believe I should NOT use ImGuiDragDropFlags_SourceAllowNullID here, but I'm using it as workaround,
+            // because without it assertion fails in BeginDragDropSource() about id being 0, even though all my controls
+            // here have proper ID. We should try leaving the flag when we update Dear ImGUI.
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID/*ImGuiDragDropFlags_None*/))
+            {
+                // Set payload to carry the index of our item (could be anything)
+                ImGui::SetDragDropPayload("dnd_listBoxMapcycle", &iActiveItemMapcycle, sizeof(int));
+
+                // Display preview (could be anything, e.g. when dragging an image we could decide to display
+                // the filename and a small preview of the image, etc.)
+                ImGui::Text("Move: %s", m_pMaps->mapcycleGetAsCharPtrArray()[iActiveItemMapcycle]);
+                ImGui::EndDragDropSource();
+            }
+        }
+
+        // end dragging from available maps to mapcycle
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("dnd_listBoxAvailMaps"))
+            {
+                IM_ASSERT(payload->DataSize == sizeof(int));
+                int payload_n = *(const int*)payload->Data;
+                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGetElem(payload_n));
+            }
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::PopID();
+
         ImGui::SameLine(fMapsAvailListBoxX);
         static int iActiveItemMapsAvailable = 0;
+        ImGui::PushID("listBoxAvailMaps"); // TODO: this I also put here as workaround for the BeginDragDropSource() assertion failure (but didnt work)
         ImGui::ListBox(
             "##listBoxAvailMaps",
             &iActiveItemMapsAvailable,
             m_pMaps->availableMapsGetAsCharPtrArray(),
             static_cast<int>(m_pMaps->availableMapsGet().size()),
             nMapListboxesHeightAsItemCount);
+
+        // start dragging from available maps to mapcycle
+        if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
+        {
+            // TODO: I believe I should NOT use ImGuiDragDropFlags_SourceAllowNullID here, but I'm using it as workaround,
+            // because without it assertion fails in BeginDragDropSource() about id being 0, even though all my controls
+            // here have proper ID. We should try leaving the flag when we update Dear ImGUI.
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID/*ImGuiDragDropFlags_None*/))
+            {
+                // Set payload to carry the index of our item (could be anything)
+                ImGui::SetDragDropPayload("dnd_listBoxAvailMaps", &iActiveItemMapsAvailable, sizeof(int));
+
+                // Display preview (could be anything, e.g. when dragging an image we could decide to display
+                // the filename and a small preview of the image, etc.)
+                ImGui::Text("Move: %s", m_pMaps->availableMapsGetAsCharPtrArray()[iActiveItemMapsAvailable]);
+                ImGui::EndDragDropSource();
+            }
+        }
+
+        // end dragging from mapcycle to available maps
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("dnd_listBoxMapcycle"))
+            {
+                IM_ASSERT(payload->DataSize == sizeof(int));
+                int payload_n = *(const int*)payload->Data;
+                m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[payload_n]);
+            }
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::PopID();
 
         ImGui::PopItemWidth();
 
@@ -470,6 +536,11 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
                 m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGetElem(iActiveItemMapsAvailable));
+                if (iActiveItemMapsAvailable >= static_cast<int>(m_pMaps->availableMapsGet().size()))
+                {
+                    // if we dont do this, we might need to click inside the listbox again to have valid active item
+                    iActiveItemMapsAvailable--;
+                }
             }
             //else
             //{
@@ -491,6 +562,11 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
                 m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
+                if (iActiveItemMapcycle >= static_cast<int>(m_pMaps->mapcycleGet().size()))
+                {
+                    // if we dont do this, we might need to click inside the listbox again to have valid active item
+                    iActiveItemMapcycle--;
+                }
             }
             //else
             //{
