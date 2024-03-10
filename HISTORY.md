@@ -17,7 +17,8 @@ A compressed build for Windows is available for TODO add link.
 
 This version brings 4 major improvements:
  - **GUI/Menu:** the game starts with a graphical user interface, a main menu where settings can be changed, server can be created or joining to a server is possible without the need of editing the config file!  
-The Mapcycle is also easily modifiable without manually editing the file. No need to start the game in explicit server- or client mode, everything is available from a single place!
+The Mapcycle is also easily modifiable without manually editing the file.
+No need to start the game in explicit server- or client mode, everything is available from a single place!  
 A new CVAR `gui_mainmenu` has been added just in case someone wants to turn this feature off.
  - **Config File and Mapcycle Save:** the game automatically saves the changes to the config file and mapcycle.txt so changes to the settings stay persistent.
  - **Bazooka:** from the original PR00FPS, an easy-to-use rocket launcher has been added to the game! This is the first weapon that brings fascinating explosions to this game! And it not only shoots explosive rockets but also features per-bullet reload, which is a property that was not set for the previous weapons, and it which means 2 things:
