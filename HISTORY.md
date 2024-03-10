@@ -23,7 +23,7 @@ A new CVAR `gui_mainmenu` has been added just in case someone wants to turn this
  - **Bazooka:** from the original PR00FPS, an easy-to-use rocket launcher has been added to the game! This is the first weapon that brings fascinating explosions to this game! And it not only shoots explosive rockets but also features per-bullet reload, which is a property that was not set for the previous weapons, and it which means 2 things:
    - the first thing is obvious: reloading rockets is done one-by-one, unlike with other weapons where 1 magazine is loaded at once;
    - reloading can be interrupted anytime by shooting a rocket. This behavior is same as with the shotguns in CS 1.6!
- - **New Map: mutans:** the 3rd official map of the game is finally here, created by the almighty [elmisto](https://github.com/elmisto)! This map is a tribute to the legendary [Mutáns-Klán](https://mutansok.gportal.hu/), a legendary group of pro Starcraft playerz.
+ - **New Map: mutans:** the 3rd official map of the game is finally here, created by the almighty [elmisto](https://github.com/elmisto)! This map is a tribute to the legendary [Mutáns-Klán](https://mutansok.gportal.hu/), a legendary group of PRO Starcraft playerz.
 
 ## v0.1.6.1 Private Beta (Dec 29, 2023)
 
