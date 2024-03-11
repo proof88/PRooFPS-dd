@@ -4,7 +4,6 @@
     Some stuff in common with game code and test code.
     Made by PR00F88, West Whiskhyll Entertainment
     2022 - 2023
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 

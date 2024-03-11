@@ -6,7 +6,6 @@
     GUI for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2024
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 

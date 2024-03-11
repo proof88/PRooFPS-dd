@@ -6,7 +6,6 @@
     Map Changing Regression test for PRooFPS-dd with 3 players: 1 server, 2 clients.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 

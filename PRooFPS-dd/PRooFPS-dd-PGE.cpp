@@ -4,7 +4,6 @@
     Customized PGE for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2022 - 2023
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 

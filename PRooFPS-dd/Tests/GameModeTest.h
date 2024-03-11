@@ -6,7 +6,6 @@
     Unit test for PRooFPS-dd GameMode.
     Made by PR00F88, West Whiskhyll Entertainment
     2022
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 

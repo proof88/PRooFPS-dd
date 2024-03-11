@@ -6,7 +6,6 @@
     Simulating input for PRooFPS-dd Regression Tests.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
-    EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
     ###################################################################################
 */
 
