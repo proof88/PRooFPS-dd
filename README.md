@@ -80,7 +80,7 @@ Note that some network statistics are also saved into the HTML log file whenever
 This seems to be an issue which does not happen on all computers but when it happens then **most probably you have a "Display Capture" set as Source** in OBS Studio.  
 Sometimes simply **switching to another application and then switching back to the game (ALT+TAB, then ALT+TAB again)** resolves the issue, so this should be the first thing you try.  
 As a next idea to resolve this issue, go to the Properties of your "Display Capture" Source and try to **change the Capture Method to "DXGI Desktop Duplication"**, also make sure **"Capture Mouse" is checked**.  
-If this does not help, **remove "Display Capture"** from Sources, start the game, then switch to OBS Studio (ALT+TAB), add a **"Window Capture" Source** and select the window of the game. You might also need to change the Capture Method too.  
+If this does not help, **remove "Display Capture"** from Sources, start the game, then switch to OBS Studio (ALT+TAB), add a **"Window Capture" Source** and select the game window. You might also need to change the Capture Method too.  
 If the issue still persists, try to upgrade OBS Studio, your video card driver, or just simply turn Fullscreen mode off in game settings when you are using OBS Studio in parallel.
 
 ### Why the Compressed Release is So Big?
