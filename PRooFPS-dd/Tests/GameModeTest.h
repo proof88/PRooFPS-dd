@@ -4,6 +4,7 @@
     ###################################################################################
     GameModeTest.h
     Unit test for PRooFPS-dd GameMode.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2022
     ###################################################################################
@@ -156,8 +157,8 @@ private:
         }
 
         gm->restart();
-        return assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time") &
-            assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        return (assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time") &
+            assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time")) != 0;
     }
 
     bool test_rename_player()
@@ -225,8 +226,8 @@ private:
             return false;
         }
 
-        bool b = assertEquals(0u, dm->getTimeLimitSecs(), "default time limit") &
-            assertEquals(0u, dm->getTimeRemainingSecs(), "remaining default");
+        bool b = (assertEquals(0u, dm->getTimeLimitSecs(), "default time limit") &
+            assertEquals(0u, dm->getTimeRemainingSecs(), "remaining default")) != 0;
 
         dm->setTimeLimitSecs(25u);
         dm->restart();  // restart() is needed to have correct value for remaining time

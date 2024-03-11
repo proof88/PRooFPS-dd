@@ -4,6 +4,7 @@
     ###################################################################################
     RegTestMapChangeServerClient3Players.h
     Map Changing Regression test for PRooFPS-dd with 3 players: 1 server, 2 clients.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     ###################################################################################

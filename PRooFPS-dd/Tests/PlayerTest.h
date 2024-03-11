@@ -4,6 +4,7 @@
     ###################################################################################
     PlayerTest.h
     Unit test for PRooFPS-dd Player class.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     ###################################################################################
@@ -241,7 +242,7 @@ private:
 
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
 
-        return assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
+        return (assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
             assertTrue(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
@@ -284,7 +285,7 @@ private:
             assertFalse(player.getCrouchInput().isDirty(), "old crouch") &
             assertFalse(player.getCrouchInput(), "crouch") &
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
-            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */;
+            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */) != 0;
     }
 
     bool test_set_name()
@@ -303,8 +304,8 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        bool b = assertFalse(player.isDirty(), "dirty 1") &
-            assertFalse(player.isNetDirty(), "net dirty 1");
+        bool b = (assertFalse(player.isDirty(), "dirty 1") &
+            assertFalse(player.isNetDirty(), "net dirty 1")) != 0;
 
         player.getHealth().set(5);
         b &= assertTrue(player.isDirty(), "dirty A 1");
@@ -379,11 +380,11 @@ private:
         player.getFrags() = 2;
         player.getDeaths() = 1;
 
-        bool b = assertEquals(0, player.getDeaths().getOld(), "old deaths 1") &
+        bool b = (assertEquals(0, player.getDeaths().getOld(), "old deaths 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") &
             assertEquals(0, player.getFrags().getOld(), "old frags 1") &
             assertEquals(2, player.getFrags(), "frags 1") &
-            assertTrue(player.isDirty(), "dirty 1");
+            assertTrue(player.isDirty(), "dirty 1")) != 0;
 
         player.updateOldValues();
 
@@ -421,24 +422,24 @@ private:
         player.getAngleY() = fAngleYOriginal;
         player.getWeaponAngle() = vecAngleWpnOriginal;
 
-        bool b = assertEquals(PureVector(), player.getWeaponAngle().getOld(), "old wpn angle 1") &
+        bool b = (assertEquals(PureVector(), player.getWeaponAngle().getOld(), "old wpn angle 1") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 1")&
             assertEquals(PureVector(), player.getPos().getOld(), "old pos 1") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 1") &
             assertEquals(0.f, player.getAngleY().getOld(), "old angle y 1") &
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 1") &
-            assertTrue(player.isDirty(), "dirty 1");
+            assertTrue(player.isDirty(), "dirty 1")) != 0;
 
         player.updateOldValues();
         b &= assertTrue(player.isNetDirty(), "is net dirty");
 
-        b &= assertEquals(vecAngleWpnOriginal, player.getWeaponAngle().getOld(), "old wpn angle 2") &
+        b &= (assertEquals(vecAngleWpnOriginal, player.getWeaponAngle().getOld(), "old wpn angle 2") &
             assertEquals(vecAngleWpnOriginal, player.getWeaponAngle(), "wpn angle 2") &
             assertEquals(vecPosOriginal, player.getPos().getOld(), "old pos 2") &
             assertEquals(vecPosOriginal, player.getPos(), "pos 2") &
             assertEquals(fAngleYOriginal, player.getAngleY().getOld(), "old angle y 2") &
             assertEquals(fAngleYOriginal, player.getAngleY(), "angle y 2") &
-            assertFalse(player.isDirty(), "dirty 2");
+            assertFalse(player.isDirty(), "dirty 2")) != 0;
 
         return b;
     }
@@ -448,20 +449,20 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.SetHealth(200);
-        bool b = assertEquals(100, player.getHealth(), "health 1") &
+        bool b = (assertEquals(100, player.getHealth(), "health 1") &
             assertFalse(player.getHealth().isDirty(), "dirty 1") &
-            assertFalse(player.isDirty(), "dirty 2");
+            assertFalse(player.isDirty(), "dirty 2")) != 0;
 
         player.SetHealth(-1);
-        b &= assertEquals(0, player.getHealth(), "health 2") &
+        b &= (assertEquals(0, player.getHealth(), "health 2") &
             assertTrue(player.getHealth().isDirty(), "dirty 3") &
-            assertTrue(player.isDirty(), "dirty 4");
+            assertTrue(player.isDirty(), "dirty 4")) != 0;
 
         player.updateOldValues();
         b &= assertTrue(player.isNetDirty(), "is net dirty");
-        b &= assertEquals(0, player.getHealth().getOld(), "health 3") &
+        b &= (assertEquals(0, player.getHealth().getOld(), "health 3") &
             assertFalse(player.getHealth().isDirty(), "dirty 5") &
-            assertFalse(player.isDirty(), "dirty 6");
+            assertFalse(player.isDirty(), "dirty 6")) != 0;
 
         return b;
     }
@@ -471,16 +472,16 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.DoDamage(25);
-        bool b = assertEquals(75, player.getHealth(), "health 1") &
-            assertEquals(100, player.getHealth().getOld(), "old health 1");
+        bool b = (assertEquals(75, player.getHealth(), "health 1") &
+            assertEquals(100, player.getHealth().getOld(), "old health 1")) != 0;
 
         player.DoDamage(25);
-        b &= assertEquals(50, player.getHealth(), "health 2") &
-            assertEquals(100, player.getHealth().getOld(), "old health 2");
+        b &= (assertEquals(50, player.getHealth(), "health 2") &
+            assertEquals(100, player.getHealth().getOld(), "old health 2")) != 0;
 
         player.DoDamage(100);
-        b &= assertEquals(0, player.getHealth(), "health 3") &
-            assertEquals(100, player.getHealth().getOld(), "old health 3");
+        b &= (assertEquals(0, player.getHealth(), "health 3") &
+            assertEquals(100, player.getHealth().getOld(), "old health 3")) != 0;
 
         return b;
     }
@@ -498,14 +499,14 @@ private:
         player.getAttack() = true;
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        bool b = assertEquals(0, player.getHealth(), "health 1") &
+        bool b = (assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertFalse(player.getAttack(), "attack 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(1, player.getDeaths(), "deaths 1") /* server increases it */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 1")) != 0;
         
         player.SetHealth(100);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
@@ -536,13 +537,13 @@ private:
 
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        bool b = assertEquals(0, player.getHealth(), "health 1") &
+        bool b = (assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(0, player.getDeaths(), "deaths 1") /* client doesn't change it, will receive update from server */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 1");
+            assertEquals(0, player.getDeaths().getOld(), "old deaths 1")) != 0;
 
         player.SetHealth(100);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
@@ -583,13 +584,13 @@ private:
         player.Die(true, bServer);
         player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
-        return b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
+        return (b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
             assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
             assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
             assertTrue(player.getWantToStandup(), "wantstandup") &
-            assertEquals(PureVector(), player.getImpactForce(), "impact force");
+            assertEquals(PureVector(), player.getImpactForce(), "impact force")) != 0;
     }
 
     bool test_jump()
@@ -691,10 +692,10 @@ private:
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggleRun = std::chrono::steady_clock::now();
         player.SetRun(false);
 
-        bool b = assertTrue(player.getTimeLastToggleRun() > timeBeforeToggleRun, "cmp timeBefore") &
-            assertTrue(player.getTimeLastToggleRun() < std::chrono::steady_clock::now(), "cmp timeAfter");
+        bool b = (assertTrue(player.getTimeLastToggleRun() > timeBeforeToggleRun, "cmp timeBefore") &
+            assertTrue(player.getTimeLastToggleRun() < std::chrono::steady_clock::now(), "cmp timeAfter")) != 0;
         
-        return b & assertFalse(player.isRunning(), "running");
+        return (b & assertFalse(player.isRunning(), "running")) != 0;
     }
 
     bool test_set_strafe()
@@ -719,9 +720,9 @@ private:
 
         const auto vecOriginalPos = player.getPos();
         player.DoCrouchServer(false);
-        bool b = assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
+        bool b = (assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
-            assertTrue(player.getCrouchStateCurrent(), "crouch current state 1");
+            assertTrue(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
 
         player.DoStandupServer(player.getPos().getNew().getY());
 
@@ -739,10 +740,10 @@ private:
 
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
         player.DoCrouchShared();
-        bool b = assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+        bool b = (assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
-            assertTrue(player.getWantToStandup(), "want standup intact 1");
+            assertTrue(player.getWantToStandup(), "want standup intact 1")) != 0;
 
         return b;
     }
@@ -754,9 +755,9 @@ private:
         player.DoCrouchServer(false);
 
         player.DoStandupServer(12.f);
-        bool b = assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
+        bool b = (assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
             assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
-            assertFalse(player.getCrouchStateCurrent(), "crouch current state 1");
+            assertFalse(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
 
         return b;
     }
@@ -769,10 +770,10 @@ private:
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
 
         player.DoStandupShared();
-        bool b = assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
+        bool b = (assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
-            assertTrue(player.getWantToStandup(), "want standup intact 1");
+            assertTrue(player.getWantToStandup(), "want standup intact 1")) != 0;
 
         return b;
     }
@@ -877,8 +878,8 @@ private:
         player.SetHealth(90);
         player.TakeItem(miHealth, newPktWpnUpdate);
 
-        return assertEquals(100, player.getHealth(), "player health") &
-            assertTrue(miHealth.isTaken(), "item taken");
+        return (assertEquals(100, player.getHealth(), "player health") &
+            assertTrue(miHealth.isTaken(), "item taken")) != 0;
     }
 
     bool test_take_item_weapon()
@@ -903,7 +904,7 @@ private:
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
-        bool b = assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
+        bool b = (assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
             static_cast<int>(player.getWeaponManager().getWeapons()[0]->getUnmagBulletCount()), "wpn 1 unmag") &
             assertTrue(miPistol.isTaken(), "item 1 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
@@ -917,7 +918,7 @@ private:
             assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 1 mag") &
             assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
-                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag");
+                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag")) != 0;
 
         player.TakeItem(miMchGun, pktWpnUpdate);
         bStrSafeChecked = strncmp(

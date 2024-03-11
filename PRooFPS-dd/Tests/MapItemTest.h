@@ -4,6 +4,7 @@
     ###################################################################################
     MapItemTest.h
     Unit test for PRooFPS-dd MapItem.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2022
     ###################################################################################
@@ -19,7 +20,8 @@ public:
 
     MapItemTest(PGEcfgProfiles& cfgProfiles) :
         UnitTest(__FILE__),
-        m_cfgProfiles(cfgProfiles)
+        m_cfgProfiles(cfgProfiles),
+        engine(nullptr)
     {}
 
     MapItemTest(const MapItemTest&) = delete;
@@ -82,14 +84,14 @@ private:
 
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
 
-        return assertEquals(mi.getId(), iLastMapItemId, "item id") &
+        return (assertEquals(mi.getId(), iLastMapItemId, "item id") &
             assertEquals(proofps_dd::MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
             assertEquals(static_cast<int>(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
             assertEquals(PureVector(1, 2, 3), mi.getPos(), "pos") &
             assertEquals(mi.getPos(), mi.getObject3D().getPosVec(), "obj pos") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "visible") &
             assertFalse(mi.isTaken(), "taken") &
-            assertEquals(0, mi.getTimeTaken().time_since_epoch().count(), "time taken");
+            assertEquals(0, mi.getTimeTaken().time_since_epoch().count(), "time taken")) != 0;
     }
 
     bool test_reset_global_item_id()
@@ -109,10 +111,10 @@ private:
         proofps_dd::MapItem miWpnMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         proofps_dd::MapItem miWpnBazooka(*engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
         
-        return assertEquals(proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miHealth), "health") &
+        return (assertEquals(proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miHealth), "health") &
             assertEquals(proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
             assertEquals(proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnMchGun), "mchgun") &
-            assertEquals(proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnBazooka), "bazooka");
+            assertEquals(proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnBazooka), "bazooka")) != 0;
     }
 
     bool test_take()
@@ -120,9 +122,9 @@ private:
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.Take();
 
-        return assertTrue(mi.isTaken(), "taken") &
+        return (assertTrue(mi.isTaken(), "taken") &
             assertLess(0, mi.getTimeTaken().time_since_epoch().count(), "time taken") &
-            assertFalse(mi.getObject3D().isRenderingAllowed(), "not visible");
+            assertFalse(mi.getObject3D().isRenderingAllowed(), "not visible")) != 0;
     }
 
     bool test_untake()
@@ -130,13 +132,13 @@ private:
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         mi.UnTake();
 
-        bool b = assertFalse(mi.isTaken(), "not taken") &
-            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible");
+        bool b = (assertFalse(mi.isTaken(), "not taken") &
+            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible")) != 0;
 
         mi.Take();
         mi.UnTake();
-        b &= assertFalse(mi.isTaken(), "not taken") &
-            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible");
+        b &= (assertFalse(mi.isTaken(), "not taken") &
+            assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible")) != 0;
 
         return b;
     }

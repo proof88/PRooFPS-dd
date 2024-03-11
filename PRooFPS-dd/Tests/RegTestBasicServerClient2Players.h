@@ -4,6 +4,7 @@
     ###################################################################################
     RegTestBasicServerClient2Players.h
     Basic Regression test for PRooFPS-dd with 2 players: 1 server, 1 client.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     ###################################################################################
@@ -442,7 +443,7 @@ private:
             }
         }
 
-        bool bRet = assertFalse(f.bad(), "f.bad()") & assertFalse(f.eof(), "f.eof()");
+        bool bRet = (assertFalse(f.bad(), "f.bad()") & assertFalse(f.eof(), "f.eof()")) != 0;
         if (!bRet)
         {
             return bRet;
@@ -579,7 +580,7 @@ private:
 
     bool evaluateServer(std::ifstream&, const ExpectedPktStatsRanges& expectedPktStatsRanges)
     {
-        bool bRet =
+        bool bRet = (
           assertBetween(
               expectedPktStatsRanges.nTxPktTotalCount.nMin,
               expectedPktStatsRanges.nTxPktTotalCount.nMax,
@@ -603,7 +604,7 @@ private:
           assertBetween(
               expectedPktStatsRanges.nInjectPktPerSecond.nMin,
               expectedPktStatsRanges.nInjectPktPerSecond.nMax,
-              evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond");
+              evaluatePktStatsServer.nInjectPktPerSecond, "server nInjectPktPerSecond") ) != 0;
         
         bRet &= evaluateFragTableCommon();
 
@@ -625,7 +626,7 @@ private:
     {
         // when this function is called, server is already evaluated and evaluatePktStatsServer contains valid server data, so
         // we can also compare client data to server data!
-        bool bRet =
+        bool bRet = (
             assertEquals(evaluatePktStatsServer.nRxPktTotalCount, evaluatePktStatsClient.nTxPktTotalCount, "client nTxPktTotalCount") &
             assertBetween(
                 expectedPktStatsRanges.nTxPktPerSecond.nMin,
@@ -638,7 +639,7 @@ private:
                 evaluatePktStatsClient.nRxPktPerSecond, "client nRxPktPerSecond") &
             /* client never injects packets to its pkt queue */
             assertEquals(evaluatePktStatsClient.nInjectPktTotalCount, 0u, "client nInjectPktTotalCount") &
-            assertEquals(evaluatePktStatsClient.nInjectPktPerSecond, 0u, "client nInjectPktPerSecond");
+            assertEquals(evaluatePktStatsClient.nInjectPktPerSecond, 0u, "client nInjectPktPerSecond") ) != 0;
 
         if (evaluatePktStatsServer.nRxPktTotalCount < evaluatePktStatsClient.nTxPktTotalCount)
         {   // this check is for logging more clear error, if we come here the above bRet check already failed

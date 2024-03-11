@@ -4,6 +4,7 @@
     ###################################################################################
     MapsTest.h
     Unit test for PRooFPS-dd Maps.
+    Please see UnitTest.h about my statement of using "bitwise and" operator with bool operands.
     Made by PR00F88, West Whiskhyll Entertainment
     2022
     ###################################################################################
@@ -166,20 +167,20 @@ private:
     bool test_is_valid_map_filename()
     {
         std::string sTooLooongFilename(proofps_dd::MsgMapChangeFromServer::nMapFilenameMaxLength, 'a');
-        return assertFalse(proofps_dd::Maps::isValidMapFilename("map.txt"), "map.txt") &
+        return (assertFalse(proofps_dd::Maps::isValidMapFilename("map.txt"), "map.txt") &
             assertFalse(proofps_dd::Maps::isValidMapFilename("map_.tx"), "map_.tx") &
             assertFalse(proofps_dd::Maps::isValidMapFilename("_map.txt"), "_map.txt") &
             assertFalse(proofps_dd::Maps::isValidMapFilename("maps.txt"), "maps.txt") &
             assertFalse(proofps_dd::Maps::isValidMapFilename("mapcycle.txt"), "mapcycle.txt") &
             assertFalse(proofps_dd::Maps::isValidMapFilename("map.txt"), "map.txt") &
             assertFalse(proofps_dd::Maps::isValidMapFilename(sTooLooongFilename), "too long") &
-            assertTrue(proofps_dd::Maps::isValidMapFilename("map_.txt"), "ok");
+            assertTrue(proofps_dd::Maps::isValidMapFilename("map_.txt"), "ok")) != 0;
     }
 
     bool test_initially_empty()
     {
         proofps_dd::Maps maps(m_cfgProfiles, *engine);
-        bool b = assertFalse(maps.isInitialized(), "inited 1") &
+        bool b = (assertFalse(maps.isInitialized(), "inited 1") &
             assertFalse(maps.loaded(), "loaded 1") &
             assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 1") &
             assertTrue(maps.getFilename().empty(), "filename 1") &
@@ -200,10 +201,10 @@ private:
             assertNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
             assertTrue(maps.availableMapsGet().empty(), "available maps empty 1") &
             assertNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 1") &
-            assertTrue(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 1");
+            assertTrue(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 1")) != 0;
         
         b &= assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.isInitialized(), "inited 2") &
+        b &= (assertTrue(maps.isInitialized(), "inited 2") &
             assertFalse(maps.loaded(), "loaded 2") &
             assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 2") &
             assertTrue(maps.getFilename().empty(), "filename 2") &
@@ -225,7 +226,7 @@ private:
             assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
             assertFalse(maps.availableMapsGet().empty(), "available maps empty 2") &
             assertNotNull(maps.availableMapsGetAsCharPtrArray(), "available maps charptrarray 2") &
-            assertFalse(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 2");
+            assertFalse(maps.availableMapsNoChangingGet().empty(), "available maps no changing empty 2")) != 0;
 
         b &= assertTrue(
             checkConstCharPtrArrayElemsPointingToContainerElems(maps.mapcycleGet(), maps.mapcycleGetAsCharPtrArray()),
