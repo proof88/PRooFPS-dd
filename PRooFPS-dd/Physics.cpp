@@ -278,8 +278,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
             }
         }
 
-        player.getHasJustStartedFallingNaturallyInThisTick() = false;
-        player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = false;
+        player.setHasJustStartedFallingNaturallyInThisTick(false);
+        player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(false);
         const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
 
         if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
@@ -308,11 +308,11 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
                 // We won't come here in next tick.
                 if (player.getHasJustStoppedJumpingInThisTick())
                 {
-                    player.getHasJustStartedFallingAfterJumpingStoppedInThisTick() = true;
+                    player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
                 }
                 else
                 {
-                    player.getHasJustStartedFallingNaturallyInThisTick() = true;
+                    player.setHasJustStartedFallingNaturallyInThisTick(true);
                 }
                 player.getHasJustStoppedJumpingInThisTick() = false;
                 //getConsole().EOLn("asd: %f", player.getGravity());

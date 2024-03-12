@@ -87,8 +87,11 @@ namespace proofps_dd
         float getGravity() const;
         bool isJumping() const;
         bool canFall() const;
-        bool& getHasJustStartedFallingNaturallyInThisTick();
-        bool& getHasJustStartedFallingAfterJumpingStoppedInThisTick();
+        bool getHasJustStartedFallingNaturallyInThisTick() const;
+        void setHasJustStartedFallingNaturallyInThisTick(bool val);
+        bool getHasJustStartedFallingAfterJumpingStoppedInThisTick() const;
+        void setHasJustStartedFallingAfterJumpingStoppedInThisTick(bool val);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeStartedFalling() const;
         bool& getHasJustStoppedJumpingInThisTick();
         void SetHealth(int value);
         void SetGravity(float value);
@@ -191,6 +194,7 @@ namespace proofps_dd
         bool b_mCanFall;
         bool m_bHasJustStartedFallingNaturally;
         bool m_bHasJustStartedFallingAfterJumpingStopped;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeStartedFalling;
         bool m_bHasJustStoppedJumping;
         
         /** True when player is crouching currently, regardless of current input.

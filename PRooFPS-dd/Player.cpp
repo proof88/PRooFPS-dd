@@ -339,14 +339,37 @@ bool proofps_dd::Player::canFall() const
     return b_mCanFall;
 }
 
-bool& proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick()
+bool proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick() const
 {
     return m_bHasJustStartedFallingNaturally;
 }
 
-bool& proofps_dd::Player::getHasJustStartedFallingAfterJumpingStoppedInThisTick()
+void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
+{
+    m_bHasJustStartedFallingNaturally = val;
+    if (val)
+    {
+        m_timeStartedFalling = std::chrono::steady_clock::now();
+    }
+}
+
+bool proofps_dd::Player::getHasJustStartedFallingAfterJumpingStoppedInThisTick() const
 {
     return m_bHasJustStartedFallingAfterJumpingStopped;
+}
+
+void proofps_dd::Player::setHasJustStartedFallingAfterJumpingStoppedInThisTick(bool val)
+{
+    m_bHasJustStartedFallingAfterJumpingStopped = val;
+    if (val)
+    {
+        m_timeStartedFalling = std::chrono::steady_clock::now();
+    }
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeStartedFalling() const
+{
+    return m_timeStartedFalling;
 }
 
 bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
