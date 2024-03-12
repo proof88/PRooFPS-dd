@@ -91,6 +91,7 @@ namespace proofps_dd
         void setHasJustStartedFallingNaturallyInThisTick(bool val);
         bool getHasJustStartedFallingAfterJumpingStoppedInThisTick() const;
         void setHasJustStartedFallingAfterJumpingStoppedInThisTick(bool val);
+        bool isFalling() const;
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeStartedFalling() const;
         bool& getHasJustStoppedJumpingInThisTick();
         void SetHealth(int value);
@@ -192,6 +193,7 @@ namespace proofps_dd
         float m_fGravity;
         bool m_bJumping;
         bool b_mCanFall;
+        bool m_bFalling;
         bool m_bHasJustStartedFallingNaturally;
         bool m_bHasJustStartedFallingAfterJumpingStopped;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedFalling;

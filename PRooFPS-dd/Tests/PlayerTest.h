@@ -258,6 +258,7 @@ private:
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
             assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
+            assertTrue(player.isFalling(), "is falling") &
             assertTrue(player.getHasJustStartedFallingNaturallyInThisTick(), "getHasJustStartedFallingNaturallyInThisTick") &
             assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
             assertEquals(0, player.getTimeStartedFalling().time_since_epoch().count(), "time started falling") &
@@ -682,22 +683,36 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
+        bool b = assertTrue(player.isFalling(), "is falling 1");
+        
+        player.SetGravity(-1.f);
+        b &= assertTrue(player.isFalling(), "is falling 2");
+        
+        player.SetGravity(0.f);
+        b &= assertFalse(player.isFalling(), "is falling 3");
+
         player.SetGravity(5.f);
 
-        return assertEquals(5.f, player.getGravity());
+        return (b & assertEquals(5.f, player.getGravity())) != 0;
     }
 
     bool test_set_has_just_started_falling()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         
+        player.SetGravity(0.f);  // way to set isFalling to false
+        bool b = assertFalse(player.isFalling(), "is falling 1");
         const auto timeBeforeJustStartedFallingAfterJumpingStopped = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
-        bool b = assertTrue(timeBeforeJustStartedFallingAfterJumpingStopped <= player.getTimeStartedFalling(), "time started falling after jumping stopped 1");
+        b &= assertTrue(player.isFalling(), "is falling 2");
+        b &= assertTrue(timeBeforeJustStartedFallingAfterJumpingStopped <= player.getTimeStartedFalling(), "time started falling after jumping stopped 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling after jumping stopped 1");
 
+        player.SetGravity(0.f);  // way to set isFalling to false
+        b &= assertFalse(player.isFalling(), "is falling 3");
         const auto timeBeforeJustStartedFallingNaturally = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingNaturallyInThisTick(true);
+        b &= assertTrue(player.isFalling(), "is falling 4");
         b &= assertTrue(timeBeforeJustStartedFallingNaturally <= player.getTimeStartedFalling(), "time started falling naturally 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling naturally 2");
 

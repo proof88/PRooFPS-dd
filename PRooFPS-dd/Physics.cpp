@@ -333,6 +333,11 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         {
             // need to die, out of map lower bound
             HandlePlayerDied(player, objXHair);
+            //if (player.isFalling())
+            //{
+            //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            //    getConsole().EOLn("Finished falling for %d millisecs", static_cast<int>(nFallDurationMillisecs));
+            //}
         }
     }
 }
@@ -401,11 +406,20 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 if (nAlignUnderOrAboveWall == 1)
                 {
                     // we fell from above
+
+                    //if (player.isFalling())
+                    //{
+                    //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+                    //    getConsole().EOLn("Finished falling for %d millisecs", static_cast<int>(nFallDurationMillisecs));
+                    //}
+                    
                     player.SetCanFall(false);
                     
                     // maybe not null everything out in the future but only decrement the components by
                     // some value, since if there is an explosion-induced force, it shouldnt be nulled out
                     // at this moment. Currently we want to null out the strafe-jump-induced force.
+                    // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
+                    // we can zero out jumpforce here completely!
                     player.getJumpForce().Set(0.f, 0.f, 0.f);
                     player.SetGravity(0.f);
                 }

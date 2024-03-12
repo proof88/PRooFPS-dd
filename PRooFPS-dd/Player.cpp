@@ -88,6 +88,7 @@ proofps_dd::Player::Player(
     m_fGravity(0.f),
     m_bJumping(false),
     b_mCanFall(true),
+    m_bFalling(true),
     m_bHasJustStartedFallingNaturally(true),
     m_bHasJustStartedFallingAfterJumpingStopped(false),
     m_bHasJustStoppedJumping(false),
@@ -122,6 +123,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
     b_mCanFall(other.b_mCanFall),
+    m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
@@ -153,6 +155,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
     b_mCanFall = other.b_mCanFall;
+    m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
     m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
@@ -350,6 +353,7 @@ void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
     if (val)
     {
         m_timeStartedFalling = std::chrono::steady_clock::now();
+        m_bFalling = true;
     }
 }
 
@@ -364,7 +368,13 @@ void proofps_dd::Player::setHasJustStartedFallingAfterJumpingStoppedInThisTick(b
     if (val)
     {
         m_timeStartedFalling = std::chrono::steady_clock::now();
+        m_bFalling = true;
     }
+}
+
+bool proofps_dd::Player::isFalling() const
+{
+    return m_bFalling;
 }
 
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeStartedFalling() const
@@ -383,6 +393,10 @@ void proofps_dd::Player::SetHealth(int value) {
 
 void proofps_dd::Player::SetGravity(float value) {
     m_fGravity = value;
+    if (value >= 0.f)
+    {
+        m_bFalling = false;
+    }
 }
 
 bool proofps_dd::Player::jumpAllowed() const {
@@ -402,6 +416,7 @@ void proofps_dd::Player::Jump() {
     m_bAllowJump = false;
     m_bJumping = true;
     m_bWillJump = false;
+    m_bFalling = false;
     m_fGravity = getCrouchInput().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
