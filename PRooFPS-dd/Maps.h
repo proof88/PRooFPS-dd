@@ -85,38 +85,20 @@ namespace proofps_dd
         /* Available maps handling */
         /* Logic is restricted to available maps, not impacting mapcycle. */
 
-        void availableMapsRefresh();
         const std::set<std::string>& availableMapsGet() const;
         const std::string& availableMapsGetElem(const size_t& index) const;
         const char** availableMapsGetAsCharPtrArray() const;
         const std::set<std::string>& availableMapsNoChangingGet() const;
         const std::string& availableMapsNoChangingGetElem(const size_t& index) const;
-        bool availableMapsAdd(const std::string& sMapFilename);
-        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
-        bool availableMapsRemove(const std::string& sMapFilename);
-        bool availableMapsRemove(const size_t& index);
-        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
 
         /* Mapcycle handling */
         /* Logic is restricted to mapcycle, not impacting available maps. */
-        
+
         const std::vector<std::string>& mapcycleGet() const;
         const char** mapcycleGetAsCharPtrArray() const;
         std::string mapcycleGetCurrent() const;
-        bool mapcycleIsCurrentLast() const;
-        bool mapcycleReload();
-        bool mapcycleSaveToFile();
         std::string mapcycleNext();
-        std::string mapcycleRewindToFirst();
-        std::string mapcycleForwardToLast();
-        bool mapcycleAdd(const std::string& sMapFilename);
-        bool mapcycleAdd(const std::vector<std::string>& vMapFilenames);
-        bool mapcycleAdd(const std::set<std::string>& vMapFilenames);
-        bool mapcycleRemove(const std::string& sMapFilename);
-        bool mapcycleRemove(const size_t& index);
-        bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
-        void mapcycleClear();
-        size_t mapcycleRemoveNonExisting();
+        bool mapcycleSaveToFile();
 
         /* Available maps and Mapcycle handling together */
         /* Here we tie both together, these complex functions are recommended to be used by GUI. */
@@ -131,6 +113,32 @@ namespace proofps_dd
         bool mapcycleRemove_availableMapsAdd();
 
     protected:
+
+        /* Available maps handling */
+        /* Logic is restricted to available maps, not impacting mapcycle. */
+
+        void availableMapsRefresh();
+        bool availableMapsAdd(const std::string& sMapFilename);
+        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
+        bool availableMapsRemove(const std::string& sMapFilename);
+        bool availableMapsRemove(const size_t& index);
+        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
+
+        /* Mapcycle handling */
+        /* Logic is restricted to mapcycle, not impacting available maps. */
+
+        bool mapcycleIsCurrentLast() const;
+        bool mapcycleReload();
+        std::string mapcycleRewindToFirst();
+        std::string mapcycleForwardToLast();
+        bool mapcycleAdd(const std::string& sMapFilename);
+        bool mapcycleAdd(const std::vector<std::string>& vMapFilenames);
+        bool mapcycleAdd(const std::set<std::string>& vMapFilenames);
+        bool mapcycleRemove(const std::string& sMapFilename);
+        bool mapcycleRemove(const size_t& index);
+        bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
+        void mapcycleClear();
+        size_t mapcycleRemoveNonExisting();
 
     private:
 

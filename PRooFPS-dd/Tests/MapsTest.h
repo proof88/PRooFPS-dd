@@ -14,6 +14,20 @@
 #include "../Maps.h"
 #include "../PRooFPS-dd-packet.h"
 
+class TestableMaps :
+    public proofps_dd::Maps
+{
+public:
+    TestableMaps(
+        PGEcfgProfiles& cfgProfiles,
+        PR00FsUltimateRenderingEngine& gfx) : Maps(cfgProfiles, gfx)
+    {};
+
+    virtual ~TestableMaps() {};
+
+    friend class MapsTest;
+};
+
 class MapsTest :
     public UnitTest
 {
@@ -593,7 +607,7 @@ private:
 
     bool test_map_server_decide_first_map_to_be_loaded()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertEquals("", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 1");
         b &= assertEquals("", maps.getNextMapToBeLoaded(), "next map to load 1");
 
@@ -781,7 +795,7 @@ private:
 
     bool test_map_available_maps_refresh()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         if (!b)
@@ -822,7 +836,7 @@ private:
 
     bool test_map_available_maps_add_single_elem()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
         b &= assertGreater(nOriginalSize, 1u, "size 1");  // should be at least 2 maps there
@@ -849,7 +863,7 @@ private:
             "map_asdasdasd.txt"
         };
 
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
         const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
@@ -883,7 +897,7 @@ private:
 
     bool test_map_available_maps_remove_by_name()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
         const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
@@ -911,7 +925,7 @@ private:
 
     bool test_map_available_maps_remove_by_index()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
         const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
@@ -948,7 +962,7 @@ private:
            "map_test_bad_order.txt"
         };
 
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.availableMapsGet().size();
         const auto nOriginalSizeAvailableMapsNoChanging = maps.availableMapsNoChangingGet().size();
@@ -980,7 +994,7 @@ private:
 
     bool test_map_mapcycle_reload()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         // update: even before initialize(), this works, and I'm not changing that now.
@@ -1018,7 +1032,7 @@ private:
 
     bool test_map_mapcycle_save_to_file()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         const auto originalMapcycle = maps.mapcycleGet();
 
@@ -1041,7 +1055,7 @@ private:
 
     bool test_map_mapcycle_next()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertEquals("", maps.mapcycleNext(), "next 1");
@@ -1069,7 +1083,7 @@ private:
 
     bool test_map_mapcycle_rewind_to_first()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
@@ -1100,7 +1114,7 @@ private:
 
     bool test_map_mapcycle_forward_to_last()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 1");
@@ -1126,7 +1140,7 @@ private:
 
     bool test_map_mapcycle_add_single_elem()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // even before initialize(), this is working
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
@@ -1162,7 +1176,7 @@ private:
             "map_asdasdasd.txt"
         };
 
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // even before initialize(), this is working
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
@@ -1202,7 +1216,7 @@ private:
 
     bool test_map_mapcycle_remove_by_name()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
@@ -1232,7 +1246,7 @@ private:
 
     bool test_map_mapcycle_remove_by_index()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
@@ -1267,7 +1281,7 @@ private:
            "map_warena.txt"
         };
 
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         // negative test before initialize(), positive tests after initialize()
         bool b = assertTrue(maps.mapcycleGet().empty(), "mapcycle empty 1");
@@ -1308,7 +1322,7 @@ private:
 
     bool test_map_mapcycle_clear()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         bool b = assertTrue(maps.initialize(), "init");
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
@@ -1329,7 +1343,7 @@ private:
 
     bool test_map_mapcycle_remove_non_existing()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         bool b = assertTrue(maps.initialize(), "init");
 
@@ -1348,7 +1362,7 @@ private:
 
     bool test_map_mapcycle_available_maps_synchronize()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
 
         bool b = assertTrue(maps.initialize(), "init");
         const auto nOriginalSize = maps.mapcycleGet().size();
@@ -1397,7 +1411,7 @@ private:
 
     bool test_map_mapcycle_add_available_maps_remove_by_name()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
@@ -1448,7 +1462,7 @@ private:
 
     bool test_map_mapcycle_add_available_maps_remove_multi_elem()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         const std::string sFirstMapName = maps.mapcycleGetCurrent();
@@ -1516,7 +1530,7 @@ private:
 
     bool test_map_mapcycle_add_available_maps_remove_all()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
@@ -1548,7 +1562,7 @@ private:
 
     bool test_map_mapcycle_remove_available_maps_add_by_name()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         // add this elem so we will have a valid thing to make positive test for
@@ -1602,7 +1616,7 @@ private:
 
     bool test_map_mapcycle_remove_available_maps_add_by_index()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         // add this elem so we will have a valid thing to make positive test for
@@ -1651,7 +1665,7 @@ private:
 
     bool test_map_mapcycle_remove_available_maps_add_multi_elem()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         const std::vector<std::string> vRemoveAddThese_Pass = {
@@ -1721,7 +1735,7 @@ private:
 
     bool test_map_mapcycle_remove_available_maps_add_all()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         const auto nOriginalSizeMapCycle = maps.mapcycleGet().size();
