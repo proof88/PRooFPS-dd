@@ -336,7 +336,9 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
             //if (player.isFalling())
             //{
             //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-            //    getConsole().EOLn("Finished falling for %d millisecs", static_cast<int>(nFallDurationMillisecs));
+            //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
+            //        static_cast<int>(nFallDurationMillisecs),
+            //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
             //}
         }
     }
@@ -410,7 +412,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     //if (player.isFalling())
                     //{
                     //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-                    //    getConsole().EOLn("Finished falling for %d millisecs", static_cast<int>(nFallDurationMillisecs));
+                    //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
+                    //        static_cast<int>(nFallDurationMillisecs),
+                    //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
                     //}
                     
                     player.SetCanFall(false);

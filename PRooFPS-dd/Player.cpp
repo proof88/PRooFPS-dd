@@ -91,6 +91,7 @@ proofps_dd::Player::Player(
     m_bFalling(true),
     m_bHasJustStartedFallingNaturally(true),
     m_bHasJustStartedFallingAfterJumpingStopped(false),
+    m_fHeightStartedFalling(0.f),
     m_bHasJustStoppedJumping(false),
     m_bCrouchingStateCurrent(false),
     m_bWantToStandup(true),
@@ -126,6 +127,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
+    m_fHeightStartedFalling(other.m_fHeightStartedFalling),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
     m_bWantToStandup(other.m_bWantToStandup),
@@ -158,6 +160,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
     m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
+    m_fHeightStartedFalling = other.m_fHeightStartedFalling;
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
     m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
     m_bWantToStandup = other.m_bWantToStandup;
@@ -353,6 +356,7 @@ void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
     if (val)
     {
         m_timeStartedFalling = std::chrono::steady_clock::now();
+        m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
     }
 }
@@ -368,6 +372,7 @@ void proofps_dd::Player::setHasJustStartedFallingAfterJumpingStoppedInThisTick(b
     if (val)
     {
         m_timeStartedFalling = std::chrono::steady_clock::now();
+        m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
     }
 }
@@ -380,6 +385,11 @@ bool proofps_dd::Player::isFalling() const
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeStartedFalling() const
 {
     return m_timeStartedFalling;
+}
+
+const float proofps_dd::Player::getHeightStartedFalling() const
+{
+    return m_fHeightStartedFalling;
 }
 
 bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()

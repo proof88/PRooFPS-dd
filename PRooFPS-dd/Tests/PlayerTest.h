@@ -262,6 +262,7 @@ private:
             assertTrue(player.getHasJustStartedFallingNaturallyInThisTick(), "getHasJustStartedFallingNaturallyInThisTick") &
             assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
             assertEquals(0, player.getTimeStartedFalling().time_since_epoch().count(), "time started falling") &
+            assertEquals(0.f, player.getHeightStartedFalling(), "height started falling") &
             assertFalse(player.getHasJustStoppedJumpingInThisTick(), "getHasJustStoppedJumpingInThisTick") &
             // TODO: maybe we should also check for object height
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
@@ -700,6 +701,9 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         
+        player.getPos().set(
+            PureVector(0.f, 5.f, 0.f)
+        );
         player.SetGravity(0.f);  // way to set isFalling to false
         bool b = assertFalse(player.isFalling(), "is falling 1");
         const auto timeBeforeJustStartedFallingAfterJumpingStopped = std::chrono::steady_clock::now();
@@ -708,6 +712,11 @@ private:
         b &= assertTrue(timeBeforeJustStartedFallingAfterJumpingStopped <= player.getTimeStartedFalling(), "time started falling after jumping stopped 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling after jumping stopped 1");
 
+        player.getPos().set(
+            PureVector(0.f, 1.f, 0.f)
+        );
+        b &= assertEquals(5.f, player.getHeightStartedFalling(), 0.001f, "height falling 1");
+
         player.SetGravity(0.f);  // way to set isFalling to false
         b &= assertFalse(player.isFalling(), "is falling 3");
         const auto timeBeforeJustStartedFallingNaturally = std::chrono::steady_clock::now();
@@ -715,6 +724,11 @@ private:
         b &= assertTrue(player.isFalling(), "is falling 4");
         b &= assertTrue(timeBeforeJustStartedFallingNaturally <= player.getTimeStartedFalling(), "time started falling naturally 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling naturally 2");
+
+        player.getPos().set(
+            PureVector(0.f, 0.f, 0.f)
+        );
+        b &= assertEquals(1.f, player.getHeightStartedFalling(), 0.001f, "height falling 2");
 
         return b;
     }
