@@ -18,8 +18,6 @@
 #include "Network/PgeNetwork.h"
 #include "PURE/include/external/PR00FsUltimateRenderingEngine.h"
 
-#include "Player.h"
-
 namespace proofps_dd
 {
 
@@ -37,6 +35,8 @@ namespace proofps_dd
         int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
         pge_network::PgeNetworkConnectionHandle m_connHandle;
     };
+
+    class Player;
 
     /**
     * GameMode class represent the Frag Table and the winning condition checks.

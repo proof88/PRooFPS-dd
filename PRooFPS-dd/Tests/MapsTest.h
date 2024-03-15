@@ -11,8 +11,8 @@
 */
 
 #include "UnitTests/UnitTest.h"
-#include "../Maps.h"
-#include "../PRooFPS-dd-packet.h"
+#include "Maps.h"
+#include "PRooFPS-dd-packet.h"
 
 class TestableMaps :
     public proofps_dd::Maps

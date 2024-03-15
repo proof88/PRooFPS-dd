@@ -17,8 +17,8 @@
 #include <string>
 
 #include "UnitTests/UnitTest.h"
-#include "../Player.h"
-#include "../PRooFPS-dd-packet.h"
+#include "Player.h"
+#include "PRooFPS-dd-packet.h"
 
 class PlayerTest :
     public UnitTest

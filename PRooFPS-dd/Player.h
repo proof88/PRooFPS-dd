@@ -22,6 +22,7 @@
 
 #include "Consts.h"
 #include "Durations.h"
+#include "GameMode.h"
 #include "GUI.h"
 #include "Maps.h"
 #include "Networking.h"
@@ -267,7 +268,11 @@ namespace proofps_dd
         void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void ServerRespawnPlayer(Player& player, bool restartGame);
         void updatePlayersOldValues();
-
+        bool handleUserUpdateFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserUpdateFromServer& msg,
+            PureObject3D& objXHair,
+            proofps_dd::GameMode& gameMode);
         bool handleDeathNotificationFromServer(
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
 

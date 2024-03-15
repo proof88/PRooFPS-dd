@@ -19,9 +19,9 @@
 #include "../../../PFL/PFL/winproof88.h"
 
 #include "UnitTests/UnitTest.h"
-#include "../Consts.h"
-#include "../GameMode.h"
-#include "../SharedWithTest.h"
+#include "Consts.h"
+#include "GameMode.h"
+#include "SharedWithTest.h"
 #include "InputSim.h"
 #include "Process.h"
 

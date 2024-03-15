@@ -10,6 +10,7 @@
 #include "stdafx.h"  // PCH
 #include "GameMode.h"
 
+#include "Player.h"
 
 /*
    ###########################################################################

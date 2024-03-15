@@ -151,9 +151,6 @@ namespace proofps_dd
         bool handleUserDisconnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserDisconnectedFromServer& msg);
-        bool handleUserUpdateFromServer(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserUpdateFromServer& msg);
         bool handleMapItemUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapItemUpdateFromServer& msg);

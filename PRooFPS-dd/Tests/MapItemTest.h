@@ -11,7 +11,7 @@
 */
 
 #include "UnitTests/UnitTest.h"
-#include "../MapItem.h"
+#include "MapItem.h"
 
 class MapItemTest :
     public UnitTest

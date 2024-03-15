@@ -14,7 +14,9 @@
 #include <thread>
 
 #include "UnitTests/UnitTest.h"
-#include "../GameMode.h"
+#include "GameMode.h"
+#include "Player.h"
+#include "PGE.h" // for Bullet and PgeCfgProfiles
 
 class GameModeTest :
     public UnitTest

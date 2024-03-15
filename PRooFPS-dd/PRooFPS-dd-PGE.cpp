@@ -483,7 +483,9 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgUserUpdateFromServer::id:
             bRet = handleUserUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
+                *m_pObjXHair,
+                *m_gameMode);
             break;
         case proofps_dd::MsgBulletUpdateFromServer::id:
             bRet = handleBulletUpdateFromServer(
@@ -1932,96 +1934,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
 
     return true;
 }  // handleUserDisconnected()
-
-bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserUpdateFromServer& msg)
-{
-    const auto it = m_mapPlayers.find(connHandleServerSide);
-    if (m_mapPlayers.end() == it)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
-    }
-
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
-
-    const bool bOriginalExpectingStartPos = it->second.isExpectingStartPos();
-    if (it->second.isExpectingStartPos())
-    {
-        it->second.SetExpectingStartPos(false);
-        // PPPKKKGGGGGG
-        it->second.getPos().set( PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z) );
-        it->second.getPos().commit(); // both server and client commits in this case
-    }
-
-    it->second.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
-    it->second.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-    it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
-
-    if (msg.m_fPlayerAngleY != -1.f)
-    {
-        //it->second.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
-        it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
-    }
-
-    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
-    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
-    
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
-    if (msg.m_bCrouch)
-    {
-        // server had already set stuff since it relayed this to clients, however
-        // there is no use of adding extra condition for checking if we are server or client
-        it->second.DoCrouchShared();
-    }
-    else
-    {
-        it->second.DoStandupShared();
-    }
-
-    it->second.getFrags() = msg.m_nFrags;
-    it->second.getDeaths() = msg.m_nDeaths;
-
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getHealth().getOld());
-    it->second.SetHealth(msg.m_nHealth);
-
-    if (msg.m_bRespawn)
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->second.getName().c_str());
-        HandlePlayerRespawned(it->second, *m_pObjXHair);
-    }
-    else
-    {
-        if ((it->second.getHealth().getOld() > 0) && (it->second.getHealth() == 0))
-        {
-            // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
-            // because it had already set health to 0 in previous frame
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->second.getName().c_str());
-            HandlePlayerDied(it->second, *m_pObjXHair, it->second.getServerSideConnectionHandle() /* ignored by client anyway */);
-
-            // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
-            // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
-            // Client does not invoke HandlePlayerDied() anywhere else.
-        }
-    }
-
-    // the only situation when game mode does not contain the player but we already receive update for the player is
-    // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later;
-    // note that it can also happen that we receive update here for a player who has not yet handshaked its name
-    // with the server, in that case the name is empty, that is why we also need to check emptiness!
-    if (!it->second.getName().empty() && !bOriginalExpectingStartPos && !m_gameMode->updatePlayer(it->second))
-    {
-        getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, it->second.getName().c_str());
-    }
-
-    if (!getNetwork().isServer())
-    {
-        // server already invoked updateOldValues() when it sent out this update message
-        it->second.updateOldValues();
-    }
-
-    return true;
-}  // handleUserUpdateFromServer()
 
 bool proofps_dd::PRooFPSddPGE::handleMapItemUpdateFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdateFromServer& msg)
 {
