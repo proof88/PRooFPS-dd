@@ -104,9 +104,6 @@ namespace proofps_dd
         proofps_dd::Durations m_durations;
         proofps_dd::Sounds m_sounds;
 
-        unsigned int m_nSendClientUpdatesInEveryNthTick;
-        unsigned int m_nSendClientUpdatesCntr;
-
         // ---------------------------------------------------------------------------
 
         void showLoadingScreen(int nProgress);
@@ -130,7 +127,6 @@ namespace proofps_dd
             const Player& player,
             bool bCamFollowsXHair,
             bool bCamTilting);
-        void serverSendUserUpdates();
         void RestartGame();
         void serverUpdateRespawnTimers();
         void UpdateGameMode();

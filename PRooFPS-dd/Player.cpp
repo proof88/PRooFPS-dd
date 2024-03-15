@@ -878,7 +878,9 @@ proofps_dd::PlayerHandling::PlayerHandling(
     m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
-    m_sounds(sounds)
+    m_sounds(sounds),
+    m_nSendClientUpdatesInEveryNthTick(1),
+    m_nSendClientUpdatesCntr(m_nSendClientUpdatesInEveryNthTick)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, gui, maps, sounds
@@ -1176,6 +1178,76 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
 
     return true;
 }  // handleUserDisconnected()
+
+void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Config& config)
+{
+    // Config::validate() makes sure neither getTickRate() nor getClientUpdateRate() return 0
+    m_nSendClientUpdatesInEveryNthTick = config.getTickRate() / config.getClientUpdateRate();
+    m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
+}
+
+void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& durations)
+{
+    if (!m_pge.getNetwork().isServer())
+    {
+        // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
+        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
+        assert(false);
+        return;
+    }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+    const bool bSendUserUpdates = (m_nSendClientUpdatesCntr == m_nSendClientUpdatesInEveryNthTick);
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+
+        if (bSendUserUpdates && player.isNetDirty())
+        {
+            pge_network::PgePacket newPktUserUpdate;
+            //getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
+            if (proofps_dd::MsgUserUpdateFromServer::initPkt(
+                newPktUserUpdate,
+                playerPair.second.getServerSideConnectionHandle(),
+                player.getPos().getNew().getX(),
+                player.getPos().getNew().getY(),
+                player.getPos().getNew().getZ(),
+                player.getAngleY(),
+                player.getWeaponAngle().getNew().getZ(),
+                player.getCrouchStateCurrent(),
+                player.getHealth(),
+                player.getRespawnFlag(),
+                player.getFrags(),
+                player.getDeaths()))
+            {
+                player.clearNetDirty();
+
+                // we always reset respawn flag here
+                playerPair.second.getRespawnFlag() = false;
+
+                // Note that health is not needed by server since it already has the updated health, but for convenience
+                // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
+                m_pge.getNetwork().getServer().sendToAll(newPktUserUpdate);
+                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
+            }
+            else
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+            }
+        }
+    }  // for playerPair
+
+    if (bSendUserUpdates)
+    {
+        m_nSendClientUpdatesCntr = 0;
+        // measure duration only if we really sent the user updates to clients
+        durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    }
+
+    ++m_nSendClientUpdatesCntr;
+} // serverSendUserUpdates()
 
 bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,

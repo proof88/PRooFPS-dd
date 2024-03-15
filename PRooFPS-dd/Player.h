@@ -20,6 +20,7 @@
 #include "PGE.h"
 #include "Config/PgeOldNewValue.h"
 
+#include "Config.h"
 #include "Consts.h"
 #include "Durations.h"
 #include "GameMode.h"
@@ -278,6 +279,8 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserDisconnectedFromServer& msg,
             proofps_dd::GameMode& gameMode);
+        void resetSendClientUpdatesCounter(proofps_dd::Config& config);
+        void serverSendUserUpdates(proofps_dd::Durations& durations);
         bool handleUserUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserUpdateFromServer& msg,
@@ -295,6 +298,9 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
+
+        unsigned int m_nSendClientUpdatesInEveryNthTick;
+        unsigned int m_nSendClientUpdatesCntr;
 
     }; // class PlayerHandling
 

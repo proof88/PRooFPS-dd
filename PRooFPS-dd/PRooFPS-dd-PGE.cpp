@@ -99,9 +99,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_bFpsFirstMeasure(true),
     m_pObjXHair(NULL),
     m_bWon(false),
-    m_fCameraMinY(0.0f),
-    m_nSendClientUpdatesInEveryNthTick(1),
-    m_nSendClientUpdatesCntr(m_nSendClientUpdatesInEveryNthTick)
+    m_fCameraMinY(0.0f)
 {
 }
 
@@ -398,9 +396,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 if (connect())
                 {
                     showXHairInCenter();
-                    // Config::validate() makes sure neither getTickRate() nor getClientUpdateRate() return 0
-                    m_nSendClientUpdatesInEveryNthTick = m_config.getTickRate() / m_config.getClientUpdateRate();
-                    m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
+                    resetSendClientUpdatesCounter(m_config);
                     m_timeSimulation = {};  // reset tick-based simulation time as well
                 }
                 else
@@ -732,7 +728,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         }  // for iPhyIter
     }  // checkWinningConditions()
     serverUpdateRespawnTimers();
-    serverSendUserUpdates();
+    serverSendUserUpdates(m_durations);
 }
 
 /**
@@ -1004,69 +1000,6 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
 } // CameraMovement()
-
-void proofps_dd::PRooFPSddPGE::serverSendUserUpdates()
-{
-    if (!getNetwork().isServer())
-    {
-        // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
-        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
-        assert(false);
-        return;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-    const bool bSendUserUpdates = (m_nSendClientUpdatesCntr == m_nSendClientUpdatesInEveryNthTick);
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-
-        if (bSendUserUpdates && player.isNetDirty())
-        {
-            pge_network::PgePacket newPktUserUpdate;
-            //getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
-            if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                newPktUserUpdate,
-                playerPair.second.getServerSideConnectionHandle(),
-                player.getPos().getNew().getX(),
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ(),
-                player.getAngleY(),
-                player.getWeaponAngle().getNew().getZ(),
-                player.getCrouchStateCurrent(),
-                player.getHealth(),
-                player.getRespawnFlag(),
-                player.getFrags(),
-                player.getDeaths()))
-            {
-                player.clearNetDirty();
-
-                // we always reset respawn flag here
-                playerPair.second.getRespawnFlag() = false;
-
-                // Note that health is not needed by server since it already has the updated health, but for convenience
-                // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
-                getNetwork().getServer().sendToAll(newPktUserUpdate);
-                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
-            }
-            else
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-            }
-        }
-    }  // for playerPair
-
-    if (bSendUserUpdates)
-    {
-        m_nSendClientUpdatesCntr = 0;
-        // measure duration only if we really sent the user updates to clients
-        m_durations.m_nSendUserUpdatesDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-    }
-
-    ++m_nSendClientUpdatesCntr;
-}
 
 void proofps_dd::PRooFPSddPGE::RestartGame()
 {
