@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "../../Console/CConsole/src/CConsole.h"
+#include "CConsole.h"
 #include "Config/PGEcfgVariable.h"
 #include "Pure/include/external/PR00FsUltimateRenderingEngine.h"
 

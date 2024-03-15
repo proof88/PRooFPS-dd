@@ -11,7 +11,7 @@
 
 #include <chrono>
 
-#include "../../../PFL/PFL/winproof88.h"
+#include "winproof88.h"
 
 namespace input_sim_test
 {

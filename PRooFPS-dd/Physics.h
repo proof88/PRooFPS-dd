@@ -11,7 +11,7 @@
 
 #include <map>
 
-#include "../../Console/CConsole/src/CConsole.h"
+#include "CConsole.h"
 
 #include "PGE.h"
 

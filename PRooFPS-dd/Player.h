@@ -15,7 +15,7 @@
 #include <variant>     // requires cpp17
 #include <vector>
 
-#include "../../Console/CConsole/src/CConsole.h"
+#include "CConsole.h"
 
 #include "PGE.h"
 #include "Config/PgeOldNewValue.h"

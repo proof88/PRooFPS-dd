@@ -12,9 +12,9 @@
 #include <iostream>
 #include <string>
 
-#include "../../../PFL/PFL/winproof88.h"
+#include "winproof88.h"
 
-#include "../../../Console/CConsole/src/CConsole.h"
+#include "CConsole.h"
 
 namespace process_stackoverflow_42531
 {

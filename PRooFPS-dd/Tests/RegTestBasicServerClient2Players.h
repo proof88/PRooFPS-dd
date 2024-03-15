@@ -16,7 +16,7 @@
 #ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
 #define WINPROOF88_ALLOW_VIRTUALKEYCODES
 #endif
-#include "../../../PFL/PFL/winproof88.h"
+#include "winproof88.h"
 
 #include "UnitTests/UnitTest.h"
 #include "Consts.h"

@@ -13,7 +13,7 @@
 #include <list>
 #include <string>
 
-#include "../../Console/CConsole/src/CConsole.h"
+#include "CConsole.h"
 
 #include "Network/PgeNetwork.h"
 #include "PURE/include/external/PR00FsUltimateRenderingEngine.h"
