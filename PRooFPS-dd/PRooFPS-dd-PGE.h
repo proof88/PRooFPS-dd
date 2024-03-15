@@ -113,6 +113,7 @@ namespace proofps_dd
         bool hasValidConnection() const;
         bool connect();
         void disconnect(bool bExitFromGameSession, const std::string& sExtraDebugText = "");
+
         void mainLoopConnectedServerOnlyOneTick(
             const long long& durElapsedMicrosecs);                      /**< Only server executes this. */
         void mainLoopConnectedClientOnlyOneTick(
@@ -121,6 +122,7 @@ namespace proofps_dd
             PureWindow& window);                                        /**< Both clients and listen-server executes this. */
         void mainLoopDisconnectedShared(
             PureWindow& window);                                        /**< Both clients and listen-server executes this. */
+
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
         void CameraMovement(
@@ -128,15 +130,17 @@ namespace proofps_dd
             bool bCamFollowsXHair,
             bool bCamTilting);
         void RestartGame();
-        void serverUpdateRespawnTimers();
         void UpdateGameMode();
+
         void serverPickupAndRespawnItems();
+
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserSetupFromServer& msg);
         bool handleUserNameChange(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserNameChange& msg);
+
         bool handleMapChangeFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapChangeFromServer& msg);

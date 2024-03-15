@@ -268,6 +268,9 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
         void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void ServerRespawnPlayer(Player& player, bool restartGame);
+        void serverUpdateRespawnTimers(
+            proofps_dd::GameMode& gameMode,
+            proofps_dd::Durations& durations);
         void updatePlayersOldValues();
         void WritePlayerList();
         bool handleUserConnected(

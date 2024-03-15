@@ -974,6 +974,35 @@ void proofps_dd::PlayerHandling::ServerRespawnPlayer(Player& player, bool restar
     }
 }
 
+void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
+    proofps_dd::GameMode& gameMode,
+    proofps_dd::Durations& durations)
+{
+    if (gameMode.checkWinningConditions())
+    {
+        return;
+    }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        if (playerPair.second.getHealth() > 0)
+        {
+            continue;
+        }
+
+        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
+        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
+        {
+            ServerRespawnPlayer(playerPair.second, false);
+        }
+    }
+
+    durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+} // serverUpdateRespawnTimers()
+
 void proofps_dd::PlayerHandling::updatePlayersOldValues()
 {
     for (auto& playerPair : m_mapPlayers)

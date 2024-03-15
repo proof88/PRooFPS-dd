@@ -727,7 +727,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             updatePlayersOldValues();
         }  // for iPhyIter
     }  // checkWinningConditions()
-    serverUpdateRespawnTimers();
+    serverUpdateRespawnTimers(*m_gameMode, m_durations);
     serverSendUserUpdates(m_durations);
 }
 
@@ -1044,33 +1044,6 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
     } // end server
 
     m_gameMode->restartWithoutRemovingPlayers(); // now both server and clients execute this on their own, in future only server should do this ...
-}
-
-void proofps_dd::PRooFPSddPGE::serverUpdateRespawnTimers()
-{
-    if (m_gameMode->checkWinningConditions())
-    {
-        return;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        if (playerPair.second.getHealth() > 0)
-        {
-            continue;
-        }
-
-        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
-        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
-        {
-            ServerRespawnPlayer(playerPair.second, false);
-        }
-    }
-
-    m_durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::PRooFPSddPGE::UpdateGameMode()
