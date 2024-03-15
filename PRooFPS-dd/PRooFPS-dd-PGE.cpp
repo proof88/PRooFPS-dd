@@ -476,7 +476,9 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgUserNameChange::id:
             bRet = handleUserNameChange(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChange>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChange>(pkt),
+                *m_gameMode,
+                getConfigProfiles());
             break;
         case proofps_dd::MsgUserCmdFromClient::id:
             bRet = handleUserCmdMoveFromClient(
@@ -1466,133 +1468,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 }  // handleUserSetupFromServer()
 
 
-bool proofps_dd::PRooFPSddPGE::handleUserNameChange(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserNameChange& msg)
-{
-    // TODO: make sure received user name is properly null-terminated! someone else could had sent that, e.g. malicious client or server
 
-    const auto playerIt = m_mapPlayers.find(connHandleServerSide);
-    if (m_mapPlayers.end() == playerIt)
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;
-    }
-
-    if (getNetwork().isServer())
-    {
-        // sanity check: connHandle should be server's if bCurrentClient is set
-        if ((connHandleServerSide == pge_network::ServerConnHandle) && (!msg.m_bCurrentClient))
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide != pge_network::ServerConnHandle: %u != %u, programming error!",
-                __func__, connHandleServerSide, pge_network::ServerConnHandle);
-            assert(false);
-            return false;
-        }
-
-        // this is a requested name so this is the place where we make sure name is unique!
-        char szNewUserName[sizeof(msg.m_szUserName)];
-        Player::genUniqueUserName(szNewUserName, msg.m_szUserName, m_mapPlayers);
-
-        if (strncmp(szNewUserName, msg.m_szUserName, sizeof(msg.m_szUserName)) == 0)
-        {
-            getConsole().OLn("PRooFPSddPGE::%s(): name change request accepted for connHandleServerSide: %u, old name: %s, new name: %s!",
-                __func__, connHandleServerSide, playerIt->second.getName().c_str(), szNewUserName);
-        }
-        else
-        {
-            getConsole().OLn("PRooFPSddPGE::%s(): name change request denied for connHandleServerSide: %u, old name: %s, requested: %s, new name: %s!",
-                __func__, connHandleServerSide, playerIt->second.getName().c_str(), msg.m_szUserName, szNewUserName);
-        }
-
-        // server updates player's name first
-        
-        playerIt->second.setName(szNewUserName);
-        // TODO: these commented lines below will be needed when we are allowing player name change WHILE already connected to the server
-        // TODO: check if such name is already present in frag table, if so, then rename
-        //if (!m_gameMode->renamePlayer(playerIt->second.getName().c_str(), szNewUserName))
-        //{
-        //    getConsole().EOLn("PRooFPSddPGE::%s(): m_gameMode->renamePlayer() FAILED!", __func__);
-        //    assert(false);
-        //    return false;
-        //}
-        if (!m_gameMode->addPlayer(playerIt->second))
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert player %s (%u) into GameMode!", __func__, szNewUserName, connHandleServerSide);
-            assert(false);
-            return false;
-        }
-
-        // then we let all clients except this one know about the name change
-        pge_network::PgePacket newPktUserNameChange;
-        if (!proofps_dd::MsgUserNameChange::initPkt(newPktUserNameChange, connHandleServerSide, false, szNewUserName))
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-            assert(false);
-            return false;
-        }
-        getNetwork().getServer().sendToAllClientsExcept(newPktUserNameChange, connHandleServerSide);
-
-        if (connHandleServerSide != pge_network::ServerConnHandle)
-        {
-            getNetwork().getServer().setDebugNickname(connHandleServerSide, szNewUserName);
-            // we also let this one know its own name change (only if this is not server)
-            proofps_dd::MsgUserNameChange& msgUserNameChange = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChange>(newPktUserNameChange);
-            msgUserNameChange.m_bCurrentClient = true;
-            getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
-        }
-
-        if (msg.m_bCurrentClient)
-        {
-            m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
-                (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
-                10, 30);
-        }
-    }
-    else
-    {
-        // if we are client, we MUST NOT receive empty user name from server, so in such case just terminate because there is something fishy!
-        if (strnlen(msg.m_szUserName, sizeof(msg.m_szUserName)) == 0)
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u, received empty user name from server!",
-                __func__, connHandleServerSide);
-            assert(false);  // in debug mode, raise the debugger
-            return false;   // for release mode
-        }
-
-
-        getConsole().OLn("PRooFPSddPGE::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
-            __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
-        
-        playerIt->second.setName(msg.m_szUserName);
-        // TODO: these commented lines below will be needed when we are allowing player name change WHILE already connected to the server
-        // TODO: check if such name is already present in frag table, if so, then rename
-        //if (!m_gameMode->renamePlayer(playerIt->second.getName(), msg.m_szUserName))
-        //{
-        //    getConsole().EOLn("PRooFPSddPGE::%s(): m_gameMode->renamePlayer() FAILED!", __func__);
-        //    assert(false);
-        //    return false;
-        //}
-        if (!m_gameMode->addPlayer(playerIt->second))
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert player %s (%u) into GameMode!", __func__, msg.m_szUserName, connHandleServerSide);
-            assert(false);
-            return false;
-        }
-
-        if (msg.m_bCurrentClient)
-        {
-            // due to difficulties caused by m_gui.textPermanent() it is easier to use it here than in handleUserSetupFromServer()
-            m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
-                (getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
-                10, 30);
-        }
-    }
-
-    getNetwork().WriteList();
-    WritePlayerList();
-
-    return true;
-
-}  // handleUserNameChange()
 
 
 bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapChangeFromServer& msg)

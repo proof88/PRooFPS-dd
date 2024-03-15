@@ -282,6 +282,11 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserDisconnectedFromServer& msg,
             proofps_dd::GameMode& gameMode);
+        bool handleUserNameChange(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserNameChange& msg,
+            proofps_dd::GameMode& gameMode,
+            PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
         void serverSendUserUpdates(proofps_dd::Durations& durations);
         bool handleUserUpdateFromServer(

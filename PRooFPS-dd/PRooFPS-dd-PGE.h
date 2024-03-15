@@ -137,9 +137,6 @@ namespace proofps_dd
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserSetupFromServer& msg);
-        bool handleUserNameChange(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserNameChange& msg);
 
         bool handleMapChangeFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
