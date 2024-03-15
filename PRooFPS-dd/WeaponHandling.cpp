@@ -476,20 +476,26 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         if (player.getHealth() == 0)
                         {
                             const auto itKiller = m_mapPlayers.find(bullet.getOwner());
+                            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
                             if (itKiller == m_mapPlayers.end())
                             {
+                                // if killer got disconnected before the kill, we can say the killer is the player itself, since
+                                // we still want to display the death notification without the killer's name, but we won't decrease
+                                // frag count for the player because HandlePlayerDied() is not doing that.
+                                nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
                                 //    __func__, playerPair.first.c_str());
                             }
                             else
                             {
+                                nKillerConnHandleServerSide = itKiller->first;
                                 itKiller->second.getFrags()++;
                                 bEndGame = gameMode.checkWinningConditions();
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }
                             // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                            HandlePlayerDied(player, objXHair);
+                            HandlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
                         }
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
@@ -796,13 +802,20 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             if (player.getHealth() == 0)
             {
                 const auto itKiller = m_mapPlayers.find(xpl.getOwner());
+                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
                 if (itKiller == m_mapPlayers.end())
                 {
+                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
+                    // we still want to display the death notification without the killer's name, but we won't decrease
+                    // frag count for the player because HandlePlayerDied() is not doing that.
+                    nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
                     //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
                     //    __func__, playerPair.first.c_str());
                 }
                 else
                 {
+                    nKillerConnHandleServerSide = itKiller->first;
+
                     // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
                     // in that case frags should be decremented!
                     if (player.getServerSideConnectionHandle() == xpl.getOwner())
@@ -817,7 +830,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                 }
                 // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                HandlePlayerDied(player, objXHair);
+                HandlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
             }
         }
     }

@@ -33,6 +33,7 @@ namespace proofps_dd
         MapItemUpdateFromServer,
         WpnUpdateFromServer,
         CurrentWpnUpdateFromServer,
+        DeathNotificationFromServer,
         LastMsgId
     };
 
@@ -52,7 +53,8 @@ namespace proofps_dd
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::BulletUpdateFromServer,      "MsgBulletUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer" },
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" }
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::DeathNotificationFromServer, "MsgDeathNotificationFromServer" }
     );
 
     // this way nobody will forget updating both the enum and the array
@@ -770,5 +772,46 @@ namespace proofps_dd
     static_assert(std::is_trivial_v<MsgCurrentWpnUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgCurrentWpnUpdateFromServer>);
     static_assert(std::is_standard_layout_v<MsgCurrentWpnUpdateFromServer>);
+
+    // server -> clients
+    // If someone dies, server notifies everyone about it.
+    // This is required because for clients it is not straightforward to find out who killed who.
+    // Although clients can recognize someone becoming dead by processing MsgUserUpdateFromServer, the killer is still unknown.
+    // And this also cannot be easily found out even from MsgBulletUpdateFromServer since clients dont do collision detection with bullets.
+    // So it is better if we introduce a specific message for this.
+    struct MsgDeathNotificationFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::DeathNotificationFromServer;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& nDeadConnHandleServerSide,
+            const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgDeathNotificationFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, nDeadConnHandleServerSide);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgDeathNotificationFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgDeathNotificationFromServer& msgDeathNotify = reinterpret_cast<proofps_dd::MsgDeathNotificationFromServer&>(*pMsgAppData);
+            msgDeathNotify.m_nKillerConnHandleServerSide = nKillerConnHandleServerSide;
+
+            return true;
+        }
+
+        pge_network::PgeNetworkConnectionHandle m_nKillerConnHandleServerSide;
+    };  // struct MsgDeathNotificationFromServer
+    static_assert(std::is_trivial_v<MsgDeathNotificationFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgDeathNotificationFromServer>);
+    static_assert(std::is_standard_layout_v<MsgDeathNotificationFromServer>);
+    
 
 } // namespace proofps_dd

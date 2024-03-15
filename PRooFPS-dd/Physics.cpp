@@ -332,7 +332,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if ((player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound
-            HandlePlayerDied(player, objXHair);
+            HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
             //if (player.isFalling())
             //{
             //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();

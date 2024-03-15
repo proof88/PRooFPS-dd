@@ -260,10 +260,16 @@ namespace proofps_dd
 
     protected:
 
-        void HandlePlayerDied(Player& player, PureObject3D& objXHair);
+        void HandlePlayerDied(
+            Player& player,
+            PureObject3D& objXHair,
+            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
         void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void ServerRespawnPlayer(Player& player, bool restartGame);
         void updatePlayersOldValues();
+
+        bool handleDeathNotificationFromServer(
+            pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
 
     private:
 

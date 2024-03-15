@@ -506,6 +506,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgCurrentWpnUpdateFromServer>(pkt));
             break;
+        case proofps_dd::MsgDeathNotificationFromServer::id:
+            bRet = handleDeathNotificationFromServer(
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgDeathNotificationFromServer>(pkt));
+            break;
         default:
             bRet = false;
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, proofpsAppMsgId);
@@ -1884,7 +1889,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserDisconnected(pge_network::PgeNetworkCon
     {
         // TEMPORARILY COMMENTED DUE TO: https://github.com/proof88/PRooFPS-dd/issues/261
         // When we are trying to join a server but we get bored and user presses ESCAPE, client's disconnect is invoked, which
-        // actually starts disconnecting because it thinks we are connected to server, end injects this userDisconnected pkt.
+        // actually starts disconnecting because it thinks we are connected to server, and injects this userDisconnected pkt.
         // 
         //getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         //assert(false); // in debug mode, try to understand this scenario
@@ -1992,7 +1997,11 @@ bool proofps_dd::PRooFPSddPGE::handleUserUpdateFromServer(pge_network::PgeNetwor
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->second.getName().c_str());
-            HandlePlayerDied(it->second, *m_pObjXHair);
+            HandlePlayerDied(it->second, *m_pObjXHair, it->second.getServerSideConnectionHandle() /* ignored by client anyway */);
+
+            // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
+            // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
+            // Client does not invoke HandlePlayerDied() anywhere else.
         }
     }
 
