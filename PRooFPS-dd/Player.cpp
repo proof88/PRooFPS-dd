@@ -985,6 +985,198 @@ void proofps_dd::PlayerHandling::updatePlayersOldValues()
     }
 }
 
+void proofps_dd::PlayerHandling::WritePlayerList()
+{
+    getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
+    for (const auto& playerPair : m_mapPlayers)
+    {
+        getConsole().OLn("Username: %s; connHandleServerSide: %u; address: %s",
+            playerPair.second.getName().c_str(), playerPair.second.getServerSideConnectionHandle(), playerPair.second.getIpAddress().c_str());
+    }
+    getConsole().OO();
+}
+
+bool proofps_dd::PlayerHandling::handleUserConnected(
+    pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+    const pge_network::MsgUserConnectedServerSelf& msg,
+    PGEcfgProfiles& cfgProfiles,
+    std::function<void(int)>& cbDisplayMapLoadingProgressUpdate)
+{
+    if (!m_pge.getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return false;
+    }
+
+    pge_network::PgePacket newPktUserUpdate;
+
+    if (msg.m_bCurrentClient)
+    {
+        // server is processing its own birth
+        if (m_mapPlayers.size() == 0)
+        {
+            // server already loads the map for itself at this point
+            if (m_maps.getFilename() != m_maps.getNextMapToBeLoaded())
+            {
+                // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
+                if (!m_maps.load(m_maps.getNextMapToBeLoaded().c_str(), cbDisplayMapLoadingProgressUpdate))
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_maps.getNextMapToBeLoaded().c_str());
+                    assert(false);
+                    return false;
+                }
+            }
+            else
+            {
+                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_maps.getNextMapToBeLoaded().c_str());
+            }
+
+            getConsole().OLn("PRooFPSddPGE::%s(): first (local) user connected and I'm server, so this is me (connHandleServerSide: %u)",
+                __func__, connHandleServerSide);
+
+            pge_network::PgePacket newPktSetup;
+            if (proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, true, msg.m_szIpAddress, m_maps.getNextMapToBeLoaded().c_str()))
+            {
+                const PureVector& vecStartPos = cfgProfiles.getVars()["testing"].getAsBool() ?
+                    m_maps.getLeftMostSpawnpoint() :
+                    m_maps.getRandomSpawnpoint();
+
+                if (proofps_dd::MsgUserUpdateFromServer::initPkt(
+                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
+                {
+                    // server injects this msg to self so resources for player will be allocated
+                    m_pge.getNetwork().getServer().send(newPktSetup);
+                    m_pge.getNetwork().getServer().send(newPktUserUpdate);
+                }
+                else
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    return false;
+                }
+            }
+            else
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return false;
+            }
+        }
+        else
+        {
+            // cannot happen
+            getConsole().EOLn("PRooFPSddPGE::%s(): user (connHandleServerSide: %u) connected with bCurrentClient as true but it is not me, CANNOT HAPPEN!",
+                __func__, connHandleServerSide);
+            assert(false);
+            return false;
+        }
+    }
+    else
+    {
+        if (connHandleServerSide == pge_network::ServerConnHandle)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): server user (connHandleServerSide: %u) connected but map m_bCurrentClient is false, CANNOT HAPPEN!",
+                __func__, connHandleServerSide);
+            assert(false);
+            return false;
+        }
+        // server is processing another user's birth
+        getConsole().OLn("PRooFPSddPGE::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
+            __func__, connHandleServerSide, msg.m_szIpAddress);
+
+        pge_network::PgePacket newPktSetup;
+        if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, msg.m_szIpAddress, m_maps.getFilename()))
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+
+        const PureVector& vecStartPos = cfgProfiles.getVars()["testing"].getAsBool() ?
+            m_maps.getRightMostSpawnpoint() :
+            m_maps.getRandomSpawnpoint();
+
+        if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+
+        // server injects this msg to self so resources for player will be allocated
+        m_pge.getNetwork().getServer().send(newPktSetup);
+        m_pge.getNetwork().getServer().send(newPktUserUpdate);
+
+        // inform all other clients about this new user
+        m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktSetup, connHandleServerSide);
+        m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktUserUpdate, connHandleServerSide);
+
+        // now we send this msg to the client with this bool flag set so client will know it is their connect
+        proofps_dd::MsgUserSetupFromServer& msgUserSetup = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserSetupFromServer>(newPktSetup);
+        msgUserSetup.m_bCurrentClient = true;
+        m_pge.getNetwork().getServer().send(newPktSetup, connHandleServerSide);
+        m_pge.getNetwork().getServer().send(newPktUserUpdate);   // TODO: why is this here? we already sent it few lines earlier.
+    }
+
+    return true;
+}  // handleUserConnected()
+
+bool proofps_dd::PlayerHandling::handleUserDisconnected(
+    pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+    const pge_network::MsgUserDisconnectedFromServer&,
+    proofps_dd::GameMode& gameMode)
+{
+    const auto playerIt = m_mapPlayers.find(connHandleServerSide);
+    if (m_mapPlayers.end() == playerIt)
+    {
+        // TEMPORARILY COMMENTED DUE TO: https://github.com/proof88/PRooFPS-dd/issues/261
+        // When we are trying to join a server but we get bored and user presses ESCAPE, client's disconnect is invoked, which
+        // actually starts disconnecting because it thinks we are connected to server, and injects this userDisconnected pkt.
+        // 
+        //getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        //assert(false); // in debug mode, try to understand this scenario
+        return true; // in release mode, dont terminate
+    }
+
+    // Server should not remove all players when it it notified with its connHandle being disconnected, because in that case
+    // all players are expected to be removed by subsequent calls into this function with their connHandle as their connection state transitions.
+    // There will be userDisconnected message for all players, including the server as well, so eventually this way m_mapPlayers will be
+    // cleared out in multiple steps on server-side.
+    // However, client won't be notified about all clients disconnecting in this case, but it is quite trivial when the server itself disconnects.
+    // So that is why we manually get rid of all players in case of client.
+    // We need m_mapPlayers to be cleared out by the end of processing all disconnections, the reasion is explained in hasValidConnection().
+    const bool bClientShouldRemoveAllPlayers = !m_pge.getNetwork().isServer() && (connHandleServerSide == pge_network::ServerConnHandle);
+    if (m_pge.getNetwork().isServer())
+    {
+        getConsole().OLn(
+            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm server",
+            __func__, playerIt->second.getName().c_str(), connHandleServerSide);
+    }
+    else
+    {
+        getConsole().OLn(
+            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm client",
+            __func__, playerIt->second.getName().c_str(), connHandleServerSide);
+    }
+
+    gameMode.removePlayer(playerIt->second);
+    m_mapPlayers.erase(playerIt);
+
+    if (bClientShouldRemoveAllPlayers)
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
+        gameMode.restart();
+        m_mapPlayers.clear();
+    }
+
+    m_pge.getNetwork().WriteList();
+    WritePlayerList();
+
+    return true;
+}  // handleUserDisconnected()
+
 bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserUpdateFromServer& msg,

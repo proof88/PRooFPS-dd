@@ -135,7 +135,6 @@ namespace proofps_dd
         void serverUpdateRespawnTimers();
         void UpdateGameMode();
         void serverPickupAndRespawnItems();
-        void WritePlayerList();
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserSetupFromServer& msg);
@@ -145,12 +144,6 @@ namespace proofps_dd
         bool handleMapChangeFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapChangeFromServer& msg);
-        bool handleUserConnected(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const pge_network::MsgUserConnectedServerSelf& msg);
-        bool handleUserDisconnected(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const pge_network::MsgUserDisconnectedFromServer& msg);
         bool handleMapItemUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapItemUpdateFromServer& msg);

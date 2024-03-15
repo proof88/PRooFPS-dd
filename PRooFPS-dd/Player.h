@@ -268,6 +268,16 @@ namespace proofps_dd
         void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void ServerRespawnPlayer(Player& player, bool restartGame);
         void updatePlayersOldValues();
+        void WritePlayerList();
+        bool handleUserConnected(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const pge_network::MsgUserConnectedServerSelf& msg,
+            PGEcfgProfiles& cfgProfiles,
+            std::function<void(int)>& cbDisplayMapLoadingProgressUpdate);
+        bool handleUserDisconnected(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const pge_network::MsgUserDisconnectedFromServer& msg,
+            proofps_dd::GameMode& gameMode);
         bool handleUserUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserUpdateFromServer& msg,
