@@ -29,7 +29,7 @@ namespace proofps_dd
 
         enum class MenuState
         {
-            None,       /* Menu is not displayed (gaming) */
+            None,       /* Menu is not displayed (we are in-game) */
             Main,
             CreateGame,
             JoinGame,
@@ -53,8 +53,12 @@ namespace proofps_dd
         void initialize();
         void shutdown();
 
+        /* Main Menu Handling */
+
         const MenuState& getMenuState() const;
         void resetMenuState(bool bExitingFromGameSession);
+
+        /* Misc */
 
         void showLoadingScreen(
             int nProgress,
@@ -74,9 +78,21 @@ namespace proofps_dd
         static Config* m_pConfig;
         static Maps* m_pMaps;
         static Networking* m_pNetworking;
+
+        /* Main Menu Handling */
+
         static MenuState m_currentMenu;
 
-        static float getCenterPosXForText(const std::string& text);
+        /* Misc */
+
+        static PureObject3D* m_pObjLoadingScreenBg;
+        static PureObject3D* m_pObjLoadingScreenLogoImg;
+        static std::string m_sAvailableMapsListForForceSelectComboBox;
+
+        // ---------------------------------------------------------------------------
+
+        /* Main Menu Handling */
+
         static void addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar);
         static float calcContentStartY(const float& fContentHeight, const float& fRemainingSpaceY);
         static void drawMainMenu(const float& fRemainingSpaceY);
@@ -84,13 +100,15 @@ namespace proofps_dd
         static void drawCreateGameMenu(const float& fRemainingSpaceY);
         static void drawJoinGameMenu(const float& fRemainingSpaceY);
         static void drawSettingsMenu(const float& fRemainingSpaceY);
-        static void drawMainMenuCb(); // this needs to be static, causing a lot of other members also need to be static
+        static void drawWindowForMainMenu();
+
+        /* Misc */
+
+        static float getCenterPosXForText(const std::string& text);
+
+        static void drawDearImGuiCb(); // this needs to be static, causing a lot of other members also need to be static
 
         // ---------------------------------------------------------------------------
-
-        static PureObject3D* m_pObjLoadingScreenBg;
-        static PureObject3D* m_pObjLoadingScreenLogoImg;
-        static std::string m_sAvailableMapsListForForceSelectComboBox;
 
         GUI();
         ~GUI();

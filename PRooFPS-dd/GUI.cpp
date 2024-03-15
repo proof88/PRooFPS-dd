@@ -20,6 +20,7 @@
 #include "Maps.h"
 #include "PRooFPS-dd-packet.h"
 
+
 // ############################### PUBLIC ################################
 
 
@@ -56,7 +57,7 @@ void proofps_dd::GUI::initialize()
     resetMenuState(false);
 
     m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
-    m_pPge->getPure().getUImanager().setGuiDrawCallback(drawMainMenuCb);
+    m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 
     // This bg plane is used to cover game objects such as map, players, etc.,
     // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
@@ -287,11 +288,6 @@ PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
-
-float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
-{
-    return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
-}
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
 {
@@ -1026,20 +1022,8 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 } // drawSettingsMenu
 
-void proofps_dd::GUI::drawMainMenuCb()
+void proofps_dd::GUI::drawWindowForMainMenu()
 {
-
-    /*
-        There should be a CVAR for enabling/disabling the menu.
-        Reg tests will disable it from command line.
-    */
-    //pge.getPure().getWindow().SetCursorVisible(true/false);
-
-    if ((m_currentMenu == MenuState::None) || (m_currentMenu == MenuState::Exiting))
-    {
-        return;
-    }
-
     m_pPge->getPure().getWindow().SetCursorVisible(true);
 
     // Dear ImGui coordinates are the same as OS desktop/native coordinates which means that operating with ImGui::GetMainViewport() is
@@ -1050,7 +1034,7 @@ void proofps_dd::GUI::drawMainMenuCb()
     const float fLogoImgHeight = m_pObjLoadingScreenLogoImg->getSizeVec().getY();
     constexpr float fMenuWndWidth = 470.f; // just put here the widest submenu's required width
     const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight;
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x/2 - fMenuWndWidth/2, fLogoImgHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("WndMainMenu", nullptr,
@@ -1077,7 +1061,29 @@ void proofps_dd::GUI::drawMainMenuCb()
 
     }
     ImGui::End();
+}
+
+/**
+ * Primary GUI draw function called back by PURE.
+ */
+void proofps_dd::GUI::drawDearImGuiCb()
+{
+    if (m_currentMenu == MenuState::None)
+    {
+        // we are in-game
+        return;
+    } else if (m_currentMenu == MenuState::Exiting)
+    {
+        return;
+    }
+
+    drawWindowForMainMenu();
 } // drawMainMenuCb()
+
+float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
+{
+    return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
+}
 
 proofps_dd::GUI::GUI()
 {
