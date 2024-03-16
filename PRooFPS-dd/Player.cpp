@@ -95,6 +95,7 @@ proofps_dd::Player::Player(
     m_bHasJustStoppedJumping(false),
     m_bCrouchingStateCurrent(false),
     m_bWantToStandup(true),
+    m_fSomersaultAngleZ(0.f),
     m_bRunning(true),
     m_bAllowJump(false),
     m_bWillJump(false),
@@ -131,6 +132,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
     m_bWantToStandup(other.m_bWantToStandup),
+    m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
     m_bRunning(other.m_bRunning),
     m_bAllowJump(other.m_bAllowJump),
     m_bWillJump(other.m_bWillJump),
@@ -164,6 +166,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
     m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
     m_bWantToStandup = other.m_bWantToStandup;
+    m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
     m_bRunning = other.m_bRunning;
     m_bAllowJump = other.m_bAllowJump;
     m_bWillJump = other.m_bWillJump;
@@ -397,6 +400,81 @@ bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
     return m_bHasJustStoppedJumping;
 }
 
+void proofps_dd::Player::startSomersault()
+{
+    // sanity check
+    if (isSomersaulting() || !isJumping() || !getCrouchStateCurrent())
+    {
+        return;
+    }
+
+    // just set the initial direction by setting a small value, so stepSomersaultAngle() will know in which direction it should change angle
+    //if (m_vecJumpForce.getX() >= 0.f)
+    //{
+    //    m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? -0.1f : 0.1f;
+    //}
+    //else
+    //{
+    //    m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? 0.1f : -0.1f;
+    //}
+
+    switch (m_strafe)
+    {
+    case Strafe::LEFT:
+        m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? 0.1f : -0.1f;
+        break;
+    case Strafe::RIGHT:
+        m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? -0.1f : 0.1f;
+        break;
+    default /* Strafe::NONE */:
+        m_fSomersaultAngleZ = 0.1f;
+    }
+
+    m_vecJumpForce.SetX( m_vecJumpForce.getX() * 2 );
+    m_fGravity *= 2;
+}
+
+bool proofps_dd::Player::isSomersaulting() const
+{
+    return m_fSomersaultAngleZ != 0.f;
+}
+
+float proofps_dd::Player::getSomersaultAngle() const
+{
+    return m_fSomersaultAngleZ;
+}
+
+void proofps_dd::Player::stepSomersaultAngle(float angle)
+{
+    if (m_fSomersaultAngleZ >= 0.f)
+    {
+        m_fSomersaultAngleZ += angle;
+        if (m_fSomersaultAngleZ >= 360.f)
+        {
+            m_fSomersaultAngleZ = 0.f;
+        }
+    }
+    else
+    {
+        m_fSomersaultAngleZ -= angle;
+        if (m_fSomersaultAngleZ <= -360.f)
+        {
+            m_fSomersaultAngleZ = 0.f;
+        }
+    }
+
+    getObject3D()->getAngleVec().SetZ( m_fSomersaultAngleZ );
+    
+    // during somersaulting wpn angle is not freely modifiable, it follows player angle!
+    getWeaponAngle().set( PureVector(0.f, getObject3D()->getAngleVec().getY(), m_fSomersaultAngleZ) );
+    Weapon* const wpn = getWeaponManager().getCurrentWeapon();
+    if (wpn)
+    {
+        wpn->getObject3D().getAngleVec().Set(0.f, getObject3D()->getAngleVec().getY(), m_fSomersaultAngleZ);
+    }
+    
+}
+
 void proofps_dd::Player::SetHealth(int value) {
     getHealth().set(std::max(0, std::min(value, 100)));
 }
@@ -429,8 +507,9 @@ void proofps_dd::Player::Jump() {
     m_bFalling = false;
     m_fGravity = getCrouchInput().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
-    m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
-    m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
+    // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
+    //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
+    //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
     //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
 }
 

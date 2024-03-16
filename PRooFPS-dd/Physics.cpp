@@ -356,6 +356,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
     const float GAME_PLAYER_SPEED_WALK = 2.0f / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = 4.0f / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = 1.5f / nPhysicsRate;
+    constexpr unsigned int GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS = 1000;
+    const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / (static_cast<float>(GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS) / nPhysicsRate);
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -448,7 +450,12 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             } // end for i
         } // end if YPPos changed
 
-        if (player.getWantToStandup())
+        if (player.isSomersaulting())
+        {
+            player.stepSomersaultAngle( GAME_PLAYER_SOMERSAULT_ROTATE_STEP );
+        }
+
+        if (player.getWantToStandup() && !player.isSomersaulting())
         {
             if (player.getCrouchStateCurrent())
             {

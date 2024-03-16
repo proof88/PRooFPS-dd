@@ -81,11 +81,14 @@ namespace proofps_dd
 
         PgeOldNewValue<int>& getHealth();
         const PgeOldNewValue<int>& getHealth() const;
+
         PgeOldNewValue<PureVector>& getPos();
         const PgeOldNewValue<PureVector>& getPos() const;
         PgeOldNewValue<TPureFloat>& getAngleY();
         const PgeOldNewValue<TPureFloat>& getAngleY() const;
+
         PureObject3D* getObject3D() const;
+
         float getGravity() const;
         bool isJumping() const;
         bool canFall() const;
@@ -97,8 +100,15 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeStartedFalling() const;
         const float getHeightStartedFalling() const;
         bool& getHasJustStoppedJumpingInThisTick();
+
+        void startSomersault();
+        bool isSomersaulting() const;
+        float getSomersaultAngle() const;
+        void stepSomersaultAngle(float angle);
+
         void SetHealth(int value);
         void SetGravity(float value);
+
         bool jumpAllowed() const;
         void SetJumpAllowed(bool b);
         void Jump();
@@ -106,22 +116,31 @@ namespace proofps_dd
         bool getWillJumpInNextTick() const;
         void setWillJumpInNextTick(bool flag);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
+
         void DoDamage(int dmg);
         void SetCanFall(bool state);
+
         bool isRunning() const;
         void SetRun(bool state);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleRun() const;
+
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
+
         bool& getAttack();
         bool attack();
+
         void Die(bool bMe, bool bServer);
         void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
+
         PureVector& getJumpForce();
         PureVector& getImpactForce();
+
         bool isExpectingStartPos() const;
         void SetExpectingStartPos(bool b);
+
         PgeOldNewValue<PureVector>& getWeaponAngle();
+
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
         bool& getWantToStandup();
@@ -129,12 +148,15 @@ namespace proofps_dd
         void DoCrouchShared();
         void DoStandupServer(const float& fNewPosY);
         void DoStandupShared();
+
         std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
         bool& getRespawnFlag();
+
         PgeOldNewValue<int>& getFrags();
         const PgeOldNewValue<int>& getFrags() const;
         PgeOldNewValue<int>& getDeaths();
         const PgeOldNewValue<int>& getDeaths() const;
+
         bool canTakeItem(const MapItem& item) const;
         void TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 
@@ -186,13 +208,16 @@ namespace proofps_dd
 
         PureVector m_vecJumpForce;
         PureVector m_vecImpactForce;
+
         PureObject3D* m_pObj;
         PureTexture* m_pTexPlayerStand;
         PureTexture* m_pTexPlayerCrouch;
+
         WeaponManager m_wpnMgr;
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;
+
         float m_fGravity;
         bool m_bJumping;
         bool b_mCanFall;
@@ -218,15 +243,22 @@ namespace proofps_dd
             higher level layers will know the player is not crouching anymore.
             Default true. */
         bool m_bWantToStandup;
+
+        float m_fSomersaultAngleZ;
         
         bool m_bRunning;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
+
         bool m_bAllowJump;
         bool m_bWillJump;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
+
         bool m_bExpectingStartPos;
+
         proofps_dd::Strafe m_strafe;  // continuous op
+
         bool m_bAttack;               // continuous op
+
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn;
 

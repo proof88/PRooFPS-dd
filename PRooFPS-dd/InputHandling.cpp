@@ -216,10 +216,10 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             {
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
-                if (player.getCrouchInput().getNew() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
+                if (player.getCrouchInput().getNew() && !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
                 {
-                    getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
-                    // TODO: initiate somersault
+                    //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
+                    player.startSomersault();
                 }
             }
             else
@@ -756,27 +756,38 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
         static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count());
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-    if (wpn)
+    if (player.isSomersaulting())
     {
-        // my xhair is used to update weapon angle
-        wpn->UpdatePositions(player.getObject3D()->getPosVec(), objXHair.getPosVec());
-        // PPPKKKGGGGGG
-        player.getWeaponAngle().set(
-            PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
-        );
-
-        // TODO: on the long run there should be a more general function that calculates angle because now player angle also depends on
-        // weapon angle, however in future we might end up not having a weapon!
-
-        // player should also look in the same horizontal direction as the weapon
-        player.getAngleY() = wpn->getObject3D().getAngleVec().getY();
+        if (wpn)
+        {
+            // during somersaulting, weapon and player angles are not controlled by player input but Physics class
+            wpn->UpdatePosition(player.getObject3D()->getPosVec());
+        }
     }
     else
     {
-        // this is just a fallback case if for any reason we dont have a weapon
-        player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
+        if (wpn)
+        {
+            // my xhair is used to update weapon angle
+            wpn->UpdatePositions(player.getObject3D()->getPosVec(), objXHair.getPosVec());
+            // PPPKKKGGGGGG
+            player.getWeaponAngle().set(
+                PureVector(0.f, wpn->getObject3D().getAngleVec().getY(), wpn->getObject3D().getAngleVec().getZ())
+            );
+
+            // TODO: on the long run there should be a more general function that calculates angle because now player angle also depends on
+            // weapon angle, however in future we might end up not having a weapon!
+
+            // player should also look in the same horizontal direction as the weapon
+            player.getAngleY() = wpn->getObject3D().getAngleVec().getY();
+        }
+        else
+        {
+            // this is just a fallback case if for any reason we dont have a weapon
+            player.getAngleY() = (objXHair.getPosVec().getX() < 0.f) ? 0.f : 180.f;
+        }
+        player.getObject3D()->getAngleVec().SetY(player.getAngleY());
     }
-    player.getObject3D()->getAngleVec().SetY(player.getAngleY());
 
     /* following condition is example of simple rate-limiting with time interval */
     const bool bMustSendPlayerAngleY =
