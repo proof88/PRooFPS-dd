@@ -205,35 +205,50 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 
     if (pktUserCmdMove.m_bJumpAction)
     {
-        if (!player.isJumping() &&
-            !player.canFall())
+        //getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
+
+        // jump-induced actions can be initiated only if we cannot fall at the moment (I always forget though what does "cannot fall" mean)
+        if (!player.canFall())
         {
             const auto nMillisecsSinceLastJump =
                 static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count());
-            if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
+            if (player.isJumping())
             {
-                // should NOT had received this from client this early (actually could, see explanation below)
-                getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %u, req: %u)!",
-                    __func__, sClientUserName.c_str(), nMillisecsSinceLastJump, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
-                // For now, dont terminate. Reason: since client does the rate limit on its side, it can happen that the required time elapsed
-                // at client-side but did not elapse at server-side. Imagine client sends a packet to server, the ping is a bit high. Client
-                // already starts to wait the required delay before sending next packet. Server receives the packet 30 ms later and starts
-                // measuring time. In the meantime client sends next packet, ping is lower, delay is much less, so server receives the packet
-                // a few msecs earlier than the required delay elapsed on server-side.
-                // So we should not terminate but log these occurrences to understand how many such occasions are there on LAN party.
-                // A way to solve this issue in reliable way is that client must always send its timestamp as well to the server, so
-                // server can check if required time elapsed based on client's sent timestamp compared to the previously sent timestamp.
-                // To avoid cheating, server must also decide if client timestamp is valid: server must save the initial client timestamp
-                // upon client connect, and it can check if game session time duration is actually matching the real elapsed time with
-                // client's elapsed time.
-                //assert(false);  // in debug mode, terminate the game
+                // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
+                // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
+                if (player.getCrouchInput().getNew() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
+                {
+                    getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
+                    // TODO: initiate somersault
+                }
             }
             else
             {
-                // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
-                // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it to the
-                // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
-                player.setWillJumpInNextTick(true);
+                if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
+                {
+                    // should NOT had received this from client this early (actually could, see explanation below)
+                    getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %u, req: %u)!",
+                        __func__, sClientUserName.c_str(), nMillisecsSinceLastJump, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+                    // For now, dont terminate. Reason: since client does the rate limit on its side, it can happen that the required time elapsed
+                    // at client-side but did not elapse at server-side. Imagine client sends a packet to server, the ping is a bit high. Client
+                    // already starts to wait the required delay before sending next packet. Server receives the packet 30 ms later and starts
+                    // measuring time. In the meantime client sends next packet, ping is lower, delay is much less, so server receives the packet
+                    // a few msecs earlier than the required delay elapsed on server-side.
+                    // So we should not terminate but log these occurrences to understand how many such occasions are there on LAN party.
+                    // A way to solve this issue in reliable way is that client must always send its timestamp as well to the server, so
+                    // server can check if required time elapsed based on client's sent timestamp compared to the previously sent timestamp.
+                    // To avoid cheating, server must also decide if client timestamp is valid: server must save the initial client timestamp
+                    // upon client connect, and it can check if game session time duration is actually matching the real elapsed time with
+                    // client's elapsed time.
+                    //assert(false);  // in debug mode, terminate the game
+                }
+                else
+                {
+                    // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
+                    // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it to the
+                    // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
+                    player.setWillJumpInNextTick(true);
+                }
             }
         }
     }

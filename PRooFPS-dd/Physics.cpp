@@ -255,6 +255,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
 
     const float GAME_IMPACT_FORCE_Y_CHANGE = PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
 
+    //const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
@@ -309,13 +311,18 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
                 if (player.getHasJustStoppedJumpingInThisTick())
                 {
                     player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
+                    //const auto nMillisecsJumpDuration =
+                    //    static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count());
+                    //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
+                    //    player.getGravity(),
+                    //    static_cast<int>(nMillisecsJumpDuration));
                 }
                 else
                 {
+                    //getConsole().EOLn("Started falling naturally: %f", player.getGravity());
                     player.setHasJustStartedFallingNaturallyInThisTick(true);
                 }
                 player.getHasJustStoppedJumpingInThisTick() = false;
-                //getConsole().EOLn("asd: %f", player.getGravity());
             }
             player.SetCanFall(true);
             // player gravity cannot go below GAME_FALL_GRAVITY_MIN
@@ -335,7 +342,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
             HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
             //if (player.isFalling())
             //{
-            //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeStartedFalling()).count();
             //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
             //        static_cast<int>(nFallDurationMillisecs),
             //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
