@@ -609,7 +609,9 @@ private:
             player.getPos().commit();
             player.getPos().set(PureVector(2.f, 4.f, 8.f));
 
-            const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
+            // we modify only the X-component of jumpForce in Jump(), since other components are not used at all!
+            //const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
+            const PureVector vecExpectedForce(player.getPos().getNew().getX() - player.getPos().getOld().getX(), 0.f, 0.f);
 
             player.getCrouchInput().set(i == 1);
             const float fExpectedInitialGravity = player.getCrouchInput() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;

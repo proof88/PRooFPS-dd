@@ -409,15 +409,6 @@ void proofps_dd::Player::startSomersault()
     }
 
     // just set the initial direction by setting a small value, so stepSomersaultAngle() will know in which direction it should change angle
-    //if (m_vecJumpForce.getX() >= 0.f)
-    //{
-    //    m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? -0.1f : 0.1f;
-    //}
-    //else
-    //{
-    //    m_fSomersaultAngleZ = (getObject3D()->getAngleVec().getY() == 0.f) ? 0.1f : -0.1f;
-    //}
-
     switch (m_strafe)
     {
     case Strafe::LEFT:

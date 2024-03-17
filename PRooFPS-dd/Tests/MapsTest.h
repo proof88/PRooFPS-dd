@@ -623,11 +623,10 @@ private:
 
             // intentionally changing mapcycle position
             maps.mapcycleNext();
-            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
             sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
             b &= assertEquals(maps.mapcycleGetCurrent(), sRet, "server decide 3");
             b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 3");
-            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 3");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
             
             m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].Set("testtest.txt");
             sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
@@ -636,7 +635,7 @@ private:
             
             // by design we require to fast-forward to last map, because this way the game will switch to the FIRST mapcycle map AFTER
             // playing on CVAR_SV_MAP
-            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 4");
+            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 3");
         }
 
         return b;
@@ -808,6 +807,7 @@ private:
         maps.availableMapsRefresh();
 
         std::set<std::string> vExpectedAvailableMaps = {
+            "map_mutans.txt",
             "map_test_bad_assignment.txt",
             "map_test_bad_order.txt",
             "map_test_good.txt",
@@ -1015,7 +1015,6 @@ private:
             // just make sure our current is also changed, we are testing it to be the original after reload
             maps.mapcycleNext();
             b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
-            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
 
             b &= assertTrue(maps.mapcycleReload(), "reload 2");
             b &= assertNotNull(maps.mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2");
@@ -1024,7 +1023,7 @@ private:
                 "mapcycleGetAsCharPtrArray() 2");
             b &= assertTrue(originalMapcycle == maps.mapcycleGet(), "equals");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
-            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
         }
 
         return b;
@@ -1099,14 +1098,13 @@ private:
         {
             maps.mapcycleNext();
             b &= assertNotEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 1");
-            b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
 
             const std::string sAllegedFirstMapName = maps.mapcycleRewindToFirst();
             b &= assertFalse(sAllegedFirstMapName.empty(), "mapcycle rewind to first 2 a");
             b &= assertEquals(sFirstMapName, sAllegedFirstMapName, "mapcycle rewind to first 2 b");
             b &= assertEquals("map_warhouse.txt", sAllegedFirstMapName, "mapcycle rewind to first 2 c specific name");
             b &= assertEquals(sFirstMapName, maps.mapcycleGetCurrent(), "current 2");
-            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
+            b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle islast 2");
         }
 
         return b;
@@ -1131,7 +1129,7 @@ private:
             const std::string sLastMapName = maps.mapcycleForwardToLast();
             b &= assertFalse(sLastMapName.empty(), "mapcycle forward to last 2 a");
             b &= assertNotEquals(sFirstMapName, sLastMapName, "mapcycle forward to last 2 b");
-            b &= assertEquals("map_warena.txt", sLastMapName, "mapcycle forward to last 2 c specific name");
+            b &= assertEquals("map_mutans.txt", sLastMapName, "mapcycle forward to last 2 c specific name");
             b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle islast 3");
         }
 
