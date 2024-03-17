@@ -219,7 +219,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
                 if (player.getCrouchInput().getNew() && !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
                 {
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
-                    //player.startSomersault(); // TODO: re-enable after release of v0.2.1.0!
+                    player.startSomersault();
                 }
             }
             else
