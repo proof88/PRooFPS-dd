@@ -27,25 +27,15 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.1.6.1 Private Beta is here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).  
+The latest available download version [v0.2.1.0 Private Beta is here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
 [Version history is here.](HISTORY.md)
 
-### Run as Server
+### Run the Game
 
-To start as server, simply run `PRooFPS-dd.exe`.
-
-### Run as Client
-
-To start as client, simply run the convenient:
- - `PRooFPS-dd-as-client.bat` (Windows) or
- - `PRooFPS-dd-as-client.sh` (Linux).
-
-To specify IP-address of the server for the client, change `cl_server_ip` CVAR in `gamedata/profiles/default/default.cfg`.  
-
-Alternatively, you can use command line arguments as well, e.g.:  
-`./PRooFPS-dd.exe --net_server=false --cl_server_ip=192.168.1.100`
+Simply run `PRooFPS-dd.exe`.  
+From the main menu, you can either start a new server or join to an existing one.
 
 ### Keyboard, Mouse
 
@@ -54,11 +44,10 @@ Alternatively, you can use command line arguments as well, e.g.:
  - **SPACE:** jump;
  - **LCTRL:** crouch/duck;
  - **R**: reload current weapon;
- - **2,3 / Mouse Wheel**: change to pistol or machine gun;
+ - **2,3,4 / Mouse Wheel**: change weapon (pistol, machine gun, bazooka);
  - **Mouse Click**: attack (fire weapon);
  - **TAB:** show frag table;
- - **M:** switch to next map based on mapcycle.txt;
- - **BACKSPACE:** show GUI demo;
+ - **M:** switch to next map based on mapcycle.txt (server only);
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
