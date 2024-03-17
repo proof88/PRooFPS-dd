@@ -1,0 +1,87 @@
+#                                    .                  .
+#.-###+.....-++-.........-#+....-++-...++-..-+++...-++-..........................    . .  ..   ..  .
+#.######--+#####-..-##+..-#######+-#####---+####+.-####+.+##+-...-#####+....-+###+.....---........ .
+#.##-+#######+##+.-####-..---+--##.##...--+######.+#####-####+.-########-.-########-..+###-.........
+#.##+--+#+--+++##.##++#+..-####-##-##---..-#+--##-+##.##-##-#+-##+.+####--##+.--.###.-##+#+...-++-..
+#.##-+#######+-##.##.##-..+#++#-##-##....-#+.--##-+#+.-###++#-##++#####-.##-#####-##+-##-#+.-+####-.
+#.+#+-#+##+-##-#+-##-##...##-##-##.##...-##.---+#++#+..+##-##-##.+#+-...+#++##-+##.##.##-#+-###-+#-.
+#.-##-###..-##-#+-##-###++##.##.##.##..-##-----.##+#-...-+-##-###.###+..##-##-..##-##.##-#+##+.##+..
+#..+##+##..-##+#+-###.+####-##-+##-##.-##-----+.##-#-..-.-##+.-###-+##-.##-##-..##-##.#+-###-.+#+..
+#...####+...+###-.-####+-.-##-+++#-##-+#+-#####++#.#+-++####.-++##+.##-.##-##+-+##.##.#+-+.+#--##-..
+#....-+-....--+-....-+#####+....-####+-#+#+---####.###+###+.+####+.###-.+#+-#####.##+-#+-#####.##-..
+#....................-------.....-++-+-++--...-##+.-+---.-.-+----++##-..-##+-##-+###-+#++##++#+-##-.
+#...............-+--......----........-.-....-..-..-.--.--.+--++-..++-...-########-..-####-.-##+##-.
+#.............-+-...........----.......-.-...-....--.-.--+++----....++-...-#####+.....+##+...-####-.
+#...........-+-.....------.------------...-...-.-.--..-...-..........-+-.....-................-++-..
+
+# Changelog:
+# ==========
+#
+# v0.9 - FarsangLAN vol. 3 pre-release for playtest
+#
+# v1.0 - Fixed missing textures
+#      - Updated weapon spawn tiles
+#
+
+Name = Mutans
+Gravity = 2.0
+
+B = fg-chat-top.bmp
+D = fg-chat-bottom.bmp
+F = fg-download.bmp
+G = fg-forum.bmp
+H = fg-login.bmp
+I = fg-poll-top.bmp
+J = fg-poll-bottom.bmp
+K = fg-news-left.bmp
+L = fg-news-middle.bmp
+Q = fg-menu.bmp
+T = fg-news-fill.bmp
+
+a = bg-dark.bmp
+c = bg-light.bmp
+e = bg-hangman.bmp
+n = bg-lama.bmp
+o = bg-sponzor-top.bmp
+r = bg-sponzor-bottom.bmp
+v = bg-uprage.bmp
+u = bg-war.bmp
+w = bg-mutans-tl.bmp
+x = bg-mutans-tr.bmp
+y = bg-mutans-bl.bmp
+z = bg-mutans-br.bmp
+
+c                                            cccccccc
+c                      cccccccc              cccwxccc   cccccccc
+c   c   c   cccccccc   cccwxccc              cccyzccc   cccwxccc   cccccccc   c   c   c
+c c   c   c cccwxccc   cccyzccc   cccccccc   cccScccc   cccyzccc   cccwxccc c   c   c c
+c   c   c   cccyzccc   cccScccc   cccwxccc   cc2ccccc   cccScccc   cccyzccc   c   c   c
+c c   c   c cccScccc   cc2ccccc   cccyzccc   aaLHLLaa   cc2ccccc   cccScccc c   c   c c
+c   c   c   cc2ccccc   aaLHLLaa   cccScccc   aaaaaaaa   aaLHLLaa   cc2ccccc   c   c   c
+a a   a   a aaLHLLaa   aaaaaaaa   cc2ccccc   aaaaaaaa   aaaaaaaa   aaLHLLaa a   a   a a
+a   a   a   aaaaaaaa   aaaaaaaa   aaLHLLaa   aaaaaaaa   aaaaaaaa   aaaaaaaa   a   a   a
+a a   a   a aaaaaaaa   aaaaoaaa 4 aaaaaaaa   aaaaaaaa 4 aaaoaaaa   aaaaaaaa a   a   a a
+a   a   a   aaaaaaaaa aaaaaraaa B aaaaaaaa   aaaaaaaa I aaaraaaaa aaaaaaaaa   a   a   a
+a a   a   a +aaaaaaFLLLaaaaaaaa D aaaaaaaa   aaaaaaaa J aaaaaaaQLLLaaaaaaa+ a   a   a a
+a   a   a   aKLLLLLLLLLLLLLLLLa   aaaaaaaa   aaaaaaaa   aKLLLLLLLLLLLLLLLLa   a   a   a
+c c   c  Tc ccccccccccccccccccc   aaaaaaaa 4 aaaaaaaa   ccccccccccccccccccc c   c   c c
+c   c   cT Tcccwxcccccccccccecc   aaaoaaaa F aaaaoaaa   ceccccccccccccwxccc   c   c   c
+c c   c  T Tcccyzcccccccccccccc   aaaraaaaa aaaaaraaa   ccccccccccccccyzccc c   c   c c
+c   c   cT TcccSccccccccccccncc   aaaaaaaGLLLaaaaaaaa   cnccccccccccccScccc   c   c   c
+c c   c  T Tcc2cccccccccccccccc   aKLLLLLLLLLLLLLLLLa   ccccccccccccc2ccccc c   c   c c
+a   a   aT TaaLHLLaaaaaaaaaavaa + aaaaaaaa   aaaaaaaa + avaaaaaaaaaaaLHLLaa   a   a   a
+a a   a  T Taaaaaaaaaaaaaaaaaaa I aaaaaaea   anaaaaaa B aaaaaaaaaaaaaaaaaaa a   a   a a
+a   a   aT Taaaaaaaaaaaaaaaauaa J aaaaaaaa   aaaaaaaa D auaaaaaaaaaaaaaaaaa   a   a   a
+a a   a  T TaaaaaaaaQaaGLLLaaaaa aaaaaaana   aeaaaaaaa aaaaaaaFaaGLLLaaaaaa a   a   a a
+a   a   aT T+aaaaFLLLLa+4+aaaaaaaaaaaaaaaa   aaaaaaaaaaaaaaQLLLLaa+4+aaaaa+   a   a   a
+a a   a  T TKLLLLLLLLLLLLLLLLLLLLLLLLLLLLa 4 aKLLLLLLLLLLLLLLLLLLLLLLLLLLLL a   a   a a
+a   a   aT  a+4+aaaaaaaaaaaaaaaaaaaaaaaaaa I aaaaaaaaaaaaaaaaaaaaaaaaaa+4+a  Ta   a   a
+a a   a  TKLLLLLLLaaaaaaaaaaaaaaaaaaaaaava J auaaaaaaaaaaaaaaaaaaaaaaKLLLLLLLL  a   a a
+a   a   a   aaaaaaaKLLLaaaaaaaaaaaaFaaaaaaa aaaaaaaFaaaaaaaaaaaaKLLLaaaaaaa   a   a   a
+a a   a 3 a a+4+aaaaaaaaFLLLaaaaaaGLLa+aGLLLLLLa+aGLLaaaaaaFLLLaaaaaaaa+4+a a 3 a   a a
+a   a   a   KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL   a   a   a
+a a   a   a TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT a   a   a a
+a   a   a   TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT   a   a   a
+a a   a   a TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT a   a   a a
+
+# end
