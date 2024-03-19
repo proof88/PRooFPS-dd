@@ -38,6 +38,8 @@ namespace proofps_dd
     {
     public:
 
+        static constexpr char* CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH = "sv_somersault_mid_air_auto_crouch";
+
         static const char* getLoggerModuleName();
         static void proofps_dd::Player::genUniqueUserName(
             char szNewUserName[proofps_dd::MsgUserNameChange::nUserNameBufferLength],

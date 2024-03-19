@@ -216,7 +216,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
             {
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
-                if (player.getCrouchInput().getNew() && !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
+                if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
                 {
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
                     player.startSomersault();

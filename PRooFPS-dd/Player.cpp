@@ -400,12 +400,29 @@ bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
     return m_bHasJustStoppedJumping;
 }
 
+/**
+ * Somersault aka front-/backflip.
+ * The idea is this function sets an initial positive or negative value for the angle based on strafe direction, and then
+ * Physics class will take care of the full somersaulting by periodic calls to stepSomersaultAngle().
+ */
 void proofps_dd::Player::startSomersault()
 {
     // sanity check
-    if (isSomersaulting() || !isJumping() || !getCrouchStateCurrent())
+    if (isSomersaulting() || !isJumping())
     {
         return;
+    }
+
+    if (!getCrouchStateCurrent())
+    {
+        if (m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
+        {
+            DoCrouchServer(true /* pull up legs because we are jumping */);
+        }
+        else
+        {
+            return;
+        }
     }
 
     // just set the initial direction by setting a small value, so stepSomersaultAngle() will know in which direction it should change angle
@@ -435,6 +452,13 @@ float proofps_dd::Player::getSomersaultAngle() const
     return m_fSomersaultAngleZ;
 }
 
+/**
+ * Stepping the somersault angle i.e. changing the angle in the proper direction.
+ * The idea is that we set the initial angle by a call to startSomersault() and then in consecutive physics timesteps
+ * we call stepSomersaultAngle() with a value calculated by the physics engine.
+ * Somersaulting will stop once stepSomersaultAngle() finishes a complete roll/flip.
+ * This also means that currently only 1 full roll/flip is done before isSomersaulting() returns false again.
+ */
 void proofps_dd::Player::stepSomersaultAngle(float angle)
 {
     if (m_fSomersaultAngleZ >= 0.f)
@@ -456,7 +480,7 @@ void proofps_dd::Player::stepSomersaultAngle(float angle)
 
     getObject3D()->getAngleVec().SetZ( m_fSomersaultAngleZ );
     
-    // during somersaulting wpn angle is not freely modifiable, it follows player angle!
+    // during somersaulting wpn angle is not freely modifiable, it strictly follows player angle!
     getWeaponAngle().set( PureVector(0.f, getObject3D()->getAngleVec().getY(), m_fSomersaultAngleZ) );
     Weapon* const wpn = getWeaponManager().getCurrentWeapon();
     if (wpn)
@@ -635,8 +659,8 @@ bool& proofps_dd::Player::getWantToStandup()
 * Invokes getPos().commit() too so not be called careless from anywhere.
 * Should be invoked only by server physics at the beginning of physics calculations.
 * 
-* @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards.
-*                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center.
+* @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards (should be used mid-air).
+*                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center (should be used on ground).
 */
 void proofps_dd::Player::DoCrouchServer(bool bPullUpLegs)
 {

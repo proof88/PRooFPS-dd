@@ -35,7 +35,7 @@ namespace proofps_dd
         };
 
         static constexpr unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
-        static constexpr unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 100;
+        static constexpr unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 50;
         static constexpr unsigned int m_nKeyPressSomersaultMaximumWaitMilliseconds = 300;
         static constexpr unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
         static constexpr unsigned int m_nPlayerAngleYSendIntervalMilliseconds = 100;

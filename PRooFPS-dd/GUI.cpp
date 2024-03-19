@@ -18,6 +18,7 @@
 
 #include "Consts.h"
 #include "Maps.h"
+#include "Player.h"
 #include "PRooFPS-dd-packet.h"
 
 
@@ -733,6 +734,18 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             }
         }
         ImGui::EndGroup();
+
+        PGEcfgVariable& cvarSvSomersaultMidAirAutoCrouch = m_pPge->getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
+        ImGui::Text("Auto-Crouch for Mid-Air Somersault:");
+        ImGui::SameLine();
+        bool bSvSomersaultMidAirAutoCrouch = cvarSvSomersaultMidAirAutoCrouch.getAsBool();
+        if (ImGui::Checkbox("##cbSomersaultMidAirAutoCrouch", &bSvSomersaultMidAirAutoCrouch))
+        {
+            cvarSvSomersaultMidAirAutoCrouch.Set(bSvSomersaultMidAirAutoCrouch);
+        }
     } // end Misc
     ImGui::Unindent();
 
