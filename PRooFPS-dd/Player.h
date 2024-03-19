@@ -145,6 +145,7 @@ namespace proofps_dd
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
+        const bool& isJumpingInitiatedFromCrouching() const;
         bool& getWantToStandup();
         void DoCrouchServer(bool bPullUpLegs);
         void DoCrouchShared();
@@ -172,7 +173,7 @@ namespace proofps_dd
             OvPos,
             OvAngleY,
             OvWpnAngle,
-            OvCrouch
+            OvCrouchInput
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -204,7 +205,7 @@ namespace proofps_dd
                 /** Current state of player crouch input, regardless of current crouching state.
                     Player is setting it as per input.
                     Continuous op. */
-                {OldNewValueName::OvCrouch,   PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
         };
         bool m_bNetDirty;
 
@@ -222,7 +223,7 @@ namespace proofps_dd
 
         float m_fGravity;
         bool m_bJumping;
-        bool b_mCanFall;
+        bool m_bCanFall;
         bool m_bFalling;
         bool m_bHasJustStartedFallingNaturally;
         bool m_bHasJustStartedFallingAfterJumpingStopped;
@@ -230,23 +231,28 @@ namespace proofps_dd
         float m_fHeightStartedFalling;
         bool m_bHasJustStoppedJumping;
         
-        /** True when player is crouching currently, regardless of current input.
-            This should be replicated to all clients, this should affect the visuals of the player.
+        /** True when player is crouching currently, regardless of current input (OvCrouchInput).
+            This should be replicated to all clients and should affect the visuals of the player.
             Can be set to true by input, but only server physics engine can set it to false, or a respawn event.
+            Somersaulting can also set it to true if mid-air auto-crouch is enabled (CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH).
             Default false. */
-        bool m_bCrouchingStateCurrent;   
+        bool m_bCrouchingStateCurrent;
+
+        /** We need to save current crouching state at the moment of initiating jump-up, so that we can check in any later moment of
+            jumping up if somersaulting can be initiated: it must not be initiated when player was already crouching at the moment of jump-up. */
+        bool m_bCrouchingWasActiveWhenInitiatedJump;
 
         /** True when player wants standing position as per input, regardless of currently crouching or not.
             This is an input to the physics engine.
             Unlike getCrouchInput(), this is persistent across frames.
             If this is true and the player is currently crouching, the physics engine will contantly check if there is
             possibility to stand up i.e. there is nothing blocking us from standing up.
-            If the physics engine finds enough space to stand up, it will flip m_bCrouchingStateCurrent to false so
-            higher level layers will know the player is not crouching anymore.
+            If the physics engine finds enough space to stand up and other conditions are also fulfilled (e.g. not somersaulting), it
+            will flip m_bCrouchingStateCurrent to false so higher level layers will know the player is not crouching anymore.
             Default true. */
         bool m_bWantToStandup;
 
-        float m_fSomersaultAngleZ;
+        float m_fSomersaultAngleZ;  /**< If non-zero, there is ongoing somersaulting handled by physics. */
         
         bool m_bRunning;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;

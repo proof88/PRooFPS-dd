@@ -87,13 +87,14 @@ proofps_dd::Player::Player(
     m_gfx(gfx),
     m_fGravity(0.f),
     m_bJumping(false),
-    b_mCanFall(true),
+    m_bCanFall(true),
     m_bFalling(true),
     m_bHasJustStartedFallingNaturally(true),
     m_bHasJustStartedFallingAfterJumpingStopped(false),
     m_fHeightStartedFalling(0.f),
     m_bHasJustStoppedJumping(false),
     m_bCrouchingStateCurrent(false),
+    m_bCrouchingWasActiveWhenInitiatedJump(false),
     m_bWantToStandup(true),
     m_fSomersaultAngleZ(0.f),
     m_bRunning(true),
@@ -124,13 +125,14 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_gfx(other.m_gfx),
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
-    b_mCanFall(other.b_mCanFall),
+    m_bCanFall(other.m_bCanFall),
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
     m_fHeightStartedFalling(other.m_fHeightStartedFalling),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
+    m_bCrouchingWasActiveWhenInitiatedJump(other.m_bCrouchingWasActiveWhenInitiatedJump),
     m_bWantToStandup(other.m_bWantToStandup),
     m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
     m_bRunning(other.m_bRunning),
@@ -158,13 +160,14 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_gfx = other.m_gfx;
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
-    b_mCanFall = other.b_mCanFall;
+    m_bCanFall = other.m_bCanFall;
     m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
     m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
     m_fHeightStartedFalling = other.m_fHeightStartedFalling;
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
     m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
+    m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
     m_bWantToStandup = other.m_bWantToStandup;
     m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
     m_bRunning = other.m_bRunning;
@@ -345,7 +348,7 @@ bool proofps_dd::Player::isJumping() const
 
 bool proofps_dd::Player::canFall() const
 {
-    return b_mCanFall;
+    return m_bCanFall;
 }
 
 bool proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick() const
@@ -408,7 +411,7 @@ bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
 void proofps_dd::Player::startSomersault()
 {
     // sanity check
-    if (isSomersaulting() || !isJumping())
+    if (isSomersaulting() || !isJumping() || isJumpingInitiatedFromCrouching())
     {
         return;
     }
@@ -520,7 +523,9 @@ void proofps_dd::Player::Jump() {
     m_bJumping = true;
     m_bWillJump = false;
     m_bFalling = false;
-    m_fGravity = getCrouchInput().getNew() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+    m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
+    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
     //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
@@ -562,7 +567,7 @@ void proofps_dd::Player::DoDamage(int dmg) {
 }
 
 void proofps_dd::Player::SetCanFall(bool state) {
-    b_mCanFall = state;
+    m_bCanFall = state;
 }
 
 bool proofps_dd::Player::isRunning() const
@@ -641,12 +646,17 @@ PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouch));
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouchInput));
 }
 
 bool& proofps_dd::Player::getCrouchStateCurrent()
 {
     return m_bCrouchingStateCurrent;
+}
+
+const bool& proofps_dd::Player::isJumpingInitiatedFromCrouching() const
+{
+    return m_bCrouchingWasActiveWhenInitiatedJump;
 }
 
 bool& proofps_dd::Player::getWantToStandup()
