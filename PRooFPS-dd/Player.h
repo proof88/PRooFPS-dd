@@ -107,6 +107,7 @@ namespace proofps_dd
         bool isSomersaulting() const;
         float getSomersaultAngle() const;
         void stepSomersaultAngle(float angle);
+        void resetSomersault();
 
         void SetHealth(int value);
         void SetGravity(float value);

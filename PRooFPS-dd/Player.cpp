@@ -493,6 +493,11 @@ void proofps_dd::Player::stepSomersaultAngle(float angle)
     
 }
 
+void proofps_dd::Player::resetSomersault()
+{
+    m_fSomersaultAngleZ = 0.f;
+}
+
 void proofps_dd::Player::SetHealth(int value) {
     getHealth().set(std::max(0, std::min(value, 100)));
 }
@@ -674,6 +679,11 @@ bool& proofps_dd::Player::getWantToStandup()
 */
 void proofps_dd::Player::DoCrouchServer(bool bPullUpLegs)
 {
+    if (getCrouchStateCurrent())
+    {
+        return;
+    }
+
     // Scaling change is legal since player object will be smaller thus no unexpected collision can happen;
     // position change is also legal since player area stays within previous standing area.
     // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
