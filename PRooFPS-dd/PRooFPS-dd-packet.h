@@ -479,6 +479,7 @@ namespace proofps_dd
             const TPureFloat y,
             const TPureFloat z,
             TPureFloat fPlayerAngleY,
+            TPureFloat fPlayerAngleZ,
             TPureFloat fWpnAngleZ,
             bool bCrouch,
             int nHealth,
@@ -504,6 +505,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_pos.y = y;
             msgUserCmdUpdate.m_pos.z = z;
             msgUserCmdUpdate.m_fPlayerAngleY = fPlayerAngleY;
+            msgUserCmdUpdate.m_fPlayerAngleZ = fPlayerAngleZ;
             msgUserCmdUpdate.m_fWpnAngleZ = fWpnAngleZ;
             msgUserCmdUpdate.m_bCrouch = bCrouch;
             msgUserCmdUpdate.m_nHealth = nHealth;
@@ -518,6 +520,7 @@ namespace proofps_dd
         // basically what we have here should be the data evaluated by Player.isDirty() and handled in handleUserUpdateFromServer().
         TXYZ m_pos;
         TPureFloat m_fPlayerAngleY;
+        TPureFloat m_fPlayerAngleZ;
         TPureFloat m_fWpnAngleZ;
         bool m_bCrouch;
         int m_nHealth;

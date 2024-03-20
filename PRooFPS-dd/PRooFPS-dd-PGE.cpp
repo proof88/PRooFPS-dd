@@ -1337,6 +1337,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getObject3D()->getPosVec().getY(),
                     it.second.getObject3D()->getPosVec().getZ(),
                     it.second.getObject3D()->getAngleVec().getY(),
+                    it.second.getObject3D()->getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                     false,
                     it.second.getHealth(),

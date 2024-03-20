@@ -88,6 +88,8 @@ namespace proofps_dd
         const PgeOldNewValue<PureVector>& getPos() const;
         PgeOldNewValue<TPureFloat>& getAngleY();
         const PgeOldNewValue<TPureFloat>& getAngleY() const;
+        PgeOldNewValue<TPureFloat>& getAngleZ();
+        const PgeOldNewValue<TPureFloat>& getAngleZ() const;
 
         PureObject3D* getObject3D() const;
 
@@ -173,6 +175,7 @@ namespace proofps_dd
             OvDeaths,
             OvPos,
             OvAngleY,
+            OvAngleZ,
             OvWpnAngle,
             OvCrouchInput
         };
@@ -202,6 +205,7 @@ namespace proofps_dd
                 {OldNewValueName::OvDeaths,   PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvPos,      PgeOldNewValue<PureVector>()},
                 {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
+                {OldNewValueName::OvAngleZ,   PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()},
                 /** Current state of player crouch input, regardless of current crouching state.
                     Player is setting it as per input.

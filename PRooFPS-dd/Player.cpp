@@ -331,6 +331,18 @@ const PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY() const
     return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleY));
 }
 
+PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleZ()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleZ));
+}
+
+const PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleZ() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleZ));
+}
+
 PureObject3D* proofps_dd::Player::getObject3D() const
 {
     return m_pObj;
@@ -440,6 +452,7 @@ void proofps_dd::Player::startSomersault()
     default /* Strafe::NONE */:
         m_fSomersaultAngleZ = 0.1f;
     }
+    getAngleZ() = m_fSomersaultAngleZ;
 
     m_vecJumpForce.SetX( m_vecJumpForce.getX() * 2 );
     m_fGravity *= 2;
@@ -482,6 +495,7 @@ void proofps_dd::Player::stepSomersaultAngle(float angle)
     }
 
     getObject3D()->getAngleVec().SetZ( m_fSomersaultAngleZ );
+    getAngleZ() = m_fSomersaultAngleZ;
     
     // during somersaulting wpn angle is not freely modifiable, it strictly follows player angle!
     getWeaponAngle().set( PureVector(0.f, getObject3D()->getAngleVec().getY(), m_fSomersaultAngleZ) );
@@ -496,6 +510,7 @@ void proofps_dd::Player::stepSomersaultAngle(float angle)
 void proofps_dd::Player::resetSomersault()
 {
     m_fSomersaultAngleZ = 0.f;
+    getAngleZ() = 0.f;
 }
 
 void proofps_dd::Player::SetHealth(int value) {
@@ -1192,7 +1207,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     m_maps.getRandomSpawnpoint();
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
+                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 100, false, 0, 0))
                 {
                     // server injects this msg to self so resources for player will be allocated
                     m_pge.getNetwork().getServer().send(newPktSetup);
@@ -1247,7 +1262,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             m_maps.getRandomSpawnpoint();
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, false, 100, false, 0, 0))
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 100, false, 0, 0))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -1493,6 +1508,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
                 player.getPos().getNew().getY(),
                 player.getPos().getNew().getZ(),
                 player.getAngleY(),
+                player.getAngleZ(),
                 player.getWeaponAngle().getNew().getZ(),
                 player.getCrouchStateCurrent(),
                 player.getHealth(),
@@ -1561,6 +1577,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         //it->second.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
         it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
+    it->second.getObject3D()->getAngleVec().SetZ(msg.m_fPlayerAngleZ);
 
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
     it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
