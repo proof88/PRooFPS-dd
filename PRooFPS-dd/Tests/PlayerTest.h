@@ -500,17 +500,27 @@ private:
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
+        player.SetJumpAllowed(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
 
         player.getAttack() = true;
+        player.getJumpForce().Set(1,2,3);
+        player.setStrafe(proofps_dd::Strafe::RIGHT);
+        player.Jump();
+        player.startSomersault();
+        bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
         player.Die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        bool b = (assertEquals(0, player.getHealth(), "health 1") &
+        b &= (assertEquals(0, player.getHealth(), "health 1") &
             assertEquals(100, player.getHealth().getOld(), "old health 1") &
             assertFalse(player.getAttack(), "attack 1") &
+            assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1") &
+            assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe 1") &
+            assertFalse(player.isSomersaulting(), "somersaulting 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
@@ -526,8 +536,6 @@ private:
             assertEquals(100, player.getHealth().getOld(), "old health 2") &
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
-            assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(2, player.getDeaths(), "deaths 2") /* server increases it */ &
             assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
 

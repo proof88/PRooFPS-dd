@@ -771,6 +771,10 @@ void proofps_dd::Player::Die(bool bMe, bool bServer)
     }
     if (bServer)
     {
+        setStrafe(Strafe::NONE);
+        getJumpForce().SetZero();
+        resetSomersault();
+
         // server instance has the right to modify death count, clients will just receive it in update
         getDeaths()++;
         //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, getDeaths());
