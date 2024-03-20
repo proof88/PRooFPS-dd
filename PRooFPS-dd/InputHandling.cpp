@@ -136,8 +136,9 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     }
 
     auto& player = it->second;
+    const auto& playerConst = player;
 
-    if (player.getHealth() == 0)
+    if (playerConst.getHealth() == 0)
     {
         if (pktUserCmdMove.m_bShootAction)
         {
@@ -166,7 +167,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
         }
         else
         {
-            player.SetRun(!player.isRunning());
+            player.setRun(!player.isRunning());
         }
     }
 
@@ -246,7 +247,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
                 {
                     // Since we are doing the actual strafe movement in the Physics class, the forces we would like to record at the moment
                     // of jumping up are available there, not here. So here we are just recording that we will do the jump: delaying it to the
-                    // Physics class, so inside there at the correct place Jump() will be invoked and correct forces will be saved.
+                    // Physics class, so inside there at the correct place jump() will be invoked and correct forces will be saved.
                     player.setWillJumpInNextTick(true);
                 }
             }
@@ -453,7 +454,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
         gameMode.showObjectives(m_pge.getPure(), m_pge.getNetwork());
     }
 
-    if (player.getHealth() == 0)
+    const auto& playerConst = player;
+
+    if (playerConst.getHealth() == 0)
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
@@ -675,7 +678,8 @@ bool proofps_dd::InputHandling::mouse(
     }
     m_bPrevAttack = m_bAttack;
 
-    if (player.getHealth() == 0)
+    const auto& playerConst = player;
+    if (playerConst.getHealth() == 0)
     {
         return false;
     }
@@ -994,7 +998,8 @@ void proofps_dd::InputHandling::RegTestDumpToFile(
     fRegTestDump << std::endl;
 
     fRegTestDump << "Player Info: Health" << std::endl;
-    fRegTestDump << "  " << player.getHealth().getNew() << std::endl;
+    const auto& playerConst = player;
+    fRegTestDump << "  " << playerConst.getHealth().getNew() << std::endl;
 
     fRegTestDump.flush();
     fRegTestDump.close();

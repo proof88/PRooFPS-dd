@@ -303,11 +303,11 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
         {
             if (player.getPos().getNew().getY() != player.getPos().getOld().getY())
             {   // still could fall in previous frame, so jumping is still disallowed ...
-                player.SetJumpAllowed(false);
+                player.setJumpAllowed(false);
             }
             else
             {
-                player.SetJumpAllowed(true);
+                player.setJumpAllowed(true);
             }
         }
     }
@@ -1113,7 +1113,8 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
             for (auto& playerPair : m_mapPlayers)
             {
                 auto& player = playerPair.second;
-                if (player.getHealth() <= 0)
+                const auto& playerConst = player;
+                if (playerConst.getHealth() <= 0)
                 {
                     continue;
                 }
@@ -1129,10 +1130,10 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                     proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
                     if (player.canTakeItem(mapItem))
                     {
-                        player.TakeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
+                        player.takeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
-                        // although item update is always sent, wpn update is sent only if TakeItem() flipped the availability of the wpn,
-                        // since it can happen the item is not weapon-related at all, or something else, anyway let TakeItem() make the decision!
+                        // although item update is always sent, wpn update is sent only if takeItem() flipped the availability of the wpn,
+                        // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
                         if (proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate))
                         {
                             if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself

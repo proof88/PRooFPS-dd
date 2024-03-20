@@ -78,6 +78,7 @@ proofps_dd::Player::Player(
     m_connHandleServerSide(connHandle),
     m_sIpAddress(sIpAddress),
     m_bNetDirty(false),
+    m_bRespawn(false),
     m_pObj(PGENULL),
     m_pTexPlayerStand(PGENULL),
     m_pTexPlayerCrouch(PGENULL),
@@ -87,6 +88,8 @@ proofps_dd::Player::Player(
     m_gfx(gfx),
     m_fGravity(0.f),
     m_bJumping(false),
+    m_bAllowJump(false),
+    m_bWillJump(false),
     m_bCanFall(true),
     m_bFalling(true),
     m_bHasJustStartedFallingNaturally(true),
@@ -98,12 +101,9 @@ proofps_dd::Player::Player(
     m_bWantToStandup(true),
     m_fSomersaultAngleZ(0.f),
     m_bRunning(true),
-    m_bAllowJump(false),
-    m_bWillJump(false),
     m_bExpectingStartPos(true),
     m_strafe(proofps_dd::Strafe::NONE),
-    m_bAttack(false),
-    m_bRespawn(false)
+    m_bAttack(false)
 {
     BuildPlayerObject(true);
 }
@@ -114,7 +114,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_sName(other.m_sName),
     m_vecOldNewValues(other.m_vecOldNewValues),
     m_bNetDirty(other.m_bNetDirty),
-    m_vecJumpForce(other.m_vecJumpForce),
+    m_timeDied(other.m_timeDied),
+    m_bRespawn(other.m_bRespawn),
     m_vecImpactForce(other.m_vecImpactForce),
     m_pObj(PGENULL),
     m_pTexPlayerStand(PGENULL),
@@ -123,8 +124,11 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
     m_gfx(other.m_gfx),
+    m_vecJumpForce(other.m_vecJumpForce),
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
+    m_bAllowJump(other.m_bAllowJump),
+    m_bWillJump(other.m_bWillJump),
     m_bCanFall(other.m_bCanFall),
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
@@ -136,13 +140,9 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bWantToStandup(other.m_bWantToStandup),
     m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
     m_bRunning(other.m_bRunning),
-    m_bAllowJump(other.m_bAllowJump),
-    m_bWillJump(other.m_bWillJump),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
     m_strafe(other.m_strafe),
-    m_bAttack(other.m_bAttack),
-    m_timeDied(other.m_timeDied),
-    m_bRespawn(other.m_bRespawn)
+    m_bAttack(other.m_bAttack)
 {
     BuildPlayerObject(true);
 }
@@ -154,12 +154,16 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_sName = other.m_sName;
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_bNetDirty = other.m_bNetDirty;
-    m_vecJumpForce = other.m_vecJumpForce;
+    m_timeDied = other.m_timeDied;
+    m_bRespawn = other.m_bRespawn;
     m_vecImpactForce = other.m_vecImpactForce;
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
+    m_vecJumpForce = other.m_vecJumpForce;
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
+    m_bAllowJump = other.m_bAllowJump;
+    m_bWillJump = other.m_bWillJump;
     m_bCanFall = other.m_bCanFall;
     m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
@@ -171,13 +175,9 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bWantToStandup = other.m_bWantToStandup;
     m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
     m_bRunning = other.m_bRunning;
-    m_bAllowJump = other.m_bAllowJump;
-    m_bWillJump = other.m_bWillJump;
     m_bExpectingStartPos = other.m_bExpectingStartPos;
     m_strafe = other.m_strafe;
     m_bAttack = other.m_bAttack;
-    m_timeDied = other.m_timeDied;
-    m_bRespawn = other.m_bRespawn;
 
     BuildPlayerObject(true);
 
@@ -295,16 +295,103 @@ CConsole& proofps_dd::Player::getConsole() const
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-PgeOldNewValue<int>& proofps_dd::Player::getHealth()
+const PgeOldNewValue<int>& proofps_dd::Player::getHealth() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
 }
 
-const PgeOldNewValue<int>& proofps_dd::Player::getHealth() const
+void proofps_dd::Player::setHealth(int value) {
+    getHealth().set(std::max(0, std::min(value, 100)));
+}
+
+void proofps_dd::Player::doDamage(int dmg) {
+    getHealth().set(getHealth().getNew() - dmg);
+    if (getHealth().getNew() < 0)
+    {
+        getHealth().set(0);
+    }
+}
+
+PureVector& proofps_dd::Player::getImpactForce()
+{
+    return m_vecImpactForce;
+}
+
+void proofps_dd::Player::die(bool bMe, bool bServer)
+{
+    m_timeDied = std::chrono::steady_clock::now();
+    if (bMe)
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
+    }
+    else
+    {
+        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
+    }
+    setHealth(0);
+    getAttack() = false;
+    getObject3D()->Hide();
+    if (m_wpnMgr.getCurrentWeapon())
+    {
+        m_wpnMgr.getCurrentWeapon()->getObject3D().Hide();
+    }
+    if (bServer)
+    {
+        setStrafe(Strafe::NONE);
+        getJumpForce().SetZero();
+        resetSomersault();
+
+        // server instance has the right to modify death count, clients will just receive it in update
+        getDeaths()++;
+        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, getDeaths());
+    }
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeDied() const
+{
+    return m_timeDied;
+}
+
+PgeOldNewValue<int>& proofps_dd::Player::getDeaths()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
+}
+
+const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
+}
+
+bool& proofps_dd::Player::getRespawnFlag()
+{
+    return m_bRespawn;
+}
+
+void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
+{
+    getObject3D()->Show();
+    doStandupShared();
+    getWantToStandup() = true;
+    getImpactForce().SetZero();
+
+    for (auto pWpn : m_wpnMgr.getWeapons())
+    {
+        if (!pWpn)
+        {
+            continue;
+        }
+
+        pWpn->Reset();
+        if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
+        {
+            pWpn->SetAvailable(true);
+            m_wpnMgr.setCurrentWeapon(pWpn, false, bServer);
+            pWpn->UpdatePosition(getObject3D()->getPosVec());
+        }
+    }
 }
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
@@ -317,6 +404,16 @@ const PgeOldNewValue<PureVector>& proofps_dd::Player::getPos() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvPos));
+}
+
+bool proofps_dd::Player::isExpectingStartPos() const
+{
+    return m_bExpectingStartPos;
+}
+
+void proofps_dd::Player::setExpectingStartPos(bool b)
+{
+    m_bExpectingStartPos = b;
 }
 
 PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY()
@@ -343,6 +440,12 @@ const PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleZ() const
     return std::get<PgeOldNewValue<TPureFloat>>(m_vecOldNewValues.at(OldNewValueName::OvAngleZ));
 }
 
+PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvWpnAngle));
+}
+
 PureObject3D* proofps_dd::Player::getObject3D() const
 {
     return m_pObj;
@@ -353,6 +456,14 @@ float proofps_dd::Player::getGravity() const
     return m_fGravity;
 }
 
+void proofps_dd::Player::setGravity(float value) {
+    m_fGravity = value;
+    if (value >= 0.f)
+    {
+        m_bFalling = false;
+    }
+}
+
 bool proofps_dd::Player::isJumping() const
 {
     return m_bJumping;
@@ -361,6 +472,10 @@ bool proofps_dd::Player::isJumping() const
 bool proofps_dd::Player::canFall() const
 {
     return m_bCanFall;
+}
+
+void proofps_dd::Player::setCanFall(bool state) {
+    m_bCanFall = state;
 }
 
 bool proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick() const
@@ -415,6 +530,167 @@ bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
     return m_bHasJustStoppedJumping;
 }
 
+bool proofps_dd::Player::jumpAllowed() const {
+    return m_bAllowJump;
+}
+
+void proofps_dd::Player::setJumpAllowed(bool b) {
+    m_bAllowJump = b;
+}
+
+void proofps_dd::Player::jump() {
+    if (!jumpAllowed())
+    {
+        return;
+    }
+
+    m_bAllowJump = false;
+    m_bJumping = true;
+    m_bWillJump = false;
+    m_bFalling = false;
+    m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
+    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+
+    m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
+    // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
+    //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
+    //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
+    //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
+}
+
+void proofps_dd::Player::stopJumping() {
+    m_bJumping = false;
+}
+
+bool proofps_dd::Player::getWillJumpInNextTick() const
+{
+    return m_bWillJump;
+}
+
+void proofps_dd::Player::setWillJumpInNextTick(bool flag)
+{
+    if (!jumpAllowed())
+    {
+        return;
+    }
+
+    m_bWillJump = flag;
+    m_timeLastWillJump = std::chrono::steady_clock::now();
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastSetWillJump() const
+{
+    return m_timeLastWillJump;
+}
+
+PureVector& proofps_dd::Player::getJumpForce()
+{
+    return m_vecJumpForce;
+}
+
+PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouchInput));
+}
+
+bool& proofps_dd::Player::getCrouchStateCurrent()
+{
+    return m_bCrouchingStateCurrent;
+}
+
+const bool& proofps_dd::Player::isJumpingInitiatedFromCrouching() const
+{
+    return m_bCrouchingWasActiveWhenInitiatedJump;
+}
+
+bool& proofps_dd::Player::getWantToStandup()
+{
+    return m_bWantToStandup;
+}
+
+/**
+* Changing player properties for physics.
+* Invokes getPos().commit() too so not be called careless from anywhere.
+* Should be invoked only by server physics at the beginning of physics calculations.
+*
+* @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards (should be used mid-air).
+*                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center (should be used on ground).
+*/
+void proofps_dd::Player::doCrouchServer(bool bPullUpLegs)
+{
+    if (getCrouchStateCurrent())
+    {
+        return;
+    }
+
+    // Scaling change is legal since player object will be smaller thus no unexpected collision can happen;
+    // position change is also legal since player area stays within previous standing area.
+    // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
+    // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+    // On the long run we should use colliders so physics does not depend on graphics.
+    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getCrouchStateCurrent() = true;  // can always go to crouching immediately
+    if (bPullUpLegs)
+    {
+        // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
+        // however we don't reposition if being on ground because it looks bad
+        // PPPKKKGGGGGG
+        PureVector playerPos = getPos().getNew();
+        playerPos.SetY(playerPos.getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f);
+        getPos().set(playerPos);
+        // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
+        getPos().commit();
+    }
+}
+
+void proofps_dd::Player::doCrouchShared()
+{
+    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
+    getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
+    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
+    //getWantToStandup() = false;
+}
+
+/**
+* Changing player properties for physics.
+* Invokes getPos().set() too so not be called careless from anywhere.
+* Should be invoked only by server physics during physics calculations.
+*
+* @param fNewPosY The new Y position for the player.
+*/
+void proofps_dd::Player::doStandupServer(const float& fNewPosY)
+{
+    getCrouchStateCurrent() = false;
+    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+    // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
+    getPos().set(
+        PureVector(
+            getPos().getNew().getX(),
+            fNewPosY,
+            getPos().getNew().getZ()
+        ));
+
+    // WA: This line is only needed to get rid of the phenomenon on server side: for 1 frame, player object will overlap the ground object below it.
+    // This is because after physics iteration there will be 1 frame rendered, and only at the beginning of next frame the server will
+    // process the handleUserUpdateFromServer() where it repositions the player object.
+    // So this line here is just a workaround to get rid of it.
+    // Clients don't see this phenomenon since they dont run this physics, just get position updates from server.
+    // The only way to fix this is to introduce colliders so we dont mess with graphical entities in physics.
+    // A bug ticket has been opened for this: https://github.com/proof88/PRooFPS-dd/issues/265.
+    getObject3D()->getPosVec().SetY(getPos().getNew().getY());
+}
+
+void proofps_dd::Player::doStandupShared()
+{
+    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
+    getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
+    getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
+    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
+    //getWantToStandup() = true;
+}
+
 /**
  * Somersault aka front-/backflip.
  * The idea is this function sets an initial positive or negative value for the angle based on strafe direction, and then
@@ -432,7 +708,7 @@ void proofps_dd::Player::startSomersault()
     {
         if (m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
         {
-            DoCrouchServer(true /* pull up legs because we are jumping */);
+            doCrouchServer(true /* pull up legs because we are jumping */);
         }
         else
         {
@@ -513,89 +789,12 @@ void proofps_dd::Player::resetSomersault()
     getAngleZ() = 0.f;
 }
 
-void proofps_dd::Player::SetHealth(int value) {
-    getHealth().set(std::max(0, std::min(value, 100)));
-}
-
-void proofps_dd::Player::SetGravity(float value) {
-    m_fGravity = value;
-    if (value >= 0.f)
-    {
-        m_bFalling = false;
-    }
-}
-
-bool proofps_dd::Player::jumpAllowed() const {
-    return m_bAllowJump;
-}
-
-void proofps_dd::Player::SetJumpAllowed(bool b) {
-    m_bAllowJump = b;
-}
-
-void proofps_dd::Player::Jump() {
-    if (!jumpAllowed())
-    {
-        return;
-    }
-
-    m_bAllowJump = false;
-    m_bJumping = true;
-    m_bWillJump = false;
-    m_bFalling = false;
-    m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
-    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
-
-    m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
-    // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
-    //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
-    //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
-    //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
-}
-
-void proofps_dd::Player::StopJumping() {
-    m_bJumping = false;
-}
-
-bool proofps_dd::Player::getWillJumpInNextTick() const
-{
-    return m_bWillJump;
-}
-
-void proofps_dd::Player::setWillJumpInNextTick(bool flag)
-{
-    if (!jumpAllowed())
-    {
-        return;
-    }
-
-    m_bWillJump = flag;
-    m_timeLastWillJump = std::chrono::steady_clock::now();
-}
-
-const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastSetWillJump() const
-{
-    return m_timeLastWillJump;
-}
-
-void proofps_dd::Player::DoDamage(int dmg) {
-    getHealth().set(getHealth().getNew() - dmg);
-    if (getHealth().getNew() < 0)
-    {
-        getHealth().set(0);
-    }
-}
-
-void proofps_dd::Player::SetCanFall(bool state) {
-    m_bCanFall = state;
-}
-
 bool proofps_dd::Player::isRunning() const
 {
     return m_bRunning;
 }
 
-void proofps_dd::Player::SetRun(bool state)
+void proofps_dd::Player::setRun(bool state)
 {
     m_bRunning = state;
     m_timeLastToggleRun = std::chrono::steady_clock::now();
@@ -637,199 +836,6 @@ bool proofps_dd::Player::attack()
     return wpn->pullTrigger();
 }
 
-PureVector& proofps_dd::Player::getJumpForce()
-{
-    return m_vecJumpForce;
-}
-
-PureVector& proofps_dd::Player::getImpactForce()
-{
-    return m_vecImpactForce;
-}
-
-bool proofps_dd::Player::isExpectingStartPos() const
-{
-    return m_bExpectingStartPos;
-}
-
-void proofps_dd::Player::SetExpectingStartPos(bool b)
-{
-    m_bExpectingStartPos = b;
-}
-
-PgeOldNewValue<PureVector>& proofps_dd::Player::getWeaponAngle()
-{
-    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvWpnAngle));
-}
-
-PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
-{
-    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvCrouchInput));
-}
-
-bool& proofps_dd::Player::getCrouchStateCurrent()
-{
-    return m_bCrouchingStateCurrent;
-}
-
-const bool& proofps_dd::Player::isJumpingInitiatedFromCrouching() const
-{
-    return m_bCrouchingWasActiveWhenInitiatedJump;
-}
-
-bool& proofps_dd::Player::getWantToStandup()
-{
-    return m_bWantToStandup;
-}
-
-/**
-* Changing player properties for physics.
-* Invokes getPos().commit() too so not be called careless from anywhere.
-* Should be invoked only by server physics at the beginning of physics calculations.
-* 
-* @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards (should be used mid-air).
-*                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center (should be used on ground).
-*/
-void proofps_dd::Player::DoCrouchServer(bool bPullUpLegs)
-{
-    if (getCrouchStateCurrent())
-    {
-        return;
-    }
-
-    // Scaling change is legal since player object will be smaller thus no unexpected collision can happen;
-    // position change is also legal since player area stays within previous standing area.
-    // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
-    // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
-    // On the long run we should use colliders so physics does not depend on graphics.
-    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
-    getCrouchStateCurrent() = true;  // can always go to crouching immediately
-    if (bPullUpLegs)
-    {
-        // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
-        // however we don't reposition if being on ground because it looks bad
-        // PPPKKKGGGGGG
-        PureVector playerPos = getPos().getNew();
-        playerPos.SetY(playerPos.getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f);
-        getPos().set(playerPos);
-        // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
-        getPos().commit();
-    }
-}
-
-void proofps_dd::Player::DoCrouchShared()
-{
-    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
-    getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
-    getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
-    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
-    //getWantToStandup() = false;
-}
-
-/**
-* Changing player properties for physics.
-* Invokes getPos().set() too so not be called careless from anywhere.
-* Should be invoked only by server physics during physics calculations.
-*
-* @param fNewPosY The new Y position for the player.
-*/
-void proofps_dd::Player::DoStandupServer(const float& fNewPosY)
-{
-    getCrouchStateCurrent() = false;
-    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
-    // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
-    getPos().set(
-        PureVector(
-            getPos().getNew().getX(),
-            fNewPosY,
-            getPos().getNew().getZ()
-        ));
-
-    // WA: This line is only needed to get rid of the phenomenon on server side: for 1 frame, player object will overlap the ground object below it.
-    // This is because after physics iteration there will be 1 frame rendered, and only at the beginning of next frame the server will
-    // process the handleUserUpdateFromServer() where it repositions the player object.
-    // So this line here is just a workaround to get rid of it.
-    // Clients don't see this phenomenon since they dont run this physics, just get position updates from server.
-    // The only way to fix this is to introduce colliders so we dont mess with graphical entities in physics.
-    // A bug ticket has been opened for this: https://github.com/proof88/PRooFPS-dd/issues/265.
-    getObject3D()->getPosVec().SetY(getPos().getNew().getY());
-}
-
-void proofps_dd::Player::DoStandupShared()
-{
-    getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
-    getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
-    getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
-    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
-    //getWantToStandup() = true;
-}
-
-void proofps_dd::Player::Die(bool bMe, bool bServer)
-{
-    getTimeDied() = std::chrono::steady_clock::now();
-    if (bMe)
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
-    }
-    else
-    {
-        //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
-    }
-    SetHealth(0);
-    getAttack() = false;
-    getObject3D()->Hide();
-    if (m_wpnMgr.getCurrentWeapon())
-    {
-        m_wpnMgr.getCurrentWeapon()->getObject3D().Hide();
-    }
-    if (bServer)
-    {
-        setStrafe(Strafe::NONE);
-        getJumpForce().SetZero();
-        resetSomersault();
-
-        // server instance has the right to modify death count, clients will just receive it in update
-        getDeaths()++;
-        //getConsole().OLn("PRooFPSddPGE::%s(): new death count: %d!", __func__, getDeaths());
-    }
-}
-
-void proofps_dd::Player::Respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
-{
-    getObject3D()->Show();
-    DoStandupShared();
-    getWantToStandup() = true;
-    getImpactForce().SetZero();
-
-    for (auto pWpn : m_wpnMgr.getWeapons())
-    {
-        if (!pWpn)
-        {
-            continue;
-        }
-
-        pWpn->Reset();
-        if (pWpn->getFilename() == wpnDefaultAvailable.getFilename())
-        {
-            pWpn->SetAvailable(true);
-            m_wpnMgr.setCurrentWeapon(pWpn, false, bServer);
-            pWpn->UpdatePosition(getObject3D()->getPosVec());
-        }
-    }
-}
-
-std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeDied()
-{
-    return m_timeDied;
-}
-
-bool& proofps_dd::Player::getRespawnFlag()
-{
-    return m_bRespawn;
-}
-
 PgeOldNewValue<int>& proofps_dd::Player::getFrags()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
@@ -840,18 +846,6 @@ const PgeOldNewValue<int>& proofps_dd::Player::getFrags() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvFrags));
-}
-
-PgeOldNewValue<int>& proofps_dd::Player::getDeaths()
-{
-    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
-}
-
-const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
-{
-    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
 }
 
 bool proofps_dd::Player::canTakeItem(const MapItem& item) const
@@ -887,7 +881,7 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     return false;
 }
 
-void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
+void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
 {
     // invoked only on server
     switch (item.getType())
@@ -942,7 +936,7 @@ void proofps_dd::Player::TakeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.Take();
-        SetHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
+        setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
         break;
     default:
         getConsole().EOLn(
@@ -988,6 +982,12 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pTexPlayerStand = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pTexPlayerCrouch = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe_crouch.bmp").c_str());
     m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
+}
+
+PgeOldNewValue<int>& proofps_dd::Player::getHealth()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
 }
 
 
@@ -1046,7 +1046,7 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(
     PureObject3D& objXHair,
     pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide)
 {
-    player.Die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
+    player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         m_pge.getAudio().play(m_sounds.m_sndPlayerDie);
@@ -1076,7 +1076,7 @@ void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObjec
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetupFromServer()
-    player.Respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
+    player.respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
@@ -1098,7 +1098,7 @@ void proofps_dd::PlayerHandling::ServerRespawnPlayer(Player& player, bool restar
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint();
-    player.SetHealth(100);
+    player.setHealth(100);
     player.getRespawnFlag() = true;
     if (restartGame)
     {
@@ -1120,16 +1120,18 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
 
     for (auto& playerPair : m_mapPlayers)
     {
-        if (playerPair.second.getHealth() > 0)
+        auto& player = playerPair.second;
+        const auto& playerConst = player;
+        if (playerConst.getHealth() > 0)
         {
             continue;
         }
 
         const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - playerPair.second.getTimeDied()).count();
+            std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
         {
-            ServerRespawnPlayer(playerPair.second, false);
+            ServerRespawnPlayer(player, false);
         }
     }
 
@@ -1496,6 +1498,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
+        const auto& playerConst = player;
 
         if (bSendUserUpdates && player.isNetDirty())
         {
@@ -1504,17 +1507,17 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
             if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
-                player.getPos().getNew().getX(),
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ(),
-                player.getAngleY(),
-                player.getAngleZ(),
+                playerConst.getPos().getNew().getX(),
+                playerConst.getPos().getNew().getY(),
+                playerConst.getPos().getNew().getZ(),
+                playerConst.getAngleY(),
+                playerConst.getAngleZ(),
                 player.getWeaponAngle().getNew().getZ(),
                 player.getCrouchStateCurrent(),
-                player.getHealth(),
+                playerConst.getHealth().getNew(),
                 player.getRespawnFlag(),
-                player.getFrags(),
-                player.getDeaths()))
+                playerConst.getFrags(),
+                playerConst.getDeaths()))
             {
                 player.clearNetDirty();
 
@@ -1557,63 +1560,65 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, it->second.getName().c_str(), msg.m_pos.x);
+    auto& player = it->second;
+    const auto& playerConst = player;
+    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
 
-    const bool bOriginalExpectingStartPos = it->second.isExpectingStartPos();
-    if (it->second.isExpectingStartPos())
+    const bool bOriginalExpectingStartPos = player.isExpectingStartPos();
+    if (player.isExpectingStartPos())
     {
-        it->second.SetExpectingStartPos(false);
+        player.setExpectingStartPos(false);
         // PPPKKKGGGGGG
-        it->second.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
-        it->second.getPos().commit(); // both server and client commits in this case
+        player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
+        player.getPos().commit(); // both server and client commits in this case
     }
 
-    it->second.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
-    it->second.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-    it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
+    player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
+    player.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec());
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
-        //it->second.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
-        it->second.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
+        //player.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
+        player.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
     }
-    it->second.getObject3D()->getAngleVec().SetZ(msg.m_fPlayerAngleZ);
+    player.getObject3D()->getAngleVec().SetZ(msg.m_fPlayerAngleZ);
 
-    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(it->second.getObject3D()->getAngleVec().getY());
-    it->second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(player.getObject3D()->getAngleVec().getY());
+    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
     if (msg.m_bCrouch)
     {
         // server had already set stuff since it relayed this to clients, however
         // there is no use of adding extra condition for checking if we are server or client
-        it->second.DoCrouchShared();
+        player.doCrouchShared();
     }
     else
     {
-        it->second.DoStandupShared();
+        player.doStandupShared();
     }
 
-    it->second.getFrags() = msg.m_nFrags;
-    it->second.getDeaths() = msg.m_nDeaths;
+    player.getFrags() = msg.m_nFrags;
+    player.getDeaths() = msg.m_nDeaths;
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, it->second.getHealth(), it->second.getHealth().getOld());
-    it->second.SetHealth(msg.m_nHealth);
+    //    __func__, msg.m_nHealth, player.getHealth(), player.getHealth().getOld());
+    player.setHealth(msg.m_nHealth);
 
     if (msg.m_bRespawn)
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, it->second.getName().c_str());
-        HandlePlayerRespawned(it->second, objXHair);
+        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, player.getName().c_str());
+        HandlePlayerRespawned(player, objXHair);
     }
     else
     {
-        if ((it->second.getHealth().getOld() > 0) && (it->second.getHealth() == 0))
+        if ((playerConst.getHealth().getOld() > 0) && (playerConst.getHealth() == 0))
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, it->second.getName().c_str());
-            HandlePlayerDied(it->second, objXHair, it->second.getServerSideConnectionHandle() /* ignored by client anyway */);
+            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, player.getName().c_str());
+            HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
@@ -1625,15 +1630,15 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later;
     // note that it can also happen that we receive update here for a player who has not yet handshaked its name
     // with the server, in that case the name is empty, that is why we also need to check emptiness!
-    if (!it->second.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(it->second))
+    if (!player.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(player))
     {
-        getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, it->second.getName().c_str());
+        getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, player.getName().c_str());
     }
 
     if (!m_pge.getNetwork().isServer())
     {
         // server already invoked updateOldValues() when it sent out this update message
-        it->second.updateOldValues();
+        player.updateOldValues();
     }
 
     return true;

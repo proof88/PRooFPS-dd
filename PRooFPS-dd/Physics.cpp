@@ -287,19 +287,19 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
         {
             // player just initiated crouching by input
-            player.DoCrouchServer(player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick));
+            player.doCrouchServer(player.isJumping() || (player.getGravity() < fPlayerGravityChangePerTick));
         } // end handle crouch
 
-        player.SetGravity(player.getGravity() + fPlayerGravityChangePerTick);
+        player.setGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
         {
             if (player.getGravity() < 0.0f)
             {
                 //getConsole().EOLn("stopped jumping up (natural): %f", player.getGravity());
-                player.SetGravity(0.f);
-                player.StopJumping();
+                player.setGravity(0.f);
+                player.stopJumping();
                 player.getHasJustStoppedJumpingInThisTick() = true;
-                player.SetCanFall(true);
+                player.setCanFall(true);
             }
         }
         else
@@ -324,9 +324,9 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
                 }
                 player.getHasJustStoppedJumpingInThisTick() = false;
             }
-            player.SetCanFall(true);
+            player.setCanFall(true);
             // player gravity cannot go below GAME_FALL_GRAVITY_MIN
-            player.SetGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
+            player.setGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
         }
         // PPPKKKGGGGGG
         player.getPos().set(
@@ -336,7 +336,8 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
                 player.getPos().getNew().getZ()
             ));
 
-        if ((player.getHealth() > 0) && (player.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        const auto& playerConst = player;
+        if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound
             HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
@@ -426,7 +427,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
                     //}
                     
-                    player.SetCanFall(false);
+                    player.setCanFall(false);
                     
                     // maybe not null everything out in the future but only decrement the components by
                     // some value, since if there is an explosion-induced force, it shouldnt be nulled out
@@ -434,16 +435,16 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                     // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
                     // we can zero out jumpforce here completely!
                     player.getJumpForce().Set(0.f, 0.f, 0.f);
-                    player.SetGravity(0.f);
+                    player.setGravity(0.f);
                 }
                 else
                 {
                     // we hit ceiling with our head during jumping
                     //getConsole().EOLn("start falling (hit ceiling)");
-                    player.SetCanFall(true);
-                    player.StopJumping();
+                    player.setCanFall(true);
+                    player.stopJumping();
                     player.getHasJustStoppedJumpingInThisTick() = true;
-                    player.SetGravity(0.f);
+                    player.setGravity(0.f);
                 }
 
                 break;
@@ -486,13 +487,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 } // end for i
                 if (bCanStandUp)
                 {
-                    player.DoStandupServer(fProposedNewPlayerPosY);
+                    player.doStandupServer(fProposedNewPlayerPosY);
                 }
             }
         } // end if (player.getWantToStandup())
 
         static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
-        if ((player.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
+        const auto& playerConst = player;
+        if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
             float fStrafeSpeed = player.getCrouchStateCurrent() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)
@@ -548,13 +550,13 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,
         // to actually start jumping in the same frame as when we detected the player initiated the jumping.
         // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
-        // that is essential for the Jump() function below to record the X-forces for the player.
+        // that is essential for the jump() function below to record the X-forces for the player.
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
         if (player.getWillJumpInNextTick())
         {
             //getConsole().EOLn("start jumping");
             // now we can actually jump and have the correct forces be saved for the jump
-            player.Jump(); // resets setWillJumpInNextTick()
+            player.jump(); // resets setWillJumpInNextTick()
         }
 
         // PPPKKKGGGGGG

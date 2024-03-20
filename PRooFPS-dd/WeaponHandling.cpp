@@ -461,7 +461,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     continue;
                 }
 
-                if ((player.getHealth() > 0) &&
+                const auto& playerConst = player;
+                if ((playerConst.getHealth() > 0) &&
                     Colliding2_NoZ(
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
                         player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
@@ -472,8 +473,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     if (bullet.getAreaDamageSize() == 0.f)
                     {
                         // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
-                        player.DoDamage(bullet.getDamageHp());
-                        if (player.getHealth() == 0)
+                        player.doDamage(bullet.getDamageHp());
+                        if (playerConst.getHealth() == 0)
                         {
                             const auto itKiller = m_mapPlayers.find(bullet.getOwner());
                             pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
@@ -775,31 +776,32 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
+        const auto& playerConst = player;
 
-        if (player.getHealth() <= 0)
+        if (playerConst.getHealth() <= 0)
         {
             continue;
         }
 
         PureVector vecImpactForce;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            player, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
         );
         if (fRadiusDamage > 0.f)
         {
             /* player.getImpactForce() is decreased in Physics */
             player.getImpactForce() += vecImpactForce;
             
-            if (player.getServerSideConnectionHandle() == 0)
+            if (playerConst.getServerSideConnectionHandle() == 0)
             {
                 // this is server player so shake camera!
                 vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
                 vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
             }
             
-            player.DoDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            player.doDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
-            if (player.getHealth() == 0)
+            if (playerConst.getHealth() == 0)
             {
                 const auto itKiller = m_mapPlayers.find(xpl.getOwner());
                 pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
@@ -808,7 +810,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     // if killer got disconnected before the kill, we can say the killer is the player itself, since
                     // we still want to display the death notification without the killer's name, but we won't decrease
                     // frag count for the player because HandlePlayerDied() is not doing that.
-                    nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
+                    nKillerConnHandleServerSide = playerConst.getServerSideConnectionHandle();
                     //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
                     //    __func__, playerPair.first.c_str());
                 }
@@ -818,7 +820,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
                     // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
                     // in that case frags should be decremented!
-                    if (player.getServerSideConnectionHandle() == xpl.getOwner())
+                    if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
                     {
                         itKiller->second.getFrags()--;
                     }
@@ -867,12 +869,13 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
         return xpl;
     }
 
-    if (playerIt->second.getHealth() > 0)
+    const auto& playerConst = playerIt->second;
+    if (playerConst.getHealth() > 0)
     {
         // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
         PureVector vecImpactForce;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerIt->second, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
         );
 
         if (fRadiusDamage > 0.f)

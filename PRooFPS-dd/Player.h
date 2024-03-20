@@ -81,21 +81,37 @@ namespace proofps_dd
         bool isNetDirty() const;
         void clearNetDirty();
 
-        PgeOldNewValue<int>& getHealth();
         const PgeOldNewValue<int>& getHealth() const;
+        void setHealth(int value);
+        void doDamage(int dmg);
+        PureVector& getImpactForce();
+        void die(bool bMe, bool bServer);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeDied() const;
+        PgeOldNewValue<int>& getDeaths();
+        const PgeOldNewValue<int>& getDeaths() const;
+
+        bool& getRespawnFlag();
+        void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
 
         PgeOldNewValue<PureVector>& getPos();
         const PgeOldNewValue<PureVector>& getPos() const;
+        bool isExpectingStartPos() const;
+        void setExpectingStartPos(bool b);
+
         PgeOldNewValue<TPureFloat>& getAngleY();
         const PgeOldNewValue<TPureFloat>& getAngleY() const;
         PgeOldNewValue<TPureFloat>& getAngleZ();
         const PgeOldNewValue<TPureFloat>& getAngleZ() const;
+        PgeOldNewValue<PureVector>& getWeaponAngle();
 
         PureObject3D* getObject3D() const;
 
         float getGravity() const;
+        void setGravity(float value);
+
         bool isJumping() const;
         bool canFall() const;
+        void setCanFall(bool state);
         bool getHasJustStartedFallingNaturallyInThisTick() const;
         void setHasJustStartedFallingNaturallyInThisTick(bool val);
         bool getHasJustStartedFallingAfterJumpingStoppedInThisTick() const;
@@ -104,6 +120,24 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeStartedFalling() const;
         const float getHeightStartedFalling() const;
         bool& getHasJustStoppedJumpingInThisTick();
+        bool jumpAllowed() const;
+        void setJumpAllowed(bool b);
+        void jump();
+        void stopJumping();
+        bool getWillJumpInNextTick() const;
+        void setWillJumpInNextTick(bool flag);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
+        PureVector& getJumpForce();
+
+        PgeOldNewValue<bool>& getCrouchInput();
+        bool& getCrouchStateCurrent();
+        const bool& isJumpingInitiatedFromCrouching() const;
+        bool& getWantToStandup();
+        void doCrouchServer(bool bPullUpLegs);
+        void doCrouchShared();
+
+        void doStandupServer(const float& fNewPosY);
+        void doStandupShared();
 
         void startSomersault();
         bool isSomersaulting() const;
@@ -111,22 +145,8 @@ namespace proofps_dd
         void stepSomersaultAngle(float angle);
         void resetSomersault();
 
-        void SetHealth(int value);
-        void SetGravity(float value);
-
-        bool jumpAllowed() const;
-        void SetJumpAllowed(bool b);
-        void Jump();
-        void StopJumping();
-        bool getWillJumpInNextTick() const;
-        void setWillJumpInNextTick(bool flag);
-        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
-
-        void DoDamage(int dmg);
-        void SetCanFall(bool state);
-
         bool isRunning() const;
-        void SetRun(bool state);
+        void setRun(bool state);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleRun() const;
 
         const proofps_dd::Strafe& getStrafe() const;
@@ -135,36 +155,11 @@ namespace proofps_dd
         bool& getAttack();
         bool attack();
 
-        void Die(bool bMe, bool bServer);
-        void Respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
-
-        PureVector& getJumpForce();
-        PureVector& getImpactForce();
-
-        bool isExpectingStartPos() const;
-        void SetExpectingStartPos(bool b);
-
-        PgeOldNewValue<PureVector>& getWeaponAngle();
-
-        PgeOldNewValue<bool>& getCrouchInput();
-        bool& getCrouchStateCurrent();
-        const bool& isJumpingInitiatedFromCrouching() const;
-        bool& getWantToStandup();
-        void DoCrouchServer(bool bPullUpLegs);
-        void DoCrouchShared();
-        void DoStandupServer(const float& fNewPosY);
-        void DoStandupShared();
-
-        std::chrono::time_point<std::chrono::steady_clock>& getTimeDied();
-        bool& getRespawnFlag();
-
         PgeOldNewValue<int>& getFrags();
         const PgeOldNewValue<int>& getFrags() const;
-        PgeOldNewValue<int>& getDeaths();
-        const PgeOldNewValue<int>& getDeaths() const;
 
         bool canTakeItem(const MapItem& item) const;
-        void TakeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
+        void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 
     private:
 
@@ -213,8 +208,9 @@ namespace proofps_dd
                 {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
         };
         bool m_bNetDirty;
-
-        PureVector m_vecJumpForce;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
+        bool m_bRespawn;
+        
         PureVector m_vecImpactForce;
 
         PureObject3D* m_pObj;
@@ -226,8 +222,12 @@ namespace proofps_dd
         std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;
 
+        PureVector m_vecJumpForce;
         float m_fGravity;
         bool m_bJumping;
+        bool m_bAllowJump;
+        bool m_bWillJump;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall;
         bool m_bFalling;
         bool m_bHasJustStartedFallingNaturally;
@@ -262,22 +262,17 @@ namespace proofps_dd
         bool m_bRunning;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
 
-        bool m_bAllowJump;
-        bool m_bWillJump;
-        std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
-
         bool m_bExpectingStartPos;
 
         proofps_dd::Strafe m_strafe;  // continuous op
 
         bool m_bAttack;               // continuous op
 
-        std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
-        bool m_bRespawn;
-
         // ---------------------------------------------------------------------------
 
         void BuildPlayerObject(bool blend);
+
+        PgeOldNewValue<int>& getHealth();
 
     }; // class Player
 

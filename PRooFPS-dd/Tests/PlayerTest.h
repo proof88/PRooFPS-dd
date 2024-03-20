@@ -245,6 +245,7 @@ private:
         const std::string sIpAddr = "192.168.1.12";
 
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
+        const auto& playerConst = player;
 
         return (assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
@@ -252,8 +253,8 @@ private:
             assertNotNull(player.getObject3D(), "object3d") &
             assertFalse(player.isDirty(), "isDirty") &
             assertFalse(player.isNetDirty(), "isNetDirty") &
-            assertFalse(player.getHealth().isDirty(), "old health") &
-            assertEquals(100, player.getHealth(), "health") &
+            assertFalse(playerConst.getHealth().isDirty(), "old health") &
+            assertEquals(100, playerConst.getHealth(), "health") &
             assertFalse(player.getDeaths().isDirty(), "old deaths") &
             assertEquals(0, player.getDeaths(), "deaths") &
             assertFalse(player.getFrags().isDirty(), "old frags") &
@@ -316,7 +317,7 @@ private:
         bool b = (assertFalse(player.isDirty(), "dirty 1") &
             assertFalse(player.isNetDirty(), "net dirty 1")) != 0;
 
-        player.getHealth().set(5);
+        player.setHealth(5);
         b &= assertTrue(player.isDirty(), "dirty A 1");
         b &= assertFalse(player.isNetDirty(), "net dirty A 1");
         player.updateOldValues();
@@ -410,10 +411,10 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.SetExpectingStartPos(false);
+        player.setExpectingStartPos(false);
         bool b = assertFalse(player.isExpectingStartPos(), "exp 1");
         
-        player.SetExpectingStartPos(true);
+        player.setExpectingStartPos(true);
         b &= assertTrue(player.isExpectingStartPos(), "exp 2");
 
         return b;
@@ -456,22 +457,23 @@ private:
     bool test_set_health_and_update_old_health()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        const auto& playerConst = player;
 
-        player.SetHealth(200);
-        bool b = (assertEquals(100, player.getHealth(), "health 1") &
-            assertFalse(player.getHealth().isDirty(), "dirty 1") &
-            assertFalse(player.isDirty(), "dirty 2")) != 0;
+        player.setHealth(200);
+        bool b = (assertEquals(100, playerConst.getHealth(), "health 1") &
+            assertFalse(playerConst.getHealth().isDirty(), "dirty 1") &
+            assertFalse(playerConst.isDirty(), "dirty 2")) != 0;
 
-        player.SetHealth(-1);
-        b &= (assertEquals(0, player.getHealth(), "health 2") &
-            assertTrue(player.getHealth().isDirty(), "dirty 3") &
-            assertTrue(player.isDirty(), "dirty 4")) != 0;
+        player.setHealth(-1);
+        b &= (assertEquals(0, playerConst.getHealth(), "health 2") &
+            assertTrue(playerConst.getHealth().isDirty(), "dirty 3") &
+            assertTrue(playerConst.isDirty(), "dirty 4")) != 0;
 
         player.updateOldValues();
-        b &= assertTrue(player.isNetDirty(), "is net dirty");
-        b &= (assertEquals(0, player.getHealth().getOld(), "health 3") &
-            assertFalse(player.getHealth().isDirty(), "dirty 5") &
-            assertFalse(player.isDirty(), "dirty 6")) != 0;
+        b &= assertTrue(playerConst.isNetDirty(), "is net dirty");
+        b &= (assertEquals(0, playerConst.getHealth().getOld(), "health 3") &
+            assertFalse(playerConst.getHealth().isDirty(), "dirty 5") &
+            assertFalse(playerConst.isDirty(), "dirty 6")) != 0;
 
         return b;
     }
@@ -479,18 +481,19 @@ private:
     bool test_do_damage()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        const auto& playerConst = player;
 
-        player.DoDamage(25);
-        bool b = (assertEquals(75, player.getHealth(), "health 1") &
-            assertEquals(100, player.getHealth().getOld(), "old health 1")) != 0;
+        player.doDamage(25);
+        bool b = (assertEquals(75, playerConst.getHealth(), "health 1") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 1")) != 0;
 
-        player.DoDamage(25);
-        b &= (assertEquals(50, player.getHealth(), "health 2") &
-            assertEquals(100, player.getHealth().getOld(), "old health 2")) != 0;
+        player.doDamage(25);
+        b &= (assertEquals(50, playerConst.getHealth(), "health 2") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 2")) != 0;
 
-        player.DoDamage(100);
-        b &= (assertEquals(0, player.getHealth(), "health 3") &
-            assertEquals(100, player.getHealth().getOld(), "old health 3")) != 0;
+        player.doDamage(100);
+        b &= (assertEquals(0, playerConst.getHealth(), "health 3") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 3")) != 0;
 
         return b;
     }
@@ -500,8 +503,9 @@ private:
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        const auto& playerConst = player;
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
-        player.SetJumpAllowed(true);
+        player.setJumpAllowed(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
@@ -510,34 +514,34 @@ private:
         player.getAttack() = true;
         player.getJumpForce().Set(1,2,3);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
-        player.Jump();
+        player.jump();
         player.startSomersault();
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
-        player.Die(true, bServer);
-        const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        b &= (assertEquals(0, player.getHealth(), "health 1") &
-            assertEquals(100, player.getHealth().getOld(), "old health 1") &
+        player.die(true, bServer);
+        const auto nFirstTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
+        b &= (assertEquals(0, playerConst.getHealth(), "health 1") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 1") &
             assertFalse(player.getAttack(), "attack 1") &
             assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1") &
-            assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe 1") &
-            assertFalse(player.isSomersaulting(), "somersaulting 1") &
+            assertEquals(proofps_dd::Strafe::NONE, playerConst.getStrafe(), "strafe 1") &
+            assertFalse(playerConst.isSomersaulting(), "somersaulting 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
-            assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
-            assertEquals(1, player.getDeaths(), "deaths 1") /* server increases it */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 1")) != 0;
+            assertFalse(playerConst.getObject3D()->isRenderingAllowed(), "player object visible 1") &
+            assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
+            assertEquals(1, playerConst.getDeaths(), "deaths 1") /* server increases it */ &
+            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 1")) != 0;
         
-        player.SetHealth(100);
-        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
+        player.setHealth(100);
+        player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
         
-        player.Die(true, bServer);
-        const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        b &= assertEquals(0, player.getHealth(), "health 2") &
-            assertEquals(100, player.getHealth().getOld(), "old health 2") &
+        player.die(true, bServer);
+        const auto nSecondTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
+        b &= assertEquals(0, playerConst.getHealth(), "health 2") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 2") &
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
-            assertEquals(2, player.getDeaths(), "deaths 2") /* server increases it */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
+            assertEquals(2, playerConst.getDeaths(), "deaths 2") /* server increases it */ &
+            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 2");
 
         return b;
     }
@@ -547,34 +551,35 @@ private:
         const bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        const auto& playerConst = player;
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
         };
 
-        player.Die(true, bServer);
+        player.die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        bool b = (assertEquals(0, player.getHealth(), "health 1") &
-            assertEquals(100, player.getHealth().getOld(), "old health 1") &
+        bool b = (assertEquals(0, playerConst.getHealth(), "health 1") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died 1") &
-            assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 1") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
-            assertEquals(0, player.getDeaths(), "deaths 1") /* client doesn't change it, will receive update from server */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 1")) != 0;
+            assertFalse(playerConst.getObject3D()->isRenderingAllowed(), "player object visible 1") &
+            assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
+            assertEquals(0, playerConst.getDeaths(), "deaths 1") /* client doesn't change it, will receive update from server */ &
+            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 1")) != 0;
 
-        player.SetHealth(100);
-        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
+        player.setHealth(100);
+        player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
-        player.Die(true, bServer);
-        const auto nSecondTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
-        b &= assertEquals(0, player.getHealth(), "health 2") &
-            assertEquals(100, player.getHealth().getOld(), "old health 2") &
+        player.die(true, bServer);
+        const auto nSecondTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
+        b &= assertEquals(0, playerConst.getHealth(), "health 2") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 2") &
             assertNotEquals(0, nSecondTimeDiedSinceEpoch, "time died a 2") &
             assertNotEquals(nFirstTimeDiedSinceEpoch, nSecondTimeDiedSinceEpoch, "time died b 2") &
-            assertFalse(player.getObject3D()->isRenderingAllowed(), "player object visible 2") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
-            assertEquals(0, player.getDeaths(), "deaths 2") /* client doesn't change it, will receive update from server */ &
-            assertEquals(0, player.getDeaths().getOld(), "old deaths 2");
+            assertFalse(playerConst.getObject3D()->isRenderingAllowed(), "player object visible 2") &
+            assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
+            assertEquals(0, playerConst.getDeaths(), "deaths 2") /* client doesn't change it, will receive update from server */ &
+            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 2");
 
         return b;
     }
@@ -598,8 +603,8 @@ private:
         player.getCrouchStateCurrent() = true;  // respawn event is allowed to set it to false
         player.getImpactForce().Set(1,2,3);
 
-        player.Die(true, bServer);
-        player.Respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
+        player.die(true, bServer);
+        player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
         return (b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
@@ -622,7 +627,7 @@ private:
             player.getPos().commit();
             player.getPos().set(PureVector(2.f, 4.f, 8.f));
 
-            // we modify only the X-component of jumpForce in Jump(), since other components are not used at all!
+            // we modify only the X-component of jumpForce in jump(), since other components are not used at all!
             //const PureVector vecExpectedForce = player.getPos().getNew() - player.getPos().getOld();
             const PureVector vecExpectedForce(player.getPos().getNew().getX() - player.getPos().getOld().getX(), 0.f, 0.f);
 
@@ -631,7 +636,7 @@ private:
             player.getCrouchStateCurrent() = true;  // jumping is not changing crouching state since crouching is also valid mid-air
 
             // TODO: maybe we should also check for object height
-            player.SetJumpAllowed(true);
+            player.setJumpAllowed(true);
             b &= assertTrue(player.jumpAllowed(), "allowed 1") &
                 assertFalse(player.isJumping(), "jumping 1") &
                 assertEquals(0.f, player.getGravity(), "gravity 1") &
@@ -645,7 +650,7 @@ private:
             b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
                 assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
             b &= assertTrue(player.getWillJumpInNextTick(), "will jump 1");
-            player.Jump();
+            player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 2") &
                 assertTrue(player.isJumping(), "jumping 2") &
                 assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 2 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
@@ -654,7 +659,7 @@ private:
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 2") &
                 assertTrue(player.getWantToStandup(), "wantstandup 2");
 
-            player.StopJumping();
+            player.stopJumping();
             b &= assertFalse(player.jumpAllowed(), "allowed 3") &
                 assertFalse(player.isJumping(), "jumping 3") &
                 assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 3 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
@@ -662,14 +667,14 @@ private:
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 3") &
                 assertTrue(player.getWantToStandup(), "wantstandup 3");
 
-            player.SetJumpAllowed(false);
+            player.setJumpAllowed(false);
             player.setWillJumpInNextTick(true);
             b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
                 assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 4") &
                 assertTrue(player.getWantToStandup(), "wantstandup 4");
 
-            player.Jump();
+            player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 4") &
                 assertFalse(player.isJumping(), "jumping 4") &
                 assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
@@ -686,10 +691,10 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.SetCanFall(false);
+        player.setCanFall(false);
         bool b = assertFalse(player.canFall(), "can fall 1");
 
-        player.SetCanFall(true);
+        player.setCanFall(true);
         b &= assertTrue(player.canFall(), "can fall 2");
 
         return b;
@@ -701,13 +706,13 @@ private:
 
         bool b = assertTrue(player.isFalling(), "is falling 1");
         
-        player.SetGravity(-1.f);
+        player.setGravity(-1.f);
         b &= assertTrue(player.isFalling(), "is falling 2");
         
-        player.SetGravity(0.f);
+        player.setGravity(0.f);
         b &= assertFalse(player.isFalling(), "is falling 3");
 
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
 
         return (b & assertEquals(5.f, player.getGravity())) != 0;
     }
@@ -719,7 +724,7 @@ private:
         player.getPos().set(
             PureVector(0.f, 5.f, 0.f)
         );
-        player.SetGravity(0.f);  // way to set isFalling to false
+        player.setGravity(0.f);  // way to set isFalling to false
         bool b = assertFalse(player.isFalling(), "is falling 1");
         const auto timeBeforeJustStartedFallingAfterJumpingStopped = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
@@ -732,7 +737,7 @@ private:
         );
         b &= assertEquals(5.f, player.getHeightStartedFalling(), 0.001f, "height falling 1");
 
-        player.SetGravity(0.f);  // way to set isFalling to false
+        player.setGravity(0.f);  // way to set isFalling to false
         b &= assertFalse(player.isFalling(), "is falling 3");
         const auto timeBeforeJustStartedFallingNaturally = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingNaturallyInThisTick(true);
@@ -752,11 +757,11 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(false);
-        player.SetJumpAllowed(true);
+        player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
         player.getPos().set(PureVector(1.0, 1.f, 1.f)); // new
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
 
         player.startSomersault();
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
@@ -764,8 +769,8 @@ private:
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
 
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // and we are still crouching
@@ -774,10 +779,10 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
 
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching
@@ -786,10 +791,10 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
 
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
@@ -802,11 +807,11 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
-        player.Jump();
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
@@ -819,11 +824,11 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
-        player.Jump();
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
@@ -841,11 +846,11 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
-        player.SetJumpAllowed(true);
+        player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
         player.getPos().set(PureVector(1.0, 1.f, 1.f)); // new
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
 
         player.startSomersault();
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
@@ -853,8 +858,8 @@ private:
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
 
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // and we are still crouching (although not needed since auto-crouch is enabled)
@@ -863,10 +868,10 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
 
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // but we are NOT crouching anymore (although not needed since auto-crouch is enabled)
@@ -876,10 +881,10 @@ private:
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
 
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump (although not needed since auto-crouch is enabled)
@@ -889,10 +894,10 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
 
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
-        player.Jump();
+        player.setGravity(5.f);
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
@@ -905,11 +910,11 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
-        player.Jump();
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
@@ -922,11 +927,11 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
-        player.SetGravity(5.f);
+        player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
-        player.Jump();
+        player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
@@ -944,10 +949,10 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
-        player.SetJumpAllowed(true);
+        player.setJumpAllowed(true);
 
         // Strafe is NONE
-        player.Jump();
+        player.jump();
         player.startSomersault();
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 1");
 
@@ -961,9 +966,9 @@ private:
 
         // Strafe is RIGHT
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::RIGHT);
-        player.Jump();
+        player.jump();
         player.startSomersault();
         b &= assertTrue(player.isSomersaulting(), "somersaulting 4");
 
@@ -977,9 +982,9 @@ private:
 
         // Strafe is LEFT
         player.resetSomersault();
-        player.SetJumpAllowed(true); // allow jump again
+        player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::LEFT);
-        player.Jump();
+        player.jump();
         player.startSomersault();
         b &= assertTrue(player.isSomersaulting(), "somersaulting 7");
 
@@ -999,10 +1004,10 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggleRun = std::chrono::steady_clock::now();
-        player.SetRun(false);
+        player.setRun(false);
 
-        bool b = (assertTrue(player.getTimeLastToggleRun() > timeBeforeToggleRun, "cmp timeBefore") &
-            assertTrue(player.getTimeLastToggleRun() < std::chrono::steady_clock::now(), "cmp timeAfter")) != 0;
+        bool b = (assertTrue(player.getTimeLastToggleRun() >= timeBeforeToggleRun, "cmp timeBefore") &
+            assertTrue(player.getTimeLastToggleRun() <= std::chrono::steady_clock::now(), "cmp timeAfter")) != 0;
         
         return (b & assertFalse(player.isRunning(), "running")) != 0;
     }
@@ -1028,14 +1033,14 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const auto vecOriginalPos = player.getPos();
-        player.DoCrouchServer(false);
+        player.doCrouchServer(false);
         bool b = (assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
 
-        player.DoStandupServer(player.getPos().getNew().getY());
+        player.doStandupServer(player.getPos().getNew().getY());
 
-        player.DoCrouchServer(true);
+        player.doCrouchServer(true);
         b &= assertNotEquals(vecOriginalPos, player.getPos(), "pos vec 2") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 2") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 2");
@@ -1048,7 +1053,7 @@ private:
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
-        player.DoCrouchShared();
+        player.doCrouchShared();
         bool b = (assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
@@ -1061,9 +1066,9 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.DoCrouchServer(false);
+        player.doCrouchServer(false);
 
-        player.DoStandupServer(12.f);
+        player.doStandupServer(12.f);
         bool b = (assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
             assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
@@ -1075,10 +1080,10 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.DoCrouchShared();
+        player.doCrouchShared();
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
 
-        player.DoStandupShared();
+        player.doStandupShared();
         bool b = (assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
@@ -1129,11 +1134,11 @@ private:
             return false;
         }
 
-        player.SetHealth(0);
+        player.setHealth(0);
         b &= assertFalse(player.attack(), "dead player cannot attack");
         b &= assertEquals(nNewBulletCountAfterAttack, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "no change in bullet count 2");
 
-        player.SetHealth(100);
+        player.setHealth(100);
         player.getWeaponManager().getCurrentWeapon()->SetMagBulletCount(0);
         b &= assertFalse(player.attack(), "should return wpn->pullTrigger() which is false in this case");
 
@@ -1148,7 +1153,7 @@ private:
 
         bool b = assertFalse(player.canTakeItem(miHealth), "1");
 
-        player.SetHealth(50);
+        player.setHealth(50);
         b &= assertTrue(player.canTakeItem(miHealth), "2");
 
         return b;
@@ -1181,13 +1186,14 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        const auto& playerConst = player;
         proofps_dd::MapItem miHealth(*engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
         pge_network::PgePacket newPktWpnUpdate;
 
-        player.SetHealth(90);
-        player.TakeItem(miHealth, newPktWpnUpdate);
+        player.setHealth(90);
+        player.takeItem(miHealth, newPktWpnUpdate);
 
-        return (assertEquals(100, player.getHealth(), "player health") &
+        return (assertEquals(100, playerConst.getHealth(), "player health") &
             assertTrue(miHealth.isTaken(), "item taken")) != 0;
     }
 
@@ -1207,7 +1213,7 @@ private:
             return false;
         };
 
-        player.TakeItem(miPistol, pktWpnUpdate);
+        player.takeItem(miPistol, pktWpnUpdate);
         bool bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[0]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
@@ -1229,7 +1235,7 @@ private:
             assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag")) != 0;
 
-        player.TakeItem(miMchGun, pktWpnUpdate);
+        player.takeItem(miMchGun, pktWpnUpdate);
         bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
@@ -1252,7 +1258,7 @@ private:
             assertEquals(0 /* we didnt have machinegun yet, so we expect unmag count to be 0 in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 2 unmag");
 
-        player.TakeItem(miBazooka, pktWpnUpdate);
+        player.takeItem(miBazooka, pktWpnUpdate);
         bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
