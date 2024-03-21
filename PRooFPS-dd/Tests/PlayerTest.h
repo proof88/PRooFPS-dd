@@ -63,9 +63,10 @@ protected:
         AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
         AddSubTest("test_set_has_just_started_falling", (PFNUNITSUBTEST)&PlayerTest::test_set_has_just_started_falling);
-        AddSubTest("test_start_somersault_when_auto_crouch_is_disabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_when_auto_crouch_is_disabled);
-        AddSubTest("test_start_somersault_when_auto_crouch_is_enabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_when_auto_crouch_is_enabled);
-        AddSubTest("test_step_somersault_angle", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle);
+        AddSubTest("test_start_somersault_server_when_auto_crouch_is_disabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_when_auto_crouch_is_disabled);
+        AddSubTest("test_start_somersault_server_when_auto_crouch_is_enabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_when_auto_crouch_is_enabled);
+        AddSubTest("test_step_somersault_angle_server", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle_server);
+        AddSubTest("test_set_somersault_client", (PFNUNITSUBTEST)&PlayerTest::test_set_somersault_client);
         AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
         AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
         AddSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
@@ -515,7 +516,7 @@ private:
         player.getJumpForce().Set(1,2,3);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.jump();
-        player.startSomersault();
+        player.startSomersaultServer();
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
         player.die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
@@ -753,7 +754,7 @@ private:
         return b;
     }
 
-    bool test_start_somersault_when_auto_crouch_is_disabled()
+    bool test_start_somersault_server_when_auto_crouch_is_disabled()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(false);
@@ -763,7 +764,7 @@ private:
         player.getPos().set(PureVector(1.0, 1.f, 1.f)); // new
         player.setGravity(5.f);
 
-        player.startSomersault();
+        player.startSomersaultServer();
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
         b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
@@ -774,7 +775,7 @@ private:
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // and we are still crouching
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
@@ -786,7 +787,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertFalse(player.isSomersaulting(), "cannot somersault without manual crouch after jump if auto crouch is disabled");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
@@ -798,7 +799,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
@@ -806,7 +807,7 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
 
         // same as previous but we change Strafe
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -815,7 +816,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
@@ -823,7 +824,7 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 5");
 
         // same as previous but we change Strafe
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -832,7 +833,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
@@ -842,7 +843,7 @@ private:
         return b;
     }
 
-    bool test_start_somersault_when_auto_crouch_is_enabled()
+    bool test_start_somersault_server_when_auto_crouch_is_enabled()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
@@ -852,7 +853,7 @@ private:
         player.getPos().set(PureVector(1.0, 1.f, 1.f)); // new
         player.setGravity(5.f);
 
-        player.startSomersault();
+        player.startSomersaultServer();
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
         b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
@@ -863,7 +864,7 @@ private:
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // and we are still crouching (although not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 1");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
@@ -875,12 +876,12 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // but we are NOT crouching anymore (although not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 2");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
 
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -888,12 +889,12 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump (although not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
         b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 4");
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
 
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -901,7 +902,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
@@ -909,7 +910,7 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 5");
 
         // same as previous but we change Strafe
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -918,7 +919,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
@@ -926,7 +927,7 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 6");
 
         // same as previous but we change Strafe
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -935,7 +936,7 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "finally true 4");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
@@ -945,7 +946,7 @@ private:
         return b;
     }
 
-    bool test_step_somersault_angle()
+    bool test_step_somersault_angle_server()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
@@ -953,48 +954,62 @@ private:
 
         // Strafe is NONE
         player.jump();
-        player.startSomersault();
+        player.startSomersaultServer();
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 1");
 
-        player.stepSomersaultAngle(30.f);  // step amount is input from physics based on physics rate, here we just pass something
+        player.stepSomersaultAngleServer(30.f);  // step amount is input from physics based on physics rate, here we just pass something
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(30.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
         b &= assertTrue(player.isSomersaulting(), "somersaulting 2");
-        player.stepSomersaultAngle(400.f);
+        player.stepSomersaultAngleServer(400.f);
         b &= assertEquals(0.f, player.getSomersaultAngle(), "angle 2 when strafe is NONE");
         b &= assertFalse(player.isSomersaulting(), "somersaulting 3");
 
         // Strafe is RIGHT
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.jump();
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "somersaulting 4");
 
-        player.stepSomersaultAngle(30.f);  // step amount is input from physics based on physics rate, here we just pass something
+        player.stepSomersaultAngleServer(30.f);  // step amount is input from physics based on physics rate, here we just pass something
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-30.1f, player.getSomersaultAngle(), "angle 1 when strafe is RIGHT");
         b &= assertTrue(player.isSomersaulting(), "somersaulting 5");
-        player.stepSomersaultAngle(400.f);
+        player.stepSomersaultAngleServer(400.f);
         b &= assertEquals(0.f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
         b &= assertFalse(player.isSomersaulting(), "somersaulting 6");
 
         // Strafe is LEFT
-        player.resetSomersault();
+        player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::LEFT);
         player.jump();
-        player.startSomersault();
+        player.startSomersaultServer();
         b &= assertTrue(player.isSomersaulting(), "somersaulting 7");
 
-        player.stepSomersaultAngle(30.f);  // step amount is input from physics based on physics rate, here we just pass something
+        player.stepSomersaultAngleServer(30.f);  // step amount is input from physics based on physics rate, here we just pass something
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(30.1f, player.getSomersaultAngle(), "angle 1 when strafe is LEFT");
         b &= assertTrue(player.isSomersaulting(), "somersaulting 8");
-        player.stepSomersaultAngle(400.f);
+        player.stepSomersaultAngleServer(400.f);
         b &= assertEquals(0.f, player.getSomersaultAngle(), "angle 2 when strafe is LEFT");
         b &= assertFalse(player.isSomersaulting(), "somersaulting 9");
+
+        return b;
+    }
+
+    bool test_set_somersault_client()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        bool b = assertFalse(player.isSomersaulting(), "somersaulting 1");
+
+        player.setSomersaultClient(30.f);
+        b &= assertTrue(player.isSomersaulting(), "somersaulting 2");
+
+        player.setSomersaultClient(0.f);
+        b &= assertFalse(player.isSomersaulting(), "somersaulting 3");
 
         return b;
     }

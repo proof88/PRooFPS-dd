@@ -340,7 +340,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     {
         setStrafe(Strafe::NONE);
         getJumpForce().SetZero();
-        resetSomersault();
+        resetSomersaultServer();
 
         // server instance has the right to modify death count, clients will just receive it in update
         getDeaths()++;
@@ -649,7 +649,7 @@ void proofps_dd::Player::doCrouchShared()
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
     getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
-    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
+    // getWantToStandup() stays updated on server-side only, in clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(), do not modify anywhere else!
     //getWantToStandup() = false;
 }
 
@@ -687,16 +687,16 @@ void proofps_dd::Player::doStandupShared()
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
     getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
-    // getWantToStandup() stays updated on server-side only, in handleInputWhenConnectedAndSendUserCmdMove(), do not modify anywhere else!
+    // getWantToStandup() stays updated on server-side only, in clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(), do not modify anywhere else!
     //getWantToStandup() = true;
 }
 
 /**
  * Somersault aka front-/backflip.
  * The idea is this function sets an initial positive or negative value for the angle based on strafe direction, and then
- * Physics class will take care of the full somersaulting by periodic calls to stepSomersaultAngle().
+ * Physics class will take care of the full somersaulting by periodic calls to stepSomersaultAngleServer().
  */
-void proofps_dd::Player::startSomersault()
+void proofps_dd::Player::startSomersaultServer()
 {
     // sanity check
     if (isSomersaulting() || !isJumping() || isJumpingInitiatedFromCrouching())
@@ -716,7 +716,7 @@ void proofps_dd::Player::startSomersault()
         }
     }
 
-    // just set the initial direction by setting a small value, so stepSomersaultAngle() will know in which direction it should change angle
+    // just set the initial direction by setting a small value, so stepSomersaultAngleServer() will know in which direction it should change angle
     switch (m_strafe)
     {
     case Strafe::LEFT:
@@ -734,6 +734,15 @@ void proofps_dd::Player::startSomersault()
     m_fGravity *= 2;
 }
 
+/**
+ * Since server calculates somersault angle, client just receives the angle periodically from server.
+ * This function is for that case when server sends the updated angle.
+ */
+void proofps_dd::Player::setSomersaultClient(float angleZ)
+{
+    m_fSomersaultAngleZ = angleZ;
+}
+
 bool proofps_dd::Player::isSomersaulting() const
 {
     return m_fSomersaultAngleZ != 0.f;
@@ -746,12 +755,12 @@ float proofps_dd::Player::getSomersaultAngle() const
 
 /**
  * Stepping the somersault angle i.e. changing the angle in the proper direction.
- * The idea is that we set the initial angle by a call to startSomersault() and then in consecutive physics timesteps
- * we call stepSomersaultAngle() with a value calculated by the physics engine.
- * Somersaulting will stop once stepSomersaultAngle() finishes a complete roll/flip.
+ * The idea is that we set the initial angle by a call to startSomersaultServer() and then in consecutive physics timesteps
+ * we call stepSomersaultAngleServer() with a value calculated by the physics engine.
+ * Somersaulting will stop once stepSomersaultAngleServer() finishes a complete roll/flip.
  * This also means that currently only 1 full roll/flip is done before isSomersaulting() returns false again.
  */
-void proofps_dd::Player::stepSomersaultAngle(float angle)
+void proofps_dd::Player::stepSomersaultAngleServer(float angle)
 {
     if (m_fSomersaultAngleZ >= 0.f)
     {
@@ -783,7 +792,7 @@ void proofps_dd::Player::stepSomersaultAngle(float angle)
     
 }
 
-void proofps_dd::Player::resetSomersault()
+void proofps_dd::Player::resetSomersaultServer()
 {
     m_fSomersaultAngleZ = 0.f;
     getAngleZ() = 0.f;
@@ -1209,7 +1218,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     m_maps.getRandomSpawnpoint();
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 100, false, 0, 0))
+                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0))
                 {
                     // server injects this msg to self so resources for player will be allocated
                     m_pge.getNetwork().getServer().send(newPktSetup);
@@ -1264,7 +1273,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             m_maps.getRandomSpawnpoint();
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 100, false, 0, 0))
+            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -1514,6 +1523,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
                 playerConst.getAngleZ(),
                 player.getWeaponAngle().getNew().getZ(),
                 player.getCrouchStateCurrent(),
+                player.getSomersaultAngle(),
                 playerConst.getHealth().getNew(),
                 player.getRespawnFlag(),
                 playerConst.getFrags(),
@@ -1586,6 +1596,9 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(player.getObject3D()->getAngleVec().getY());
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+
+    // server has already set this in input handling and/or physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
+    player.setSomersaultClient(msg.m_fSomersaultAngle);
 
     //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
     if (msg.m_bCrouch)

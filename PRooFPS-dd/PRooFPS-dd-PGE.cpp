@@ -481,7 +481,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 getConfigProfiles());
             break;
         case proofps_dd::MsgUserCmdFromClient::id:
-            bRet = handleUserCmdMoveFromClient(
+            bRet = serverHandleUserCmdMoveFromClient(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt));
             break;
@@ -761,7 +761,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
-        if (handleInputWhenConnectedAndSendUserCmdMove(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
+        if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
             proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -793,7 +793,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopDisconnectedShared(PureWindow& window)
 {
     if (window.isActive())
     {
-        if (handleInputWhenDisconnected() == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
+        if (clientHandleInputWhenDisconnectedFromServer() == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
             return;
@@ -900,12 +900,12 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
            
            I see 2 other ways of doing this:
             - keep the xhair 2D, and anytime mouse is moved, we should also change 2 variables: fCamPosOffsetX and fCamPosOffsetY
-              based on the dx and dy variables in InputHandling::mouse(). Camera will have this position offset applied relative to
+              based on the dx and dy variables in InputHandling::clientMouseWhenConnectedToServer(). Camera will have this position offset applied relative to
               player's position. This looks to be the easiest solution.
               However, on the long run we will need 3D position of xhair since we want to use pick/select method, for example,
               when hovering the xhair over other player, we should be able to tell which player is that.
               
-            - change the xhair to 3D, so in InputHandling::mouse() the dx and dy variable changes will be applied to xhair's 3D position.
+            - change the xhair to 3D, so in InputHandling::clientMouseWhenConnectedToServer() the dx and dy variable changes will be applied to xhair's 3D position.
               With this method, pick/select can be implemented in a different way: no need to unproject, we just need collision
               logic to find out which player object collides with our xhair object!
         */
@@ -1341,6 +1341,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getObject3D()->getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                     false,
+                    it.second.getSomersaultAngle(),
                     it.second.getHealth(),
                     false,
                     it.second.getFrags(),

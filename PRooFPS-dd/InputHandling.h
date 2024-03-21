@@ -63,7 +63,7 @@ namespace proofps_dd
 
     protected:
 
-        PlayerAppActionRequest handleInputWhenConnectedAndSendUserCmdMove(
+        PlayerAppActionRequest clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
             proofps_dd::GameMode& gameMode,
             bool& won,
             proofps_dd::Player& player,
@@ -72,9 +72,9 @@ namespace proofps_dd
             const unsigned int nClUpdateRate,
             const unsigned int nPhysicsRateMin);
 
-        PlayerAppActionRequest handleInputWhenDisconnected();
+        PlayerAppActionRequest clientHandleInputWhenDisconnectedFromServer();
 
-        bool handleUserCmdMoveFromClient(
+        bool serverHandleUserCmdMoveFromClient(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserCmdFromClient& msg);
 
@@ -101,7 +101,7 @@ namespace proofps_dd
         TPureFloat m_fLastWeaponAngleZSent;
 
         
-        PlayerAppActionRequest keyboardWhenConnected(
+        PlayerAppActionRequest clientKeyboardWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
             bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
@@ -109,22 +109,22 @@ namespace proofps_dd
             const unsigned int nClUpdateRate,
             const unsigned int nPhysicsRateMin);
 
-        PlayerAppActionRequest keyboardWhenDisconnected();
+        PlayerAppActionRequest clientKeyboardWhenDisconnectedFromServer();
 
-        bool mouse(
+        bool clientMouseWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
             bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
-        void updatePlayerAsPerInputAndSendUserCmdMove(
+        void clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
             bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
-        void mouseWheel(
+        void clientMouseWheel(
             const short int& nMouseWheelChange,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player);

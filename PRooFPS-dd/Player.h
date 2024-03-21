@@ -139,11 +139,12 @@ namespace proofps_dd
         void doStandupServer(const float& fNewPosY);
         void doStandupShared();
 
-        void startSomersault();
+        void startSomersaultServer();
+        void setSomersaultClient(float angleZ);
         bool isSomersaulting() const;
         float getSomersaultAngle() const;
-        void stepSomersaultAngle(float angle);
-        void resetSomersault();
+        void stepSomersaultAngleServer(float angle);
+        void resetSomersaultServer();
 
         bool isRunning() const;
         void setRun(bool state);

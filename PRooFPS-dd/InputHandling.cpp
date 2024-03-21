@@ -72,7 +72,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputWhenConnectedAndSendUserCmdMove(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
     proofps_dd::GameMode& gameMode,
     bool& won,
     proofps_dd::Player& player,
@@ -83,25 +83,25 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::han
 {
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
-       in keyboard(), this is needed if only mouse() generates reason to send the pkt */
+       in keyboard(), this is needed if only clientMouseWhenConnectedToServer() generates reason to send the pkt */
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
-        keyboardWhenConnected(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+        clientKeyboardWhenConnectedToServer(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
-        mouse(gameMode, won, pkt, player, objXHair);
-        updatePlayerAsPerInputAndSendUserCmdMove(won, pkt, player, objXHair);
+        clientMouseWhenConnectedToServer(gameMode, won, pkt, player, objXHair);
+        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(won, pkt, player, objXHair);
     }
     return playerAppActionReq;
 }
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::handleInputWhenDisconnected()
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientHandleInputWhenDisconnectedFromServer()
 {
-    return keyboardWhenDisconnected();
+    return clientKeyboardWhenDisconnectedFromServer();
 }
 
-bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
+bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
 {
@@ -220,7 +220,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
                 if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
                 {
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
-                    player.startSomersault();
+                    player.startSomersaultServer();
                 }
             }
             else
@@ -388,9 +388,12 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
     }
 
     // TODO: this should be moved up, so returning from function is easier for rest of action handling code
-    player.getWeaponAngle().set(PureVector(0.f, player.getAngleY(), pktUserCmdMove.m_fWpnAngleZ));
-    wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
-    wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+    if (!player.isSomersaulting())
+    {
+        player.getWeaponAngle().set(PureVector(0.f, player.getAngleY(), pktUserCmdMove.m_fWpnAngleZ));
+        wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
+        wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+    }
 
     if (pktUserCmdMove.m_bRequestReload || (pktUserCmdMove.m_cWeaponSwitch != '\0'))
     {
@@ -430,7 +433,7 @@ bool proofps_dd::InputHandling::handleUserCmdMoveFromClient(
 // ############################### PRIVATE ###############################
 
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboardWhenConnected(
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
     bool& won,
     pge_network::PgePacket& pkt,
@@ -617,7 +620,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
     return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }
 
-proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::keyboardWhenDisconnected()
+proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientKeyboardWhenDisconnectedFromServer()
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -629,7 +632,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::key
 /**
     @return True in case there was mouse (xhair) movement, false otherwise.
 */
-bool proofps_dd::InputHandling::mouse(
+bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
     bool& /*won*/,
     pge_network::PgePacket& pkt,
@@ -688,7 +691,7 @@ bool proofps_dd::InputHandling::mouse(
     {
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
-            mouseWheel(nMouseWheelChange, pkt, player);
+            clientMouseWheel(nMouseWheelChange, pkt, player);
         }
     }
 
@@ -750,7 +753,7 @@ bool proofps_dd::InputHandling::mouse(
     return true;
 }
 
-void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
+void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
     bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player, PureObject3D& objXHair)
@@ -764,7 +767,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     {
         if (wpn)
         {
-            // during somersaulting, weapon and player angles are not controlled by player input but Physics class
+            // during somersaulting, weapon and player angles are NOT controlled by player input but by Physics class
             wpn->UpdatePosition(player.getObject3D()->getPosVec());
         }
     }
@@ -827,7 +830,7 @@ void proofps_dd::InputHandling::updatePlayerAsPerInputAndSendUserCmdMove(
     }
 }
 
-void proofps_dd::InputHandling::mouseWheel(
+void proofps_dd::InputHandling::clientMouseWheel(
     const short int& nMouseWheelChange,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player)
