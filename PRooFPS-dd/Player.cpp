@@ -539,17 +539,22 @@ void proofps_dd::Player::setJumpAllowed(bool b) {
 }
 
 void proofps_dd::Player::jump() {
-    if (!jumpAllowed())
+    m_bWillJump = false;
+
+    if (isJumping() || !jumpAllowed())
     {
         return;
     }
 
     m_bAllowJump = false;
     m_bJumping = true;
-    m_bWillJump = false;
     m_bFalling = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
     m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+
+    //static int nJumpCounter = 0;
+    //nJumpCounter++;
+    //getConsole().EOLn("%s() %d: fGravity: %f, crouchInput: %b ", __func__, nJumpCounter, m_fGravity, m_bCrouchingWasActiveWhenInitiatedJump);
 
     m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
@@ -631,6 +636,7 @@ void proofps_dd::Player::doCrouchServer(bool bPullUpLegs)
     // On the long run we should use colliders so physics does not depend on graphics.
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getCrouchStateCurrent() = true;  // can always go to crouching immediately
+    //getConsole().EOLn("%s(): bPullUpLegs: %b ", __func__, bPullUpLegs);
     if (bPullUpLegs)
     {
         // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
