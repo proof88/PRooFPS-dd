@@ -512,8 +512,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 vecOriginalJumpForce = player.getJumpForce();
             }
 
-            const bool bPlayerInAir = player.isJumping() || player.canFall();
-            if ( !bPlayerInAir ||
+            if ( !player.isInAir() ||
                  (m_bAllowStrafeMidAir &&
                  (
                     /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */

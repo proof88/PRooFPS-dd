@@ -110,8 +110,10 @@ namespace proofps_dd
         void setGravity(float value);
 
         bool isJumping() const;
+        // TODO: canFall() and setCanFall() are a bit fishy. They have been around since the very beginning, but using isFalling() seems to be better.
         bool canFall() const;
         void setCanFall(bool state);
+        bool isInAir() const;
         bool getHasJustStartedFallingNaturallyInThisTick() const;
         void setHasJustStartedFallingNaturallyInThisTick(bool val);
         bool getHasJustStartedFallingAfterJumpingStoppedInThisTick() const;

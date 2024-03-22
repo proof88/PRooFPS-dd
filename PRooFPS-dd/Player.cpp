@@ -478,6 +478,11 @@ void proofps_dd::Player::setCanFall(bool state) {
     m_bCanFall = state;
 }
 
+bool proofps_dd::Player::isInAir() const
+{
+    return isJumping() || canFall();
+}
+
 bool proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick() const
 {
     return m_bHasJustStartedFallingNaturally;
@@ -617,7 +622,7 @@ bool& proofps_dd::Player::getWantToStandup()
 float proofps_dd::Player::getProposedNewPosYforStandup() const
 {
     constexpr float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
-    bool bPushDownLegs = isJumping() || canFall(); // growth is inverse to bPullUpLegs in doCrouchServer()
+    bool bPushDownLegs = isInAir(); // growth is inverse to bPullUpLegs in doCrouchServer()
 
     return bPushDownLegs ?
         getPos().getNew().getY() + (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f - fProposedNewPlayerHalfHeight :
@@ -647,7 +652,7 @@ void proofps_dd::Player::doCrouchServer()
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getCrouchStateCurrent() = true;  // can always go to crouching immediately
 
-    const bool bPullUpLegs = isJumping() || canFall();
+    const bool bPullUpLegs = isInAir();
     if (bPullUpLegs)
     {
         // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,

@@ -63,6 +63,7 @@ protected:
         AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
         AddSubTest("test_set_has_just_started_falling", (PFNUNITSUBTEST)&PlayerTest::test_set_has_just_started_falling);
+        AddSubTest("test_is_in_air", (PFNUNITSUBTEST)&PlayerTest::test_is_in_air);
         AddSubTest("test_start_somersault_server_when_auto_crouch_is_disabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_when_auto_crouch_is_disabled);
         AddSubTest("test_start_somersault_server_when_auto_crouch_is_enabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_when_auto_crouch_is_enabled);
         AddSubTest("test_step_somersault_angle_server", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle_server);
@@ -751,6 +752,33 @@ private:
             PureVector(0.f, 0.f, 0.f)
         );
         b &= assertEquals(1.f, player.getHeightStartedFalling(), 0.001f, "height falling 2");
+
+        return b;
+    }
+
+    bool test_is_in_air()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        // we are on the ground now
+        player.setCanFall(false);
+        player.setJumpAllowed(true);
+
+        bool b = assertFalse(player.isInAir(), "1");
+
+        // jumping up
+        player.jump();
+        b &= assertTrue(player.isInAir(), "2");
+
+        // reached max Y pos
+        player.stopJumping();
+        b &= assertFalse(player.isInAir(), "3");
+
+        // canFall needs to be set manually
+        player.setCanFall(true);
+        b &= assertTrue(player.isInAir(), "4");
+
+        // TODO: canFall() and setCanFall() are a bit fishy. They have been around since the very beginning, but using isFalling() seems to be better.
 
         return b;
     }
