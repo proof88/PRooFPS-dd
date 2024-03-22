@@ -497,7 +497,10 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         const auto& playerConst = player;
         if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
-            float fStrafeSpeed = player.getCrouchStateCurrent() ? GAME_PLAYER_SPEED_CROUCH : (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
+            float fStrafeSpeed =
+                player.getCrouchStateCurrent() ?
+                (player.isSomersaulting() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_CROUCH) :
+                (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)
             {
                 fStrafeSpeed = -fStrafeSpeed;
