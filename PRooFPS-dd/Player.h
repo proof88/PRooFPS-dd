@@ -133,10 +133,11 @@ namespace proofps_dd
         bool& getCrouchStateCurrent();
         const bool& isJumpingInitiatedFromCrouching() const;
         bool& getWantToStandup();
-        void doCrouchServer(bool bPullUpLegs);
+        float getProposedNewPosYforStandup() const;
+        void doCrouchServer();
         void doCrouchShared();
 
-        void doStandupServer(const float& fNewPosY);
+        void doStandupServer();
         void doStandupShared();
 
         void startSomersaultServer();

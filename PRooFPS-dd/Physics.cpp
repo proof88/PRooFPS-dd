@@ -326,7 +326,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
         {
             // player just initiated crouching by input
-            player.doCrouchServer(player.isJumping() || player.canFall());
+            player.doCrouchServer();
         } // end handle crouch
 
         // PPPKKKGGGGGG
@@ -462,13 +462,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             if (player.getCrouchStateCurrent())
             {
                 // we need to check if there is enough space to stand up
-                const float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
-
-                const float fProposedNewPlayerPosY = 
-                    (player.isJumping() || player.canFall()) ?
-                    player.getPos().getNew().getY() + (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f - fProposedNewPlayerHalfHeight  :
-                    player.getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
-
+                constexpr float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
+                const float fProposedNewPlayerPosY = player.getProposedNewPosYforStandup();
                 const float fProposedNewPlayerPos1YMinusHalf = fProposedNewPlayerPosY - fProposedNewPlayerHalfHeight;
                 const float fProposedNewPlayerPos1YPlusHalf = fProposedNewPlayerPosY + fProposedNewPlayerHalfHeight;
                 bool bCanStandUp = true;
@@ -493,7 +488,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 } // end for i
                 if (bCanStandUp)
                 {
-                    player.doStandupServer(fProposedNewPlayerPosY);
+                    player.doStandupServer();
                 }
             }
         } // end if (player.getWantToStandup())

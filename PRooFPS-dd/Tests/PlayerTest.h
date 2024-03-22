@@ -71,6 +71,7 @@ protected:
         AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
         AddSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
         AddSubTest("test_client_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_client_do_crouch);
+        AddSubTest("test_get_proposed_new_pos_y_for_standup", (PFNUNITSUBTEST)&PlayerTest::test_get_proposed_new_pos_y_for_standup);
         AddSubTest("test_server_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_server_do_standup);
         AddSubTest("test_client_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_client_do_standup);
         AddSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
@@ -780,6 +781,7 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
 
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -792,6 +794,7 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
 
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -808,6 +811,7 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -825,6 +829,7 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -869,6 +874,7 @@ private:
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
 
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
         player.setGravity(5.f);
@@ -882,6 +888,7 @@ private:
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
 
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -895,6 +902,7 @@ private:
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
 
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -911,6 +919,7 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -928,6 +937,7 @@ private:
 
         // same as previous but we change Strafe
         player.resetSomersaultServer();
+        player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
@@ -1046,17 +1056,27 @@ private:
     bool test_server_do_crouch()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        
+        // we are on the ground now
+        player.setCanFall(false);
+        player.setJumpAllowed(true);
 
-        const auto vecOriginalPos = player.getPos();
-        player.doCrouchServer(false);
-        bool b = (assertEquals(vecOriginalPos, player.getPos(), "pos vec 1") &
+        // first we test crouching when being on ground
+        const auto vecOriginalPos = player.getPos().getNew();
+        player.doCrouchServer();
+        // pos should be unchanged since object is shrinked vertically to the center
+        bool b = (assertEquals(vecOriginalPos, player.getPos().getNew(), "pos vec 1") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
 
-        player.doStandupServer(player.getPos().getNew().getY());
+        player.doStandupServer();
 
-        player.doCrouchServer(true);
-        b &= assertNotEquals(vecOriginalPos, player.getPos(), "pos vec 2") &
+        // now we test crouching when being in air
+        player.jump();
+        player.doCrouchServer();
+        // pos should be changed since the top of the object stays unchanged (keep the head at the same position) while the legs are pulled upwards!
+        b &= assertNotEquals(vecOriginalPos, player.getPos().getNew(), "pos vec 2") &
+            assertGreater(player.getPos().getNew().getY(), vecOriginalPos.getY(), "pos Y greater") &
             assertNotEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 2") &
             assertTrue(player.getCrouchStateCurrent(), "crouch current state 2");
 
@@ -1077,16 +1097,63 @@ private:
         return b;
     }
 
+    bool test_get_proposed_new_pos_y_for_standup()
+    {
+        proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        // we are crouching on the ground now
+        player.setCanFall(false);
+        player.setJumpAllowed(true);
+        player.doCrouchServer();
+
+        // first we test new proposed Y pos when being on ground
+        const auto vecOriginalPos = player.getPos().getNew();
+        const auto fProposedNewY = player.getProposedNewPosYforStandup();
+        // new Y pos should be more up since we are crouching on the ground
+        bool b = assertGreater(fProposedNewY, vecOriginalPos.getY(), "pos Y greater 1");
+
+        // now we test standing up when being in air i.e. reset standing height with head position not changing but legs are pushed down
+        player.jump();
+        const auto vecOriginalPos_2 = player.getPos().getNew();
+        const auto fProposedNewY_2 = player.getProposedNewPosYforStandup();
+        b &= assertLess(fProposedNewY_2, vecOriginalPos_2.getY(), "pos Y greater 1");
+
+        return b;
+    }
+
     bool test_server_do_standup()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.doCrouchServer(false);
+        // we are crouching on the ground now
+        player.setCanFall(false);
+        player.setJumpAllowed(true);
+        player.doCrouchServer();
 
-        player.doStandupServer(12.f);
-        bool b = (assertEquals(12.f, player.getPos().getNew().getY(), "pos vec 1") &
+        // first we test standing up when being on ground
+        const auto vecOriginalPos = player.getPos().getNew();
+        const auto fProposedNewY = player.getProposedNewPosYforStandup();
+        player.doStandupServer();
+        // new Y pos should be more up since we were crouching on the ground
+        bool b = (assertNotEquals(vecOriginalPos, player.getPos().getNew(), "pos vec 1") &
+            assertGreater(player.getPos().getNew().getY(), vecOriginalPos.getY(), "pos Y greater 1") &
+            assertEquals(fProposedNewY, player.getPos().getNew().getY(), "pos vec 1") &
             assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 1") &
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1")) != 0;
+
+        // now we test standing up when being in air
+        player.jump();
+        player.doCrouchServer();
+
+        const auto vecOriginalPos_2 = player.getPos().getNew();
+        const auto fProposedNewY_2 = player.getProposedNewPosYforStandup();
+        player.doStandupServer();
+        // new Y pos should be more down since we are simulating pushing down our legs by keeping the head position at the same position.
+        b &= (assertNotEquals(vecOriginalPos, player.getPos().getNew(), "pos vec 2") &
+            assertLess(player.getPos().getNew().getY(), vecOriginalPos_2.getY(), "pos Y greater 2") &
+            assertEquals(fProposedNewY_2, player.getPos().getNew().getY(), "pos vec 2") &
+            assertEquals(1.f, player.getObject3D()->getScaling().getY(), "scaling Y 2") &
+            assertFalse(player.getCrouchStateCurrent(), "crouch current state 2")) != 0;
 
         return b;
     }

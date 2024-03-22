@@ -53,9 +53,9 @@ namespace proofps_dd
 
     static constexpr unsigned int GAME_NETWORK_RECONNECT_SECONDS = 2;
 
-    static const float GAME_BLOCK_SIZE_X = 1.0f;
-    static const float GAME_BLOCK_SIZE_Y = 1.0f;
-    static const float GAME_BLOCK_SIZE_Z = 1.0f;
+    static constexpr float GAME_BLOCK_SIZE_X = 1.0f;
+    static constexpr float GAME_BLOCK_SIZE_Y = 1.0f;
+    static constexpr float GAME_BLOCK_SIZE_Z = 1.0f;
 
     /*
       For the future:
@@ -73,10 +73,10 @@ namespace proofps_dd
     // WARNING: change this value with same caution as with above const!
     static const float GAME_JUMP_GRAVITY_START_FROM_CROUCHING = 15.f;
 
-    static const float GAME_PLAYER_W = 0.95f;
-    static const float GAME_PLAYER_H_STAND  = 1.88f;
-    static const float GAME_PLAYER_H_CROUCH_SCALING_Y = 0.5f;
-    static const unsigned GAME_PLAYER_RESPAWN_SECONDS = 3;
+    static constexpr float GAME_PLAYER_W = 0.95f;
+    static constexpr float GAME_PLAYER_H_STAND  = 1.88f;
+    static constexpr float GAME_PLAYER_H_CROUCH_SCALING_Y = 0.5f;
+    static constexpr unsigned GAME_PLAYER_RESPAWN_SECONDS = 3;
 
     static constexpr char* GAME_WPN_DEFAULT = "pistol.txt";
 

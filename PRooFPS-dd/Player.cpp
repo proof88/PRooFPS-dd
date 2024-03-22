@@ -614,6 +614,16 @@ bool& proofps_dd::Player::getWantToStandup()
     return m_bWantToStandup;
 }
 
+float proofps_dd::Player::getProposedNewPosYforStandup() const
+{
+    constexpr float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
+    bool bPushDownLegs = isJumping() || canFall(); // growth is inverse to bPullUpLegs in doCrouchServer()
+
+    return bPushDownLegs ?
+        getPos().getNew().getY() + (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f - fProposedNewPlayerHalfHeight :
+        getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
+}
+
 /**
 * Changing player properties for physics.
 * Invokes getPos().commit() too so not be called careless from anywhere.
@@ -622,7 +632,7 @@ bool& proofps_dd::Player::getWantToStandup()
 * @param bPullUpLegs True will result in the top Y position of the object won't change thus it will shrink upwards (should be used mid-air).
 *                    False will result in both the top and bottom Y positions of the object will change thus it will shrink towards center (should be used on ground).
 */
-void proofps_dd::Player::doCrouchServer(bool bPullUpLegs)
+void proofps_dd::Player::doCrouchServer()
 {
     if (getCrouchStateCurrent())
     {
@@ -636,7 +646,8 @@ void proofps_dd::Player::doCrouchServer(bool bPullUpLegs)
     // On the long run we should use colliders so physics does not depend on graphics.
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getCrouchStateCurrent() = true;  // can always go to crouching immediately
-    //getConsole().EOLn("%s(): bPullUpLegs: %b ", __func__, bPullUpLegs);
+
+    const bool bPullUpLegs = isJumping() || canFall();
     if (bPullUpLegs)
     {
         // reposition is allowed only if being in the air: pulling up the legs, so the head supposed to stay in same position as before,
@@ -663,18 +674,16 @@ void proofps_dd::Player::doCrouchShared()
 * Changing player properties for physics.
 * Invokes getPos().set() too so not be called careless from anywhere.
 * Should be invoked only by server physics during physics calculations.
-*
-* @param fNewPosY The new Y position for the player.
 */
-void proofps_dd::Player::doStandupServer(const float& fNewPosY)
+void proofps_dd::Player::doStandupServer()
 {
     getCrouchStateCurrent() = false;
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
-    // reposition so the legs will stay at the same position as we stand up, so we are essentially growing up from the ground
+    // Physics engine calls us if verification for enough free space has passed, it is not our job to check that
     getPos().set(
         PureVector(
             getPos().getNew().getX(),
-            fNewPosY,
+            getProposedNewPosYforStandup(),
             getPos().getNew().getZ()
         ));
 
@@ -714,7 +723,7 @@ void proofps_dd::Player::startSomersaultServer()
     {
         if (m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
         {
-            doCrouchServer(true /* pull up legs because we are jumping */);
+            doCrouchServer();
         }
         else
         {
