@@ -73,6 +73,19 @@ namespace proofps_dd
     // WARNING: change this value with same caution as with above const!
     static const float GAME_JUMP_GRAVITY_START_FROM_CROUCHING = 15.f;
 
+    static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN = 1.f;
+    static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX = 2.f;
+    static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX;
+    static_assert(
+        GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN <= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF,
+        "Min somersault mid-air jump force multiplier should not be greater than default somersault mid-air jump force multiplier.");
+    static_assert(
+        GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN <= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX,
+        "Min somersault mid-air jump force multiplier should not be greater than max somersault mid-air jump force multiplier.");
+    static_assert(
+        GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF <= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX,
+        "Max somersault mid-air jump force multiplier should not be smaller than default somersault mid-air jump force multiplier.");
+
     static constexpr float GAME_PLAYER_W = 0.95f;
     static constexpr float GAME_PLAYER_H_STAND  = 1.88f;
     static constexpr float GAME_PLAYER_H_CROUCH_SCALING_Y = 0.5f;

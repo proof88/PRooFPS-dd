@@ -750,8 +750,9 @@ void proofps_dd::Player::startSomersaultServer()
     }
     getAngleZ() = m_fSomersaultAngleZ;
 
-    m_vecJumpForce.SetX( m_vecJumpForce.getX() * 2 );
-    m_fGravity *= 2;
+    // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
+    m_vecJumpForce.SetX( m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() );
+    m_fGravity *= m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
 }
 
 /**

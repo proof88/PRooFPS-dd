@@ -12,7 +12,7 @@
 
 #include <cassert>
 
-#include "Consts.h"
+#include "Player.h"
 
 static constexpr char* CVAR_SV_RECONNECT_DELAY = "sv_reconnect_delay";
 static constexpr char* CVAR_CL_RECONNECT_DELAY = "cl_reconnect_delay";
@@ -161,6 +161,30 @@ void proofps_dd::Config::validate()
         getConsole().EOLn("ERROR: %s cannot be true when %s is false, forcing false!",
             CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL, CVAR_SV_ALLOW_STRAFE_MID_AIR);
     }
+
+    if (!m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() >= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN) &&
+            (m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() <= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX))
+        {
+            m_fSomersaultMidAirJumpForceMultiplier = m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
+            getConsole().OLn("Somersault Mid-Air Jump Force Multiplier from config: %f", m_fSomersaultMidAirJumpForceMultiplier);
+        }
+        else
+        {
+            m_fSomersaultMidAirJumpForceMultiplier = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF;
+            getConsole().EOLn("ERROR: Invalid Somersault Mid-Air Jump Force Multiplier in config: %s, forcing default: %f",
+                m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsString().c_str(),
+                m_fSomersaultMidAirJumpForceMultiplier);
+            m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF);
+        m_fSomersaultMidAirJumpForceMultiplier = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF;
+        getConsole().OLn("Missing Somersault Mid-Air Jump Force Multiplier in config, forcing default: %f", m_fSomersaultMidAirJumpForceMultiplier);
+    }
     
     m_bCamFollowsXHair = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
@@ -183,6 +207,11 @@ const unsigned int& proofps_dd::Config::getPhysicsRate() const
 const unsigned int& proofps_dd::Config::getClientUpdateRate() const
 {
     return m_nClientUpdateRate;
+}
+
+const float& proofps_dd::Config::getSomersaultMidAirJumpForceMultiplier() const
+{
+    return m_fSomersaultMidAirJumpForceMultiplier;
 }
 
 const unsigned int& proofps_dd::Config::getReconnectDelaySeconds() const
@@ -211,13 +240,7 @@ proofps_dd::Config::Config(
     PGE& pge,
     proofps_dd::Maps& maps) :
     m_pge(pge),
-    m_maps(maps),
-    m_nTickrate(GAME_TICKRATE_DEF),
-    m_nPhysicsRateMin(GAME_PHYSICS_RATE_MIN_DEF),
-    m_nClientUpdateRate(GAME_CL_UPDATERATE_DEF),
-    m_nSecondsReconnectDelay(GAME_NETWORK_RECONNECT_SECONDS),
-    m_bCamFollowsXHair(true),
-    m_bCamTilting(true)
+    m_maps(maps)
 {
     // Note that the following should not be touched here as they are not fully constructed when we are here:
     // maps, pge

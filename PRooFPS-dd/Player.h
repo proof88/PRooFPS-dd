@@ -39,6 +39,7 @@ namespace proofps_dd
     public:
 
         static constexpr char* CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH = "sv_somersault_mid_air_auto_crouch";
+        static constexpr char* CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER = "sv_somersault_mid_air_jump_force_multiplier";
 
         static const char* getLoggerModuleName();
         static void proofps_dd::Player::genUniqueUserName(

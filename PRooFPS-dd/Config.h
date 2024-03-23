@@ -16,6 +16,7 @@
 
 #include "PGE.h"
 
+#include "Consts.h"
 #include "Maps.h"
 
 namespace proofps_dd
@@ -40,6 +41,8 @@ namespace proofps_dd
         const unsigned int& getPhysicsRate() const;
         const unsigned int& getClientUpdateRate() const;
 
+        const float& getSomersaultMidAirJumpForceMultiplier() const;
+
         const unsigned int& getReconnectDelaySeconds() const;
 
         const bool& getCameraFollowsPlayerAndXHair() const;
@@ -52,13 +55,15 @@ namespace proofps_dd
         PGE& m_pge;
         Maps& m_maps;
 
-        unsigned int m_nTickrate;
-        unsigned int m_nPhysicsRateMin;
-        unsigned int m_nClientUpdateRate;
-        unsigned int m_nSecondsReconnectDelay;
+        unsigned int m_nTickrate = GAME_TICKRATE_DEF;
+        unsigned int m_nPhysicsRateMin = GAME_PHYSICS_RATE_MIN_DEF;
+        unsigned int m_nClientUpdateRate = GAME_CL_UPDATERATE_DEF;
+        unsigned int m_nSecondsReconnectDelay = GAME_NETWORK_RECONNECT_SECONDS;
 
-        bool m_bCamFollowsXHair;
-        bool m_bCamTilting;
+        float m_fSomersaultMidAirJumpForceMultiplier = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF;
+
+        bool m_bCamFollowsXHair = true;
+        bool m_bCamTilting = true;
 
         // ---------------------------------------------------------------------------
 

@@ -115,6 +115,9 @@ void proofps_dd::GUI::initialize()
     */
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
+    const ImVec4 imColorDefaultGreen(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
+    const ImVec4 imColorHoveredGray(0.59f, 0.59f, 0.59f, 1.f);
+    const ImVec4 imColorActiveGray(0.71f, 0.71f, 0.71f, 1.f);
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
@@ -127,7 +130,7 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
     style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.54f, 0.54f, 0.54f, 1.00f);
     style.Colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
-    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
+    style.Colors[ImGuiCol_TitleBgActive] = imColorDefaultGreen;
     style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
     style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
     style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
@@ -135,22 +138,22 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
     style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
     style.Colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_SliderGrab] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-    style.Colors[ImGuiCol_Button] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-    style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.71f, 0.71f, 0.71f, 1.00f);
-    style.Colors[ImGuiCol_Header] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.71f, 0.71f, 0.71f, 1.00f);
-    style.Colors[ImGuiCol_Separator] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_SeparatorActive] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_ResizeGrip] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_Tab] = ImVec4(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
-    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
+    style.Colors[ImGuiCol_SliderGrab] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(60 / 255.f, 74 / 255.f, 23 / 255.f, 1.f);
+    style.Colors[ImGuiCol_Button] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_ButtonHovered] = imColorHoveredGray;
+    style.Colors[ImGuiCol_ButtonActive] = imColorActiveGray;
+    style.Colors[ImGuiCol_Header] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_HeaderHovered] = imColorHoveredGray;
+    style.Colors[ImGuiCol_HeaderActive] = imColorActiveGray;
+    style.Colors[ImGuiCol_Separator] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_SeparatorHovered] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_SeparatorActive] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_ResizeGrip] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_ResizeGripHovered] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_ResizeGripActive] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_Tab] = imColorDefaultGreen;
+    style.Colors[ImGuiCol_TabHovered] = imColorHoveredGray;
     style.Colors[ImGuiCol_TabActive] = ImVec4(0.64f, 0.64f, 0.64f, 1.00f);
     style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.07f, 0.10f, 0.15f, 1.00f);
     style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
@@ -739,13 +742,32 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
-        ImGui::Text("Auto-Crouch for Mid-Air Somersault:");
+        ImGui::Text("Mid-Air Somersault Auto-Crouch:");
         ImGui::SameLine();
         bool bSvSomersaultMidAirAutoCrouch = cvarSvSomersaultMidAirAutoCrouch.getAsBool();
         if (ImGui::Checkbox("##cbSomersaultMidAirAutoCrouch", &bSvSomersaultMidAirAutoCrouch))
         {
             cvarSvSomersaultMidAirAutoCrouch.Set(bSvSomersaultMidAirAutoCrouch);
         }
+
+        PGEcfgVariable& cvarSvSomersaultMidAirJumpForceMultiplier = m_pPge->getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvSomersaultMidAirJumpForceMultiplier; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvSomersaultMidAirJumpForceMultiplier, cvarSvSomersaultMidAirJumpForceMultiplier);
+        ImGui::Text("Mid-Air Somersault Jump Force Multiplier:");
+        ImGui::SameLine();
+        float fSvSomersaultMidAirJumpForceMultiplier = cvarSvSomersaultMidAirJumpForceMultiplier.getAsFloat();
+        ImGui::PushItemWidth(70);
+        if (ImGui::SliderFloat(
+            "##sliderSomersaultMidAirJumpForceMultiplier",
+            &fSvSomersaultMidAirJumpForceMultiplier,
+            1.0f, 2.0f, "%.1f",
+            ImGuiSliderFlags_AlwaysClamp))
+        {
+            cvarSvSomersaultMidAirJumpForceMultiplier.Set(fSvSomersaultMidAirJumpForceMultiplier);
+        }
+        ImGui::PopItemWidth();
+
     } // end Misc
     ImGui::Unindent();
 
