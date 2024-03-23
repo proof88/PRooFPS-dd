@@ -787,6 +787,8 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(false);
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(2.f);
+        
         player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
@@ -834,15 +836,16 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 4");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
+        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 4");
+        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity 4");
 
-        // same as previous but we change Strafe
+        // same as previous but we change Strafe and Multiplier for Jump Force
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.5f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
@@ -852,15 +855,16 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 5");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 5");
+        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 5");
+        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity 5");
 
-        // same as previous but we change Strafe
+        // same as previous but we change Strafe and Multiplier for Jump Force
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
@@ -870,8 +874,8 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 6");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 6");
+        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 6");
+        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity 6");
 
         return b;
     }
@@ -880,6 +884,7 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(2.f);
         player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
@@ -942,10 +947,11 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 5");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 5");
+        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 5");
+        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity 5");
 
-        // same as previous but we change Strafe
+        // same as previous but we change Strafe and Multiplier for Jump Force
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.5f);
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
@@ -960,10 +966,11 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 6");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 6");
+        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 6");
+        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity 6");
 
-        // same as previous but we change Strafe
+        // same as previous but we change Strafe and Multiplier for Jump Force
+        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.f);
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
@@ -978,8 +985,8 @@ private:
         b &= assertTrue(player.isSomersaulting(), "finally true 4");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 7");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 7");
+        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 7");
+        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity 7");
 
         return b;
     }
