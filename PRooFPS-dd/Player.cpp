@@ -845,6 +845,15 @@ const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const
 void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
 {
     m_strafe = strafe;
+    if (strafe != Strafe::NONE)
+    {
+        m_timeLastStrafe = std::chrono::steady_clock::now();
+    }
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastStrafe() const
+{
+    return m_timeLastStrafe;
 }
 
 bool& proofps_dd::Player::getAttack()

@@ -156,6 +156,7 @@ namespace proofps_dd
 
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastStrafe() const;
 
         bool& getAttack();
         bool attack();
@@ -270,6 +271,7 @@ namespace proofps_dd
         bool m_bExpectingStartPos;
 
         proofps_dd::Strafe m_strafe;  // continuous op
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastStrafe;
 
         bool m_bAttack;               // continuous op
 

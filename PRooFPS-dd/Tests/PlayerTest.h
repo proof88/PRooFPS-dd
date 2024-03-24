@@ -284,6 +284,7 @@ private:
             assertTrue(player.isRunning(), "running default") &
             assertEquals(0, player.getTimeLastToggleRun().time_since_epoch().count(), "time last run toggle") &
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
+            assertEquals(0, player.getTimeLastStrafe().time_since_epoch().count(), "time last strafe") &
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
@@ -1076,14 +1077,23 @@ private:
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
+        std::chrono::time_point<std::chrono::steady_clock> timeBeforeStrafe = std::chrono::steady_clock::now();
         player.setStrafe(proofps_dd::Strafe::LEFT);
-        bool b = assertEquals(proofps_dd::Strafe::LEFT, player.getStrafe(), "1");
+        bool b = assertEquals(proofps_dd::Strafe::LEFT, player.getStrafe(), "strafe 1");
+        b &= assertTrue(player.getTimeLastStrafe() >= timeBeforeStrafe, "cmp timeBefore 1") &
+            assertTrue(player.getTimeLastStrafe() <= std::chrono::steady_clock::now(), "cmp timeAfter 1");
 
+        timeBeforeStrafe = std::chrono::steady_clock::now();
         player.setStrafe(proofps_dd::Strafe::RIGHT);
-        b &= assertEquals(proofps_dd::Strafe::RIGHT, player.getStrafe(), "2");
+        b &= assertEquals(proofps_dd::Strafe::RIGHT, player.getStrafe(), "strafe 2");
+        b &= assertTrue(player.getTimeLastStrafe() >= timeBeforeStrafe, "cmp timeBefore 2") &
+            assertTrue(player.getTimeLastStrafe() <= std::chrono::steady_clock::now(), "cmp timeAfter 2");
 
+        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeStopStrafe = std::chrono::steady_clock::now();
         player.setStrafe(proofps_dd::Strafe::NONE);
-        b &= assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "3");
+        b &= assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe 3");
+        b &= assertTrue(player.getTimeLastStrafe() >= timeBeforeStrafe, "cmp timeBefore 3") &
+            assertTrue(player.getTimeLastStrafe() < timeBeforeStopStrafe, "cmp timeAfter 3");
 
         return b;
     }
