@@ -315,7 +315,11 @@ void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariab
     {
         if (sHint.empty())
         {
-            sHint += cvar.getShortHint() + '\n' + '\n';
+            sHint = cvar.getShortHint() + '\n';
+            if (!cvar.getLongHint().empty())
+            {
+                sHint += + '\n';
+            }
             for (const auto& sLongHintLine : cvar.getLongHint())
             {
                 sHint += sLongHintLine + '\n';
@@ -1031,13 +1035,28 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     }
     ImGui::EndGroup();
 
-    bool bGfxCamTilting = m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
+    PGEcfgVariable& cvarGfxCamTilt = m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING];
+    bool bGfxCamTilting = cvarGfxCamTilt.getAsBool();
     ImGui::AlignTextToFramePadding();
+    static std::string sHintGfxCamTilt; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGfxCamTilt, cvarGfxCamTilt);
     ImGui::Text("Camera Tilting:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbCamTilt", &bGfxCamTilting))
     {
-        m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].Set(bGfxCamTilting);
+        cvarGfxCamTilt.Set(bGfxCamTilting);
+    }
+
+    PGEcfgVariable& cvarGfxCamRoll = m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_ROLLING];
+    bool bGfxCamRolling = cvarGfxCamRoll.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintGfxCamRoll; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGfxCamRoll, cvarGfxCamRoll);
+    ImGui::Text("Camera Rolling:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbCamRoll", &bGfxCamRolling))
+    {
+        cvarGfxCamRoll.Set(bGfxCamRolling);
     }
 
     ImGui::Separator();

@@ -111,5 +111,6 @@ namespace proofps_dd
 
     static constexpr char* CVAR_GFX_CAM_FOLLOWS_XHAIR = "gfx_cam_follows_xhair";
     static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
+    static constexpr char* CVAR_GFX_CAM_ROLLING = "gfx_cam_rolling";
 
 } // namespace proofps_dd

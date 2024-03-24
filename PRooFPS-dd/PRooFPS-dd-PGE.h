@@ -128,7 +128,8 @@ namespace proofps_dd
         void CameraMovement(
             const Player& player,
             bool bCamFollowsXHair,
-            bool bCamTilting);
+            bool bCamTilting,
+            bool bCamRoll);
         void RestartGame();
         void UpdateGameMode();
 

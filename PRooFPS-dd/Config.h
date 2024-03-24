@@ -47,6 +47,7 @@ namespace proofps_dd
 
         const bool& getCameraFollowsPlayerAndXHair() const;
         const bool& getCameraTilting() const;
+        const bool& getCameraRolling() const;
 
     protected:
 
@@ -64,6 +65,7 @@ namespace proofps_dd
 
         bool m_bCamFollowsXHair = true;
         bool m_bCamTilting = true;
+        bool m_bCamRolling = true;
 
         // ---------------------------------------------------------------------------
 

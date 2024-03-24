@@ -188,6 +188,7 @@ void proofps_dd::Config::validate()
     
     m_bCamFollowsXHair = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool();
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
+    m_bCamRolling = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_ROLLING].getAsBool();
 
     getConsole().OOOLn("Config validation finished!");
 
@@ -227,6 +228,11 @@ const bool& proofps_dd::Config::getCameraFollowsPlayerAndXHair() const
 const bool& proofps_dd::Config::getCameraTilting() const
 {
     return m_bCamTilting;
+}
+
+const bool& proofps_dd::Config::getCameraRolling() const
+{
+    return m_bCamRolling;
 }
 
 

@@ -20,6 +20,7 @@
 #include "Pure/include/external/PureUiManager.h"
 #include "Pure/include/external/Display/PureWindow.h"
 #include "Pure/include/external/PureCamera.h"
+#include "PURE/include/external/Math/PureTransformMatrix.h"
 #include "../../Console/CConsole/src/CConsole.h"
 
 using namespace std::chrono_literals;
@@ -770,7 +771,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(player, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting());
+    CameraMovement(player, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -865,9 +866,68 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
 void proofps_dd::PRooFPSddPGE::CameraMovement(
     const Player& player,
     bool bCamFollowsXHair,
-    bool bCamTilting)
+    bool bCamTilting,
+    bool bCamRoll)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    static float fShakeDegree = 0.f;
+    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
+    fShakeDegree += 1200 / m_fps;
+    while (fShakeDegree >= 360.f)
+    {
+        fShakeDegree -= 360.f;
+    }
+    float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
+
+    const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_IMPACT_FORCE_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
+    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
+    const float fCamShakeForceChangePerFrame = GAME_IMPACT_FORCE_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
+    if (m_vecCamShakeForce.getX() > 0.f)
+    {
+        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceChangePerFrame);
+        if (m_vecCamShakeForce.getX() < 0.f)
+        {
+            m_vecCamShakeForce.SetX(0.f);
+        }
+    }
+    if (m_vecCamShakeForce.getY() > 0.f)
+    {
+        m_vecCamShakeForce.SetY(m_vecCamShakeForce.getY() - fCamShakeForceChangePerFrame);
+        if (m_vecCamShakeForce.getY() < 0.f)
+        {
+            m_vecCamShakeForce.SetY(0.f);
+        }
+    }
+
+    const float fShakeFactorX = fShakeSine * m_vecCamShakeForce.getX() / m_fps;
+    const float fShakeFactorY = fShakeSine * m_vecCamShakeForce.getY() / m_fps;
+
+    auto& camera = getPure().getCamera();
+
+    if (bCamRoll && player.isSomersaulting())
+    {
+        camera.getPosVec().Set(
+            player.getObject3D()->getPosVec().getX() + fShakeFactorX,
+            player.getObject3D()->getPosVec().getY() + fShakeFactorY,
+            GAME_CAM_Z);
+        camera.getTargetVec().Set(
+            player.getObject3D()->getPosVec().getX() + fShakeFactorX,
+            player.getObject3D()->getPosVec().getY() + fShakeFactorY,
+            player.getObject3D()->getPosVec().getZ()
+        );
+
+        PureVector vecNewUp(0.f, 1.f, 0.f);
+        PureTransformMatrix matRotZ;
+        matRotZ.SetRotationZ((player.getObject3D()->getAngleVec().getY() == 0.f) ? -player.getSomersaultAngle() : player.getSomersaultAngle());
+        vecNewUp *= matRotZ;
+        camera.getUpVec() = vecNewUp;
+
+        // return early, as during somersault camera rolling we don't need sophisticated camera movement
+        m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        return;
+    }
 
     constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
     constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
@@ -891,7 +951,6 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
         m_maps.getBlocksVertexPosMax().getY() :
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
-    auto& camera = getPure().getCamera();
     float fCamPosXTarget, fCamPosYTarget;
     if (bCamFollowsXHair)
     {
@@ -945,39 +1004,6 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
             std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
     }
 
-    static float fShakeDegree = 0.f;
-    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
-    fShakeDegree += 1200 / m_fps;
-    while (fShakeDegree >= 360.f)
-    {
-        fShakeDegree -= 360.f;
-    }
-    float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
-
-    const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    const float GAME_IMPACT_FORCE_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
-    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
-    const float fCamShakeForceChangePerFrame = GAME_IMPACT_FORCE_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
-    if (m_vecCamShakeForce.getX() > 0.f)
-    {
-        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceChangePerFrame);
-        if (m_vecCamShakeForce.getX() < 0.f)
-        {
-            m_vecCamShakeForce.SetX(0.f);
-        }
-    }
-    if (m_vecCamShakeForce.getY() > 0.f)
-    {
-        m_vecCamShakeForce.SetY(m_vecCamShakeForce.getY() - fCamShakeForceChangePerFrame);
-        if (m_vecCamShakeForce.getY() < 0.f)
-        {
-            m_vecCamShakeForce.SetY(0.f);
-        }
-    }
-
-    float fShakeFactorX = fShakeSine * m_vecCamShakeForce.getX() / m_fps;
-    float fShakeFactorY = fShakeSine * m_vecCamShakeForce.getY() / m_fps;
-
     fCamPosXTarget += fShakeFactorX;
     fCamPosYTarget += fShakeFactorY;
 
@@ -998,6 +1024,8 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
         bCamTilting ? ((vecCamPos.getY() + fCamPosYTarget) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
+    // we can always reset like this, since Up vector doesn't have effect on camera pitch/yaw
+    camera.getUpVec().Set(0.f, 1.f, 0.f);
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
