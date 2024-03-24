@@ -1171,7 +1171,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         return false;
     }
 
-    Weapon* const wpn = it->second.getWeaponManager().getWeaponByFilename(msg.m_szWpnCurrentName);
+    auto& player = it->second;
+    Weapon* const wpn = player.getWeaponManager().getWeaponByFilename(msg.m_szWpnCurrentName);
     if (!wpn)
     {
         getConsole().EOLn("WeaponHandling::%s(): did not find wpn: %s!", __func__, msg.m_szWpnCurrentName);
@@ -1185,17 +1186,17 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
     }
 
-    if (!it->second.getWeaponManager().setCurrentWeapon(wpn,
+    if (!player.getWeaponManager().setCurrentWeapon(wpn,
         true /* even client should record last switch time to be able to check it on client side too */,
         m_pge.getNetwork().isServer()))
     {
         getConsole().EOLn("WeaponHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
-            __func__, it->second.getName().c_str(), wpn->getFilename().c_str());
+            __func__, player.getName().c_str(), wpn->getFilename().c_str());
         assert(false);
         return false;
     }
 
-    it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
+    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec(), player.isSomersaulting());
 
     return true;
 }

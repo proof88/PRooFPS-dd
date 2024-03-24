@@ -804,7 +804,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopDisconnectedShared(PureWindow& window)
 
 void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
 {
-    // this is horrible that FPS measuring is still not available from outside of Pure .........
+    // this is horrible that FPS measuring is still not available from outside of PURE .........
     std::stringstream ssFps;
     ssFps << std::fixed << std::setprecision(1) << m_fps;
     m_fps_counter++;
@@ -882,7 +882,6 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
 
     const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     const float GAME_IMPACT_FORCE_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
-    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
     const float fCamShakeForceChangePerFrame = GAME_IMPACT_FORCE_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
     if (m_vecCamShakeForce.getX() > 0.f)
     {

@@ -362,7 +362,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                     assert(false);  // in debug mode, terminate the game
                     return true;   // in release mode, dont terminate the server, just silently ignore!
                 }
-                it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec());
+                it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec(), player.isSomersaulting());
 
                 //getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
                 //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
@@ -768,7 +768,7 @@ void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveTo
         if (wpn)
         {
             // during somersaulting, weapon and player angles are NOT controlled by player input but by Physics class
-            wpn->UpdatePosition(player.getObject3D()->getPosVec());
+            wpn->UpdatePosition(player.getObject3D()->getPosVec(), true);
         }
     }
     else

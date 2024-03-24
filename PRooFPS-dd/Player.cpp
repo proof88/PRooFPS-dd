@@ -389,7 +389,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
         {
             pWpn->SetAvailable(true);
             m_wpnMgr.setCurrentWeapon(pWpn, false, bServer);
-            pWpn->UpdatePosition(getObject3D()->getPosVec());
+            pWpn->UpdatePosition(getObject3D()->getPosVec(), false);
         }
     }
 }
@@ -668,6 +668,7 @@ void proofps_dd::Player::doCrouchServer()
 
 void proofps_dd::Player::doCrouchShared()
 {
+    // we don't change player position in this "shared" version since only "server" versions do that and positions are replicated to clients in the usual way
     getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
     getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
@@ -704,6 +705,7 @@ void proofps_dd::Player::doStandupServer()
 
 void proofps_dd::Player::doStandupShared()
 {
+    // we don't change player position in this "shared" version since only "server" versions do that and positions are replicated to clients in the usual way
     getObject3D()->SetScaling(PureVector(1.f, 1.f, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerStand);
     getCrouchStateCurrent() = false;  // since this is replicated from server, it is valid
@@ -1604,20 +1606,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         player.getPos().commit(); // both server and client commits in this case
     }
 
-    player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
-    player.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec());
-
-    if (msg.m_fPlayerAngleY != -1.f)
-    {
-        //player.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
-        player.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
-    }
-    player.getObject3D()->getAngleVec().SetZ(msg.m_fPlayerAngleZ);
-
-    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(player.getObject3D()->getAngleVec().getY());
-    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
-
     // server has already set this in input handling and/or physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
     player.setSomersaultClient(msg.m_fSomersaultAngle);
 
@@ -1632,6 +1620,20 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     {
         player.doStandupShared();
     }
+
+    player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
+    player.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
+    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec(), player.isSomersaulting());
+
+    if (msg.m_fPlayerAngleY != -1.f)
+    {
+        //player.getAngleY() = msg.m_fPlayerAngleY;  // not sure why this is commented
+        player.getObject3D()->getAngleVec().SetY(msg.m_fPlayerAngleY);
+    }
+    player.getObject3D()->getAngleVec().SetZ(msg.m_fPlayerAngleZ);
+
+    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(player.getObject3D()->getAngleVec().getY());
+    player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;
