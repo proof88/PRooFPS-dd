@@ -143,7 +143,7 @@ namespace proofps_dd
         void doStandupServer();
         void doStandupShared();
 
-        void startSomersaultServer();
+        void startSomersaultServer(bool bJumpInduced);
         void setSomersaultClient(float angleZ);
         bool isSomersaulting() const;
         float getSomersaultAngle() const;
@@ -156,7 +156,8 @@ namespace proofps_dd
 
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
-        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastStrafe() const;
+        const proofps_dd::Strafe& getPreviousActualStrafe() const;
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastActualStrafe() const;
 
         bool& getAttack();
         bool attack();
@@ -271,6 +272,7 @@ namespace proofps_dd
         bool m_bExpectingStartPos;
 
         proofps_dd::Strafe m_strafe;  // continuous op
+        proofps_dd::Strafe m_prevActualStrafe;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastStrafe;
 
         bool m_bAttack;               // continuous op

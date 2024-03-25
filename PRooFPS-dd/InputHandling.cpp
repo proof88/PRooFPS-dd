@@ -171,8 +171,21 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
     }
 
+    const auto nMillisecsSinceLastStrafe =
+        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastActualStrafe()).count());
+    const auto prevStrafeState = player.getStrafe();
     // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
     player.setStrafe(pktUserCmdMove.m_strafe);
+    if ((prevStrafeState == Strafe::NONE) && (player.getStrafe() != Strafe::NONE) && (player.getPreviousActualStrafe() == player.getStrafe()))
+    {
+        // at this point, player triggered either a LEFT-NONE-LEFT or a RIGHT-NONE-RIGHT combo
+        if (!player.isInAir() && !player.isSomersaulting() && (nMillisecsSinceLastStrafe <= m_nKeyPressSomersaultMaximumWaitMilliseconds))
+        {
+            //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
+            player.startSomersaultServer(false);
+        }
+    }
+    
 
     //static std::chrono::time_point<std::chrono::steady_clock> timeStrafeStarted;
     //static float fPlayerPosXStarted = 0.f;
@@ -217,10 +230,10 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             {
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
-                if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump < m_nKeyPressSomersaultMaximumWaitMilliseconds))
+                if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump <= m_nKeyPressSomersaultMaximumWaitMilliseconds))
                 {
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
-                    player.startSomersaultServer();
+                    player.startSomersaultServer(true);
                 }
             }
             else

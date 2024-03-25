@@ -103,6 +103,7 @@ proofps_dd::Player::Player(
     m_bRunning(true),
     m_bExpectingStartPos(true),
     m_strafe(proofps_dd::Strafe::NONE),
+    m_prevActualStrafe(proofps_dd::Strafe::NONE),
     m_bAttack(false)
 {
     BuildPlayerObject(true);
@@ -142,6 +143,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bRunning(other.m_bRunning),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
     m_strafe(other.m_strafe),
+    m_prevActualStrafe(other.m_prevActualStrafe),
     m_bAttack(other.m_bAttack)
 {
     BuildPlayerObject(true);
@@ -177,6 +179,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bRunning = other.m_bRunning;
     m_bExpectingStartPos = other.m_bExpectingStartPos;
     m_strafe = other.m_strafe;
+    m_prevActualStrafe = other.m_prevActualStrafe;
     m_bAttack = other.m_bAttack;
 
     BuildPlayerObject(true);
@@ -339,6 +342,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     if (bServer)
     {
         setStrafe(Strafe::NONE);
+        m_prevActualStrafe = Strafe::NONE;
         getJumpForce().SetZero();
         resetSomersaultServer();
 
@@ -376,6 +380,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     doStandupShared();
     getWantToStandup() = true;
     getImpactForce().SetZero();
+    m_prevActualStrafe = Strafe::NONE;
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
@@ -714,21 +719,42 @@ void proofps_dd::Player::doStandupShared()
 }
 
 /**
- * Somersault aka front-/backflip.
+ * Salto/somersault aka front-/backflip.
  * The idea is this function sets an initial positive or negative value for the angle based on strafe direction, and then
  * Physics class will take care of the full somersaulting by periodic calls to stepSomersaultAngleServer().
+ * 
+ * @param bJumpInduced Set it to true if somersault is initiated during jump-up so it will be a mid-air salto/somersault.
+ *                     Set it to false if somersault is initiated on-ground so it will be an on-ground somersault.
  */
-void proofps_dd::Player::startSomersaultServer()
+void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
 {
     // sanity check
-    if (isSomersaulting() || !isJumping() || isJumpingInitiatedFromCrouching())
+    if (isSomersaulting())
     {
         return;
     }
 
+    if (bJumpInduced)
+    {
+        // mid-air sanity check
+        if ((isJumping() && isJumpingInitiatedFromCrouching()) || (isJumping() != bJumpInduced))
+        {
+            return;
+        }
+    }
+    else
+    {
+        // on-ground sanity check
+        if (isInAir() || (m_strafe == Strafe::NONE))
+        {
+            return;
+        }
+    }
+
     if (!getCrouchStateCurrent())
     {
-        if (m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
+        // for somersaulting on ground, we always require manual crouch, however for mid-air somersaulting, crouching depends on server config!
+        if (bJumpInduced && m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
         {
             doCrouchServer();
         }
@@ -738,7 +764,7 @@ void proofps_dd::Player::startSomersaultServer()
         }
     }
 
-    // just set the initial direction by setting a small value, so stepSomersaultAngleServer() will know in which direction it should change angle
+    // just set the initial m_fSomersaultAngleZ by setting a small value, so stepSomersaultAngleServer() will know in which direction it should change angle
     switch (m_strafe)
     {
     case Strafe::LEFT:
@@ -752,9 +778,34 @@ void proofps_dd::Player::startSomersaultServer()
     }
     getAngleZ() = m_fSomersaultAngleZ;
 
-    // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
-    m_vecJumpForce.SetX( m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() );
-    m_fGravity *= m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
+    if (bJumpInduced)
+    {
+        // triggering mid-air somersaulting modifies player jump force and gravity, not the impact force
+        // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
+        m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat());
+        m_fGravity *= m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
+    }
+    else
+    {
+        // triggering on-ground somersaulting modifies impact force only, not jump force or gravity
+        switch (m_strafe)
+        {
+        case Strafe::LEFT:
+            if (m_vecImpactForce.getX() > -GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X)
+            {
+                m_vecImpactForce.SetX(std::max(-GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, m_vecImpactForce.getX() - GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X));
+            }
+            break;
+        case Strafe::RIGHT:
+            if (m_vecImpactForce.getX() < GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X)
+            {
+                m_vecImpactForce.SetX(std::min(GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, m_vecImpactForce.getX() + GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X));
+            }
+            break;
+        default /* Strafe::NONE */:
+            break; // no-op
+        }
+    }
 }
 
 /**
@@ -844,6 +895,10 @@ const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const
 
 void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
 {
+    if (m_strafe != Strafe::NONE)
+    {
+        m_prevActualStrafe = m_strafe;
+    }
     m_strafe = strafe;
     if (strafe != Strafe::NONE)
     {
@@ -851,7 +906,16 @@ void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
     }
 }
 
-const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastStrafe() const
+/**
+ * Gets previous non-NONE strafe value registered before the last NONE strafe value and the current non-NONE strafe state.
+ * It is Strafe::NONE only right after constructing the Player object or after respawn().
+ */
+const proofps_dd::Strafe& proofps_dd::Player::getPreviousActualStrafe() const
+{
+    return m_prevActualStrafe;
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastActualStrafe() const
 {
     return m_timeLastStrafe;
 }

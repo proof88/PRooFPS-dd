@@ -57,6 +57,13 @@ namespace proofps_dd
     static constexpr float GAME_BLOCK_SIZE_Y = 1.0f;
     static constexpr float GAME_BLOCK_SIZE_Z = 1.0f;
 
+    // Physics modifies these as per physics rate
+    static constexpr float GAME_PLAYER_BASE_SPEED_WALK = 2.f;
+    static constexpr float GAME_PLAYER_BASE_SPEED_RUN = 4.f;
+    static constexpr float GAME_PLAYER_BASE_SPEED_CROUCH = 1.5f;
+
+    static constexpr float GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X = 10.f;
+
     /*
       For the future:
       for tickrate 20, this is good, for tickrate 60, 19.f gives identical result.
@@ -73,6 +80,7 @@ namespace proofps_dd
     // WARNING: change this value with same caution as with above const!
     static const float GAME_JUMP_GRAVITY_START_FROM_CROUCHING = 15.f;
 
+    static constexpr unsigned int GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS = 1000;
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN = 1.f;
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX = 2.f;
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX;
