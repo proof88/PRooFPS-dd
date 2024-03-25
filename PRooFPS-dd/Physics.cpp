@@ -610,6 +610,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
         const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + fPlayerHalfHeight;
 
+        bool bHorizontalCollisionOccured = false;
         if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
@@ -626,6 +627,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 {
                     continue;
                 }
+
+                bHorizontalCollisionOccured = true;
 
                 if (m_bAllowStrafeMidAir || player.canFall())
                 {
@@ -651,6 +654,15 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
                 break;
             } // end for i
         } // end XPos changed
+
+        if (!bHorizontalCollisionOccured)
+        {
+            if (player.getWillSomersaultInNextTick())
+            {
+                // only here can we really trigger on-ground somersaulting
+                player.startSomersaultServer(false);
+            }
+        }
     } // end for player
 }
 

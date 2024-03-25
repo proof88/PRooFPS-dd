@@ -189,7 +189,9 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         if (!player.isInAir() && !player.isSomersaulting() && (nMillisecsSinceLastStrafe <= m_nKeyPressSomersaultMaximumWaitMilliseconds))
         {
             //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
-            player.startSomersaultServer(false);
+            // unlike with mid-air somersaulting that can be triggered in InputHandling, the on-ground somersaulting should be postponed to Physics:
+            // because Physics can determine if there is horizontal collision occuring at the moment, and if not, then it can trigger the somersault!
+            player.setWillSomersaultInNextTick(true);
         }
     }
 

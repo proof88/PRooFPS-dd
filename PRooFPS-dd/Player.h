@@ -143,6 +143,8 @@ namespace proofps_dd
         void doStandupServer();
         void doStandupShared();
 
+        bool getWillSomersaultInNextTick() const;
+        void setWillSomersaultInNextTick(bool flag);
         void startSomersaultServer(bool bJumpInduced);
         void setSomersaultClient(float angleZ);
         bool isSomersaulting() const;
@@ -264,6 +266,7 @@ namespace proofps_dd
             Default true. */
         bool m_bWantToStandup;
 
+        bool m_bWillSomersault;
         float m_fSomersaultAngleZ;  /**< If non-zero, there is ongoing somersaulting handled by physics. */
         
         bool m_bRunning;

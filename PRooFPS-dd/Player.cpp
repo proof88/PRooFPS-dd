@@ -99,6 +99,7 @@ proofps_dd::Player::Player(
     m_bCrouchingStateCurrent(false),
     m_bCrouchingWasActiveWhenInitiatedJump(false),
     m_bWantToStandup(true),
+    m_bWillSomersault(false),
     m_fSomersaultAngleZ(0.f),
     m_bRunning(true),
     m_bExpectingStartPos(true),
@@ -139,6 +140,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
     m_bCrouchingWasActiveWhenInitiatedJump(other.m_bCrouchingWasActiveWhenInitiatedJump),
     m_bWantToStandup(other.m_bWantToStandup),
+    m_bWillSomersault(other.m_bWillSomersault),
     m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
     m_bRunning(other.m_bRunning),
     m_bExpectingStartPos(other.m_bExpectingStartPos),
@@ -175,6 +177,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
     m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
     m_bWantToStandup = other.m_bWantToStandup;
+    m_bWillSomersault = other.m_bWillSomersault;
     m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
     m_bRunning = other.m_bRunning;
     m_bExpectingStartPos = other.m_bExpectingStartPos;
@@ -343,8 +346,10 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     {
         setStrafe(Strafe::NONE);
         m_prevActualStrafe = Strafe::NONE;
+        setWillJumpInNextTick(false);
         getJumpForce().SetZero();
         resetSomersaultServer();
+        setWillSomersaultInNextTick(false);
 
         // server instance has the right to modify death count, clients will just receive it in update
         getDeaths()++;
@@ -718,6 +723,16 @@ void proofps_dd::Player::doStandupShared()
     //getWantToStandup() = true;
 }
 
+bool proofps_dd::Player::getWillSomersaultInNextTick() const
+{
+    return m_bWillSomersault;
+}
+
+void proofps_dd::Player::setWillSomersaultInNextTick(bool flag)
+{
+    m_bWillSomersault = flag;
+}
+
 /**
  * Salto/somersault aka front-/backflip.
  * The idea is this function sets an initial positive or negative value for the angle based on strafe direction, and then
@@ -728,6 +743,8 @@ void proofps_dd::Player::doStandupShared()
  */
 void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
 {
+    m_bWillSomersault = false;
+
     // sanity check
     if (isSomersaulting())
     {

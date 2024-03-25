@@ -279,6 +279,7 @@ private:
             assertFalse(player.isJumping(), "jumping") &
             assertFalse(player.getWillJumpInNextTick(), "will jump") &
             assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
+            assertFalse(player.getWillSomersaultInNextTick(), "will somersault") &
             assertFalse(player.isSomersaulting(), "isSomersaulting") &
             assertEquals(0.f, player.getSomersaultAngle(), "getSomersaultAngle") &
             assertTrue(player.isExpectingStartPos(), "expecting start pos") &
@@ -517,32 +518,40 @@ private:
             return false;
         };
 
-        player.getAttack() = true;
-        player.getJumpForce().Set(1,2,3);
+        player.getAttack() = true; // this should be reset
+        player.getJumpForce().Set(1,2,3); // this should be also reset
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.setStrafe(proofps_dd::Strafe::LEFT); // we are doing this so we can test if prevActualStrafe is also reset!
         player.jump();
         player.startSomersaultServer(true);
+        player.setJumpAllowed(true); // jump() has set it to false, but we forcing it now back to true and expect it to be reset by die()
+        player.setWillJumpInNextTick(true); // this should be also reset
+        player.setWillSomersaultInNextTick(true); // this should be also reset
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
+
         player.die(true, bServer);
+
         const auto nFirstTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
         b &= (assertEquals(0, playerConst.getHealth(), "health 1") &
             assertEquals(100, playerConst.getHealth().getOld(), "old health 1") &
             assertFalse(player.getAttack(), "attack 1") &
             assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1") &
+            assertFalse(player.getWillJumpInNextTick(), "will jump 1") &
             assertEquals(proofps_dd::Strafe::NONE, playerConst.getStrafe(), "strafe 1") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe 1") &
             assertFalse(playerConst.isSomersaulting(), "somersaulting 1") &
+            assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
             assertFalse(playerConst.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(1, playerConst.getDeaths(), "deaths 1") /* server increases it */ &
             assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 1")) != 0;
-        
+
+        // now we just testing for getTimeDied()
         player.setHealth(100);
         player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
-        
         player.die(true, bServer);
+
         const auto nSecondTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
         b &= assertEquals(0, playerConst.getHealth(), "health 2") &
             assertEquals(100, playerConst.getHealth().getOld(), "old health 2") &
@@ -819,8 +828,10 @@ private:
         player.setGravity(5.f);
 
         // negative case
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1");
         b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
         b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x 1");
@@ -835,6 +846,7 @@ private:
         player.getCrouchStateCurrent() = true; // and we are still crouching
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 2");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 2");
@@ -849,8 +861,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault without manual crouch after jump if auto crouch is disabled");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 3");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 3");
@@ -865,8 +879,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 4");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
         b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 4");
@@ -887,8 +903,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 5");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 5");
@@ -909,8 +927,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 6");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 6");
@@ -933,8 +953,10 @@ private:
         player.setGravity(5.f);
 
         // negative case
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1");
         b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
         b &= assertEquals(5.f, player.getGravity(), "gravity 1");
         b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x 1");
@@ -947,8 +969,10 @@ private:
         auto fOriginalGravity = player.getGravity();
         auto fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // and we are still crouching (although not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 2");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 2");
@@ -963,8 +987,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = false; // but we are NOT crouching anymore (although not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 3");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 3");
@@ -980,8 +1006,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump (although not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 4");
         b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 4");
         b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 4");
@@ -997,8 +1025,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 5");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
         b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 5");
@@ -1019,8 +1049,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 6");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 6");
@@ -1041,8 +1073,10 @@ private:
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = false; // and we are still NOT crouching (not needed since auto-crouch is enabled)
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 4");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 7");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 7");
@@ -1072,8 +1106,10 @@ private:
         auto fOriginalGravity = player.getGravity();
         auto fOriginalImpactForceX = player.getImpactForce().getX();
         player.getCrouchStateCurrent() = true; // and we are still crouching
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on-ground when jumping up");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 1");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 1");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 1");
@@ -1086,8 +1122,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault on-ground when falling down");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 2");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 2");
@@ -1100,8 +1138,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault on-ground when not crouching");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 3");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
         b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 3");
@@ -1113,8 +1153,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault on-ground when not strafing");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 4");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 4");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 4");
@@ -1127,8 +1169,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 5");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 1 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 5");
@@ -1143,8 +1187,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 6");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 6");
@@ -1160,8 +1206,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 7");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 7");
@@ -1176,8 +1224,10 @@ private:
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
+        player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 4");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 8");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 4 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 8");
