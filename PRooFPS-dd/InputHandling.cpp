@@ -171,6 +171,13 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
     }
 
+    // make sure we have an up-to-date angle Y so startSomersaultServer() has the up-to-date data to decide things
+    if ((pktUserCmdMove.m_fPlayerAngleY != -1.f) && (!player.isSomersaulting()))
+    {
+        player.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
+        player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
+    }
+
     const auto nMillisecsSinceLastStrafe =
         static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastActualStrafe()).count());
     const auto prevStrafeState = player.getStrafe();
@@ -185,7 +192,6 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             player.startSomersaultServer(false);
         }
     }
-    
 
     //static std::chrono::time_point<std::chrono::steady_clock> timeStrafeStarted;
     //static float fPlayerPosXStarted = 0.f;
@@ -265,12 +271,6 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 }
             }
         }
-    }
-
-    if (pktUserCmdMove.m_fPlayerAngleY != -1.f)
-    {
-        player.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
-        player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
