@@ -551,7 +551,7 @@ void proofps_dd::Player::setJumpAllowed(bool b) {
 void proofps_dd::Player::jump() {
     m_bWillJump = false;
 
-    if (isJumping() || !jumpAllowed())
+    if (isJumping() || !jumpAllowed() || isSomersaulting())
     {
         return;
     }

@@ -646,6 +646,7 @@ private:
             const float fExpectedInitialGravity = player.getCrouchInput() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
             player.getCrouchStateCurrent() = true;  // jumping is not changing crouching state since crouching is also valid mid-air
 
+            // positive test
             // TODO: maybe we should also check for object height
             player.setJumpAllowed(true);
             b &= assertTrue(player.jumpAllowed(), "allowed 1") &
@@ -678,6 +679,7 @@ private:
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 3") &
                 assertTrue(player.getWantToStandup(), "wantstandup 3");
 
+            // negative test
             player.setJumpAllowed(false);
             player.setWillJumpInNextTick(true);
             b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
@@ -692,6 +694,18 @@ private:
                 assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 4") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 5") &
                 assertTrue(player.getWantToStandup(), "wantstandup 5");
+
+            // negative test: we are already somersaulting on-ground
+            player.stopJumping();
+            player.setJumpAllowed(true);
+            player.setCanFall(false);
+            player.setStrafe(proofps_dd::Strafe::RIGHT);
+            player.startSomersaultServer(false);
+            player.setWillJumpInNextTick(true);
+            player.jump();
+            b &= assertTrue(player.isSomersaulting(), "somersaulting 1") &
+                assertFalse(player.isJumping(), "jumping 5") &
+                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 5");
 
         } // end for i
 
