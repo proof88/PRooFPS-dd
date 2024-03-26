@@ -46,7 +46,8 @@ From the main menu, you can either start a new server or join to an existing one
  - **SPACE:** jump;
  - **LCTRL:** crouch/duck.
 
-On-the-ground somersault: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).  
+On-the-ground somersault: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).
+
 In-air salto/somersault: jump-crouch-jump or jump-jump combo, depending on server configuration of CVAR `sv_somersault_mid_air_auto_crouch`.
 
 **Weapons**
