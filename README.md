@@ -27,7 +27,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.2.1.0 Private Beta is here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).  
+The latest available download version [v0.2.2.0 Private Beta is here](https://drive.google.com/file/d/1vDM_siI_4xKFpkhx_2AsiFiCdx5YY5fO/view?usp=drive_link).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
 [Version history is here.](HISTORY.md)
@@ -39,13 +39,24 @@ From the main menu, you can either start a new server or join to an existing one
 
 ### Keyboard, Mouse
 
- - **A/D, LEFT/RIGHT:** move the player (strafe);
+**Movement**
+
+ - **A/D, LEFT/RIGHT:** strafe: move the player in either left or right direction;
  - **LSHIFT:** toggle move speed: walking or running;
  - **SPACE:** jump;
- - **LCTRL:** crouch/duck;
- - **R**: reload current weapon;
+ - **LCTRL:** crouch/duck.
+
+On-the-ground somersault: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).  
+In-air salto/somersault: jump-crouch-jump or jump-jump combo, depending on server configuration of CVAR `sv_somersault_mid_air_auto_crouch`.
+
+**Weapons**
+
  - **2,3,4 / Mouse Wheel**: change weapon (pistol, machine gun, bazooka);
- - **Mouse Click**: attack (fire weapon);
+ - **R**: reload current weapon;
+ - **Mouse Click**: attack (fire weapon).
+
+**Misc**
+
  - **TAB:** show frag table;
  - **M:** switch to next map based on mapcycle.txt (server only);
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
