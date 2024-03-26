@@ -80,7 +80,11 @@ namespace proofps_dd
     // WARNING: change this value with same caution as with above const!
     static const float GAME_JUMP_GRAVITY_START_FROM_CROUCHING = 15.f;
 
-    static constexpr unsigned int GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS = 1000;
+    static constexpr unsigned int GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS = 300;
+    static_assert(
+        GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS > 0,
+        "Somersault duration cannot be 0.");
+
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN = 1.f;
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX = 2.f;
     static constexpr float GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX;

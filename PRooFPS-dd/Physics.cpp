@@ -358,7 +358,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
     const float GAME_PLAYER_SPEED_WALK = GAME_PLAYER_BASE_SPEED_WALK / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = GAME_PLAYER_BASE_SPEED_RUN / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = GAME_PLAYER_BASE_SPEED_CROUCH / nPhysicsRate;
-    const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / (static_cast<float>(GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS) / nPhysicsRate);
+    const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS);
 
     for (auto& playerPair : m_mapPlayers)
     {
