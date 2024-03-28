@@ -612,7 +612,7 @@ private:
         b &= assertEquals("", maps.getNextMapToBeLoaded(), "next map to load 1");
 
         b &= assertTrue(maps.initialize(), "init") &
-            m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].getAsString().empty();
+            m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMap].getAsString().empty();
 
         if (b)
         {
@@ -628,13 +628,13 @@ private:
             b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 3");
             b &= assertFalse(maps.mapcycleIsCurrentLast(), "mapcycle last 2");
             
-            m_cfgProfiles.getVars()[proofps_dd::Maps::CVAR_SV_MAP].Set("testtest.txt");
+            m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMap].Set("testtest.txt");
             sRet = maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded();
             b &= assertEquals("testtest.txt", sRet, "server decide 4");
             b &= assertEquals(sRet, maps.getNextMapToBeLoaded(), "next map to load 4");
             
             // by design we require to fast-forward to last map, because this way the game will switch to the FIRST mapcycle map AFTER
-            // playing on CVAR_SV_MAP
+            // playing on szCVarSvMap
             b &= assertTrue(maps.mapcycleIsCurrentLast(), "mapcycle last 3");
         }
 

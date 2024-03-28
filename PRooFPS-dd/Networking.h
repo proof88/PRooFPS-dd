@@ -17,10 +17,10 @@
 
 namespace proofps_dd
 {
-
     class Networking
     {
     public:
+        static constexpr char* szCVarClServerIp = "cl_server_ip";
 
         static const char* getLoggerModuleName();
 

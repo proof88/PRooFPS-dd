@@ -144,7 +144,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
 
         const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
-        if (timeDiffSeconds >= proofps_dd::GAME_PLAYER_RESPAWN_SECONDS)
+        if (timeDiffSeconds >= nPlayerRespawnSeconds)
         {
             ServerRespawnPlayer(player, false);
         }

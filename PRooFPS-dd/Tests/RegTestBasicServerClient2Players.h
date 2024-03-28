@@ -23,6 +23,7 @@
 #include "GameMode.h"
 #include "SharedWithTest.h"
 #include "InputSim.h"
+#include "PlayerHandling.h"
 #include "Process.h"
 
 class RegTestBasicServerClient2Players :
@@ -227,7 +228,7 @@ protected:
         }
 
         // wait for the killed server player to respawn
-        std::this_thread::sleep_for(std::chrono::milliseconds(proofps_dd::GAME_PLAYER_RESPAWN_SECONDS*1000 + 200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(proofps_dd::PlayerHandling::nPlayerRespawnSeconds * 1000 + 200));
 
         {
             // it is recommended to be a bit more patient here, since after respawn the camera will reposition gradually, which

@@ -150,14 +150,14 @@ const std::string& proofps_dd::Maps::serverDecideFirstMapAndUpdateNextMapToBeLoa
     // the SV_MAP value properly since we at this level KNOW that spaces should NOT be present in this specific CVAR.
     {
         // this is ridiculous, PFL still doesnt have std::string-compatible strClr() !!!
-        const std::string sOriginalMapName = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
+        const std::string sOriginalMapName = m_cfgProfiles.getVars()[szCVarSvMap].getAsString();
         char cLine[200]{};
         strncpy_s(cLine, sizeof(cLine), sOriginalMapName.c_str(), sOriginalMapName.length());
         PFL::strClr(cLine);
-        m_cfgProfiles.getVars()[CVAR_SV_MAP].Set(cLine);
+        m_cfgProfiles.getVars()[szCVarSvMap].Set(cLine);
     }
 
-    if (m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString().empty())
+    if (m_cfgProfiles.getVars()[szCVarSvMap].getAsString().empty())
     {
         mapcycleRewindToFirst();
         m_sServerMapFilenameToLoad = mapcycleGetCurrent();
@@ -172,10 +172,10 @@ const std::string& proofps_dd::Maps::serverDecideFirstMapAndUpdateNextMapToBeLoa
     }
     else
     {
-        m_sServerMapFilenameToLoad = m_cfgProfiles.getVars()[CVAR_SV_MAP].getAsString();
-        getConsole().OLn("First map by config (%s): %s", CVAR_SV_MAP, m_sServerMapFilenameToLoad.c_str());
+        m_sServerMapFilenameToLoad = m_cfgProfiles.getVars()[szCVarSvMap].getAsString();
+        getConsole().OLn("First map by config (%s): %s", szCVarSvMap, m_sServerMapFilenameToLoad.c_str());
 
-        // we go to last map in mapcycle so that when server switches from CVAR_SV_MAP to next map, it will be the
+        // we go to last map in mapcycle so that when server switches from szCVarSvMap to next map, it will be the
         // first map in mapcycle, this is how it will properly start looping mapcycle.
         mapcycleForwardToLast();
     }
@@ -363,13 +363,13 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         }
     }
     m_blocksVertexPosMin.Set(
-        m_blockPosMin.getX() - proofps_dd::GAME_BLOCK_SIZE_X / 2.f,
-        m_blockPosMin.getY() - proofps_dd::GAME_BLOCK_SIZE_Y / 2.f,
-        m_blockPosMin.getZ() - proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
+        m_blockPosMin.getX() - proofps_dd::Maps::fMapBlockSizeWidth / 2.f,
+        m_blockPosMin.getY() - proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
+        m_blockPosMin.getZ() - proofps_dd::Maps::fMapBlockSizeDepth / 2.f);
     m_blocksVertexPosMax.Set(
-        m_blockPosMax.getX() + proofps_dd::GAME_BLOCK_SIZE_X / 2.f,
-        m_blockPosMax.getY() + proofps_dd::GAME_BLOCK_SIZE_Y / 2.f,
-        m_blockPosMax.getZ() + proofps_dd::GAME_BLOCK_SIZE_Z / 2.f);
+        m_blockPosMax.getX() + proofps_dd::Maps::fMapBlockSizeWidth / 2.f,
+        m_blockPosMax.getY() + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
+        m_blockPosMax.getZ() + proofps_dd::Maps::fMapBlockSizeDepth / 2.f);
 
     getConsole().SOLnOO("> Map loaded with width %u and height %u!", m_width, m_height);
     return true;
@@ -1344,7 +1344,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         const bool bForeground = foregroundBlocks.find(c) != foregroundBlocks.end();
         const bool bBackground = backgroundBlocks.find(c) != backgroundBlocks.end();
 
-        x = x + proofps_dd::GAME_BLOCK_SIZE_X;
+        x = x + proofps_dd::Maps::fMapBlockSizeWidth;
         if ( x > maxx )
         {
             maxx = x;
@@ -1464,7 +1464,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     const auto it = m_mapReferenceBlockObject3Ds.find(c);
                     if (it == m_mapReferenceBlockObject3Ds.end())
                     {
-                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(proofps_dd::GAME_BLOCK_SIZE_X, proofps_dd::GAME_BLOCK_SIZE_X, proofps_dd::GAME_BLOCK_SIZE_X);
+                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth);
                         m_mapReferenceBlockObject3Ds[c]->Hide();
                         PureTexture* tex = PGENULL;
                         if (m_Block2Texture.find(c) == m_Block2Texture.end())
@@ -1520,9 +1520,9 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
         }
 
-        pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::GAME_BLOCK_SIZE_Z);
+        pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::Maps::fMapBlockSizeDepth);
     }  // while
-    y = y - proofps_dd::GAME_BLOCK_SIZE_Y;
+    y = y - proofps_dd::Maps::fMapBlockSizeHeight;
     return true;
 }  // lineHandleLayout()
 

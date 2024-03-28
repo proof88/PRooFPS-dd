@@ -511,7 +511,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         player.setJumpAllowed(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
@@ -652,7 +652,7 @@ private:
             const PureVector vecExpectedForce(player.getPos().getNew().getX() - player.getPos().getOld().getX(), 0.f, 0.f);
 
             player.getCrouchInput().set(i == 1);
-            const float fExpectedInitialGravity = player.getCrouchInput() ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+            const float fExpectedInitialGravity = player.getCrouchInput() ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
             player.getCrouchStateCurrent() = true;  // jumping is not changing crouching state since crouching is also valid mid-air
 
             // positive test
@@ -818,8 +818,8 @@ private:
     {
         constexpr bool bJumpInducedSomersault = true;
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(false);
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(2.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(false);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f);
         
         player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
@@ -896,7 +896,7 @@ private:
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.5f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.5f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
@@ -920,7 +920,7 @@ private:
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
@@ -944,8 +944,8 @@ private:
     {
         constexpr bool bJumpInducedSomersault = true;
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(2.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f);
         player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
@@ -1037,7 +1037,7 @@ private:
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.5f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.5f);
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
@@ -1061,7 +1061,7 @@ private:
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(1.f);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.f);
         player.resetSomersaultServer();
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
@@ -1090,8 +1090,8 @@ private:
     {
         constexpr bool bJumpInducedSomersault = false;
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true); // should affect mid-air somersault only
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(2.f); // jump forces must NOT change in this test
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true); // should affect mid-air somersault only
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f); // jump forces must NOT change in this test
         player.setJumpAllowed(true);
         player.getPos().set(PureVector()); // old
         player.getPos().commit();
@@ -1177,7 +1177,7 @@ private:
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 1 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 5");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 5");
-        b &= assertEquals(fOriginalImpactForceX + proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, player.getImpactForce().getX(), "impact force x 5");
+        b &= assertEquals(fOriginalImpactForceX + proofps_dd::Player::fSomersaultGroundImpactForceX, player.getImpactForce().getX(), "impact force x 5");
 
         // positive case
         // same as previous but we change initial impact force
@@ -1195,8 +1195,8 @@ private:
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 6");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 6");
-        // we cannot go above proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X
-        b &= assertEquals(proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, player.getImpactForce().getX(), "impact force x 6");
+        // we cannot go above proofps_dd::Player::fSomersaultGroundImpactForceX
+        b &= assertEquals(proofps_dd::Player::fSomersaultGroundImpactForceX, player.getImpactForce().getX(), "impact force x 6");
 
         // positive case
         // now we are changing Strafe
@@ -1214,7 +1214,7 @@ private:
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 7");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 7");
-        b &= assertEquals(fOriginalImpactForceX - proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, player.getImpactForce().getX(), "impact force x 7");
+        b &= assertEquals(fOriginalImpactForceX - proofps_dd::Player::fSomersaultGroundImpactForceX, player.getImpactForce().getX(), "impact force x 7");
 
         // positive case
         // same as previous but we change initial impact force
@@ -1232,8 +1232,8 @@ private:
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 4 when strafe is LEFT");
         b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 8");
         b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 8");
-        // we cannot go below -proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X
-        b &= assertEquals(-proofps_dd::GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, player.getImpactForce().getX(), "impact force x 8");
+        // we cannot go below -proofps_dd::Player::fSomersaultGroundImpactForceX
+        b &= assertEquals(-proofps_dd::Player::fSomersaultGroundImpactForceX, player.getImpactForce().getX(), "impact force x 8");
 
         return b;
     }
@@ -1241,7 +1241,7 @@ private:
     bool test_step_somersault_angle_server()
     {
         proofps_dd::Player player(m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
-        m_cfgProfiles.getVars()[proofps_dd::Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].Set(true);
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         player.setJumpAllowed(true);
 
         // Strafe is NONE

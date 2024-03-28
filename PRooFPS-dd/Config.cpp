@@ -162,27 +162,27 @@ void proofps_dd::Config::validate()
             CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL, CVAR_SV_ALLOW_STRAFE_MID_AIR);
     }
 
-    if (!m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsString().empty())
+    if (!m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsString().empty())
     {
-        if ((m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() >= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MIN) &&
-            (m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat() <= GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_MAX))
+        if ((m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat() >= Player::fSomersaultMidAirJumpForceMultiplierMin) &&
+            (m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat() <= Player::fSomersaultMidAirJumpForceMultiplierMax))
         {
-            m_fSomersaultMidAirJumpForceMultiplier = m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
+            m_fSomersaultMidAirJumpForceMultiplier = m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat();
             getConsole().OLn("Somersault Mid-Air Jump Force Multiplier from config: %f", m_fSomersaultMidAirJumpForceMultiplier);
         }
         else
         {
-            m_fSomersaultMidAirJumpForceMultiplier = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF;
+            m_fSomersaultMidAirJumpForceMultiplier = Player::fSomersaultMidAirJumpForceMultiplierDef;
             getConsole().EOLn("ERROR: Invalid Somersault Mid-Air Jump Force Multiplier in config: %s, forcing default: %f",
-                m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsString().c_str(),
+                m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsString().c_str(),
                 m_fSomersaultMidAirJumpForceMultiplier);
-            m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF);
+            m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(Player::fSomersaultMidAirJumpForceMultiplierDef);
         }
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].Set(GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF);
-        m_fSomersaultMidAirJumpForceMultiplier = GAME_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER_DEF;
+        m_pge.getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(Player::fSomersaultMidAirJumpForceMultiplierDef);
+        m_fSomersaultMidAirJumpForceMultiplier = Player::fSomersaultMidAirJumpForceMultiplierDef;
         getConsole().OLn("Missing Somersault Mid-Air Jump Force Multiplier in config, forcing default: %f", m_fSomersaultMidAirJumpForceMultiplier);
     }
     
@@ -246,7 +246,8 @@ proofps_dd::Config::Config(
     PGE& pge,
     proofps_dd::Maps& maps) :
     m_pge(pge),
-    m_maps(maps)
+    m_maps(maps),
+    m_fSomersaultMidAirJumpForceMultiplier(Player::fSomersaultMidAirJumpForceMultiplierDef)
 {
     // Note that the following should not be touched here as they are not fully constructed when we are here:
     // maps, pge

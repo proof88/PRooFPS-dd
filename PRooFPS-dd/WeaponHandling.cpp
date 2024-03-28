@@ -407,13 +407,13 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
 {
     // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
     const PureVector vRelaxedMapMinBounds(
-        m_maps.getBlocksVertexPosMin().getX() - proofps_dd::GAME_BLOCK_SIZE_X * 4,
-        m_maps.getBlocksVertexPosMin().getY() - proofps_dd::GAME_BLOCK_SIZE_Y,
-        m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::GAME_BLOCK_SIZE_Z); // ah why dont we have vector-scalar subtract operator defined ...
+        m_maps.getBlocksVertexPosMin().getX() - proofps_dd::Maps::fMapBlockSizeWidth * 4,
+        m_maps.getBlocksVertexPosMin().getY() - proofps_dd::Maps::fMapBlockSizeHeight,
+        m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::Maps::fMapBlockSizeDepth); // ah why dont we have vector-scalar subtract operator defined ...
     const PureVector vRelaxedMapMaxBounds(
-        m_maps.getBlocksVertexPosMax().getX() + proofps_dd::GAME_BLOCK_SIZE_X * 4,
-        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::GAME_BLOCK_SIZE_Y,
-        m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::GAME_BLOCK_SIZE_Z);
+        m_maps.getBlocksVertexPosMax().getX() + proofps_dd::Maps::fMapBlockSizeWidth * 4,
+        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight,
+        m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
     
     return !Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
@@ -425,8 +425,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
-    const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
-    const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
+    const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+    const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
     bool bEndGame = gameMode.checkWinningConditions();
     std::list<Bullet>& bullets = m_pge.getBullets();
     auto it = bullets.begin();

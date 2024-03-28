@@ -173,7 +173,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getPure().getCamera().SetNearPlane(0.1f);
     getPure().getCamera().SetFarPlane(100.0f);
     getPure().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
-    getPure().getCamera().getTargetVec().Set( 0, 0, -proofps_dd::GAME_BLOCK_SIZE_Z );
+    getPure().getCamera().getTargetVec().Set( 0, 0, -proofps_dd::Maps::fMapBlockSizeDepth );
 
     m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
     if (!m_gameMode)
@@ -632,9 +632,9 @@ bool proofps_dd::PRooFPSddPGE::connect()
     else
     {
         std::string sIp = "127.0.0.1";
-        if (!getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString().empty())
+        if (!getConfigProfiles().getVars()[Networking::szCVarClServerIp].getAsString().empty())
         {
-            sIp = getConfigProfiles().getVars()[CVAR_CL_SERVER_IP].getAsString();
+            sIp = getConfigProfiles().getVars()[Networking::szCVarClServerIp].getAsString();
             getConsole().OLn("IP from config: %s", sIp.c_str());
         }
 
@@ -935,20 +935,20 @@ void proofps_dd::PRooFPSddPGE::CameraMovement(
     const float fCamMinAllowedPosX =
         m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
         m_maps.getBlocksVertexPosMin().getX() :
-        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::GAME_BLOCK_SIZE_X * (nBlocksToKeepCameraWithinMapBoundsHorizontally));
+        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (nBlocksToKeepCameraWithinMapBoundsHorizontally));
     const float fCamMaxAllowedPosX =
         m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
         m_maps.getBlocksVertexPosMax().getX() :
-        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::GAME_BLOCK_SIZE_X * (m_maps.width() - nBlocksToKeepCameraWithinMapBoundsHorizontally));
+        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (m_maps.width() - nBlocksToKeepCameraWithinMapBoundsHorizontally));
     
     const float fCamMinAllowedPosY =
         m_maps.height() < (nBlocksToKeepCameraWithinMapBottom + 1) ?
         m_maps.getBlocksVertexPosMin().getY() :
-        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (nBlocksToKeepCameraWithinMapBottom - 1));
+        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (nBlocksToKeepCameraWithinMapBottom - 1));
     const float fCamMaxAllowedPosY =
         m_maps.height() < (nBlocksToKeepCameraWithinMapTop + 1) ?
         m_maps.getBlocksVertexPosMax().getY() :
-        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::GAME_BLOCK_SIZE_Y * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
+        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
     float fCamPosXTarget, fCamPosYTarget;
     if (bCamFollowsXHair)
@@ -1241,7 +1241,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                 newPktUserNameChange,
                 pge_network::ServerConnHandle,
                 true,
-                getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString()))
+                getConfigProfiles().getVars()[Player::szCVarClName].getAsString()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
@@ -1269,7 +1269,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                 newPktUserNameChange,
                 connHandleServerSide,
                 false,
-                getConfigProfiles().getVars()[CVAR_CL_NAME].getAsString()))
+                getConfigProfiles().getVars()[Player::szCVarClName].getAsString()))
             {
                 getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
@@ -1304,7 +1304,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         getPure().getCamera().getTargetVec().Set(
             getPure().getCamera().getPosVec().getX(),
             getPure().getCamera().getPosVec().getY(),
-            -proofps_dd::GAME_BLOCK_SIZE_Z);
+            -proofps_dd::Maps::fMapBlockSizeDepth);
 
         hideLoadingScreen();
         showXHairInCenter();
@@ -1548,7 +1548,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     getPure().getCamera().getTargetVec().Set(
         getPure().getCamera().getPosVec().getX(),
         getPure().getCamera().getPosVec().getY(),
-        -proofps_dd::GAME_BLOCK_SIZE_Z);
+        -proofps_dd::Maps::fMapBlockSizeDepth);
 
     hideLoadingScreen();
     showXHairInCenter();

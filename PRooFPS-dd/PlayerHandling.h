@@ -34,11 +34,12 @@
 
 namespace proofps_dd
 {
-
     class PlayerHandling :
         protected proofps_dd::Networking
     {
     public:
+
+        static constexpr unsigned nPlayerRespawnSeconds = 3;
 
         static const char* getLoggerModuleName();
 

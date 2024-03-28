@@ -382,7 +382,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
 
 float proofps_dd::GUI::drawPlayerNameInputBox()
 {
-    PGEcfgVariable& cvarClName = m_pPge->getConfigProfiles().getVars()[CVAR_CL_NAME];
+    PGEcfgVariable& cvarClName = m_pPge->getConfigProfiles().getVars()[Player::szCVarClName];
     ImGui::AlignTextToFramePadding();
     static std::string sHintClName; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintClName, cvarClName);
@@ -583,7 +583,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             m_pMaps->mapcycleRemove_availableMapsAdd();
         }
 
-        PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::CVAR_SV_MAP];
+        PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMap];
 
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
@@ -742,7 +742,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         }
         ImGui::EndGroup();
 
-        PGEcfgVariable& cvarSvSomersaultMidAirAutoCrouch = m_pPge->getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH];
+        PGEcfgVariable& cvarSvSomersaultMidAirAutoCrouch = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirAutoCrouch];
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
@@ -754,7 +754,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             cvarSvSomersaultMidAirAutoCrouch.Set(bSvSomersaultMidAirAutoCrouch);
         }
 
-        PGEcfgVariable& cvarSvSomersaultMidAirJumpForceMultiplier = m_pPge->getConfigProfiles().getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER];
+        PGEcfgVariable& cvarSvSomersaultMidAirJumpForceMultiplier = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier];
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvSomersaultMidAirJumpForceMultiplier; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvSomersaultMidAirJumpForceMultiplier, cvarSvSomersaultMidAirJumpForceMultiplier);
@@ -860,7 +860,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();
 
-    PGEcfgVariable& cvarClServerIp = m_pPge->getConfigProfiles().getVars()[CVAR_CL_SERVER_IP];
+    PGEcfgVariable& cvarClServerIp = m_pPge->getConfigProfiles().getVars()[Networking::szCVarClServerIp];
 
     ImGui::AlignTextToFramePadding();
     static std::string sHintClServerIp; // static so it is built up by addHintToItemByCVar() only once

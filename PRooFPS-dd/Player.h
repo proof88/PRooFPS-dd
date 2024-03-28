@@ -38,8 +38,55 @@ namespace proofps_dd
     {
     public:
 
-        static constexpr char* CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH = "sv_somersault_mid_air_auto_crouch";
-        static constexpr char* CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER = "sv_somersault_mid_air_jump_force_multiplier";
+        static constexpr char* szCVarClName = "cl_name";
+
+        static constexpr float fObjWidth = 0.95f;
+        static constexpr float fObjHeightStanding = 1.88f;
+        static constexpr float fObjHeightCrouchScaling = 0.5f;
+
+        // Physics modifies these as per nPhysicsRate
+        static constexpr float fBaseSpeedWalk = 2.f;
+        static constexpr float fBaseSpeedRun = 4.f;
+        static constexpr float fBaseSpeedCrouch = 1.5f;
+
+        /*
+          For the future:
+          for tickrate 20, this is good, for tickrate 60, 19.f gives identical result.
+          However, in Physics::serverGravity(), I'm lerping not this but GAME_GRAVITY_CONST based on tickrate.
+          I don't remember why I'm not lerping this between 19 and 20 but anyway that approach is also good.
+
+          WARNING: when value is changed, physics must be manually tested on Warhouse: there are some places
+          on that map when we cannot jump HORIZONTALLY in between walls/boxes.
+          For example, as of v0.1.6, 20.f and 19.f works fine, but 18.f produces this issue.
+          And different tick/physics_min_rate config values should be tested (60 and 20).
+        */
+        static constexpr float fJumpGravityStartFromStanding = 19.f;
+
+        // WARNING: change this value with same caution as with above const!
+        static constexpr float fJumpGravityStartFromCrouching = 15.f;
+
+        static constexpr char* szCVarSvSomersaultMidAirAutoCrouch = "sv_somersault_mid_air_auto_crouch";
+        static constexpr char* szCVarSvSomersaultMidAirJumpForceMultiplier = "sv_somersault_mid_air_jump_force_multiplier";
+
+        static constexpr unsigned int nSomersaultTargetDurationMillisecs = 300;
+        static_assert(
+            nSomersaultTargetDurationMillisecs > 0,
+            "Somersault duration cannot be 0.");
+
+        static constexpr float fSomersaultMidAirJumpForceMultiplierMin = 1.f;
+        static constexpr float fSomersaultMidAirJumpForceMultiplierMax = 2.f;
+        static constexpr float fSomersaultMidAirJumpForceMultiplierDef = Player::fSomersaultMidAirJumpForceMultiplierMax;
+        static_assert(
+            fSomersaultMidAirJumpForceMultiplierMin <= fSomersaultMidAirJumpForceMultiplierDef,
+            "Min somersault mid-air jump force multiplier should not be greater than default somersault mid-air jump force multiplier.");
+        static_assert(
+            fSomersaultMidAirJumpForceMultiplierMin <= fSomersaultMidAirJumpForceMultiplierMax,
+            "Min somersault mid-air jump force multiplier should not be greater than max somersault mid-air jump force multiplier.");
+        static_assert(
+            fSomersaultMidAirJumpForceMultiplierDef <= fSomersaultMidAirJumpForceMultiplierMax,
+            "Max somersault mid-air jump force multiplier should not be smaller than default somersault mid-air jump force multiplier.");
+
+        static constexpr float fSomersaultGroundImpactForceX = 10.f;
 
         static const char* getLoggerModuleName();
         static void proofps_dd::Player::genUniqueUserName(
@@ -249,7 +296,7 @@ namespace proofps_dd
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.
             Can be set to true by input, but only server physics engine can set it to false, or a respawn event.
-            Somersaulting can also set it to true if mid-air auto-crouch is enabled (CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH).
+            Somersaulting can also set it to true if mid-air auto-crouch is enabled (Player::szCVarSvSomersaultMidAirAutoCrouch).
             Default false. */
         bool m_bCrouchingStateCurrent = false;
 

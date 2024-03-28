@@ -355,10 +355,10 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nPhysicsRate)
 {
-    const float GAME_PLAYER_SPEED_WALK = GAME_PLAYER_BASE_SPEED_WALK / nPhysicsRate;
-    const float GAME_PLAYER_SPEED_RUN = GAME_PLAYER_BASE_SPEED_RUN / nPhysicsRate;
-    const float GAME_PLAYER_SPEED_CROUCH = GAME_PLAYER_BASE_SPEED_CROUCH / nPhysicsRate;
-    const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / GAME_PLAYER_SOMERSAULT_TARGET_DURATION_MILLISECS);
+    const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
+    const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
+    const float GAME_PLAYER_SPEED_CROUCH = Player::fBaseSpeedCrouch / nPhysicsRate;
+    const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
 
     for (auto& playerPair : m_mapPlayers)
     {
@@ -374,8 +374,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
         // could be fetched into cache for even faster iteration on its elements ...
 
         // at this point, player.getPos().getY() is already updated by Gravity()
-        const float fBlockSizeXhalf = proofps_dd::GAME_BLOCK_SIZE_X / 2.f;
-        const float fBlockSizeYhalf = proofps_dd::GAME_BLOCK_SIZE_Y / 2.f;
+        const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+        const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
 
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
@@ -461,7 +461,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
             if (player.getCrouchStateCurrent())
             {
                 // we need to check if there is enough space to stand up
-                constexpr float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
+                constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
                 const float fProposedNewPlayerPosY = player.getProposedNewPosYforStandup();
                 const float fProposedNewPlayerPos1YMinusHalf = fProposedNewPlayerPosY - fProposedNewPlayerHalfHeight;
                 const float fProposedNewPlayerPos1YPlusHalf = fProposedNewPlayerPosY + fProposedNewPlayerHalfHeight;
@@ -641,7 +641,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const un
 
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
-                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::GAME_PLAYER_W / 2.0f + 0.01f);
+                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
                 //getConsole().EOLn("x align to wall");
                 // PPPKKKGGGGGG
                 player.getPos().set(

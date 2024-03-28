@@ -26,7 +26,6 @@
 
 namespace proofps_dd
 {
-
     class Physics :
         protected virtual proofps_dd::PlayerHandling
     {

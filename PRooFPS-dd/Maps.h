@@ -23,12 +23,15 @@
 
 namespace proofps_dd
 {
-
     class Maps
     {
     public:
 
-        static constexpr char* CVAR_SV_MAP = "sv_map";
+        static constexpr char* szCVarSvMap = "sv_map";
+
+        static constexpr float fMapBlockSizeWidth = 1.0f;
+        static constexpr float fMapBlockSizeHeight = 1.0f;
+        static constexpr float fMapBlockSizeDepth = 1.0f;
 
         static const char* getLoggerModuleName();
 

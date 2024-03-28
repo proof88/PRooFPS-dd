@@ -535,7 +535,7 @@ void proofps_dd::Player::jump() {
     m_bJumping = true;
     m_bFalling = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
-    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::GAME_JUMP_GRAVITY_START_FROM_CROUCHING : proofps_dd::GAME_JUMP_GRAVITY_START_FROM_STANDING;
+    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
 
     //static int nJumpCounter = 0;
     //nJumpCounter++;
@@ -601,12 +601,12 @@ bool& proofps_dd::Player::getWantToStandup()
 
 float proofps_dd::Player::getProposedNewPosYforStandup() const
 {
-    constexpr float fProposedNewPlayerHalfHeight = GAME_PLAYER_H_STAND / 2.f;
+    constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
     bool bPushDownLegs = isInAir(); // growth is inverse to bPullUpLegs in doCrouchServer()
 
     return bPushDownLegs ?
-        getPos().getNew().getY() + (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f - fProposedNewPlayerHalfHeight :
-        getPos().getNew().getY() - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
+        getPos().getNew().getY() + (Player::fObjHeightStanding * Player::fObjHeightCrouchScaling) / 2.f - fProposedNewPlayerHalfHeight :
+        getPos().getNew().getY() - (Player::fObjHeightStanding * Player::fObjHeightCrouchScaling) / 2.f + fProposedNewPlayerHalfHeight + 0.01f;
 }
 
 /**
@@ -629,7 +629,7 @@ void proofps_dd::Player::doCrouchServer()
     // We need to set Object3D scaling since that is used in physics calculations also in serverPlayerCollisionWithWalls(),
     // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
     // On the long run we should use colliders so physics does not depend on graphics.
-    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getObject3D()->SetScaling(PureVector(1.f, Player::fObjHeightCrouchScaling, 1.f));
     getCrouchStateCurrent() = true;  // can always go to crouching immediately
 
     const bool bPullUpLegs = isInAir();
@@ -639,7 +639,7 @@ void proofps_dd::Player::doCrouchServer()
         // however we don't reposition if being on ground because it looks bad
         // PPPKKKGGGGGG
         PureVector playerPos = getPos().getNew();
-        playerPos.SetY(playerPos.getY() + GAME_PLAYER_H_STAND / 2.f - (GAME_PLAYER_H_STAND * GAME_PLAYER_H_CROUCH_SCALING_Y) / 2.f);
+        playerPos.SetY(playerPos.getY() + Player::fObjHeightStanding / 2.f - (Player::fObjHeightStanding * Player::fObjHeightCrouchScaling) / 2.f);
         getPos().set(playerPos);
         // since we are at the beginning of a tick, it is legal to commit the position now, as old and new positions supposed to be the same at this point
         getPos().commit();
@@ -649,7 +649,7 @@ void proofps_dd::Player::doCrouchServer()
 void proofps_dd::Player::doCrouchShared()
 {
     // we don't change player position in this "shared" version since only "server" versions do that and positions are replicated to clients in the usual way
-    getObject3D()->SetScaling(PureVector(1.f, GAME_PLAYER_H_CROUCH_SCALING_Y, 1.f));
+    getObject3D()->SetScaling(PureVector(1.f, Player::fObjHeightCrouchScaling, 1.f));
     getObject3D()->getMaterial().setTexture(m_pTexPlayerCrouch);
     getCrouchStateCurrent() = true; // since this is replicated from server, it is valid
     // getWantToStandup() stays updated on server-side only, in clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(), do not modify anywhere else!
@@ -741,7 +741,7 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
     if (!getCrouchStateCurrent())
     {
         // for somersaulting on ground, we always require manual crouch, however for mid-air somersaulting, crouching depends on server config!
-        if (bJumpInduced && m_cfgProfiles.getVars()[CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH].getAsBool())
+        if (bJumpInduced && m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirAutoCrouch].getAsBool())
         {
             doCrouchServer();
         }
@@ -769,8 +769,8 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
     {
         // triggering mid-air somersaulting modifies player jump force and gravity, not the impact force
         // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
-        m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat());
-        m_fGravity *= m_cfgProfiles.getVars()[Player::CVAR_SV_SOMERSAULT_MID_AIR_JUMP_FORCE_MULTIPLIER].getAsFloat();
+        m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat());
+        m_fGravity *= m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat();
     }
     else
     {
@@ -778,15 +778,15 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
         switch (m_strafe)
         {
         case Strafe::LEFT:
-            if (m_vecImpactForce.getX() > -GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X)
+            if (m_vecImpactForce.getX() > -Player::fSomersaultGroundImpactForceX)
             {
-                m_vecImpactForce.SetX(std::max(-GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, m_vecImpactForce.getX() - GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X));
+                m_vecImpactForce.SetX(std::max(-Player::fSomersaultGroundImpactForceX, m_vecImpactForce.getX() - Player::fSomersaultGroundImpactForceX));
             }
             break;
         case Strafe::RIGHT:
-            if (m_vecImpactForce.getX() < GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X)
+            if (m_vecImpactForce.getX() < Player::fSomersaultGroundImpactForceX)
             {
-                m_vecImpactForce.SetX(std::min(GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X, m_vecImpactForce.getX() + GAME_PLAYER_SOMERSAULT_GROUND_IMPACT_FORCE_X));
+                m_vecImpactForce.SetX(std::min(Player::fSomersaultGroundImpactForceX, m_vecImpactForce.getX() + Player::fSomersaultGroundImpactForceX));
             }
             break;
         default /* Strafe::NONE */:
@@ -1057,7 +1057,7 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
-    m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::GAME_PLAYER_W, proofps_dd::GAME_PLAYER_H_STAND);
+    m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);
     if (!m_pObj)
     {
         throw std::runtime_error("Failed to create object for new player!");
