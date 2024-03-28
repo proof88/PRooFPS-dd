@@ -24,6 +24,7 @@
 #include "Networking.h"
 #include "Physics.h"
 #include "Player.h"
+#include "PlayerHandling.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
 #include "WeaponHandling.h"

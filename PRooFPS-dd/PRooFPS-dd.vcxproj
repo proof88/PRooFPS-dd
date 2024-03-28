@@ -194,6 +194,7 @@
     <ClInclude Include="Networking.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerHandling.h" />
     <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
     <ClInclude Include="Maps.h" />
@@ -222,6 +223,7 @@
     <ClCompile Include="Networking.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PlayerHandling.cpp" />
     <ClCompile Include="PRooFPS-dd-PGE.cpp" />
     <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />

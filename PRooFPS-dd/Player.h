@@ -3,7 +3,7 @@
 /*
     ###################################################################################
     Player.h
-    Player and PlayerHandling classes for PRooFPS-dd
+    Player class for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
     2023
     ###################################################################################
@@ -216,15 +216,16 @@ namespace proofps_dd
                     Continuous op. */
                 {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
         };
-        bool m_bNetDirty;
+
+        bool m_bNetDirty = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
-        bool m_bRespawn;
+        bool m_bRespawn = false;
         
         PureVector m_vecImpactForce;
 
-        PureObject3D* m_pObj;
-        PureTexture* m_pTexPlayerStand;
-        PureTexture* m_pTexPlayerCrouch;
+        PureObject3D* m_pObj = nullptr;
+        PureTexture* m_pTexPlayerStand = nullptr;
+        PureTexture* m_pTexPlayerCrouch = nullptr;
 
         WeaponManager m_wpnMgr;
         PGEcfgProfiles& m_cfgProfiles;
@@ -232,29 +233,29 @@ namespace proofps_dd
         PR00FsUltimateRenderingEngine& m_gfx;
 
         PureVector m_vecJumpForce;
-        float m_fGravity;
-        bool m_bJumping;
-        bool m_bAllowJump;
-        bool m_bWillJump;
+        float m_fGravity = 0.f;
+        bool m_bJumping = false;
+        bool m_bAllowJump = false;
+        bool m_bWillJump = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
-        bool m_bCanFall;
-        bool m_bFalling;
-        bool m_bHasJustStartedFallingNaturally;
-        bool m_bHasJustStartedFallingAfterJumpingStopped;
+        bool m_bCanFall = true;
+        bool m_bFalling = true;
+        bool m_bHasJustStartedFallingNaturally = true;
+        bool m_bHasJustStartedFallingAfterJumpingStopped = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedFalling;
-        float m_fHeightStartedFalling;
-        bool m_bHasJustStoppedJumping;
-        
+        float m_fHeightStartedFalling = 0.f;
+        bool m_bHasJustStoppedJumping = false;
+
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.
             Can be set to true by input, but only server physics engine can set it to false, or a respawn event.
             Somersaulting can also set it to true if mid-air auto-crouch is enabled (CVAR_SV_SOMERSAULT_MID_AIR_AUTO_CROUCH).
             Default false. */
-        bool m_bCrouchingStateCurrent;
+        bool m_bCrouchingStateCurrent = false;
 
         /** We need to save current crouching state at the moment of initiating jump-up, so that we can check in any later moment of
             jumping up if somersaulting can be initiated: it must not be initiated when player was already crouching at the moment of jump-up. */
-        bool m_bCrouchingWasActiveWhenInitiatedJump;
+        bool m_bCrouchingWasActiveWhenInitiatedJump = false;
 
         /** True when player wants standing position as per input, regardless of currently crouching or not.
             This is an input to the physics engine.
@@ -264,21 +265,21 @@ namespace proofps_dd
             If the physics engine finds enough space to stand up and other conditions are also fulfilled (e.g. not somersaulting), it
             will flip m_bCrouchingStateCurrent to false so higher level layers will know the player is not crouching anymore.
             Default true. */
-        bool m_bWantToStandup;
+        bool m_bWantToStandup = true;
 
-        bool m_bWillSomersault;
-        float m_fSomersaultAngleZ;  /**< If non-zero, there is ongoing somersaulting handled by physics. */
+        bool m_bWillSomersault = false;
+        float m_fSomersaultAngleZ = 0.f;  /**< If non-zero, there is ongoing somersaulting handled by physics. */
         
-        bool m_bRunning;
+        bool m_bRunning = true;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
 
-        bool m_bExpectingStartPos;
+        bool m_bExpectingStartPos = true;
 
-        proofps_dd::Strafe m_strafe;  // continuous op
-        proofps_dd::Strafe m_prevActualStrafe;
+        proofps_dd::Strafe m_strafe = Strafe::NONE;  // continuous op
+        proofps_dd::Strafe m_prevActualStrafe = Strafe::NONE;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastStrafe;
 
-        bool m_bAttack;               // continuous op
+        bool m_bAttack = false;       // continuous op
 
         // ---------------------------------------------------------------------------
 
@@ -287,81 +288,5 @@ namespace proofps_dd
         PgeOldNewValue<int>& getHealth();
 
     }; // class Player
-
-    class PlayerHandling :
-        protected proofps_dd::Networking
-    {
-    public:
-
-        static const char* getLoggerModuleName();
-
-        // ---------------------------------------------------------------------------
-
-        CConsole& getConsole() const;
-
-        PlayerHandling(
-            PGE& pge,
-            proofps_dd::Durations& durations,
-            proofps_dd::GUI& gui,
-            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-            proofps_dd::Maps& maps,
-            proofps_dd::Sounds& sounds);
-
-        PlayerHandling(const PlayerHandling&) = delete;
-        PlayerHandling& operator=(const PlayerHandling&) = delete;
-        PlayerHandling(PlayerHandling&&) = delete;
-        PlayerHandling&& operator=(PlayerHandling&&) = delete;
-
-    protected:
-
-        void HandlePlayerDied(
-            Player& player,
-            PureObject3D& objXHair,
-            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
-        void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
-        void ServerRespawnPlayer(Player& player, bool restartGame);
-        void serverUpdateRespawnTimers(
-            proofps_dd::GameMode& gameMode,
-            proofps_dd::Durations& durations);
-        void updatePlayersOldValues();
-        void WritePlayerList();
-        bool handleUserConnected(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const pge_network::MsgUserConnectedServerSelf& msg,
-            PGEcfgProfiles& cfgProfiles,
-            std::function<void(int)>& cbDisplayMapLoadingProgressUpdate);
-        bool handleUserDisconnected(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const pge_network::MsgUserDisconnectedFromServer& msg,
-            proofps_dd::GameMode& gameMode);
-        bool handleUserNameChange(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserNameChange& msg,
-            proofps_dd::GameMode& gameMode,
-            PGEcfgProfiles& cfgProfiles);
-        void resetSendClientUpdatesCounter(proofps_dd::Config& config);
-        void serverSendUserUpdates(proofps_dd::Durations& durations);
-        bool handleUserUpdateFromServer(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgUserUpdateFromServer& msg,
-            PureObject3D& objXHair,
-            proofps_dd::GameMode& gameMode);
-        bool handleDeathNotificationFromServer(
-            pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
-
-    private:
-
-        // ---------------------------------------------------------------------------
-
-        PGE& m_pge;
-        proofps_dd::GUI& m_gui;
-        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
-        proofps_dd::Maps& m_maps;
-        proofps_dd::Sounds& m_sounds;
-
-        unsigned int m_nSendClientUpdatesInEveryNthTick;
-        unsigned int m_nSendClientUpdatesCntr;
-
-    }; // class PlayerHandling
 
 } // namespace proofps_dd

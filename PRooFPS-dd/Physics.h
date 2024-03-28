@@ -20,6 +20,7 @@
 #include "GUI.h"
 #include "Maps.h"
 #include "Player.h"
+#include "PlayerHandling.h"
 #include "PRooFPS-dd-packet.h"
 #include "Sounds.h"
 
