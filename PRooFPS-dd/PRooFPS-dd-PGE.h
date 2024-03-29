@@ -43,6 +43,7 @@ namespace proofps_dd
         protected proofps_dd::CameraHandling,
         protected proofps_dd::InputHandling,
         protected virtual proofps_dd::PlayerHandling,
+        protected proofps_dd::Sounds,
         protected proofps_dd::WeaponHandling
     {
 
@@ -125,9 +126,8 @@ namespace proofps_dd
             PureWindow& window);                                        /**< Both clients and listen-server executes this. */
 
         void updateFramesPerSecond(PureWindow& window);
-        void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void RestartGame();
-        void UpdateGameMode();
+        void restartGame();
+        void updateGameMode();
 
         void serverPickupAndRespawnItems();
 

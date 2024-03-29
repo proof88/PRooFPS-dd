@@ -5,7 +5,7 @@
     Sounds.h
     Sounds for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
-    2023
+    2024
     ###################################################################################
 */
 
@@ -15,8 +15,24 @@
 namespace proofps_dd
 {
 
-    struct Sounds
+    class Sounds
     {
+    public:
+
+        static const char* getLoggerModuleName();
+
+        // ---------------------------------------------------------------------------
+
+        CConsole& getConsole() const;
+
+        Sounds();
+
+        Sounds(const Sounds&) = delete;
+        Sounds& operator=(const Sounds&) = delete;
+        Sounds(Sounds&&) = delete;
+        Sounds&& operator=(Sounds&&) = delete;
+
+        // TODO: to be moved
         SoLoud::Wav m_sndLetsgo;
         SoLoud::Wav m_sndReloadStart;
         SoLoud::Wav m_sndReloadFinish;
@@ -29,6 +45,13 @@ namespace proofps_dd
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;
         SoLoud::Wav m_sndExplosion;
-    };
+
+    protected:
+
+        void loadSound(SoLoud::Wav& snd, const char* fname);
+
+    private:
+
+    }; // class Sounds
 
 } // namespace proofps_dd

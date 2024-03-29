@@ -20,6 +20,10 @@ static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
 static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
+
+// ############################### PUBLIC ################################
+
+
 proofps_dd::CameraHandling::CameraHandling(
     PGE& pge,
     proofps_dd::Durations& durations,
@@ -37,6 +41,10 @@ proofps_dd::CameraHandling::CameraHandling(
     // be existing at this point, only isGameRunning() is safe to call. The following assertion is reminding me of that:
     assert(!pge.isGameRunning());
 }
+
+
+// ############################## PROTECTED ##############################
+
 
 void proofps_dd::CameraHandling::cameraInitForGameStart()
 {
@@ -95,6 +103,10 @@ PureVector& proofps_dd::CameraHandling::cameraGetShakeForce()
 {
     return m_vecCamShakeForce;
 }
+
+
+// ############################### PRIVATE ###############################
+
 
 void proofps_dd::CameraHandling::cameraSmoothShakeForceTowardsZero(const float& fFps)
 {

@@ -3,7 +3,7 @@
     PRooFPSddPGE.cpp
     Customized PGE for PRooFPS-dd
     Made by PR00F88, West Whiskhyll Entertainment
-    2022 - 2023
+    2022 - 2024
     ###################################################################################
 */
 
@@ -81,6 +81,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_mapPlayers,
         m_maps,
         m_sounds),
+    proofps_dd::Sounds(),
     proofps_dd::WeaponHandling(
         *this,
         m_durations,
@@ -256,18 +257,18 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("  size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
     getConsole().OLn("");
 
-    LoadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
-    LoadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
-    LoadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
-    LoadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
-    LoadSound(m_sounds.m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
-    LoadSound(m_sounds.m_sndShootBazooka,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka.wav").c_str());
-    LoadSound(m_sounds.m_sndReloadBazooka,  (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka_reload.wav").c_str());
-    LoadSound(m_sounds.m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
-    LoadSound(m_sounds.m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
-    LoadSound(m_sounds.m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
-    LoadSound(m_sounds.m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
-    LoadSound(m_sounds.m_sndExplosion,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/xplosion.wav").c_str());
+    loadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
+    loadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
+    loadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
+    loadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
+    loadSound(m_sounds.m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
+    loadSound(m_sounds.m_sndShootBazooka,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka.wav").c_str());
+    loadSound(m_sounds.m_sndReloadBazooka,  (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka_reload.wav").c_str());
+    loadSound(m_sounds.m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
+    loadSound(m_sounds.m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
+    loadSound(m_sounds.m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
+    loadSound(m_sounds.m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
+    loadSound(m_sounds.m_sndExplosion,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/xplosion.wav").c_str());
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
@@ -768,7 +769,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
-    UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
+    updateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
@@ -846,20 +847,7 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
     m_gui.textForNextFrame(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSizeLegacy());
 }
 
-void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
-{
-    const SoLoud::result resSoloud = snd.load(fname);
-    if (resSoloud == SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
-    {
-        getConsole().OLn("%s: %s loaded, length: %f secs!", __func__, fname, snd.getLength());
-    }
-    else
-    {
-        getConsole().EOLn("%s: %s load error: %d!", __func__, fname, resSoloud);
-    }
-}
-
-void proofps_dd::PRooFPSddPGE::RestartGame()
+void proofps_dd::PRooFPSddPGE::restartGame()
 {
     if (getNetwork().isServer())
     {
@@ -904,7 +892,7 @@ void proofps_dd::PRooFPSddPGE::RestartGame()
     m_gameMode->restartWithoutRemovingPlayers(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
-void proofps_dd::PRooFPSddPGE::UpdateGameMode()
+void proofps_dd::PRooFPSddPGE::updateGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -913,7 +901,7 @@ void proofps_dd::PRooFPSddPGE::UpdateGameMode()
         const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
         if (nSecsSinceWin >= 15)
         {
-            RestartGame();
+            restartGame();
         }
         else
         {

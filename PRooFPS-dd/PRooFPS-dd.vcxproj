@@ -230,6 +230,7 @@
     <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />
     <ClCompile Include="SharedWithTest.cpp" />
+    <ClCompile Include="Sounds.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugTest_PRooFPS-dd|Win32'">Create</PrecompiledHeader>
