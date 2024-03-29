@@ -184,6 +184,7 @@
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureIRenderer.h" />
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureRendererHWfixedPipe.h" />
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h" />
+    <ClInclude Include="CameraHandling.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Consts.h" />
     <ClInclude Include="Durations.h" />
@@ -215,6 +216,7 @@
     <ClInclude Include="WeaponHandling.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CameraHandling.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />

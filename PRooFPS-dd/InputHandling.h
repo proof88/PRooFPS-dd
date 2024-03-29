@@ -80,19 +80,19 @@ namespace proofps_dd
 
     private:
 
-        static const char* proofps_dd::InputHandling::getMsgAppIdName(const proofps_dd::PRooFPSappMsgId& id);
+        static const char* getMsgAppIdName(const proofps_dd::PRooFPSappMsgId& id);
         static const size_t getLongestMsgAppIdNameLength();
 
         // ---------------------------------------------------------------------------
 
         PGE& m_pge;
-        proofps_dd::Durations& m_durations;
+        Durations& m_durations;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
-        proofps_dd::Maps& m_maps;
-        proofps_dd::Sounds& m_sounds;
+        Maps& m_maps;
+        Sounds& m_sounds;
 
-        proofps_dd::Strafe m_prevStrafe;
-        proofps_dd::Strafe m_strafe;
+        Strafe m_prevStrafe;
+        Strafe m_strafe;
         bool m_bPrevAttack;
         bool m_bAttack;
         bool m_bPrevCrouch;

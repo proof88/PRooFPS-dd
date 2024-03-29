@@ -20,17 +20,12 @@
 #include "Pure/include/external/PureUiManager.h"
 #include "Pure/include/external/Display/PureWindow.h"
 #include "Pure/include/external/PureCamera.h"
-#include "PURE/include/external/Math/PureTransformMatrix.h"
 #include "../../Console/CConsole/src/CConsole.h"
 
 using namespace std::chrono_literals;
 
 static constexpr unsigned int GAME_FPS_MEASURE_INTERVAL = 500;
 static_assert(GAME_FPS_MEASURE_INTERVAL > 0);
-
-static constexpr float GAME_CAM_Z = -5.0f;
-static constexpr float GAME_CAM_SPEED_X = 0.1f;
-static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 
 
 // ############################### PUBLIC ################################
@@ -62,8 +57,12 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 */
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
-    proofps_dd::InputHandling(
+    proofps_dd::CameraHandling(
         *this, /* Hint: for 1-param ctors, use: static_cast<PGE&>(*this) so it will call the only ctor, not the deleted copy ctor. */
+        m_durations,
+        m_maps),
+    proofps_dd::InputHandling(
+        *this,
         m_durations,
         m_mapPlayers,
         m_maps,
@@ -99,8 +98,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
     m_pObjXHair(NULL),
-    m_bWon(false),
-    m_fCameraMinY(0.0f)
+    m_bWon(false)
 {
 }
 
@@ -170,10 +168,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     setGameRunningFrequency(GAME_MAXFPS);
     getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
 
-    getPure().getCamera().SetNearPlane(0.1f);
-    getPure().getCamera().SetFarPlane(100.0f);
-    getPure().getCamera().getPosVec().Set( 0, 0, GAME_CAM_Z );
-    getPure().getCamera().getTargetVec().Set( 0, 0, -proofps_dd::Maps::fMapBlockSizeDepth );
+    cameraInitForGameStart();
 
     m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
     if (!m_gameMode)
@@ -497,7 +492,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = handleBulletUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgBulletUpdateFromServer>(pkt),
-                m_vecCamShakeForce);
+                cameraGetShakeForce());
             break;
         case proofps_dd::MsgMapItemUpdateFromServer::id:
             bRet = handleMapItemUpdateFromServer(
@@ -724,7 +719,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverGravity(*m_pObjXHair, m_config.getPhysicsRate());
             serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), m_vecCamShakeForce);
+            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), cameraGetShakeForce());
             serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
@@ -762,8 +757,9 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
-        if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(*m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()) ==
-            proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
+        if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
+            *m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
+        ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
             return;
@@ -771,7 +767,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    CameraMovement(player, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
+    cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     UpdateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.Update(m_fps);
     m_maps.UpdateVisibilitiesForRenderer();
@@ -862,173 +858,6 @@ void proofps_dd::PRooFPSddPGE::LoadSound(SoLoud::Wav& snd, const char* fname)
         getConsole().EOLn("%s: %s load error: %d!", __func__, fname, resSoloud);
     }
 }
-
-void proofps_dd::PRooFPSddPGE::CameraMovement(
-    const Player& player,
-    bool bCamFollowsXHair,
-    bool bCamTilting,
-    bool bCamRoll)
-{
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    static float fShakeDegree = 0.f;
-    assert(m_fps > 0.f);  // updateFramesPerSecond() makes sure m_fps is never 0
-    fShakeDegree += 1200 / m_fps;
-    while (fShakeDegree >= 360.f)
-    {
-        fShakeDegree -= 360.f;
-    }
-    float fShakeSine = sin(fShakeDegree * PFL::PI / 180.f);
-
-    const float GAME_FPS_RATE_LERP_FACTOR = (m_fps - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    const float GAME_IMPACT_FORCE_CHANGE = PFL::lerp(2150.f, 2160.f, GAME_FPS_RATE_LERP_FACTOR);
-    const float fCamShakeForceChangePerFrame = GAME_IMPACT_FORCE_CHANGE / 36.f / m_fps; /* smaller number means longer shaking in time */
-    if (m_vecCamShakeForce.getX() > 0.f)
-    {
-        m_vecCamShakeForce.SetX(m_vecCamShakeForce.getX() - fCamShakeForceChangePerFrame);
-        if (m_vecCamShakeForce.getX() < 0.f)
-        {
-            m_vecCamShakeForce.SetX(0.f);
-        }
-    }
-    if (m_vecCamShakeForce.getY() > 0.f)
-    {
-        m_vecCamShakeForce.SetY(m_vecCamShakeForce.getY() - fCamShakeForceChangePerFrame);
-        if (m_vecCamShakeForce.getY() < 0.f)
-        {
-            m_vecCamShakeForce.SetY(0.f);
-        }
-    }
-
-    const float fShakeFactorX = fShakeSine * m_vecCamShakeForce.getX() / m_fps;
-    const float fShakeFactorY = fShakeSine * m_vecCamShakeForce.getY() / m_fps;
-
-    auto& camera = getPure().getCamera();
-
-    if (bCamRoll && player.isSomersaulting())
-    {
-        camera.getPosVec().Set(
-            player.getObject3D()->getPosVec().getX() + fShakeFactorX,
-            player.getObject3D()->getPosVec().getY() + fShakeFactorY,
-            GAME_CAM_Z);
-        camera.getTargetVec().Set(
-            player.getObject3D()->getPosVec().getX() + fShakeFactorX,
-            player.getObject3D()->getPosVec().getY() + fShakeFactorY,
-            player.getObject3D()->getPosVec().getZ()
-        );
-
-        PureVector vecNewUp(0.f, 1.f, 0.f);
-        PureTransformMatrix matRotZ;
-        matRotZ.SetRotationZ((player.getObject3D()->getAngleVec().getY() == 0.f) ? -player.getSomersaultAngle() : player.getSomersaultAngle());
-        vecNewUp *= matRotZ;
-        camera.getUpVec() = vecNewUp;
-
-        // return early, as during somersault camera rolling we don't need sophisticated camera movement
-        m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        return;
-    }
-
-    constexpr unsigned int nBlocksToKeepCameraWithinMapBoundsHorizontally = 3;
-    constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
-    constexpr unsigned int nBlocksToKeepCameraWithinMapTop = 1;
-    
-    const float fCamMinAllowedPosX =
-        m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
-        m_maps.getBlocksVertexPosMin().getX() :
-        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (nBlocksToKeepCameraWithinMapBoundsHorizontally));
-    const float fCamMaxAllowedPosX =
-        m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally*2 + 1) ?
-        m_maps.getBlocksVertexPosMax().getX() :
-        m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (m_maps.width() - nBlocksToKeepCameraWithinMapBoundsHorizontally));
-    
-    const float fCamMinAllowedPosY =
-        m_maps.height() < (nBlocksToKeepCameraWithinMapBottom + 1) ?
-        m_maps.getBlocksVertexPosMin().getY() :
-        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (nBlocksToKeepCameraWithinMapBottom - 1));
-    const float fCamMaxAllowedPosY =
-        m_maps.height() < (nBlocksToKeepCameraWithinMapTop + 1) ?
-        m_maps.getBlocksVertexPosMax().getY() :
-        m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
-
-    float fCamPosXTarget, fCamPosYTarget;
-    if (bCamFollowsXHair)
-    {
-        /* Unsure about if we really need to unproject the 2D xhair's position.
-           Because of matrix multiplication and inversion, maybe this way is too expensive.
-           
-           I see 2 other ways of doing this:
-            - keep the xhair 2D, and anytime mouse is moved, we should also change 2 variables: fCamPosOffsetX and fCamPosOffsetY
-              based on the dx and dy variables in InputHandling::clientMouseWhenConnectedToServer(). Camera will have this position offset applied relative to
-              player's position. This looks to be the easiest solution.
-              However, on the long run we will need 3D position of xhair since we want to use pick/select method, for example,
-              when hovering the xhair over other player, we should be able to tell which player is that.
-              
-            - change the xhair to 3D, so in InputHandling::clientMouseWhenConnectedToServer() the dx and dy variable changes will be applied to xhair's 3D position.
-              With this method, pick/select can be implemented in a different way: no need to unproject, we just need collision
-              logic to find out which player object collides with our xhair object!
-        */
-        PureVector vecUnprojected;
-        if (!camera.project2dTo3d(
-            static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getX()) + camera.getViewport().size.width/2),
-            static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getY()) + camera.getViewport().size.height/2),
-            /* in v0.1.5 this is player's Z mapped to depth buffer: 0.9747f,*/
-            0.96f,
-            vecUnprojected))
-        {
-            //getConsole().EOLn("PRooFPSddPGE::%s(): project2dTo3d() failed!", __func__);
-        }
-        else
-        {
-            //getConsole().EOLn("obj X: %f, Y: %f, vecUnprojected X: %f, Y: %f",
-            //    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
-            //    vecUnprojected.getX(), vecUnprojected.getY());
-        }
-
-        fCamPosXTarget = std::min(
-            fCamMaxAllowedPosX,
-            std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + vecUnprojected.getX())/2));
-        
-        fCamPosYTarget = std::min(
-            fCamMaxAllowedPosY,
-            std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + vecUnprojected.getY())/2));
-    }
-    else
-    {
-        fCamPosXTarget = std::min(
-            fCamMaxAllowedPosX,
-            std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
-
-        fCamPosYTarget = std::min(
-            fCamMaxAllowedPosY,
-            std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
-    }
-
-    fCamPosXTarget += fShakeFactorX;
-    fCamPosYTarget += fShakeFactorY;
-
-    PureVector vecCamPos{
-        PFL::smooth(
-            camera.getPosVec().getX() + fShakeFactorX, fCamPosXTarget, GAME_CAM_SPEED_X * m_fps),
-        PFL::smooth(
-            camera.getPosVec().getY() + fShakeFactorY,
-            fCamPosYTarget,
-            /* if we are not following xhair, we want an eased vertical camera movement because it looks nice */
-            (bCamFollowsXHair ? (GAME_CAM_SPEED_X * m_fps) : (GAME_CAM_SPEED_Y * m_fps))),
-        GAME_CAM_Z
-    };
-
-    camera.getPosVec() = vecCamPos;
-    camera.getTargetVec().Set(
-        bCamTilting ? ((vecCamPos.getX() + fCamPosXTarget) / 2.f) : vecCamPos.getX(),
-        bCamTilting ? ((vecCamPos.getY() + fCamPosYTarget) / 2.f) : vecCamPos.getY(),
-        player.getObject3D()->getPosVec().getZ()
-    );
-    // we can always reset like this, since Up vector doesn't have effect on camera pitch/yaw
-    camera.getUpVec().Set(0.f, 1.f, 0.f);
-
-    m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-
-} // CameraMovement()
 
 void proofps_dd::PRooFPSddPGE::RestartGame()
 {
@@ -1297,15 +1126,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         }
 
         // at this point we can be sure we have the proper map loaded, camera must start from the center of the map
-        getPure().getCamera().getPosVec().Set(
-            (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
-            (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
-            GAME_CAM_Z);
-        getPure().getCamera().getTargetVec().Set(
-            getPure().getCamera().getPosVec().getX(),
-            getPure().getCamera().getPosVec().getY(),
-            -proofps_dd::Maps::fMapBlockSizeDepth);
-
+        cameraPositionToMapCenter();
         hideLoadingScreen();
         showXHairInCenter();
         
@@ -1541,15 +1362,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // Camera must start from the center of the map.
     // This is also done in both server and client in handleUserSetupFromServer(), they will get that pkg from server
     // after they successfully reconnect to server later. However due to rendering again before that, camera should already positioned now.
-    getPure().getCamera().getPosVec().Set(
-        (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
-        (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
-        GAME_CAM_Z);
-    getPure().getCamera().getTargetVec().Set(
-        getPure().getCamera().getPosVec().getX(),
-        getPure().getCamera().getPosVec().getY(),
-        -proofps_dd::Maps::fMapBlockSizeDepth);
-
+    cameraPositionToMapCenter();
     hideLoadingScreen();
     showXHairInCenter();
 

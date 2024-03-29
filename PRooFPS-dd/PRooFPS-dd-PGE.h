@@ -14,6 +14,7 @@
 #include "PGE.h"
 #include "Pure/include/external/Object3D/PureObject3DManager.h"
 
+#include "CameraHandling.h"
 #include "Config.h"
 #include "Consts.h"
 #include "Durations.h"
@@ -39,6 +40,7 @@ namespace proofps_dd
     */
     class PRooFPSddPGE final :
         public PGE,
+        protected proofps_dd::CameraHandling,
         protected proofps_dd::InputHandling,
         protected virtual proofps_dd::PlayerHandling,
         protected proofps_dd::WeaponHandling
@@ -96,8 +98,6 @@ namespace proofps_dd
 
         PureObject3D* m_pObjXHair;
         bool m_bWon;
-        float m_fCameraMinY;
-        PureVector m_vecCamShakeForce;
 
         std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                       Key is server-side connection handle. */
@@ -126,11 +126,6 @@ namespace proofps_dd
 
         void updateFramesPerSecond(PureWindow& window);
         void LoadSound(SoLoud::Wav& snd, const char* fname);
-        void CameraMovement(
-            const Player& player,
-            bool bCamFollowsXHair,
-            bool bCamTilting,
-            bool bCamRoll);
         void RestartGame();
         void UpdateGameMode();
 
