@@ -191,6 +191,7 @@
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="InputHandling.h" />
+    <ClInclude Include="Mapcycle.h" />
     <ClInclude Include="MapItem.h" />
     <ClInclude Include="Networking.h" />
     <ClInclude Include="Physics.h" />
@@ -207,6 +208,8 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
     <ClInclude Include="Tests\InputSim.h" />
+    <ClInclude Include="Tests\MapcycleTest.h" />
+    <ClInclude Include="Tests\MapTestsCommon.h" />
     <ClInclude Include="Tests\PlayerTest.h" />
     <ClInclude Include="Tests\Process.h" />
     <ClInclude Include="Tests\RegTestBasicServerClient2Players.h" />
@@ -221,6 +224,7 @@
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />
     <ClCompile Include="InputHandling.cpp" />
+    <ClCompile Include="Mapcycle.cpp" />
     <ClCompile Include="MapItem.cpp" />
     <ClCompile Include="Networking.cpp" />
     <ClCompile Include="Physics.cpp" />

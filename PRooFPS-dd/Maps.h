@@ -19,6 +19,7 @@
 #include "Config/PGEcfgVariable.h"
 #include "Pure/include/external/PR00FsUltimateRenderingEngine.h"
 
+#include "Mapcycle.h"
 #include "MapItem.h"
 
 namespace proofps_dd
@@ -35,8 +36,6 @@ namespace proofps_dd
 
         static const char* getLoggerModuleName();
 
-        static bool isValidMapFilename(const std::string& sFilename);
-
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;
@@ -44,7 +43,7 @@ namespace proofps_dd
         Maps(
             PGEcfgProfiles& cfgProfiles,
             PR00FsUltimateRenderingEngine& gfx);
-        virtual ~Maps();
+        ~Maps();
 
         Maps(const Maps&) = delete;
         Maps& operator=(const Maps&) = delete;
@@ -85,68 +84,16 @@ namespace proofps_dd
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         void Update(const float& fps);
 
-        /* Available maps handling */
-        /* Logic is restricted to available maps, not impacting mapcycle. */
+        /* Mapcycle and Available maps handling */
 
-        const std::set<std::string>& availableMapsGet() const;
-        const std::string& availableMapsGetElem(const size_t& index) const;
-        const char** availableMapsGetAsCharPtrArray() const;
-        const std::set<std::string>& availableMapsNoChangingGet() const;
-        const std::string& availableMapsNoChangingGetElem(const size_t& index) const;
-
-        /* Mapcycle handling */
-        /* Logic is restricted to mapcycle, not impacting available maps. */
-
-        const std::vector<std::string>& mapcycleGet() const;
-        const char** mapcycleGetAsCharPtrArray() const;
-        std::string mapcycleGetCurrent() const;
-        std::string mapcycleNext();
-        bool mapcycleSaveToFile();
-
-        /* Available maps and Mapcycle handling together */
-        /* Here we tie both together, these complex functions are recommended to be used by GUI. */
-
-        void mapcycle_availableMaps_Synchronize();
-        bool mapcycleAdd_availableMapsRemove(const std::string& sMapFilename);
-        bool mapcycleAdd_availableMapsRemove(const std::vector<std::string>& vMapFilenames);
-        bool mapcycleAdd_availableMapsRemove();
-        bool mapcycleRemove_availableMapsAdd(const std::string& sMapFilename);
-        bool mapcycleRemove_availableMapsAdd(const size_t& indexToMapcycle);
-        bool mapcycleRemove_availableMapsAdd(const std::vector<std::string>& vMapFilenames);
-        bool mapcycleRemove_availableMapsAdd();
+        proofps_dd::Mapcycle& getMapcycle();
 
     protected:
 
-        /* Available maps handling */
-        /* Logic is restricted to available maps, not impacting mapcycle. */
-
-        void availableMapsRefresh();
-        bool availableMapsAdd(const std::string& sMapFilename);
-        bool availableMapsAdd(const std::vector<std::string>& vMapFilenames);
-        bool availableMapsRemove(const std::string& sMapFilename);
-        bool availableMapsRemove(const size_t& index);
-        bool availableMapsRemove(const std::vector<std::string>& vMapFilenames);
-
-        /* Mapcycle handling */
-        /* Logic is restricted to mapcycle, not impacting available maps. */
-
-        bool mapcycleIsCurrentLast() const;
-        bool mapcycleReload();
-        std::string mapcycleRewindToFirst();
-        std::string mapcycleForwardToLast();
-        bool mapcycleAdd(const std::string& sMapFilename);
-        bool mapcycleAdd(const std::vector<std::string>& vMapFilenames);
-        bool mapcycleAdd(const std::set<std::string>& vMapFilenames);
-        bool mapcycleRemove(const std::string& sMapFilename);
-        bool mapcycleRemove(const size_t& index);
-        bool mapcycleRemove(const std::vector<std::string>& vMapFilenames);
-        void mapcycleClear();
-        size_t mapcycleRemoveNonExisting();
-
     private:
 
-        const float GAME_PLAYERS_POS_Z = -1.2f;
-        const float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
+        static constexpr float GAME_PLAYERS_POS_Z = -1.2f;
+        static constexpr float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
 
         const std::set<char> foregroundBlocks = {
             'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T'
@@ -184,23 +131,8 @@ namespace proofps_dd
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
 
-        /* Available maps handling */
-
-        std::set<std::string> m_availableMaps;
-        const char** m_vszAvailableMaps;
-
-        std::set<std::string> m_availableMapsNoChanging;
-        std::string m_sEmptyStringToReturn;
-
-        /* Mapcycle handling */
-
-        // I want unique elements in mapcycle. Yes, std::set would be trivial, but:
-        // - I don't want elements to be sorted;
-        // - I'm not sure if uniqueness will be forever, maybe I want to allow repeating maps!
-        // Yes I know about std::unordered_multiset, but for some reason I wanted to stick for vector for now.
-        std::vector<std::string> m_mapcycle;
-        std::vector<std::string>::iterator m_mapcycleItCurrent;
-        const char** m_vszMapcycle;
+        /* Mapcycle and Available maps handling */
+        Mapcycle m_mapcycle;
 
         // ---------------------------------------------------------------------------
 
@@ -209,21 +141,6 @@ namespace proofps_dd
 
         void lineHandleAssignment(std::string& sVar, std::string& sValue);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
-
-        bool mapFilenameAddToVector_NoDuplicatesAllowed(
-            const std::string& sMapFilename,
-            std::vector<std::string>& vec);
-        bool mapFilenameAddToSet_NoDuplicatesAllowed(
-            const std::string& sMapFilename,
-            std::set<std::string>& settt);
-        bool mapFilenameRemoveFromVector(
-            const std::string& sMapFilename,
-            std::vector<std::string>& vec);
-        bool mapFilenameRemoveFromSet(
-            const std::string& sMapFilename,
-            std::set<std::string>& settt);
-        void availableMapsRefreshCharPtrArray();
-        void mapcycleRefreshCharPtrArray();
 
     }; // class Maps
 

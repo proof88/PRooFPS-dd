@@ -92,7 +92,7 @@ void proofps_dd::GUI::initialize()
     // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
     // We are force-inserting the extra NULL characters into the string because this will be actually handled by a multi-element array by Dear ImGUI
     m_sAvailableMapsListForForceSelectComboBox += std::string(" ") + '\0'; // this first elem represents the not-selected map
-    for (const auto& sMapName : m_pMaps->availableMapsNoChangingGet())
+    for (const auto& sMapName : m_pMaps->getMapcycle().availableMapsNoChangingGet())
     {
         m_sAvailableMapsListForForceSelectComboBox += sMapName + '\0';
         //m_sAvailableMapsListForMapcycleListBox += sMapName + '\0';
@@ -453,12 +453,12 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::ListBox(
             "##listBoxMapcycle",
             &iActiveItemMapcycle,
-            m_pMaps->mapcycleGetAsCharPtrArray(),
-            static_cast<int>(m_pMaps->mapcycleGet().size()),
+            m_pMaps->getMapcycle().mapcycleGetAsCharPtrArray(),
+            static_cast<int>(m_pMaps->getMapcycle().mapcycleGet().size()),
             nMapListboxesHeightAsItemCount);
 
         // start dragging from mapcycle to available maps
-        if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->mapcycleGet().size())))
+        if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->getMapcycle().mapcycleGet().size())))
         {
             // TODO: I believe I should NOT use ImGuiDragDropFlags_SourceAllowNullID here, but I'm using it as workaround,
             // because without it assertion fails in BeginDragDropSource() about id being 0, even though all my controls
@@ -470,7 +470,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
                 // Display preview (could be anything, e.g. when dragging an image we could decide to display
                 // the filename and a small preview of the image, etc.)
-                ImGui::Text("Move: %s", m_pMaps->mapcycleGetAsCharPtrArray()[iActiveItemMapcycle]);
+                ImGui::Text("Move: %s", m_pMaps->getMapcycle().mapcycleGetAsCharPtrArray()[iActiveItemMapcycle]);
                 ImGui::EndDragDropSource();
             }
         }
@@ -482,7 +482,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 IM_ASSERT(payload->DataSize == sizeof(int));
                 int payload_n = *(const int*)payload->Data;
-                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGetElem(payload_n));
+                m_pMaps->getMapcycle().mapcycleAdd_availableMapsRemove(m_pMaps->getMapcycle().availableMapsGetElem(payload_n));
             }
             ImGui::EndDragDropTarget();
         }
@@ -494,12 +494,12 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::ListBox(
             "##listBoxAvailMaps",
             &iActiveItemMapsAvailable,
-            m_pMaps->availableMapsGetAsCharPtrArray(),
-            static_cast<int>(m_pMaps->availableMapsGet().size()),
+            m_pMaps->getMapcycle().availableMapsGetAsCharPtrArray(),
+            static_cast<int>(m_pMaps->getMapcycle().availableMapsGet().size()),
             nMapListboxesHeightAsItemCount);
 
         // start dragging from available maps to mapcycle
-        if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
+        if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->getMapcycle().availableMapsGet().size())))
         {
             // TODO: I believe I should NOT use ImGuiDragDropFlags_SourceAllowNullID here, but I'm using it as workaround,
             // because without it assertion fails in BeginDragDropSource() about id being 0, even though all my controls
@@ -511,7 +511,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
                 // Display preview (could be anything, e.g. when dragging an image we could decide to display
                 // the filename and a small preview of the image, etc.)
-                ImGui::Text("Move: %s", m_pMaps->availableMapsGetAsCharPtrArray()[iActiveItemMapsAvailable]);
+                ImGui::Text("Move: %s", m_pMaps->getMapcycle().availableMapsGetAsCharPtrArray()[iActiveItemMapsAvailable]);
                 ImGui::EndDragDropSource();
             }
         }
@@ -523,7 +523,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 IM_ASSERT(payload->DataSize == sizeof(int));
                 int payload_n = *(const int*)payload->Data;
-                m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[payload_n]);
+                m_pMaps->getMapcycle().mapcycleRemove_availableMapsAdd(m_pMaps->getMapcycle().mapcycleGet()[payload_n]);
             }
             ImGui::EndDragDropTarget();
         }
@@ -535,11 +535,11 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         if (ImGui::Button("<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
             // not sure if it can be -1 but check always anyway!
-            if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->availableMapsGet().size())))
+            if ((iActiveItemMapsAvailable >= 0) && (iActiveItemMapsAvailable < static_cast<int>(m_pMaps->getMapcycle().availableMapsGet().size())))
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
-                m_pMaps->mapcycleAdd_availableMapsRemove(m_pMaps->availableMapsGetElem(iActiveItemMapsAvailable));
-                if (iActiveItemMapsAvailable >= static_cast<int>(m_pMaps->availableMapsGet().size()))
+                m_pMaps->getMapcycle().mapcycleAdd_availableMapsRemove(m_pMaps->getMapcycle().availableMapsGetElem(iActiveItemMapsAvailable));
+                if (iActiveItemMapsAvailable >= static_cast<int>(m_pMaps->getMapcycle().availableMapsGet().size()))
                 {
                     // if we dont do this, we might need to click inside the listbox again to have valid active item
                     iActiveItemMapsAvailable--;
@@ -554,18 +554,18 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther));
         if (ImGui::Button("<<", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleAdd_availableMapsRemove();
+            m_pMaps->getMapcycle().mapcycleAdd_availableMapsRemove();
         }
 
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 2));
         if (ImGui::Button(">", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
             // not sure if it can be -1 but check always anyway!
-            if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->mapcycleGet().size())))
+            if ((iActiveItemMapcycle >= 0) && (iActiveItemMapcycle < static_cast<int>(m_pMaps->getMapcycle().mapcycleGet().size())))
             {
                 // Maps ensures availableMapsGetAsCharPtrArray() and availableMapsGet() have always same number of elements!
-                m_pMaps->mapcycleRemove_availableMapsAdd(m_pMaps->mapcycleGet()[iActiveItemMapcycle]);
-                if (iActiveItemMapcycle >= static_cast<int>(m_pMaps->mapcycleGet().size()))
+                m_pMaps->getMapcycle().mapcycleRemove_availableMapsAdd(m_pMaps->getMapcycle().mapcycleGet()[iActiveItemMapcycle]);
+                if (iActiveItemMapcycle >= static_cast<int>(m_pMaps->getMapcycle().mapcycleGet().size()))
                 {
                     // if we dont do this, we might need to click inside the listbox again to have valid active item
                     iActiveItemMapcycle--;
@@ -580,7 +580,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::SetCursorPos(ImVec2(fMapMoveBtnsPosX, fBasePosY + fMapMoveBtnsVerticalDistanceFromEachOther * 3));
         if (ImGui::Button(">>", ImVec2(fMapMoveBtnsWidth, fMapMoveBtnsHeight)))
         {
-            m_pMaps->mapcycleRemove_availableMapsAdd();
+            m_pMaps->getMapcycle().mapcycleRemove_availableMapsAdd();
         }
 
         PGEcfgVariable& cvarSvMap = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMap];
@@ -600,7 +600,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             if (!cvarSvMap.getAsString().empty() && (cvarSvMap.getAsString() != " "))
             {
                 int i = 0;
-                for (const auto& sTmp : m_pMaps->availableMapsNoChangingGet())
+                for (const auto& sTmp : m_pMaps->getMapcycle().availableMapsNoChangingGet())
                 {
                     if (sTmp == cvarSvMap.getAsString())
                     {
@@ -621,10 +621,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 cvarSvMap.Set("");
             }
-            else if (iSelectMapStart <= static_cast<int>(m_pMaps->availableMapsNoChangingGet().size()))
+            else if (iSelectMapStart <= static_cast<int>(m_pMaps->getMapcycle().availableMapsNoChangingGet().size()))
             {
                 /* first empty item as index 0 is NOT in availableMapsNoChangingGet(), that is why index can be == size() */
-                cvarSvMap.Set(m_pMaps->availableMapsNoChangingGetElem(iSelectMapStart-1));
+                cvarSvMap.Set(m_pMaps->getMapcycle().availableMapsNoChangingGetElem(iSelectMapStart-1));
             }
             else
             {
@@ -784,7 +784,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         {
             getConsole().EOLn("ERROR: failed to save current config profile!");
         }
-        if (!m_pMaps->mapcycleSaveToFile())
+        if (!m_pMaps->getMapcycle().mapcycleSaveToFile())
         {
             getConsole().EOLn("ERROR: failed to save mapcycle!");
         }
@@ -807,7 +807,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
             }
-            if (!m_pMaps->mapcycleSaveToFile())
+            if (!m_pMaps->getMapcycle().mapcycleSaveToFile())
             {
                 getConsole().EOLn("ERROR: failed to save mapcycle!");
             }

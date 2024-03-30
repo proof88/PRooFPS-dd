@@ -297,6 +297,15 @@
     <ClInclude Include="CameraHandling.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Mapcycle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MapcycleTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MapTestsCommon.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -357,6 +366,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mapcycle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

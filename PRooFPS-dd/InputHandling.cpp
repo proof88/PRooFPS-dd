@@ -531,11 +531,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
         if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
         {
-            if (m_pge.getNetwork().isServer() && !m_maps.mapcycleGet().empty())
+            if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())
             {
-                m_maps.mapcycleNext();
+                m_maps.getMapcycle().mapcycleNext();
                 pge_network::PgePacket newPktMapChange;
-                if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.mapcycleGetCurrent()))
+                if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.getMapcycle().mapcycleGetCurrent()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
