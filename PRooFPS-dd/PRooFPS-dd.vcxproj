@@ -188,6 +188,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="Consts.h" />
     <ClInclude Include="Durations.h" />
+    <ClInclude Include="Explosion.h" />
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="InputHandling.h" />
@@ -221,6 +222,7 @@
   <ItemGroup>
     <ClCompile Include="CameraHandling.cpp" />
     <ClCompile Include="Config.cpp" />
+    <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />
     <ClCompile Include="InputHandling.cpp" />
