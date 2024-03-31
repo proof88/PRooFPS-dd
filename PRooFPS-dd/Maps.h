@@ -67,7 +67,7 @@ namespace proofps_dd
         void unload();
         unsigned int width() const;
         unsigned int height() const;
-        void UpdateVisibilitiesForRenderer();
+        void updateVisibilitiesForRenderer();
         const std::string& getFilename() const;              /**< Retrieves the currently loaded map filename. */
         const std::set<PureVector>& getSpawnpoints() const;  /**< Retrieves the set of spawnpoints of the currently loaded map. */
         const PureVector& getRandomSpawnpoint() const;       /**< Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map. */
@@ -83,7 +83,7 @@ namespace proofps_dd
         int getForegroundBlockCount() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
-        void Update(const float& fps);
+        void update(const float& fps);
 
         bool handleMapItemUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,

@@ -415,7 +415,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
         m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight,
         m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
     
-    return !Colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
+    return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
 void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
@@ -463,7 +463,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
                 const auto& playerConst = player;
                 if ((playerConst.getHealth() > 0) &&
-                    Colliding2_NoZ(
+                    colliding2_NoZ(
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
                         player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
                         fBulletPosX, fBulletPosY,
@@ -496,7 +496,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }
                             // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                            HandlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
+                            handlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
                         }
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
@@ -832,7 +832,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                 }
                 // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                HandlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
+                handlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
             }
         }
     }

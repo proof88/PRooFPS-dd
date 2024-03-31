@@ -581,7 +581,7 @@ void proofps_dd::PRooFPSddPGE::showLoadingScreen(int nProgress)
 void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
 {
     m_gui.hideLoadingScreen();
-    m_maps.UpdateVisibilitiesForRenderer();
+    m_maps.updateVisibilitiesForRenderer();
 }
 
 void proofps_dd::PRooFPSddPGE::showXHairInCenter()
@@ -778,8 +778,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     updateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
-    m_maps.Update(m_fps);
-    m_maps.UpdateVisibilitiesForRenderer();
+    m_maps.update(m_fps);
+    m_maps.updateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
     {
         // very bad: m_gui.textPermanent() should be used, but then removeTextPermanentLegacy() would be also needed anytime there is a change ...
@@ -861,7 +861,7 @@ void proofps_dd::PRooFPSddPGE::restartGame()
     {
         for (auto& playerPair : m_mapPlayers)
         {
-            ServerRespawnPlayer(playerPair.second, true);
+            serverRespawnPlayer(playerPair.second, true);
         }
 
         // respawn all map items
@@ -879,7 +879,7 @@ void proofps_dd::PRooFPSddPGE::restartGame()
                 continue;
             }
 
-            mapItem.UnTake();
+            mapItem.unTake();
 
             if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
                 newPktMapItemUpdate,
@@ -957,7 +957,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                 continue;
             }
 
-            mapItem.UnTake();
+            mapItem.unTake();
             bSendItemUpdate = true;
         }
         else
@@ -977,7 +977,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                 // decision than collision check ...
                 // To avoid Z-fighting, players and items have different Z-coords. This makes Colliding() unable to work, so we use Colliding_NoZ().
                 // And it is faster too, no use of Z anyway since theoretically players and items have the same Z.
-                if (Colliding_NoZ(*plobj, mapItem.getObject3D()))
+                if (colliding_NoZ(*plobj, mapItem.getObject3D()))
                 {
                     proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
                     if (player.canTakeItem(mapItem))

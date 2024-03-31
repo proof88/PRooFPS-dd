@@ -46,7 +46,7 @@ const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getGlobalMapItemId()
     return m_globalMapItemId;
 }
 
-void proofps_dd::MapItem::ResetGlobalData()
+void proofps_dd::MapItem::resetGlobalData()
 {
     m_globalMapItemId = 0;
     for (auto& refPair : m_mapReferenceObjects)
@@ -159,7 +159,7 @@ bool proofps_dd::MapItem::isTaken() const
     return m_bTaken;
 }
 
-void proofps_dd::MapItem::Take()
+void proofps_dd::MapItem::take()
 {
     // executed by both server and clients, only when server says so, however only server is responsible for checking m_timeTaken
     if (isTaken())
@@ -172,7 +172,7 @@ void proofps_dd::MapItem::Take()
     m_obj->Hide();
 }
 
-void proofps_dd::MapItem::UnTake()
+void proofps_dd::MapItem::unTake()
 {
     // executed by both server and clients, only when server says so
     if (!isTaken())
@@ -189,7 +189,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::MapItem::g
     return m_timeTaken;
 }
 
-void proofps_dd::MapItem::Update(float factor)
+void proofps_dd::MapItem::update(float factor)
 {
     // executed by both server and clients, always, and this is not synchronized between players
     m_fSinusMotionDegrees += factor;

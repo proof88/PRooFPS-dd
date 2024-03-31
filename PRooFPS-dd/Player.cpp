@@ -998,7 +998,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             return;
         }
 
-        item.Take();
+        item.take();
         if (pWpnBecomingAvailable->isAvailable())
         {
             // just increase bullet count
@@ -1027,7 +1027,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         break;
     }
     case proofps_dd::MapItemType::ITEM_HEALTH:
-        item.Take();
+        item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
         break;
     default:

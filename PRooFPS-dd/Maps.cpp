@@ -33,7 +33,7 @@ proofps_dd::Maps::Maps(
     m_width(0),
     m_height(0)
 {
-    proofps_dd::MapItem::ResetGlobalData();
+    proofps_dd::MapItem::resetGlobalData();
 }
 
 proofps_dd::Maps::~Maps()
@@ -176,7 +176,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
     cbDisplayProgressUpdate(0);
 
     // this wont be needed after we require unload() before consecutive load()
-    proofps_dd::MapItem::ResetGlobalData();
+    proofps_dd::MapItem::resetGlobalData();
 
     const std::string sFilenameWithRelativePath = std::string(Mapcycle::GAME_MAPS_DIR) + fname;
     m_sFileName = PFL::getFilename(sFilenameWithRelativePath.c_str());
@@ -373,7 +373,7 @@ void proofps_dd::Maps::unload()
         delete itemPair.second;
     }
     m_items.clear();
-    proofps_dd::MapItem::ResetGlobalData();
+    proofps_dd::MapItem::resetGlobalData();
 
     m_width = 0;
     m_height = 0;
@@ -397,7 +397,7 @@ unsigned int proofps_dd::Maps::height() const
     return m_height;
 }
 
-void proofps_dd::Maps::UpdateVisibilitiesForRenderer()
+void proofps_dd::Maps::updateVisibilitiesForRenderer()
 {
     const PureVector& campos = m_gfx.getCamera().getPosVec();
 
@@ -538,7 +538,7 @@ const std::map<std::string, PGEcfgVariable>& proofps_dd::Maps::getVars() const
     return m_vars;
 }
 
-void proofps_dd::Maps::Update(const float& fps)
+void proofps_dd::Maps::update(const float& fps)
 {
     // invoked by both server and client
     for (auto& itemPair : getItems())
@@ -554,7 +554,7 @@ void proofps_dd::Maps::Update(const float& fps)
             continue;
         }
 
-        mapItem.Update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
+        mapItem.update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
     }
 }
 
@@ -573,11 +573,11 @@ bool proofps_dd::Maps::handleMapItemUpdateFromServer(
 
     if (msg.m_bTaken)
     {
-        pMapItem->Take();
+        pMapItem->take();
     }
     else
     {
-        pMapItem->UnTake();
+        pMapItem->unTake();
     }
 
     return true;

@@ -56,7 +56,7 @@ protected:
 
     virtual void TearDown() override
     {
-        proofps_dd::MapItem::ResetGlobalData();
+        proofps_dd::MapItem::resetGlobalData();
     }
 
     virtual void Finalize() override
@@ -99,7 +99,7 @@ private:
         proofps_dd::MapItem* mi = new proofps_dd::MapItem(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         delete mi;
 
-        proofps_dd::MapItem::ResetGlobalData();
+        proofps_dd::MapItem::resetGlobalData();
 
         return assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
     }
@@ -120,7 +120,7 @@ private:
     bool test_take()
     {
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
-        mi.Take();
+        mi.take();
 
         return (assertTrue(mi.isTaken(), "taken") &
             assertLess(0, mi.getTimeTaken().time_since_epoch().count(), "time taken") &
@@ -130,13 +130,13 @@ private:
     bool test_untake()
     {
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
-        mi.UnTake();
+        mi.unTake();
 
         bool b = (assertFalse(mi.isTaken(), "not taken") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible")) != 0;
 
-        mi.Take();
-        mi.UnTake();
+        mi.take();
+        mi.unTake();
         b &= (assertFalse(mi.isTaken(), "not taken") &
             assertTrue(mi.getObject3D().isRenderingAllowed(), "not visible")) != 0;
 
@@ -147,7 +147,7 @@ private:
     {
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const float fOriginalObjPosY = mi.getPos().getY();
-        mi.Update(4.f);
+        mi.update(4.f);
 
         return assertNotEquals(fOriginalObjPosY, mi.getPos().getY());
     }

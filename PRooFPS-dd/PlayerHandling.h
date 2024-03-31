@@ -62,17 +62,17 @@ namespace proofps_dd
 
     protected:
 
-        void HandlePlayerDied(
+        void handlePlayerDied(
             Player& player,
             PureObject3D& objXHair,
             pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
-        void HandlePlayerRespawned(Player& player, PureObject3D& objXHair);
-        void ServerRespawnPlayer(Player& player, bool restartGame);
+        void handlePlayerRespawned(Player& player, PureObject3D& objXHair);
+        void serverRespawnPlayer(Player& player, bool restartGame);
         void serverUpdateRespawnTimers(
             proofps_dd::GameMode& gameMode,
             proofps_dd::Durations& durations);
         void updatePlayersOldValues();
-        void WritePlayerList();
+        void writePlayerList();
         bool handleUserConnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserConnectedServerSelf& msg,

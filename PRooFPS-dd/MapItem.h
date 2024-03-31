@@ -44,7 +44,7 @@ namespace proofps_dd
         static const uint32_t ITEM_WPN_BAZOOKA_RESPAWN_SECS = 20;
     
         static const MapItemId& getGlobalMapItemId();
-        static void ResetGlobalData();
+        static void resetGlobalData();
     
         static uint32_t getItemRespawnTimeSecs(const MapItem& mapItem);
     
@@ -65,10 +65,10 @@ namespace proofps_dd
         //PureObject3D&     getObject3D();
     
         bool isTaken() const;
-        void Take();
-        void UnTake();
+        void take();
+        void unTake();
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeTaken() const;
-        void Update(float factor);
+        void update(float factor);
     
     protected:
     

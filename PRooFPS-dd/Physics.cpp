@@ -58,9 +58,9 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 // ############################## PROTECTED ##############################
 
 
-bool proofps_dd::Physics::Colliding(const PureObject3D& a, const PureObject3D& b)
+bool proofps_dd::Physics::colliding(const PureObject3D& a, const PureObject3D& b)
 {
-    return Colliding2(
+    return colliding2(
         a.getPosVec().getX(), a.getPosVec().getY(), a.getPosVec().getZ(),
         a.getScaledSizeVec().getX(), a.getScaledSizeVec().getY(), a.getScaledSizeVec().getZ(),
         b.getPosVec().getX(), b.getPosVec().getY(), b.getPosVec().getZ(),
@@ -68,9 +68,9 @@ bool proofps_dd::Physics::Colliding(const PureObject3D& a, const PureObject3D& b
     );
 }
 
-bool proofps_dd::Physics::Colliding_NoZ(const PureObject3D& a, const PureObject3D& b)
+bool proofps_dd::Physics::colliding_NoZ(const PureObject3D& a, const PureObject3D& b)
 {
-    return Colliding2_NoZ(
+    return colliding2_NoZ(
         a.getPosVec().getX(), a.getPosVec().getY(),
         a.getScaledSizeVec().getX(), a.getScaledSizeVec().getY(),
         b.getPosVec().getX(), b.getPosVec().getY(),
@@ -78,7 +78,7 @@ bool proofps_dd::Physics::Colliding_NoZ(const PureObject3D& a, const PureObject3
     );
 }
 
-bool proofps_dd::Physics::Colliding2(
+bool proofps_dd::Physics::colliding2(
     float o1px, float o1py, float o1pz, float o1sx, float o1sy, float o1sz,
     float o2px, float o2py, float o2pz, float o2sx, float o2sy, float o2sz)
 {
@@ -103,7 +103,7 @@ bool proofps_dd::Physics::Colliding2(
         );
 }
 
-bool proofps_dd::Physics::Colliding2_NoZ(
+bool proofps_dd::Physics::colliding2_NoZ(
     float o1px, float o1py, float o1sx, float o1sy,
     float o2px, float o2py, float o2sx, float o2sy)
 {
@@ -134,7 +134,7 @@ float proofps_dd::Physics::distance_NoZ(
 float proofps_dd::Physics::distance_NoZ(float o1px, float o1py, float o1sx, float o1sy, float o2px, float o2py)
 {
     // first we check if O1 is colliding with O2, if yes then their distance is 0
-    if (Colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
+    if (colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
     {
         return 0.f;
     }
@@ -172,7 +172,7 @@ float proofps_dd::Physics::distance_NoZ_with_distancePerAxis(float o1px, float o
     vDirPerAxis.Normalize();
 
     // first we check if O1 is colliding with O2, if yes then their distance is 0
-    if (Colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
+    if (colliding2_NoZ(o1px, o1py, o1sx, o1sy, o2px, o2py, 0.1f, 0.1f))
     {
         vDistancePerAxis.SetZero();
         return 0.f;
@@ -206,7 +206,7 @@ float proofps_dd::Physics::distance_NoZ_with_distancePerAxis(float o1px, float o
     return fRetCenterDistance;
 }
 
-bool proofps_dd::Physics::Colliding3(
+bool proofps_dd::Physics::colliding3(
     const PureVector& vecPosMin, const PureVector& vecPosMax,
     const PureVector& vecObjPos, const PureVector& vecObjSize)
 {
@@ -221,7 +221,7 @@ bool proofps_dd::Physics::Colliding3(
         vecPosMin.getZ() + vecSize.getZ() / 2.f
     );
 
-    return Colliding2(
+    return colliding2(
         vecPos.getX(), vecPos.getY(), vecPos.getZ(),
         vecSize.getX(), vecSize.getY(), vecSize.getZ(),
         vecObjPos.getX(), vecObjPos.getY(), vecObjPos.getZ(),
@@ -341,7 +341,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound
-            HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
+            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
             //if (player.isFalling())
             //{
             //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeStartedFalling()).count();

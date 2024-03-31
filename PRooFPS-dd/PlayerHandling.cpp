@@ -56,7 +56,7 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 
 static constexpr char* szWaitingToRespawn = "Waiting to respawn ...";
 
-void proofps_dd::PlayerHandling::HandlePlayerDied(
+void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     PureObject3D& objXHair,
     pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide)
@@ -86,7 +86,7 @@ void proofps_dd::PlayerHandling::HandlePlayerDied(
     }
 }
 
-void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObject3D& objXHair)
+void proofps_dd::PlayerHandling::handlePlayerRespawned(Player& player, PureObject3D& objXHair)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
@@ -109,7 +109,7 @@ void proofps_dd::PlayerHandling::HandlePlayerRespawned(Player& player, PureObjec
     }
 }
 
-void proofps_dd::PlayerHandling::ServerRespawnPlayer(Player& player, bool restartGame)
+void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restartGame)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint();
@@ -146,7 +146,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= nPlayerRespawnSeconds)
         {
-            ServerRespawnPlayer(player, false);
+            serverRespawnPlayer(player, false);
         }
     }
 
@@ -166,7 +166,7 @@ void proofps_dd::PlayerHandling::updatePlayersOldValues()
     }
 }
 
-void proofps_dd::PlayerHandling::WritePlayerList()
+void proofps_dd::PlayerHandling::writePlayerList()
 {
     getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
     for (const auto& playerPair : m_mapPlayers)
@@ -353,7 +353,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     }
 
     m_pge.getNetwork().WriteList();
-    WritePlayerList();
+    writePlayerList();
 
     return true;
 }  // handleUserDisconnected()
@@ -484,7 +484,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
     }
 
     m_pge.getNetwork().WriteList();
-    WritePlayerList();
+    writePlayerList();
 
     return true;
 
@@ -628,7 +628,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (msg.m_bRespawn)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, player.getName().c_str());
-        HandlePlayerRespawned(player, objXHair);
+        handlePlayerRespawned(player, objXHair);
     }
     else
     {
@@ -637,7 +637,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, player.getName().c_str());
-            HandlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
+            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!

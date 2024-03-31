@@ -129,7 +129,7 @@ namespace proofps_dd
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player);
 
-        void RegTestDumpToFile(
+        void regTestDumpToFile(
             proofps_dd::GameMode& gameMode,
             proofps_dd::Player& player,
             const unsigned int nTickrate,

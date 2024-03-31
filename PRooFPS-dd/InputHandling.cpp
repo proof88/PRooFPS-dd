@@ -487,7 +487,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
             {
                 getConsole().SetLoggingState("4LLM0DUL3S", true);
-                RegTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+                regTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
                 getConsole().SetLoggingState("4LLM0DUL3S", false);
             }
         }
@@ -913,7 +913,7 @@ const size_t proofps_dd::InputHandling::getLongestMsgAppIdNameLength()
     return nLongestLength;
 }
 
-void proofps_dd::InputHandling::RegTestDumpToFile(
+void proofps_dd::InputHandling::regTestDumpToFile(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player,
     const unsigned int nTickrate,
