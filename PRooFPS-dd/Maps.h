@@ -21,6 +21,7 @@
 
 #include "Mapcycle.h"
 #include "MapItem.h"
+#include "PRooFPS-dd-packet.h"
 
 namespace proofps_dd
 {
@@ -84,9 +85,13 @@ namespace proofps_dd
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         void Update(const float& fps);
 
+        bool handleMapItemUpdateFromServer(
+            pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
+            const MsgMapItemUpdateFromServer& msg);
+
         /* Mapcycle and Available maps handling */
 
-        proofps_dd::Mapcycle& getMapcycle();
+        Mapcycle& getMapcycle();
 
     protected:
 

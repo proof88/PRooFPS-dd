@@ -78,6 +78,7 @@ protected:
         AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
         AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
         AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        AddSubTest("test_map_handle_map_item_update_from_server", (PFNUNITSUBTEST)&MapsTest::test_map_handle_map_item_update_from_server);
     }
 
     virtual bool setUp() override
@@ -672,6 +673,37 @@ private:
                 assertNotEquals(vOriginalItemPosY[i], itemPair.second->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
                 i++;
             }
+        }
+
+        return b;
+    }
+
+    bool test_map_handle_map_item_update_from_server()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertFalse(maps.getItems().empty(), "items");
+
+        if (b)
+        {
+            const auto& iLastValidItemIdInThisMap = (--maps.getItems().end())->first;
+            const auto iInvalidItemIdInThisMap = iLastValidItemIdInThisMap + 1;
+
+            // negative test with invalid item id
+            proofps_dd::MsgMapItemUpdateFromServer msg{ iInvalidItemIdInThisMap, true /*taken*/};
+            b &= assertFalse(maps.handleMapItemUpdateFromServer(0u /*irrelevant*/, msg), "invalid id");
+
+            // positive test for updating item as taken
+            msg.m_mapItemId = iLastValidItemIdInThisMap;
+            b &= assertTrue(maps.handleMapItemUpdateFromServer(0u /*irrelevant*/, msg), "valid id 1");
+            b &= assertTrue(maps.getItems().at(iLastValidItemIdInThisMap)->isTaken(), "taken");
+
+            // positive test for updating item as untaken
+            msg.m_bTaken = false;
+            b &= assertTrue(maps.handleMapItemUpdateFromServer(0u /*irrelevant*/, msg), "valid id 2");
+            b &= assertFalse(maps.getItems().at(iLastValidItemIdInThisMap)->isTaken(), "taken");
         }
 
         return b;

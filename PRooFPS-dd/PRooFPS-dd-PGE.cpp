@@ -496,7 +496,15 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 cameraGetShakeForce());
             break;
         case proofps_dd::MsgMapItemUpdateFromServer::id:
-            bRet = handleMapItemUpdateFromServer(
+            // TODO: this check should not be here, in future a big packet table should solve this as well:
+            // https://github.com/proof88/PRooFPS-dd/issues/220
+            if (getNetwork().isServer())
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
+                assert(false);
+                return false;
+            }
+            bRet = m_maps.handleMapItemUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgMapItemUpdateFromServer>(pkt));
             break;
@@ -1369,34 +1377,3 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
 
     return true;
 }  // handleMapChangeFromServer()
-
-bool proofps_dd::PRooFPSddPGE::handleMapItemUpdateFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapItemUpdateFromServer& msg)
-{
-    if (getNetwork().isServer())
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
-        assert(false);
-        return false;
-    }
-
-    const auto it = m_maps.getItems().find(msg.m_mapItemId);
-    if (it == m_maps.getItems().end())
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): unknown map item id %u, CANNOT HAPPEN!", __func__, msg.m_mapItemId);
-        assert(false);
-        return false;
-    }
-
-    MapItem* const pMapItem = it->second;
-
-    if (msg.m_bTaken)
-    {
-        pMapItem->Take();
-    }
-    else
-    {
-        pMapItem->UnTake();
-    }
-
-    return true;
-}  // handleMapItemUpdateFromServer()

@@ -16,7 +16,7 @@
 #include "Network/PgePacket.h"
 #include "Weapons/WeaponManager.h" // for BulletId
 
-#include "Maps.h"
+#include "MapItem.h"
 #include "Strafe.h"
 
 namespace proofps_dd

@@ -138,9 +138,6 @@ namespace proofps_dd
         bool handleMapChangeFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgMapChangeFromServer& msg);
-        bool handleMapItemUpdateFromServer(
-            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgMapItemUpdateFromServer& msg);
 
     }; // class PRooFPSddPGE
 

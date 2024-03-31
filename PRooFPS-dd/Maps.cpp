@@ -558,6 +558,31 @@ void proofps_dd::Maps::Update(const float& fps)
     }
 }
 
+bool proofps_dd::Maps::handleMapItemUpdateFromServer(
+    pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
+    const proofps_dd::MsgMapItemUpdateFromServer& msg)
+{
+    const auto it = getItems().find(msg.m_mapItemId);
+    if (it == getItems().end())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): unknown map item id %u, CANNOT HAPPEN!", __func__, msg.m_mapItemId);
+        return false;
+    }
+
+    MapItem* const pMapItem = it->second;
+
+    if (msg.m_bTaken)
+    {
+        pMapItem->Take();
+    }
+    else
+    {
+        pMapItem->UnTake();
+    }
+
+    return true;
+}  // handleMapItemUpdateFromServer()
+
 proofps_dd::Mapcycle& proofps_dd::Maps::getMapcycle()
 {
     return m_mapcycle;
