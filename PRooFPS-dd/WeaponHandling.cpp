@@ -593,6 +593,10 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             else
             {
                 // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
+                // this is lame, as I think the weapon object itself should play when it fires a bullet, however currently
+                // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
+                // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
+                // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
                 m_pge.getAudio().getAudioEngineCore().play(wpn->getFiringSound());
             }
         }  // end player.getAttack() && attack()
