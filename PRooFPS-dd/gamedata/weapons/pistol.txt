@@ -84,6 +84,9 @@ firing_mode_max = burst
 # Cannot be 0.
 firing_cooldown = 500
 
+firing_snd = deagle-1.wav
+firing_dry_snd = dryfire_pistol.wav
+
 #####################
 #                   #
 #  FIRING ACCURACY  #
@@ -151,7 +154,7 @@ bullet_drag = 0.2
 
 # If fragile, bullet can be destroyed by other bullet.
 # E.g. a rocket can explode in air when hit by another bullet.
-bullet_fragile = true
+bullet_fragile = false
 
 #####################################
 #                                   #

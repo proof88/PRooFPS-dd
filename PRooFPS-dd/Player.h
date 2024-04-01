@@ -101,6 +101,7 @@ namespace proofps_dd
         // TODO: we should pass the network instance also, so Player can always check if network instance is server or not,
         // and this also enables clearer testing
         explicit Player(
+            pge_audio::PgeAudio& audio,
             PGEcfgProfiles& cfgProfiles,
             std::list<Bullet>& bullets,
             PR00FsUltimateRenderingEngine& gfx,
@@ -275,6 +276,7 @@ namespace proofps_dd
         PureTexture* m_pTexPlayerCrouch = nullptr;
 
         WeaponManager m_wpnMgr;
+        pge_audio::PgeAudio& m_audio;
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;

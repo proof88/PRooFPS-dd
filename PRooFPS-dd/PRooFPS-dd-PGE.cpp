@@ -257,18 +257,13 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("  size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
     getConsole().OLn("");
 
-    loadSound(m_sounds.m_sndLetsgo,         (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav").c_str());
-    loadSound(m_sounds.m_sndReloadStart,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipout.wav").c_str());
-    loadSound(m_sounds.m_sndReloadFinish,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/de_clipin.wav").c_str());
-    loadSound(m_sounds.m_sndShootPistol,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/deagle-1.wav").c_str());
-    loadSound(m_sounds.m_sndShootMchgun,    (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_unsil-1.wav").c_str());
-    loadSound(m_sounds.m_sndShootBazooka,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka.wav").c_str());
-    loadSound(m_sounds.m_sndReloadBazooka,  (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/bazooka_reload.wav").c_str());
-    loadSound(m_sounds.m_sndShootDryPistol, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_pistol.wav").c_str());
-    loadSound(m_sounds.m_sndShootDryMchgun, (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/dryfire_rifle.wav").c_str());
-    loadSound(m_sounds.m_sndChangeWeapon,   (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/m4a1_deploy.wav").c_str());
-    loadSound(m_sounds.m_sndPlayerDie,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav").c_str());
-    loadSound(m_sounds.m_sndExplosion,      (std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/xplosion.wav").c_str());
+    getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");
+    getAudio().loadSound(m_sounds.m_sndReloadStart,   std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/de_clipout.wav");
+    getAudio().loadSound(m_sounds.m_sndReloadFinish,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/de_clipin.wav");
+    getAudio().loadSound(m_sounds.m_sndReloadBazooka, std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/bazooka_reload.wav");
+    getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
+    getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
+    getAudio().loadSound(m_sounds.m_sndExplosion,     std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/xplosion.wav");
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 
@@ -1126,7 +1121,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         hideLoadingScreen();
         showXHairInCenter();
         
-        getAudio().play(m_sounds.m_sndLetsgo);
+        getAudio().getAudioEngineCore().play(m_sounds.m_sndLetsgo);
     }
     else
     {
@@ -1239,7 +1234,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     const auto insertRes = m_mapPlayers.insert(
         {
             connHandleServerSide,
-            Player(getConfigProfiles(), getBullets(), getPure(), connHandleServerSide, msg.m_szIpAddress)
+            Player(getAudio(), getConfigProfiles(), getBullets(), getPure(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)
     {

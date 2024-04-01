@@ -65,14 +65,16 @@ void proofps_dd::Player::genUniqueUserName(
 
 
 proofps_dd::Player::Player(
+    pge_audio::PgeAudio& audio,
     PGEcfgProfiles& cfgProfiles,
     std::list<Bullet>& bullets,
     PR00FsUltimateRenderingEngine& gfx,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const std::string& sIpAddress) :
+    m_audio(audio),
     m_connHandleServerSide(connHandle),
     m_sIpAddress(sIpAddress),
-    m_wpnMgr(cfgProfiles, gfx, bullets),
+    m_wpnMgr(audio, cfgProfiles, gfx, bullets),
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
     m_gfx(gfx)
@@ -92,7 +94,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_pObj(PGENULL),
     m_pTexPlayerStand(PGENULL),
     m_pTexPlayerCrouch(PGENULL),
-    m_wpnMgr(other.m_cfgProfiles, other.m_gfx, other.m_bullets),
+    m_wpnMgr(other.m_audio, other.m_cfgProfiles, other.m_gfx, other.m_bullets),
+    m_audio(other.m_audio),
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
     m_gfx(other.m_gfx),
@@ -131,6 +134,8 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_timeDied = other.m_timeDied;
     m_bRespawn = other.m_bRespawn;
     m_vecImpactForce = other.m_vecImpactForce;
+    //m_audio = other.m_audio;  // deleted function
+    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
     m_vecJumpForce = other.m_vecJumpForce;

@@ -84,6 +84,9 @@ firing_mode_max = semi
 # Cannot be 0.
 firing_cooldown = 1000
 
+firing_snd = bazooka.wav
+firing_dry_snd = dryfire_bazooka.wav
+
 #####################
 #                   #
 #  FIRING ACCURACY  #

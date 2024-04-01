@@ -137,6 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\PFL\PFL\winproof88.h" />
+    <ClInclude Include="..\..\PGE\PGE\Audio\PgeAudio.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud_wav.h" />
     <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgFile.h" />

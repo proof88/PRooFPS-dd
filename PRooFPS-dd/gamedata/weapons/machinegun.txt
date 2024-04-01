@@ -84,6 +84,9 @@ firing_mode_max = auto
 # Cannot be 0.
 firing_cooldown = 150
 
+firing_snd = m4a1_unsil-1.wav
+firing_dry_snd = dryfire_rifle.wav
+
 #####################
 #                   #
 #  FIRING ACCURACY  #
@@ -151,7 +154,7 @@ bullet_drag = 0.2
 
 # If fragile, bullet can be destroyed by other bullet.
 # E.g. a rocket can explode in air when hit by another bullet.
-bullet_fragile = true
+bullet_fragile = false
 
 #####################################
 #                                   #

@@ -64,7 +64,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
-        m_pge.getAudio().play(m_sounds.m_sndPlayerDie);
+        m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
         m_gui.textPermanent(szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2);
     }

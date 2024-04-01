@@ -379,7 +379,6 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
     return Explosion::initExplosionsReference(m_pge);
 }
 
-
 float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
     const Player& player,
     const Explosion& xpl,
@@ -430,7 +429,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     
     const Explosion& xpl = m_explosions.back();
 
-    m_pge.getAudio().play(m_sounds.m_sndExplosion);
+    m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndExplosion);
 
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
@@ -519,7 +518,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 
     Explosion& xpl = m_explosions.back();
 
-    m_pge.getAudio().play(m_sounds.m_sndExplosion);
+    m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndExplosion);
 
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
@@ -594,24 +593,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             else
             {
                 // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
-                // not nice, but this is just some temporal solution for private beta
-                if (wpn->getFilename() == "pistol.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootPistol);
-                }
-                else if (wpn->getFilename() == "machinegun.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
-                }
-                else if (wpn->getFilename() == "bazooka.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootBazooka);
-                }
-                else
-                {
-                    getConsole().EOLn("WeaponHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
-                    assert(false);
-                }
+                m_pge.getAudio().getAudioEngineCore().play(wpn->getFiringSound());
             }
         }  // end player.getAttack() && attack()
 
@@ -714,7 +696,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             // this is my newborn bullet
             // I'm playing the sound associated to my current weapon, although it might happen that with BIG latency, when I receive this update from server,
             // I have already switched to another weapon ... but I think this cannot happen since my inputs are processed and responded by server in order.
-            const Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+            Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
             if (!wpn)
             {
                 getConsole().EOLn("WeaponHandling::%s(): getWeapon() failed!", __func__);
@@ -723,25 +705,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             }
             else
             {
-                // not nice, but this is just some temporal solution for private beta
-                if (wpn->getFilename() == "pistol.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootPistol);
-                }
-                else if (wpn->getFilename() == "machinegun.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootMchgun);
-                }
-                else if (wpn->getFilename() == "bazooka.txt")
-                {
-                    m_pge.getAudio().play(m_sounds.m_sndShootBazooka);
-                }
-                else
-                {
-                    getConsole().EOLn("WeaponHandling::%s(): did not find correct weapon name for: %s!", __func__, wpn->getFilename().c_str());
-                    assert(false);
-                    return false;
-                }
+                m_pge.getAudio().getAudioEngineCore().play(wpn->getFiringSound());
             }
         }
 
@@ -843,7 +807,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     if (isMyConnection(it->first))
     {
         //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
-        m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
+        m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
     }
 
     if (!player.getWeaponManager().setCurrentWeapon(wpn,

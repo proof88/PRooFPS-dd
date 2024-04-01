@@ -368,7 +368,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             {
                 if (connHandleServerSide == pge_network::ServerConnHandle)
                 {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
-                    m_pge.getAudio().play(m_sounds.m_sndChangeWeapon);
+                    m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
                 }
                 if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
                 {
