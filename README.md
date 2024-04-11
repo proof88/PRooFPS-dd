@@ -18,11 +18,11 @@ It uses my open-source [game engine](https://github.com/proof88/PGE).
 This game is still **under development**.
 
 **[Version History](HISTORY.md)**  
+**[Kanban Board View for 2024 to Reach Public Beta 1](https://github.com/users/proof88/projects/9/views/1)**  
+**[Roadmap View for 2024 to Reach Public Beta 1](https://github.com/users/proof88/projects/9/views/4)**  
 **[Known Bugs](https://github.com/proof88/PRooFPS-dd/labels/bug)**  
 **[Known Network Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc)**  
 **[Other Performance Issues](https://github.com/proof88/PRooFPS-dd/issues?q=is%3Aopen+is%3Aissue+-milestone%3A%22Networking+%28Public+Beta%29%22+label%3Aoptimization+sort%3Aupdated-desc+)**  
-**[Kanban Board View for 2024 to Reach Public Beta 1](https://github.com/users/proof88/projects/9/views/1)**  
-**[Roadmap View for 2024 to Reach Public Beta 1](https://github.com/users/proof88/projects/9/views/4)**  
 **[Full Backlog](https://github.com/proof88/PRooFPS-dd/milestones?direction=asc&sort=title&state=open)**
 
 You can follow the project on my **[facebook page](https://www.facebook.com/whiskhyll)**.
