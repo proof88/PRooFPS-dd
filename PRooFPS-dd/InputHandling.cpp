@@ -387,7 +387,8 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
                     pktWpnUpdateCurrent,
                     connHandleServerSide,
-                    pTargetWpn->getFilename());
+                    pTargetWpn->getFilename(),
+                    pTargetWpn->getState().getNew());
                 m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
             }
             else

@@ -747,7 +747,8 @@ namespace proofps_dd
     static_assert(std::is_standard_layout_v<MsgWpnUpdateFromServer>);
 
     // server -> clients
-    // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch
+    // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch, state update, etc.
+    // We need to send state update to all clients because only this way clients can properly audio-visualize that on their side.
     struct MsgCurrentWpnUpdateFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::CurrentWpnUpdateFromServer;
@@ -755,7 +756,8 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
-            const std::string& sWpnCurrentName)
+            const std::string& sWpnCurrentName,
+            const Weapon::State& state)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgCurrentWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -772,11 +774,13 @@ namespace proofps_dd
 
             proofps_dd::MsgCurrentWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgCurrentWpnUpdateFromServer&>(*pMsgAppData);
             strncpy_s(msgWpnUpdate.m_szWpnCurrentName, MsgWpnUpdateFromServer::nWpnNameNameMaxLength, sWpnCurrentName.c_str(), sWpnCurrentName.length());
+            msgWpnUpdate.m_state = state;
 
             return true;
         }
 
         char m_szWpnCurrentName[MsgWpnUpdateFromServer::nWpnNameNameMaxLength];
+        Weapon::State m_state;
     };  // struct MsgCurrentWpnUpdateFromServer
     static_assert(std::is_trivial_v<MsgCurrentWpnUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgCurrentWpnUpdateFromServer>);

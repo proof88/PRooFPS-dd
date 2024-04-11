@@ -577,8 +577,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             continue;
         }
 
-        bool bSendPkt = false;
-
+        bool bSendPrivateWpnUpdatePktToTheClientOnly = false;
         if (player.getAttack() && player.attack())
         {
             //getConsole().EOLn("WeaponHandling::%s(): player %u attack", __func__, playerServerSideConnHandle);
@@ -588,7 +587,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             if (playerServerSideConnHandle != pge_network::ServerConnHandle)
             {
                 // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger() in player.attack()
-                bSendPkt = true;
+                bSendPrivateWpnUpdatePktToTheClientOnly = true;
             }
             else
             {
@@ -606,21 +605,51 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             if (playerServerSideConnHandle != pge_network::ServerConnHandle)
             {
                 // server doesn't need to send this msg to itself, it already executed bullet count change by wpn->update()
-                bSendPkt = true;
+                bSendPrivateWpnUpdatePktToTheClientOnly = true;
             }
         }
 
-        if (bSendPkt)
+        if (bSendPrivateWpnUpdatePktToTheClientOnly)
         {
-            pge_network::PgePacket pktWpnUpdate;
-            proofps_dd::MsgWpnUpdateFromServer::initPkt(
-                pktWpnUpdate,
+            pge_network::PgePacket pktWpnUpdatePrivate;
+            if (!proofps_dd::MsgWpnUpdateFromServer::initPkt(
+                pktWpnUpdatePrivate,
                 pge_network::ServerConnHandle /* ignored by client anyway */,
                 wpn->getFilename(),
                 wpn->isAvailable(),
                 wpn->getMagBulletCount(),
-                wpn->getUnmagBulletCount());
-            m_pge.getNetwork().getServer().send(pktWpnUpdate, playerServerSideConnHandle);
+                wpn->getUnmagBulletCount()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                continue;
+            }
+            m_pge.getNetwork().getServer().send(pktWpnUpdatePrivate, playerServerSideConnHandle);
+        }
+
+        bool bSendPublicWpnUpdatePktToAllClients = false;
+        if (wpn->getState().isDirty())
+        {
+            bSendPublicWpnUpdatePktToAllClients = true;
+            wpn->updateOldValues();
+        }
+
+        if (bSendPublicWpnUpdatePktToAllClients)
+        {
+            // we use the same msg as being used for handling weapon change in InputHandling, however it cannot happen that same type of message
+            // is sent out twice in same tick to clients since in case of weapon change the weapon state is not changing for sure!
+            pge_network::PgePacket pktWpnUpdateCurrentPublic;
+            if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
+                pktWpnUpdateCurrentPublic,
+                playerServerSideConnHandle,
+                wpn->getFilename(),
+                wpn->getState().getNew()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                continue;
+            }
+            m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrentPublic);
         }
     }  // end for playerPair
 
@@ -789,7 +818,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         return false;
     }
 
-    //getConsole().OLn("WeaponHandling::%s(): received: %s for player %u",  __func__, msg.m_szWpnCurrentName, connHandleServerSide);
+    //getConsole().EOLn("WeaponHandling::%s(): received: %s for player %u, state: %d",  __func__, msg.m_szWpnCurrentName, connHandleServerSide, static_cast<int>(msg.m_state));
 
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
@@ -808,7 +837,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         return false;
     }
 
-    if (isMyConnection(it->first))
+    if (isMyConnection(it->first) && (player.getWeaponManager().getCurrentWeapon()->getFilename() != msg.m_szWpnCurrentName))
     {
         //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);

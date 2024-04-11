@@ -1196,7 +1196,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                 if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
                     pktWpnUpdateCurrent,
                     it.second.getServerSideConnectionHandle(),
-                    it.second.getWeaponManager().getCurrentWeapon()->getFilename()))
+                    it.second.getWeaponManager().getCurrentWeapon()->getFilename(),
+                    it.second.getWeaponManager().getCurrentWeapon()->getState().getNew()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
