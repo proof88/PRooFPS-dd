@@ -94,7 +94,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_maps(getConfigProfiles(), getPure()),
-    m_fps(GAME_MAXFPS),
+    m_fps(GAME_MAXFPS_DEF),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
@@ -153,8 +153,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 {
     getConsole().OLnOI("PRooFPSddPGE::onGameInitialized()");
 
-    getConsole().SetLoggingState("4LLM0DUL3S", false);
-
     // basically I turn everything off, I could simply set 0, but still want to set bits in a clear way;
     // I need to use legacy rendering path, because if I use occlusion culling methods, it will be slow
     // for ~1000 cubes, since Pure still doesn't implement hierarchical occlusion culling ...
@@ -166,8 +164,11 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         PURE_RH_OQ_DRAW_IF_QUERY_PENDING_OFF |
         PURE_RH_ORDERING_BY_DISTANCE_OFF);
     
-    setGameRunningFrequency(GAME_MAXFPS);
+    m_config.validate();
+    setGameRunningFrequency( getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt() );
     getConsole().OLn("Game running frequency: %u Hz", getGameRunningFrequency());
+
+    getConsole().SetLoggingState("4LLM0DUL3S", false);
 
     cameraInitForGameStart();
 
@@ -245,8 +246,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         }
     }
 
-    m_config.validate();
-
     getConsole().OLn("");
     getConsole().OLn("size of PgePacket: %u Bytes", sizeof(pge_network::PgePacket));
     getConsole().OLn("  size of MsgUserCmdFromClient: %u Bytes", sizeof(proofps_dd::MsgUserCmdFromClient));
@@ -277,7 +276,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_gameMode->restart();
     
     m_fps_lastmeasure = GetTickCount();
-    m_fps = GAME_MAXFPS;
+    m_fps = GAME_MAXFPS_DEF;
 
     return true;
 }
@@ -1369,7 +1368,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // TODO: there are things that are the same as in onGameInitialized(), put them into a common function!
     m_timeSimulation = {};  // reset tick-based simulation time as well
     m_fps_lastmeasure = GetTickCount();
-    m_fps = GAME_MAXFPS;
+    m_fps = GAME_MAXFPS_DEF;
 
     return true;
 }  // handleMapChangeFromServer()

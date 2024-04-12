@@ -24,10 +24,10 @@ namespace proofps_dd
     // TODO: unsure why I'm not using unsigned for these. Anyway, these will need to be handled in different way anyway in near future,
     // to have object for each of these with validation rules defined in object: https://github.com/proof88/PRooFPS-dd/issues/251 .
     static constexpr int   GAME_TICKRATE_DEF = 60;
-    static constexpr int   GAME_TICKRATE_MIN = 20;           /* Before modifying this, keep in mind serverGravity() is lerping between 20 and 60! */
-    static constexpr int   GAME_TICKRATE_MAX = GAME_MAXFPS;
-    static_assert(GAME_TICKRATE_MAX == GAME_MAXFPS, "Max tickrate is limited by max FPS since onGameRunning() freq is same as max FPS.");
-    static_assert(0 < GAME_TICKRATE_MIN, "Min tickrate should be positive.");
+    static constexpr int   GAME_TICKRATE_MIN = 20;     /* Before modifying this, keep in mind serverGravity() is lerping between 20 and 60! */
+    static constexpr int   GAME_TICKRATE_MAX = 60;     /* Before modifying this, keep in mind serverGravity() is lerping between 20 and 60! */
+    static_assert(GAME_TICKRATE_MAX <= GAME_MAXFPS_MAX, "Max tickrate is limited by max MaxFPS since onGameRunning() freq is same as max FPS.");
+    static_assert(0 < GAME_TICKRATE_MIN, "Min tickrate must be positive.");
     static_assert(GAME_TICKRATE_MIN < GAME_TICKRATE_MAX, "Min tickrate should not less than max tickrate (if equal, division by zero happens in Physics::serverGravity()).");
     static_assert(GAME_TICKRATE_MIN <= GAME_TICKRATE_DEF, "Min tickrate should not be greater than default tickrate.");
     static_assert(GAME_TICKRATE_DEF <= GAME_TICKRATE_MAX, "Max tickrate should not be smaller than default tickrate.");
@@ -53,6 +53,7 @@ namespace proofps_dd
     static_assert(GAME_CL_UPDATERATE_DEF <= GAME_CL_UPDATERATE_MAX, "Max cl_updaterate should not be smaller than default cl_updaterate.");
     static_assert(GAME_TICKRATE_DEF % GAME_CL_UPDATERATE_DEF == 0, "Clients should receive UPDATED physics results evenly distributed in time.");
 
+    static constexpr char* CVAR_FPS_MAX = "gfx_fps_max";
     static constexpr char* CVAR_TICKRATE = "tickrate";
     static constexpr char* CVAR_PHYSICS_RATE_MIN = "physics_rate_min";
     static constexpr char* CVAR_CL_UPDATERATE = "cl_updaterate";

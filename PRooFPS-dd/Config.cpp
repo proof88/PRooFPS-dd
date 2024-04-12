@@ -53,28 +53,86 @@ void proofps_dd::Config::validate()
 
     getConsole().OLnOI("Config validation ...");
 
-    if (!m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
+    if (!m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsString().empty())
     {
-        if ((m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() >= GAME_TICKRATE_MIN) &&
-            (m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt() <= m_pge.getGameRunningFrequency()))
+        if ((m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsInt() >= GAME_MAXFPS_MIN) &&
+            (m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt() <= GAME_MAXFPS_MAX))
         {
-            m_nTickrate = m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
-            getConsole().OLn("Tickrate from config: %u Hz", m_nTickrate);
+            getConsole().OLn("MaxFPS from config: %u FPS", m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt());
         }
         else
         {
-            m_nTickrate = GAME_TICKRATE_DEF;
-            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing default: %u Hz",
-                m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
-                m_nTickrate);
-            m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].Set(GAME_TICKRATE_DEF);
+            getConsole().EOLn("ERROR: Invalid MaxFPS in config: %s, forcing default: %d FPS",
+                m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsString().c_str(),
+                GAME_MAXFPS_DEF);
+            m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].Set(GAME_MAXFPS_DEF);
         }
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].Set(GAME_TICKRATE_DEF);
-        m_nTickrate = GAME_TICKRATE_DEF;
-        getConsole().OLn("Missing Tickrate in config, forcing default: %u Hz", m_nTickrate);
+        m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].Set(GAME_MAXFPS_DEF);
+        getConsole().OLn("Missing MaxFPS in config, forcing default: %d FPS", GAME_MAXFPS_DEF);
+    }
+
+    if (!m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() >= GAME_TICKRATE_MIN) &&
+            (m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() <= GAME_TICKRATE_MAX))
+        {
+            if (m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt() > 0)
+            {
+                if (m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsInt() > m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsInt())
+                {
+                    m_nTickrate = m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt();
+                    getConsole().EOLn("ERROR: Tickrate greater than MaxFPS in config: %s, forcing to: %u Hz",
+                        m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
+                        m_nTickrate);
+                    m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].Set(m_nTickrate);
+                }
+                else
+                {
+                    m_nTickrate = m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
+                    getConsole().OLn("Tickrate from config: %u Hz", m_nTickrate);
+                }
+            }
+            else
+            {
+                m_nTickrate = m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsUInt();
+                getConsole().OLn("Tickrate from config: %u Hz", m_nTickrate);
+            }
+        }
+        else
+        {
+            // we cannot default tickrate greater than configured maxFPS
+            if (m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt() > 0)
+            {
+                m_nTickrate = std::min(GAME_TICKRATE_DEF, static_cast<int>(m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt()) /* int cannot overflow due to GAME_MAXFPS_MAX above */);
+            }
+            else
+            {
+                m_nTickrate = GAME_TICKRATE_DEF;
+            }
+            
+            getConsole().EOLn("ERROR: Invalid Tickrate in config: %s, forcing to: %u Hz",
+                m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].getAsString().c_str(),
+                m_nTickrate);
+            m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].Set(m_nTickrate);
+        }
+    }
+    else
+    {
+        // we cannot default tickrate greater than configured maxFPS
+        if (m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt() > 0)
+        {
+            m_nTickrate = std::min(GAME_TICKRATE_DEF, static_cast<int>(m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt()) /* int cannot overflow due to GAME_MAXFPS_MAX above */);
+        }
+        else
+        {
+            m_nTickrate = GAME_TICKRATE_DEF;
+        }
+
+        m_pge.getConfigProfiles().getVars()[CVAR_TICKRATE].Set(m_nTickrate);
+        getConsole().OLn("Missing Tickrate in config, forcing to: %u Hz", m_nTickrate);
     }
 
     if (!m_pge.getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().empty())
@@ -90,7 +148,7 @@ void proofps_dd::Config::validate()
         else
         {
             m_nPhysicsRateMin = m_nTickrate;
-            getConsole().EOLn("ERROR: Invalid Min. physics rate in config: %s, forcing tickrate: %u Hz",
+            getConsole().EOLn("ERROR: Invalid Min. physics rate in config: %s, forcing to Tickrate: %u Hz",
                 m_pge.getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].getAsString().c_str(),
                 m_nTickrate);
             m_pge.getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].Set(m_nTickrate);
@@ -98,9 +156,9 @@ void proofps_dd::Config::validate()
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].Set(GAME_PHYSICS_RATE_MIN_DEF);
-        m_nPhysicsRateMin = GAME_PHYSICS_RATE_MIN_DEF;
-        getConsole().OLn("Missing Min. physics rate in config, forcing default: %u Hz", m_nPhysicsRateMin);
+        m_pge.getConfigProfiles().getVars()[CVAR_PHYSICS_RATE_MIN].Set(m_nTickrate);
+        m_nPhysicsRateMin = m_nTickrate;
+        getConsole().OLn("Missing Min. physics rate in config, forcing to Tickrate: %u Hz", m_nPhysicsRateMin);
     }
 
     if (!m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().empty())
@@ -116,7 +174,7 @@ void proofps_dd::Config::validate()
         else
         {
             m_nClientUpdateRate = m_nTickrate;
-            getConsole().EOLn("ERROR: Invalid Client update rate in config: %s, forcing tickrate: %u Hz",
+            getConsole().EOLn("ERROR: Invalid Client update rate in config: %s, forcing to Tickrate: %u Hz",
                 m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().c_str(),
                 m_nClientUpdateRate);
             m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(m_nTickrate);
@@ -124,9 +182,9 @@ void proofps_dd::Config::validate()
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(GAME_CL_UPDATERATE_DEF);
-        m_nClientUpdateRate = GAME_CL_UPDATERATE_DEF;
-        getConsole().OLn("Missing Client update rate in config, forcing default: %u Hz", m_nClientUpdateRate);
+        m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].Set(m_nTickrate);
+        m_nClientUpdateRate = m_nTickrate;
+        getConsole().OLn("Missing Client update rate in config, forcing to Tickrate: %u Hz", m_nClientUpdateRate);
     }
 
     const char* const szCVarReconnectDelay = m_pge.getNetwork().isServer() ? CVAR_SV_RECONNECT_DELAY : CVAR_CL_RECONNECT_DELAY;
