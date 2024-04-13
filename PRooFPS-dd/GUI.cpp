@@ -1137,9 +1137,16 @@ void proofps_dd::GUI::drawDearImGuiCb()
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
         //ImGui::PushFont(m_pImFont);
+        //const auto fTextX = ImGui::GetCursorPosX();
+        //auto fTextY = ImGui::GetCursorPosY();
         //for (int i = 0; i < 20; i++)
         //{
+        //    ImGui::SetCursorPos(ImVec2(fTextX + 1, fTextY + 1));
+        //    ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
+        //    float fNextTextRowY = ImGui::GetCursorPosY() - 1;
+        //    ImGui::SetCursorPos(ImVec2(fTextX, fTextY));
         //    ImGui::Text("ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
+        //    fTextY = fNextTextRowY;
         //}
         //ImGui::PopFont();
 
