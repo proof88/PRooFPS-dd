@@ -12,10 +12,6 @@
 
 #include <cassert>
 
-// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
-#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
-#include "imgui.h"
-
 #include "Consts.h"
 #include "Maps.h"
 #include "Player.h"
@@ -113,6 +109,11 @@ void proofps_dd::GUI::initialize()
            - https://github.com/Code-Building/ImGuiBuilder
            - https://github.com/iamclint/ImGuiDesigner
     */
+
+    ImGui::GetIO().Fonts->AddFontDefault();
+    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", 16);
+    assert(m_pImFont);
+    assert(ImGui::GetIO().Fonts->Build());
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
     const ImVec4 imColorDefaultGreen(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
@@ -291,6 +292,8 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
+
+ImFont* proofps_dd::GUI::m_pImFont = nullptr;
 
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
@@ -1125,6 +1128,23 @@ void proofps_dd::GUI::drawDearImGuiCb()
     if (m_currentMenu == MenuState::None)
     {
         // we are in-game
+
+        const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x, main_viewport->WorkSize.y), ImGuiCond_FirstUseEver);
+
+        ImGui::Begin("WndInGame", nullptr,
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
+
+        //ImGui::PushFont(m_pImFont);
+        //for (int i = 0; i < 20; i++)
+        //{
+        //    ImGui::Text("ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
+        //}
+        //ImGui::PopFont();
+
+        ImGui::End();
+
         return;
     } else if (m_currentMenu == MenuState::Exiting)
     {

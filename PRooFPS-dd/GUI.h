@@ -20,6 +20,10 @@
 #include "Maps.h"
 #include "Networking.h"
 
+// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
+#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+#include "imgui.h"
+
 namespace proofps_dd
 {
 
@@ -88,6 +92,8 @@ namespace proofps_dd
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
+
+        static ImFont* m_pImFont;
 
         // ---------------------------------------------------------------------------
 

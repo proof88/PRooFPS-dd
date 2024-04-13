@@ -340,6 +340,12 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
         if (hasValidConnection())
         {
+
+            //for (int i = 0; i < 20; i++)
+            //{
+            //    m_gui.textForNextFrame("ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD", 0, getPure().getUImanager().getDefaultFontSizeLegacy() * i);
+            //}
+
             if (getNetwork().isServer())
             {
                 // TODO: very bad: physics stuff should not be set every frame, it should be done in config.validate(), however

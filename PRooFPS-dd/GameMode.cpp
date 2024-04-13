@@ -448,6 +448,7 @@ void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEng
                 nXPosInternalQueueTime, nThisRowY);
         }
     }
+
 }  // showObjectivesServer()
 
 void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY)
