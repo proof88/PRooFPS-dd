@@ -181,6 +181,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const pge_network::MsgUserConnectedServerSelf& msg,
     PGEcfgProfiles& cfgProfiles,
+    proofps_dd::Config& config,
+    proofps_dd::GameMode& gameMode,
     std::function<void(int)>& cbDisplayMapLoadingProgressUpdate)
 {
     if (!m_pge.getNetwork().isServer())
@@ -299,6 +301,33 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         msgUserSetup.m_bCurrentClient = true;
         m_pge.getNetwork().getServer().send(newPktSetup, connHandleServerSide);
         m_pge.getNetwork().getServer().send(newPktUserUpdate);   // TODO: why is this here? we already sent it few lines earlier.
+
+        pge_network::PgePacket newPktServerInfo;
+        // In the future we need something better than GameMode not having some funcs like getFragLimit()
+        const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
+        if (!pDeathMatchMode)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): cast FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+        if (!proofps_dd::MsgServerInfoFromServer::initPkt(
+            newPktServerInfo,
+            cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
+            config.getTickRate(),
+            config.getPhysicsRate(),
+            config.getClientUpdateRate(),
+            gameMode.getGameModeType(),
+            pDeathMatchMode->getFragLimit(),
+            pDeathMatchMode->getTimeLimitSecs(),
+            pDeathMatchMode->getTimeRemainingSecs(),
+            0/*config.getrespawntimesecs*/))
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+        m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
     }
 
     return true;

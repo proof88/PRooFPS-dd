@@ -18,6 +18,7 @@
 
 #include "Consts.h"
 #include "Maps.h"
+#include "PRooFPS-dd-packet.h"
 
 namespace proofps_dd
 {
@@ -94,6 +95,10 @@ namespace proofps_dd
         const bool& getCameraTilting() const;
         const bool& getCameraRolling() const;
 
+        bool clientHandleServerInfoFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const MsgServerInfoFromServer& msgServerInfo);
+
     protected:
 
     private:
@@ -111,6 +116,8 @@ namespace proofps_dd
         bool m_bCamFollowsXHair = true;
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
+
+        MsgServerInfoFromServer m_serverInfo{}; /* Used by clients only, to store server's config for informational purpose. */
 
         // ---------------------------------------------------------------------------
 

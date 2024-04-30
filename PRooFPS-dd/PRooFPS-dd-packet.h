@@ -16,6 +16,7 @@
 #include "Network/PgePacket.h"
 #include "Weapons/WeaponManager.h" // for BulletId
 
+#include "GameMode.h"
 #include "MapItem.h"
 #include "Strafe.h"
 
@@ -24,7 +25,8 @@ namespace proofps_dd
 
     enum class PRooFPSappMsgId : pge_network::MsgApp::TMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
     {
-        MapChangeFromServer = 0,
+        ServerInfoFromServer = 0,
+        MapChangeFromServer,
         UserSetupFromServer,
         UserNameChange,
         UserCmdFromClient,
@@ -45,7 +47,8 @@ namespace proofps_dd
 
     const auto MapMsgAppId2String = PFL::std_array_of<PRooFPSappMsgId2ZStringPair>
     (
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MapChangeFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::ServerInfoFromServer,        "MsgServerInfoFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MsgMapChangeFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChange,              "MsgUserNameChange" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient" },
@@ -59,6 +62,74 @@ namespace proofps_dd
 
     // this way nobody will forget updating both the enum and the array
     static_assert(static_cast<size_t>(PRooFPSappMsgId::LastMsgId) == MapMsgAppId2String.size());
+
+    // server -> clients
+    // sent to any connecting client, or in the future even before connecting e.g. when listing servers.
+    // Client initialization/player bringup should NOT depend on this, this is just for informational purpose so that
+    // server config can be seen on client-side as well. Some values might be used to alter client's behavior, e.g.
+    // nRespawnTimeSecs is actually needed by client for proper visualization of the respawn time countdown.
+    struct MsgServerInfoFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::ServerInfoFromServer;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const unsigned int& nMaxFps,
+            const unsigned int& nTickrate,
+            const unsigned int& nPhysicsRateMin,
+            const unsigned int& nClientUpdateRate,
+            const GameModeType& iGameModeType,
+            const unsigned int& nFragLimit,
+            const unsigned int& nTimeLimitSecs,
+            const unsigned int& nTimeRemainingSecs,
+            const unsigned int& nRespawnTimeSecs)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgServerInfoFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgServerInfoFromServer& msgServerInfo = reinterpret_cast<proofps_dd::MsgServerInfoFromServer&>(*pMsgAppData);
+
+            msgServerInfo.m_nMaxFps = nMaxFps;
+            msgServerInfo.m_nTickrate = nTickrate;
+            msgServerInfo.m_nPhysicsRateMin = nPhysicsRateMin;
+            msgServerInfo.m_nClientUpdateRate = nClientUpdateRate;
+
+            msgServerInfo.m_iGameModeType = iGameModeType;
+            msgServerInfo.m_nFragLimit = nFragLimit;
+            msgServerInfo.m_nTimeLimitSecs = nTimeLimitSecs;
+            msgServerInfo.m_nTimeRemainingSecs = nTimeRemainingSecs;
+
+            msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
+
+            return true;
+        }
+
+        unsigned int m_nMaxFps;
+        unsigned int m_nTickrate;
+        unsigned int m_nPhysicsRateMin;
+        unsigned int m_nClientUpdateRate;
+
+        GameModeType m_iGameModeType;
+        unsigned int m_nFragLimit;
+        unsigned int m_nTimeLimitSecs;
+        unsigned int m_nTimeRemainingSecs;
+
+        unsigned int m_nRespawnTimeSecs;
+
+    };  // struct MsgServerInfoFromServer
+    static_assert(std::is_trivial_v<MsgServerInfoFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgServerInfoFromServer>);
+    static_assert(std::is_standard_layout_v<MsgServerInfoFromServer>);
 
     // server -> self (inject) and clients
     // sent to all clients when map is changing
@@ -104,7 +175,7 @@ namespace proofps_dd
      *  - proofps_dd::MsgUserSetupFromServer;
      *  - proofps_dd::MsgUserNameChange.
      * 
-     * However, when multiple players are connecting simulatenously to the server, messages for different players can come
+     * However, when multiple players are connecting simultaneously to the server, messages for different players can come
      * interleaved, thus handling of these messages must take this into account.
      * 
      * 1.) pge_network::MsgUserConnectedServerSelf

@@ -77,6 +77,8 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const pge_network::MsgUserConnectedServerSelf& msg,
             PGEcfgProfiles& cfgProfiles,
+            proofps_dd::Config& config,
+            proofps_dd::GameMode& gameMode,
             std::function<void(int)>& cbDisplayMapLoadingProgressUpdate);
         bool handleUserDisconnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

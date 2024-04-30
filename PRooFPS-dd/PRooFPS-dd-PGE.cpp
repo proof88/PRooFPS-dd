@@ -441,6 +441,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             pge_network::PgePacket::getServerSideConnectionHandle(pkt),
             pge_network::PgePacket::getMessageAsUserConnected(pkt),
             getConfigProfiles(),
+            m_config,
+            *m_gameMode,
             m_cbDisplayMapLoadingProgressUpdate);
         break;
     case pge_network::MsgUserDisconnectedFromServer::id:
@@ -460,6 +462,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         const proofps_dd::PRooFPSappMsgId& proofpsAppMsgId = static_cast<proofps_dd::PRooFPSappMsgId>(pge_network::PgePacket::getMsgAppIdFromPkt(pkt));
         switch (proofpsAppMsgId)
         {
+        case proofps_dd::MsgServerInfoFromServer::id:
+            bRet = m_config.clientHandleServerInfoFromServer(
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt));
+            break;
         case proofps_dd::MsgMapChangeFromServer::id:
             bRet = handleMapChangeFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),

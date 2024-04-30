@@ -293,6 +293,39 @@ const bool& proofps_dd::Config::getCameraRolling() const
     return m_bCamRolling;
 }
 
+bool proofps_dd::Config::clientHandleServerInfoFromServer(
+    pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
+    const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
+{
+    if (m_pge.getNetwork().isServer())
+    {
+        getConsole().EOLn("Config::%s(): server received, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return false;
+    }
+
+    m_serverInfo = msgServerInfo;
+
+    const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
+    getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+    getConsole().OLnOI("Config::%s(): received the following server config:", __func__);
+    getConsole().OLn("nMaxFps           : %u FPS", m_serverInfo.m_nMaxFps);
+    getConsole().OLn("nTickrate         : %u Hz",  m_serverInfo.m_nTickrate);
+    getConsole().OLn("nPhysicsRateMin   : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
+    getConsole().OLn("nClientUpdateRate : %u Hz",  m_serverInfo.m_nClientUpdateRate);
+    getConsole().OLn("iGameModeType     : %d",     m_serverInfo.m_iGameModeType);
+    getConsole().OLn("nFragLimit        : %u",     m_serverInfo.m_nFragLimit);
+    getConsole().OLn("nTimeLimitSecs    : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("nTimeRemainingSecs: %u s",   m_serverInfo.m_nTimeRemainingSecs);
+    getConsole().OLn("nRespawnTimeSecs  : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLnOO("");
+
+    getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
+
+    return true;
+}
+
 
 // ############################## PROTECTED ##############################
 
