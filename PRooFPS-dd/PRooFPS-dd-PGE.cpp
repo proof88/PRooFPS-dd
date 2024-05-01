@@ -741,7 +741,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             updatePlayersOldValues();
         }  // for iPhyIter
     }  // checkWinningConditions()
-    serverUpdateRespawnTimers(*m_gameMode, m_durations);
+    serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
     serverSendUserUpdates(m_durations);
 }
 

@@ -248,6 +248,19 @@ void proofps_dd::Config::validate()
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
     m_bCamRolling = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_ROLLING].getAsBool();
 
+    // obviously for clients, m_nPlayerRespawnDelaySecs will be overrid when receiving MsgServerInfoFromServer, see: clientHandleServerInfoFromServer()
+    if (!m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].getAsString().empty())
+    {
+        m_nPlayerRespawnDelaySecs = m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].getAsUInt();
+        getConsole().OLn("Player Respawn Delay from config: %u seconds", m_nPlayerRespawnDelaySecs);
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].Set(Player::nSvDmRespawnDelaySecs);
+        m_nPlayerRespawnDelaySecs = Player::nSvDmRespawnDelaySecs;
+        getConsole().OLn("Missing Player Respawn Delay in config, forcing default: %u seconds", m_nPlayerRespawnDelaySecs);
+    }
+
     getConsole().OOOLn("Config validation finished!");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
@@ -293,6 +306,11 @@ const bool& proofps_dd::Config::getCameraRolling() const
     return m_bCamRolling;
 }
 
+const unsigned int& proofps_dd::Config::getPlayerRespawnDelaySeconds() const
+{
+    return m_nPlayerRespawnDelaySecs;
+}
+
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
     const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
@@ -305,6 +323,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     }
 
     m_serverInfo = msgServerInfo;
+    m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);

@@ -88,6 +88,9 @@ namespace proofps_dd
 
         static constexpr float fSomersaultGroundImpactForceX = 10.f;
 
+        static constexpr unsigned int nSvDmRespawnDelaySecs = 3;
+        static constexpr char* szCVarSvDmRespawnDelaySecs = "sv_dm_respawn_delay";
+
         static const char* getLoggerModuleName();
         static void proofps_dd::Player::genUniqueUserName(
             char szNewUserName[proofps_dd::MsgUserNameChange::nUserNameBufferLength],

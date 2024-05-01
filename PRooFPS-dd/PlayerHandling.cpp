@@ -123,6 +123,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
 }
 
 void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
+    proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode,
     proofps_dd::Durations& durations)
 {
@@ -144,7 +145,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
 
         const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
-        if (timeDiffSeconds >= nPlayerRespawnSeconds)
+        if (static_cast<unsigned long long>(timeDiffSeconds) >= config.getPlayerRespawnDelaySeconds())
         {
             serverRespawnPlayer(player, false);
         }
@@ -321,7 +322,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             pDeathMatchMode->getFragLimit(),
             pDeathMatchMode->getTimeLimitSecs(),
             pDeathMatchMode->getTimeRemainingSecs(),
-            0/*config.getrespawntimesecs*/))
+            config.getPlayerRespawnDelaySeconds()))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);

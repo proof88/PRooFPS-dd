@@ -23,6 +23,7 @@
 #include "GameMode.h"
 #include "SharedWithTest.h"
 #include "InputSim.h"
+#include "Player.h"
 #include "PlayerHandling.h"
 #include "Process.h"
 
@@ -228,7 +229,7 @@ protected:
         }
 
         // wait for the killed server player to respawn
-        std::this_thread::sleep_for(std::chrono::milliseconds(proofps_dd::PlayerHandling::nPlayerRespawnSeconds * 1000 + 200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(m_nSvDmPlayerRespawnDelaySecs * 1000 + 200));
 
         {
             // it is recommended to be a bit more patient here, since after respawn the camera will reposition gradually, which
@@ -313,6 +314,8 @@ private:
         TPureUInt nUnmagBulletCount;
     };
     std::vector<EvaluateWpn> evaluateWpnData;
+
+    const unsigned int m_nSvDmPlayerRespawnDelaySecs = 3;
 
     int nPlayerHealth;
 
@@ -713,10 +716,12 @@ private:
                 "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1");
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1" +
+                " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs));
         }
         else
         {
+            // we dont need to configure szCVarSvDmRespawnDelaySecs for clients, since they will receive it from server
             procInfoClient = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
                 "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +

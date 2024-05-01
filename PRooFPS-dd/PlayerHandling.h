@@ -39,8 +39,6 @@ namespace proofps_dd
     {
     public:
 
-        static constexpr unsigned nPlayerRespawnSeconds = 3;
-
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
@@ -69,6 +67,7 @@ namespace proofps_dd
         void handlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void serverRespawnPlayer(Player& player, bool restartGame);
         void serverUpdateRespawnTimers(
+            proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode,
             proofps_dd::Durations& durations);
         void updatePlayersOldValues();

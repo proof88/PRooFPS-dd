@@ -95,6 +95,8 @@ namespace proofps_dd
         const bool& getCameraTilting() const;
         const bool& getCameraRolling() const;
 
+        const unsigned int& getPlayerRespawnDelaySeconds() const;
+
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const MsgServerInfoFromServer& msgServerInfo);
@@ -117,7 +119,13 @@ namespace proofps_dd
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
 
-        MsgServerInfoFromServer m_serverInfo{}; /* Used by clients only, to store server's config for informational purpose. */
+        unsigned int m_nPlayerRespawnDelaySecs{};
+
+        /** Used by clients only, to store server's config for informational purpose.
+            Seems to be redundant as we could also store these in above members, but for now we keep them separate.
+            Maybe in the future the only member here will be this, so server will immediately store its config here, and just
+            pass this member when sending out message to clients, and clients also need only this. */
+        MsgServerInfoFromServer m_serverInfo{};
 
         // ---------------------------------------------------------------------------
 
