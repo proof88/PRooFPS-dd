@@ -54,8 +54,6 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 // ############################## PROTECTED ##############################
 
 
-static constexpr char* szWaitingToRespawn = "Waiting to respawn ...";
-
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     PureObject3D& objXHair,
@@ -66,7 +64,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     {
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
-        m_gui.textPermanent(szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2);
+        m_gui.showRespawnTimer();
     }
 
     if (m_pge.getNetwork().isServer())
@@ -103,9 +101,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(Player& player, PureObjec
         camera.getTargetVec().SetY(camera.getPosVec().getY());
 
         objXHair.Show();
-        // well, this won't work if clientHeight is being changed in the meantime, but anyway this supposed to be a temporal feature ...
-        m_pge.getPure().getUImanager().removeTextPermanentLegacy(
-            szWaitingToRespawn, 200, m_pge.getPure().getWindow().getClientHeight() / 2, m_pge.getPure().getUImanager().getDefaultFontSizeLegacy());
+        m_gui.hideRespawnTimer();
     }
 }
 

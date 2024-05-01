@@ -74,6 +74,9 @@ namespace proofps_dd
         void textForNextFrame(const std::string& s, int x, int y) const;
         void textPermanent(const std::string& s, int x, int y) const;
 
+        void showRespawnTimer();
+        void hideRespawnTimer();
+
     protected:
 
     private:
@@ -86,6 +89,10 @@ namespace proofps_dd
         /* Main Menu Handling */
 
         static MenuState m_currentMenu;
+
+        /* In-Game GUI elements */
+
+        static bool m_bShowRespawnTimer;
 
         /* Misc */
 
@@ -108,9 +115,15 @@ namespace proofps_dd
         static void drawSettingsMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
 
+        /* In-Game GUI elements */
+
+        static void drawRespawnTimer();
+
         /* Misc */
 
         static float getCenterPosXForText(const std::string& text);
+        static void drawText(const float& x, const float& y, const std::string& text);
+        static void drawTextShadowed(const float& x, const float& y, const std::string& text);
 
         static void drawDearImGuiCb(); // this needs to be static, causing a lot of other members also need to be static
 

@@ -111,7 +111,7 @@ void proofps_dd::GUI::initialize()
     */
 
     ImGui::GetIO().Fonts->AddFontDefault();
-    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", 16);
+    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", 20);
     assert(m_pImFont);
     assert(ImGui::GetIO().Fonts->Build());
 
@@ -276,6 +276,15 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
     m_pPge->getPure().getUImanager().textPermanentLegacy(s, x, y)->SetDropShadow(true);
 }
 
+void proofps_dd::GUI::showRespawnTimer()
+{
+    m_bShowRespawnTimer = true;
+}
+
+void proofps_dd::GUI::hideRespawnTimer()
+{
+    m_bShowRespawnTimer = false;
+}
 
 // ############################## PROTECTED ##############################
 
@@ -287,7 +296,10 @@ PGE* proofps_dd::GUI::m_pPge = nullptr;
 proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
+
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
+
+bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
@@ -1154,7 +1166,10 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
-        //ImGui::PushFont(m_pImFont);
+        ImGui::PushFont(m_pImFont);
+
+        drawRespawnTimer();
+
         //const auto fTextX = ImGui::GetCursorPosX();
         //auto fTextY = ImGui::GetCursorPosY();
         //for (int i = 0; i < 20; i++)
@@ -1166,7 +1181,9 @@ void proofps_dd::GUI::drawDearImGuiCb()
         //    ImGui::Text("ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
         //    fTextY = fNextTextRowY;
         //}
-        //ImGui::PopFont();
+        // 
+
+        ImGui::PopFont();
 
         ImGui::End();
 
@@ -1179,9 +1196,36 @@ void proofps_dd::GUI::drawDearImGuiCb()
     drawWindowForMainMenu();
 } // drawMainMenuCb()
 
+void proofps_dd::GUI::drawRespawnTimer()
+{
+    if (!m_bShowRespawnTimer)
+    {
+        return;
+    }
+
+    static constexpr char* szRespawnWaitText = "... Waiting to Respawn ...";
+    // if we make this static, it will be wrong upon changing screen resolution so now just let it be like this
+    const float fTextPosX = getCenterPosXForText(szRespawnWaitText);
+
+    drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
+}
+
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
 {
     return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
+}
+
+void proofps_dd::GUI::drawText(const float& x, const float& y, const std::string& text)
+{
+    ImGui::SetCursorPos(ImVec2(x, y));
+    ImGui::Text("%s", text.c_str());
+}
+
+void proofps_dd::GUI::drawTextShadowed(const float& x, const float& y, const std::string& text)
+{
+    ImGui::SetCursorPos(ImVec2(x + 1, y + 1));
+    ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%s", text.c_str());
+    drawText(x, y, text);
 }
 
 proofps_dd::GUI::GUI()
