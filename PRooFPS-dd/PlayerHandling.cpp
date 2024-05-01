@@ -318,7 +318,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             pDeathMatchMode->getFragLimit(),
             pDeathMatchMode->getTimeLimitSecs(),
             pDeathMatchMode->getTimeRemainingSecs(),
-            config.getPlayerRespawnDelaySeconds()))
+            config.getPlayerRespawnDelaySeconds(),
+            config.getPlayerRespawnInvulnerabilityDelaySeconds()))
         {
             getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);

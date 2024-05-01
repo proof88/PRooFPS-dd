@@ -96,6 +96,7 @@ namespace proofps_dd
         const bool& getCameraRolling() const;
 
         const unsigned int& getPlayerRespawnDelaySeconds() const;
+        const unsigned int& getPlayerRespawnInvulnerabilityDelaySeconds() const;
 
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -120,6 +121,7 @@ namespace proofps_dd
         bool m_bCamRolling = true;
 
         unsigned int m_nPlayerRespawnDelaySecs{};
+        unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};
 
         /** Used by clients only, to store server's config for informational purpose.
             Seems to be redundant as we could also store these in above members, but for now we keep them separate.

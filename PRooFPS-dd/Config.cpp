@@ -256,9 +256,22 @@ void proofps_dd::Config::validate()
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].Set(Player::nSvDmRespawnDelaySecs);
-        m_nPlayerRespawnDelaySecs = Player::nSvDmRespawnDelaySecs;
+        m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].Set(Player::nSvDmRespawnDelaySecsDef);
+        m_nPlayerRespawnDelaySecs = Player::nSvDmRespawnDelaySecsDef;
         getConsole().OLn("Missing Player Respawn Delay in config, forcing default: %u seconds", m_nPlayerRespawnDelaySecs);
+    }
+
+    // obviously for clients, m_nPlayerRespawnInvulnerabilityDelaySecs will be overrid when receiving MsgServerInfoFromServer, see: clientHandleServerInfoFromServer()
+    if (!m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnInvulnerabilityDelaySecs].getAsString().empty())
+    {
+        m_nPlayerRespawnInvulnerabilityDelaySecs = m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnInvulnerabilityDelaySecs].getAsUInt();
+        getConsole().OLn("Player Respawn Invulnerability Delay from config: %u seconds", m_nPlayerRespawnInvulnerabilityDelaySecs);
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnInvulnerabilityDelaySecs].Set(Player::nSvDmRespawnInvulnerabilityDelaySecsDef);
+        m_nPlayerRespawnInvulnerabilityDelaySecs = Player::nSvDmRespawnInvulnerabilityDelaySecsDef;
+        getConsole().OLn("Missing Player Respawn Invulnerability Delay in config, forcing default: %u seconds", m_nPlayerRespawnInvulnerabilityDelaySecs);
     }
 
     getConsole().OOOLn("Config validation finished!");
@@ -311,6 +324,11 @@ const unsigned int& proofps_dd::Config::getPlayerRespawnDelaySeconds() const
     return m_nPlayerRespawnDelaySecs;
 }
 
+const unsigned int& proofps_dd::Config::getPlayerRespawnInvulnerabilityDelaySeconds() const
+{
+    return m_nPlayerRespawnInvulnerabilityDelaySecs;
+}
+
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
     const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
@@ -324,6 +342,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 
     m_serverInfo = msgServerInfo;
     m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
+    m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
@@ -338,6 +357,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("nTimeLimitSecs    : %u s",   m_serverInfo.m_nTimeLimitSecs);
     getConsole().OLn("nTimeRemainingSecs: %u s",   m_serverInfo.m_nTimeRemainingSecs);
     getConsole().OLn("nRespawnTimeSecs  : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLn("nRespawnInvulnerabilityTimeSecs: %u s", m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);

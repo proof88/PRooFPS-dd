@@ -82,7 +82,8 @@ namespace proofps_dd
             const unsigned int& nFragLimit,
             const unsigned int& nTimeLimitSecs,
             const unsigned int& nTimeRemainingSecs,
-            const unsigned int& nRespawnTimeSecs)
+            const unsigned int& nRespawnTimeSecs,
+            const unsigned int& nRespawnInvulnerabilityTimeSecs)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -110,6 +111,7 @@ namespace proofps_dd
             msgServerInfo.m_nTimeRemainingSecs = nTimeRemainingSecs;
 
             msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
+            msgServerInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
 
             return true;
         }
@@ -125,6 +127,7 @@ namespace proofps_dd
         unsigned int m_nTimeRemainingSecs;
 
         unsigned int m_nRespawnTimeSecs;
+        unsigned int m_nRespawnInvulnerabilityTimeSecs;
 
     };  // struct MsgServerInfoFromServer
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);
