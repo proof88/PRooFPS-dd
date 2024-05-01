@@ -278,6 +278,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
 
 void proofps_dd::GUI::showRespawnTimer()
 {
+    m_timePlayerDied = std::chrono::steady_clock::now();
     m_bShowRespawnTimer = true;
 }
 
@@ -300,6 +301,7 @@ proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
 bool proofps_dd::GUI::m_bShowRespawnTimer = false;
+std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
 
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
@@ -1208,6 +1210,34 @@ void proofps_dd::GUI::drawRespawnTimer()
     const float fTextPosX = getCenterPosXForText(szRespawnWaitText);
 
     drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
+
+    assert(m_pConfig);
+    if (m_pConfig->getPlayerRespawnDelaySeconds() == 0)
+    {
+        return;
+    }
+
+    // client doesn't control respawn, countdown is just an estimation, the recorded die time is when client received
+    // the death notification from server, so it is just ROUGHLY exact, but good enough! Server controls the respawn.
+    // Client knows the server's configured respawn delay, so we have everything for showing a ROUGH countdown.
+    const auto timeDiffMillisecs = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - m_timePlayerDied).count());
+    
+    const float fRespawnProgress = std::min(1.f, timeDiffMillisecs / (static_cast<float>(m_pConfig->getPlayerRespawnDelaySeconds() * 1000)));
+    //const int timeRemainingUntilRespawnSecs =
+    //    std::max(0, static_cast<int>(m_pConfig->getPlayerRespawnDelaySeconds()) - timeDiffSeconds);
+
+    constexpr float fProgressBarSizeX = 200.f;
+    constexpr float fProgressBarSizeY = 10.f;
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2.f - (fProgressBarSizeX / 2.f), ImGui::GetCursorPosY()));
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+    ImGui::ProgressBar(fRespawnProgress, ImVec2(fProgressBarSizeX, fProgressBarSizeY), "");
+
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
 }
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)

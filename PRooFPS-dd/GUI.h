@@ -93,6 +93,7 @@ namespace proofps_dd
         /* In-Game GUI elements */
 
         static bool m_bShowRespawnTimer;
+        static std::chrono::time_point<std::chrono::steady_clock> m_timePlayerDied;
 
         /* Misc */
 
