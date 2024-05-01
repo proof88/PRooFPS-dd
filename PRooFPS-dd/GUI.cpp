@@ -775,6 +775,24 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         }
         ImGui::PopItemWidth();
 
+        PGEcfgVariable& cvarSvDmPlayerRespawnDelaySecs = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvDmRespawnDelaySecs; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvDmRespawnDelaySecs, cvarSvDmPlayerRespawnDelaySecs);
+        ImGui::Text("Player Respawn Delay:");
+        ImGui::SameLine();
+        int nSvDmPlayerRespawnDelaySecs = cvarSvDmPlayerRespawnDelaySecs.getAsInt();
+        ImGui::PushItemWidth(70);
+        if (ImGui::SliderInt(
+            "##sliderSvDmPlayerRespawnDelaySecs",
+            &nSvDmPlayerRespawnDelaySecs,
+            0, 5, "%d",
+            ImGuiSliderFlags_AlwaysClamp))
+        {
+            cvarSvDmPlayerRespawnDelaySecs.Set(nSvDmPlayerRespawnDelaySecs);
+        }
+        ImGui::PopItemWidth();
+
     } // end Misc
     ImGui::Unindent();
 
