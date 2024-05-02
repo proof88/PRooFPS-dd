@@ -295,6 +295,8 @@ private:
             assertEquals(0, player.getTimeLastActualStrafe().time_since_epoch().count(), "time last strafe") &
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
+            assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
+            assertFalse(player.getInvulnerability(), "invulnerability") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
@@ -391,6 +393,15 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty G 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty G 3");
+
+        player.getInvulnerability().set(true);
+        b &= assertTrue(player.isDirty(), "dirty H 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty H 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty H 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty H 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty H 3");
 
         return b;
     }

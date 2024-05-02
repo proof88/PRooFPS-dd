@@ -199,6 +199,30 @@ void proofps_dd::Player::setName(const std::string& sName)
     m_sName = sName;
 }
 
+PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability));
+}
+
+const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability));
+}
+
+void proofps_dd::Player::update()
+{
+    if (getInvulnerability())
+    {
+        // TODO: blink player
+    }
+    else
+    {
+        // TODO: show player if not dead
+    }
+}
+
 WeaponManager& proofps_dd::Player::getWeaponManager()
 {
     return m_wpnMgr;

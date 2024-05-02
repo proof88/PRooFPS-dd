@@ -127,6 +127,8 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
+        void update();
+
         WeaponManager& getWeaponManager();
         const WeaponManager& getWeaponManager() const;
 
@@ -147,6 +149,9 @@ namespace proofps_dd
 
         bool& getRespawnFlag();
         void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
+
+        PgeOldNewValue<bool>& getInvulnerability();
+        const PgeOldNewValue<bool>& getInvulnerability() const;
 
         PgeOldNewValue<PureVector>& getPos();
         const PgeOldNewValue<PureVector>& getPos() const;
@@ -235,7 +240,8 @@ namespace proofps_dd
             OvAngleY,
             OvAngleZ,
             OvWpnAngle,
-            OvCrouchInput
+            OvCrouchInput,
+            OvInvulnerability
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -269,6 +275,7 @@ namespace proofps_dd
                     Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(false)},
         };
 
         bool m_bNetDirty = false;

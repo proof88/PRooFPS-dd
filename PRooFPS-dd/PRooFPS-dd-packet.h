@@ -560,7 +560,8 @@ namespace proofps_dd
             int nHealth,
             bool bRespawn,
             int nFrags,
-            int nDeaths)
+            int nDeaths,
+            bool bInvulnerability)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -591,6 +592,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_bRespawn = bRespawn;
             msgUserCmdUpdate.m_nFrags = nFrags;
             msgUserCmdUpdate.m_nDeaths = nDeaths;
+            msgUserCmdUpdate.m_bInvulnerability = bInvulnerability;
 
             return true;
         }
@@ -607,6 +609,7 @@ namespace proofps_dd
         bool m_bRespawn;
         int m_nFrags;
         int m_nDeaths;
+        bool m_bInvulnerability;
     };  // struct MsgUserUpdateFromServer
     static_assert(std::is_trivial_v<MsgUserUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgUserUpdateFromServer>);

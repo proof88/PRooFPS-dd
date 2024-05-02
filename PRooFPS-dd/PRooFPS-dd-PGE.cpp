@@ -784,6 +784,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
+    updatePlayers(); // maybe we should do this per-tick instead of per-frame in the future
     updateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
@@ -1191,12 +1192,13 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getObject3D()->getAngleVec().getY(),
                     it.second.getObject3D()->getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
-                    false,
+                    false /* TODO: why are we not sending out the current crouch state??? */,
                     it.second.getSomersaultAngle(),
                     it.second.getHealth(),
                     false,
                     it.second.getFrags(),
-                    it.second.getDeaths()))
+                    it.second.getDeaths(),
+                    it.second.getInvulnerability()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
