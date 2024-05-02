@@ -150,8 +150,10 @@ namespace proofps_dd
         bool& getRespawnFlag();
         void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
 
-        PgeOldNewValue<bool>& getInvulnerability();
         const PgeOldNewValue<bool>& getInvulnerability() const;
+        void setInvulnerability(const bool& bState, const unsigned int& nSeconds = 0 /* relevant only if bState is true */);
+        const unsigned int& getInvulnerabilityDurationSeconds() const;
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeInvulnerabilityStarted() const;
 
         PgeOldNewValue<PureVector>& getPos();
         const PgeOldNewValue<PureVector>& getPos() const;
@@ -281,6 +283,8 @@ namespace proofps_dd
         bool m_bNetDirty = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn = false;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeStartedInvulnerability;
+        unsigned int m_nInvulnerabilityDurationSecs = 0;
         
         PureVector m_vecImpactForce;
 

@@ -61,6 +61,7 @@ protected:
         AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
         AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
         AddSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
+        AddSubTest("test_set_invulnerability", (PFNUNITSUBTEST)&PlayerTest::test_set_invulnerability);
         AddSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
         AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
         AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
@@ -297,6 +298,8 @@ private:
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
             assertFalse(player.getInvulnerability(), "invulnerability") &
+            assertEquals(0, player.getTimeInvulnerabilityStarted().time_since_epoch().count(), "time invulnerability started") &
+            assertEquals(0u, player.getInvulnerabilityDurationSeconds(), "invulnerability duration") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
@@ -394,7 +397,7 @@ private:
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty G 3");
 
-        player.getInvulnerability().set(true);
+        player.setInvulnerability(true);
         b &= assertTrue(player.isDirty(), "dirty H 1");
         b &= assertFalse(player.isNetDirty(), "net dirty H 1");
         player.updateOldValues();
@@ -649,6 +652,25 @@ private:
             assertTrue(player.getWantToStandup(), "wantstandup") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe")) != 0;
+    }
+
+    bool test_set_invulnerability()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+
+        player.setInvulnerability(true, 25);
+
+        bool b = true;
+        b &= assertTrue(player.getInvulnerability().isDirty(), "old invulnerability") &
+            assertTrue(player.getInvulnerability(), "invulnerability") &
+            assertNotEquals(0, player.getTimeInvulnerabilityStarted().time_since_epoch().count(), "time invulnerability started") &
+            assertEquals(25u, player.getInvulnerabilityDurationSeconds(), "invulnerability duration");
+
+        player.setInvulnerability(false);
+        b &= assertFalse(player.getInvulnerability(), "invulnerability");
+
+        return b;
     }
 
     bool test_jump()

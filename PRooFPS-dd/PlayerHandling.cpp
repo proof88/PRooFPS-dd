@@ -677,7 +677,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (msg.m_bInvulnerability != player.getInvulnerability())
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
-        player.getInvulnerability().set(msg.m_bInvulnerability);
+        player.setInvulnerability(msg.m_bInvulnerability);
     }
 
     // the only situation when game mode does not contain the player but we already receive update for the player is

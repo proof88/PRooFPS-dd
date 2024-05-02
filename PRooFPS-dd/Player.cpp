@@ -199,16 +199,27 @@ void proofps_dd::Player::setName(const std::string& sName)
     m_sName = sName;
 }
 
-PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability()
+const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability));
 }
 
-const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
+void proofps_dd::Player::setInvulnerability(const bool& bState, const unsigned int& nSeconds)
 {
-    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability));
+    std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability)).set(bState);
+    m_nInvulnerabilityDurationSecs = nSeconds;
+    m_timeStartedInvulnerability = std::chrono::steady_clock::now();
+}
+
+const unsigned int& proofps_dd::Player::getInvulnerabilityDurationSeconds() const
+{
+    return m_nInvulnerabilityDurationSecs;
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeInvulnerabilityStarted() const
+{
+    return m_timeStartedInvulnerability;
 }
 
 void proofps_dd::Player::update()
