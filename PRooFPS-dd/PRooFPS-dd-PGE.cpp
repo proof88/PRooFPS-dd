@@ -477,10 +477,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserSetupFromServer>(pkt));
             break;
-        case proofps_dd::MsgUserNameChange::id:
+        case proofps_dd::MsgUserNameChangeAndBootupDone::id:
             bRet = handleUserNameChange(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChange>(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChangeAndBootupDone>(pkt),
+                m_config,
                 *m_gameMode,
                 getConfigProfiles());
             break;
@@ -620,7 +621,7 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
     // - server: it would still be able to find itself in the map, obviously since 0 is its own handle anyway;
     // - client: it would still be able to find the server in the map, which is a false conclusion of having a valid connection.
     // We must also wait for a non-empty player name because it means that all 3 must-have messages were processed properly:
-    // MsgUserConnected, MsgUserSetup, MsgUserNameChange.
+    // MsgUserConnected, MsgUserSetup, MsgUserNameChangeAndBootupDone.
     // A properly set unique name is important for gamemode. And handleUserUpdateFromServer() would also update gamemode by valid user name.
     const auto itPlayer = m_mapPlayers.find(m_nServerSideConnectionHandle);
     return (itPlayer != m_mapPlayers.end()) && (!itPlayer->second.getName().empty());
@@ -1071,7 +1072,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 
             // now we should ask ourselves to set our wanted name
             pge_network::PgePacket newPktUserNameChange;
-            if (!proofps_dd::MsgUserNameChange::initPkt(
+            if (!proofps_dd::MsgUserNameChangeAndBootupDone::initPkt(
                 newPktUserNameChange,
                 pge_network::ServerConnHandle,
                 true,
@@ -1097,20 +1098,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         }
         else
         {
-            // now we should ask the server to set our wanted name
-            pge_network::PgePacket newPktUserNameChange;
-            if (!proofps_dd::MsgUserNameChange::initPkt(
-                newPktUserNameChange,
-                connHandleServerSide,
-                false,
-                getConfigProfiles().getVars()[Player::szCVarClName].getAsString()))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                return false;
-            }
-            getNetwork().getClient().send(newPktUserNameChange);
-
             // Client receives map name also in MsgUserSetupFromServer.
             // If this is a bootup, then we need to load map here, only if it is different than what we have already loaded (map change case).
             // Because we also get here in case of reconnecting after a map change, we should load the map only if it is different than server just asked for.
@@ -1128,6 +1115,25 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             {
                 getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, msg.m_szMapFilename);
             }
+
+            // Now we should ask the server to set our wanted name,
+            // this is how we actually signal the server that we have loaded all the stuff and are READY!
+            // Until this point, server has been keeping us in a forever-invulnerable state, since we have been already visible for other players from the moment
+            // of our connection has been established. This is NOT related to the "respawn invulnerability timer".
+            // For this message, server will actually start the "respawn invulnerability timer" for us, since from NOW we are able to see ourselves on client-side!
+            // See handleUserNameChange() also!
+            pge_network::PgePacket newPktUserNameChange;
+            if (!proofps_dd::MsgUserNameChangeAndBootupDone::initPkt(
+                newPktUserNameChange,
+                connHandleServerSide,
+                false,
+                getConfigProfiles().getVars()[Player::szCVarClName].getAsString()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return false;
+            }
+            getNetwork().getClient().send(newPktUserNameChange);
         }
 
         // at this point we can be sure we have the proper map loaded, camera must start from the center of the map
@@ -1170,7 +1176,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     // send out only confirmed non-empty names, as handleUserNameChange() expects confirmed, unique, non-empty names!
                     // Once this client has a confirmed name, server will send out this info to all clients anyway!
                     pge_network::PgePacket newPktUserNameChange;
-                    if (!proofps_dd::MsgUserNameChange::initPkt(
+                    if (!proofps_dd::MsgUserNameChangeAndBootupDone::initPkt(
                         newPktUserNameChange,
                         it.second.getServerSideConnectionHandle(),
                         false,

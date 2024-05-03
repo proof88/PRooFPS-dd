@@ -389,7 +389,8 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
 
 bool proofps_dd::PlayerHandling::handleUserNameChange(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-    const proofps_dd::MsgUserNameChange& msg,
+    const proofps_dd::MsgUserNameChangeAndBootupDone& msg,
+    proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode,
     PGEcfgProfiles& cfgProfiles)
 {
@@ -398,7 +399,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;
     }
 
@@ -407,7 +408,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         // sanity check: connHandle should be server's if bCurrentClient is set
         if ((connHandleServerSide == pge_network::ServerConnHandle) && (!msg.m_bCurrentClient))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide != pge_network::ServerConnHandle: %u != %u, programming error!",
+            getConsole().EOLn("PlayerHandling::%s(): cannot happen: connHandleServerSide != pge_network::ServerConnHandle: %u != %u, programming error!",
                 __func__, connHandleServerSide, pge_network::ServerConnHandle);
             assert(false);
             return false;
@@ -419,12 +420,12 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
 
         if (strncmp(szNewUserName, msg.m_szUserName, sizeof(msg.m_szUserName)) == 0)
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): name change request accepted for connHandleServerSide: %u, old name: %s, new name: %s!",
+            getConsole().OLn("PlayerHandling::%s(): name change request accepted for connHandleServerSide: %u, old name: %s, new name: %s!",
                 __func__, connHandleServerSide, playerIt->second.getName().c_str(), szNewUserName);
         }
         else
         {
-            getConsole().OLn("PRooFPSddPGE::%s(): name change request denied for connHandleServerSide: %u, old name: %s, requested: %s, new name: %s!",
+            getConsole().OLn("PlayerHandling::%s(): name change request denied for connHandleServerSide: %u, old name: %s, requested: %s, new name: %s!",
                 __func__, connHandleServerSide, playerIt->second.getName().c_str(), msg.m_szUserName, szNewUserName);
         }
 
@@ -435,22 +436,22 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         // TODO: check if such name is already present in frag table, if so, then rename
         //if (!gameMode.renamePlayer(playerIt->second.getName().c_str(), szNewUserName))
         //{
-        //    getConsole().EOLn("PRooFPSddPGE::%s(): gameMode.renamePlayer() FAILED!", __func__);
+        //    getConsole().EOLn("PlayerHandling::%s(): gameMode.renamePlayer() FAILED!", __func__);
         //    assert(false);
         //    return false;
         //}
         if (!gameMode.addPlayer(playerIt->second))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert player %s (%u) into GameMode!", __func__, szNewUserName, connHandleServerSide);
+            getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, szNewUserName, connHandleServerSide);
             assert(false);
             return false;
         }
 
         // then we let all clients except this one know about the name change
         pge_network::PgePacket newPktUserNameChange;
-        if (!proofps_dd::MsgUserNameChange::initPkt(newPktUserNameChange, connHandleServerSide, false, szNewUserName))
+        if (!proofps_dd::MsgUserNameChangeAndBootupDone::initPkt(newPktUserNameChange, connHandleServerSide, false, szNewUserName))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
@@ -460,7 +461,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         {
             m_pge.getNetwork().getServer().setDebugNickname(connHandleServerSide, szNewUserName);
             // we also let this one know its own name change (only if this is not server)
-            proofps_dd::MsgUserNameChange& msgUserNameChange = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChange>(newPktUserNameChange);
+            proofps_dd::MsgUserNameChangeAndBootupDone& msgUserNameChange = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserNameChangeAndBootupDone>(newPktUserNameChange);
             msgUserNameChange.m_bCurrentClient = true;
             m_pge.getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
         }
@@ -471,20 +472,24 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
         }
+
+        // from our point of view, client player has now fully booted up so NOW we are arming the respawn invulnerability
+        getConsole().EOLn("PlayerHandling::%s(): arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+        playerIt->second.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     }
     else
     {
         // if we are client, we MUST NOT receive empty user name from server, so in such case just terminate because there is something fishy!
         if (strnlen(msg.m_szUserName, sizeof(msg.m_szUserName)) == 0)
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): cannot happen: connHandleServerSide: %u, received empty user name from server!",
+            getConsole().EOLn("PlayerHandling::%s(): cannot happen: connHandleServerSide: %u, received empty user name from server!",
                 __func__, connHandleServerSide);
             assert(false);  // in debug mode, raise the debugger
             return false;   // for release mode
         }
 
 
-        getConsole().OLn("PRooFPSddPGE::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
+        getConsole().OLn("PlayerHandling::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
 
         playerIt->second.setName(msg.m_szUserName);
@@ -492,13 +497,13 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         // TODO: check if such name is already present in frag table, if so, then rename
         //if (!gameMode.renamePlayer(playerIt->second.getName(), msg.m_szUserName))
         //{
-        //    getConsole().EOLn("PRooFPSddPGE::%s(): gameMode.renamePlayer() FAILED!", __func__);
+        //    getConsole().EOLn("PlayerHandling::%s(): gameMode.renamePlayer() FAILED!", __func__);
         //    assert(false);
         //    return false;
         //}
         if (!gameMode.addPlayer(playerIt->second))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): failed to insert player %s (%u) into GameMode!", __func__, msg.m_szUserName, connHandleServerSide);
+            getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, msg.m_szUserName, connHandleServerSide);
             assert(false);
             return false;
         }
@@ -573,7 +578,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
                 m_pge.getNetwork().getServer().sendToAll(newPktUserUpdate);
-                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2 invul: %b!", __func__, playerConst.getInvulnerability());
+                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2, invul: %b!", __func__, playerConst.getInvulnerability());
             }
             else
             {
@@ -597,7 +602,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserUpdateFromServer& msg,
     PureObject3D& objXHair,
-    const proofps_dd::Config& config,
+    const proofps_dd::Config& /*config*/,
     proofps_dd::GameMode& gameMode)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
@@ -621,19 +626,23 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
         player.getPos().commit(); // both server and client commits in this case
 
-        if (m_pge.getNetwork().isServer() && (config.getPlayerRespawnInvulnerabilityDelaySeconds() > 0))
+        if (m_pge.getNetwork().isServer())
         {
-            // When Player is spawned for the 1st time, it is not a "re-"spawn, but we should still apply the respawn invulnerability.
-            // I could not find a better way for this (MsgUserConnected, MsgUserSetupFromServer, etc.), so here we are forcing it.
-            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
-            player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+            // When Player is spawned for the 1st time, it is not a "re-"spawn, but we should still apply invulnerability since
+            // this player has not yet fully booted up but gets visible to other players so we keep protected from other players.
+            // I could not find a better place for this (MsgUserConnected, MsgUserSetupFromServer, etc.), so here we are forcing it.
+            getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+            player.setInvulnerability(true, 999);
         }
     }
     else
     {
-        if (msg.m_bInvulnerability != player.getInvulnerability())
+        if (!m_pge.getNetwork().isServer() && (msg.m_bInvulnerability != player.getInvulnerability()))
         {
-            //getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
+            // only clients should fall here, server sets invulnerability in other locations and doesnt need to update itself here!
+            
+            getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
+            // no need to set time for clients even if state is true, since player.update() is not allowed to stop invulnerability on client-side.
             player.setInvulnerability(msg.m_bInvulnerability);
         }
     }

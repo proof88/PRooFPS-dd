@@ -28,7 +28,7 @@ namespace proofps_dd
         ServerInfoFromServer = 0,
         MapChangeFromServer,
         UserSetupFromServer,
-        UserNameChange,
+        UserNameChangeAndBootupDone,
         UserCmdFromClient,
         UserUpdateFromServer,
         BulletUpdateFromServer,
@@ -50,7 +50,7 @@ namespace proofps_dd
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::ServerInfoFromServer,        "MsgServerInfoFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MsgMapChangeFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer" },
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChange,              "MsgUserNameChange" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChangeAndBootupDone, "MsgUserNameChangeAndBootupDone" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserCmdFromClient,           "MsgUserCmdFromClient" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserUpdateFromServer,        "MsgUserUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::BulletUpdateFromServer,      "MsgBulletUpdateFromServer" },
@@ -176,7 +176,7 @@ namespace proofps_dd
      * The order of these messages is defined as:
      *  - pge_network::MsgUserConnectedServerSelf;
      *  - proofps_dd::MsgUserSetupFromServer;
-     *  - proofps_dd::MsgUserNameChange.
+     *  - proofps_dd::MsgUserNameChangeAndBootupDone.
      * 
      * However, when multiple players are connecting simultaneously to the server, messages for different players can come
      * interleaved, thus handling of these messages must take this into account.
@@ -200,24 +200,24 @@ namespace proofps_dd
      *     - MsgUserUpdateFromServer.
      * 
      * 2.) proofps_dd::MsgUserSetupFromServer
-     *     If the server is setuping itself, then only a MsgUserNameChange will be injected, assuming there are no other players at this point
+     *     If the server is setuping itself, then only a MsgUserNameChangeAndBootupDone will be injected, assuming there are no other players at this point
      *     to be notified. The assumption is good, since we learnt above that when server starts listening, the first message will be
      *     the MsgUserConnectedServerSelf for the server itself, which generates this MsgUserSetupFromServer too.
      * 
      *     If the server is setuping a client, then the following messages will be sent:
      *      - iterating over PRooFPS-dd-PGE::m_mapPlayers, sending out messages about the players already in the container to the client being set up:
      *        - MsgUserSetupFromServer;
-     *        - MsgUserNameChange (if that player's name is not still empty);
+     *        - MsgUserNameChangeAndBootupDone (if that player's name is not still empty);
      *        - MsgUserUpdateFromServer;
      *        - MsgCurrentWpnUpdateFromServer;
      *      - iterating over map items, sending out state of all map items to the client being set up:
      *        - MsgMapItemUpdateFromServer (but I leave this out from the analysis below).
      * 
-     *     If we are client then we are sending a MsgUserNameChange to the server.
+     *     If we are client then we are sending a MsgUserNameChangeAndBootupDone to the server.
      * 
      *     Only after this the new player is added to PRooFPS-dd-PGE::m_mapPlayers.
      * 
-     * 3.) proofps_dd::MsgUserNameChange
+     * 3.) proofps_dd::MsgUserNameChangeAndBootupDone
      *     Server reacts to this with the same kind of message, client doesn't react to it.
      *     This is when the player is added to PRooFPS-dd-PGE::m_gameMode.
      * 
@@ -227,81 +227,81 @@ namespace proofps_dd
      * We are monitoring also PgeGnsServer::m_mapClients in the server, and also PRooFPS-dd-PGE::m_mapPlayers and PRooFPS-dd-PGE::m_gameMode in all iterations.
      * Time is elapsing from top to bottom in column 1 first, then in column 2, and so on, so the whole procedure finishes somewhere in the bottom right.
      * 
-     *            I T E R A T I O N  1         |         I T E R A T I O N  2             |         I T E R A T I O N  3          |         I T E R A T I O N  4
-     *                                         |                                          |                                       |
-     * PgeGnsServer::m_mapClients  : {}        | PgeGnsServer::m_mapClients:              |  PgeGnsServer::m_mapClients:          |
-     *                                         |    {0, 100, 400}                         |     {0, 100, 400}                     |
-     *                                         | PRooFPS-dd-PGE(0)::m_mapPlayers: {}      |  PRooFPS-dd-PGE(0)::m_mapPlayers:     |
-     *                                         |                                          |  {0, 100, 400}                        |
-     *                                         | PRooFPS-dd-PGE(100)::m_mapPlayers: {}    |  PRooFPS-dd-PGE(100)::m_mapPlayers:   |
-     *                                         |                                          |  {100, 400}                           |
-     *                                         | PRooFPS-dd-PGE(400)::m_mapPlayers: {}    |  PRooFPS-dd-PGE(400)::m_mapPlayers:   |
-     *                                         |                                          |  {400}                                |
-     * Server connecting:                      |                                          |                                       |
-     * - MsgUserConnectedServerSelf(0)         |                                          |                                       |
-     *   PgeGnsServer::m_mapClients: {0}       |                                          |                                       |
-     *   -> MsgUserSetupFromServer(0)  ------->| 0 (self)                                 |                                       |
-     *                                         |   -> MsgUserNameChange(0) -------------->|  0 (self)                             |
-     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers: {0}   |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserUpdateFromServer(0) ------->| 0 (self)                                 |                                       |
-     *                                         |                                          |                                       |
-     *                                         |                                          |                                       |
-     * Client with handle 100 connecting:      |                                          |                                       |
-     * - MsgUserConnectedServerSelf(100)       |                                          |                                       |
-     *   PgeGnsServer::m_mapClients: {0, 100}  |                                          |                                       |
-     *   -> MsgUserSetupFromServer(100) ------>| 0 (self)                                 |                                       |
-     *                                         |   -> MsgUserSetupFromServer(0) --------->|  100                                  |
-     *                                         |                                          |    PRooFPS-dd-PGE(100)::m_mapPlayers: |
-     *                                         |                                          |    {0, 100, 400}                      |
-     *                                         |   -> MsgUserNameChange(0) -------------->|  100                                  |
-     *                                         |   -> MsgUserUpdateFromServer(0) -------->|  100                                  |
-     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) -->|  100                                  |
-     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:       |                                       |
-     *                                         |      {0, 100}                            |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserSetupFromServer(100) ------>| 100                                      |                                       |
-     *                                         |   -> MsgUserNameChange(100) ------------>|  0                                    |
-     *                                         |                                          |    -> MsgUserNameChange(100) -------->|  100
-     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:     |                                       |
-     *                                         |      {100}                               |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserUpdateFromServer(100) ----->| 0 (self)                                 |                                       |
-     *   -> MsgUserUpdateFromServer(100) ----->| 100                                      |                                       |
-     *                                         |                                          |                                       |
-     *                                         |                                          |                                       |
-     * Client with handle 400 connecting:      |                                          |                                       |
-     * - MsgUserConnectedServerSelf(400)       |                                          |                                       |
-     *   PgeGnsServer::m_mapClients:           |                                          |                                       |
-     *   {0, 100, 400}                         |                                          |                                       |
-     *   -> MsgUserSetupFromServer(400) ------>| 0 (self)                                 |                                       |
-     *                                         |   -> MsgUserSetupFromServer(0) --------->|  400                                  |
-     *                                         |                                          |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
-     *                                         |                                          |    {0, 400}                           |
-     *                                         |   -> MsgUserNameChange(0) -------------->|  400                                  |
-     *                                         |   -> MsgUserUpdateFromServer(0) -------->|  400                                  |
-     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) -->|  400                                  |
-     *                                         |   -> MsgUserSetupFromServer(100) ------->|  400                                  |
-     *                                         |                                          |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
-     *                                         |                                          |    {0, 100, 400}                      |
-     *                                         |   -> MsgUserNameChange(100) ------------>|  400                                  |
-     *                                         |   -> MsgUserUpdateFromServer(100) ------>|  400                                  |
-     *                                         |   -> MsgCurrentWpnUpdateFromServer(100)->|  400                                  |
-     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:       |                                       |
-     *                                         |      {0, 100, 400}                       |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserSetupFromServer(400) ------>| 100                                      |                                       |
-     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:     |                                       |
-     *                                         |      {100, 400}                          |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserSetupFromServer(400) ------>| 400                                      |                                       |
-     *                                         |   -> MsgUserNameChange(400) ------------>|  0                                    |
-     *                                         |                                          |    -> MsgUserNameChange(400) -------->|  400
-     *                                         |   PRooFPS-dd-PGE(400)::m_mapPlayers:     |                                       |
-     *                                         |      {400}                               |                                       |
-     *                                         |                                          |                                       |
-     *   -> MsgUserUpdateFromServer(400) ----->| 0 (self)                                 |                                       |
-     *   -> MsgUserUpdateFromServer(400) ----->| 400                                      |                                       |
+     *            I T E R A T I O N  1         |         I T E R A T I O N  2               |         I T E R A T I O N  3          |         I T E R A T I O N  4
+     *                                         |                                            |                                       |
+     * PgeGnsServer::m_mapClients  : {}        | PgeGnsServer::m_mapClients:                |  PgeGnsServer::m_mapClients:          |
+     *                                         |    {0, 100, 400}                           |     {0, 100, 400}                     |
+     *                                         | PRooFPS-dd-PGE(0)::m_mapPlayers: {}        |  PRooFPS-dd-PGE(0)::m_mapPlayers:     |
+     *                                         |                                            |  {0, 100, 400}                        |
+     *                                         | PRooFPS-dd-PGE(100)::m_mapPlayers: {}      |  PRooFPS-dd-PGE(100)::m_mapPlayers:   |
+     *                                         |                                            |  {100, 400}                           |
+     *                                         | PRooFPS-dd-PGE(400)::m_mapPlayers: {}      |  PRooFPS-dd-PGE(400)::m_mapPlayers:   |
+     *                                         |                                            |  {400}                                |
+     * Server connecting:                      |                                            |                                       |
+     * - MsgUserConnectedServerSelf(0)         |                                            |                                       |
+     *   PgeGnsServer::m_mapClients: {0}       |                                            |                                       |
+     *   -> MsgUserSetupFromServer(0)  ------->| 0 (self)                                   |                                       |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(0) --->|  0 (self)                             |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers: {0}     |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserUpdateFromServer(0) ------->| 0 (self)                                   |                                       |
+     *                                         |                                            |                                       |
+     *                                         |                                            |                                       |
+     * Client with handle 100 connecting:      |                                            |                                       |
+     * - MsgUserConnectedServerSelf(100)       |                                            |                                       |
+     *   PgeGnsServer::m_mapClients: {0, 100}  |                                            |                                       |
+     *   -> MsgUserSetupFromServer(100) ------>| 0 (self)                                   |                                       |
+     *                                         |   -> MsgUserSetupFromServer(0) ----------->|  100                                  |
+     *                                         |                                            |    PRooFPS-dd-PGE(100)::m_mapPlayers: |
+     *                                         |                                            |    {0, 100, 400}                      |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(0) --->|  100                                  |
+     *                                         |   -> MsgUserUpdateFromServer(0) ---------->|  100                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) ---->|  100                                  |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:         |                                       |
+     *                                         |      {0, 100}                              |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserSetupFromServer(100) ------>| 100                                        |                                       |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(100)-->|  0                                    |
+     *                                         |                                            |    -> MsgUserNameChange ------------->|  100
+     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:       |       AndBootupDone(100)              |
+     *                                         |      {100}                                 |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserUpdateFromServer(100) ----->| 0 (self)                                   |                                       |
+     *   -> MsgUserUpdateFromServer(100) ----->| 100                                        |                                       |
+     *                                         |                                            |                                       |
+     *                                         |                                            |                                       |
+     * Client with handle 400 connecting:      |                                            |                                       |
+     * - MsgUserConnectedServerSelf(400)       |                                            |                                       |
+     *   PgeGnsServer::m_mapClients:           |                                            |                                       |
+     *   {0, 100, 400}                         |                                            |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 0 (self)                                   |                                       |
+     *                                         |   -> MsgUserSetupFromServer(0) ----------->|  400                                  |
+     *                                         |                                            |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
+     *                                         |                                            |    {0, 400}                           |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(0) --->|  400                                  |
+     *                                         |   -> MsgUserUpdateFromServer(0) ---------->|  400                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(0) ---->|  400                                  |
+     *                                         |   -> MsgUserSetupFromServer(100) --------->|  400                                  |
+     *                                         |                                            |    PRooFPS-dd-PGE(400)::m_mapPlayers: |
+     *                                         |                                            |    {0, 100, 400}                      |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(100)-->|  400                                  |
+     *                                         |   -> MsgUserUpdateFromServer(100) -------->|  400                                  |
+     *                                         |   -> MsgCurrentWpnUpdateFromServer(100)--->|  400                                  |
+     *                                         |   PRooFPS-dd-PGE(0)::m_mapPlayers:         |                                       |
+     *                                         |      {0, 100, 400}                         |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 100                                        |                                       |
+     *                                         |   PRooFPS-dd-PGE(100)::m_mapPlayers:       |                                       |
+     *                                         |      {100, 400}                            |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserSetupFromServer(400) ------>| 400                                        |                                       |
+     *                                         |   -> MsgUserNameChangeAndBootupDone(400)-->|  0                                    |
+     *                                         |                                            |    -> MsgUserNameChange ------------->|  400
+     *                                         |   PRooFPS-dd-PGE(400)::m_mapPlayers:       |       AndBootupDone(400)              |
+     *                                         |      {400}                                 |                                       |
+     *                                         |                                            |                                       |
+     *   -> MsgUserUpdateFromServer(400) ----->| 0 (self)                                   |                                       |
+     *   -> MsgUserUpdateFromServer(400) ----->| 400                                        |                                       |
      *
      * 
      * Some conclusions:
@@ -322,7 +322,7 @@ namespace proofps_dd
     // This message is also used to tell the client which map to load at bootup.
     // However, in case of map change, MsgMapChangeFromServer contains this info, but this message also contains it again.
     // A unique pre-generated user name is also in the message, which must be accepted by clients, however clients are
-    // also encouraged to request user name change using MsgUserNameChange message.
+    // also encouraged to request user name change using MsgUserNameChangeAndBootupDone message.
     struct MsgUserSetupFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserSetupFromServer;
@@ -364,14 +364,16 @@ namespace proofps_dd
     static_assert(std::is_standard_layout_v<MsgUserSetupFromServer>);
 
     // client -> server -> clients
-    // MsgUserNameChange messages are first sent by client to server to request user name change, for which the server will reply back the
+    // MsgUserNameChangeAndBootupDone messages are first sent by client to server to request user name change, for which the server will reply back the
     // same kind of message. Since server is in charge for ensuring unique user names for all players, it might generate a unique user name
     // for the user in case of name collision. A response message is always sent back to the clients, containing either the accepted or the
     // newly generated user name, which must be accepted by the clients.
     // Server also injects this message to itself, names are handled in the same code path.
-    struct MsgUserNameChange
+    // Client sends this message to server after it already loaded all resources including the map, this is why we are treating this as "bootup done"
+    // message, so on server side we can start the respawn-invulnerability timer also at this point.
+    struct MsgUserNameChangeAndBootupDone
     {
-        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserNameChange;
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserNameChangeAndBootupDone;
         static const uint8_t nUserNameBufferLength = 11;  // for now very short, to keep the frag table look nice
 
         static bool initPkt(
@@ -381,19 +383,19 @@ namespace proofps_dd
             const std::string& sUserName)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
-            static_assert(sizeof(MsgUserNameChange) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+            static_assert(sizeof(MsgUserNameChangeAndBootupDone) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
 
             // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
             pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
 
             pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserNameChange));
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserNameChangeAndBootupDone));
             if (!pMsgAppData)
             {
                 return false;
             }
 
-            proofps_dd::MsgUserNameChange& msgUserNameChange = reinterpret_cast<proofps_dd::MsgUserNameChange&>(*pMsgAppData);
+            proofps_dd::MsgUserNameChangeAndBootupDone& msgUserNameChange = reinterpret_cast<proofps_dd::MsgUserNameChangeAndBootupDone&>(*pMsgAppData);
             msgUserNameChange.m_bCurrentClient = bCurrentClient;
             strncpy_s(msgUserNameChange.m_szUserName, nUserNameBufferLength, sUserName.c_str(), sUserName.length());
 
@@ -402,10 +404,10 @@ namespace proofps_dd
 
         bool m_bCurrentClient; // TODO: this could be removed once every instance saves its server-side connection handle
         char m_szUserName[nUserNameBufferLength];
-    };  // MsgUserNameChange
-    static_assert(std::is_trivial_v<MsgUserNameChange>);
-    static_assert(std::is_trivially_copyable_v<MsgUserNameChange>);
-    static_assert(std::is_standard_layout_v<MsgUserNameChange>);
+    };  // MsgUserNameChangeAndBootupDone
+    static_assert(std::is_trivial_v<MsgUserNameChangeAndBootupDone>);
+    static_assert(std::is_trivially_copyable_v<MsgUserNameChangeAndBootupDone>);
+    static_assert(std::is_standard_layout_v<MsgUserNameChangeAndBootupDone>);
 
     // clients -> server + server self (inject)
     // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer

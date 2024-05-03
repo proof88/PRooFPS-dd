@@ -409,10 +409,10 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
     
     ImGui::PushItemWidth(200);
 
-    static char szPlayerName[MsgUserNameChange::nUserNameBufferLength];
+    static char szPlayerName[MsgUserNameChangeAndBootupDone::nUserNameBufferLength];
     strncpy_s(
         szPlayerName,
-        MsgUserNameChange::nUserNameBufferLength,
+        MsgUserNameChangeAndBootupDone::nUserNameBufferLength,
         cvarClName.getAsString().c_str(),
         cvarClName.getAsString().length());
     if (ImGui::InputText("##inputPlayerName", szPlayerName, IM_ARRAYSIZE(szPlayerName)))

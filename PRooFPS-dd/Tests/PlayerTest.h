@@ -147,7 +147,7 @@ private:
 
     bool test_gen_unique_user_name()
     {
-        char szNewUserName[proofps_dd::MsgUserNameChange::nUserNameBufferLength];
+        char szNewUserName[proofps_dd::MsgUserNameChangeAndBootupDone::nUserNameBufferLength];
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player> mapPlayers;
         bool b = true;
 
@@ -206,7 +206,7 @@ private:
         for (const auto& connHandlePlayerPair : mapPlayers)
         {
             b &= assertEquals("ASDASDA", connHandlePlayerPair.second.getName().substr(0, 7), "player name cp 2") &
-                assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserNameChange::nUserNameBufferLength-1u, "player name length cp 2");
+                assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserNameChangeAndBootupDone::nUserNameBufferLength-1u, "player name length cp 2");
             const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
             b &= assertTrue(insertRes.second, "insert into set 2");
         }

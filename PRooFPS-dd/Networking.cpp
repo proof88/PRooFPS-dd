@@ -80,8 +80,8 @@ void proofps_dd::Networking::allowListAppMessages()
     m_pge.getNetwork().getServer().getAllowListedAppMessages().clear();
     
     // following messages are received/sent by both clients and server over network:
-    m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
-    m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChange::id));
+    m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChangeAndBootupDone::id));
+    m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserNameChangeAndBootupDone::id));
 
     if (m_pge.getNetwork().isServer())
     {
