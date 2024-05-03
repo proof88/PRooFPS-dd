@@ -105,12 +105,13 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(Player& player, PureObjec
     }
 }
 
-void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restartGame)
+void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint();
     player.setHealth(100);
     player.getRespawnFlag() = true;
+    player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     if (restartGame)
     {
         player.getFrags() = 0;
@@ -119,7 +120,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
 }
 
 void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
-    proofps_dd::Config& config,
+    const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode,
     proofps_dd::Durations& durations)
 {
@@ -144,7 +145,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (static_cast<unsigned long long>(timeDiffSeconds) >= config.getPlayerRespawnDelaySeconds())
         {
-            serverRespawnPlayer(player, false);
+            serverRespawnPlayer(player, false, config);
         }
     }
 
@@ -226,7 +227,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                     newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0, false))
                 {
-                    // server injects this msg to self so resources for player will be allocated
+                    // server injects this msg to self so resources for player will be allocated upon processing these
                     m_pge.getNetwork().getServer().send(newPktSetup);
                     m_pge.getNetwork().getServer().send(newPktUserUpdate);
                 }
@@ -286,7 +287,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             return false;
         }
 
-        // server injects this msg to self so resources for player will be allocated
+        // server injects this msg to self so resources for player will be allocated upon processing these
         m_pge.getNetwork().getServer().send(newPktSetup);
         m_pge.getNetwork().getServer().send(newPktUserUpdate);
 
@@ -298,7 +299,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         proofps_dd::MsgUserSetupFromServer& msgUserSetup = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserSetupFromServer>(newPktSetup);
         msgUserSetup.m_bCurrentClient = true;
         m_pge.getNetwork().getServer().send(newPktSetup, connHandleServerSide);
-        m_pge.getNetwork().getServer().send(newPktUserUpdate);   // TODO: why is this here? we already sent it few lines earlier.
+        m_pge.getNetwork().getServer().send(newPktUserUpdate, connHandleServerSide);
 
         pge_network::PgePacket newPktServerInfo;
         // In the future we need something better than GameMode not having some funcs like getFragLimit()
@@ -572,7 +573,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
                 m_pge.getNetwork().getServer().sendToAll(newPktUserUpdate);
-                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2!", __func__);
+                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2 invul: %b!", __func__, playerConst.getInvulnerability());
             }
             else
             {
@@ -596,6 +597,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserUpdateFromServer& msg,
     PureObject3D& objXHair,
+    const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode)
 {
     const auto it = m_mapPlayers.find(connHandleServerSide);
@@ -612,10 +614,28 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     const bool bOriginalExpectingStartPos = player.isExpectingStartPos();
     if (player.isExpectingStartPos())
     {
+        // Player object is recently constructed and this is the 1st MsgUserUpdateFromServer for this Player
+
         player.setExpectingStartPos(false);
         // PPPKKKGGGGGG
         player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
         player.getPos().commit(); // both server and client commits in this case
+
+        if (m_pge.getNetwork().isServer() && (config.getPlayerRespawnInvulnerabilityDelaySeconds() > 0))
+        {
+            // When Player is spawned for the 1st time, it is not a "re-"spawn, but we should still apply the respawn invulnerability.
+            // I could not find a better way for this (MsgUserConnected, MsgUserSetupFromServer, etc.), so here we are forcing it.
+            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+            player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+        }
+    }
+    else
+    {
+        if (msg.m_bInvulnerability != player.getInvulnerability())
+        {
+            //getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
+            player.setInvulnerability(msg.m_bInvulnerability);
+        }
     }
 
     // server has already set this in input handling and/or physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
@@ -674,12 +694,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         }
     }
 
-    if (msg.m_bInvulnerability != player.getInvulnerability())
-    {
-        getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
-        player.setInvulnerability(msg.m_bInvulnerability);
-    }
-
     // the only situation when game mode does not contain the player but we already receive update for the player is
     // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later;
     // note that it can also happen that we receive update here for a player who has not yet handshaked its name
@@ -731,13 +745,13 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     return true;
 }
 
-void proofps_dd::PlayerHandling::updatePlayers()
+void proofps_dd::PlayerHandling::updatePlayers(const proofps_dd::Config& config)
 {
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
 
-        player.update();
+        player.update(config, m_pge.getNetwork().isServer());
     }
 }
 

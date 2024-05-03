@@ -127,7 +127,7 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
-        void update();
+        void update(const proofps_dd::Config& config, bool bServer);
 
         WeaponManager& getWeaponManager();
         const WeaponManager& getWeaponManager() const;

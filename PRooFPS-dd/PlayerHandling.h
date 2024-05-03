@@ -45,6 +45,7 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
+        // TODO: pass "const proofps_dd::Config& config" also, too many functions need it anyway!
         PlayerHandling(
             PGE& pge,
             proofps_dd::Durations& durations,
@@ -65,9 +66,9 @@ namespace proofps_dd
             PureObject3D& objXHair,
             pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
         void handlePlayerRespawned(Player& player, PureObject3D& objXHair);
-        void serverRespawnPlayer(Player& player, bool restartGame);
+        void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);
         void serverUpdateRespawnTimers(
-            proofps_dd::Config& config,
+            const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode,
             proofps_dd::Durations& durations);
         void updatePlayersOldValues();
@@ -94,10 +95,11 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserUpdateFromServer& msg,
             PureObject3D& objXHair,
+            const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode);
         bool handleDeathNotificationFromServer(
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
-        void updatePlayers();
+        void updatePlayers(const proofps_dd::Config& config);
 
     private:
 

@@ -222,15 +222,20 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeStartedInvulnerability;
 }
 
-void proofps_dd::Player::update()
+void proofps_dd::Player::update(const proofps_dd::Config& config, bool bServer)
 {
     if (getInvulnerability())
     {
-        // TODO: blink player
-    }
-    else
-    {
-        // TODO: show player if not dead
+        constexpr auto nBlinkPeriodMillisecs = 100;
+        const auto nInvulTimeElapsedMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedInvulnerability).count();
+        // only server instance is allowed to decide about ENDING invulnerability
+        const bool bEndInvul = bServer && (static_cast<unsigned int>(nInvulTimeElapsedMillisecs) >= config.getPlayerRespawnInvulnerabilityDelaySeconds() * 1000);
+        const bool bShowPlayer = bEndInvul || ((nInvulTimeElapsedMillisecs / nBlinkPeriodMillisecs) % 2) == 0;
+        getObject3D()->SetRenderingAllowed(bShowPlayer);
+        if (bEndInvul)
+        {
+            setInvulnerability(false);
+        }
     }
 }
 

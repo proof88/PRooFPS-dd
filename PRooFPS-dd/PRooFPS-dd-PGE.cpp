@@ -494,6 +494,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
                 *m_pObjXHair,
+                m_config,
                 *m_gameMode);
             break;
         case proofps_dd::MsgBulletUpdateFromServer::id:
@@ -784,7 +785,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
-    updatePlayers(); // maybe we should do this per-tick instead of per-frame in the future
+    updatePlayers(m_config); // maybe we should do this per-tick instead of per-frame in the future
     updateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
@@ -869,7 +870,7 @@ void proofps_dd::PRooFPSddPGE::restartGame()
     {
         for (auto& playerPair : m_mapPlayers)
         {
-            serverRespawnPlayer(playerPair.second, true);
+            serverRespawnPlayer(playerPair.second, true, m_config);
         }
 
         // respawn all map items
@@ -1323,10 +1324,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 
     return true;
 }  // handleUserSetupFromServer()
-
-
-
-
 
 bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/, const proofps_dd::MsgMapChangeFromServer& msg)
 {
