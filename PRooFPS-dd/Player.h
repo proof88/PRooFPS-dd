@@ -129,6 +129,10 @@ namespace proofps_dd
 
         void update(const proofps_dd::Config& config, bool bServer);
 
+        void show();
+        void hide();
+        void setVisibilityState(bool state);
+
         WeaponManager& getWeaponManager();
         const WeaponManager& getWeaponManager() const;
 

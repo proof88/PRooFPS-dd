@@ -228,14 +228,40 @@ void proofps_dd::Player::update(const proofps_dd::Config& config, bool bServer)
     {
         constexpr auto nBlinkPeriodMillisecs = 100;
         const auto nInvulTimeElapsedMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedInvulnerability).count();
-        // only server instance is allowed to decide about ENDING invulnerability
+        // only server instance is allowed to decide about ENDING invulnerability, client will be notified over network msg
         const bool bEndInvul = bServer && (static_cast<unsigned int>(nInvulTimeElapsedMillisecs) >= config.getPlayerRespawnInvulnerabilityDelaySeconds() * 1000);
         const bool bShowPlayer = bEndInvul || ((nInvulTimeElapsedMillisecs / nBlinkPeriodMillisecs) % 2) == 0;
-        getObject3D()->SetRenderingAllowed(bShowPlayer);
+        setVisibilityState(bShowPlayer);
         if (bEndInvul)
         {
             setInvulnerability(false);
         }
+    }
+    else
+    {
+        if (getHealth() > 0)
+        {
+            show();
+        }
+    }
+}
+
+void proofps_dd::Player::show()
+{
+    setVisibilityState(true);
+}
+
+void proofps_dd::Player::hide()
+{
+    setVisibilityState(false);
+}
+
+void proofps_dd::Player::setVisibilityState(bool state)
+{
+    getObject3D()->SetRenderingAllowed(state);
+    if (m_wpnMgr.getCurrentWeapon())
+    {
+        m_wpnMgr.getCurrentWeapon()->getObject3D().SetRenderingAllowed(state);
     }
 }
 
@@ -352,11 +378,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     }
     setHealth(0);
     getAttack() = false;
-    getObject3D()->Hide();
-    if (m_wpnMgr.getCurrentWeapon())
-    {
-        m_wpnMgr.getCurrentWeapon()->getObject3D().Hide();
-    }
+    hide();
     if (bServer)
     {
         setStrafe(Strafe::NONE);
@@ -396,7 +418,6 @@ bool& proofps_dd::Player::getRespawnFlag()
 
 void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
-    getObject3D()->Show();
     doStandupShared();
     getWantToStandup() = true;
     getImpactForce().SetZero();
@@ -417,6 +438,8 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
             pWpn->UpdatePosition(getObject3D()->getPosVec(), false);
         }
     }
+
+    show();
 }
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()

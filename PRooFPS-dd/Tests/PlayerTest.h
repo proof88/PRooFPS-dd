@@ -52,6 +52,9 @@ protected:
         AddSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
         AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
+        AddSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
+        AddSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
+        AddSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
         AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
         AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
         AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
@@ -261,6 +264,7 @@ private:
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
             assertTrue(player.getName().empty(), "name") &
             assertNotNull(player.getObject3D(), "object3d") &
+            assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertFalse(player.isDirty(), "isDirty") &
             assertFalse(player.isNetDirty(), "isNetDirty") &
             assertFalse(playerConst.getHealth().isDirty(), "old health") &
@@ -323,6 +327,77 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
         player.setName("apple");
         bool b = assertEquals("apple", player.getName(), "apple");
+
+        return b;
+    }
+
+    bool test_show()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        player.hide();
+        player.show();
+
+        bool b = true;
+        b &= assertNotNull(player.getObject3D(), "object3d") &
+            assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
+            assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null") &
+            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible");
+
+        return b;
+    }
+
+    bool test_hide()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        player.hide();
+
+        bool b = true;
+        b &= assertNotNull(player.getObject3D(), "object3d") &
+            assertFalse(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d not visible") &
+            assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible");
+
+        return b;
+    }
+
+    bool test_set_visibility_state()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        player.setVisibilityState(false);
+
+        bool b = true;
+        b &= assertNotNull(player.getObject3D(), "object3d 1") &
+            assertFalse(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d not visible 1") &
+            assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null 1") &
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible 1");
+
+        player.setVisibilityState(true);
+
+        b &= assertNotNull(player.getObject3D(), "object3d 2") &
+            assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible 2") &
+            assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null 2") &
+            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible 2");
 
         return b;
     }
