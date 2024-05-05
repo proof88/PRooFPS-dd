@@ -281,7 +281,7 @@ namespace proofps_dd
                     Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
-                {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
         };
 
         bool m_bNetDirty = false;

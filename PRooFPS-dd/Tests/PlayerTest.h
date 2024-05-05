@@ -301,7 +301,7 @@ private:
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
-            assertFalse(player.getInvulnerability(), "invulnerability") &
+            assertTrue(player.getInvulnerability(), "invulnerability") &
             assertEquals(0, player.getTimeInvulnerabilityStarted().time_since_epoch().count(), "time invulnerability started") &
             assertEquals(0u, player.getInvulnerabilityDurationSeconds(), "invulnerability duration") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
@@ -472,7 +472,7 @@ private:
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty G 3");
 
-        player.setInvulnerability(true);
+        player.setInvulnerability(false);
         b &= assertTrue(player.isDirty(), "dirty H 1");
         b &= assertFalse(player.isNetDirty(), "net dirty H 1");
         player.updateOldValues();
@@ -734,16 +734,16 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, "192.168.1.12");
 
-        player.setInvulnerability(true, 25);
+        player.setInvulnerability(false);
 
         bool b = true;
         b &= assertTrue(player.getInvulnerability().isDirty(), "old invulnerability") &
-            assertTrue(player.getInvulnerability(), "invulnerability") &
+            assertFalse(player.getInvulnerability(), "invulnerability");
+
+        player.setInvulnerability(true, 25);
+        b &= assertTrue(player.getInvulnerability(), "invulnerability") &
             assertNotEquals(0, player.getTimeInvulnerabilityStarted().time_since_epoch().count(), "time invulnerability started") &
             assertEquals(25u, player.getInvulnerabilityDurationSeconds(), "invulnerability duration");
-
-        player.setInvulnerability(false);
-        b &= assertFalse(player.getInvulnerability(), "invulnerability");
 
         return b;
     }
