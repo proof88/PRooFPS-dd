@@ -340,7 +340,7 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         const auto& playerConst = player;
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
-            // need to die, out of map lower bound
+            // need to die, out of map lower bound ... and this applies also when we player has invulnerability!
             handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
             //if (player.isFalling())
             //{

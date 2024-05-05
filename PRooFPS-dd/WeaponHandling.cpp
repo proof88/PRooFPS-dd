@@ -121,6 +121,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     continue;
                 }
 
+                if (player.getInvulnerability())
+                {
+                    continue;
+                }
+
                 const auto& playerConst = player;
                 if ((playerConst.getHealth() > 0) &&
                     colliding2_NoZ(
@@ -458,6 +463,12 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
             }
             
+            if (player.getInvulnerability())
+            {
+                // even for invulnerable players we let the impact for to be modified as usual above
+                continue;
+            }
+
             player.doDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
             if (playerConst.getHealth() == 0)
