@@ -116,7 +116,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bWillSomersault(other.m_bWillSomersault),
     m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
     m_bRunning(other.m_bRunning),
-    m_bExpectingStartPos(other.m_bExpectingStartPos),
+    m_bJustCreatedAndExpectingStartPos(other.m_bJustCreatedAndExpectingStartPos),
     m_strafe(other.m_strafe),
     m_prevActualStrafe(other.m_prevActualStrafe),
     m_bAttack(other.m_bAttack)
@@ -155,7 +155,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bWillSomersault = other.m_bWillSomersault;
     m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
     m_bRunning = other.m_bRunning;
-    m_bExpectingStartPos = other.m_bExpectingStartPos;
+    m_bJustCreatedAndExpectingStartPos = other.m_bJustCreatedAndExpectingStartPos;
     m_strafe = other.m_strafe;
     m_prevActualStrafe = other.m_prevActualStrafe;
     m_bAttack = other.m_bAttack;
@@ -463,14 +463,14 @@ const PgeOldNewValue<PureVector>& proofps_dd::Player::getPos() const
     return std::get<PgeOldNewValue<PureVector>>(m_vecOldNewValues.at(OldNewValueName::OvPos));
 }
 
-bool proofps_dd::Player::isExpectingStartPos() const
+bool proofps_dd::Player::isJustCreatedAndExpectingStartPos() const
 {
-    return m_bExpectingStartPos;
+    return m_bJustCreatedAndExpectingStartPos;
 }
 
-void proofps_dd::Player::setExpectingStartPos(bool b)
+void proofps_dd::Player::setJustCreatedAndExpectingStartPos(bool b)
 {
-    m_bExpectingStartPos = b;
+    m_bJustCreatedAndExpectingStartPos = b;
 }
 
 PgeOldNewValue<TPureFloat>& proofps_dd::Player::getAngleY()

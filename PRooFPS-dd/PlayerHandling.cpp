@@ -616,12 +616,12 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     const auto& playerConst = player;
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
 
-    const bool bOriginalExpectingStartPos = player.isExpectingStartPos();
-    if (player.isExpectingStartPos())
+    const bool bOriginalExpectingStartPos = player.isJustCreatedAndExpectingStartPos();
+    if (player.isJustCreatedAndExpectingStartPos())
     {
         // Player object is recently constructed and this is the 1st MsgUserUpdateFromServer for this Player
 
-        player.setExpectingStartPos(false);
+        player.setJustCreatedAndExpectingStartPos(false);
         // PPPKKKGGGGGG
         player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
         player.getPos().commit(); // both server and client commits in this case
@@ -708,7 +708,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     }
 
     // the only situation when game mode does not contain the player but we already receive update for the player is
-    // when isExpectingStartPos() is true, because the userNameChange will be handled a bit later;
+    // when isJustCreatedAndExpectingStartPos() is true, because the userNameChange will be handled a bit later;
     // note that it can also happen that we receive update here for a player who has not yet handshaked its name
     // with the server, in that case the name is empty, that is why we also need to check emptiness!
     if (!player.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(player))

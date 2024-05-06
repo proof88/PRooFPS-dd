@@ -57,7 +57,7 @@ protected:
         AddSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
         AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
         AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
-        AddSubTest("test_set_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_start_pos);
+        AddSubTest("test_set_just_created_and_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_just_created_and_expecting_start_pos);
         AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
         AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
         AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
@@ -292,7 +292,7 @@ private:
             assertFalse(player.getWillSomersaultInNextTick(), "will somersault") &
             assertFalse(player.isSomersaulting(), "isSomersaulting") &
             assertEquals(0.f, player.getSomersaultAngle(), "getSomersaultAngle") &
-            assertTrue(player.isExpectingStartPos(), "expecting start pos") &
+            assertTrue(player.isJustCreatedAndExpectingStartPos(), "expecting start pos") &
             assertTrue(player.isRunning(), "running default") &
             assertEquals(0, player.getTimeLastToggleRun().time_since_epoch().count(), "time last run toggle") &
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
@@ -508,15 +508,15 @@ private:
         return b;
     }
 
-    bool test_set_expecting_start_pos()
+    bool test_set_just_created_and_expecting_start_pos()
     {
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
-        player.setExpectingStartPos(false);
-        bool b = assertFalse(player.isExpectingStartPos(), "exp 1");
+        player.setJustCreatedAndExpectingStartPos(false);
+        bool b = assertFalse(player.isJustCreatedAndExpectingStartPos(), "exp 1");
         
-        player.setExpectingStartPos(true);
-        b &= assertTrue(player.isExpectingStartPos(), "exp 2");
+        player.setJustCreatedAndExpectingStartPos(true);
+        b &= assertTrue(player.isJustCreatedAndExpectingStartPos(), "exp 2");
 
         return b;
     }

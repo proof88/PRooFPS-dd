@@ -161,8 +161,9 @@ namespace proofps_dd
 
         PgeOldNewValue<PureVector>& getPos();
         const PgeOldNewValue<PureVector>& getPos() const;
-        bool isExpectingStartPos() const;
-        void setExpectingStartPos(bool b);
+
+        bool isJustCreatedAndExpectingStartPos() const;
+        void setJustCreatedAndExpectingStartPos(bool b);
 
         PgeOldNewValue<TPureFloat>& getAngleY();
         const PgeOldNewValue<TPureFloat>& getAngleY() const;
@@ -343,7 +344,7 @@ namespace proofps_dd
         bool m_bRunning = true;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
 
-        bool m_bExpectingStartPos = true;
+        bool m_bJustCreatedAndExpectingStartPos = true;
 
         proofps_dd::Strafe m_strafe = Strafe::NONE;  // continuous op
         proofps_dd::Strafe m_prevActualStrafe = Strafe::NONE;
