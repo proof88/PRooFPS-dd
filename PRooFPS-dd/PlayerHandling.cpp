@@ -631,17 +631,21 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // When Player is spawned for the 1st time, it is not a "re-"spawn, but we should still apply invulnerability since
             // this player has not yet fully booted up but gets visible to other players so we keep protected from other players.
             // I could not find a better place for this (MsgUserConnected, MsgUserSetupFromServer, etc.), so here we are forcing it.
-            getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
             player.setInvulnerability(true, 999);
+        }
+        else
+        {
+            player.setInvulnerability(msg.m_bInvulnerability);
+            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: initial invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
         }
     }
     else
     {
         if (!m_pge.getNetwork().isServer() && (msg.m_bInvulnerability != player.getInvulnerability()))
         {
-            // only clients should fall here, server sets invulnerability in other locations and doesnt need to update itself here!
-            
-            getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
+            // only clients should fall here, server sets invulnerability in other locations and doesnt need to update itself here!           
+            //getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
             // no need to set time for clients even if state is true, since player.update() is not allowed to stop invulnerability on client-side.
             player.setInvulnerability(msg.m_bInvulnerability);
         }

@@ -205,6 +205,15 @@ const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
     return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability));
 }
 
+/**
+* Both server and client use this function.
+* However, only server actually uses the nSeconds argument.
+* Client never knows the duration of invulnerability, it just always sets the state received from server.
+* Server is responsible for managing invulnerability durations and explicitly notifying clients about invulnerability ending.
+* 
+* @param bState   True for activating player invulnerability, false to reset it.
+* @param nSeconds Duration of invulnerability. Used by server instance only.
+*/
 void proofps_dd::Player::setInvulnerability(const bool& bState, const unsigned int& nSeconds)
 {
     std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvInvulnerability)).set(bState);
