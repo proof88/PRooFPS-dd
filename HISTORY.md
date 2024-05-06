@@ -12,6 +12,34 @@
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.2.3.0 Private Beta (May 06, 2024)
+
+A compressed build for Windows is available for TODO download here TODO.
+
+All changes in this version are related to **player respawn functionality**.
+
+This version brings a new feature called **player invulnerability**:
+ - when a player is invulnerable, their **player object is blinking** so everyone knows the player is invulnerable;
+ - when a player is invulnerable, **cannot be killed by bullet or explosion**, but can still die if falling out of map boundaries;
+ - when a client connects to the server, its player object becomes visible to all other players even though the client is still loading resources thus unable to move.
+In previous versions other players could already kill the connecting player during this small time window, this is not possible anymore.
+**All players are now always invulnerable until fully loading everything**.
+ - based on server configuration, any **respawning player is invulnerable for a very short period of time**, so they cannot be killed right at the moment of respawn.
+This respawn invulnerability config is stored in CVAR `sv_dm_respawn_invulnerability_delay` and **independent of the abovementioned default invulnerability of connecting players**.
+Can be changed from menu GUI as well.
+ - in the future a new special map item type could be also added, giving the player invulnerability for a short period of time.
+
+Another small feature is the **configurable respawn timer**:
+ - server can configure the **number of seconds a player needs to wait to respawn** in the new CVAR called `sv_dm_respawn_delay` which can be also set in the menu GUI.
+ - As stated for the previous version, the possibility of using the new GUI library for In-Game GUI/HUD has been added. Now the first actual visible change has been done:
+after the player dies, a **progress bar is shown as a respawn countdown**.
+
+Some **under-the-hood changes**:
+ - **FTR: Server Config Sent to Clients:** a new message type is added serving for sending relevant server configuration to the clients. For now this is used by the client to properly display the respawn countdown progress bar because the respawn delay is configured on server side. In the future this message type can be used when listing servers with their basic config values.
+ - **FTR: Sounds in Weapon File:** previously hardcoded file names were used for playing weapon sound effects, now these are specified in the weapon text files.
+ - **FTR: Replicating Weapon State to Clients:** in previous versions clients did not know about the state of their current weapon, now server replicates it to them. This is a prerequisite to some upcoming feature such as visualizing weapon reload on client side (currently weapon reload does not have any visible effect).
+ - **FTR: CVAR for Max Framerate:** a new CVAR `gfx_fps_max` is added to the configuration which controls the maximum framerate. Previously 60 was hardcoded, now it is possible to change it from the config file. This is still serving development benchmarking purposes only, so this config is not accessible from the menu GUI.
+
 ## v0.2.2.0 Private Beta (Mar 26, 2024)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1vDM_siI_4xKFpkhx_2AsiFiCdx5YY5fO/view?usp=drive_link).
