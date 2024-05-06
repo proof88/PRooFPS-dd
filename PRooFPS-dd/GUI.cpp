@@ -818,7 +818,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         if (ImGui::SliderInt(
             "##sliderSvDmPlayerRespawnInvulnerabilityDelaySecs",
             &nSvDmPlayerRespawnInvulnerabilityDelaySecs,
-            0, 5, "%d",
+            0, 3, "%d",
             ImGuiSliderFlags_AlwaysClamp))
         {
             cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.Set(nSvDmPlayerRespawnInvulnerabilityDelaySecs);
