@@ -41,6 +41,11 @@ namespace proofps_dd
     /**
     * GameMode class represent the Frag Table and the winning condition checks.
     * It identifies players by their name thus it is essential that all players have unique name.
+    * 
+    * TODO: not sure exactly about my original idea, but definitely the current design should be changed a bit.
+    * GameMode should NOT contain anything related to "frags", it should be more abstract.
+    * Frags, frag table, etc. should be introduced in derived class such as DeathMatchMode.
+    * However this definitely won't be "fixed" in 2024.
     */
     class GameMode
     {
@@ -61,17 +66,23 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
 
         /**
-        * Resets winning time and winning condition.
-        * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this or
-        * use restartWithoutRemovingPlayers() instead.
+        * Similar to restartWithoutRemovingPlayers() but it also removes all players from this GameMode instance.
+        * 
+        * Used by both server and clients. A typical situation for clients to invoke this is when they get disconnected from server.
+        * 
+        * @param network PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
         */
-        virtual void restart();
+        virtual void restart(pge_network::PgeINetwork& network);
 
         /**
-        * Resets winning time and winning condition.
+        * Resets winning time and winning condition, also zeros out relevant members of FragTableRow for all players.
         * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this.
+        * 
+        * Used by both server and clients: clients invoke it upon receiving MsgGameSessionStateFromServer.
+        * 
+        * @param network PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
         */
-        virtual void restartWithoutRemovingPlayers();
+        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network);
 
         /**
         * Evaluates conditions to see if game is won or not.
@@ -84,7 +95,7 @@ namespace proofps_dd
         * @param  network PGE network instance to be used to send out MsgGameSessionStateFromServer if needed.
         * @return True if game is won, false otherwise.
         */
-        virtual bool checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network) = 0;
+        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) = 0;
 
         /**
         * Handles server's update about current game session goal, e.g. game is won.
@@ -94,7 +105,7 @@ namespace proofps_dd
         *
         * @param  bGameSessionWon True if the current game session goal has been just reached, false otherwise.
         */
-        virtual void receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon) = 0;
+        virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) = 0;
 
         /**
         * Returns the current game session win state i.e. game goal is reached or not.
@@ -183,7 +194,7 @@ namespace proofps_dd
         GameMode(GameMode&&) = delete;
         GameMode&& operator=(GameMode&&) = delete;
 
-        bool sendGameSessionStateToClients(pge_network::PgeINetwork& network);
+        bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network);
 
     private:
 
@@ -211,10 +222,8 @@ namespace proofps_dd
         DeathMatchMode(DeathMatchMode&&) = delete;
         DeathMatchMode&& operator=(DeathMatchMode&&) = delete;
 
-        virtual void restart() override;
-        virtual void restartWithoutRemovingPlayers() override;
-        virtual bool checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network) override;
-        virtual void receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon) override;
+        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+        virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) override;
 
         /**
         * @return Configured time limit previously set by setTimeLimitSecs(). 0 means no time limit.

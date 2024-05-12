@@ -273,7 +273,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     m_deathMatchMode->setFragLimit(10);
     //m_deathMatchMode->setTimeLimitSecs(500);
-    m_gameMode->restart();
+    m_gameMode->restart(getNetwork());
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = GAME_MAXFPS_DEF;
@@ -733,7 +733,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     * if it is really required.
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
-    if (!m_gameMode->checkAndUpdateWinningConditionsServer(getNetwork()))
+    if (!m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork()))
     {
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
         {
@@ -746,7 +746,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
         }  // for iPhyIter
-    }  // checkAndUpdateWinningConditionsServer()
+    }  // serverCheckAndUpdateWinningConditions()
     serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
     serverSendUserUpdates(m_durations);
 }
@@ -869,49 +869,49 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
     m_gui.textForNextFrame(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSizeLegacy());
 }
 
-void proofps_dd::PRooFPSddPGE::restartGame()
+void proofps_dd::PRooFPSddPGE::serverRestartGame()
 {
-    if (getNetwork().isServer())
+    assert(getNetwork().isServer());
+
+    for (auto& playerPair : m_mapPlayers)
     {
-        for (auto& playerPair : m_mapPlayers)
+        serverRespawnPlayer(playerPair.second, true, m_config);
+    }
+
+    // respawn all map items
+    pge_network::PgePacket newPktMapItemUpdate;
+    for (auto& itemPair : m_maps.getItems())
+    {
+        if (!itemPair.second)
         {
-            serverRespawnPlayer(playerPair.second, true, m_config);
+            continue;
         }
 
-        // respawn all map items
-        pge_network::PgePacket newPktMapItemUpdate;
-        for (auto& itemPair : m_maps.getItems())
+        MapItem& mapItem = *(itemPair.second);
+        if (!mapItem.isTaken())
         {
-            if (!itemPair.second)
-            {
-                continue;
-            }
+            // just to avoid unnecessary server -> client network traffic
+            continue;
+        }
 
-            MapItem& mapItem = *(itemPair.second);
-            if (!mapItem.isTaken())
-            {
-                continue;
-            }
+        mapItem.unTake();
 
-            mapItem.unTake();
+        if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
+            newPktMapItemUpdate,
+            0,
+            mapItem.getId(),
+            mapItem.isTaken()))
+        {
+            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
+        }
+        else
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+        }
+    } // end for items
 
-            if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
-                newPktMapItemUpdate,
-                0,
-                mapItem.getId(),
-                mapItem.isTaken()))
-            {
-                getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
-            }
-            else
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-            }
-        } // end for items
-    } // end server
-
-    m_gameMode->restartWithoutRemovingPlayers(); // now both server and clients execute this on their own, in future only server should do this ...
+    m_gameMode->restartWithoutRemovingPlayers(getNetwork());
 }
 
 void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
@@ -922,21 +922,22 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
     // reset isGameWon(), however in future only server should reset it and send out explicit msg to clients about the reset!
     if (m_gameMode->isGameWon())
     {
-        const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
-        if (nSecsSinceWin >= 15)
+        if (getNetwork().isServer())
         {
-            restartGame();
-        }
-        else
-        {
-            // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
-            m_gameMode->showObjectives(getPure(), getNetwork());
-            m_pObjXHair->Hide();
-            for (auto& playerPair : m_mapPlayers)
+            const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
+            if (nSecsSinceWin >= 15)
             {
-                playerPair.second.getObject3D()->Hide();
-                playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+                serverRestartGame();
             }
+        }
+
+        // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
+        m_gameMode->showObjectives(getPure(), getNetwork());
+        m_pObjXHair->Hide();
+        for (auto& playerPair : m_mapPlayers)
+        {
+            playerPair.second.getObject3D()->Hide();
+            playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
         }
     }
 
@@ -1048,7 +1049,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
         return false;
     }
 
-    m_gameMode->receiveAndUpdateWinningConditionsClient(getNetwork(), msg.m_bGameSessionEnd);
+    m_gameMode->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
     
     return true;
 }

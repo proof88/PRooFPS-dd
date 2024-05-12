@@ -126,7 +126,7 @@ namespace proofps_dd
             PureWindow& window);                                        /**< Both clients and listen-server executes this. */
 
         void updateFramesPerSecond(PureWindow& window);
-        void restartGame();
+        void serverRestartGame();
         void updateVisualsForGameMode();
 
         void serverPickupAndRespawnItems();

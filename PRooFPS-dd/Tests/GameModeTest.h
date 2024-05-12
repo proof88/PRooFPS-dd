@@ -57,7 +57,7 @@ protected:
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
-        AddSubTest("test_reset_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_reset_updates_times);
+        AddSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
         AddSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
         AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
@@ -67,8 +67,8 @@ protected:
         AddSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
         AddSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
         AddSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
-        AddSubTest("test_deathmatch_reset", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_reset);
-        AddSubTest("test_deathmatch_restartWithoutRemovingPlayers", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restartWithoutRemovingPlayers);
+        AddSubTest("test_deathmatch_restart", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart);
+        AddSubTest("test_deathmatch_restart_without_removing_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart_without_removing_players);
         AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
         AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
         AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
@@ -174,7 +174,7 @@ private:
         return b;
     }
 
-    bool test_reset_updates_times()
+    bool test_restart_updates_times()
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -197,7 +197,7 @@ private:
                 return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             }
 
-            gm->restart();
+            gm->restart(m_network);
             b &= (assertLess(0, gm->getResetTime().time_since_epoch().count(), (std::string("reset time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(0, gm->getWinTime().time_since_epoch().count(), (std::string("win time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
         }
@@ -308,7 +308,7 @@ private:
                 assertEquals(0u, dm->getTimeRemainingSecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
 
             dm->setTimeLimitSecs(25u);
-            dm->restart();  // restart() is needed to have correct value for remaining time
+            dm->restart(m_network);  // restart() is needed to have correct value for remaining time
             b &= assertEquals(25u, dm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(25u, dm->getTimeRemainingSecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
@@ -620,11 +620,11 @@ private:
 
             if (bTestingAsServer)
             {
-                // game won, win time is already updated by updatePlayer() even before explicit call to checkAndUpdateWinningConditionsServer();
+                // game won, win time is already updated by updatePlayer() even before explicit call to serverCheckAndUpdateWinningConditions();
                 // this is known only by server, client needs to be informed by server
                 b &= assertTrue(gm->isGameWon(), "game won");
                 b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), (std::string("win time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning server");
+                b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning server");
                 b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
@@ -678,7 +678,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertFalse(gm->isGameWon(), "game not won");
-                b &= assertFalse(dm->checkAndUpdateWinningConditionsServer(m_network), "winning");
+                b &= assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network), "winning");
                 b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
             }
 
@@ -757,7 +757,7 @@ private:
                 // even though winner player is removed, winning condition stays true, win time is still valid, an explicit reset() would be needed to clear them!
                 b &= assertTrue(gm->isGameWon(), "game won");
                 b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning");
+                b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning");
             }
 
         }
@@ -765,7 +765,7 @@ private:
         return b;
     }
 
-    bool test_deathmatch_reset()
+    bool test_deathmatch_restart()
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -807,7 +807,7 @@ private:
             {
                 b &= assertTrue(gm->isGameWon(), "game won 1");
                 b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning 1");
+                b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 1");
                 b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
@@ -823,7 +823,7 @@ private:
 
             b &= assertTrue(dm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            dm->restart();
+            dm->restart(m_network);
 
             b &= assertEquals(25u, dm->getTimeLimitSecs(), (std::string("time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertEquals(15u, dm->getFragLimit(), (std::string("frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
@@ -832,13 +832,13 @@ private:
                 b &= assertFalse(gm->isGameWon(), "game won 2");
                 b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
                 b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
-                b &= assertFalse(dm->checkAndUpdateWinningConditionsServer(m_network), "winning 2");
+                b &= assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
 
-                // for now no outgoing packet for winning state true -> false transition
-                b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                // outgoing packet for winning state true -> false transition too
+                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
-                    b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
                     );
                 }
@@ -854,7 +854,7 @@ private:
         return b;
     }
 
-    bool test_deathmatch_restartWithoutRemovingPlayers()
+    bool test_deathmatch_restart_without_removing_players()
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -896,7 +896,7 @@ private:
             {
                 b &= assertTrue(gm->isGameWon(), "game won 1");
                 b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning 1");
+                b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 1");
                 b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
@@ -912,7 +912,7 @@ private:
 
             b &= assertTrue(dm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            dm->restartWithoutRemovingPlayers();
+            dm->restartWithoutRemovingPlayers(m_network);
 
             b &= assertEquals(25u, dm->getTimeLimitSecs(), (std::string("time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertEquals(15u, dm->getFragLimit(), (std::string("frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
@@ -921,13 +921,13 @@ private:
                 b &= assertFalse(gm->isGameWon(), "game won 2");
                 b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
                 b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
-                b &= assertFalse(dm->checkAndUpdateWinningConditionsServer(m_network), "winning 2");
+                b &= assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
 
-                // for now no outgoing packet for winning state true -> false transition
-                b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                // outgoing packet for winning state true -> false transition too
+                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
-                    b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
                     );
                 }
@@ -963,7 +963,7 @@ private:
             return assertFalse(true, "testInitDeathmatch fail");
         }
         
-        return assertFalse(dm->checkAndUpdateWinningConditionsServer(m_network));
+        return assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network));
     }
 
     bool test_deathmatch_winning_cond_time_limit()
@@ -981,25 +981,38 @@ private:
         }
 
         dm->setTimeLimitSecs(2);
-        dm->restart();
+        dm->restart(m_network);
+        // restart triggers MsgGameSessionStateFromServer out no matter current state
+        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
         std::set<unsigned int> setRemainingSecs = {0, 1};
         int iSleep = 0;
-        while ((iSleep++ < 5) && !dm->checkAndUpdateWinningConditionsServer(m_network))
+        while ((iSleep++ < 5) && !dm->serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             setRemainingSecs.erase( dm->getTimeRemainingSecs() );
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
-        bool b = assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertTrue(gm->isGameWon(), "game won");
-        b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning");
+        b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning");
         b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
         b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
             );
         }
@@ -1026,7 +1039,19 @@ private:
         }
 
         dm->setFragLimit(5);
-        dm->restart();
+        dm->restart(m_network);
+        // restart triggers MsgGameSessionStateFromServer out no matter current state
+        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
 
         proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
@@ -1038,11 +1063,11 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
 
-        bool b = assertTrue(dm->addPlayer(player1, m_network), "add player 1");
+        b &= assertTrue(dm->addPlayer(player1, m_network), "add player 1");
         b &= assertTrue(dm->addPlayer(player2, m_network), "add player 2");
 
         unsigned int i = 0;
-        while (!dm->checkAndUpdateWinningConditionsServer(m_network) && (i++ < 5))
+        while (!dm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
             b &= assertTrue(dm->updatePlayer(player1, m_network), "update player");
@@ -1050,13 +1075,13 @@ private:
 
         b &= assertTrue(gm->isGameWon(), "game won 2");
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-        b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning");
+        b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
             );
         }
@@ -1094,27 +1119,9 @@ private:
 
         dm->setFragLimit(5);
         dm->setTimeLimitSecs(2);
-        dm->restart();
-
-        bool b = assertTrue(dm->addPlayer(player1, m_network), "add player 1");
-        b &= assertTrue(dm->addPlayer(player2, m_network), "add player 2");
-
-        // time limit elapse also means winning even if frag limit not reached
-        std::set<unsigned int> setRemainingSecs = { 0, 1 };
-        int iSleep = 0;
-        while ((iSleep++ < 5) && !dm->checkAndUpdateWinningConditionsServer(m_network))
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            setRemainingSecs.erase(dm->getTimeRemainingSecs());
-        }
-        b &= assertTrue(gm->isGameWon(), "game won 1");
-        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
-        b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning due to time");
-        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
-        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
-
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        dm->restart(m_network);
+        // restart triggers MsgGameSessionStateFromServer out no matter current state
+        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
         try
         {
             b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
@@ -1126,9 +1133,52 @@ private:
             b &= assertFalse(true, "tx msg count");
         }
 
+        b &= assertTrue(dm->addPlayer(player1, m_network), "add player 1");
+        b &= assertTrue(dm->addPlayer(player2, m_network), "add player 2");
+
+        // time limit elapse also means winning even if frag limit not reached
+        std::set<unsigned int> setRemainingSecs = { 0, 1 };
+        int iSleep = 0;
+        while ((iSleep++ < 5) && !dm->serverCheckAndUpdateWinningConditions(m_network))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            setRemainingSecs.erase(dm->getTimeRemainingSecs());
+        }
+        b &= assertTrue(gm->isGameWon(), "game won 1");
+        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
+        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
+        b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning due to time");
+        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
+
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
         // frag limit reach also means winning even if time limit not reached
         dm->setTimeLimitSecs(100);
-        dm->restart();
+        dm->restart(m_network);
+        // restart triggers MsgGameSessionStateFromServer out no matter current state
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
         b &= assertFalse(gm->isGameWon(), "game won 2");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
 
@@ -1136,20 +1186,20 @@ private:
         b &= assertTrue(dm->addPlayer(player2, m_network), "add player 2");
 
         unsigned int i = 0;
-        while (!dm->checkAndUpdateWinningConditionsServer(m_network) && (i++ < 5))
+        while (!dm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
             b &= assertTrue(dm->updatePlayer(player1, m_network), "update player");
         }
         b &= assertTrue(gm->isGameWon(), "game won 3");
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
-        b &= assertTrue(dm->checkAndUpdateWinningConditionsServer(m_network), "winning due to frags");
+        b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning due to frags");
         b &= assertEquals(dm->getFragLimit(), i, "frags collected");
 
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEquals(4u, m_network.getServer().getTxPacketCount(), "tx pkt count");
         try
         {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(4u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
             );
         }
@@ -1172,12 +1222,12 @@ private:
         bool b = assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertFalse(dm->isGameWon(), "winning state 1");
 
-        dm->receiveAndUpdateWinningConditionsClient(m_network, true);
+        dm->clientReceiveAndUpdateWinningConditions(m_network, true);
 
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
         b &= assertTrue(dm->isGameWon(), "winning state 2");
 
-        dm->receiveAndUpdateWinningConditionsClient(m_network, false);
+        dm->clientReceiveAndUpdateWinningConditions(m_network, false);
 
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
         b &= assertFalse(dm->isGameWon(), "winning state 3");

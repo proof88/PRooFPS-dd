@@ -58,17 +58,28 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::
     return m_timeReset;
 }
 
-void proofps_dd::GameMode::restart()
+void proofps_dd::GameMode::restart(pge_network::PgeINetwork& network)
 {
-    m_timeReset = std::chrono::steady_clock::now();
-    m_bWon = false;
+    m_players.clear();
+    restartWithoutRemovingPlayers(network);
     // extended in derived class
 }
 
-void proofps_dd::GameMode::restartWithoutRemovingPlayers()
+void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network)
 {
     m_timeReset = std::chrono::steady_clock::now();
+    m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
+    for (auto& player : m_players)
+    {
+        player.m_nFrags = 0;
+        player.m_nDeaths = 0;
+    }
+
+    if (network.isServer())
+    {
+        serverSendGameSessionStateToClients(network);
+    }
     // extended in derived class
 }
 
@@ -133,7 +144,7 @@ proofps_dd::GameMode::GameMode(proofps_dd::GameModeType gm) :
 {
 }
 
-bool proofps_dd::GameMode::sendGameSessionStateToClients(pge_network::PgeINetwork& network)
+bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network)
 {
     assert(network.isServer());
     pge_network::PgePacket pktGameSessionState;
@@ -177,25 +188,7 @@ proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
-void proofps_dd::DeathMatchMode::restart()
-{
-    proofps_dd::GameMode::restart();
-    m_players.clear();
-    m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
-}
-
-void proofps_dd::DeathMatchMode::restartWithoutRemovingPlayers()
-{
-    proofps_dd::GameMode::restart();
-    for (auto& player : m_players)
-    {
-        player.m_nFrags = 0;
-        player.m_nDeaths = 0;
-    }
-    m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
-}
-
-bool proofps_dd::DeathMatchMode::checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network)
+bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
 {
     assert(network.isServer());
 
@@ -211,7 +204,7 @@ bool proofps_dd::DeathMatchMode::checkAndUpdateWinningConditionsServer(pge_netwo
         {
             m_bWon = true;
             m_timeWin = std::chrono::steady_clock::now();
-            sendGameSessionStateToClients(network);
+            serverSendGameSessionStateToClients(network);
             return true;
         }
     }
@@ -223,7 +216,7 @@ bool proofps_dd::DeathMatchMode::checkAndUpdateWinningConditionsServer(pge_netwo
         {
             m_bWon = true;
             m_timeWin = std::chrono::steady_clock::now();
-            sendGameSessionStateToClients(network);
+            serverSendGameSessionStateToClients(network);
             return true;
         }
     }
@@ -231,7 +224,7 @@ bool proofps_dd::DeathMatchMode::checkAndUpdateWinningConditionsServer(pge_netwo
     return false;
 }
 
-void proofps_dd::DeathMatchMode::receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon)
+void proofps_dd::DeathMatchMode::clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon)
 {
     assert(!network.isServer());
 
@@ -244,7 +237,7 @@ void proofps_dd::DeathMatchMode::receiveAndUpdateWinningConditionsClient(pge_net
     }
     else
     {
-        m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
+        restartWithoutRemovingPlayers(network);
     }
 }
 
@@ -305,7 +298,7 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
 
     if (network.isServer())
     {
-        checkAndUpdateWinningConditionsServer(network);  // to make sure winning time is updated if game has just been won!
+        serverCheckAndUpdateWinningConditions(network);  // to make sure winning time is updated if game has just been won!
     }
     return bRet;
 }
@@ -361,7 +354,7 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
 
     if (network.isServer())
     {
-        checkAndUpdateWinningConditionsServer(network);  // to make sure winning time is updated if game has just been won!
+        serverCheckAndUpdateWinningConditions(network);  // to make sure winning time is updated if game has just been won!
     }
 
     return true;

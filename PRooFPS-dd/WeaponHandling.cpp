@@ -156,7 +156,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             {
                                 nKillerConnHandleServerSide = itKiller->first;
                                 itKiller->second.getFrags()++;
-                                bEndGame = gameMode.checkAndUpdateWinningConditionsServer(m_pge.getNetwork());
+                                bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }

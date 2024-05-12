@@ -377,7 +377,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     if (bClientShouldRemoveAllPlayers)
     {
         getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
-        gameMode.restart();
+        gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }
 
