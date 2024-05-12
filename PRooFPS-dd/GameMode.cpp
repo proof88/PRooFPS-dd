@@ -144,6 +144,23 @@ proofps_dd::GameMode::GameMode(proofps_dd::GameModeType gm) :
 {
 }
 
+bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle)
+{
+    assert(network.isServer());
+    pge_network::PgePacket pktGameSessionState;
+    if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
+        pktGameSessionState,
+        m_bWon))
+    {
+        getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return false;
+    }
+    network.getServer().send(pktGameSessionState, connHandle);
+
+    return true;
+}
+
 bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network)
 {
     assert(network.isServer());
@@ -294,6 +311,16 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
     if (bRet)
     {
         m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths(), player.getServerSideConnectionHandle() });
+
+        if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
+        {
+            // we automatically inform the new player about the current game goal/win state since maybe they are connecting when game is already won;
+            // inform them ONLY IF GAME IS WON, since otherwise they are good already, and sending them "NOT WON" now would cause them to zero out already updated frag table data!
+            if (isGameWon())
+            {
+                serverSendGameSessionStateToClient(network, player.getServerSideConnectionHandle());
+            }
+        }
     }
 
     if (network.isServer())

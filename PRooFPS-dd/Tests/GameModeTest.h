@@ -64,6 +64,7 @@ protected:
         AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
         AddSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
         AddSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
+        AddSubTest("test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won);
         AddSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
         AddSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
         AddSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
@@ -541,6 +542,79 @@ private:
         return b;
     }
 
+    bool test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won()
+    {
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as server");
+        }
+
+        if (!testInitDeathmatch())
+        {
+            return assertFalse(true, "testInitDeathmatch fail");
+        }
+
+        bool b = true;
+
+        dm->setFragLimit(11);
+
+        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Adam");
+        player1.getFrags() = 10;
+        player1.getDeaths() = 0;
+
+        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Apple");
+        player2.getFrags() = 5;
+        player2.getDeaths() = 2;
+
+        b &= assertTrue(dm->addPlayer(player1, m_network), "add player 1 fail");
+
+        // initially there is no sent out packets because game is NOT yet won
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+
+        // adding same player fails so still no sent out packets
+        b &= assertFalse(dm->addPlayer(player1, m_network), "add player 1 again fail 1");
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+
+        // game is now won, expecting 1 sent pkts to the virtually connected client (ServerStub has 1 virtual always-connected client)
+        player1.getFrags()++;
+        b &= assertTrue(dm->updatePlayer(player1, m_network), "update player 1 fail");
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
+        // adding same player fails so number of sent pkts should not change
+        b &= assertFalse(dm->addPlayer(player1, m_network), "add player 1 again fail 2");
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+
+        // now adding new player should trigger sending out MsgGameSessionStateFromServer to the player since game state is already won
+        b &= assertTrue(dm->addPlayer(player2, m_network), "add player 2 fail");
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
+        return b;
+    }
+
     bool test_deathmatch_update_player()
     {
         bool bTestingAsServer = false;
@@ -822,6 +896,21 @@ private:
             }
 
             b &= assertTrue(dm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            if (bTestingAsServer)
+            {
+                // in case of server instance, addPlayer() sends MsgGameSessionStateFromServer to newly added player when isGameWon() is true 
+                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                try
+                {
+                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    );
+                }
+                catch (...)
+                {
+                    b &= assertFalse(true, "tx msg count");
+                }
+            }
 
             dm->restart(m_network);
 
@@ -835,10 +924,10 @@ private:
                 b &= assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
-                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
                     );
                 }
@@ -911,6 +1000,21 @@ private:
             }
 
             b &= assertTrue(dm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            if (bTestingAsServer)
+            {
+                // in case of server instance, addPlayer() sends MsgGameSessionStateFromServer to newly added player when isGameWon() is true 
+                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                try
+                {
+                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    );
+                }
+                catch (...)
+                {
+                    b &= assertFalse(true, "tx msg count");
+                }
+            }
 
             dm->restartWithoutRemovingPlayers(m_network);
 
@@ -924,10 +1028,10 @@ private:
                 b &= assertFalse(dm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
                 try
                 {
-                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
                     );
                 }

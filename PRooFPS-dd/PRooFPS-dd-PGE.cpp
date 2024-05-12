@@ -791,7 +791,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     updatePlayers(m_config); // maybe we should do this per-tick instead of per-frame in the future
-    updateVisualsForGameMode(); // temporal
+    updateVisualsForGameMode();
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
@@ -918,8 +918,6 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    // TODO: now this is executed on both server and client side, and when nSecsSinceWin elapses on either server and client-side, restartGame() will
-    // reset isGameWon(), however in future only server should reset it and send out explicit msg to clients about the reset!
     if (m_gameMode->isGameWon())
     {
         if (getNetwork().isServer())

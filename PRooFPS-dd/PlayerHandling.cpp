@@ -488,7 +488,6 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             return false;   // for release mode
         }
 
-
         getConsole().OLn("PlayerHandling::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
 

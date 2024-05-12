@@ -194,6 +194,7 @@ namespace proofps_dd
         GameMode(GameMode&&) = delete;
         GameMode&& operator=(GameMode&&) = delete;
 
+        bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
         bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network);
 
     private:
