@@ -105,6 +105,7 @@ void proofps_dd::Networking::allowListAppMessages()
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
 
         // following messages are received only by clients over network:
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgServerInfoFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgBulletUpdateFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgMapItemUpdateFromServer::id));

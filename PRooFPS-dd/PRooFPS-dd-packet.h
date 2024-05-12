@@ -26,6 +26,7 @@ namespace proofps_dd
     enum class PRooFPSappMsgId : pge_network::MsgApp::TMsgId  /* underlying type should be same as type of pge_network::MsgApp::msgId */
     {
         ServerInfoFromServer = 0,
+        GameSessionStateFromServer,
         MapChangeFromServer,
         UserSetupFromServer,
         UserNameChangeAndBootupDone,
@@ -48,6 +49,7 @@ namespace proofps_dd
     const auto MapMsgAppId2String = PFL::std_array_of<PRooFPSappMsgId2ZStringPair>
     (
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::ServerInfoFromServer,        "MsgServerInfoFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::GameSessionStateFromServer,  "MsgGameSessionStateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MsgMapChangeFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChangeAndBootupDone, "MsgUserNameChangeAndBootupDone" },
@@ -133,6 +135,42 @@ namespace proofps_dd
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgServerInfoFromServer>);
     static_assert(std::is_standard_layout_v<MsgServerInfoFromServer>);
+
+    // server -> clients
+    // sent to all clients when game session state is changed (e.g. frag limit reached or whatever goal is defined in GameMode object).
+    struct MsgGameSessionStateFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::GameSessionStateFromServer;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            bool bGameSessionEnd)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgGameSessionStateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgGameSessionStateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgGameSessionStateFromServer& msgGameSessionState = reinterpret_cast<proofps_dd::MsgGameSessionStateFromServer&>(*pMsgAppData);
+            
+            msgGameSessionState.m_bGameSessionEnd = bGameSessionEnd;
+
+            return true;
+        }
+
+        bool m_bGameSessionEnd;
+    };  // struct MsgGameSessionStateFromServer
+    static_assert(std::is_trivial_v<MsgGameSessionStateFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgGameSessionStateFromServer>);
+    static_assert(std::is_standard_layout_v<MsgGameSessionStateFromServer>);
 
     // server -> self (inject) and clients
     // sent to all clients when map is changing

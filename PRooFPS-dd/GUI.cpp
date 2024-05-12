@@ -855,7 +855,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         }
         else
         {
-            m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(true);
+            m_pPge->getConfigProfiles().getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
             if (!m_pPge->getConfigProfiles().writeConfiguration())
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
@@ -961,7 +961,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
         if (bIpAddrValid)
         {
             m_pConfig->validate();
-            m_pPge->getConfigProfiles().getVars()[pge_network::PgeNetwork::CVAR_NET_SERVER].Set(false);
+            m_pPge->getConfigProfiles().getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
             if (!m_pPge->getConfigProfiles().writeConfiguration())
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");

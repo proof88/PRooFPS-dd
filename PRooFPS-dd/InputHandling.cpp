@@ -463,7 +463,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
     }
 
-    if (gameMode.checkWinningConditions())
+    if (gameMode.isGameWon())
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
@@ -659,7 +659,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     // the amount of wheel rotation accumulating too much
     const short int nMouseWheelChange = m_pge.getInput().getMouse().getWheel();
 
-    if (gameMode.checkWinningConditions())
+    if (gameMode.isGameWon())
     {
         return false;
     }

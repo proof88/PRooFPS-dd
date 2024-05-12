@@ -312,6 +312,24 @@
     <ClInclude Include="..\..\PGE\PGE\Audio\PgeAudio.h">
       <Filter>Header Files\PGE\Audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIClient.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeINetwork.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIServer.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeClientStub.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeNetworkStub.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeServerStub.h">
+      <Filter>Header Files\PGE\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -467,6 +467,10 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt));
             break;
+        case proofps_dd::MsgGameSessionStateFromServer::id:
+            bRet = clientHandleGameSessionStateFromServer(
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgGameSessionStateFromServer>(pkt));
+            break;
         case proofps_dd::MsgMapChangeFromServer::id:
             bRet = handleMapChangeFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
@@ -729,7 +733,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     * if it is really required.
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
-    if (!m_gameMode->checkWinningConditions())
+    if (!m_gameMode->checkAndUpdateWinningConditionsServer(getNetwork()))
     {
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
         {
@@ -742,7 +746,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverPickupAndRespawnItems();
             updatePlayersOldValues();
         }  // for iPhyIter
-    }  // checkWinningConditions()
+    }  // checkAndUpdateWinningConditionsServer()
     serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
     serverSendUserUpdates(m_durations);
 }
@@ -787,7 +791,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     updatePlayers(m_config); // maybe we should do this per-tick instead of per-frame in the future
-    updateGameMode();  // TODO: on the long run this should be also executed only by server, now for fraglimit every instance executes ...
+    updateVisualsForGameMode(); // temporal
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
     if (player.getWeaponManager().getCurrentWeapon())
@@ -910,11 +914,13 @@ void proofps_dd::PRooFPSddPGE::restartGame()
     m_gameMode->restartWithoutRemovingPlayers(); // now both server and clients execute this on their own, in future only server should do this ...
 }
 
-void proofps_dd::PRooFPSddPGE::updateGameMode()
+void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    if (m_gameMode->checkWinningConditions())
+    // TODO: now this is executed on both server and client side, and when nSecsSinceWin elapses on either server and client-side, restartGame() will
+    // reset isGameWon(), however in future only server should reset it and send out explicit msg to clients about the reset!
+    if (m_gameMode->isGameWon())
     {
         const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_gameMode->getWinTime()).count();
         if (nSecsSinceWin >= 15)
@@ -939,7 +945,7 @@ void proofps_dd::PRooFPSddPGE::updateGameMode()
 
 void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 {
-    if (m_gameMode->checkWinningConditions())
+    if (m_gameMode->isGameWon())
     {
         return;
     }
@@ -1029,6 +1035,23 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 
     m_durations.m_nPickupAndRespawnItemsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }  // serverPickupAndRespawnItems()
+
+bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proofps_dd::MsgGameSessionStateFromServer& msg)
+{
+    /* this function should be in GameMode, however currently I cannot include PRooFPS-dd-packet.h in GameMode.h due to
+       circular include dependency, thus here I'm manually passing values from the msg to GameMode */
+    
+    if (getNetwork().isServer())
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): server received, CANNOT HAPPEN!", __func__);
+        assert(false);
+        return false;
+    }
+
+    m_gameMode->receiveAndUpdateWinningConditionsClient(getNetwork(), msg.m_bGameSessionEnd);
+    
+    return true;
+}
 
 bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserSetupFromServer& msg)
 {

@@ -144,10 +144,16 @@
     <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgProfiles.h" />
     <ClInclude Include="..\..\PGE\PGE\Config\PGEcfgVariable.h" />
     <ClInclude Include="..\..\PGE\PGE\Network\PgeClient.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIClient.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeINetwork.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\PgeIServer.h" />
     <ClInclude Include="..\..\PGE\PGE\Network\PgeIServerClient.h" />
     <ClInclude Include="..\..\PGE\PGE\Network\PgeNetwork.h" />
     <ClInclude Include="..\..\PGE\PGE\Network\PgePacket.h" />
     <ClInclude Include="..\..\PGE\PGE\Network\PgeServer.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeClientStub.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeNetworkStub.h" />
+    <ClInclude Include="..\..\PGE\PGE\Network\Stubs\PgeServerStub.h" />
     <ClInclude Include="..\..\PGE\PGE\PGE.h" />
     <ClInclude Include="..\..\PGE\PGE\PGEInputHandler.h" />
     <ClInclude Include="..\..\PGE\PGE\PGEWorld.h" />

@@ -78,9 +78,30 @@ namespace proofps_dd
         * Since conditions depend on game mode, the actual implementation must be in the specific derived game mode class.
         * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         * 
+        * This function is for server instance only.
+        * It also sends out MsgGameSessionStateFromServer to all clients in case game session state is changed as a result of the call.
+        * 
+        * @param  network PGE network instance to be used to send out MsgGameSessionStateFromServer if needed.
         * @return True if game is won, false otherwise.
         */
-        virtual bool checkWinningConditions() = 0;
+        virtual bool checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network) = 0;
+
+        /**
+        * Handles server's update about current game session goal, e.g. game is won.
+        * Server sends out such notification occasionally only, when something relevant has changed about the current game session.
+        * 
+        * This function is for client instance only.
+        *
+        * @param  bGameSessionWon True if the current game session goal has been just reached, false otherwise.
+        */
+        virtual void receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon) = 0;
+
+        /**
+        * Returns the current game session win state i.e. game goal is reached or not.
+        * 
+        * @return True if current game session is won (goal reached), false otherwise.
+        */
+        bool isGameWon() const;
         
         /**
         * @return Timestamp of moment when current game was won by a player. It is Epoch time 0 if the game is not yet won.
@@ -94,27 +115,37 @@ namespace proofps_dd
         
         /**
         * Adds the specified player.
-        * Automatically evaluates winning condition, in case of winning it also updates winning time.
+        * In case of server instance, it automatically evaluates winning condition, and in case of winning it also updates winning time and
+        * sends out MsgGameSessionStateFromServer to all clients.
+        * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
+        * 
         * Fails if a player with same name is already added.
         * 
         * @return True if added the new player, false otherwise.
         */
-        virtual bool addPlayer(const Player& player) = 0;
+        virtual bool addPlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) = 0;
 
         /**
         * Updates data for the specified player.
-        * Automatically evaluates winning condition, in case of winning it also updates winning time.
+        * In case of server instance, it automatically evaluates winning condition, and in case of winning it also updates winning time and
+        * sends out MsgGameSessionStateFromServer to all clients.
         * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
+        * 
         * Fails if player with same cannot be found.
         *
         * @return True if updated the existing player, false otherwise.
         */
-        virtual bool updatePlayer(const Player& player) = 0;
+        virtual bool updatePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) = 0;
 
         /**
         * Removes data for the specified player.
         * Fails if player with same cannot be found.
-        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
+        * 
+        * Does not evaluate winning conditions, since once a game is won, it stays won even if all players are removed, until explicit call to restart().
         *
         * @return True if removed the existing player, false otherwise.
         */
@@ -138,11 +169,12 @@ namespace proofps_dd
         * Shows the objectives of the current game mode.
         * For example, in a deathmatch game, it might show a frag table, or in a single player game it might show mission objectives.
         */
-        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) = 0;
+        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network) = 0;
 
     protected:
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<FragTableRow> m_players;
+        bool m_bWon{ false };
 
         GameMode(GameModeType gm);
 
@@ -150,6 +182,8 @@ namespace proofps_dd
         GameMode& operator=(const GameMode&) = delete;
         GameMode(GameMode&&) = delete;
         GameMode&& operator=(GameMode&&) = delete;
+
+        bool sendGameSessionStateToClients(pge_network::PgeINetwork& network);
 
     private:
 
@@ -179,7 +213,8 @@ namespace proofps_dd
 
         virtual void restart() override;
         virtual void restartWithoutRemovingPlayers() override;
-        virtual bool checkWinningConditions() override;
+        virtual bool checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network) override;
+        virtual void receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon) override;
 
         /**
         * @return Configured time limit previously set by setTimeLimitSecs(). 0 means no time limit.
@@ -214,10 +249,14 @@ namespace proofps_dd
         */
         void setFragLimit(unsigned int limit);
 
-        virtual bool addPlayer(const Player& player) override;
-        virtual bool updatePlayer(const Player& player) override;
+        virtual bool addPlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
+        virtual bool updatePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
         virtual bool removePlayer(const Player& player) override;
-        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network) override;
+        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network) override;
 
     protected:
 
@@ -227,12 +266,11 @@ namespace proofps_dd
         
         // ---------------------------------------------------------------------------
 
-        unsigned int m_nTimeLimitSecs;
-        unsigned int m_nFragLimit;
-        bool m_bWon;
+        unsigned int m_nTimeLimitSecs{};
+        unsigned int m_nFragLimit{};
 
-        void showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY);
-        void showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY);
+        void showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY);
+        void showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY);
 
     }; // class DeathMatchMode
 

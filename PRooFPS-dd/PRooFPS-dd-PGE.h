@@ -127,9 +127,12 @@ namespace proofps_dd
 
         void updateFramesPerSecond(PureWindow& window);
         void restartGame();
-        void updateGameMode();
+        void updateVisualsForGameMode();
 
         void serverPickupAndRespawnItems();
+
+        bool clientHandleGameSessionStateFromServer(
+            const proofps_dd::MsgGameSessionStateFromServer& msg);
 
         bool handleUserSetupFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

@@ -124,7 +124,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Durations& durations)
 {
-    if (gameMode.checkWinningConditions())
+    if (gameMode.isGameWon())
     {
         return;
     }
@@ -440,7 +440,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         //    assert(false);
         //    return false;
         //}
-        if (!gameMode.addPlayer(playerIt->second))
+        if (!gameMode.addPlayer(playerIt->second, m_pge.getNetwork()))
         {
             getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, szNewUserName, connHandleServerSide);
             assert(false);
@@ -501,7 +501,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         //    assert(false);
         //    return false;
         //}
-        if (!gameMode.addPlayer(playerIt->second))
+        if (!gameMode.addPlayer(playerIt->second, m_pge.getNetwork()))
         {
             getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, msg.m_szUserName, connHandleServerSide);
             assert(false);
@@ -711,7 +711,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     // when isJustCreatedAndExpectingStartPos() is true, because the userNameChange will be handled a bit later;
     // note that it can also happen that we receive update here for a player who has not yet handshaked its name
     // with the server, in that case the name is empty, that is why we also need to check emptiness!
-    if (!player.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(player))
+    if (!player.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(player, m_pge.getNetwork()))
     {
         getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, player.getName().c_str());
     }

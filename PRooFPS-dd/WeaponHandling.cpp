@@ -87,7 +87,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     pge_network::PgePacket newPktBulletUpdate;
     const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
     const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
-    bool bEndGame = gameMode.checkWinningConditions();
+    bool bEndGame = gameMode.isGameWon();
     std::list<Bullet>& bullets = m_pge.getBullets();
     auto it = bullets.begin();
     while (it != bullets.end())
@@ -156,7 +156,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             {
                                 nKillerConnHandleServerSide = itKiller->first;
                                 itKiller->second.getFrags()++;
-                                bEndGame = gameMode.checkWinningConditions();
+                                bEndGame = gameMode.checkAndUpdateWinningConditionsServer(m_pge.getNetwork());
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }
@@ -340,7 +340,7 @@ void proofps_dd::WeaponHandling::serverUpdateExplosions(proofps_dd::GameMode& ga
 {
     // on the long run this function needs to be part of the game engine itself, however first serverUpdateBullets() should be moved there!
 
-    const bool bEndGame = gameMode.checkWinningConditions();
+    const bool bEndGame = gameMode.isGameWon();
     auto it = m_explosions.begin();
     while (it != m_explosions.end())
     {
@@ -571,7 +571,7 @@ void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
 
 void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
 {
-    if (gameMode.checkWinningConditions())
+    if (gameMode.isGameWon())
     {
         return;
     }

@@ -11,6 +11,7 @@
 #include "GameMode.h"
 
 #include "Player.h"
+#include "PRooFPS-dd-packet.h"
 
 /*
    ###########################################################################
@@ -60,13 +61,20 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::
 void proofps_dd::GameMode::restart()
 {
     m_timeReset = std::chrono::steady_clock::now();
+    m_bWon = false;
     // extended in derived class
 }
 
 void proofps_dd::GameMode::restartWithoutRemovingPlayers()
 {
     m_timeReset = std::chrono::steady_clock::now();
+    m_bWon = false;
     // extended in derived class
+}
+
+bool proofps_dd::GameMode::isGameWon() const
+{
+    return m_bWon;
 }
 
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getWinTime() const
@@ -125,6 +133,23 @@ proofps_dd::GameMode::GameMode(proofps_dd::GameModeType gm) :
 {
 }
 
+bool proofps_dd::GameMode::sendGameSessionStateToClients(pge_network::PgeINetwork& network)
+{
+    assert(network.isServer());
+    pge_network::PgePacket pktGameSessionState;
+    if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
+        pktGameSessionState,
+        m_bWon))
+    {
+        getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return false;
+    }
+    network.getServer().sendToAllClientsExcept(pktGameSessionState);
+
+    return true;
+}
+
 
 // ############################### PRIVATE ###############################
 
@@ -144,10 +169,7 @@ static constexpr int nXPosFrags = 200;
 static constexpr int nXPosDeaths = 250;
 
 proofps_dd::DeathMatchMode::DeathMatchMode() :
-    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch),
-    m_nTimeLimitSecs(0),
-    m_nFragLimit(0),
-    m_bWon(false)
+    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
 {
 }
 
@@ -160,7 +182,6 @@ void proofps_dd::DeathMatchMode::restart()
     proofps_dd::GameMode::restart();
     m_players.clear();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
-    m_bWon = false;
 }
 
 void proofps_dd::DeathMatchMode::restartWithoutRemovingPlayers()
@@ -172,11 +193,12 @@ void proofps_dd::DeathMatchMode::restartWithoutRemovingPlayers()
         player.m_nDeaths = 0;
     }
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
-    m_bWon = false;
 }
 
-bool proofps_dd::DeathMatchMode::checkWinningConditions()
+bool proofps_dd::DeathMatchMode::checkAndUpdateWinningConditionsServer(pge_network::PgeINetwork& network)
 {
+    assert(network.isServer());
+
     if (m_bWon)
     {
         // once it is won, it stays won until next restart()
@@ -189,6 +211,7 @@ bool proofps_dd::DeathMatchMode::checkWinningConditions()
         {
             m_bWon = true;
             m_timeWin = std::chrono::steady_clock::now();
+            sendGameSessionStateToClients(network);
             return true;
         }
     }
@@ -200,11 +223,29 @@ bool proofps_dd::DeathMatchMode::checkWinningConditions()
         {
             m_bWon = true;
             m_timeWin = std::chrono::steady_clock::now();
+            sendGameSessionStateToClients(network);
             return true;
         }
     }
 
     return false;
+}
+
+void proofps_dd::DeathMatchMode::receiveAndUpdateWinningConditionsClient(pge_network::PgeINetwork& network, bool bGameSessionWon)
+{
+    assert(!network.isServer());
+
+    getConsole().EOLn("DeathMatchMode::%s(): client received new win state: %b!", __func__, bGameSessionWon);
+
+    m_bWon = bGameSessionWon;
+    if (m_bWon)
+    {
+        m_timeWin = std::chrono::steady_clock::now();
+    }
+    else
+    {
+        m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
+    }
 }
 
 unsigned int proofps_dd::DeathMatchMode::getTimeLimitSecs() const
@@ -236,7 +277,7 @@ void proofps_dd::DeathMatchMode::setFragLimit(unsigned int limit)
     m_nFragLimit = limit;
 }
 
-bool proofps_dd::DeathMatchMode::addPlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::PgeINetwork& network)
 {
     bool bRet = true;
     auto it = m_players.cbegin();
@@ -262,11 +303,14 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player)
         m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths(), player.getServerSideConnectionHandle() });
     }
 
-    checkWinningConditions();  // to make sure winning time is updated if game has just been won!
+    if (network.isServer())
+    {
+        checkAndUpdateWinningConditionsServer(network);  // to make sure winning time is updated if game has just been won!
+    }
     return bRet;
 }
 
-bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network::PgeINetwork& network)
 {
     const auto itFound = std::find_if(
         std::begin(m_players),
@@ -315,7 +359,11 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player)
     itFound->m_nFrags = player.getFrags();
     itFound->m_nDeaths = player.getDeaths();
 
-    checkWinningConditions();  // to make sure winning time is updated if game has just been won!
+    if (network.isServer())
+    {
+        checkAndUpdateWinningConditionsServer(network);  // to make sure winning time is updated if game has just been won!
+    }
+
     return true;
 }
 
@@ -336,13 +384,13 @@ bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
     return true;
 }
 
-void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network)
+void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network)
 {
     int nYPosStart = pure.getWindow().getClientHeight() - 20;
     
-    if (checkWinningConditions())
+    if (isGameWon())
     {
-        text(pure, "Happy 10th LANniversary! Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
+        text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
         nYPosStart -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
     }
     else
@@ -386,7 +434,7 @@ int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1d
     }
 }
 
-void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY)
+void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY)
 {
     constexpr int nXPosPing = 320;
     constexpr int nXPosQuality = 370;
@@ -451,7 +499,7 @@ void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEng
 
 }  // showObjectivesServer()
 
-void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeNetwork& network, int nThisRowY)
+void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY)
 {
     assert(!network.isServer());
 
