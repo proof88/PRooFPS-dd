@@ -209,6 +209,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     // let the GUI create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
     m_gui.initialize();
+    m_gui.setGameModeInstance(*m_gameMode);
 
     m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
     {
@@ -270,10 +271,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         getPure().getWindow().getX() + getPure().getWindow().getWidth()/2,
         getPure().getWindow().getY() + getPure().getWindow().getHeight()/2);
     getPure().getWindow().SetCursorVisible(false);
-
-    m_deathMatchMode->setFragLimit(10);
-    //m_deathMatchMode->setTimeLimitSecs(500);
-    m_gameMode->restart(getNetwork());
     
     m_fps_lastmeasure = GetTickCount();
     m_fps = GAME_MAXFPS_DEF;

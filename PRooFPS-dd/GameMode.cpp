@@ -205,6 +205,13 @@ proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
+void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles)
+{
+    // assuming config is correct, because Config instance invokes us after its own validation is done
+    setFragLimit( cfgProfiles.getVars()[GameMode::szCvarSvDmFragLimit].getAsUInt() );
+    setTimeLimitSecs( cfgProfiles.getVars()[GameMode::szCvarSvDmTimeLimit].getAsUInt() );
+}
+
 bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
 {
     assert(network.isServer());

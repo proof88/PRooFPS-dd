@@ -17,6 +17,7 @@
 #include "PGE.h"
 
 #include "Consts.h"
+#include "GameMode.h"
 #include "Maps.h"
 #include "PRooFPS-dd-packet.h"
 
@@ -112,6 +113,10 @@ namespace proofps_dd
         unsigned int m_nTickrate = GAME_TICKRATE_DEF;
         unsigned int m_nPhysicsRateMin = GAME_PHYSICS_RATE_MIN_DEF;
         unsigned int m_nClientUpdateRate = GAME_CL_UPDATERATE_DEF;
+
+        int m_nFragLimit = GameMode::nSvDmFragLimitDef;
+        int m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+
         unsigned int m_nSecondsReconnectDelay = GAME_NETWORK_RECONNECT_SECONDS;
 
         float m_fSomersaultMidAirJumpForceMultiplier /* initialization postponed to .cpp ctor so I dont need to include Player.h here */;
@@ -120,8 +125,8 @@ namespace proofps_dd
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
 
-        unsigned int m_nPlayerRespawnDelaySecs{};
-        unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};
+        unsigned int m_nPlayerRespawnDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
+        unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
 
         /** Used by clients only, to store server's config for informational purpose.
             Seems to be redundant as we could also store these in above members, but for now we keep them separate.

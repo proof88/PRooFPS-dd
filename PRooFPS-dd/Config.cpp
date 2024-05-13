@@ -161,6 +161,54 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Min. physics rate in config, forcing to Tickrate: %u Hz", m_nPhysicsRateMin);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].getAsInt() >= GameMode::nSvDmFragLimitMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].getAsInt() <= GameMode::nSvDmFragLimitMax))
+        {
+            m_nFragLimit = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].getAsInt();
+            getConsole().OLn("Fraglimit from config: %d", m_nFragLimit);
+        }
+        else
+        {
+            m_nFragLimit = GameMode::nSvDmFragLimitDef;
+            getConsole().EOLn("ERROR: Invalid Fraglimit in config: %s, forcing to: %d",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].getAsString().c_str(),
+                m_nFragLimit);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].Set(GameMode::nSvDmFragLimitDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit].Set(GameMode::nSvDmFragLimitDef);
+        m_nFragLimit = GameMode::nSvDmFragLimitDef;
+        getConsole().OLn("Missing Fraglimit in config, forcing to: %d", m_nFragLimit);
+    }
+
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt() >= GameMode::nSvDmTimeLimitSecsMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt() <= GameMode::nSvDmTimeLimitSecsMax))
+        {
+            m_nTimeLimitSecs = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt();
+            getConsole().OLn("Timelimit from config: %d seconds", m_nTimeLimitSecs);
+        }
+        else
+        {
+            m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+            getConsole().EOLn("ERROR: Invalid Timelimit in config: %s, forcing to: %d seconds",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsString().c_str(),
+                m_nTimeLimitSecs);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].Set(GameMode::nSvDmTimeLimitSecsDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].Set(GameMode::nSvDmTimeLimitSecsDef);
+        m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+        getConsole().OLn("Missing Timelimit in config, forcing to: %d seconds", m_nTimeLimitSecs);
+    }
+
     if (!m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsString().empty())
     {
         if ((m_pge.getConfigProfiles().getVars()[CVAR_CL_UPDATERATE].getAsInt() >= GAME_CL_UPDATERATE_MIN) &&

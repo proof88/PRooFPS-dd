@@ -15,6 +15,7 @@
 
 #include "CConsole.h"
 
+#include "Config/PGEcfgProfiles.h"
 #include "Network/PgeNetwork.h"
 #include "PURE/include/external/PR00FsUltimateRenderingEngine.h"
 
@@ -46,10 +47,32 @@ namespace proofps_dd
     * GameMode should NOT contain anything related to "frags", it should be more abstract.
     * Frags, frag table, etc. should be introduced in derived class such as DeathMatchMode.
     * However this definitely won't be "fixed" in 2024.
+    * 
+    * TODO: regarding fetchConfig(): probably GameMode should autonomuously handle relevant config, including validation.
+    * However, for this to happen, it should implement an IConfigHandler so Config class can invoke its validateConfig()
+    * function when Config::validate() is invoked. On the long run this mechanism should be extended to other classes as well
+    * where the CVAR definitions are also present.
     */
     class GameMode
     {
     public:
+
+        static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
+        static constexpr char* szCvarSvDmTimeLimit = "sv_dm_timelimit_secs";
+
+        static constexpr int nSvDmFragLimitDef = 10;
+        static constexpr int nSvDmFragLimitMin = 0;
+        static constexpr int nSvDmFragLimitMax = 999;
+        static_assert(nSvDmFragLimitMin < nSvDmFragLimitMax,  "Min fraglimit should be smaller than max fraglimit.");
+        static_assert(nSvDmFragLimitMin <= nSvDmFragLimitDef, "Min fraglimit should not be greater than default fraglimit.");
+        static_assert(nSvDmFragLimitDef <= nSvDmFragLimitMax, "Max fraglimit should not be smaller than default fraglimit.");
+
+        static constexpr int nSvDmTimeLimitSecsDef = 0;
+        static constexpr int nSvDmTimeLimitSecsMin = 0;
+        static constexpr int nSvDmTimeLimitSecsMax = 60 * 60 * 24;
+        static_assert(nSvDmTimeLimitSecsMin < nSvDmTimeLimitSecsMax,  "Min timelimit should be smaller than max timelimit.");
+        static_assert(nSvDmTimeLimitSecsMin <= nSvDmTimeLimitSecsDef, "Min timelimit should not be greater than default timelimit.");
+        static_assert(nSvDmTimeLimitSecsDef <= nSvDmTimeLimitSecsMax, "Max timelimit should not be smaller than default timelimit.");
 
         static const char* getLoggerModuleName();
 
@@ -60,6 +83,16 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         virtual ~GameMode();
+
+        /**
+        * Fetches configuration from the given PGEcfgProfiles instance.
+        * For now it does not do validation, as all validations are currently implemented in the Config class.
+        * TODO: on the long run, validation should be also done, by proper planning and implementing an IConfigHandler interface, as
+        * described in the comment above.
+        *
+        * @param network PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
+        */
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles) = 0;
 
         GameModeType getGameModeType() const;
 
@@ -222,6 +255,8 @@ namespace proofps_dd
         DeathMatchMode& operator=(const DeathMatchMode&) = delete;
         DeathMatchMode(DeathMatchMode&&) = delete;
         DeathMatchMode&& operator=(DeathMatchMode&&) = delete;
+
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles) override;
 
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
         virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) override;

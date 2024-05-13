@@ -17,6 +17,7 @@
 #include "PGE.h"
 
 #include "Config.h"
+#include "GameMode.h"
 #include "Maps.h"
 #include "Networking.h"
 
@@ -77,6 +78,8 @@ namespace proofps_dd
         void showRespawnTimer();
         void hideRespawnTimer();
 
+        void setGameModeInstance(proofps_dd::GameMode& gm);
+
     protected:
 
     private:
@@ -102,6 +105,8 @@ namespace proofps_dd
         static std::string m_sAvailableMapsListForForceSelectComboBox;
 
         static ImFont* m_pImFont;
+
+        static GameMode* m_pGameMode;
 
         // ---------------------------------------------------------------------------
 

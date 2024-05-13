@@ -61,6 +61,7 @@ protected:
         AddSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
         AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
+        AddSubTest("test_deathmatch_fetch_config", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_fetch_config);
         AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
         AddSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
         AddSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
@@ -343,6 +344,46 @@ private:
             b &= assertEquals(0u, dm->getFragLimit(), (std::string("default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             dm->setFragLimit(25u);
             b &= assertEquals(25u, dm->getFragLimit(), (std::string("new fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+        }
+
+        return b;
+    }
+
+    bool test_deathmatch_fetch_config()
+    {
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmFragLimit].Set(25);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmTimeLimit].Set(13);
+
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                TearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalse(true, "network reinit as server");
+                }
+            }
+
+            if (!testInitDeathmatch())
+            {
+                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            }
+
+            b &= (assertEquals(0u, dm->getFragLimit(), (std::string("default frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+                assertEquals(0u, dm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()));
+
+            dm->fetchConfig(m_cfgProfiles);
+            dm->restart(m_network);  // restart() is needed to have correct value for remaining time
+
+            b &= assertEquals(25u, dm->getFragLimit(), (std::string("new frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+                assertEquals(13u, dm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+                assertEquals(13u, dm->getTimeRemainingSecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
 
         return b;

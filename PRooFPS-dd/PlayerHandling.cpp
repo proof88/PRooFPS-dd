@@ -468,12 +468,15 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
 
         if (msg.m_bCurrentClient)
         {
+            // this is the moment when server player has fully booted up, restart the game mode now, for example remaining game time starts to count down now!
+            gameMode.restartWithoutRemovingPlayers(m_pge.getNetwork());
+
             m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
                 (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
                 10, 30);
         }
 
-        // from our point of view, client player has now fully booted up so NOW we are arming the respawn invulnerability
+        // from our point of view, player has now fully booted up so NOW we are arming the respawn invulnerability
         getConsole().EOLn("PlayerHandling::%s(): arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
         playerIt->second.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     }

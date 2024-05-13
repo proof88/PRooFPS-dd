@@ -287,6 +287,11 @@ void proofps_dd::GUI::hideRespawnTimer()
     m_bShowRespawnTimer = false;
 }
 
+void proofps_dd::GUI::setGameModeInstance(proofps_dd::GameMode& gm)
+{
+    m_pGameMode = &gm;
+}
+
 // ############################## PROTECTED ##############################
 
 
@@ -308,6 +313,8 @@ PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
 ImFont* proofps_dd::GUI::m_pImFont = nullptr;
+
+proofps_dd::GameMode* proofps_dd::GUI::m_pGameMode = nullptr;
 
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
@@ -655,6 +662,43 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();
 
+    ImGui::Text("[ Game Goal ]");
+    ImGui::Indent();
+    {
+        PGEcfgVariable& cvarSvDmFragLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvDmFragLimit; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvDmFragLimit, cvarSvDmFragLimit);
+        ImGui::Text("Frag Limit:");
+        ImGui::SameLine();
+        int nCvarSvDmFragLimit = cvarSvDmFragLimit.getAsInt();
+        ImGui::PushItemWidth(100);
+        if (ImGui::InputInt("##inputSvDmFragLimit", &nCvarSvDmFragLimit, 1, 10))
+        {
+            nCvarSvDmFragLimit = std::max(GameMode::nSvDmFragLimitMin, std::min(GameMode::nSvDmFragLimitMax, nCvarSvDmFragLimit));
+            cvarSvDmFragLimit.Set(nCvarSvDmFragLimit);
+        }
+        ImGui::PopItemWidth();
+
+        PGEcfgVariable& cvarSvDmTimeLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvDmTimeLimit; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvDmTimeLimit, cvarSvDmTimeLimit);
+        ImGui::Text("Time Limit:");
+        ImGui::SameLine();
+        int nCvarSvDmTimeLimit = cvarSvDmTimeLimit.getAsInt();
+        ImGui::PushItemWidth(100);
+        if (ImGui::InputInt("seconds##inputSvDmTimeLimit", &nCvarSvDmTimeLimit, 1, 60))
+        {
+            nCvarSvDmTimeLimit = std::max(GameMode::nSvDmTimeLimitSecsMin, std::min(GameMode::nSvDmTimeLimitSecsMax, nCvarSvDmTimeLimit));
+            cvarSvDmTimeLimit.Set(nCvarSvDmTimeLimit);
+        }
+        ImGui::PopItemWidth();
+    } // end Game Goal
+    ImGui::Unindent();
+
+    ImGui::Separator();
+
     ImGui::Text("[ Miscellaneous ]");
     ImGui::Indent();
     {
@@ -848,6 +892,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     if (ImGui::Button("START >"))
     {
         m_pConfig->validate();
+
+        assert(m_pGameMode);
+        m_pGameMode->fetchConfig(m_pPge->getConfigProfiles());
+
         if (m_pMaps->serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {            
             getConsole().EOLn("ERROR: Server is unable to select first map!");
