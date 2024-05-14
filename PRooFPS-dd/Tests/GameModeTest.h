@@ -378,7 +378,7 @@ private:
             b &= (assertEquals(0u, dm->getFragLimit(), (std::string("default frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(0u, dm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()));
 
-            dm->fetchConfig(m_cfgProfiles);
+            dm->fetchConfig(m_cfgProfiles, m_network);
             dm->restart(m_network);  // restart() is needed to have correct value for remaining time
 
             b &= assertEquals(25u, dm->getFragLimit(), (std::string("new frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &

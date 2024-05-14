@@ -427,6 +427,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 */
 bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 {
+    assert(m_gameMode);
+
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     bool bRet;
 
@@ -462,7 +464,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgServerInfoFromServer::id:
             bRet = m_config.clientHandleServerInfoFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt),
+                *m_gameMode);
             break;
         case proofps_dd::MsgGameSessionStateFromServer::id:
             bRet = clientHandleGameSessionStateFromServer(
@@ -492,6 +495,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt));
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:
+            assert(m_pObjXHair);
             bRet = handleUserUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),

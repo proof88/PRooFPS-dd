@@ -70,6 +70,11 @@ namespace proofps_dd
     // Client initialization/player bringup should NOT depend on this, this is just for informational purpose so that
     // server config can be seen on client-side as well. Some values might be used to alter client's behavior, e.g.
     // nRespawnTimeSecs is actually needed by client for proper visualization of the respawn time countdown.
+    // 
+    // nTimeRemainingSecs is used by client to start its own countdown on its side from server's nTimeRemainingSecs.
+    // Thus this message needs to be sent out at least once to new client AFTER client bringup is done.
+    // It won't be exactly the same countdown as on server's side, this is just for ROUGH informational purpose so that
+    // client can also show remaining time without any proper synchronization with server.
     struct MsgServerInfoFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::ServerInfoFromServer;

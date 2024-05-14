@@ -894,7 +894,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         m_pConfig->validate();
 
         assert(m_pGameMode);
-        m_pGameMode->fetchConfig(m_pPge->getConfigProfiles());
+        m_pGameMode->fetchConfig(m_pPge->getConfigProfiles(), m_pPge->getNetwork());
 
         if (m_pMaps->serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {            

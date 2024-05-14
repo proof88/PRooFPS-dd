@@ -90,9 +90,10 @@ namespace proofps_dd
         * TODO: on the long run, validation should be also done, by proper planning and implementing an IConfigHandler interface, as
         * described in the comment above.
         *
-        * @param network PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
+        * @param cfgProfiles The current user config profile from where we can fetch value of GameMode-specific CVARs.
+        * @param network     PGE network instance to be used to know if we are server or client.
         */
-        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles) = 0;
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) = 0;
 
         GameModeType getGameModeType() const;
 
@@ -256,7 +257,7 @@ namespace proofps_dd
         DeathMatchMode(DeathMatchMode&&) = delete;
         DeathMatchMode&& operator=(DeathMatchMode&&) = delete;
 
-        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles) override;
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) override;
 
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
         virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) override;

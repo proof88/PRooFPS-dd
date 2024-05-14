@@ -205,11 +205,16 @@ proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
-void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles)
+void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network)
 {
     // assuming config is correct, because Config instance invokes us after its own validation is done
     setFragLimit( cfgProfiles.getVars()[GameMode::szCvarSvDmFragLimit].getAsUInt() );
     setTimeLimitSecs( cfgProfiles.getVars()[GameMode::szCvarSvDmTimeLimit].getAsUInt() );
+
+    if (!network.isServer())
+    {
+        // TODO: client needs a trick to be able to show remaining time
+    }
 }
 
 bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)

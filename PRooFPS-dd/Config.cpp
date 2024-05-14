@@ -379,7 +379,8 @@ const unsigned int& proofps_dd::Config::getPlayerRespawnInvulnerabilityDelaySeco
 
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
-    const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
+    const proofps_dd::MsgServerInfoFromServer& msgServerInfo,
+    proofps_dd::GameMode& gameMode)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -407,6 +408,9 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("nRespawnTimeSecs  : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnerabilityTimeSecs: %u s", m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     getConsole().OLnOO("");
+
+    // client GameMode instance is updated now with relevant server config
+    gameMode.fetchConfig(m_pge.getConfigProfiles(), m_pge.getNetwork());
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
 
