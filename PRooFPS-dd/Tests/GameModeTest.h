@@ -60,6 +60,7 @@ protected:
         AddSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
         AddSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
         AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
+        AddSubTest("test_deathmatch_time_limit_client_update_time_remaining_secs", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_client_update_time_remaining_secs);
         AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
         AddSubTest("test_deathmatch_fetch_config", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_fetch_config);
         AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
@@ -314,6 +315,34 @@ private:
             b &= assertEquals(25u, dm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(25u, dm->getTimeRemainingSecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
+
+        return b;
+    }
+
+    bool test_deathmatch_time_limit_client_update_time_remaining_secs()
+    {
+        // client-only test
+        if (!testInitDeathmatch())
+        {
+            return assertFalse(true, "testInitDeathmatch fail");
+        }
+
+        constexpr unsigned int nTimeLimitSecs = 13u;
+        constexpr unsigned int nTimeRemainingServerSideSecs = 4u;
+
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmTimeLimit].Set(nTimeLimitSecs);
+        dm->fetchConfig(m_cfgProfiles, m_network);
+        dm->clientUpdateTimeRemainingSecs(nTimeRemainingServerSideSecs, m_network);
+
+        bool b = true;
+
+        // positive case
+        b &= assertEquals(nTimeLimitSecs, dm->getTimeLimitSecs(), "time limit") &
+            assertEquals(nTimeRemainingServerSideSecs, dm->getTimeRemainingSecs(), "remaining 1");
+
+        // negative case: remaining time as seconds is bigger than time limit as seconds
+        dm->clientUpdateTimeRemainingSecs(nTimeLimitSecs + 1u, m_network);
+        b &= assertEquals(nTimeLimitSecs, dm->getTimeRemainingSecs(), "remaining 2");
 
         return b;
     }

@@ -412,6 +412,15 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     // client GameMode instance is updated now with relevant server config
     gameMode.fetchConfig(m_pge.getConfigProfiles(), m_pge.getNetwork());
 
+    // in the future GameMode will be also recreated here based on iGameModeType, now we just cast the already existing one
+    DeathMatchMode* const deathMatchMode = dynamic_cast<DeathMatchMode*>(&gameMode);
+    if (!deathMatchMode)
+    {
+        getConsole().EOLn("ERROR: deathMatchMode null!");
+        return false;
+    }
+    deathMatchMode->clientUpdateTimeRemainingSecs(m_serverInfo.m_nTimeRemainingSecs, m_pge.getNetwork());
+
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
 
     return true;

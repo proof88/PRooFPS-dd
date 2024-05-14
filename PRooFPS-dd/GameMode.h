@@ -220,6 +220,7 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<FragTableRow> m_players;
         bool m_bWon{ false };
+        std::chrono::time_point<std::chrono::steady_clock> m_timeReset; // can be private again once all time-related functions in DeathMatchMode are moved to this class
 
         GameMode(GameModeType gm);
 
@@ -234,7 +235,6 @@ namespace proofps_dd
     private:
 
         GameModeType m_gameModeType;
-        std::chrono::time_point<std::chrono::steady_clock> m_timeReset;
 
         // ---------------------------------------------------------------------------
 
@@ -281,6 +281,16 @@ namespace proofps_dd
         *         0 if there is no time limit set, or the game was not yet reset or when the time limit has been reached or the game has been won.
         */
         unsigned int getTimeRemainingSecs() const;
+
+        /**
+        * Updates the remaining time on client side, based on the remaining time received from server.
+        * Basically it corrects the game restart time on client side so client will have the roughly same game restart time as the server.
+        * TODO: time related functions should really be in GameMode class, I dont see use of putting it in DeathMatch and it complicates things.
+        *
+        * @param nRemSecs Remaining time in seconds, from server.
+        * @param network  PGE network instance to be used to know if we are server or client.
+        */
+        void clientUpdateTimeRemainingSecs(const unsigned int& nRemSecs, pge_network::PgeINetwork& network);
 
         /**
         * @return Configured frag limit previously set by setFragLimit(). 0 means no frag limit.

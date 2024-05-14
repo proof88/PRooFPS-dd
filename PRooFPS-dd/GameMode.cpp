@@ -289,6 +289,19 @@ unsigned int proofps_dd::DeathMatchMode::getTimeRemainingSecs() const
     return getTimeLimitSecs() - static_cast<unsigned int>((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - getResetTime())).count());
 }
 
+void proofps_dd::DeathMatchMode::clientUpdateTimeRemainingSecs(const unsigned int& nRemSecs, pge_network::PgeINetwork& network)
+{
+    assert(!network.isServer());
+
+    if (nRemSecs > m_nTimeLimitSecs)
+    {
+        // should not happen, but should log as error
+        getConsole().EOLn("GameMode::%s(): nRemSecs > m_nTimeLimitSecs: %u > %u!", __func__, nRemSecs, m_nTimeLimitSecs);
+    }
+
+    m_timeReset = std::chrono::steady_clock::now() - std::chrono::seconds(m_nTimeLimitSecs - std::min(nRemSecs, m_nTimeLimitSecs));
+}
+
 unsigned int proofps_dd::DeathMatchMode::getFragLimit() const
 {
     return m_nFragLimit;
