@@ -52,6 +52,7 @@ protected:
         AddSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
         AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
+        AddSubTest("test_set_booted_up", (PFNUNITSUBTEST)&PlayerTest::test_set_booted_up);
         AddSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
         AddSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
         AddSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
@@ -263,6 +264,8 @@ private:
         return (assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
             assertEquals(sIpAddr, player.getIpAddress(), "ip address") &
             assertTrue(player.getName().empty(), "name") &
+            assertLess(0, player.getTimeConstructed().time_since_epoch().count(), "time constructed") &
+            assertEquals(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up") &
             assertNotNull(player.getObject3D(), "object3d") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertFalse(player.isDirty(), "isDirty") &
@@ -327,6 +330,21 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
         player.setName("apple");
         bool b = assertEquals("apple", player.getName(), "apple");
+
+        return b;
+    }
+
+    bool test_set_booted_up()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        const std::string sIpAddr = "192.168.1.12";
+
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, connHandleExpected, sIpAddr);
+        player.setTimeBootedUp();
+
+        bool b = true;
+        b &= (assertLess(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up 1") &
+            assertLess(player.getTimeConstructed().time_since_epoch().count(), player.getTimeBootedUp().time_since_epoch().count(), "time booted up 2"));
 
         return b;
     }

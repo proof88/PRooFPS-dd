@@ -179,6 +179,21 @@ proofps_dd::Player::~Player()
     m_wpnMgr.Clear();
 }
 
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeConstructed() const
+{
+    return m_timeCtor;
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeBootedUp() const
+{
+    return m_timeBootedUp;
+}
+
+void proofps_dd::Player::setTimeBootedUp()
+{
+    m_timeBootedUp = std::chrono::steady_clock::now();
+}
+
 const pge_network::PgeNetworkConnectionHandle& proofps_dd::Player::getServerSideConnectionHandle() const
 {
     return m_connHandleServerSide;
@@ -1151,6 +1166,8 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pTexPlayerStand = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pTexPlayerCrouch = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe_crouch.bmp").c_str());
     m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
+
+    m_timeCtor = std::chrono::steady_clock::now();
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getHealth()

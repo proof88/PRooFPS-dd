@@ -477,11 +477,14 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 assert(false);
                 return false;
             }
+            // this message will be received by client late enough to make the timeRemainingSecs annoying delayed, so we send updated message a bit later as well
             m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
         }
 
+        playerIt->second.setTimeBootedUp();
+
         // from our point of view, player has now fully booted up so NOW we are arming the respawn invulnerability
-        getConsole().EOLn("PlayerHandling::%s(): arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+        getConsole().EOLn("PlayerHandling::%s(): Player BOOTED UP, arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
         playerIt->second.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     }
     else
@@ -495,7 +498,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             return false;   // for release mode
         }
 
-        getConsole().OLn("PlayerHandling::%s(): accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
+        playerIt->second.setTimeBootedUp();
+        getConsole().EOLn("PlayerHandling::%s(): Player BOOTED UP, accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
 
         playerIt->second.setName(msg.m_szUserName);
@@ -626,8 +630,8 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (player.isJustCreatedAndExpectingStartPos())
     {
         // Player object is recently constructed and this is the 1st MsgUserUpdateFromServer for this Player
-
         player.setJustCreatedAndExpectingStartPos(false);
+
         // PPPKKKGGGGGG
         player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
         player.getPos().commit(); // both server and client commits in this case
@@ -637,13 +641,13 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // When Player is spawned for the 1st time, it is not a "re-"spawn, but we should still apply invulnerability since
             // this player has not yet fully booted up but gets visible to other players so we keep protected from other players.
             // I could not find a better place for this (MsgUserConnected, MsgUserSetupFromServer, etc.), so here we are forcing it.
-            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+            //getConsole().EOLn("PlayerHandling::%s(): 1st spawn: forced invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
             player.setInvulnerability(true, 999);
         }
         else
         {
             player.setInvulnerability(msg.m_bInvulnerability);
-            //getConsole().EOLn("PRooFPSddPGE::%s(): 1st spawn: initial invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+            //getConsole().EOLn("PlayerHandling::%s(): 1st spawn: initial invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
         }
     }
     else
@@ -651,7 +655,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         if (!m_pge.getNetwork().isServer() && (msg.m_bInvulnerability != player.getInvulnerability()))
         {
             // only clients should fall here, server sets invulnerability in other locations and doesnt need to update itself here!           
-            //getConsole().EOLn("PRooFPSddPGE::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
+            //getConsole().EOLn("PlayerHandling::%s(): new invulnerability state %b for connHandleServerSide: %u!", __func__, msg.m_bInvulnerability, connHandleServerSide);
             // no need to set time for clients even if state is true, since player.update() is not allowed to stop invulnerability on client-side.
             player.setInvulnerability(msg.m_bInvulnerability);
         }
@@ -660,7 +664,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     // server has already set this in input handling and/or physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
     player.setSomersaultClient(msg.m_fSomersaultAngle);
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
+    //getConsole().OLn("PlayerHandling::%s(): rcvd crouch: %b", __func__, msg.m_bCrouch);
     if (msg.m_bCrouch)
     {
         // server had already set stuff since it relayed this to clients, however
@@ -689,13 +693,13 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;
 
-    //getConsole().OLn("PRooFPSddPGE::%s(): rcvd health: %d, health: %d, old health: %d",
+    //getConsole().OLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, player.getHealth(), player.getHealth().getOld());
     player.setHealth(msg.m_nHealth);
 
     if (msg.m_bRespawn)
     {
-        //getConsole().OLn("PRooFPSddPGE::%s(): player %s has respawned!", __func__, player.getName().c_str());
+        //getConsole().OLn("PlayerHandling::%s(): player %s has respawned!", __func__, player.getName().c_str());
         handlePlayerRespawned(player, objXHair);
     }
     else
@@ -704,7 +708,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         {
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
-            //getConsole().OLn("PRooFPSddPGE::%s(): player %s has died!", __func__, player.getName().c_str());
+            //getConsole().OLn("PlayerHandling::%s(): player %s has died!", __func__, player.getName().c_str());
             handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however

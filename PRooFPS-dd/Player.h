@@ -122,6 +122,10 @@ namespace proofps_dd
         Player(Player&&) = delete;
         Player&& operator=(Player&&) = delete;
 
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeConstructed() const;
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeBootedUp() const;
+        void setTimeBootedUp();
+
         const pge_network::PgeNetworkConnectionHandle& getServerSideConnectionHandle() const;
         const std::string& getIpAddress() const;
         const std::string& getName() const;
@@ -263,6 +267,11 @@ namespace proofps_dd
 
         std::string m_sIpAddress; // TODO: this should be either in the engine, or wait until we move this class to the engine
         std::string m_sName;
+
+        std::chrono::time_point<std::chrono::steady_clock> m_timeCtor;
+        
+        /** Timestamp of server-side processing of UserNameChangeAndBootupDone (after MsgUserConnectedServerSelf and MsgUserSetupFromServer is already processed */
+        std::chrono::time_point<std::chrono::steady_clock> m_timeBootedUp;
 
         std::map<OldNewValueName,
             std::variant<
