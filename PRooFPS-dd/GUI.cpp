@@ -368,7 +368,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     constexpr float fBtnHeight = 20.f;
     constexpr float fBtnSpacingY = 30.f;
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + 20 /* this should be version text size Y */;
+    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + 20*2 /* this should be version texts size Y */;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     // in case of buttons, remove size argument (ImVec2) to auto-resize
@@ -402,6 +402,10 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     ImGui::SetCursorPosX(getCenterPosXForText(sVersion));
     ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
     ImGui::Text("%s", sVersion.c_str());
+
+    const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
+    ImGui::SetCursorPosX(getCenterPosXForText(sLatestAlpVersion));
+    ImGui::TextDisabled("%s", sLatestAlpVersion.c_str());
 }
 
 float proofps_dd::GUI::drawPlayerNameInputBox()
