@@ -64,7 +64,8 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaPulse,
             const int& nDamageHp,
             PureObject3D& objXHair,
-            PureVector& vecCamShakeForce);
+            PureVector& vecCamShakeForce,
+            proofps_dd::GameMode& gameMode);
         Explosion& createExplosionClient(
             const proofps_dd::Explosion::ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,

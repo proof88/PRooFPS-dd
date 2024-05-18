@@ -239,7 +239,10 @@ void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
     m_bAllowStrafeMidAirFull = bAllow;
 }
 
-void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate)
+void proofps_dd::Physics::serverGravity(
+    PureObject3D& objXHair,
+    const unsigned int& nPhysicsRate,
+    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */ )
 {   
     /* Although I tried to make calculations to have same result with different tickrate, the
        results are not the same, just SIMILAR when comparing 60 vs 20 Hz results.
@@ -341,7 +344,14 @@ void proofps_dd::Physics::serverGravity(PureObject3D& objXHair, const unsigned i
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound ... and this applies also when we player has invulnerability!
-            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle());
+
+            // TODO: why we invoke handlePlayerDied() here?! Why dont we just set health to 0? handleUserUpdateFromServer() would invoke handlePlayerDied() anyway!
+            // This is the only place where physics invokes handlePlayerDied() now.
+            // In the future physics need to handle fall damage too, but that could also just set health to 0.
+            // Note that we also need to consider who will know that upon dieing by falling down, splash die sound is needed to be played.
+            // Because that would be also sent to clients so they can also play the sound. Maybe set death reason, I dont know.
+            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle(), gameMode);
+
             //if (player.isFalling())
             //{
             //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeStartedFalling()).count();

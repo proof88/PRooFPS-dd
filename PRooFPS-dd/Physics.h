@@ -16,7 +16,7 @@
 #include "PGE.h"
 
 #include "Durations.h"
-#include "GameMode.h"
+#include "GameMode.h"  /* TODO: get rid of GameMode, Physics should not have it */
 #include "GUI.h"
 #include "Maps.h"
 #include "Player.h"
@@ -81,7 +81,10 @@ namespace proofps_dd
         
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
-        void serverGravity(PureObject3D& objXHair, const unsigned int& nPhysicsRate);
+        void serverGravity(
+            PureObject3D& objXHair,
+            const unsigned int& nPhysicsRate,
+            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */);
         void serverPlayerCollisionWithWalls(bool& won, const unsigned int& nPhysicsRate);
 
     private:

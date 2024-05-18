@@ -161,7 +161,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }
                             // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                            handlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
+                            handlePlayerDied(player, objXHair, nKillerConnHandleServerSide, gameMode);
                         }
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
@@ -236,7 +236,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getAreaDamagePulse(),
                         bullet.getDamageHp(),
                         objXHair,
-                        vecCamShakeForce);
+                        vecCamShakeForce,
+                        gameMode);
                 }
             }
 
@@ -423,7 +424,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const TPureFloat& fDamageAreaPulse,
     const int& nDamageHp,
     PureObject3D& objXHair,
-    PureVector& vecCamShakeForce)
+    PureVector& vecCamShakeForce,
+    proofps_dd::GameMode& gameMode)
 {
     m_explosions.push_back(
         Explosion(
@@ -502,7 +504,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                 }
                 // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                handlePlayerDied(player, objXHair, nKillerConnHandleServerSide);
+                handlePlayerDied(player, objXHair, nKillerConnHandleServerSide, gameMode);
             }
         }
     }

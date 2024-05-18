@@ -57,14 +57,19 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     PureObject3D& objXHair,
-    pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide)
+    pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide,
+    proofps_dd::GameMode& gameMode)
 {
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
         objXHair.Hide();
-        m_gui.showRespawnTimer();
+        
+        if (!gameMode.isGameWon())
+        {
+            m_gui.showRespawnTimer();
+        }
     }
 
     if (m_pge.getNetwork().isServer())
@@ -84,7 +89,9 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     }
 }
 
-void proofps_dd::PlayerHandling::handlePlayerRespawned(Player& player, PureObject3D& objXHair)
+void proofps_dd::PlayerHandling::handlePlayerRespawned(
+    Player& player,
+    PureObject3D& objXHair)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
@@ -349,6 +356,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     if (bClientShouldRemoveAllPlayers)
     {
         getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
+        m_gui.hideRespawnTimer();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }
@@ -751,7 +759,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PlayerHandling::%s(): player %s has died!", __func__, player.getName().c_str());
-            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
+            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */, gameMode);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
@@ -810,8 +818,17 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     return true;
 }
 
-void proofps_dd::PlayerHandling::updatePlayers(const proofps_dd::Config& config)
+void proofps_dd::PlayerHandling::updatePlayers(
+    const proofps_dd::Config& config,
+    proofps_dd::GameMode& gameMode)
 {
+    // both client and server come here, so this is a great place to HIDE respawn countdown for player is game has been won in the meantime.
+    // as of v0.2.4 this is invoked in every frame so this is great!
+    if (gameMode.isGameWon())
+    {
+        m_gui.hideRespawnTimer();
+    }
+
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;

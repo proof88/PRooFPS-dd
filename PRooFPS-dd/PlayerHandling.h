@@ -64,7 +64,8 @@ namespace proofps_dd
         void handlePlayerDied(
             Player& player,
             PureObject3D& objXHair,
-            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide);
+            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide,
+            proofps_dd::GameMode& gameMode);
         void handlePlayerRespawned(Player& player, PureObject3D& objXHair);
         void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);
         void serverUpdateRespawnTimers(
@@ -104,7 +105,9 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode);
         bool handleDeathNotificationFromServer(
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
-        void updatePlayers(const proofps_dd::Config& config);
+        void updatePlayers(
+            const proofps_dd::Config& config,
+            proofps_dd::GameMode& gameMode);
 
     private:
 

@@ -676,6 +676,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
         "Unloading resources ..." :
         "Unloading resources ... Reason: " + sExtraDebugText;
     m_gui.textForNextFrame(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
+    m_gui.hideRespawnTimer();
     getPure().getRenderer()->RenderScene();
 
     getConsole().SetLoggingState("4LLM0DUL3S", true);
@@ -741,7 +742,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-            serverGravity(*m_pObjXHair, m_config.getPhysicsRate());
+            serverGravity(*m_pObjXHair, m_config.getPhysicsRate(), *m_gameMode);
             serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
             serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), cameraGetShakeForce());
@@ -793,7 +794,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
     cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
-    updatePlayers(m_config); // maybe we should do this per-tick instead of per-frame in the future
+    updatePlayers(m_config, *m_gameMode); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
