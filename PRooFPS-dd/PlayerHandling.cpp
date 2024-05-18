@@ -672,6 +672,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
+    const bool bCurrentClient = isMyConnection(connHandleServerSide);
     auto& player = it->second;
     const auto& playerConst = player;
     //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
@@ -767,13 +768,19 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         }
     }
 
-    // the only situation when game mode does not contain the player but we already receive update for the player is
-    // when isJustCreatedAndExpectingStartPos() is true, because the userNameChange will be handled a bit later;
-    // note that it can also happen that we receive update here for a player who has not yet handshaked its name
-    // with the server, in that case the name is empty, that is why we also need to check emptiness!
-    if (!player.getName().empty() && !bOriginalExpectingStartPos && !gameMode.updatePlayer(player, m_pge.getNetwork()))
+    // We might receive update for another player who has not yet handshaked its name with the server, in that case the name is empty, that
+    // is why we also need to check emptiness!
+    // Also, we should not try update ourselves in GameMode if bOriginalExpectingStartPos is set because that also means that
+    // we not yet handshaked our own name with the server (but on our side our name is not empty, so we need this complicated logic below).
+    if (!player.getName().empty())
     {
-        getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, player.getName().c_str());
+        if (!bCurrentClient || (bCurrentClient && !bOriginalExpectingStartPos))
+        {
+            if (!gameMode.updatePlayer(player, m_pge.getNetwork()))
+            {
+                getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, player.getName().c_str());
+            }
+        }
     }
 
     if (!m_pge.getNetwork().isServer())
