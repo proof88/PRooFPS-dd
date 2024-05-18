@@ -394,7 +394,6 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
 
     // client GameMode instance is updated now with relevant server config
-    gameMode.fetchConfig(m_pge.getConfigProfiles(), m_pge.getNetwork());
 
     // in the future GameMode will be also recreated here based on iGameModeType, now we just cast the already existing one
     DeathMatchMode* const deathMatchMode = dynamic_cast<DeathMatchMode*>(&gameMode);
@@ -403,6 +402,8 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().EOLn("ERROR: deathMatchMode null!");
         return false;
     }
+    deathMatchMode->setFragLimit(m_serverInfo.m_nFragLimit);
+    deathMatchMode->setTimeLimitSecs(m_serverInfo.m_nTimeLimitSecs);
     deathMatchMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
 
     // keep logging here, after clientUpdateTimeRemainingSecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
@@ -417,7 +418,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
     getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
     getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
-    getConsole().OLn("m_nTimeRemainingMsecs : %u s",   m_serverInfo.m_nTimeRemainingMillisecs);
+    getConsole().OLn("nTimeRemainingMsecs   : %u ms",  m_serverInfo.m_nTimeRemainingMillisecs);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     getConsole().OLnOO("");
