@@ -734,6 +734,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     * if it is really required.
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
+    assert(m_gameMode);
+    assert(m_pObjXHair);
     if (!m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork()))
     {
         for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
@@ -749,7 +751,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         }  // for iPhyIter
     }  // serverCheckAndUpdateWinningConditions()
     serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
-    serverSendUserUpdates(m_durations);
+    serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *m_gameMode);
 }
 
 /**
@@ -1288,6 +1290,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         return false;
     }
     Player& insertedPlayer = insertRes.first->second;
+
+    if (getNetwork().isServer() && msg.m_bCurrentClient)
+    {
+        // server player is obviously not expecting after bootup delayed update from server
+        insertedPlayer.setExpectingAfterBootUpDelayedUpdate(false);
+    }
 
     for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
     {

@@ -393,22 +393,6 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
     m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
 
-    const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
-    getConsole().SetLoggingState(getLoggerModuleName(), true);
-
-    getConsole().OLnOI("Config::%s(): received the following server config:", __func__);
-    getConsole().OLn("nMaxFps           : %u FPS", m_serverInfo.m_nMaxFps);
-    getConsole().OLn("nTickrate         : %u Hz",  m_serverInfo.m_nTickrate);
-    getConsole().OLn("nPhysicsRateMin   : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
-    getConsole().OLn("nClientUpdateRate : %u Hz",  m_serverInfo.m_nClientUpdateRate);
-    getConsole().OLn("iGameModeType     : %d",     m_serverInfo.m_iGameModeType);
-    getConsole().OLn("nFragLimit        : %u",     m_serverInfo.m_nFragLimit);
-    getConsole().OLn("nTimeLimitSecs    : %u s",   m_serverInfo.m_nTimeLimitSecs);
-    getConsole().OLn("nTimeRemainingSecs: %u s",   m_serverInfo.m_nTimeRemainingSecs);
-    getConsole().OLn("nRespawnTimeSecs  : %u s",   m_serverInfo.m_nRespawnTimeSecs);
-    getConsole().OLn("nRespawnInvulnerabilityTimeSecs: %u s", m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
-    getConsole().OLnOO("");
-
     // client GameMode instance is updated now with relevant server config
     gameMode.fetchConfig(m_pge.getConfigProfiles(), m_pge.getNetwork());
 
@@ -419,7 +403,24 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().EOLn("ERROR: deathMatchMode null!");
         return false;
     }
-    deathMatchMode->clientUpdateTimeRemainingSecs(m_serverInfo.m_nTimeRemainingSecs, m_pge.getNetwork());
+    deathMatchMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
+
+    // keep logging here, after clientUpdateTimeRemainingSecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
+    const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
+    getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+    getConsole().OLnOI("Config::%s(): received the following server config:", __func__);
+    getConsole().OLn("nMaxFps               : %u FPS", m_serverInfo.m_nMaxFps);
+    getConsole().OLn("nTickrate             : %u Hz",  m_serverInfo.m_nTickrate);
+    getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
+    getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
+    getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
+    getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
+    getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("m_nTimeRemainingMsecs : %u s",   m_serverInfo.m_nTimeRemainingMillisecs);
+    getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
 

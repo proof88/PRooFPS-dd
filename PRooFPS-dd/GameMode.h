@@ -277,20 +277,20 @@ namespace proofps_dd
         void setTimeLimitSecs(unsigned int secs);
 
         /**
-        * @return Seconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
-        *         0 if there is no time limit set, or the game was not yet reset or when the time limit has been reached or the game has been won.
+        * @return Milliseconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
+        *         0 if there is no time limit set, or if the game was not yet reset, or if the time limit has been already reached, or the game has been won for any reason.
         */
-        unsigned int getTimeRemainingSecs() const;
+        unsigned int getTimeRemainingMillisecs() const;
 
         /**
         * Updates the remaining time on client side, based on the remaining time received from server.
         * Basically it corrects the game restart time on client side so client will have the roughly same game restart time as the server.
         * TODO: time related functions should really be in GameMode class, I dont see use of putting it in DeathMatch and it complicates things.
         *
-        * @param nRemSecs Remaining time in seconds, from server.
-        * @param network  PGE network instance to be used to know if we are server or client.
+        * @param nRemMillisecs Remaining time in milliseconds, from server.
+        * @param network       PGE network instance to be used to know if we are server or client.
         */
-        void clientUpdateTimeRemainingSecs(const unsigned int& nRemSecs, pge_network::PgeINetwork& network);
+        void clientUpdateTimeRemainingMillisecs(const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
         /**
         * @return Configured frag limit previously set by setFragLimit(). 0 means no frag limit.

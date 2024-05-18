@@ -126,6 +126,9 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeBootedUp() const;
         void setTimeBootedUp();
 
+        bool isExpectingAfterBootUpDelayedUpdate() const;
+        void setExpectingAfterBootUpDelayedUpdate(bool b);
+
         const pge_network::PgeNetworkConnectionHandle& getServerSideConnectionHandle() const;
         const std::string& getIpAddress() const;
         const std::string& getName() const;
@@ -272,6 +275,8 @@ namespace proofps_dd
         
         /** Timestamp of server-side processing of UserNameChangeAndBootupDone (after MsgUserConnectedServerSelf and MsgUserSetupFromServer is already processed */
         std::chrono::time_point<std::chrono::steady_clock> m_timeBootedUp;
+
+        bool m_bExpectingAfterBootUpDelayedUpdate = true;
 
         std::map<OldNewValueName,
             std::variant<

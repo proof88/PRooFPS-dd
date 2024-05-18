@@ -469,7 +469,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 gameMode.getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
-                pDeathMatchMode->getTimeRemainingSecs(),
+                pDeathMatchMode->getTimeRemainingMillisecs(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds()))
             {
@@ -541,7 +541,11 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
     m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
 }
 
-void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& durations)
+void proofps_dd::PlayerHandling::serverSendUserUpdates(
+    PGEcfgProfiles& cfgProfiles,
+    proofps_dd::Config& config,
+    proofps_dd::Durations& durations,
+    proofps_dd::GameMode& gameMode)
 {
     if (!m_pge.getNetwork().isServer())
     {
@@ -558,6 +562,44 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
     {
         auto& player = playerPair.second;
         const auto& playerConst = player;
+
+        static constexpr long long nAfterBootUpDelayedUpdateSeconds = 3;
+        if (playerConst.isExpectingAfterBootUpDelayedUpdate() &&
+            (playerConst.getTimeBootedUp().time_since_epoch().count() != 0) &&
+            ((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - playerConst.getTimeBootedUp()).count()) >= nAfterBootUpDelayedUpdateSeconds))
+        {
+            player.setExpectingAfterBootUpDelayedUpdate(false);
+
+            // In the future we need something better than GameMode not having some funcs like getFragLimit()
+            const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
+            if (!pDeathMatchMode)
+            {
+                getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return;
+            }
+
+            pge_network::PgePacket newPktServerInfo;
+            if (!proofps_dd::MsgServerInfoFromServer::initPkt(
+                newPktServerInfo,
+                cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
+                config.getTickRate(),
+                config.getPhysicsRate(),
+                config.getClientUpdateRate(),
+                gameMode.getGameModeType(),
+                pDeathMatchMode->getFragLimit(),
+                pDeathMatchMode->getTimeLimitSecs(),
+                pDeathMatchMode->getTimeRemainingMillisecs(),
+                config.getPlayerRespawnDelaySeconds(),
+                config.getPlayerRespawnInvulnerabilityDelaySeconds()))
+            {
+                getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return;
+            }
+            m_pge.getNetwork().getServer().send(newPktServerInfo, playerPair.first);
+            getConsole().EOLn("WA: PRooFPSddPGE::%s(): sent out after-bootup delayed update to: %u", __func__, playerPair.first);
+        } // isExpectingAfterBootUpDelayedUpdate()
 
         if (bSendUserUpdates && player.isNetDirty())
         {
@@ -595,7 +637,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(proofps_dd::Durations& du
                 getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
             }
-        }
+        } // bSendUserUpdates
     }  // for playerPair
 
     if (bSendUserUpdates)

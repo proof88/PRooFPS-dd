@@ -86,6 +86,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_connHandleServerSide(other.m_connHandleServerSide),
     m_sIpAddress(other.m_sIpAddress),
     m_sName(other.m_sName),
+    m_bExpectingAfterBootUpDelayedUpdate(other.m_bExpectingAfterBootUpDelayedUpdate),
     m_vecOldNewValues(other.m_vecOldNewValues),
     m_bNetDirty(other.m_bNetDirty),
     m_timeDied(other.m_timeDied),
@@ -129,6 +130,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_connHandleServerSide = other.m_connHandleServerSide;
     m_sIpAddress = other.m_sIpAddress;
     m_sName = other.m_sName;
+    m_bExpectingAfterBootUpDelayedUpdate = other.m_bExpectingAfterBootUpDelayedUpdate;
     m_vecOldNewValues = other.m_vecOldNewValues;
     m_bNetDirty = other.m_bNetDirty;
     m_timeDied = other.m_timeDied;
@@ -192,6 +194,16 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
 void proofps_dd::Player::setTimeBootedUp()
 {
     m_timeBootedUp = std::chrono::steady_clock::now();
+}
+
+bool proofps_dd::Player::isExpectingAfterBootUpDelayedUpdate() const
+{
+    return m_bExpectingAfterBootUpDelayedUpdate;
+}
+
+void proofps_dd::Player::setExpectingAfterBootUpDelayedUpdate(bool b)
+{
+    m_bExpectingAfterBootUpDelayedUpdate = b;
 }
 
 const pge_network::PgeNetworkConnectionHandle& proofps_dd::Player::getServerSideConnectionHandle() const

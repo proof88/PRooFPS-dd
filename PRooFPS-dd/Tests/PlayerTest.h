@@ -53,6 +53,7 @@ protected:
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
         AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
         AddSubTest("test_set_booted_up", (PFNUNITSUBTEST)&PlayerTest::test_set_booted_up);
+        AddSubTest("test_set_expecting_after_boot_up_delayed_update", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_after_boot_up_delayed_update);
         AddSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
         AddSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
         AddSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
@@ -266,6 +267,7 @@ private:
             assertTrue(player.getName().empty(), "name") &
             assertLess(0, player.getTimeConstructed().time_since_epoch().count(), "time constructed") &
             assertEquals(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up") &
+            assertTrue(player.isExpectingAfterBootUpDelayedUpdate(), "expecting after bootup delayed update") &
             assertNotNull(player.getObject3D(), "object3d") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertFalse(player.isDirty(), "isDirty") &
@@ -345,6 +347,19 @@ private:
         bool b = true;
         b &= (assertLess(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up 1") &
             assertLess(player.getTimeConstructed().time_since_epoch().count(), player.getTimeBootedUp().time_since_epoch().count(), "time booted up 2"));
+
+        return b;
+    }
+
+    bool test_set_expecting_after_boot_up_delayed_update()
+    {
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *engine, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        player.setExpectingAfterBootUpDelayedUpdate(false);
+        bool b = assertFalse(player.isExpectingAfterBootUpDelayedUpdate(), "exp 1");
+
+        player.setExpectingAfterBootUpDelayedUpdate(true);
+        b &= assertTrue(player.isExpectingAfterBootUpDelayedUpdate(), "exp 2");
 
         return b;
     }

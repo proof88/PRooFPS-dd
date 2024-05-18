@@ -91,7 +91,11 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode,
             PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
-        void serverSendUserUpdates(proofps_dd::Durations& durations);
+        void serverSendUserUpdates(
+            PGEcfgProfiles& cfgProfiles,
+            proofps_dd::Config& config,
+            proofps_dd::Durations& durations,
+            proofps_dd::GameMode& gameMode);
         bool handleUserUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserUpdateFromServer& msg,

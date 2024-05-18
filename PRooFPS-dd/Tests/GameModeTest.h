@@ -308,12 +308,13 @@ private:
             }
 
             b &= (assertEquals(0u, dm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(0u, dm->getTimeRemainingSecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
+                assertEquals(0u, dm->getTimeRemainingMillisecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
 
             dm->setTimeLimitSecs(25u);
             dm->restart(m_network);  // restart() is needed to have correct value for remaining time
             b &= assertEquals(25u, dm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(25u, dm->getTimeRemainingSecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                /* 23000 millisecs so there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here) */
+                assertLequals(23000u, dm->getTimeRemainingMillisecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
 
         return b;
@@ -328,21 +329,23 @@ private:
         }
 
         constexpr unsigned int nTimeLimitSecs = 13u;
-        constexpr unsigned int nTimeRemainingServerSideSecs = 4u;
+        constexpr unsigned int nTimeRemainingServerSideMillisecs = 4000u;
 
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmTimeLimit].Set(nTimeLimitSecs);
         dm->fetchConfig(m_cfgProfiles, m_network);
-        dm->clientUpdateTimeRemainingSecs(nTimeRemainingServerSideSecs, m_network);
+        dm->clientUpdateTimeRemainingMillisecs(nTimeRemainingServerSideMillisecs, m_network);
 
         bool b = true;
 
         // positive case
         b &= assertEquals(nTimeLimitSecs, dm->getTimeLimitSecs(), "time limit") &
-            assertEquals(nTimeRemainingServerSideSecs, dm->getTimeRemainingSecs(), "remaining 1");
+            assertLequals(dm->getTimeRemainingMillisecs(), nTimeRemainingServerSideMillisecs, "remaining 1 a") &
+            assertNotEquals(0u, dm->getTimeRemainingMillisecs(), "remaining 1 b");
 
         // negative case: remaining time as seconds is bigger than time limit as seconds
-        dm->clientUpdateTimeRemainingSecs(nTimeLimitSecs + 1u, m_network);
-        b &= assertEquals(nTimeLimitSecs, dm->getTimeRemainingSecs(), "remaining 2");
+        dm->clientUpdateTimeRemainingMillisecs((nTimeLimitSecs + 1u) * 1000, m_network);
+        // (nTimeLimitSecs-2) so that there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here)
+        b &= assertLequals((nTimeLimitSecs-2) * 1000, dm->getTimeRemainingMillisecs(), "remaining 2");
 
         return b;
     }
@@ -412,7 +415,8 @@ private:
 
             b &= assertEquals(25u, dm->getFragLimit(), (std::string("new frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(13u, dm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(13u, dm->getTimeRemainingSecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                /* 11000 millisecs so there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here) */
+                assertLequals(11000u, dm->getTimeRemainingMillisecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
 
         return b;
@@ -1174,7 +1178,7 @@ private:
         while ((iSleep++ < 5) && !dm->serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            setRemainingSecs.erase( dm->getTimeRemainingSecs() );
+            setRemainingSecs.erase( static_cast<unsigned int>(std::floor(dm->getTimeRemainingMillisecs() / 1000.f)) );
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
@@ -1316,7 +1320,7 @@ private:
         while ((iSleep++ < 5) && !dm->serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            setRemainingSecs.erase(dm->getTimeRemainingSecs());
+            setRemainingSecs.erase(static_cast<unsigned int>(std::floor(dm->getTimeRemainingMillisecs() / 1000.f)));
         }
         b &= assertTrue(gm->isGameWon(), "game won 1");
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());

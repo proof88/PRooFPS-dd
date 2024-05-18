@@ -88,7 +88,7 @@ namespace proofps_dd
             const GameModeType& iGameModeType,
             const unsigned int& nFragLimit,
             const unsigned int& nTimeLimitSecs,
-            const unsigned int& nTimeRemainingSecs,
+            const unsigned int& nTimeRemainingMillisecs,
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSecs)
         {
@@ -115,7 +115,7 @@ namespace proofps_dd
             msgServerInfo.m_iGameModeType = iGameModeType;
             msgServerInfo.m_nFragLimit = nFragLimit;
             msgServerInfo.m_nTimeLimitSecs = nTimeLimitSecs;
-            msgServerInfo.m_nTimeRemainingSecs = nTimeRemainingSecs;
+            msgServerInfo.m_nTimeRemainingMillisecs = nTimeRemainingMillisecs;
 
             msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
             msgServerInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
@@ -131,7 +131,7 @@ namespace proofps_dd
         GameModeType m_iGameModeType;
         unsigned int m_nFragLimit;
         unsigned int m_nTimeLimitSecs;
-        unsigned int m_nTimeRemainingSecs;
+        unsigned int m_nTimeRemainingMillisecs;
 
         unsigned int m_nRespawnTimeSecs;
         unsigned int m_nRespawnInvulnerabilityTimeSecs;
