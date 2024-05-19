@@ -85,7 +85,7 @@ namespace proofps_dd
             PureObject3D& objXHair,
             const unsigned int& nPhysicsRate,
             proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */);
-        void serverPlayerCollisionWithWalls(bool& won, const unsigned int& nPhysicsRate);
+        void serverPlayerCollisionWithWalls(const unsigned int& nPhysicsRate);
 
     private:
 

@@ -364,7 +364,7 @@ void proofps_dd::Physics::serverGravity(
     }
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls(bool& /*won*/, const unsigned int& nPhysicsRate)
+void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPhysicsRate)
 {
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;

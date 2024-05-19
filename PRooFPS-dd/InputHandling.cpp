@@ -74,7 +74,6 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
     proofps_dd::GameMode& gameMode,
-    bool& won,
     proofps_dd::Player& player,
     PureObject3D& objXHair,
     const unsigned int nTickrate,
@@ -87,11 +86,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
-        clientKeyboardWhenConnectedToServer(gameMode, won, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+        clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
-        clientMouseWhenConnectedToServer(gameMode, won, pkt, player, objXHair);
-        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(won, pkt, player, objXHair);
+        clientMouseWhenConnectedToServer(gameMode, pkt, player, objXHair);
+        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(pkt, player, objXHair);
     }
     return playerAppActionReq;
 }
@@ -451,7 +450,6 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
-    bool& won,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
     const unsigned int nTickrate,
@@ -480,158 +478,150 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
-    if (!won)
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
     {
-
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
+        if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
         {
-            if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
+            getConsole().SetLoggingState("4LLM0DUL3S", true);
+            regTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+            getConsole().SetLoggingState("4LLM0DUL3S", false);
+        }
+    }
+
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
+    {
+        if (m_pge.getNetwork().isServer())
+        {
+            // for testing purpose only, we can teleport server player to random spawn point
+            player.getPos() = m_maps.getRandomSpawnpoint();
+            player.getRespawnFlag() = true;
+        }
+
+        // log some stats
+        getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
+        m_pge.getPure().getRenderer()->ResetStatistics();
+        getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
+
+        getConsole().SetLoggingState(getLoggerModuleName(), true);
+        getConsole().OLn("");
+        getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_durations.m_nFramesElapsedSinceLastDurationsReset);
+        getConsole().OLn("Avg Durations per Frame:");
+        getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_durations.m_nFullRoundtripDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_durations.m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_durations.m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_durations.m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_durations.m_nGravityCollisionDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_durations.m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_durations.m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_durations.m_nUpdateBulletsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_durations.m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_durations.m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_durations.m_nUpdateGameModeDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - CameraMovementDuration: %f usecs", m_durations.m_nCameraMovementDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_durations.m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
+        getConsole().OLn("");
+        getConsole().SetLoggingState(getLoggerModuleName(), false);
+
+        m_durations.reset();
+    }
+
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
+    {
+        if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())
+        {
+            m_maps.getMapcycle().mapcycleNext();
+            pge_network::PgePacket newPktMapChange;
+            if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.getMapcycle().mapcycleGetCurrent()))
             {
-                getConsole().SetLoggingState("4LLM0DUL3S", true);
-                regTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
-                getConsole().SetLoggingState("4LLM0DUL3S", false);
+                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
             }
+            m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
         }
+    }
 
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
-        {
-            if (m_pge.getNetwork().isServer())
-            {
-                // for testing purpose only, we can teleport server player to random spawn point
-                player.getPos() = m_maps.getRandomSpawnpoint();
-                player.getRespawnFlag() = true;
-            }
-
-            // log some stats
-            getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
-            m_pge.getPure().getRenderer()->ResetStatistics();
-            getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
-
-            getConsole().SetLoggingState(getLoggerModuleName(), true);
-            getConsole().OLn("");
-            getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_durations.m_nFramesElapsedSinceLastDurationsReset);
-            getConsole().OLn("Avg Durations per Frame:");
-            getConsole().OLn(" - FullRoundtripDuration: %f usecs", m_durations.m_nFullRoundtripDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn(" - FullOnPacketReceivedDuration: %f usecs", m_durations.m_nFullOnPacketReceivedDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - HandleUserCmdMoveDuration: %f usecs", m_durations.m_nHandleUserCmdMoveDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn(" - FullOnGameRunningDuration: %f usecs", m_durations.m_nFullOnGameRunningDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - GravityCollisionDuration: %f usecs", m_durations.m_nGravityCollisionDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - ActiveWindowStuffDuration: %f usecs", m_durations.m_nActiveWindowStuffDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateWeaponDuration: %f usecs", m_durations.m_nUpdateWeaponsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateBulletsDuration: %f usecs", m_durations.m_nUpdateBulletsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateRespawnTimersDuration: %f usecs", m_durations.m_nUpdateRespawnTimersDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - PickupAndRespawnItemsDuration: %f usecs", m_durations.m_nPickupAndRespawnItemsDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - UpdateGameModeDuration: %f usecs", m_durations.m_nUpdateGameModeDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - CameraMovementDuration: %f usecs", m_durations.m_nCameraMovementDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_durations.m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
-            getConsole().OLn("");
-            getConsole().SetLoggingState(getLoggerModuleName(), false);
-
-            m_durations.reset();
-        }
-
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
-        {
-            if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())
-            {
-                m_maps.getMapcycle().mapcycleNext();
-                pge_network::PgePacket newPktMapChange;
-                if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.getMapcycle().mapcycleGetCurrent()))
-                {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                    assert(false);
-                }
-                m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
-            }
-        }
-
-        // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
-        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
-        {
-            m_strafe = proofps_dd::Strafe::LEFT;
-        }
-        else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
-        {
-            m_strafe = proofps_dd::Strafe::RIGHT;
-        }
-        else
-        {
-            m_strafe = proofps_dd::Strafe::NONE;
-        }
-
-        // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
-        // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
-        m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
-
-        bool bSendJumpAction = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
-        {
-            bSendJumpAction = true;
-        }
-
-        bool bToggleRunWalk = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
-        {
-            bToggleRunWalk = true;
-        }
-
-        bool bRequestReload = false;
-        if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
-        {
-            //getConsole().EOLn("InputHandling::%s(): bRequestReload became true!", __func__);
-            bRequestReload = true;
-        }
-
-        unsigned char cWeaponSwitch = '\0';
-        if (!bRequestReload)
-        {   // we dont care about wpn switch if reload is requested
-            const auto nSecsSinceLastWeaponSwitchMillisecs =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-                ).count();
-            if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
-            {
-                for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
-                {
-                    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
-                    {
-                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
-                        if (!pTargetWpn)
-                        {
-                            getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
-                                __func__, keyWpnPair.second.c_str());
-                            break;
-                        }
-                        if (!pTargetWpn->isAvailable())
-                        {
-                            //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
-                            //    __func__, key.second.c_str());
-                            break;
-                        }
-                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                        {
-                            cWeaponSwitch = keyWpnPair.first;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
-        {
-            // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
-            // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
-            // as one-time actions.
-            proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
-        }
-        m_prevStrafe = m_strafe;
-        m_bPrevCrouch = m_bCrouch;
+    // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
+    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+    {
+        m_strafe = proofps_dd::Strafe::LEFT;
+    }
+    else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+    {
+        m_strafe = proofps_dd::Strafe::RIGHT;
     }
     else
     {
+        m_strafe = proofps_dd::Strafe::NONE;
+    }
 
-    } // won
+    // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
+    // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
+    m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
+
+    bool bSendJumpAction = false;
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
+    {
+        bSendJumpAction = true;
+    }
+
+    bool bToggleRunWalk = false;
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+    {
+        bToggleRunWalk = true;
+    }
+
+    bool bRequestReload = false;
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+    {
+        //getConsole().EOLn("InputHandling::%s(): bRequestReload became true!", __func__);
+        bRequestReload = true;
+    }
+
+    unsigned char cWeaponSwitch = '\0';
+    if (!bRequestReload)
+    {   // we dont care about wpn switch if reload is requested
+        const auto nSecsSinceLastWeaponSwitchMillisecs =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
+            ).count();
+        if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+        {
+            for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+            {
+                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+                {
+                    const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
+                    if (!pTargetWpn)
+                    {
+                        getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
+                            __func__, keyWpnPair.second.c_str());
+                        break;
+                    }
+                    if (!pTargetWpn->isAvailable())
+                    {
+                        //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
+                        //    __func__, key.second.c_str());
+                        break;
+                    }
+                    if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+                    {
+                        cWeaponSwitch = keyWpnPair.first;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+    {
+        // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
+        // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
+        // as one-time actions.
+        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
+    }
+    m_prevStrafe = m_strafe;
+    m_bPrevCrouch = m_bCrouch;
 
     return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }
@@ -650,7 +640,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 */
 bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
-    bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
     PureObject3D& objXHair)
@@ -770,7 +759,6 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
 }
 
 void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
-    bool& /*won*/,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player, PureObject3D& objXHair)
 {

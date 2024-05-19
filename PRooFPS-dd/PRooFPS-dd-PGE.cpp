@@ -98,8 +98,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps_counter(0),
     m_fps_lastmeasure(0),
     m_bFpsFirstMeasure(true),
-    m_pObjXHair(NULL),
-    m_bWon(false)
+    m_pObjXHair(NULL)
 {
 }
 
@@ -755,20 +754,21 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     assert(m_gameMode);
     assert(m_pObjXHair);
-    if (!m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork()))
+    const bool bWin = m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork());
+    for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
-        for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
+        if (!bWin)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
             serverGravity(*m_pObjXHair, m_config.getPhysicsRate(), *m_gameMode);
-            serverPlayerCollisionWithWalls(m_bWon, m_config.getPhysicsRate());
+            serverPlayerCollisionWithWalls(m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-            serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), cameraGetShakeForce());
-            serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
-            serverPickupAndRespawnItems();
-            updatePlayersOldValues();
-        }  // for iPhyIter
-    }  // serverCheckAndUpdateWinningConditions()
+        }
+        serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), cameraGetShakeForce());
+        serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
+        serverPickupAndRespawnItems();
+        updatePlayersOldValues();
+    }  // for iPhyIter
     serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
     serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *m_gameMode);
 }
@@ -802,7 +802,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     if (window.isActive())
     {
         if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
-            *m_gameMode, m_bWon, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
+            *m_gameMode, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
         ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);

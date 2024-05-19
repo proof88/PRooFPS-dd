@@ -65,7 +65,6 @@ namespace proofps_dd
 
         PlayerAppActionRequest clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
             proofps_dd::GameMode& gameMode,
-            bool& won,
             proofps_dd::Player& player,
             PureObject3D& objXHair,
             const unsigned int nTickrate,
@@ -103,7 +102,6 @@ namespace proofps_dd
         
         PlayerAppActionRequest clientKeyboardWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
-            bool& won,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
@@ -113,13 +111,11 @@ namespace proofps_dd
 
         bool clientMouseWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
-            bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);
 
         void clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
-            bool& won,
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
             PureObject3D& objXHair);

@@ -662,7 +662,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 assert(false);
                 continue;
             }
-            getConsole().EOLn("WeaponHandling::%s(): sending new weapon state old: %d, new: %d", __func__, wpn->getState().getOld(), wpn->getState().getNew());
+            //getConsole().EOLn("WeaponHandling::%s(): sending weapon state old: %d, new: %d", __func__, wpn->getState().getOld(), wpn->getState().getNew());
             m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrentPublic);
         }
     }  // end for playerPair
