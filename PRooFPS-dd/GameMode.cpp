@@ -252,7 +252,7 @@ void proofps_dd::DeathMatchMode::clientReceiveAndUpdateWinningConditions(pge_net
 {
     assert(!network.isServer());
 
-    getConsole().EOLn("DeathMatchMode::%s(): client received new win state: %b!", __func__, bGameSessionWon);
+    //getConsole().EOLn("DeathMatchMode::%s(): client received new win state: %b!", __func__, bGameSessionWon);
 
     m_bWon = bGameSessionWon;
     if (m_bWon)

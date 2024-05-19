@@ -1003,7 +1003,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
             {
                 auto& player = playerPair.second;
                 const auto& playerConst = player;
-                if (playerConst.getHealth() <= 0)
+                if ((playerConst.getHealth() <= 0) || (player.getRespawnFlag()))
                 {
                     continue;
                 }
