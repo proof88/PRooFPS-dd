@@ -459,6 +459,24 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         // TODO: here we will need to iterate over all app msg but for now there is only 1 inside!
 
         const proofps_dd::PRooFPSappMsgId& proofpsAppMsgId = static_cast<proofps_dd::PRooFPSappMsgId>(pge_network::PgePacket::getMsgAppIdFromPkt(pkt));
+
+        //if (m_nServerSideConnectionHandle == pge_network::PgePacket::getServerSideConnectionHandle(pkt))
+        //{
+        //    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
+        //    if (playerIt != m_mapPlayers.end())
+        //    {
+        //        const Player& player = playerIt->second;
+        //        if (player.getHealth() == 0)
+        //        {
+        //            //getConsole().EOLn("Got message during being dead: %u", proofpsAppMsgId);
+        //            if (proofpsAppMsgId == proofps_dd::MsgCurrentWpnUpdateFromServer::id)
+        //            {
+        //                getConsole().EOLn("Wpn update");
+        //            }
+        //        }
+        //    }
+        //}
+
         switch (proofpsAppMsgId)
         {
         case proofps_dd::MsgServerInfoFromServer::id:

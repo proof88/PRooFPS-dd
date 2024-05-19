@@ -633,7 +633,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 wpn->getMagBulletCount(),
                 wpn->getUnmagBulletCount()))
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 continue;
             }
@@ -658,10 +658,11 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 wpn->getFilename(),
                 wpn->getState().getNew()))
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 continue;
             }
+            getConsole().EOLn("WeaponHandling::%s(): sending new weapon state old: %d, new: %d", __func__, wpn->getState().getOld(), wpn->getState().getNew());
             m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrentPublic);
         }
     }  // end for playerPair
@@ -690,7 +691,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         // Since client simulates bullet travel for visual purpose only, not doing collision check, it relies on server to know when a hit happened,
         // and for that obviously we need the server-side position of bullet at the moment of hit.
         // Also, we actually require other bullet parameters as well for making the explosion, because we might not have the bullet in getBullets() on
-        // our side: when 2 players are almost at the same position (partially overlapping), one fires the weapon, then bullet will immediately hit on
+        // our side: when 2 players are almost at the same position (partially overlapping), one fires the weapon, then bullet will immediately hit
         // the other player on server-side, we will receive a bullet delete request only from server in that case without any bullet create request prior to it!
         if (msg.m_fDamageAreaSize > 0.f)
         {
