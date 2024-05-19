@@ -29,6 +29,8 @@
    stored in OldPerfMeasurements directory, to understand if we have improvement or regression wrt performance;
    later this should be automatized;
 
+ - make sure default config is what you want a new user to see when they load up the game for the first time;
+
  - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
    directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
 
