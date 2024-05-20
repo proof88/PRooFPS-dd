@@ -606,7 +606,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 return;
             }
             m_pge.getNetwork().getServer().send(newPktServerInfo, playerPair.first);
-            getConsole().EOLn("WA: PRooFPSddPGE::%s(): sent out after-bootup delayed update to: %u", __func__, playerPair.first);
+            getConsole().EOLn("PRooFPSddPGE::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
         } // isExpectingAfterBootUpDelayedUpdate()
 
         if (bSendUserUpdates && player.isNetDirty())

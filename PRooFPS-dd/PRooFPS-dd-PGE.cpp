@@ -653,12 +653,13 @@ bool proofps_dd::PRooFPSddPGE::connect()
 {
     initializeWeaponHandling();
     bool bRet;
+    const std::string sAppVersion = std::string(GAME_NAME) + " " + std::string(GAME_VERSION);
     if (getNetwork().isServer())
     {
         m_gui.textForNextFrame("Starting Server ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
 
-        bRet = getNetwork().getServer().startListening();
+        bRet = getNetwork().getServer().startListening(sAppVersion);
         if (!bRet)
         {
             getConsole().EOLn("ERROR: Server has FAILED to start listening!");
@@ -676,7 +677,7 @@ bool proofps_dd::PRooFPSddPGE::connect()
         m_gui.textForNextFrame("Connecting to Server @ " + sIp + " ...", 200, getPure().getWindow().getClientHeight() / 2);
         getPure().getRenderer()->RenderScene();
 
-        bRet = getNetwork().getClient().connectToServer(sIp);
+        bRet = getNetwork().getClient().connectToServer(sIp, sAppVersion);
         if (!bRet)
         {
             getConsole().EOLn("ERROR: Client has FAILED to establish connection to the server!");
