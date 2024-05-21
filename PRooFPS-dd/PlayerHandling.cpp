@@ -506,6 +506,19 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             return false;   // for release mode
         }
 
+        // TEMPORAL WORKAROUND DUE TO: https://github.com/proof88/PRooFPS-dd/issues/268
+        // we have the same WA in handleUserSetupFromServer().
+        const auto itPlayerInGamemode = std::find_if(
+            gameMode.getFragTable().begin(),
+            gameMode.getFragTable().end(),
+            [&msg](const proofps_dd::FragTableRow& row) { return row.m_sName == msg.m_szUserName; });
+        if (itPlayerInGamemode != gameMode.getFragTable().end())
+        {
+            getConsole().EOLn("PlayerHandling::%s(): WA: connHandleServerSide: %u is already present in GameMode, allowed temporarily due to issue #268 (received: %s; set: %s)!",
+                __func__, connHandleServerSide, msg.m_szUserName, playerIt->second.getName().c_str());
+            return true;
+        }
+
         playerIt->second.setTimeBootedUp();
         getConsole().EOLn("PlayerHandling::%s(): Player BOOTED UP, accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);

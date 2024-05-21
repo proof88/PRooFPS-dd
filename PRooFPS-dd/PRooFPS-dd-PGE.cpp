@@ -1093,7 +1093,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     // TEMPORAL WORKAROUND DUE TO: https://github.com/proof88/PRooFPS-dd/issues/268
     if (m_mapPlayers.end() != m_mapPlayers.find(connHandleServerSide))
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): connHandleServerSide: %u is already present in players list, allowed temporarily!",
+        getConsole().EOLn("PRooFPSddPGE::%s(): WA: connHandleServerSide: %u is already present in players list, allowed temporarily due to issue #268!",
             __func__, connHandleServerSide);
         return true;
     }
