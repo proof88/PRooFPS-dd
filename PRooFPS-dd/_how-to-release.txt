@@ -40,7 +40,7 @@
 
  - delete any test-purpose map from gamedata/maps and other unneeded files from other directories under gamedata dir;
 
- - check if game is able to start up from this new release directory, if so then compress and upload;
+ - check if game is able to start up from this new release directory, if so then compress and upload to Google Drive (to the usual LAN directory);
 
  - check if game is able to start up on a separate machine after downloading;
 
