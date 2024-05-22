@@ -21,6 +21,17 @@ that is the latest "Approofed für Lan Party" version that was actually tested o
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/14LFeXtEJIeAmZXRS7tQooMIVSmikNdog/view?usp=drive_link).
 
+This version brings the following new features:
+ - Frag Limit (CVAR: `sv_dm_fraglimit`) and Time Limit (CVAR: `sv_dm_timelimit_secs`) can now be set in GUI when creating new server;
+ - Frag Limit, Time Limit and Remaining Time in seconds are now displayed on client-side too above the Frag Table;
+ - Clients with only matching game version can connect to the server, other clients are rejected by server.
+
+This version fixes the following bugs:
+ - When a player died at a map item location and the item respawned during the player's respawn countdown, the player immediately picked that item up after respawning at a DIFFERENT location;
+ - Frag Table was showing default 0 values for all camping (not moving) players on a client who just recently connected to the server (updates came only when players made any input);
+ - After a played died, Waiting for Respawn countdown was still visible when the game has already ended and restart is expected;
+ - Bullets were not deleted when game ended, instead they continued their travel after game restart, causing potential damage to players.
+
 ## v0.2.3.0 Private Beta (May 06, 2024)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/19oEKgra3Vjw2lB4bMzyWXGh-lkcWOj9u/view?usp=drive_link).
