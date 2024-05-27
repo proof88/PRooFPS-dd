@@ -28,6 +28,7 @@ This version brings the following new features:
 
 This version fixes the following bugs:
  - When a player died at a map item location and the item respawned during the player's respawn countdown, the player immediately picked that item up after respawning at a DIFFERENT location;
+ - When a player died during reloading a weapon, the weapon after respawn could had illegal amount of unmag bullets;
  - Frag Table was showing default 0 values for all camping (not moving) players on a client who just recently connected to the server (updates came only when players made any input);
  - After a played died, Waiting for Respawn countdown was still visible when the game has already ended and restart is expected;
  - Bullets were not deleted when game ended, instead they continued their travel after game restart, causing potential damage to players.
