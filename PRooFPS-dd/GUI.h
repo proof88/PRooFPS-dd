@@ -20,6 +20,7 @@
 #include "GameMode.h"
 #include "Maps.h"
 #include "Networking.h"
+#include "XHair.h"
 
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
@@ -71,8 +72,7 @@ namespace proofps_dd
         void hideLoadingScreen();
         bool showBgWithLogo();
         bool hideBgWithLogo();
-        PureObject3D* getXHair();
-        void showXHairInCenter();
+        XHair* getXHair();
 
         void textForNextFrame(const std::string& s, int x, int y) const;
         void textPermanent(const std::string& s, int x, int y) const;
@@ -102,7 +102,7 @@ namespace proofps_dd
 
         /* Misc */
 
-        static PureObject3D* m_pObjXHair;
+        static XHair* m_pXHair;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
