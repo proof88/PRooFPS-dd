@@ -42,6 +42,8 @@ namespace proofps_dd
         void show();
         void showInCenter();
         void hide();
+        void updateUnprojectedCoords(PureCamera& cam);
+        const PureVector& getUnprojectedCoords() const;
 
     protected:
 
@@ -54,6 +56,7 @@ namespace proofps_dd
 
         PGE& m_pge;
         PureObject3D* m_pObjXHair;
+        PureVector m_vecUnprojected;
 
         // ---------------------------------------------------------------------------
 

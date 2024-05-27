@@ -71,7 +71,7 @@ void proofps_dd::CameraHandling::cameraPositionToMapCenter()
 
 void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
     const Player& player,
-    const PureObject3D& objXHair,
+    const XHair& xhair,
     const float& fFps,
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed,
@@ -93,7 +93,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
         return;
     }
 
-    cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, objXHair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+    cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
@@ -175,7 +175,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsSomersaultin
 void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(
     PureCamera& cam,
     const Player& player,
-    const PureObject3D& objXHair,
+    const XHair& xhair,
     const float& fFps,
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed)
@@ -205,44 +205,13 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
     float fCamPosXTarget, fCamPosYTarget;
     if (bCamFollowsXHair)
     {
-        /* Unsure about if we really need to unproject the 2D xhair's position.
-           Because of matrix multiplication and inversion, maybe this way is too expensive.
-
-           I see 2 other ways of doing this:
-            - keep the xhair 2D, and anytime mouse is moved, we should also change 2 variables: fCamPosOffsetX and fCamPosOffsetY
-              based on the dx and dy variables in InputHandling::clientMouseWhenConnectedToServer(). Camera will have this position offset applied relative to
-              player's position. This looks to be the easiest solution.
-              However, on the long run we will need 3D position of xhair since we want to use pick/select method, for example,
-              when hovering the xhair over other player, we should be able to tell which player is that.
-
-            - change the xhair to 3D, so in InputHandling::clientMouseWhenConnectedToServer() the dx and dy variable changes will be applied to xhair's 3D position.
-              With this method, pick/select can be implemented in a different way: no need to unproject, we just need collision
-              logic to find out which player object collides with our xhair object!
-        */
-        PureVector vecUnprojected;
-        if (!cam.project2dTo3d(
-            static_cast<TPureUInt>(roundf(objXHair.getPosVec().getX()) + cam.getViewport().size.width / 2),
-            static_cast<TPureUInt>(roundf(objXHair.getPosVec().getY()) + cam.getViewport().size.height / 2),
-            /* in v0.1.5 this is player's Z mapped to depth buffer: 0.9747f,*/
-            0.96f,
-            vecUnprojected))
-        {
-            //getConsole().EOLn("PRooFPSddPGE::%s(): project2dTo3d() failed!", __func__);
-        }
-        else
-        {
-            //getConsole().EOLn("obj X: %f, Y: %f, vecUnprojected X: %f, Y: %f",
-            //    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
-            //    vecUnprojected.getX(), vecUnprojected.getY());
-        }
-
         fCamPosXTarget = std::min(
             fCamMaxAllowedPosX,
-            std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + vecUnprojected.getX()) / 2));
+            std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2));
 
         fCamPosYTarget = std::min(
             fCamMaxAllowedPosY,
-            std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + vecUnprojected.getY()) / 2));
+            std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2));
     }
     else
     {
@@ -275,6 +244,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
         bCamTiltingAllowed ? ((vecCamPos.getY() + fCamPosYTarget) / 2.f) : vecCamPos.getY(),
         player.getObject3D()->getPosVec().getZ()
     );
-    // we can always reset like this, since Up vector doesn't have effect on camera pitch/yaw
+
+    // we can always reset Up like this, since Up vector doesn't have effect on camera pitch/yaw, only on roll!
     cam.getUpVec().Set(0.f, 1.f, 0.f);
 }

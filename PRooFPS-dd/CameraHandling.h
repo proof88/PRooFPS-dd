@@ -18,6 +18,7 @@
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+#include "XHair.h"
 
 namespace proofps_dd
 {
@@ -42,7 +43,7 @@ namespace proofps_dd
         
         void cameraUpdatePosAndAngle(
             const Player& player,
-            const PureObject3D& objXHair,
+            const XHair& xhair,
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed,
@@ -69,7 +70,7 @@ namespace proofps_dd
         void cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(
             PureCamera& cam,
             const Player& player,
-            const PureObject3D& objXHair,
+            const XHair& xhair,
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed);

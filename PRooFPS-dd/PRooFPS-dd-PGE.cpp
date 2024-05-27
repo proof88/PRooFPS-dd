@@ -773,7 +773,17 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    cameraUpdatePosAndAngle(player, m_gui.getXHair()->getObject3D(), m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
+    // after we have adjusted xhair 2D coords based on user input above, update 3D coords for this frame
+    // TODO: get rid of this by changing XHair design as explained within the function itself!
+    m_gui.getXHair()->updateUnprojectedCoords(getPure().getCamera());
+    
+    cameraUpdatePosAndAngle(
+        player,
+        *m_gui.getXHair(),
+        m_fps,
+        m_config.getCameraFollowsPlayerAndXHair(),
+        m_config.getCameraTilting(),
+        m_config.getCameraRolling());
     updatePlayers(m_config, *m_gameMode); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
     m_maps.update(m_fps);
