@@ -56,6 +56,22 @@ void proofps_dd::GUI::initialize()
     m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 
+    // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
+    // this is needed because it is not trivial when to show/hide the xhair for the server.
+    m_pObjXHair = m_pPge->getPure().getObject3DManager().createPlane(32.f, 32.f);
+    m_pObjXHair->SetStickedToScreen(true);
+    m_pObjXHair->SetDoubleSided(true);
+    m_pObjXHair->SetTestingAgainstZBuffer(false);
+    m_pObjXHair->SetLit(false);
+    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
+    // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
+    m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
+    PureTexture* xhairtex = m_pPge->getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair.bmp").c_str());
+    m_pObjXHair->getMaterial().setTexture(xhairtex);
+    m_pObjXHair->Hide();
+
+    // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
+    // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
     // This bg plane is used to cover game objects such as map, players, etc.,
     // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
     m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
@@ -185,9 +201,15 @@ void proofps_dd::GUI::shutdown()
         delete m_pObjLoadingScreenLogoImg;
         m_pObjLoadingScreenBg = nullptr;
         m_pObjLoadingScreenLogoImg = nullptr;
-
-        // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
     }
+
+    if (m_pObjXHair)
+    {
+        delete m_pObjXHair;
+        m_pObjXHair = nullptr;
+    }
+
+    // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
 }
 
 const proofps_dd::GUI::MenuState& proofps_dd::GUI::getMenuState() const
@@ -266,6 +288,31 @@ bool proofps_dd::GUI::hideBgWithLogo()
     return false;
 }
 
+PureObject3D* proofps_dd::GUI::getXHair()
+{
+    return m_pObjXHair;
+}
+
+void proofps_dd::GUI::showXHairInCenter()
+{
+    if (!m_pObjXHair)
+    {
+        return;
+    }
+
+    // this is to get rid of all mouse move messages that were probably queued up in the meantime (e.g. during map loading), otherwise
+    // there is no use of setting cursor pos to center if enqueued messages will reposition it when PURE runs the window's processMessages().
+    m_pPge->getPure().getWindow().ProcessMessages();
+
+    // getInput().getMouse().SetCursorPos() is not triggering any mouse move event and nulls out pending raw input events as well!
+    m_pPge->getInput().getMouse().SetCursorPos(
+        m_pPge->getPure().getWindow().getX() + m_pPge->getPure().getWindow().getWidth() / 2,
+        m_pPge->getPure().getWindow().getY() + m_pPge->getPure().getWindow().getHeight() / 2);
+
+    m_pObjXHair->getPosVec().Set(0, 0, 0); // reposition to viewport center so it won't appear at random places
+    m_pObjXHair->Show();
+}
+
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int x, int y) const
 {
     m_pPge->getPure().getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
@@ -308,6 +355,7 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
 
+PureObject3D* proofps_dd::GUI::m_pObjXHair = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;

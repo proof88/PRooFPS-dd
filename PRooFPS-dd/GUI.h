@@ -71,6 +71,8 @@ namespace proofps_dd
         void hideLoadingScreen();
         bool showBgWithLogo();
         bool hideBgWithLogo();
+        PureObject3D* getXHair();
+        void showXHairInCenter();
 
         void textForNextFrame(const std::string& s, int x, int y) const;
         void textPermanent(const std::string& s, int x, int y) const;
@@ -100,6 +102,7 @@ namespace proofps_dd
 
         /* Misc */
 
+        static PureObject3D* m_pObjXHair;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;

@@ -97,8 +97,6 @@ namespace proofps_dd
         unsigned long m_fps_lastmeasure;
         bool m_bFpsFirstMeasure;
 
-        PureObject3D* m_pObjXHair;
-
         std::map<pge_network::PgeNetworkConnectionHandle, Player> m_mapPlayers;  /**< Connected players, used by both server and clients.
                                                                                       Key is server-side connection handle. */
 
@@ -109,7 +107,6 @@ namespace proofps_dd
 
         void showLoadingScreen(int nProgress);
         void hideLoadingScreen();
-        void showXHairInCenter();
 
         bool hasValidConnection() const;
         bool connect();

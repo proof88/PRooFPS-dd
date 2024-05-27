@@ -97,8 +97,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_fps(GAME_MAXFPS_DEF),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
-    m_bFpsFirstMeasure(true),
-    m_pObjXHair(NULL)
+    m_bFpsFirstMeasure(true)
 {
 }
 
@@ -191,22 +190,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         return false;
     }
 
-    // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
-    // this is needed because it is not trivial when to show/hide the xhair for the server.
-    m_pObjXHair = getPure().getObject3DManager().createPlane(32.f, 32.f);
-    m_pObjXHair->SetStickedToScreen(true);
-    m_pObjXHair->SetDoubleSided(true);
-    m_pObjXHair->SetTestingAgainstZBuffer(false);
-    m_pObjXHair->SetLit(false);
-    // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
-    // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
-    m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    PureTexture* xhairtex = getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair.bmp").c_str());
-    m_pObjXHair->getMaterial().setTexture(xhairtex);
-    m_pObjXHair->Hide();
-
-    // let the GUI create loading screen AFTER we created the xhair because otherwise in some situations the xhair
-    // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
     m_gui.initialize();
     m_gui.setGameModeInstance(*m_gameMode);
 
@@ -388,7 +371,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             {
                 if (connect())
                 {
-                    showXHairInCenter();
+                    m_gui.showXHairInCenter();
                     resetSendClientUpdatesCounter(m_config);
                     m_timeSimulation = {};  // reset tick-based simulation time as well
                 }
@@ -512,11 +495,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt));
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:
-            assert(m_pObjXHair);
+            assert(m_gui.getXHair());
             bRet = handleUserUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
-                *m_pObjXHair,
+                *m_gui.getXHair(),
                 m_config,
                 *m_gameMode);
             break;
@@ -589,8 +572,6 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_maps.shutdown();
     m_gui.shutdown();
-    delete m_pObjXHair;
-    m_pObjXHair = nullptr;
     delete m_gameMode;
     m_gameMode = nullptr;
     getPure().getObject3DManager().DeleteAll();
@@ -613,26 +594,6 @@ void proofps_dd::PRooFPSddPGE::hideLoadingScreen()
 {
     m_gui.hideLoadingScreen();
     m_maps.updateVisibilitiesForRenderer();
-}
-
-void proofps_dd::PRooFPSddPGE::showXHairInCenter()
-{
-    if (!m_pObjXHair)
-    {
-        return;
-    }
-
-    // this is to get rid of all mouse move messages that were probably queued up in the meantime (e.g. during map loading), otherwise
-    // there is no use of setting cursor pos to center if enqueued messages will reposition it when PURE runs the window's processMessages().
-    getPure().getWindow().ProcessMessages();
-
-    // getInput().getMouse().SetCursorPos() is not triggering any mouse move event and nulls out pending raw input events as well!
-    getInput().getMouse().SetCursorPos(
-        getPure().getWindow().getX() + getPure().getWindow().getWidth() / 2,
-        getPure().getWindow().getY() + getPure().getWindow().getHeight() / 2);
-    
-    m_pObjXHair->getPosVec().Set(0, 0, 0); // reposition to viewport center so it won't appear at random places
-    m_pObjXHair->Show();
 }
 
 bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
@@ -713,7 +674,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     // we should hide all the players because actual deleting them will happen later once
     // game is processing each player disconnect, however they should not be visible from now as they would be visible
     // during map loading.
-    m_pObjXHair->Hide();
+    m_gui.getXHair()->Hide();
     for (auto& connHandlePlayerPair : m_mapPlayers)
     {
         connHandlePlayerPair.second.getObject3D()->Hide();
@@ -754,18 +715,18 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     assert(m_gameMode);
-    assert(m_pObjXHair);
+    assert(m_gui.getXHair());
     const bool bWin = m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
         if (!bWin)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-            serverGravity(*m_pObjXHair, m_config.getPhysicsRate(), *m_gameMode);
+            serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *m_gameMode);
             serverPlayerCollisionWithWalls(m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
-        serverUpdateBullets(*m_gameMode, *m_pObjXHair, m_config.getPhysicsRate(), cameraGetShakeForce());
+        serverUpdateBullets(*m_gameMode, *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
         serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
         updatePlayersOldValues();
@@ -803,7 +764,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     if (window.isActive())
     {
         if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
-            *m_gameMode, player, *m_pObjXHair, m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
+            *m_gameMode, player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
         ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -812,7 +773,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     } // window is active
     m_durations.m_nActiveWindowStuffDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 
-    cameraUpdatePosAndAngle(player, *m_pObjXHair, m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
+    cameraUpdatePosAndAngle(player, *m_gui.getXHair(), m_fps, m_config.getCameraFollowsPlayerAndXHair(), m_config.getCameraTilting(), m_config.getCameraRolling());
     updatePlayers(m_config, *m_gameMode); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
     m_maps.update(m_fps);
@@ -954,7 +915,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 
         // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
         m_gameMode->showObjectives(getPure(), getNetwork());
-        m_pObjXHair->Hide();
+        m_gui.getXHair()->Hide();
         for (auto& playerPair : m_mapPlayers)
         {
             playerPair.second.getObject3D()->Hide();
@@ -1184,7 +1145,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         // at this point we can be sure we have the proper map loaded, camera must start from the center of the map
         cameraPositionToMapCenter();
         hideLoadingScreen();
-        showXHairInCenter();
+        m_gui.showXHairInCenter();
         
         getAudio().getAudioEngineCore().play(m_sounds.m_sndLetsgo);
     }
@@ -1424,7 +1385,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // after they successfully reconnect to server later. However due to rendering again before that, camera should already positioned now.
     cameraPositionToMapCenter();
     hideLoadingScreen();
-    showXHairInCenter();
+    m_gui.showXHairInCenter();
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,
