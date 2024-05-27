@@ -851,22 +851,27 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         return false;
     }
 
-    if (isMyConnection(it->first) && (player.getWeaponManager().getCurrentWeapon()->getFilename() != msg.m_szWpnCurrentName))
+    // once we have this function, we should invoke it here, because state must be set always, no matter if we are alive or not!
+    // wpn->clientReceiveStateFromServer(msg.m_state);
+    
+    if (std::as_const(player).getHealth() > 0)
     {
-        //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
-        m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
-    }
+        if (isMyConnection(it->first) && (player.getWeaponManager().getCurrentWeapon()->getFilename() != msg.m_szWpnCurrentName))
+        {
+            //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
+            m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
+        }
 
-    if (!player.getWeaponManager().setCurrentWeapon(wpn,
-        true /* even client should record last switch time to be able to check it on client side too */,
-        m_pge.getNetwork().isServer()))
-    {
-        getConsole().EOLn("WeaponHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
-            __func__, player.getName().c_str(), wpn->getFilename().c_str());
-        assert(false);
-        return false;
+        if (!player.getWeaponManager().setCurrentWeapon(wpn,
+            true /* even client should record last switch time to be able to check it on client side too */,
+            m_pge.getNetwork().isServer()))
+        {
+            getConsole().EOLn("WeaponHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
+                __func__, player.getName().c_str(), wpn->getFilename().c_str());
+            assert(false);
+            return false;
+        }
     }
-
     player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec(), player.isSomersaulting());
 
     return true;
