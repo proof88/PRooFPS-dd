@@ -866,6 +866,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
         if (!gameMode.isGameWon() &&
             m_gui.getXHair()->getIdText().empty() &&
             !isMyConnection(playerPair.first) &&
+            (std::as_const(player).getObject3D()->isRenderingAllowed()) &&
             (std::as_const(player).getHealth() > 0) &&
             Physics::colliding2_NoZ(
                 player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),

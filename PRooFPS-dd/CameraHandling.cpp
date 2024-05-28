@@ -184,44 +184,65 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
     constexpr unsigned int nBlocksToKeepCameraWithinMapBottom = 5;
     constexpr unsigned int nBlocksToKeepCameraWithinMapTop = 1;
 
-    const float fCamMinAllowedPosX =
+    const float fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds =
         m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally * 2 + 1) ?
         m_maps.getBlocksVertexPosMin().getX() :
         m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (nBlocksToKeepCameraWithinMapBoundsHorizontally));
-    const float fCamMaxAllowedPosX =
+    const float fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds =
         m_maps.width() < (nBlocksToKeepCameraWithinMapBoundsHorizontally * 2 + 1) ?
         m_maps.getBlocksVertexPosMax().getX() :
         m_maps.getBlocksVertexPosMin().getX() + (proofps_dd::Maps::fMapBlockSizeWidth * (m_maps.width() - nBlocksToKeepCameraWithinMapBoundsHorizontally));
 
-    const float fCamMinAllowedPosY =
+    const float fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds =
         m_maps.height() < (nBlocksToKeepCameraWithinMapBottom + 1) ?
         m_maps.getBlocksVertexPosMin().getY() :
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (nBlocksToKeepCameraWithinMapBottom - 1));
-    const float fCamMaxAllowedPosY =
+    const float fCamMaxAllowedPosYtoKeepAwayFromMapVerticalBounds =
         m_maps.height() < (nBlocksToKeepCameraWithinMapTop + 1) ?
         m_maps.getBlocksVertexPosMax().getY() :
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
+    // TODO: multipliers 6 and 4 are roughly okay for 1024x768 and 1080p, but later ratio should be introduced based on actual screen width and height
+    constexpr float fCamMaxXDistanceFromPlayer = Maps::fMapBlockSizeWidth * 6;
+    constexpr float fCamMaxYDistanceFromPlayer = Maps::fMapBlockSizeHeight * 4;
     float fCamPosXTarget, fCamPosYTarget;
     if (bCamFollowsXHair)
     {
+        const float fPosXBetweenPlayerAndCamera =
+            (xhair.getUnprojectedCoords().getX() >= player.getObject3D()->getPosVec().getX()) ?
+            (std::min(
+                player.getObject3D()->getPosVec().getX() + player.getObject3D()->getPosVec().getX() + fCamMaxXDistanceFromPlayer,
+                player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2.f) :
+            (std::max(
+                player.getObject3D()->getPosVec().getX() + player.getObject3D()->getPosVec().getX() - fCamMaxXDistanceFromPlayer,
+                player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2.f);
+
+        const float fPosYBetweenPlayerAndCamera =
+            (xhair.getUnprojectedCoords().getY() >= player.getObject3D()->getPosVec().getY()) ?
+            (std::min(
+                player.getObject3D()->getPosVec().getY() + player.getObject3D()->getPosVec().getY() + fCamMaxYDistanceFromPlayer,
+                player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2.f) :
+            (std::max(
+                player.getObject3D()->getPosVec().getY() + player.getObject3D()->getPosVec().getY() - fCamMaxYDistanceFromPlayer,
+                player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2.f);
+
         fCamPosXTarget = std::min(
-            fCamMaxAllowedPosX,
-            std::max(fCamMinAllowedPosX, (player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2));
+            fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
+            std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, fPosXBetweenPlayerAndCamera));
 
         fCamPosYTarget = std::min(
-            fCamMaxAllowedPosY,
-            std::max(fCamMinAllowedPosY, (player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2));
+            fCamMaxAllowedPosYtoKeepAwayFromMapVerticalBounds,
+            std::max(fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds, fPosYBetweenPlayerAndCamera));
     }
     else
     {
         fCamPosXTarget = std::min(
-            fCamMaxAllowedPosX,
-            std::max(fCamMinAllowedPosX, player.getObject3D()->getPosVec().getX()));
+            fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
+            std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, player.getObject3D()->getPosVec().getX()));
 
         fCamPosYTarget = std::min(
-            fCamMaxAllowedPosY,
-            std::max(fCamMinAllowedPosY, player.getObject3D()->getPosVec().getY()));
+            fCamMaxAllowedPosYtoKeepAwayFromMapVerticalBounds,
+            std::max(fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds, player.getObject3D()->getPosVec().getY()));
     }
 
     fCamPosXTarget += m_fShakeFactorX;
