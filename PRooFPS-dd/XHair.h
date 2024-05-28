@@ -57,6 +57,7 @@ namespace proofps_dd
         PGE& m_pge;
         PureObject3D* m_pObjXHair;
         PureVector m_vecUnprojected;
+        PureObject3D* m_pObjDebugCube;
 
         // ---------------------------------------------------------------------------
 

@@ -1261,6 +1261,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::PushFont(m_pImFont);
 
         drawRespawnTimer();
+        drawXHairHoveredPlayerNames();
 
         //const auto fTextX = ImGui::GetCursorPosX();
         //auto fTextY = ImGui::GetCursorPosY();
@@ -1328,6 +1329,11 @@ void proofps_dd::GUI::drawRespawnTimer()
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
+}
+
+void proofps_dd::GUI::drawXHairHoveredPlayerNames()
+{
+
 }
 
 float proofps_dd::GUI::getCenterPosXForText(const std::string& text)

@@ -10,7 +10,7 @@
 #include "stdafx.h"  // PCH
 
 #include "Player.h"
-#include "PRooFPS-dd-packet.h"
+#include "Consts.h"
 
 
 // ############################### PUBLIC ################################
@@ -258,7 +258,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeStartedInvulnerability;
 }
 
-void proofps_dd::Player::update(const proofps_dd::Config& config, bool bServer)
+void proofps_dd::Player::updateVisuals(const proofps_dd::Config& config, bool bServer)
 {
     if (getInvulnerability())
     {

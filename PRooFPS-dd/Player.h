@@ -21,14 +21,8 @@
 #include "Config/PgeOldNewValue.h"
 
 #include "Config.h"
-#include "Consts.h"
 #include "Durations.h"
-#include "GameMode.h"
-#include "GUI.h"
-#include "Maps.h"
-#include "Networking.h"
 #include "PRooFPS-dd-packet.h"
-#include "Sounds.h"
 #include "Strafe.h"
 
 namespace proofps_dd
@@ -134,7 +128,7 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
-        void update(const proofps_dd::Config& config, bool bServer);
+        void updateVisuals(const proofps_dd::Config& config, bool bServer);
 
         void show();
         void hide();

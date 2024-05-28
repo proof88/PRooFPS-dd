@@ -25,13 +25,16 @@ CConsole& proofps_dd::XHair::getConsole() const
 
 proofps_dd::XHair::XHair(PGE& pge) :
     m_pge(pge),
-    m_pObjXHair(pge.getPure().getObject3DManager().createPlane(32.f, 32.f))
+    m_pObjXHair(pge.getPure().getObject3DManager().createPlane(32.f, 32.f)),
+    m_pObjDebugCube(pge.getPure().getObject3DManager().createCube(0.02f))
 {
-    if (!m_pObjXHair)
+    if (!m_pObjXHair || !m_pObjDebugCube)
     {
         throw std::exception(
             std::string("ERROR: m_pObjXHair NULL!").c_str());
     }
+
+    m_pObjDebugCube->Hide();  // show it when need to debug xhair 2d -> 3d unprojection
 
     m_pObjXHair->SetStickedToScreen(true);
     m_pObjXHair->SetDoubleSided(true);
@@ -50,6 +53,10 @@ proofps_dd::XHair::~XHair()
     if (m_pObjXHair)
     {
         delete m_pObjXHair;
+    }
+    if (m_pObjDebugCube)
+    {
+        delete m_pObjDebugCube;
     }
 }
 
@@ -120,18 +127,29 @@ void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
     if (!cam.project2dTo3d(
         static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getX()) + cam.getViewport().size.width / 2),
         static_cast<TPureUInt>(roundf(m_pObjXHair->getPosVec().getY()) + cam.getViewport().size.height / 2),
-        /* in v0.1.5 this is player's Z mapped to depth buffer: 0.9747f, and I dont remember why I'm using 0.96f ... */
-        0.96f,
+        /* in v0.2.5 this is player's Z (-1.2f as per GAME_PLAYERS_POS_Z) mapped to depth buffer: 0.9747f,
+           0.f Z is 0.981f depth, but
+           I was using 0.96f in earlier versions so it was a bit aligned on Z-axis, the camera was less moving away to screen corners,
+           but better to use the mapped player Z since the aim of unprojecting xhair is to collide it with player objects */
+        0.9747f,
         m_vecUnprojected))
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): project2dTo3d() failed!", __func__);
+        //getConsole().EOLn("XHair::%s(): project2dTo3d() failed!", __func__);
     }
     else
     {
-        //getConsole().EOLn("obj X: %f, Y: %f, m_vecUnprojected X: %f, Y: %f",
+        m_pObjDebugCube->getPosVec() = m_vecUnprojected;
+        //getConsole().EOLn("XHair obj X: %f, Y: %f, m_vecUnprojected X: %f, Y: %f",
         //    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
         //    m_vecUnprojected.getX(), m_vecUnprojected.getY());
     }
+
+    // this code snippet here is just for finding out which screen depth to use:
+    //PureVector vecProjected;
+    //if (cam.project3dTo2d(0.f, 0.f, 0.f /* GAME_PLAYERS_POS_Z as defined in Maps */, vecProjected))
+    //{
+    //    getConsole().EOLn("XHair::%s(): vecProjected X: %f, Y: %f, Z (depth): %f!", __func__, vecProjected.getX(), vecProjected.getY(), vecProjected.getZ());
+    //}
 }
 
 const PureVector& proofps_dd::XHair::getUnprojectedCoords() const

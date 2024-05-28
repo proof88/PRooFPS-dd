@@ -127,6 +127,7 @@ namespace proofps_dd
         /* In-Game GUI elements */
 
         static void drawRespawnTimer();
+        static void drawXHairHoveredPlayerNames();
 
         /* Misc */
 

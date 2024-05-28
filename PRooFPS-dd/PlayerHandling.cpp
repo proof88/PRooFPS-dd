@@ -10,6 +10,7 @@
 #include "stdafx.h"  // PCH
 
 #include "PlayerHandling.h"
+#include "Physics.h"
 #include "PRooFPS-dd-packet.h"
 
 
@@ -838,11 +839,11 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     return true;
 }
 
-void proofps_dd::PlayerHandling::updatePlayers(
+void proofps_dd::PlayerHandling::updatePlayersVisuals(
     const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode)
 {
-    // both client and server come here, so this is a great place to HIDE respawn countdown for player is game has been won in the meantime.
+    // both client and server come here, so this is a great place to HIDE respawn countdown for player if game has been won in the meantime.
     // as of v0.2.4 this is invoked in every frame so this is great!
     if (gameMode.isGameWon())
     {
@@ -853,7 +854,16 @@ void proofps_dd::PlayerHandling::updatePlayers(
     {
         auto& player = playerPair.second;
 
-        player.update(config, m_pge.getNetwork().isServer());
+        player.updateVisuals(config, m_pge.getNetwork().isServer());
+        
+        if (Physics::colliding2_NoZ(
+            player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
+            player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+            m_gui.getXHair()->getUnprojectedCoords().getX(), m_gui.getXHair()->getUnprojectedCoords().getY(),
+            /* virtual 3D size of xhair */ 0.02f, 0.02f))
+        {
+            //getConsole().EOLn("PlayerHandling::%s(): xhair hit player: %s!", __func__, player.getName().c_str());
+        }
     }
 }
 

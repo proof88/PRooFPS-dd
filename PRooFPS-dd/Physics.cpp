@@ -55,9 +55,6 @@ const char* proofps_dd::Physics::getLoggerModuleName()
 }
 
 
-// ############################## PROTECTED ##############################
-
-
 bool proofps_dd::Physics::colliding(const PureObject3D& a, const PureObject3D& b)
 {
     return colliding2(
@@ -228,6 +225,10 @@ bool proofps_dd::Physics::colliding3(
         vecObjSize.getX(), vecObjSize.getY(), vecObjSize.getZ()
     );
 }
+
+
+// ############################## PROTECTED ##############################
+
 
 void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
 {

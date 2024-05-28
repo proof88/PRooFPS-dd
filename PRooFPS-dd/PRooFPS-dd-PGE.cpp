@@ -784,7 +784,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
         m_config.getCameraFollowsPlayerAndXHair(),
         m_config.getCameraTilting(),
         m_config.getCameraRolling());
-    updatePlayers(m_config, *m_gameMode); // maybe we should do this per-tick instead of per-frame in the future
+
+    updatePlayersVisuals(m_config, *m_gameMode); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();

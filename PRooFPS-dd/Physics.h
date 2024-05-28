@@ -50,8 +50,6 @@ namespace proofps_dd
         Physics(Physics&&) = delete;
         Physics&& operator=(Physics&&) = delete;
 
-    protected:
-
         static bool colliding(const PureObject3D& a, const PureObject3D& b);
         static bool colliding_NoZ(const PureObject3D& a, const PureObject3D& b);
         static bool colliding2(
@@ -78,6 +76,7 @@ namespace proofps_dd
             PureVector& vDirPerAxis,
             PureVector& vDistancePerAxis);
 
+    protected:
         
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
