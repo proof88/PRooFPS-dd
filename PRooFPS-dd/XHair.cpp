@@ -95,6 +95,11 @@ void proofps_dd::XHair::hide()
     m_pObjXHair->Hide();
 }
 
+bool proofps_dd::XHair::visible() const
+{
+    return m_pObjXHair->isRenderingAllowed();
+}
+
 void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
 {
     // TODO: explicit call to this function would NOT be required if we did maintain a dirty flag and explicit setX(), setY() functions, which
@@ -155,6 +160,21 @@ void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
 const PureVector& proofps_dd::XHair::getUnprojectedCoords() const
 {
     return m_vecUnprojected;
+}
+
+void proofps_dd::XHair::showIdText(const std::string& sText)
+{
+    m_sIdText = sText;
+}
+
+void proofps_dd::XHair::hideIdText()
+{
+    m_sIdText.clear();
+}
+
+const std::string& proofps_dd::XHair::getIdText() const
+{
+    return m_sIdText;
 }
 
 

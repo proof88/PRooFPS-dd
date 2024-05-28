@@ -42,8 +42,14 @@ namespace proofps_dd
         void show();
         void showInCenter();
         void hide();
+        bool visible() const;
+
         void updateUnprojectedCoords(PureCamera& cam);
         const PureVector& getUnprojectedCoords() const;
+
+        void showIdText(const std::string& sText);
+        void hideIdText();
+        const std::string& getIdText() const;
 
     protected:
 
@@ -58,6 +64,7 @@ namespace proofps_dd
         PureObject3D* m_pObjXHair;
         PureVector m_vecUnprojected;
         PureObject3D* m_pObjDebugCube;
+        std::string m_sIdText;
 
         // ---------------------------------------------------------------------------
 

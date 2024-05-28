@@ -31,6 +31,7 @@
 #include <sstream>
 #include <set>
 #include <string>
+#include <utility>    // as_const(), swap(), etc.
 #include <vector>
 
 // Windows Header Files

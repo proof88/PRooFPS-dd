@@ -74,8 +74,8 @@ namespace proofps_dd
         bool hideBgWithLogo();
         XHair* getXHair();
 
-        void textForNextFrame(const std::string& s, int x, int y) const;
-        void textPermanent(const std::string& s, int x, int y) const;
+        void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
+        void textPermanent(const std::string& s, int nPureX, int nPureY) const;
 
         void showRespawnTimer();
         void hideRespawnTimer();
@@ -127,13 +127,16 @@ namespace proofps_dd
         /* In-Game GUI elements */
 
         static void drawRespawnTimer();
-        static void drawXHairHoveredPlayerNames();
+        static void drawXHairHoverText();
 
         /* Misc */
 
-        static float getCenterPosXForText(const std::string& text);
-        static void drawText(const float& x, const float& y, const std::string& text);
-        static void drawTextShadowed(const float& x, const float& y, const std::string& text);
+        static float getImGuiXfromPureX(const float& fPureX);
+        static float getImGuiYfromPureY(const float& fPureY);
+        static float getPosXforCenteredText(const std::string& text, const float& fImGuiX);
+        static float getPosXforWindowCenteredText(const std::string& text);
+        static void drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text);
+        static void drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text);
 
         static void drawDearImGuiCb(); // this needs to be static, causing a lot of other members also need to be static
 

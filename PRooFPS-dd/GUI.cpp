@@ -285,14 +285,14 @@ proofps_dd::XHair* proofps_dd::GUI::getXHair()
     return m_pXHair;
 }
 
-void proofps_dd::GUI::textForNextFrame(const std::string& s, int x, int y) const
+void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
 {
-    m_pPge->getPure().getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
+    m_pPge->getPure().getUImanager().textTemporalLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
 
-void proofps_dd::GUI::textPermanent(const std::string& s, int x, int y) const
+void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY) const
 {
-    m_pPge->getPure().getUImanager().textPermanentLegacy(s, x, y)->SetDropShadow(true);
+    m_pPge->getPure().getUImanager().textPermanentLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
 
 void proofps_dd::GUI::showRespawnTimer()
@@ -419,12 +419,12 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     }
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
-    ImGui::SetCursorPosX(getCenterPosXForText(sVersion));
+    ImGui::SetCursorPosX(getPosXforWindowCenteredText(sVersion));
     ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
     ImGui::Text("%s", sVersion.c_str());
 
     const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
-    ImGui::SetCursorPosX(getCenterPosXForText(sLatestAlpVersion));
+    ImGui::SetCursorPosX(getPosXforWindowCenteredText(sLatestAlpVersion));
     ImGui::TextDisabled("%s", sLatestAlpVersion.c_str());
 }
 
@@ -1255,26 +1255,14 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x, main_viewport->WorkSize.y), ImGuiCond_FirstUseEver);
 
+        // this window should cover the full window client area, otherwise getImGuiXfromPureX() and other functions might not function properly!
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
         ImGui::PushFont(m_pImFont);
 
         drawRespawnTimer();
-        drawXHairHoveredPlayerNames();
-
-        //const auto fTextX = ImGui::GetCursorPosX();
-        //auto fTextY = ImGui::GetCursorPosY();
-        //for (int i = 0; i < 20; i++)
-        //{
-        //    ImGui::SetCursorPos(ImVec2(fTextX + 1, fTextY + 1));
-        //    ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
-        //    float fNextTextRowY = ImGui::GetCursorPosY() - 1;
-        //    ImGui::SetCursorPos(ImVec2(fTextX, fTextY));
-        //    ImGui::Text("ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDASD");
-        //    fTextY = fNextTextRowY;
-        //}
-        // 
+        drawXHairHoverText();
 
         ImGui::PopFont();
 
@@ -1298,7 +1286,7 @@ void proofps_dd::GUI::drawRespawnTimer()
 
     static constexpr char* szRespawnWaitText = "... Waiting to Respawn ...";
     // if we make this static, it will be wrong upon changing screen resolution so now just let it be like this
-    const float fTextPosX = getCenterPosXForText(szRespawnWaitText);
+    const float fTextPosX = getPosXforWindowCenteredText(szRespawnWaitText);
 
     drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
 
@@ -1331,27 +1319,78 @@ void proofps_dd::GUI::drawRespawnTimer()
     ImGui::PopStyleColor();
 }
 
-void proofps_dd::GUI::drawXHairHoveredPlayerNames()
+void proofps_dd::GUI::drawXHairHoverText()
 {
+    if (!m_pXHair->visible() || m_pXHair->getIdText().empty())
+    {
+        return;
+    }
 
+    drawTextShadowed(
+        getPosXforCenteredText(
+            m_pXHair->getIdText(), getImGuiXfromPureX(m_pXHair->getObject3D().getPosVec().getX())),
+            getImGuiYfromPureY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
+            m_pXHair->getIdText());
 }
 
-float proofps_dd::GUI::getCenterPosXForText(const std::string& text)
+/**
+* Converts the given X position specified in PURE 2D coordinate system to an X position in ImGui's 2D coordinate system.
+* 
+* Dear ImGui coordinates are the same as OS desktop/native coordinates which means that operating with ImGui::GetMainViewport() is
+* different than operating with getPure().getCamera().getViewport():
+* - PURE 2D viewport (0,0) is the CENTER, and positive Y goes UPWARDS from CENTER;
+* - Dear ImGui viewport (0,0) is the TOP LEFT, and positive Y goes DOWNWARDS from the TOP.
+* 
+* @param fPureX The input X position in PURE 2D coordinate system.
+* 
+* @return The X position in ImGui's 2D coordinate system equivalent to the input PURE 2D X position.
+*/
+float proofps_dd::GUI::getImGuiXfromPureX(const float& fPureX)
 {
-    return (ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f;
+    // considering ImGui::GetWindowSize() covering the full client area of the window
+    return fPureX + ImGui::GetWindowSize().x * 0.5f;
 }
 
-void proofps_dd::GUI::drawText(const float& x, const float& y, const std::string& text)
+
+/**
+* Converts the given Y position specified in PURE 2D coordinate system to an Y position in ImGui's 2D coordinate system.
+*
+* Dear ImGui coordinates are the same as OS desktop/native coordinates which means that operating with ImGui::GetMainViewport() is
+* different than operating with getPure().getCamera().getViewport():
+* - PURE 2D viewport (0,0) is the CENTER, and positive Y goes UPWARDS from CENTER;
+* - Dear ImGui viewport (0,0) is the TOP LEFT, and positive Y goes DOWNWARDS from the TOP.
+*
+* @param fPureY The input Y position in PURE 2D coordinate system.
+*
+* @return The Y position in ImGui's 2D coordinate system equivalent to the input PURE 2D Y position.
+*/
+float proofps_dd::GUI::getImGuiYfromPureY(const float& fPureY)
 {
-    ImGui::SetCursorPos(ImVec2(x, y));
+    // considering ImGui::GetWindowSize() covering the full client area of the window
+    return ImGui::GetWindowSize().y * 0.5f - fPureY;
+}
+
+float proofps_dd::GUI::getPosXforCenteredText(const std::string& text, const float& fImGuiX)
+{
+    return fImGuiX - ImGui::CalcTextSize(text.c_str()).x * 0.5f;
+}
+
+float proofps_dd::GUI::getPosXforWindowCenteredText(const std::string& text)
+{
+    return getPosXforCenteredText(text, ImGui::GetWindowSize().x * 0.5f);
+}
+
+void proofps_dd::GUI::drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text)
+{
+    ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
     ImGui::Text("%s", text.c_str());
 }
 
-void proofps_dd::GUI::drawTextShadowed(const float& x, const float& y, const std::string& text)
+void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text)
 {
-    ImGui::SetCursorPos(ImVec2(x + 1, y + 1));
+    ImGui::SetCursorPos(ImVec2(fImGuiX + 1, fImGuiY + 1));
     ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%s", text.c_str());
-    drawText(x, y, text);
+    drawText(fImGuiX, fImGuiY, text);
 }
 
 proofps_dd::GUI::GUI()
