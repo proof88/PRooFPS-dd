@@ -1184,6 +1184,18 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         cvarGfxCamRoll.Set(bGfxCamRolling);
     }
 
+    PGEcfgVariable& cvarGuiXHairIdentifiesPlayers = m_pPge->getConfigProfiles().getVars()[XHair::szCvarGuiXHairIdentifiesPlayers];
+    bool bGuiXHairIdentifiesPlayers = cvarGuiXHairIdentifiesPlayers.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintGuiXHairIdentifiesPlayers; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGuiXHairIdentifiesPlayers, cvarGuiXHairIdentifiesPlayers);
+    ImGui::Text("Crosshair Identifies Players:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbGuiXHairIdentifiesPlayers", &bGuiXHairIdentifiesPlayers))
+    {
+        cvarGuiXHairIdentifiesPlayers.Set(bGuiXHairIdentifiesPlayers);
+    }
+
     ImGui::Separator();
 
     if (ImGui::Button("< BACK"))

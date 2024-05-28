@@ -26,7 +26,7 @@ namespace proofps_dd
     {
     public:
 
-        //static constexpr char* szCvarGuiXHairIdentifiesPlayers = "gui_xhair_identifies_players";
+        static constexpr char* szCvarGuiXHairIdentifiesPlayers = "gui_xhair_identifies_players";
 
         static const char* getLoggerModuleName();
 

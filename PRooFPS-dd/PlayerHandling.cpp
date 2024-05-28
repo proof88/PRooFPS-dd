@@ -850,6 +850,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
         m_gui.hideRespawnTimer();
     }
 
+    const bool bXHairIdentifiesPlayers = m_pge.getConfigProfiles().getVars()[XHair::szCvarGuiXHairIdentifiesPlayers].getAsBool();
     m_gui.getXHair()->hideIdText();
     for (auto& playerPair : m_mapPlayers)
     {
@@ -857,25 +858,28 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
 
         player.updateVisuals(config, m_pge.getNetwork().isServer());
         
-        // it does not matter if we iterate from the back or the front, because players are ordered in the map by their conn handle, which
-        // is not continuously increasing, so the latest added player might not be the last player in the map.
-        // At the same time, when players are overlapping, the later added player is rendered over the earlier added player, which would imply
-        // that in such situation the later added player's name is preferred to be shown, but it is not the case due to the order in the map.
-        // To solve this, there should be also a different map where players are ordered by their connection time, and we should iterate that.
-        // Opened ticket for this bug: https://github.com/proof88/PRooFPS-dd/issues/323
-        if (!gameMode.isGameWon() &&
-            m_gui.getXHair()->getIdText().empty() &&
-            !isMyConnection(playerPair.first) &&
-            (std::as_const(player).getObject3D()->isRenderingAllowed()) &&
-            (std::as_const(player).getHealth() > 0) &&
-            Physics::colliding2_NoZ(
-                player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
-                player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-                m_gui.getXHair()->getUnprojectedCoords().getX(), m_gui.getXHair()->getUnprojectedCoords().getY(),
-                /* virtual 3D size of xhair */ 0.02f, 0.02f))
+        if (bXHairIdentifiesPlayers)
         {
-            m_gui.getXHair()->showIdText(player.getName() + " | HP: " + std::to_string(std::as_const(player).getHealth().getNew()));
-            //getConsole().EOLn("PlayerHandling::%s(): xhair hit player: %s!", __func__, player.getName().c_str());
+            // it does not matter if we iterate from the back or the front, because players are ordered in the map by their conn handle, which
+            // is not continuously increasing, so the latest added player might not be the last player in the map.
+            // At the same time, when players are overlapping, the later added player is rendered over the earlier added player, which would imply
+            // that in such situation the later added player's name is preferred to be shown, but it is not the case due to the order in the map.
+            // To solve this, there should be also a different map where players are ordered by their connection time, and we should iterate that.
+            // Opened ticket for this bug: https://github.com/proof88/PRooFPS-dd/issues/323
+            if (!gameMode.isGameWon() &&
+                m_gui.getXHair()->getIdText().empty() &&
+                !isMyConnection(playerPair.first) &&
+                (std::as_const(player).getObject3D()->isRenderingAllowed()) &&
+                (std::as_const(player).getHealth() > 0) &&
+                Physics::colliding2_NoZ(
+                    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
+                    player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+                    m_gui.getXHair()->getUnprojectedCoords().getX(), m_gui.getXHair()->getUnprojectedCoords().getY(),
+                    /* virtual 3D size of xhair */ 0.02f, 0.02f))
+            {
+                m_gui.getXHair()->showIdText(player.getName() + " | HP: " + std::to_string(std::as_const(player).getHealth().getNew()));
+                //getConsole().EOLn("PlayerHandling::%s(): xhair hit player: %s!", __func__, player.getName().c_str());
+            }
         }
     }
 }
