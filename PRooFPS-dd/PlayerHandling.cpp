@@ -862,7 +862,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
         // At the same time, when players are overlapping, the later added player is rendered over the earlier added player, which would imply
         // that in such situation the later added player's name is preferred to be shown, but it is not the case due to the order in the map.
         // To solve this, there should be also a different map where players are ordered by their connection time, and we should iterate that.
-        // Opened ticket for this bug: 
+        // Opened ticket for this bug: https://github.com/proof88/PRooFPS-dd/issues/323
         if (!gameMode.isGameWon() &&
             m_gui.getXHair()->getIdText().empty() &&
             !isMyConnection(playerPair.first) &&
