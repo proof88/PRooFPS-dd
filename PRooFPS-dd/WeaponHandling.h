@@ -63,7 +63,7 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaSize,
             const TPureFloat& fDamageAreaPulse,
             const int& nDamageHp,
-            PureObject3D& objXHair,
+            XHair& xhair,
             PureVector& vecCamShakeForce,
             proofps_dd::GameMode& gameMode);
         Explosion& createExplosionClient(
@@ -84,7 +84,7 @@ namespace proofps_dd
         bool isBulletOutOfMapBounds(const Bullet& bullet) const;
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
-            PureObject3D& objXHair,
+            XHair& xhair,
             const unsigned int& nPhysicsRate,
             PureVector& vecCamShakeForce);
         void clientUpdateBullets(const unsigned int& nPhysicsRate);
@@ -105,6 +105,9 @@ namespace proofps_dd
         bool handleWpnUpdateCurrentFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);
+        void handleWeaponStateChangeShared(
+            const Weapon::State& oldState,
+            const Weapon::State& newState);
 
     private:
 
@@ -112,6 +115,7 @@ namespace proofps_dd
 
         PGE& m_pge;
         proofps_dd::Durations& m_durations;
+        proofps_dd::GUI& m_gui;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;

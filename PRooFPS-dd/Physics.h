@@ -81,7 +81,7 @@ namespace proofps_dd
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
         void serverGravity(
-            PureObject3D& objXHair,
+            XHair& xhair,
             const unsigned int& nPhysicsRate,
             proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */);
         void serverPlayerCollisionWithWalls(const unsigned int& nPhysicsRate);

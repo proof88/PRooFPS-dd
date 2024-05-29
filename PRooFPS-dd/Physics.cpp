@@ -241,7 +241,7 @@ void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
 }
 
 void proofps_dd::Physics::serverGravity(
-    PureObject3D& objXHair,
+    XHair& xhair,
     const unsigned int& nPhysicsRate,
     proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */ )
 {   
@@ -352,7 +352,7 @@ void proofps_dd::Physics::serverGravity(
             // Note that we also need to consider who will know that upon dieing by falling down, splash die sound is needed to be played.
             // Because that would be also sent to clients so they can also play the sound. Maybe set death reason, I dont know.
             player.getFrags()--; // suicide
-            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle(), gameMode);
+            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
 
             //if (player.isFalling())
             //{

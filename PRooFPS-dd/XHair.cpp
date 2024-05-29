@@ -70,6 +70,7 @@ void proofps_dd::XHair::show()
 {
     assert(m_pObjXHair); // otherwise ctor would had already thrown
     m_pObjXHair->Show();
+    m_bVisible = true;
 }
 
 void proofps_dd::XHair::showInCenter()
@@ -87,17 +88,20 @@ void proofps_dd::XHair::showInCenter()
 
     m_pObjXHair->getPosVec().Set(0, 0, 0); // reposition to viewport center so it won't appear at random places
     m_pObjXHair->Show();
+    m_bVisible = true;
 }
 
 void proofps_dd::XHair::hide()
 {
     assert(m_pObjXHair); // otherwise ctor would had already thrown
     m_pObjXHair->Hide();
+    m_bVisible = false;
+    stopBlinking();
 }
 
 bool proofps_dd::XHair::visible() const
 {
-    return m_pObjXHair->isRenderingAllowed();
+    return m_bVisible;
 }
 
 void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
@@ -175,6 +179,40 @@ void proofps_dd::XHair::hideIdText()
 const std::string& proofps_dd::XHair::getIdText() const
 {
     return m_sIdText;
+}
+
+void proofps_dd::XHair::startBlinking()
+{
+    // idea is that game calls either xhair show() or hide(), while GUI can also invoke startBlinking, so game does not deal with blinking,
+    // this blinking is allowed only if xhair is visible anyway, a hidden xhair wont be shown by startBlinking().
+    m_timeStartedBlinking = std::chrono::steady_clock::now();
+    m_bBlinking = m_bVisible;  // visibility state always overrides blinking
+}
+
+void proofps_dd::XHair::stopBlinking()
+{
+    m_bBlinking = false;
+    // during blinking, game maybe invoked hide() for whatever reason, later game may invoke stopBlinking() also for whatever reason, anyway we should enable
+    // xhair rendering only if game still did NOT invoke hide() in the meantime
+    m_pObjXHair->SetRenderingAllowed(m_bVisible);  // visibility state always overrides after-blinking true visibility state
+}
+
+void proofps_dd::XHair::updateVisuals()
+{
+    // expected to be invoked every frame
+    if (!m_bVisible)
+    {
+        stopBlinking();
+        return;
+    }
+
+    if (m_bBlinking)
+    {
+        constexpr auto nBlinkPeriodMillisecs = 200;
+        const auto nElapsedTimeSinceBlinkingStartMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedBlinking).count();
+        m_pObjXHair->SetRenderingAllowed(
+            ((nElapsedTimeSinceBlinkingStartMillisecs / nBlinkPeriodMillisecs) % 2) == 1);
+    }
 }
 
 

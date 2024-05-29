@@ -16,6 +16,7 @@
 
 #include "Durations.h"
 #include "GameMode.h"
+#include "GUI.h"
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -66,7 +67,7 @@ namespace proofps_dd
         PlayerAppActionRequest clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
             proofps_dd::GameMode& gameMode,
             proofps_dd::Player& player,
-            PureObject3D& objXHair,
+            proofps_dd::XHair& xhair,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
             const unsigned int nPhysicsRateMin);

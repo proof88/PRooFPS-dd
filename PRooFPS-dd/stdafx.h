@@ -23,6 +23,7 @@
 // C++ std headers
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iomanip>

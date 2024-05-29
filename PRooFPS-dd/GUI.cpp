@@ -1274,7 +1274,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::PushFont(m_pImFont);
 
         drawRespawnTimer();
-        drawXHairHoverText();
+        updateXHair();
 
         ImGui::PopFont();
 
@@ -1343,6 +1343,14 @@ void proofps_dd::GUI::drawXHairHoverText()
             m_pXHair->getIdText(), getImGuiXfromPureX(m_pXHair->getObject3D().getPosVec().getX())),
             getImGuiYfromPureY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
             m_pXHair->getIdText());
+}
+
+void proofps_dd::GUI::updateXHair()
+{
+    // in the future this function can be moved to XHair class with drawXHairHoverText(), but first drawTextShadowed need to be moved to separate class
+    // so that both GUI and XHair classes can utilize it
+    m_pXHair->updateVisuals();
+    drawXHairHoverText();
 }
 
 /**

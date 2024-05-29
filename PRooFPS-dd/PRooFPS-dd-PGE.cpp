@@ -499,7 +499,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = handleUserUpdateFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
-                m_gui.getXHair()->getObject3D(),
+                *m_gui.getXHair(),
                 m_config,
                 *m_gameMode);
             break;
@@ -722,11 +722,11 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         if (!bWin)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-            serverGravity(m_gui.getXHair()->getObject3D(), m_config.getPhysicsRate(), *m_gameMode);
+            serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *m_gameMode);
             serverPlayerCollisionWithWalls(m_config.getPhysicsRate());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
-        serverUpdateBullets(*m_gameMode, m_gui.getXHair()->getObject3D(), m_config.getPhysicsRate(), cameraGetShakeForce());
+        serverUpdateBullets(*m_gameMode, *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
         serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
         updatePlayersOldValues();
@@ -760,11 +760,12 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
 void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
 {
     std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+    assert(m_gui.getXHair());
     Player& player = m_mapPlayers.at(m_nServerSideConnectionHandle); // cannot throw, because of bValidConnection
     if (window.isActive())
     {
         if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
-            *m_gameMode, player, m_gui.getXHair()->getObject3D(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
+            *m_gameMode, player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate()
         ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);

@@ -57,7 +57,7 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
-    PureObject3D& objXHair,
+    XHair& xhair,
     pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide,
     proofps_dd::GameMode& gameMode)
 {
@@ -65,7 +65,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
-        objXHair.Hide();
+        xhair.hide();
         
         if (!gameMode.isGameWon())
         {
@@ -92,7 +92,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
 
 void proofps_dd::PlayerHandling::handlePlayerRespawned(
     Player& player,
-    PureObject3D& objXHair)
+    XHair& xhair)
 {
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
@@ -108,7 +108,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         camera.getTargetVec().SetX(camera.getPosVec().getX());
         camera.getTargetVec().SetY(camera.getPosVec().getY());
 
-        objXHair.Show();
+        xhair.show();
         m_gui.hideRespawnTimer();
     }
 }
@@ -675,7 +675,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
 bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserUpdateFromServer& msg,
-    PureObject3D& objXHair,
+    XHair& xhair,
     const proofps_dd::Config& /*config*/,
     proofps_dd::GameMode& gameMode)
 {
@@ -765,7 +765,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (msg.m_bRespawn)
     {
         //getConsole().OLn("PlayerHandling::%s(): player %s has respawned!", __func__, player.getName().c_str());
-        handlePlayerRespawned(player, objXHair);
+        handlePlayerRespawned(player, xhair);
     }
     else
     {
@@ -774,7 +774,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PlayerHandling::%s(): player %s has died!", __func__, player.getName().c_str());
-            handlePlayerDied(player, objXHair, player.getServerSideConnectionHandle() /* ignored by client anyway */, gameMode);
+            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle() /* ignored by client anyway */, gameMode);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!

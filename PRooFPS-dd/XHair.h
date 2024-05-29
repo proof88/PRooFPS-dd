@@ -51,6 +51,11 @@ namespace proofps_dd
         void hideIdText();
         const std::string& getIdText() const;
 
+        void startBlinking();
+        void stopBlinking();
+
+        void updateVisuals();
+
     protected:
 
         XHair(const XHair&) = delete;
@@ -65,6 +70,9 @@ namespace proofps_dd
         PureVector m_vecUnprojected;
         PureObject3D* m_pObjDebugCube;
         std::string m_sIdText;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeStartedBlinking;
+        bool m_bVisible = false;
+        bool m_bBlinking = false;
 
         // ---------------------------------------------------------------------------
 

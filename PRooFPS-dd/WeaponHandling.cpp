@@ -35,6 +35,7 @@ proofps_dd::WeaponHandling::WeaponHandling(
     proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds),
     m_pge(pge),
     m_durations(durations),
+    m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds)
@@ -78,7 +79,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
-void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, PureObject3D& objXHair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
+void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -161,7 +162,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                                 //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                             }
                             // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                            handlePlayerDied(player, objXHair, nKillerConnHandleServerSide, gameMode);
+                            handlePlayerDied(player, xhair, nKillerConnHandleServerSide, gameMode);
                         }
                     }
                     break; // we can stop since a bullet can touch 1 playerPair only at a time
@@ -235,7 +236,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getAreaDamageSize(),
                         bullet.getAreaDamagePulse(),
                         bullet.getDamageHp(),
-                        objXHair,
+                        xhair,
                         vecCamShakeForce,
                         gameMode);
                 }
@@ -423,7 +424,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const TPureFloat& fDamageAreaSize,
     const TPureFloat& fDamageAreaPulse,
     const int& nDamageHp,
-    PureObject3D& objXHair,
+    XHair& xhair,
     PureVector& vecCamShakeForce,
     proofps_dd::GameMode& gameMode)
 {
@@ -504,7 +505,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
                 }
                 // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                handlePlayerDied(player, objXHair, nKillerConnHandleServerSide, gameMode);
+                handlePlayerDied(player, xhair, nKillerConnHandleServerSide, gameMode);
             }
         }
     }
@@ -620,6 +621,11 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 // server doesn't need to send this msg to itself, it already executed bullet count change by wpn->update()
                 bSendPrivateWpnUpdatePktToTheClientOnly = true;
             }
+        }
+
+        if (playerServerSideConnHandle == pge_network::ServerConnHandle)
+        {
+            handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew());
         }
 
         if (bSendPrivateWpnUpdatePktToTheClientOnly)
@@ -851,8 +857,12 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         return false;
     }
 
-    // once we have this function, we should invoke it here, because state must be set always, no matter if we are alive or not!
-    // wpn->clientReceiveStateFromServer(msg.m_state);
+    // state must be set always, no matter if we are alive or not!
+    wpn->clientReceiveStateFromServer(msg.m_state);
+    if (isMyConnection(it->first))
+    {
+        handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state);
+    }
     
     if (std::as_const(player).getHealth() > 0)
     {
@@ -875,6 +885,39 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec(), player.isSomersaulting());
 
     return true;
+}
+
+void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(const Weapon::State& oldState, const Weapon::State& newState)
+{
+    // processing weapon state change for the CURRENT player on THIS machine, no matter if we are server or client
+
+    switch (oldState)
+    {
+    case Weapon::State::WPN_RELOADING:
+    {
+        switch (newState)
+        {
+        case Weapon::State::WPN_READY:
+        /* fall-through */
+        case Weapon::State::WPN_SHOOTING:
+            m_gui.getXHair()->stopBlinking();
+            break;
+        default:
+            break;
+        }
+        break;
+    }
+    default:
+        switch (newState)
+        {
+        case Weapon::State::WPN_RELOADING:
+            m_gui.getXHair()->startBlinking();
+            break;
+        default:
+            break;
+        }
+        break;
+    }
 }
 
 

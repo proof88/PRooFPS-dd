@@ -128,6 +128,7 @@ namespace proofps_dd
 
         static void drawRespawnTimer();
         static void drawXHairHoverText();
+        static void updateXHair();
 
         /* Misc */
 

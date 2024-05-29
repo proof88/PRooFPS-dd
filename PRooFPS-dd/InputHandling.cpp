@@ -8,16 +8,12 @@
 */
 
 #include "stdafx.h"  // PCH
+#include "InputHandling.h"
 
 // there is no unistd.h in VS, we use process.h instead
 //#include <unistd.h>   // for getpid()
 #include <process.h>  // for getpid()
 
-#include <cassert>
-#include <chrono>
-#include <iomanip>
-
-#include "InputHandling.h"
 #include "SharedWithTest.h"
 
 
@@ -75,7 +71,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Player& player,
-    PureObject3D& objXHair,
+    proofps_dd::XHair& xhair,
     const unsigned int nTickrate,
     const unsigned int nClUpdateRate,
     const unsigned int nPhysicsRateMin)
@@ -89,8 +85,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
-        clientMouseWhenConnectedToServer(gameMode, pkt, player, objXHair);
-        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(pkt, player, objXHair);
+        clientMouseWhenConnectedToServer(gameMode, pkt, player, xhair.getObject3D());
+        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(pkt, player, xhair.getObject3D());
     }
     return playerAppActionReq;
 }
@@ -311,6 +307,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             timeLastWpnReload = std::chrono::steady_clock::now();
             if (wpn->reload())
             {
+
                 //getConsole().OLn("InputHandling::%s(): player %s reloading the weapon!",
                 //    __func__, sClientUserName.c_str());
             }
