@@ -492,7 +492,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgUserCmdFromClient::id:
             bRet = serverHandleUserCmdMoveFromClient(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt),
+                *this);
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:
             assert(m_gui.getXHair());
@@ -1398,6 +1399,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     cameraPositionToMapCenter();
     hideLoadingScreen();
     m_gui.getXHair()->showInCenter();
+    m_gui.getXHair()->handleMagLoaded();
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,

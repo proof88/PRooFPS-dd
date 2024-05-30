@@ -75,6 +75,12 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaPulse,
             PureVector& vecCamShakeForce);
 
+        void handleWeaponBulletCountsChangeShared(
+            const TPureUInt& nOldMagCount,
+            const TPureUInt& nNewMagCount,
+            const TPureUInt& nOldUnmagCount,
+            const TPureUInt& nNewUnmagCount);
+
     protected:
 
         void deleteWeaponHandlingAll();

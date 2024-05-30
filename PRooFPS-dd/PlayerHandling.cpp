@@ -109,6 +109,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         camera.getTargetVec().SetY(camera.getPosVec().getY());
 
         xhair.show();
+        xhair.handleMagLoaded();
         m_gui.hideRespawnTimer();
     }
 }

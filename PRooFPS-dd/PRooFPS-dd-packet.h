@@ -870,7 +870,7 @@ namespace proofps_dd
 
     // server -> clients
     // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch, state update, etc.
-    // We need to send state update to all clients because only this way clients can properly audio-visualize that on their side.
+    // We need to send state update to all clients because only this way clients can properly audio-visualize other players' weapon state on their side.
     struct MsgCurrentWpnUpdateFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::CurrentWpnUpdateFromServer;

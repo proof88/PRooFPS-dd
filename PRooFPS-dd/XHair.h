@@ -54,6 +54,9 @@ namespace proofps_dd
         void startBlinking();
         void stopBlinking();
 
+        void handleMagEmpty();
+        void handleMagLoaded();
+
         void updateVisuals();
 
     protected:

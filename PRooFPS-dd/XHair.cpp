@@ -197,6 +197,16 @@ void proofps_dd::XHair::stopBlinking()
     m_pObjXHair->SetRenderingAllowed(m_bVisible);  // visibility state always overrides after-blinking true visibility state
 }
 
+void proofps_dd::XHair::handleMagEmpty()
+{
+    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(255, 0, 0, 255);
+}
+
+void proofps_dd::XHair::handleMagLoaded()
+{
+    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(255, 255, 255, 255);
+}
+
 void proofps_dd::XHair::updateVisuals()
 {
     // expected to be invoked every frame

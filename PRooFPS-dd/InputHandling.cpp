@@ -98,7 +98,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
 bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-    const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove)
+    const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove,
+    proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way */)
 {
     //const int nRandom = PFL::random(0, 100);
     //getConsole().EOLn("InputHandling::%s(): new msg from connHandleServerSide: %u, strafe: %d, %d, shoot: %b, crouch: %b!",
@@ -366,7 +367,30 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
                     m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
                 }
-                if (!player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
+                const auto prevWpn = player.getWeaponManager().getCurrentWeapon();
+                if (player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
+                {
+                    if (connHandleServerSide == pge_network::ServerConnHandle)
+                    {
+                        // !!!BADDESIGN!!!
+                        // this is ridiculous.
+                        // InputHandling should not use wpnHandling.
+                        // All Weapon-related messages should be injected by server to self, thus the processing of such events
+                        // would be the same as clients process them.
+                        // Would be nice to think about a design change.
+                        // Player movement is fine, but weapon handling is a bit different between server and client, leading to the need of
+                        // invoking some functions at multiple places, such as:
+                        // - handleWeaponBulletCountsChangeShared();
+                        // - handleWeaponStateChangeShared().
+                        wpnHandling.handleWeaponBulletCountsChangeShared(
+                            prevWpn->getMagBulletCount(),
+                            pTargetWpn->getMagBulletCount(),
+                            prevWpn->getUnmagBulletCount(),
+                            pTargetWpn->getUnmagBulletCount()
+                        );
+                    }
+                }
+                else
                 {
                     getConsole().EOLn("InputHandling::%s(): player %s switching to %s failed due to setCurrentWeapon() failed!",
                         __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());

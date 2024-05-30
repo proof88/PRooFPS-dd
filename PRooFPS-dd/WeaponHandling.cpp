@@ -591,6 +591,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             continue;
         }
 
+        const auto nOldMagCount = wpn->getMagBulletCount();
+        const auto nOldUnmagCount = wpn->getUnmagBulletCount();
         bool bSendPrivateWpnUpdatePktToTheClientOnly = false;
         if (player.getAttack() && player.attack())
         {
@@ -626,6 +628,11 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
             handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew());
+            handleWeaponBulletCountsChangeShared(
+                nOldMagCount,
+                wpn->getMagBulletCount(),
+                nOldUnmagCount,
+                wpn->getUnmagBulletCount());
         }
 
         if (bSendPrivateWpnUpdatePktToTheClientOnly)
@@ -822,6 +829,15 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
         return false;
     }
 
+    if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
+    {
+        handleWeaponBulletCountsChangeShared(
+            wpn->getMagBulletCount(),
+            msg.m_nMagBulletCount,
+            wpn->getUnmagBulletCount(),
+            msg.m_nUnmagBulletCount);
+    }
+
     wpn->SetAvailable(msg.m_bAvailable);
     wpn->SetMagBulletCount(msg.m_nMagBulletCount);
     wpn->SetUnmagBulletCount(msg.m_nUnmagBulletCount);
@@ -870,6 +886,12 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         {
             //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
             m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
+
+            handleWeaponBulletCountsChangeShared(
+                player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(),
+                wpn->getMagBulletCount(),
+                player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount(),
+                wpn->getUnmagBulletCount());
         }
 
         if (!player.getWeaponManager().setCurrentWeapon(wpn,
@@ -917,6 +939,24 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(const Weapon::Sta
             break;
         }
         break;
+    }
+}
+
+void proofps_dd::WeaponHandling::handleWeaponBulletCountsChangeShared(
+    const TPureUInt& nOldMagCount,
+    const TPureUInt& nNewMagCount,
+    const TPureUInt& /*nOldUnmagCount*/,
+    const TPureUInt& /*nNewUnmagCount*/)
+{
+    // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
+
+    if ((nOldMagCount > 0) && (nNewMagCount == 0))
+    {
+        m_gui.getXHair()->handleMagEmpty();
+    }
+    else if ((nOldMagCount == 0) && (nNewMagCount > 0))
+    {
+        m_gui.getXHair()->handleMagLoaded();
     }
 }
 
