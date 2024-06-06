@@ -22,8 +22,9 @@
    "RegTestDump*.txt" files there so we will have a saved reference later for packet numbers later, these
    are also (should be) version-controlled;
 
- - manual test: start a server instance and 2 client instances, then make sure the weapon switch for the server player
-   and 1st client player is correctly visible in the 2nd client instance, and vice versa;
+ - manual test: start a server instance and 2 client instances, then:
+   - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
+   - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
 
  - if this is a bigger version number increment, it would be nice also to create a new benchmark measurement
    stored in OldPerfMeasurements directory, to understand if we have improvement or regression wrt performance;
