@@ -201,6 +201,7 @@
     <ClInclude Include="InputHandling.h" />
     <ClInclude Include="Mapcycle.h" />
     <ClInclude Include="MapItem.h" />
+    <ClInclude Include="Minimap.h" />
     <ClInclude Include="Networking.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
@@ -236,6 +237,7 @@
     <ClCompile Include="InputHandling.cpp" />
     <ClCompile Include="Mapcycle.cpp" />
     <ClCompile Include="MapItem.cpp" />
+    <ClCompile Include="Minimap.cpp" />
     <ClCompile Include="Networking.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Player.cpp" />

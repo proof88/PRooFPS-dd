@@ -111,6 +111,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         xhair.show();
         xhair.handleMagLoaded();
         m_gui.hideRespawnTimer();
+        m_gui.getMinimap()->show(); // even though we dont hide it when player dies, game restart eventually respawns players so we need to show because game end hides it
     }
 }
 

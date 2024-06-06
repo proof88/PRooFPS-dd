@@ -209,7 +209,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
     bool bMapLayoutReached = false;
     constexpr std::streamsize nBuffSize = 1024;
     char cLine[nBuffSize];
-    TPureFloat y = 4.0f;
+    TPureFloat y = 0.f;  // before v0.2.5 it was 4.f but I dont know why, I'm changing to 0 so all blocks have their Y-pos <= 0.f
     std::streampos fStreamPosMapLayoutStart, fStreamPosPrevLine;
     // First the map layout handling will be "dry", meaning that the map won't be actually created but
     // the number of required blocks will be counted. This is useful, because then in the next non-dry run,
@@ -263,7 +263,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         const int nTotalBlocks_h = m_blocks_h;
         f.clear();  // clears error states, including eof bit
         f.seekg(fStreamPosMapLayoutStart);
-        y = 4.0f; // just reset this to same value as it was before the loop
+        y = 0.f; // just reset this to same value as it was before the loop
         while (!bParseError && !f.eof())
         {
             f.getline(cLine, nBuffSize);

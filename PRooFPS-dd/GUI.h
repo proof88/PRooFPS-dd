@@ -19,7 +19,9 @@
 #include "Config.h"
 #include "GameMode.h"
 #include "Maps.h"
+#include "Minimap.h"
 #include "Networking.h"
+#include "Player.h"
 #include "XHair.h"
 
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
@@ -49,7 +51,8 @@ namespace proofps_dd
             PGE& pge,
             proofps_dd::Config& config,
             proofps_dd::Maps& maps,
-            proofps_dd::Networking& networking);   /**< Gets the singleton instance. */
+            proofps_dd::Networking& networking,
+            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
         static CConsole& getConsole();
@@ -73,6 +76,7 @@ namespace proofps_dd
         bool showBgWithLogo();
         bool hideBgWithLogo();
         XHair* getXHair();
+        Minimap* getMinimap();
 
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;
@@ -90,6 +94,7 @@ namespace proofps_dd
         static Config* m_pConfig;
         static Maps* m_pMaps;
         static Networking* m_pNetworking;
+        static std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* m_pMapPlayers;
 
         /* Main Menu Handling */
 
@@ -103,6 +108,7 @@ namespace proofps_dd
         /* Misc */
 
         static XHair* m_pXHair;
+        static Minimap* m_pMinimap;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
@@ -132,10 +138,10 @@ namespace proofps_dd
 
         /* Misc */
 
-        static float getImGuiXfromPureX(const float& fPureX);
-        static float getImGuiYfromPureY(const float& fPureY);
-        static float getPosXforCenteredText(const std::string& text, const float& fImGuiX);
-        static float getPosXforWindowCenteredText(const std::string& text);
+        static float getDearImGui2DposXFromPure2DposX(const float& fPureX);
+        static float getDearImGui2DposYFromPure2DposY(const float& fPureY);
+        static float getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX);
+        static float getDearImGui2DposXforWindowCenteredText(const std::string& text);
         static void drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text);
         static void drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text);
 

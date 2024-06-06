@@ -25,7 +25,8 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     PGE& pge,
     proofps_dd::Config& config,
     proofps_dd::Maps& maps,
-    proofps_dd::Networking& networking)
+    proofps_dd::Networking& networking,
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
     // Note that the following should not be touched here as they are not fully constructed when we are here:
@@ -36,6 +37,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     m_pConfig = &config;
     m_pMaps = &maps;
     m_pNetworking = &networking;
+    m_pMapPlayers = &mapPlayers;
     return m_guiInstance;
 }
 
@@ -51,7 +53,11 @@ CConsole& proofps_dd::GUI::getConsole()
 
 void proofps_dd::GUI::initialize()
 {
-    assert(m_pPge); // TODO: change to ref
+    // these are cannot be null since they point to always-existing instances when getGuiInstance() is called, and GUI is part of their owner: class PRooFPSddPGE.
+    // TODO: change these to ref
+    assert(m_pPge);
+    assert(m_pMaps);
+    assert(m_pMapPlayers);
 
     resetMenuState(false);
 
@@ -61,6 +67,8 @@ void proofps_dd::GUI::initialize()
     // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
     // this is needed because it is not trivial when to show/hide the xhair for the server.
     m_pXHair = new XHair(*m_pPge);
+
+    m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -201,6 +209,12 @@ void proofps_dd::GUI::shutdown()
         m_pXHair = nullptr;
     }
 
+    if (m_pMinimap)
+    {
+        delete m_pMinimap;
+        m_pMinimap = nullptr;
+    }
+
     // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
 }
 
@@ -285,6 +299,11 @@ proofps_dd::XHair* proofps_dd::GUI::getXHair()
     return m_pXHair;
 }
 
+proofps_dd::Minimap* proofps_dd::GUI::getMinimap()
+{
+    return m_pMinimap;
+}
+
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
 {
     m_pPge->getPure().getUImanager().textTemporalLegacy(s, nPureX, nPureY)->SetDropShadow(true);
@@ -321,6 +340,7 @@ PGE* proofps_dd::GUI::m_pPge = nullptr;
 proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
+std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
 
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
@@ -328,6 +348,7 @@ bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
 
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
+proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -419,12 +440,12 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     }
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
-    ImGui::SetCursorPosX(getPosXforWindowCenteredText(sVersion));
+    ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sVersion));
     ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
     ImGui::Text("%s", sVersion.c_str());
 
     const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
-    ImGui::SetCursorPosX(getPosXforWindowCenteredText(sLatestAlpVersion));
+    ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sLatestAlpVersion));
     ImGui::TextDisabled("%s", sLatestAlpVersion.c_str());
 }
 
@@ -1267,7 +1288,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(main_viewport->WorkSize.x, main_viewport->WorkSize.y), ImGuiCond_FirstUseEver);
 
-        // this window should cover the full window client area, otherwise getImGuiXfromPureX() and other functions might not function properly!
+        // this window should cover the full window client area, otherwise getDearImGui2DposXFromPure2DposX() and other functions might not function properly!
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
@@ -1275,6 +1296,8 @@ void proofps_dd::GUI::drawDearImGuiCb()
 
         drawRespawnTimer();
         updateXHair();
+
+        m_pMinimap->updateVisuals();
 
         ImGui::PopFont();
 
@@ -1298,7 +1321,7 @@ void proofps_dd::GUI::drawRespawnTimer()
 
     static constexpr char* szRespawnWaitText = "... Waiting to Respawn ...";
     // if we make this static, it will be wrong upon changing screen resolution so now just let it be like this
-    const float fTextPosX = getPosXforWindowCenteredText(szRespawnWaitText);
+    const float fTextPosX = getDearImGui2DposXforWindowCenteredText(szRespawnWaitText);
 
     drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
 
@@ -1339,9 +1362,9 @@ void proofps_dd::GUI::drawXHairHoverText()
     }
 
     drawTextShadowed(
-        getPosXforCenteredText(
-            m_pXHair->getIdText(), getImGuiXfromPureX(m_pXHair->getObject3D().getPosVec().getX())),
-            getImGuiYfromPureY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
+        getDearImGui2DposXforCenteredText(
+            m_pXHair->getIdText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
+            getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
             m_pXHair->getIdText());
 }
 
@@ -1365,7 +1388,7 @@ void proofps_dd::GUI::updateXHair()
 * 
 * @return The X position in ImGui's 2D coordinate system equivalent to the input PURE 2D X position.
 */
-float proofps_dd::GUI::getImGuiXfromPureX(const float& fPureX)
+float proofps_dd::GUI::getDearImGui2DposXFromPure2DposX(const float& fPureX)
 {
     // considering ImGui::GetWindowSize() covering the full client area of the window
     return fPureX + ImGui::GetWindowSize().x * 0.5f;
@@ -1384,20 +1407,20 @@ float proofps_dd::GUI::getImGuiXfromPureX(const float& fPureX)
 *
 * @return The Y position in ImGui's 2D coordinate system equivalent to the input PURE 2D Y position.
 */
-float proofps_dd::GUI::getImGuiYfromPureY(const float& fPureY)
+float proofps_dd::GUI::getDearImGui2DposYFromPure2DposY(const float& fPureY)
 {
     // considering ImGui::GetWindowSize() covering the full client area of the window
     return ImGui::GetWindowSize().y * 0.5f - fPureY;
 }
 
-float proofps_dd::GUI::getPosXforCenteredText(const std::string& text, const float& fImGuiX)
+float proofps_dd::GUI::getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX)
 {
     return fImGuiX - ImGui::CalcTextSize(text.c_str()).x * 0.5f;
 }
 
-float proofps_dd::GUI::getPosXforWindowCenteredText(const std::string& text)
+float proofps_dd::GUI::getDearImGui2DposXforWindowCenteredText(const std::string& text)
 {
-    return getPosXforCenteredText(text, ImGui::GetWindowSize().x * 0.5f);
+    return getDearImGui2DposXforCenteredText(text, ImGui::GetWindowSize().x * 0.5f);
 }
 
 void proofps_dd::GUI::drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text)

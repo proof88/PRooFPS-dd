@@ -31,7 +31,7 @@ proofps_dd::XHair::XHair(PGE& pge) :
     if (!m_pObjXHair || !m_pObjDebugCube)
     {
         throw std::exception(
-            std::string("ERROR: m_pObjXHair NULL!").c_str());
+            std::string("ERROR: m_pObjXHair or m_pObjDebugCube NULL!").c_str());
     }
 
     m_pObjDebugCube->Hide();  // show it when need to debug xhair 2d -> 3d unprojection
@@ -149,7 +149,7 @@ void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
     {
         m_pObjDebugCube->getPosVec() = m_vecUnprojected;
         //getConsole().EOLn("XHair obj X: %f, Y: %f, m_vecUnprojected X: %f, Y: %f",
-        //    player.getObject3D()->getPosVec().getX(), player.getObject3D()->getPosVec().getY(),
+        //    m_pObjXHair->getPosVec().getX(), m_pObjXHair->getPosVec().getY(),
         //    m_vecUnprojected.getX(), m_vecUnprojected.getY());
     }
 

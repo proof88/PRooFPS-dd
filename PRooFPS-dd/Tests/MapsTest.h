@@ -283,8 +283,8 @@ private:
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height");
-        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H)/2, -1), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(MAP_TEST_W, MAP_TEST_H/2-1, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H) + 1, -1), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PureVector(MAP_TEST_W, 0, 0), maps.getBlockPosMax(), "objects Max");
         b &= assertEquals(
             PureVector(
                 maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,
@@ -394,8 +394,8 @@ private:
         // block and map boundaries
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 1");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 1");
-        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getBlockPosMin(), "objects Min 1");
-        b &= assertEquals(PureVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getBlockPosMax(), "objects Max 1");
+        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H) + 1, -1), maps.getBlockPosMin(), "objects Min 1");
+        b &= assertEquals(PureVector(MAP_TEST_W, 0, 0), maps.getBlockPosMax(), "objects Max 1");
         b &= assertEquals(
             PureVector(
                 maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,
@@ -464,8 +464,8 @@ private:
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 3");
 
         // block and map boundaries
-        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H) / 2, -1), maps.getBlockPosMin(), "objects Min 3");
-        b &= assertEquals(PureVector(MAP_TEST_W, MAP_TEST_H / 2 - 1, 0), maps.getBlockPosMax(), "objects Max 3");
+        b &= assertEquals(PureVector(1, -static_cast<signed>(MAP_TEST_H) + 1, -1), maps.getBlockPosMin(), "objects Min 3");
+        b &= assertEquals(PureVector(MAP_TEST_W, 0, 0), maps.getBlockPosMax(), "objects Max 3");
         b &= assertEquals(
             PureVector(
                 maps.getBlockPosMin().getX() - 1/*blocksize_X*/ / 2.f,

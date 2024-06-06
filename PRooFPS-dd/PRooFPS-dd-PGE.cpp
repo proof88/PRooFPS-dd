@@ -90,7 +90,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_config(Config::getConfigInstance(*this, m_maps)),
-    m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this)),
+    m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this, m_mapPlayers)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_maps(getConfigProfiles(), getPure()),
@@ -372,6 +372,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 if (connect())
                 {
                     m_gui.getXHair()->showInCenter();
+                    //m_gui.getMinimap()->show();
                     resetSendClientUpdatesCounter(m_config);
                     m_timeSimulation = {};  // reset tick-based simulation time as well
                 }
@@ -676,6 +677,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     // game is processing each player disconnect, however they should not be visible from now as they would be visible
     // during map loading.
     m_gui.getXHair()->hide();
+    m_gui.getMinimap()->hide();
     for (auto& connHandlePlayerPair : m_mapPlayers)
     {
         connHandlePlayerPair.second.getObject3D()->Hide();
@@ -929,6 +931,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
         // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
         m_gameMode->showObjectives(getPure(), getNetwork());
         m_gui.getXHair()->hide();
+        m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)
         {
             playerPair.second.getObject3D()->Hide();
@@ -1159,6 +1162,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         cameraPositionToMapCenter();
         hideLoadingScreen();
         m_gui.getXHair()->showInCenter();
+        m_gui.getMinimap()->show();
         
         getAudio().getAudioEngineCore().play(m_sounds.m_sndLetsgo);
     }
@@ -1400,6 +1404,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     hideLoadingScreen();
     m_gui.getXHair()->showInCenter();
     m_gui.getXHair()->handleMagLoaded();
+    m_gui.getMinimap()->show();
 
     // Since we are here from a message callback, it is not really good to try building up a connection again, since
     // we already disconnected above, and we should let the main loop handle all pending messages and connection state changes,
