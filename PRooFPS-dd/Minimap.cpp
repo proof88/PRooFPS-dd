@@ -27,7 +27,7 @@ CConsole& proofps_dd::Minimap::getConsole() const
 proofps_dd::Minimap::Minimap(
     PGE& pge,
     Maps& maps,
-    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
     m_pge(pge),
     m_maps(maps),
     m_mapPlayers(mapPlayers),
@@ -71,7 +71,7 @@ bool proofps_dd::Minimap::visible() const
     return m_bVisible;
 }
 
-void proofps_dd::Minimap::updateVisuals()
+void proofps_dd::Minimap::draw()
 {
     // expected to be invoked every frame
     if (!visible())
@@ -79,7 +79,136 @@ void proofps_dd::Minimap::updateVisuals()
         return;
     }
 
-    drawBackAndViewportRectangles();
+    if (!m_pge.getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapShow].getAsBool())
+    {
+        return;
+    }
+
+    if ((m_maps.width() * m_maps.height()) == 0)
+    {
+        // map not yet loaded but GUI is already rendering the MenuState::None path, i.e. we are NOT in main menu
+        return;
+    }
+
+    static constexpr ImVec4 clrMinimapBgVec4 = ImVec4(0.f, 0.57f, 0.f, 1.f);
+    static constexpr ImVec4 clrMinimapBorderVec4 = ImVec4(0.f, 0.0f, 0.f, 1.f);
+    static constexpr ImVec4 clrViewportRectBgVec4 = ImVec4(0.f, 0.69f, 0.f, 1.f);
+    static constexpr ImVec4 clrPlayerRectBgVec4 = ImVec4(1.f, 1.f, 1.f, 1.f);
+    static constexpr auto nMinimapPosLeft = 10;
+    static constexpr auto nMinimapPosTop = 10;
+
+    const auto minimapSize = getMinimapSizeInPixels();
+    if ((minimapSize.x <= 5) || (minimapSize.y <= 5))
+    {
+        // there is no use of drawing anything if we are on such small map
+        return;
+    }
+
+    ImDrawList* const dl = ImGui::GetWindowDrawList();
+    assert(dl);
+
+    // draw minimap background rect
+
+    static const auto clrMinimapBgU32 = ImGui::GetColorU32(clrMinimapBgVec4);
+    dl->AddRectFilled(
+        ImVec2(nMinimapPosLeft, nMinimapPosTop),
+        ImVec2(nMinimapPosLeft + minimapSize.x, nMinimapPosTop + minimapSize.y),
+        clrMinimapBgU32);
+
+    // draw inside viewport rect
+
+    /* for viewport rect, we generate world-space coords of the top-left and bottom-right corners of the PURE camera viewport, and from these coords
+       we can calculate where the 2D viewport rect should be located on the minimap */
+    PureVector vecCamViewportTopLeftInWorldSpace;
+    if (!m_pge.getPure().getCamera().project2dTo3d(
+        0,
+        static_cast<TPureUInt>(roundf(m_pge.getPure().getCamera().getViewport().size.height - 1)),
+        /* in v0.2.5 this is player's Z (-1.2f as per GAME_PLAYERS_POS_Z) mapped to depth buffer: 0.9747f,
+           I'm using it now, however in the future if camera Z position can be change, we will need a dynamic value here */
+        0.9747f,
+        vecCamViewportTopLeftInWorldSpace))
+    {
+        //getConsole().EOLn("drawMinimap::%s(): project2dTo3d(0,0,...) failed!", __func__);
+        return;
+    }
+    m_pObjDebugVpTopLeft->getPosVec() = vecCamViewportTopLeftInWorldSpace;
+
+    PureVector vecCamViewportBottomRightInWorldSpace;
+    if (!m_pge.getPure().getCamera().project2dTo3d(
+        static_cast<TPureUInt>(roundf(m_pge.getPure().getCamera().getViewport().size.width - 1)),
+        0,
+        /* in v0.2.5 this is player's Z (-1.2f as per GAME_PLAYERS_POS_Z) mapped to depth buffer: 0.9747f,
+           I'm using it now, same way as in XHair, however in the future if camera Z position can be change, we will need a dynamic value here */
+        0.9747f,
+        vecCamViewportBottomRightInWorldSpace))
+    {
+        //getConsole().EOLn("drawMinimap::%s(): project2dTo3d(0,0,...) failed!", __func__);
+        return;
+    }
+    m_pObjDebugVpBottomRight->getPosVec() = vecCamViewportBottomRightInWorldSpace;
+
+    //static int i = 0;
+    //if (i++ == 300)
+    //{
+    //    i = 0; // for adding debug breakpoint here, which is hit every 5 seconds @ 60 FPS
+    //}
+
+    // although we also calculate rectangles to stay inside the minimap, it is good to use a clip rectangle just in case ...
+    ImGui::PushClipRect(
+        ImVec2(nMinimapPosLeft, nMinimapPosTop),
+        ImVec2(nMinimapPosLeft + minimapSize.x + 1, nMinimapPosTop + minimapSize.y + 1),
+        false);
+
+    const ImVec2 fViewportRectTopLeft2D(
+        nMinimapPosLeft + getMinimapXfromWorldSpaceX(vecCamViewportTopLeftInWorldSpace.getX()),
+        nMinimapPosTop + getMinimapYfromWorldSpaceY(vecCamViewportTopLeftInWorldSpace.getY()));
+    const ImVec2 fViewportRectBottomRight2D(
+        nMinimapPosLeft + getMinimapXfromWorldSpaceX(vecCamViewportBottomRightInWorldSpace.getX()),
+        nMinimapPosTop + getMinimapYfromWorldSpaceY(vecCamViewportBottomRightInWorldSpace.getY()));
+
+    static const auto clrViewportRectBgU32 = ImGui::GetColorU32(clrViewportRectBgVec4);
+    dl->AddRectFilled(fViewportRectTopLeft2D, fViewportRectBottomRight2D, clrViewportRectBgU32);
+
+    // draw players rects
+
+    static const auto clrPlayerRectBgU32 = ImGui::GetColorU32(clrPlayerRectBgVec4);
+    for (const auto& playerPair : m_mapPlayers)
+    {
+        const auto& player = playerPair.second;
+        if ((player.getHealth() <= 0) || (!player.getObject3D()->isRenderingAllowed()))
+        {
+            continue;
+        }
+
+        ImVec2 fPlayerRectTopLeft2D(
+            nMinimapPosLeft + getMinimapXfromWorldSpaceX(player.getObject3D()->getPosVec().getX()),
+            nMinimapPosTop + getMinimapYfromWorldSpaceY(player.getObject3D()->getPosVec().getY()));
+
+        fPlayerRectTopLeft2D.x = std::min(fPlayerRectTopLeft2D.x, nMinimapPosLeft + minimapSize.x - 1);
+        fPlayerRectTopLeft2D.y = std::min(fPlayerRectTopLeft2D.y, nMinimapPosTop + minimapSize.y - 1);
+
+        dl->AddRectFilled(
+            fPlayerRectTopLeft2D,
+            ImVec2(fPlayerRectTopLeft2D.x + 2, fPlayerRectTopLeft2D.y + 2),
+            clrPlayerRectBgU32);
+    }
+
+    // finally draw the border of the minimap, it is last to make sure it is overdrawing everything else on the edges of the minimap rect
+
+    // Note: no need to set dl->Flags to 0 since I'm rounding return values in getMinimap...() functions, but I'm leaving here the commented code for some time ...
+    //const auto flagsDrawListOriginal = dl->Flags;
+    //dl->Flags = 0;  // in case anti-aliasing is set, we turn it off temporarily because border looks sharper and better without it
+    static const auto clrMinimapBorderU32 = ImGui::GetColorU32(clrMinimapBorderVec4);
+    dl->AddRect(
+        ImVec2(nMinimapPosLeft, nMinimapPosTop),
+        ImVec2(nMinimapPosLeft + minimapSize.x + 1, nMinimapPosTop + minimapSize.y + 1),
+        clrMinimapBorderU32,
+        0.f /* rounding */,
+        0 /* flags */,
+        1.f /* thickness */);
+    //dl->Flags = flagsDrawListOriginal;
+
+    ImGui::PopClipRect();
 }
 
 
@@ -179,133 +308,4 @@ float proofps_dd::Minimap::getMinimapYfromWorldSpaceY(const float& posWorldY) co
     /* note that the UPWARDS vs DOWNWARDS difference between PURE and Dear ImGui has been implicitly handled above where
        we created positive value from the 2 negative values division*/
     return std::roundf(fPosWorldYtoLowestMapPosWorldYRatio * getMinimapSizeInPixels().y);
-}
-
-void proofps_dd::Minimap::drawBackAndViewportRectangles()
-{
-    ImDrawList* const dl = ImGui::GetWindowDrawList();
-    assert(dl);
-
-    if ((m_maps.width() * m_maps.height()) == 0)
-    {
-        // map not yet loaded but GUI is already rendering the MenuState::None path, i.e. we are NOT in main menu
-        return;
-    }
-
-    static constexpr ImVec4 clrMinimapBgVec4 = ImVec4(0.f, 0.57f, 0.f, 1.f);
-    static constexpr ImVec4 clrMinimapBorderVec4 = ImVec4(0.f, 0.0f, 0.f, 1.f);
-    static constexpr ImVec4 clrViewportRectBgVec4 = ImVec4(0.f, 0.69f, 0.f, 1.f);
-    static constexpr ImVec4 clrPlayerRectBgVec4 = ImVec4(1.f, 1.f, 1.f, 1.f);
-    static constexpr auto nMinimapPosLeft = 10;
-    static constexpr auto nMinimapPosTop = 10;
-
-    const auto minimapSize = getMinimapSizeInPixels();
-    if ((minimapSize.x <= 5) || (minimapSize.y <= 5))
-    {
-        // there is no use of drawing anything if we are on such small map
-        return;
-    }
-
-    // draw minimap background rect
-
-    static const auto clrMinimapBgU32 = ImGui::GetColorU32(clrMinimapBgVec4);
-    dl->AddRectFilled(
-        ImVec2(nMinimapPosLeft, nMinimapPosTop),
-        ImVec2(nMinimapPosLeft + minimapSize.x, nMinimapPosTop + minimapSize.y),
-        clrMinimapBgU32);
-
-    // draw inside viewport rect
-
-    /* for viewport rect, we generate world-space coords of the top-left and bottom-right corners of the PURE camera viewport, and from these coords
-       we can calculate where the 2D viewport rect should be located on the minimap */
-    PureVector vecCamViewportTopLeftInWorldSpace;
-    if (!m_pge.getPure().getCamera().project2dTo3d(
-        0,
-        static_cast<TPureUInt>(roundf(m_pge.getPure().getCamera().getViewport().size.height - 1)),
-        /* in v0.2.5 this is player's Z (-1.2f as per GAME_PLAYERS_POS_Z) mapped to depth buffer: 0.9747f,
-           I'm using it now, however in the future if camera Z position can be change, we will need a dynamic value here */
-        0.9747f,
-        vecCamViewportTopLeftInWorldSpace))
-    {
-        //getConsole().EOLn("drawMinimap::%s(): project2dTo3d(0,0,...) failed!", __func__);
-        return;
-    }
-    m_pObjDebugVpTopLeft->getPosVec() = vecCamViewportTopLeftInWorldSpace;
-
-    PureVector vecCamViewportBottomRightInWorldSpace;
-    if (!m_pge.getPure().getCamera().project2dTo3d(
-        static_cast<TPureUInt>(roundf(m_pge.getPure().getCamera().getViewport().size.width - 1)),
-        0,
-        /* in v0.2.5 this is player's Z (-1.2f as per GAME_PLAYERS_POS_Z) mapped to depth buffer: 0.9747f,
-           I'm using it now, same way as in XHair, however in the future if camera Z position can be change, we will need a dynamic value here */
-        0.9747f,
-        vecCamViewportBottomRightInWorldSpace))
-    {
-        //getConsole().EOLn("drawMinimap::%s(): project2dTo3d(0,0,...) failed!", __func__);
-        return;
-    }
-    m_pObjDebugVpBottomRight->getPosVec() = vecCamViewportBottomRightInWorldSpace;
-
-    //static int i = 0;
-    //if (i++ == 300)
-    //{
-    //    i = 0; // for adding debug breakpoint here, which is hit every 5 seconds @ 60 FPS
-    //}
-
-    // although we also calculate rectangles to stay inside the minimap, it is good to use a clip rectangle just in case ...
-    ImGui::PushClipRect(
-        ImVec2(nMinimapPosLeft, nMinimapPosTop),
-        ImVec2(nMinimapPosLeft + minimapSize.x + 1, nMinimapPosTop + minimapSize.y + 1),
-        false);
-
-    const ImVec2 fViewportRectTopLeft2D(
-        nMinimapPosLeft + getMinimapXfromWorldSpaceX(vecCamViewportTopLeftInWorldSpace.getX()),
-        nMinimapPosTop + getMinimapYfromWorldSpaceY(vecCamViewportTopLeftInWorldSpace.getY()));
-    const ImVec2 fViewportRectBottomRight2D(
-        nMinimapPosLeft + getMinimapXfromWorldSpaceX(vecCamViewportBottomRightInWorldSpace.getX()),
-        nMinimapPosTop + getMinimapYfromWorldSpaceY(vecCamViewportBottomRightInWorldSpace.getY()));
-
-    static const auto clrViewportRectBgU32 = ImGui::GetColorU32(clrViewportRectBgVec4);
-    dl->AddRectFilled(fViewportRectTopLeft2D, fViewportRectBottomRight2D, clrViewportRectBgU32);
-
-    // draw players rects
-
-    static const auto clrPlayerRectBgU32 = ImGui::GetColorU32(clrPlayerRectBgVec4);
-    for (const auto& playerPair : m_mapPlayers)
-    {
-        const auto& player = playerPair.second;
-        if ((player.getHealth() <= 0) || (!player.getObject3D()->isRenderingAllowed()))
-        {
-            continue;
-        }
-
-        ImVec2 fPlayerRectTopLeft2D(
-            nMinimapPosLeft + getMinimapXfromWorldSpaceX(player.getObject3D()->getPosVec().getX()),
-            nMinimapPosTop + getMinimapYfromWorldSpaceY(player.getObject3D()->getPosVec().getY()));
-
-        fPlayerRectTopLeft2D.x = std::min(fPlayerRectTopLeft2D.x, nMinimapPosLeft + minimapSize.x - 1);
-        fPlayerRectTopLeft2D.y = std::min(fPlayerRectTopLeft2D.y, nMinimapPosTop + minimapSize.y - 1);
-
-        dl->AddRectFilled(
-            fPlayerRectTopLeft2D,
-            ImVec2(fPlayerRectTopLeft2D.x + 2, fPlayerRectTopLeft2D.y + 2),
-            clrPlayerRectBgU32);
-    }
-
-    // finally draw the border of the minimap, it is last to make sure it is overdrawing everything else on the edges of the minimap rect
-   
-    // Note: no need to set dl->Flags to 0 since I'm rounding return values in getMinimap...() functions, but I'm leaving here the commented code for some time ...
-    //const auto flagsDrawListOriginal = dl->Flags;
-    //dl->Flags = 0;  // in case anti-aliasing is set, we turn it off temporarily because border looks sharper and better without it
-    static const auto clrMinimapBorderU32 = ImGui::GetColorU32(clrMinimapBorderVec4);
-    dl->AddRect(
-        ImVec2(nMinimapPosLeft, nMinimapPosTop),
-        ImVec2(nMinimapPosLeft + minimapSize.x + 1, nMinimapPosTop + minimapSize.y + 1),
-        clrMinimapBorderU32,
-        0.f /* rounding */,
-        0 /* flags */,
-        1.f /* thickness */);
-    //dl->Flags = flagsDrawListOriginal;
-
-    ImGui::PopClipRect();
 }

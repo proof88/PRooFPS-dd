@@ -1217,6 +1217,18 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         cvarGuiXHairIdentifiesPlayers.Set(bGuiXHairIdentifiesPlayers);
     }
 
+    PGEcfgVariable& cvarGuiMinimapShow = m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapShow];
+    bool bGuiMinimapShow = cvarGuiMinimapShow.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintGuiMinimapShow; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGuiMinimapShow, cvarGuiMinimapShow);
+    ImGui::Text("Show Minimap:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbGuiMinimapShow", &bGuiMinimapShow))
+    {
+        cvarGuiMinimapShow.Set(bGuiMinimapShow);
+    }
+
     ImGui::Separator();
 
     if (ImGui::Button("< BACK"))
@@ -1297,7 +1309,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
         drawRespawnTimer();
         updateXHair();
 
-        m_pMinimap->updateVisuals();
+        m_pMinimap->draw();
 
         ImGui::PopFont();
 

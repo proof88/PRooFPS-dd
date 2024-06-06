@@ -27,6 +27,8 @@ namespace proofps_dd
     {
     public:
 
+        static constexpr char* szCvarGuiMinimapShow = "gui_minimap_show";
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
@@ -36,13 +38,13 @@ namespace proofps_dd
         Minimap(
             PGE& pge,
             Maps& maps,
-            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
         ~Minimap();
 
         void show();
         void hide();
         bool visible() const;
-        void updateVisuals();
+        void draw();
 
     protected:
 
@@ -55,7 +57,7 @@ namespace proofps_dd
 
         PGE& m_pge;
         Maps& m_maps;
-        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
+        const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         PureObject3D* m_pObjDebugVpTopLeft;
         PureObject3D* m_pObjDebugVpBottomRight;
         bool m_bVisible = false;
@@ -64,8 +66,6 @@ namespace proofps_dd
 
         float getMinimapXfromWorldSpaceX(const float& posWorldX) const;
         float getMinimapYfromWorldSpaceY(const float& posWorldY) const;
-
-        void drawBackAndViewportRectangles();
 
         // ---------------------------------------------------------------------------
 
