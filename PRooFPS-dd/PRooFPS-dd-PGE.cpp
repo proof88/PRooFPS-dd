@@ -793,15 +793,6 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     updateVisualsForGameMode();
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
-    if (player.getWeaponManager().getCurrentWeapon())
-    {
-        // very bad: m_gui.textPermanent() should be used, but then removeTextPermanentLegacy() would be also needed anytime there is a change ...
-        m_gui.textForNextFrame(
-            player.getWeaponManager().getCurrentWeapon()->getVars()["name"].getAsString() + ": " +
-            std::to_string(player.getWeaponManager().getCurrentWeapon()->getMagBulletCount()) + " / " +
-            std::to_string(player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount()),
-            10, 150);
-    }
 }
 
 /**

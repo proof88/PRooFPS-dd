@@ -104,6 +104,7 @@ namespace proofps_dd
 
         static bool m_bShowRespawnTimer;
         static std::chrono::time_point<std::chrono::steady_clock> m_timePlayerDied;
+        static bool m_bShowHealthAndArmor;
 
         /* Misc */
 
@@ -135,6 +136,8 @@ namespace proofps_dd
         static void drawRespawnTimer();
         static void drawXHairHoverText();
         static void updateXHair();
+        static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
+        static void drawWeapon(const proofps_dd::Player& player);
 
         /* Misc */
 

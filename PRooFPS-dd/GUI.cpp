@@ -18,6 +18,9 @@
 #include "PRooFPS-dd-packet.h"
 
 
+static constexpr float fDefaultFontSizePixels = 20.f;
+
+
 // ############################### PUBLIC ################################
 
 
@@ -60,9 +63,6 @@ void proofps_dd::GUI::initialize()
     assert(m_pMapPlayers);
 
     resetMenuState(false);
-
-    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(20);
-    m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 
     // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
     // this is needed because it is not trivial when to show/hide the xhair for the server.
@@ -127,7 +127,7 @@ void proofps_dd::GUI::initialize()
     */
 
     ImGui::GetIO().Fonts->AddFontDefault();
-    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", 20);
+    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
     assert(m_pImFont);
     assert(ImGui::GetIO().Fonts->Build());
 
@@ -189,6 +189,9 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
+
+    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(fDefaultFontSizePixels)));
+    m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 } // initialize()
 
 void proofps_dd::GUI::shutdown()
@@ -347,6 +350,8 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
 
+bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
+
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
@@ -409,7 +414,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     constexpr float fBtnHeight = 20.f;
     constexpr float fBtnSpacingY = 30.f;
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + 20*2 /* this should be version texts size Y */;
+    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + fDefaultFontSizePixels * 2 /* 2 lines for versions texts under buttons */;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     // in case of buttons, remove size argument (ImVec2) to auto-resize
@@ -1304,25 +1309,37 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
+        assert(m_pImFont);  // initialize() created it before configuring this to be the callback for PURE
         ImGui::PushFont(m_pImFont);
 
         drawRespawnTimer();
         updateXHair();
 
+        assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
         m_pMinimap->draw();
+
+        assert(m_pMapPlayers);
+        const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
+        if (it != m_pMapPlayers->end())
+        {
+            drawCurrentPlayerInfo(it->second);
+        }
 
         ImGui::PopFont();
 
         ImGui::End();
 
         return;
-    } else if (m_currentMenu == MenuState::Exiting)
+    }
+    else if (m_currentMenu == MenuState::Exiting)
     {
         return;
     }
 
+    // at this point, we are in the menu
+
     drawWindowForMainMenu();
-} // drawMainMenuCb()
+} // drawDearImGuiCb()
 
 void proofps_dd::GUI::drawRespawnTimer()
 {
@@ -1335,6 +1352,7 @@ void proofps_dd::GUI::drawRespawnTimer()
     // if we make this static, it will be wrong upon changing screen resolution so now just let it be like this
     const float fTextPosX = getDearImGui2DposXforWindowCenteredText(szRespawnWaitText);
 
+    assert(m_pPge);
     drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
 
     assert(m_pConfig);
@@ -1368,6 +1386,8 @@ void proofps_dd::GUI::drawRespawnTimer()
 
 void proofps_dd::GUI::drawXHairHoverText()
 {
+    assert(m_pXHair); // only updateXHair() calls this
+
     if (!m_pXHair->visible() || m_pXHair->getIdText().empty())
     {
         return;
@@ -1382,10 +1402,66 @@ void proofps_dd::GUI::drawXHairHoverText()
 
 void proofps_dd::GUI::updateXHair()
 {
+    assert(m_pXHair);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
     // in the future this function can be moved to XHair class with drawXHairHoverText(), but first drawTextShadowed need to be moved to separate class
     // so that both GUI and XHair classes can utilize it
     m_pXHair->updateVisuals();
     drawXHairHoverText();
+}
+
+void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
+{
+    assert(m_pPge);
+    assert(m_pMinimap);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    // I think we should show health and armor only when xhair is also visible, however xhair is not always properly controlled but hidden by loading screen,
+    // so I would rather stick to minimap visibility now which is controlled more better
+    if (!m_pMinimap->visible())
+    {
+        return;
+    }
+
+    // we start at the bottom of the screen, in reverse order from bottom to top
+    const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - fDefaultFontSizePixels - 10 /* spacing from viewport bottom edge */;
+    if (m_pNetworking->isServer())
+    {
+        drawTextShadowed(
+            10,
+            fStartY,
+            "Server, User name: " + player.getName() +
+            (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
+    }
+    else
+    {
+        drawTextShadowed(
+            10,
+            fStartY,
+            "Client, User name: " + player.getName() +
+            "; IP: " + player.getIpAddress() +
+            (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
+    }
+
+    const float fYdiffBetweenRows = ImGui::GetCursorPos().y - fStartY; // now we know the vertical distance between each row as Dear ImGui calculated
+
+    const Weapon* wpnCurrent = player.getWeaponManager().getCurrentWeapon();
+    if (wpnCurrent)
+    {
+        const auto itCVarWpnName = wpnCurrent->getVars().find("name");
+
+        if (itCVarWpnName != wpnCurrent->getVars().end())
+        {
+            drawTextShadowed(
+                10,
+                ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+                itCVarWpnName->second.getAsString() + ": " +
+                std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
+                std::to_string(wpnCurrent->getUnmagBulletCount()));
+        }
+    }
+    
+    drawTextShadowed(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: 0 %");
+    drawTextShadowed(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
 }
 
 /**

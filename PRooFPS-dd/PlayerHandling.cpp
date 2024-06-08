@@ -454,9 +454,10 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             // this is the moment when server player has fully booted up, restart the game mode now, for example remaining game time starts to count down now!
             gameMode.restartWithoutRemovingPlayers(m_pge.getNetwork());
 
-            m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
-                (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
-                10, 30);
+            // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
+            //m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
+            //    (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
+            //    10, 30);
         }
         else
         {
@@ -545,9 +546,10 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         if (msg.m_bCurrentClient)
         {
             // due to difficulties caused by m_gui.textPermanent() it is easier to use it here than in handleUserSetupFromServer()
-            m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
-                (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
-                10, 30);
+            // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
+            //m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
+            //    (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
+            //    10, 30);
         }
     }
 

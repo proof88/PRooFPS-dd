@@ -26,8 +26,6 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
-        CConsole& getConsole() const;
-
         Networking(
             PGE& pge,
             proofps_dd::Durations& durations);
@@ -36,6 +34,11 @@ namespace proofps_dd
         Networking& operator=(const Networking&) = delete;
         Networking(Networking&&) = delete;
         Networking&& operator=(Networking&&) = delete;
+
+        CConsole& getConsole() const;
+
+        bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
+        const pge_network::PgeNetworkConnectionHandle& getMyServerSideConnectionHandle() const;
 
         bool reinitialize();
         bool isServer() const;
@@ -46,7 +49,6 @@ namespace proofps_dd
                                                                                       (server instance also receives this from itself).
                                                                                       Server doesn't have a connection to itself, so it uses default 0 (invalid) handle. */
 
-        bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
         void allowListAppMessages();
 
 

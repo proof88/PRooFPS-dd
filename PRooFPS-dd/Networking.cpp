@@ -36,6 +36,25 @@ proofps_dd::Networking::Networking(
     assert(!pge.isGameRunning());
 }
 
+const char* proofps_dd::Networking::getLoggerModuleName()
+{
+    return "Networking";
+}
+
+CConsole& proofps_dd::Networking::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
+bool proofps_dd::Networking::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
+{
+    // TODO: it would be much better if this function was part of PGE and not application.
+    // However, before any refactor could be done, PgeGnsClient::m_hConnectionServerSide should be properly filled, and then
+    // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
+    // is our connection or not.
+    return m_nServerSideConnectionHandle == connHandleServerSide;
+}
+
 bool proofps_dd::Networking::reinitialize()
 {
     bool bRet = m_pge.getNetwork().reinitialize();
@@ -51,28 +70,14 @@ bool proofps_dd::Networking::isServer() const
     return m_pge.getNetwork().isServer();
 }
 
-CConsole& proofps_dd::Networking::getConsole() const
+const pge_network::PgeNetworkConnectionHandle& proofps_dd::Networking::getMyServerSideConnectionHandle() const
 {
-    return CConsole::getConsoleInstance(getLoggerModuleName());
-}
-
-const char* proofps_dd::Networking::getLoggerModuleName()
-{
-    return "Networking";
+    return m_nServerSideConnectionHandle;
 }
 
 
 // ############################## PROTECTED ##############################
 
-
-bool proofps_dd::Networking::isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const
-{
-    // TODO: it would be much better if this function was part of PGE and not application.
-    // However, before any refactor could be done, PgeGnsClient::m_hConnectionServerSide should be properly filled, and then
-    // getters could be added to classes to retrieve this info. Then we can have a function in PGE which can tell if this
-    // is our connection or not.
-    return m_nServerSideConnectionHandle == connHandleServerSide;
-}
 
 void proofps_dd::Networking::allowListAppMessages()
 {
