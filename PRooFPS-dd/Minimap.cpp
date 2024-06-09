@@ -90,12 +90,14 @@ void proofps_dd::Minimap::draw()
         return;
     }
 
-    static constexpr ImVec4 clrMinimapBgVec4 = ImVec4(0.f, 0.57f, 0.f, 1.f);
-    static constexpr ImVec4 clrMinimapBorderVec4 = ImVec4(0.f, 0.0f, 0.f, 1.f);
-    static constexpr ImVec4 clrViewportRectBgVec4 = ImVec4(0.f, 0.69f, 0.f, 1.f);
-    static constexpr ImVec4 clrPlayerRectBgVec4 = ImVec4(1.f, 1.f, 1.f, 1.f);
     static constexpr auto nMinimapPosLeft = 10;
     static constexpr auto nMinimapPosTop = 10;
+    static const float fAlpha =
+        m_pge.getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent].getAsBool() ? 0.8f : 1.f;
+    static const ImVec4 clrMinimapBgVec4 = ImVec4(0.f, 0.57f, 0.f, fAlpha);
+    static const ImVec4 clrMinimapBorderVec4 = ImVec4(0.f, 0.0f, 0.f, fAlpha);
+    static const ImVec4 clrViewportRectBgVec4 = ImVec4(0.f, 0.69f, 0.f, fAlpha);
+    static const ImVec4 clrPlayerRectBgVec4 = ImVec4(1.f, 1.f, 1.f, fAlpha);
 
     const auto minimapSize = getMinimapSizeInPixels();
     if ((minimapSize.x <= 5) || (minimapSize.y <= 5))

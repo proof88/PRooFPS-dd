@@ -28,6 +28,7 @@ namespace proofps_dd
     public:
 
         static constexpr char* szCvarGuiMinimapShow = "gui_minimap_show";
+        static constexpr char* szCvarGuiMinimapTransparent = "gui_minimap_transparent";
 
         static const char* getLoggerModuleName();
 

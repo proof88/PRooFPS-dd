@@ -1242,6 +1242,18 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         cvarGuiMinimapShow.Set(bGuiMinimapShow);
     }
 
+    PGEcfgVariable& cvarGuiMinimapTransparent = m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent];
+    bool bGuiMinimapTransparent = cvarGuiMinimapTransparent.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintGuiMinimapTransparent; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintGuiMinimapTransparent, cvarGuiMinimapTransparent);
+    ImGui::Text("Minimap Transparency:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbGuiMinimapTransparent", &bGuiMinimapTransparent))
+    {
+        cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
+    }
+
     ImGui::Separator();
 
     if (ImGui::Button("< BACK"))
