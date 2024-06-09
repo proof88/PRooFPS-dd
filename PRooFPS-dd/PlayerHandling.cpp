@@ -75,12 +75,24 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
 
     if (m_pge.getNetwork().isServer())
     {
-        // TODO: server should display death notification on gui here (client should display in handleDeathNotificationFromServer())
-
-        // important: killer info is just for informational purpose so we can display it on client side, however
-        // if the killer got disconnected already, conn handle will be set as same as player's connhandle, so we can still
+        // important: killer info is just for informational purpose so we can display it, however
+        // if the killer got disconnected already, conn handle is set as same as player's connhandle, so we can still
         // show the player dieing without a killer, however it is not suicide in such case, that is why we should never
         // decrease frags based only on this value!
+
+        // server displays death notification on gui here, client displays in handleDeathNotificationFromServer() as we send the pkt out below
+        assert(m_gui.getDeathKillEvents());
+        std::string sKillerName;
+        if (nKillerConnHandleServerSide != player.getServerSideConnectionHandle())
+        {
+            const auto itPlayerKiller = m_mapPlayers.find(nKillerConnHandleServerSide);
+            if (m_mapPlayers.end() != itPlayerKiller)
+            {
+                sKillerName = itPlayerKiller->second.getName();
+            }
+        }
+        m_gui.getDeathKillEvents()->addDeathKillEvent(sKillerName, player.getName());
+
         pge_network::PgePacket pktDeathNotificationFromServer;
         proofps_dd::MsgDeathNotificationFromServer::initPkt(
             pktDeathNotificationFromServer,
@@ -360,6 +372,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     {
         getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
         m_gui.hideRespawnTimer();
+        m_gui.getDeathKillEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }
@@ -829,6 +842,7 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
         return false; // crash in both debug and release mode: if someone dies on server side, must still exist at that moment in every network instance
     }
 
+    std::string sKillerName;
     const auto itPlayerKiller = m_mapPlayers.find(msg.m_nKillerConnHandleServerSide);
     if (m_mapPlayers.end() == itPlayerKiller)
     {
@@ -836,9 +850,18 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
         assert(false); // crash in debug, ignore in release mode: a bullet killing someone might be shot by a killer already disconnected before the impact,
         // however this is not likely to happen in debug mode when I'm testing regular gameplay!
     }
+    else
+    {
+        // killer connhandle is set to player's connhandle also if killer got disconnected in the meantime, so that is not necessarily suicide!
+        if (msg.m_nKillerConnHandleServerSide != itPlayerDied->first)
+        {
+            sKillerName = itPlayerKiller->second.getName();
+        }
+    }
 
     // Server does death notification on GUI in HandlePlayerDied(), clients do here.
-    // TODO: add notification to GUI!
+    assert(m_gui.getDeathKillEvents());
+    m_gui.getDeathKillEvents()->addDeathKillEvent(sKillerName, itPlayerDied->second.getName());
 
     return true;
 }

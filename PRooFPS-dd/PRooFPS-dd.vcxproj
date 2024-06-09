@@ -194,7 +194,9 @@
     <ClInclude Include="CameraHandling.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Consts.h" />
+    <ClInclude Include="DeathKillEventLister.h" />
     <ClInclude Include="Durations.h" />
+    <ClInclude Include="EventLister.h" />
     <ClInclude Include="Explosion.h" />
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="GUI.h" />
@@ -215,6 +217,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Strafe.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tests\EventListerTest.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
     <ClInclude Include="Tests\InputSim.h" />
     <ClInclude Include="Tests\MapcycleTest.h" />
@@ -231,6 +234,8 @@
   <ItemGroup>
     <ClCompile Include="CameraHandling.cpp" />
     <ClCompile Include="Config.cpp" />
+    <ClCompile Include="DeathKillEventLister.cpp" />
+    <ClCompile Include="EventLister.cpp" />
     <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />

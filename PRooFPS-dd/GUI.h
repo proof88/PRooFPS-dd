@@ -17,6 +17,7 @@
 #include "PGE.h"
 
 #include "Config.h"
+#include "DeathKillEventLister.h"
 #include "GameMode.h"
 #include "Maps.h"
 #include "Minimap.h"
@@ -77,6 +78,7 @@ namespace proofps_dd
         bool hideBgWithLogo();
         XHair* getXHair();
         Minimap* getMinimap();
+        DeathKillEventLister* getDeathKillEvents();
 
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;
@@ -110,6 +112,7 @@ namespace proofps_dd
 
         static XHair* m_pXHair;
         static Minimap* m_pMinimap;
+        static DeathKillEventLister* m_pEventsDeathKill;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
@@ -137,13 +140,14 @@ namespace proofps_dd
         static void drawXHairHoverText();
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
-        static void drawWeapon(const proofps_dd::Player& player);
+        static void updateDeathKillEvents();
 
         /* Misc */
 
         static float getDearImGui2DposXFromPure2DposX(const float& fPureX);
         static float getDearImGui2DposYFromPure2DposY(const float& fPureY);
         static float getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX);
+        static float getDearImGui2DposXforRightAdjustedText(const std::string& text, const float& fImGuiX);
         static float getDearImGui2DposXforWindowCenteredText(const std::string& text);
         static void drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text);
         static void drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text);

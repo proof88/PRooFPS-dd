@@ -70,6 +70,8 @@ void proofps_dd::GUI::initialize()
 
     m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
 
+    m_pEventsDeathKill = new DeathKillEventLister(m_pPge->getPure());
+
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
     // This bg plane is used to cover game objects such as map, players, etc.,
@@ -307,6 +309,11 @@ proofps_dd::Minimap* proofps_dd::GUI::getMinimap()
     return m_pMinimap;
 }
 
+proofps_dd::DeathKillEventLister* proofps_dd::GUI::getDeathKillEvents()
+{
+    return m_pEventsDeathKill;
+}
+
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
 {
     m_pPge->getPure().getUImanager().textTemporalLegacy(s, nPureX, nPureY)->SetDropShadow(true);
@@ -354,6 +361,7 @@ bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
+proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -1314,6 +1322,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
 
         drawRespawnTimer();
         updateXHair();
+        updateDeathKillEvents();
 
         assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
         m_pMinimap->draw();
@@ -1464,6 +1473,25 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     drawTextShadowed(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
 }
 
+void proofps_dd::GUI::updateDeathKillEvents()
+{
+    // similar to updateXHair(), we are doing like this because text drawing is implemented in GUI, it should be somewhere else, then EventLister could be more independent
+
+    assert(m_pEventsDeathKill);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+    
+    m_pEventsDeathKill->update();
+
+    const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
+    ImGui::SetCursorPosY(50);
+    for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
+    {
+        drawTextShadowed(
+            getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+            ImGui::GetCursorPos().y,
+            it->second);
+    }
+}
+
 /**
 * Converts the given X position specified in PURE 2D coordinate system to an X position in ImGui's 2D coordinate system.
 * 
@@ -1504,6 +1532,11 @@ float proofps_dd::GUI::getDearImGui2DposYFromPure2DposY(const float& fPureY)
 float proofps_dd::GUI::getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX)
 {
     return fImGuiX - ImGui::CalcTextSize(text.c_str()).x * 0.5f;
+}
+
+float proofps_dd::GUI::getDearImGui2DposXforRightAdjustedText(const std::string& text, const float& fImGuiX)
+{
+    return fImGuiX - ImGui::CalcTextSize(text.c_str()).x;
 }
 
 float proofps_dd::GUI::getDearImGui2DposXforWindowCenteredText(const std::string& text)
