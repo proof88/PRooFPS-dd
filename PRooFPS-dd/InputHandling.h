@@ -54,6 +54,7 @@ namespace proofps_dd
         InputHandling(
             PGE& pge,
             proofps_dd::Durations& durations,
+            proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
             proofps_dd::Sounds& sounds);
@@ -89,6 +90,7 @@ namespace proofps_dd
 
         PGE& m_pge;
         Durations& m_durations;
+        proofps_dd::GUI& m_gui;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         Maps& m_maps;
         Sounds& m_sounds;

@@ -27,11 +27,13 @@ const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisec
 proofps_dd::InputHandling::InputHandling(
     PGE& pge,
     proofps_dd::Durations& durations,
+    proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
     proofps_dd::Sounds& sounds) :
     m_pge(pge),
     m_durations(durations),
+    m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
@@ -45,7 +47,7 @@ proofps_dd::InputHandling::InputHandling(
     m_fLastWeaponAngleZSent(0.f)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // pge, durations, mapPlayers, maps, sounds
+    // pge, durations, gui, mapPlayers, maps, sounds
     // But they can be used in other functions.
 
     // Since this class is used to build up the PRooFPSddPGE class which is derived from PGE class, PGE is not yet initialized
@@ -489,7 +491,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     if (m_pge.getInput().getKeyboard().isKeyPressed(VK_TAB))
     {
-        gameMode.showObjectives(m_pge.getPure(), m_pge.getNetwork());
+        m_gui.showGameObjectives();
     }
 
     const auto& playerConst = player;

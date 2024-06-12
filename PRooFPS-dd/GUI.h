@@ -79,6 +79,7 @@ namespace proofps_dd
         XHair* getXHair();
         Minimap* getMinimap();
         DeathKillEventLister* getDeathKillEvents();
+        void showGameObjectives();
 
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;
@@ -112,6 +113,7 @@ namespace proofps_dd
 
         static XHair* m_pXHair;
         static Minimap* m_pMinimap;
+        static bool m_bShowGameObjectives;
         static DeathKillEventLister* m_pEventsDeathKill;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
@@ -141,6 +143,10 @@ namespace proofps_dd
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static void updateDeathKillEvents();
+        static void hideGameObjectives();
+        static void drawGameObjectivesServer(float nThisRowY);
+        static void drawGameObjectivesClient(float nThisRowY);
+        static void drawGameObjectives();
 
         /* Misc */
 

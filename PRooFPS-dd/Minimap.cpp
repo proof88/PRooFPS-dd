@@ -213,13 +213,6 @@ void proofps_dd::Minimap::draw()
     ImGui::PopClipRect();
 }
 
-
-// ############################## PROTECTED ##############################
-
-
-// ############################### PRIVATE ###############################
-
-
 ImVec2 proofps_dd::Minimap::getMinimapSizeInPixels() const
 {
     if (m_maps.width() * m_maps.height() == 0)
@@ -269,6 +262,13 @@ ImVec2 proofps_dd::Minimap::getMinimapSizeInPixels() const
 
     return retSize;
 }
+
+
+// ############################## PROTECTED ##############################
+
+
+// ############################### PRIVATE ###############################
+
 
 float proofps_dd::Minimap::getMinimapXfromWorldSpaceX(const float& posWorldX) const
 {

@@ -46,6 +46,7 @@ namespace proofps_dd
         void hide();
         bool visible() const;
         void draw();
+        ImVec2 getMinimapSizeInPixels() const;
 
     protected:
 
@@ -62,8 +63,6 @@ namespace proofps_dd
         PureObject3D* m_pObjDebugVpTopLeft;
         PureObject3D* m_pObjDebugVpBottomRight;
         bool m_bVisible = false;
-
-        ImVec2 getMinimapSizeInPixels() const;
 
         float getMinimapXfromWorldSpaceX(const float& posWorldX) const;
         float getMinimapYfromWorldSpaceY(const float& posWorldY) const;

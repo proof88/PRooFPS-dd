@@ -64,6 +64,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     proofps_dd::InputHandling(
         *this,
         m_durations,
+        m_gui,
         m_mapPlayers,
         m_maps,
         m_sounds),
@@ -922,7 +923,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
         }
 
         // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
-        m_gameMode->showObjectives(getPure(), getNetwork());
+        m_gui.showGameObjectives();
         m_gui.getXHair()->hide();
         m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)

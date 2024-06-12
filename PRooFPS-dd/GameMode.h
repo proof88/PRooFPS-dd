@@ -210,12 +210,6 @@ namespace proofps_dd
 
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
-        /**
-        * Shows the objectives of the current game mode.
-        * For example, in a deathmatch game, it might show a frag table, or in a single player game it might show mission objectives.
-        */
-        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network) = 0;
-
     protected:
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<FragTableRow> m_players;
@@ -312,7 +306,6 @@ namespace proofps_dd
             const Player& player,
             pge_network::PgeINetwork& network) override;
         virtual bool removePlayer(const Player& player) override;
-        virtual void showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network) override;
 
     protected:
 
@@ -324,9 +317,6 @@ namespace proofps_dd
 
         unsigned int m_nTimeLimitSecs{};
         unsigned int m_nFragLimit{};
-
-        void showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY);
-        void showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY);
 
     }; // class DeathMatchMode
 

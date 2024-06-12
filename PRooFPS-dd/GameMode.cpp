@@ -191,10 +191,6 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeI
 // ############################### PUBLIC ################################
 
 
-static constexpr int nXPosPlayerName = 20;
-static constexpr int nXPosFrags = 200;
-static constexpr int nXPosDeaths = 250;
-
 proofps_dd::DeathMatchMode::DeathMatchMode() :
     proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
 {
@@ -434,44 +430,6 @@ bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
     return true;
 }
 
-void proofps_dd::DeathMatchMode::showObjectives(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network)
-{
-    int nYPosStart = pure.getWindow().getClientHeight() - 20;
-    
-    if (isGameWon())
-    {
-        text(pure, "Game Ended! Waiting for restart ...", nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
-    }
-    else
-    {
-        std::string sLimits = "DeathMatch";
-        if (getFragLimit() > 0)
-        {
-            sLimits += " | Frag Limit: " + std::to_string(getFragLimit());
-        }
-        if (getTimeLimitSecs() > 0)
-        {
-            sLimits += " | Time Limit: " + std::to_string(getTimeLimitSecs()) + " s, Remaining: " + std::to_string(getTimeRemainingMillisecs() / 1000) + " s";
-        }
-        text(pure, sLimits, nXPosPlayerName, nYPosStart);
-        nYPosStart -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
-    }
-
-    text(pure, "Player Name", nXPosPlayerName, nYPosStart);
-    text(pure, "Frags", nXPosFrags, nYPosStart);
-    text(pure, "Deaths", nXPosDeaths, nYPosStart);
-
-    if (network.isServer())
-    {
-        showObjectivesServer(pure, network, nYPosStart);
-    }
-    else
-    {
-        showObjectivesClient(pure, network, nYPosStart);
-    }
-}
-
 int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
 {
     if (p1frags == p2frags)
@@ -483,120 +441,6 @@ int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1d
         return p2frags - p1frags;
     }
 }
-
-void proofps_dd::DeathMatchMode::showObjectivesServer(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY)
-{
-    constexpr int nXPosPing = 320;
-    constexpr int nXPosQuality = 370;
-    constexpr int nXPosSpeed = 480;
-    constexpr int nXPosPending = 640;
-    constexpr int nXPosUnAckd = 780;
-    constexpr int nXPosInternalQueueTime = 870;
-
-    assert(network.isServer());
-
-    text(pure, "Ping", nXPosPing, nThisRowY);
-    text(pure, "Qlty", nXPosQuality, nThisRowY);
-    text(pure, "NE/FE", nXPosQuality, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
-    text(pure, "Speed", nXPosSpeed, nThisRowY);
-    text(pure, "Tx/Rx(Bps)", nXPosSpeed, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
-    text(pure, "Pending", nXPosPending, nThisRowY);
-    text(pure, "Rel/Unrel(Bps)", nXPosPending, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
-    text(pure, "UnAck'd", nXPosUnAckd, nThisRowY);
-    text(pure, "(Bps)", nXPosUnAckd, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
-    text(pure, "Int. Q", nXPosInternalQueueTime, nThisRowY);
-    text(pure, "Time (us)", nXPosInternalQueueTime, nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy());
-
-    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
-
-    text(pure, "============================================================================================", nXPosPlayerName, nThisRowY);
-
-    for (const auto& player : getFragTable())
-    {
-        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy();
-        text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
-        text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
-        text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
-        
-        /* debug data */
-        if (player.m_connHandle != pge_network::ServerConnHandle)
-        {
-            text(pure,
-                std::to_string(network.getServer().getPing(player.m_connHandle, true)),
-                nXPosPing, nThisRowY);
-            std::stringstream ssQuality;
-            ssQuality << std::fixed << std::setprecision(2) << network.getServer().getQualityLocal(player.m_connHandle, false) <<
-                "/" << network.getServer().getQualityRemote(player.m_connHandle, false);
-            text(pure,
-                ssQuality.str(),
-                nXPosQuality, nThisRowY);
-            text(pure,
-                std::to_string(std::lround(network.getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
-                std::to_string(std::lround(network.getServer().getRxByteRate(player.m_connHandle, false))),
-                nXPosSpeed, nThisRowY);
-            text(pure,
-                std::to_string(network.getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
-                std::to_string(network.getServer().getPendingUnreliableBytes(player.m_connHandle, false)),
-                nXPosPending, nThisRowY);
-            text(pure,
-                std::to_string(network.getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)),
-                nXPosUnAckd, nThisRowY);
-            text(pure,
-                std::to_string(network.getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)),
-                nXPosInternalQueueTime, nThisRowY);
-        }
-    }
-
-}  // showObjectivesServer()
-
-void proofps_dd::DeathMatchMode::showObjectivesClient(PR00FsUltimateRenderingEngine& pure, pge_network::PgeINetwork& network, int nThisRowY)
-{
-    assert(!network.isServer());
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-
-    text(pure, "=======================================", nXPosPlayerName, nThisRowY);
-
-    for (const auto& player : getFragTable())
-    {
-        nThisRowY = nThisRowY - pure.getUImanager().getDefaultFontSizeLegacy();
-        text(pure, player.m_sName, nXPosPlayerName, nThisRowY);
-        text(pure, std::to_string(player.m_nFrags), nXPosFrags, nThisRowY);
-        text(pure, std::to_string(player.m_nDeaths), nXPosDeaths, nThisRowY);
-    }
-
-    /* debug data */
-
-    nThisRowY -= 2 * pure.getUImanager().getDefaultFontSizeLegacy();
-    text(pure, "Ping: " + std::to_string(network.getClient().getPing(true)) + " ms",
-        nXPosPlayerName, nThisRowY);
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-    std::stringstream ssQuality;
-    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << network.getClient().getQualityLocal(false) <<
-        "; far: " << network.getClient().getQualityRemote(false);
-    text(pure,
-        ssQuality.str(),
-        nXPosPlayerName, nThisRowY);
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-    text(pure, "Tx Speed: " + std::to_string(std::lround(network.getClient().getTxByteRate(false))) +
-        " Bps; Rx Speed: " + std::to_string(std::lround(network.getClient().getRxByteRate(false))) + " Bps",
-        nXPosPlayerName, nThisRowY);
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-    text(pure, "Pending Bytes: Reliable: " + std::to_string(network.getClient().getPendingReliableBytes(false)) +
-        "; Unreliable: " + std::to_string(network.getClient().getPendingUnreliableBytes(false)),
-        nXPosPlayerName, nThisRowY);
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-    text(pure, "UnAck'd Bytes: " + std::to_string(network.getClient().getSentButUnAckedReliableBytes(false)),
-        nXPosPlayerName, nThisRowY);
-
-    nThisRowY -= pure.getUImanager().getDefaultFontSizeLegacy();
-    text(pure, "Internal Queue Time: " + std::to_string(network.getClient().getInternalQueueTimeUSecs(false)) + " us",
-        nXPosPlayerName, nThisRowY);
-}  // showObjectivesClient()
 
 
 // ############################## PROTECTED ##############################

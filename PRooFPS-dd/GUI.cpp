@@ -20,6 +20,10 @@
 
 static constexpr float fDefaultFontSizePixels = 20.f;
 
+static constexpr float nXPosPlayerName = 20.f;
+static constexpr float nXPosFrags = 200.f;
+static constexpr float nXPosDeaths = 250.f;
+
 
 // ############################### PUBLIC ################################
 
@@ -314,6 +318,11 @@ proofps_dd::DeathKillEventLister* proofps_dd::GUI::getDeathKillEvents()
     return m_pEventsDeathKill;
 }
 
+void proofps_dd::GUI::showGameObjectives()
+{
+    m_bShowGameObjectives = true;
+}
+
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
 {
     m_pPge->getPure().getUImanager().textTemporalLegacy(s, nPureX, nPureY)->SetDropShadow(true);
@@ -361,6 +370,7 @@ bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
+bool proofps_dd::GUI::m_bShowGameObjectives = false;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
@@ -1346,6 +1356,8 @@ void proofps_dd::GUI::drawDearImGuiCb()
             drawCurrentPlayerInfo(it->second);
         }
 
+        drawGameObjectives();
+
         ImGui::PopFont();
 
         ImGui::End();
@@ -1503,6 +1515,194 @@ void proofps_dd::GUI::updateDeathKillEvents()
             it->second);
     }
 }
+
+void proofps_dd::GUI::hideGameObjectives()
+{
+    m_bShowGameObjectives = false;
+}
+
+void proofps_dd::GUI::drawGameObjectivesServer(float nThisRowY)
+{
+    constexpr int nXPosPing = 320;
+    constexpr int nXPosQuality = 370;
+    constexpr int nXPosSpeed = 480;
+    constexpr int nXPosPending = 640;
+    constexpr int nXPosUnAckd = 780;
+    constexpr int nXPosInternalQueueTime = 870;
+
+    assert(m_pNetworking && m_pNetworking->isServer());
+    assert(m_pGameMode);
+    assert(m_pPge);
+
+    drawTextShadowed(nXPosPing, nThisRowY, "Ping");
+    drawTextShadowed(nXPosQuality, nThisRowY, "Qlty");
+    drawTextShadowed(nXPosQuality, nThisRowY + fDefaultFontSizePixels, "NE/FE");
+    drawTextShadowed(nXPosSpeed, nThisRowY, "Speed");
+    drawTextShadowed(nXPosSpeed, nThisRowY + fDefaultFontSizePixels, "Tx/Rx(Bps)");
+    drawTextShadowed(nXPosPending, nThisRowY, "Pending");
+    drawTextShadowed(nXPosPending, nThisRowY + fDefaultFontSizePixels, "Rel/Unrel(Bps)");
+    drawTextShadowed(nXPosUnAckd, nThisRowY, "UnAck'd");
+    drawTextShadowed(nXPosUnAckd, nThisRowY + fDefaultFontSizePixels, "(Bps)");
+    drawTextShadowed(nXPosInternalQueueTime, nThisRowY, "Int. Q");
+    drawTextShadowed(nXPosInternalQueueTime, nThisRowY + fDefaultFontSizePixels, "Time (us)");
+
+    nThisRowY += 2 * fDefaultFontSizePixels;
+
+    drawTextShadowed(nXPosPlayerName, nThisRowY, "============================================================================================");
+
+    for (const auto& player : m_pGameMode->getFragTable())
+    {
+        nThisRowY = nThisRowY + fDefaultFontSizePixels;
+        drawTextShadowed(nXPosPlayerName, nThisRowY, player.m_sName);
+        drawTextShadowed(nXPosFrags, nThisRowY, std::to_string(player.m_nFrags));
+        drawTextShadowed(nXPosDeaths, nThisRowY, std::to_string(player.m_nDeaths));
+
+        /* debug data */
+        if (player.m_connHandle != pge_network::ServerConnHandle)
+        {
+            drawTextShadowed(nXPosPing, nThisRowY, std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)));
+            std::stringstream ssQuality;
+            ssQuality << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getServer().getQualityLocal(player.m_connHandle, false) <<
+                "/" << m_pPge->getNetwork().getServer().getQualityRemote(player.m_connHandle, false);
+            drawTextShadowed(nXPosQuality, nThisRowY, ssQuality.str());
+            drawTextShadowed(
+                nXPosSpeed,
+                nThisRowY,
+                std::to_string(std::lround(m_pPge->getNetwork().getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
+                std::to_string(std::lround(m_pPge->getNetwork().getServer().getRxByteRate(player.m_connHandle, false))));
+            drawTextShadowed(
+                nXPosPending,
+                nThisRowY,
+                std::to_string(m_pPge->getNetwork().getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
+                std::to_string(m_pPge->getNetwork().getServer().getPendingUnreliableBytes(player.m_connHandle, false)));
+            drawTextShadowed(
+                nXPosUnAckd,
+                nThisRowY,
+                std::to_string(m_pPge->getNetwork().getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)));
+            drawTextShadowed(
+                nXPosInternalQueueTime,
+                nThisRowY,
+                std::to_string(m_pPge->getNetwork().getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)));
+        }
+    }
+
+}  // drawGameObjectivesServer()
+
+void proofps_dd::GUI::drawGameObjectivesClient(float nThisRowY)
+{
+    assert(m_pNetworking && !m_pNetworking->isServer());
+    assert(m_pGameMode);
+    assert(m_pPge);
+
+    nThisRowY += fDefaultFontSizePixels;
+
+    drawTextShadowed(nXPosPlayerName, nThisRowY, "======================================");
+
+    for (const auto& player : m_pGameMode->getFragTable())
+    {
+        nThisRowY = nThisRowY + fDefaultFontSizePixels;
+        drawTextShadowed(nXPosPlayerName, nThisRowY, player.m_sName);
+        drawTextShadowed(nXPosFrags, nThisRowY, std::to_string(player.m_nFrags));
+        drawTextShadowed(nXPosDeaths, nThisRowY, std::to_string(player.m_nDeaths));
+    }
+
+    /* debug data */
+
+    nThisRowY += 2 * fDefaultFontSizePixels;
+    drawTextShadowed(nXPosPlayerName, nThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
+
+    nThisRowY += fDefaultFontSizePixels;
+    std::stringstream ssQuality;
+    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
+        "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
+    drawTextShadowed(nXPosPlayerName, nThisRowY, ssQuality.str());
+
+    nThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        nXPosPlayerName,
+        nThisRowY,
+        "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
+        " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
+
+    nThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        nXPosPlayerName,
+        nThisRowY,
+        "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
+        "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
+
+    nThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        nXPosPlayerName,
+        nThisRowY,
+        "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
+
+    nThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        nXPosPlayerName,
+        nThisRowY,
+        "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
+}  // drawGameObjectivesClient()
+
+void proofps_dd::GUI::drawGameObjectives()
+{
+    // unlike with other usual GUI elements, we automatically invoke hideGameObjectives() after draw, so that showGameObjectives() need to be called
+    // every frame by the game (keep button pressed), this has the convenience of no need to explicitly call hideGameObjectives() by game
+
+    if (!m_bShowGameObjectives)
+    {
+        return;
+    }
+
+    assert(m_pNetworking);
+    assert(m_pGameMode);
+    assert(m_pPge);
+    assert(m_pMinimap);
+
+    proofps_dd::DeathMatchMode* pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_pGameMode);
+    if (!pDeathMatchMode)
+    {
+        getConsole().EOLn("ERROR: pDeathMatchMode null!");
+        return;
+    }
+
+    float nYPosStart = m_pMinimap->getMinimapSizeInPixels().y + 20.f;;
+
+    if (m_pGameMode->isGameWon())
+    {
+        drawTextShadowed(nXPosPlayerName, nYPosStart, "Game Ended! Waiting for restart ...");
+        nYPosStart += 2 * fDefaultFontSizePixels;
+    }
+    else
+    {
+        std::string sLimits = "DeathMatch";
+        if (pDeathMatchMode->getFragLimit() > 0)
+        {
+            sLimits += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
+        }
+        if (pDeathMatchMode->getTimeLimitSecs() > 0)
+        {
+            sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) + " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
+        }
+        drawTextShadowed(nXPosPlayerName, nYPosStart, sLimits);
+        nYPosStart += 2 * fDefaultFontSizePixels;
+    }
+
+    drawTextShadowed(nXPosPlayerName, nYPosStart, "Player Name");
+    drawTextShadowed(nXPosFrags, nYPosStart, "Frags");
+    drawTextShadowed(nXPosDeaths, nYPosStart, "Deaths");
+
+    if (m_pNetworking->isServer())
+    {
+        drawGameObjectivesServer(nYPosStart);
+    }
+    else
+    {
+        drawGameObjectivesClient(nYPosStart);
+    }
+
+    hideGameObjectives();
+} // drawGameObjectives()
 
 /**
 * Converts the given X position specified in PURE 2D coordinate system to an X position in ImGui's 2D coordinate system.
