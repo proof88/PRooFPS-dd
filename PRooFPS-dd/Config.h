@@ -103,6 +103,20 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const MsgServerInfoFromServer& msgServerInfo,
             proofps_dd::GameMode& gameMode);
+        void serverSaveServerInfo(
+            const unsigned int& nMaxFps,
+            const unsigned int& nTickrate,
+            const unsigned int& nPhysicsRateMin,
+            const unsigned int& nClientUpdateRate,
+            const GameModeType& iGameModeType,
+            const unsigned int& nFragLimit,
+            const unsigned int& nTimeLimitSecs,
+            const unsigned int& nRespawnTimeSecs,
+            const unsigned int& nRespawnInvulnerabilityTimeSec);
+
+        const MsgServerInfoFromServer& getServerInfo() const;
+        bool isServerInfoReceived() const;
+        void setServerInfoNotReceived();
 
     protected:
 
@@ -129,11 +143,15 @@ namespace proofps_dd
         unsigned int m_nPlayerRespawnDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
         unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
 
-        /** Used by clients only, to store server's config for informational purpose.
+        /** Server and clients use this for informational purpose, to show it as debug info.
+            Actually, clients also use it for other purpose too, e.g. to know the respawn time so they draw countdown progress bar based on that!
             Seems to be redundant as we could also store these in above members, but for now we keep them separate.
             Maybe in the future the only member here will be this, so server will immediately store its config here, and just
-            pass this member when sending out message to clients, and clients also need only this. */
+            pass this member when sending out message to clients, and clients also need only this.
+            Only clients use all members, server use almost all members, except irrelevant ones, e.g.: m_nTimeRemainingMillisecs.
+        */
         MsgServerInfoFromServer m_serverInfo{};
+        bool m_bServerInfoReceived = false;  /**< Valid for clients only, since server does not send to itself. */
 
         // ---------------------------------------------------------------------------
 

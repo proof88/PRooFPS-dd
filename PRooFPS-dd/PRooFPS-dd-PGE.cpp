@@ -690,6 +690,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
         }
     }
 
+    m_config.setServerInfoNotReceived();
     deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
     m_maps.unload();
 

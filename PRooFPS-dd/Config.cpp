@@ -389,6 +389,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         return false;
     }
 
+    m_bServerInfoReceived = true;
     m_serverInfo = msgServerInfo;
     m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
     m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
@@ -426,6 +427,62 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
 
     return true;
+}
+
+void proofps_dd::Config::serverSaveServerInfo(
+    const unsigned int& nMaxFps,
+    const unsigned int& nTickrate,
+    const unsigned int& nPhysicsRateMin,
+    const unsigned int& nClientUpdateRate,
+    const GameModeType& iGameModeType,
+    const unsigned int& nFragLimit,
+    const unsigned int& nTimeLimitSecs,
+    const unsigned int& nRespawnTimeSecs,
+    const unsigned int& nRespawnInvulnerabilityTimeSecs)
+{
+    m_serverInfo.m_nMaxFps = nMaxFps;
+    m_serverInfo.m_nTickrate = nTickrate;
+    m_serverInfo.m_nPhysicsRateMin = nPhysicsRateMin;
+    m_serverInfo.m_nClientUpdateRate = nClientUpdateRate;
+
+    m_serverInfo.m_iGameModeType = iGameModeType;
+    m_serverInfo.m_nFragLimit = nFragLimit;
+    m_serverInfo.m_nTimeLimitSecs = nTimeLimitSecs;
+
+    m_serverInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
+    m_serverInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
+
+    const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
+    getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+    getConsole().OLnOI("Config::%s(): server is working with this config:", __func__);
+    getConsole().OLn("nMaxFps               : %u FPS", m_serverInfo.m_nMaxFps);
+    getConsole().OLn("nTickrate             : %u Hz",  m_serverInfo.m_nTickrate);
+    getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
+    getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
+    getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
+    getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
+    getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    getConsole().OLnOO("");
+
+    getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
+}
+
+const proofps_dd::MsgServerInfoFromServer& proofps_dd::Config::getServerInfo() const
+{
+    return m_serverInfo;
+}
+
+bool proofps_dd::Config::isServerInfoReceived() const
+{
+    return m_bServerInfoReceived;
+}
+
+void proofps_dd::Config::setServerInfoNotReceived()
+{
+    m_bServerInfoReceived = false;
 }
 
 

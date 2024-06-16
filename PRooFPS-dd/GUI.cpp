@@ -23,9 +23,7 @@ static constexpr float fDefaultFontSizePixels = 20.f;
 
 static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 255.f, 0.7f); /* bg color for typically 1 row within a table to be highlighted */
 
-static constexpr float nXPosPlayerName = 20.f;
-static constexpr float nXPosFrags = 200.f;
-static constexpr float nXPosDeaths = 250.f;
+static constexpr float fGameInfoPagesStartX = 20.f;
 
 
 // ############################### PUBLIC ################################
@@ -1879,11 +1877,11 @@ void proofps_dd::GUI::drawGameObjectives()
         return;
     }
 
-    float nYPosStart = m_pMinimap->getMinimapSizeInPixels().y + 20.f;;
+    float nYPosStart = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
 
     if (m_pGameMode->isGameWon())
     {
-        drawTextShadowed(nXPosPlayerName, nYPosStart, "Game Ended! Waiting for restart ...");
+        drawTextShadowed(fGameInfoPagesStartX, nYPosStart, "Game Ended! Waiting for restart ...");
         nYPosStart += 2 * fDefaultFontSizePixels;
     }
     else
@@ -1898,7 +1896,7 @@ void proofps_dd::GUI::drawGameObjectives()
             sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
                 " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
-        drawTextShadowed(nXPosPlayerName, nYPosStart, sLimits);
+        drawTextShadowed(fGameInfoPagesStartX, nYPosStart, sLimits);
         nYPosStart += 2 * fDefaultFontSizePixels;
     }
 
@@ -1921,9 +1919,55 @@ void proofps_dd::GUI::drawClientConnectionDebugInfo()
 void proofps_dd::GUI::drawGameServerConfig()
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
+    assert(m_pConfig);
     assert(m_pNetworking);
 
-    // TODO: draw server config
+    float fThisRowY = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
+    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Server Config");
+
+    if (!m_pNetworking->isServer())
+    {
+        fThisRowY += 2 * fDefaultFontSizePixels;
+        drawTextShadowed(fGameInfoPagesStartX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
+    }
+
+    fThisRowY += 2 * fDefaultFontSizePixels;
+
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Max Framerate: ") + std::to_string(m_pConfig->getServerInfo().m_nMaxFps) + " FPS");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Tickrate: ") + std::to_string(m_pConfig->getServerInfo().m_nTickrate) + " Hz");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Min Physics Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nPhysicsRateMin) + " Hz");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Client Update Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nClientUpdateRate) + " Hz");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Respawn Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnTimeSecs) + " s");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX, fThisRowY,
+        std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
     if (!m_pNetworking->isServer())
     {
