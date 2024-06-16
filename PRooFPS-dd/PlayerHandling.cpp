@@ -123,6 +123,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         xhair.show();
         xhair.handleMagLoaded();
         m_gui.hideRespawnTimer();
+        m_gui.hideGameObjectives(); // just in case player was checking it during respawn countdown, OR game just restarted
         m_gui.getMinimap()->show(); // even though we dont hide it when player dies, game restart eventually respawns players so we need to show because game end hides it
     }
 }
@@ -372,6 +373,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     {
         getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
         m_gui.hideRespawnTimer();
+        m_gui.hideGameObjectives();
         m_gui.getDeathKillEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();

@@ -677,6 +677,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     // we should hide all the players because actual deleting them will happen later once
     // game is processing each player disconnect, however they should not be visible from now as they would be visible
     // during map loading.
+    m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
     m_gui.getXHair()->hide();
     m_gui.getMinimap()->hide();
@@ -903,6 +904,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
         }
     } // end for items
 
+    m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
     m_gameMode->restartWithoutRemovingPlayers(getNetwork());
 }
@@ -1047,6 +1049,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
     {
         // !!! BADDESIGN !!!
         // GUI should be invoked in GameMode's restartWithoutRemovingPlayers(), however I cannot include GUI.h in GameMode now ...
+        m_gui.hideGameObjectives();
         m_gui.getDeathKillEvents()->clear();
     }
     
@@ -1164,6 +1167,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         hideLoadingScreen();
         m_gui.getXHair()->showInCenter();
         m_gui.getMinimap()->show();
+        m_gui.hideGameObjectives(); // just in case it would had stuck from a previous game session
         
         getAudio().getAudioEngineCore().play(m_sounds.m_sndLetsgo);
     }

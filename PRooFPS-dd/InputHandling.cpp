@@ -489,9 +489,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
-    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_TAB))
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_TAB))
     {
-        m_gui.showGameObjectives();
+        m_gui.showAndLoopGameInfoPages();
     }
 
     const auto& playerConst = player;

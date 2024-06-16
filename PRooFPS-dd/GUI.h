@@ -46,6 +46,14 @@ namespace proofps_dd
             Exiting     /* User requested closing the app */
         };
 
+        enum class GameInfoPage
+        {
+            None,
+            FragTable,
+            ServerConfig,
+            COUNT
+        };
+
         static constexpr char* CVAR_GUI_MAINMENU = "gui_mainmenu";
 
         static GUI& getGuiInstance(
@@ -80,6 +88,8 @@ namespace proofps_dd
         Minimap* getMinimap();
         DeathKillEventLister* getDeathKillEvents();
         void showGameObjectives();
+        void hideGameObjectives();
+        void showAndLoopGameInfoPages();
 
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;
@@ -113,7 +123,6 @@ namespace proofps_dd
 
         static XHair* m_pXHair;
         static Minimap* m_pMinimap;
-        static bool m_bShowGameObjectives;
         static DeathKillEventLister* m_pEventsDeathKill;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
@@ -121,6 +130,7 @@ namespace proofps_dd
 
         static ImFont* m_pImFont;
 
+        static GameInfoPage m_gameInfoPageCurrent;
         static GameMode* m_pGameMode;
 
         // ---------------------------------------------------------------------------
@@ -143,10 +153,12 @@ namespace proofps_dd
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static void updateDeathKillEvents();
-        static void hideGameObjectives();
         static void drawGameObjectivesServer();
         static void drawGameObjectivesClient();
         static void drawGameObjectives();
+        static void drawClientConnectionDebugInfo();
+        static void drawGameServerConfig();
+        static void drawGameInfoPages();
 
         /* Misc */
 

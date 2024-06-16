@@ -323,7 +323,23 @@ proofps_dd::DeathKillEventLister* proofps_dd::GUI::getDeathKillEvents()
 
 void proofps_dd::GUI::showGameObjectives()
 {
-    m_bShowGameObjectives = true;
+    m_gameInfoPageCurrent = GameInfoPage::FragTable;
+}
+
+void proofps_dd::GUI::hideGameObjectives()
+{
+    m_gameInfoPageCurrent = GameInfoPage::None;
+}
+
+void proofps_dd::GUI::showAndLoopGameInfoPages()
+{
+    // obviously I'm assuming GameInfoPage is contiguous
+    m_gameInfoPageCurrent = static_cast<GameInfoPage>(static_cast<int>(m_gameInfoPageCurrent) + 1);
+    if (m_gameInfoPageCurrent == GameInfoPage::COUNT)
+    {
+        
+        m_gameInfoPageCurrent = GameInfoPage::None;
+    }
 }
 
 void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
@@ -373,7 +389,6 @@ bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
-bool proofps_dd::GUI::m_bShowGameObjectives = false;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
@@ -381,6 +396,7 @@ std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
 ImFont* proofps_dd::GUI::m_pImFont = nullptr;
 
+proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 proofps_dd::GameMode* proofps_dd::GUI::m_pGameMode = nullptr;
 
 
@@ -1359,7 +1375,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
             drawCurrentPlayerInfo(it->second);
         }
 
-        drawGameObjectives();
+        drawGameInfoPages();
 
         ImGui::PopFont();
 
@@ -1519,16 +1535,12 @@ void proofps_dd::GUI::updateDeathKillEvents()
     }
 }
 
-void proofps_dd::GUI::hideGameObjectives()
-{
-    m_bShowGameObjectives = false;
-}
-
 void proofps_dd::GUI::drawGameObjectivesServer()
 {
     assert(m_pNetworking && m_pNetworking->isServer());
     assert(m_pGameMode);
     assert(m_pPge);
+    assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
     static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
         "Player Name",
@@ -1720,6 +1732,7 @@ void proofps_dd::GUI::drawGameObjectivesClient()
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pGameMode);
     assert(m_pPge);
+    assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
     static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
         "Player Name",
@@ -1852,13 +1865,7 @@ void proofps_dd::GUI::drawGameObjectivesClient()
 
 void proofps_dd::GUI::drawGameObjectives()
 {
-    // unlike with other usual GUI elements, we automatically invoke hideGameObjectives() after draw, so that showGameObjectives() need to be called
-    // every frame by the game (keep button pressed), this has the convenience of no need to explicitly call hideGameObjectives() by game
-
-    if (!m_bShowGameObjectives)
-    {
-        return;
-    }
+    assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
     assert(m_pNetworking);
     assert(m_pGameMode);
@@ -1903,9 +1910,45 @@ void proofps_dd::GUI::drawGameObjectives()
     {
         drawGameObjectivesClient();
     }
-
-    hideGameObjectives();
 } // drawGameObjectives()
+
+void proofps_dd::GUI::drawClientConnectionDebugInfo()
+{
+    assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
+    assert(m_pNetworking && !m_pNetworking->isServer());
+}
+
+void proofps_dd::GUI::drawGameServerConfig()
+{
+    assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
+    assert(m_pNetworking);
+
+    // TODO: draw server config
+    
+    if (!m_pNetworking->isServer())
+    {
+        drawClientConnectionDebugInfo();
+    }
+}
+
+void proofps_dd::GUI::drawGameInfoPages()
+{
+    switch (m_gameInfoPageCurrent)
+    {
+    case proofps_dd::GUI::GameInfoPage::FragTable:
+        drawGameObjectives();
+        break;
+    case proofps_dd::GUI::GameInfoPage::ServerConfig:
+        drawGameServerConfig();
+        break;
+    case proofps_dd::GUI::GameInfoPage::None:
+        // fall-through
+    case proofps_dd::GUI::GameInfoPage::COUNT:
+        // fall-through
+    default:
+        break;
+    }
+}
 
 /**
 * Converts the given X position specified in PURE 2D coordinate system to an X position in ImGui's 2D coordinate system.
