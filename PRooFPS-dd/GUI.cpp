@@ -11,6 +11,7 @@
 #include "GUI.h"
 
 #include <cassert>
+#include <numeric>
 
 #include "Consts.h"
 #include "Maps.h"
@@ -19,6 +20,8 @@
 
 
 static constexpr float fDefaultFontSizePixels = 20.f;
+
+static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 255.f, 0.7f); /* bg color for typically 1 row within a table to be highlighted */
 
 static constexpr float nXPosPlayerName = 20.f;
 static constexpr float nXPosFrags = 200.f;
@@ -184,11 +187,11 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
     style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
     style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+    style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.8f);                 // ImGuiCol_FrameBg but bit darker and transparent
     style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
     style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
-    style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.15f, 0.18f, 0.06f, 0.8f);                 // ImGuiCol_FrameBg but bit darker and transparent
+    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(0.23f, 0.26f, 0.14f, 0.8f);              // ImGuiCol_FrameBg but transparent a bit
     style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.16f, 0.18f, 0.10f, 1.00f);
     style.Colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
     style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
@@ -1337,7 +1340,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
 
         // this window should cover the full window client area, otherwise getDearImGui2DposXFromPure2DposX() and other functions might not function properly!
         ImGui::Begin("WndInGame", nullptr,
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollWithMouse);
 
         assert(m_pImFont);  // initialize() created it before configuring this to be the callback for PURE
         ImGui::PushFont(m_pImFont);
@@ -1521,71 +1524,195 @@ void proofps_dd::GUI::hideGameObjectives()
     m_bShowGameObjectives = false;
 }
 
-void proofps_dd::GUI::drawGameObjectivesServer(float nThisRowY)
+void proofps_dd::GUI::drawGameObjectivesServer()
 {
-    constexpr int nXPosPing = 320;
-    constexpr int nXPosQuality = 370;
-    constexpr int nXPosSpeed = 480;
-    constexpr int nXPosPending = 640;
-    constexpr int nXPosUnAckd = 780;
-    constexpr int nXPosInternalQueueTime = 870;
-
     assert(m_pNetworking && m_pNetworking->isServer());
     assert(m_pGameMode);
     assert(m_pPge);
 
-    drawTextShadowed(nXPosPing, nThisRowY, "Ping");
-    drawTextShadowed(nXPosQuality, nThisRowY, "Qlty");
-    drawTextShadowed(nXPosQuality, nThisRowY + fDefaultFontSizePixels, "NE/FE");
-    drawTextShadowed(nXPosSpeed, nThisRowY, "Speed");
-    drawTextShadowed(nXPosSpeed, nThisRowY + fDefaultFontSizePixels, "Tx/Rx(Bps)");
-    drawTextShadowed(nXPosPending, nThisRowY, "Pending");
-    drawTextShadowed(nXPosPending, nThisRowY + fDefaultFontSizePixels, "Rel/Unrel(Bps)");
-    drawTextShadowed(nXPosUnAckd, nThisRowY, "UnAck'd");
-    drawTextShadowed(nXPosUnAckd, nThisRowY + fDefaultFontSizePixels, "(Bps)");
-    drawTextShadowed(nXPosInternalQueueTime, nThisRowY, "Int. Q");
-    drawTextShadowed(nXPosInternalQueueTime, nThisRowY + fDefaultFontSizePixels, "Time (us)");
+    static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
+        "Player Name",
+        "Frags",
+        "Deaths",
+        "Ping",
+        "Qlty NE/FE",
+        "Speed\nTx/Rx (Bps)",
+        "Pending\nRl/URl (Bps)",
+        "UnAck'd\n(Bps)",
+        "tIntQ\n(us)"
+    );
 
-    nThisRowY += 2 * fDefaultFontSizePixels;
+    static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
+        0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
+        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */,
+        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[7]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
+        ImGui::CalcTextSize(vecHeaderLabels[8]).x + 2 * ImGui::GetStyle().ItemSpacing.x
+    );
 
-    drawTextShadowed(nXPosPlayerName, nThisRowY, "============================================================================================");
+    assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
 
-    for (const auto& player : m_pGameMode->getFragTable())
+    static const float fColsTotalWidthAfterCol0 = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+
+    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
+
+    constexpr ImGuiTableFlags tblFlags =
+        ImGuiTableFlags_RowBg /* |
+         ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
+        ImGuiTableFlags_ScrollY |
+        ImGuiTableFlags_SizingStretchProp;
+
+    /*
+    * Copied this from imgui.h:
+    * // - The DEFAULT sizing policies are:
+    * //    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+    * //    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
+    * // - When ScrollX is off:
+    * //    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
+    * //    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+    * //    - Fixed Columns (if any) will generally obtain their requested width (unless the table cannot fit them all).
+    * //    - Stretch Columns will share the remaining width according to their respective weight.
+    * //    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+    * //      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+    * //      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+    * 
+    * Based on above info, my table defaults to ImGuiTableFlags_SizingStretchSame since I dont use either ScrollX for the table or ImGuiWindowFlags_AlwaysAutoResize window.
+    * But I can still change it to ImGuiTableFlags_SizingFixedFit or ImGuiTableFlags_SizingStretchProp if I want to.
+    * Thus columns default to ImGuiTableColumnFlags_WidthStretch but I can change it to ImGuiTableColumnFlags_WidthFixed, I can even mix them.
+    * However, for me the leading column (player name) should be stretched to content and all remaining columns should be fixed.
+    * But I cannot properly stretch by column since I go row-by-row, not by column-to-column.
+    * So anyway, since I'm calculating table width and height below in pixels, I'm using the column width calculated above based on header text,
+    * and then calculate col0 width by subtracting their total width from table width.
+    * Note that I'm using ImGuiTableColumnFlags_WidthStretch for all columns because I want the calculated widths to be treated as weights and not
+    * strict widths in pixels, so ImGui will find out the exact pixels. Also, with ImGuiTableColumnFlags_WidthFixed the widths were wrong for some
+    * unknown reason, but I think this weighted config will be just fine.
+    */
+
+    static constexpr float fTableColIndentPixels = 4.f; // not sure why I dont use this in above calculations instead of ImGui::GetStyle().ItemSpacing.x
+
+    const float fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f; // we might maximize this because looks too wide in full hd
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
+    const float fPlayerNameColWidthPixels = fTableWidthPixels - fColsTotalWidthAfterCol0;
+
+    ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
+    
+    // not changing padding anymore since it requires border flags which I dont use now
+    //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
+    
+    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
+    if (ImGui::BeginTable("tbl_frag_sv", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
     {
-        nThisRowY = nThisRowY + fDefaultFontSizePixels;
-        drawTextShadowed(nXPosPlayerName, nThisRowY, player.m_sName);
-        drawTextShadowed(nXPosFrags, nThisRowY, std::to_string(player.m_nFrags));
-        drawTextShadowed(nXPosDeaths, nThisRowY, std::to_string(player.m_nDeaths));
-
-        /* debug data */
-        if (player.m_connHandle != pge_network::ServerConnHandle)
+        ImGui::TableSetupScrollFreeze(1, 1);
+        ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
+        size_t iHdrCol = 0;
+        for (const auto& hdr : vecHeaderLabels)
         {
-            drawTextShadowed(nXPosPing, nThisRowY, std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)));
-            std::stringstream ssQuality;
-            ssQuality << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getServer().getQualityLocal(player.m_connHandle, false) <<
-                "/" << m_pPge->getNetwork().getServer().getQualityRemote(player.m_connHandle, false);
-            drawTextShadowed(nXPosQuality, nThisRowY, ssQuality.str());
-            drawTextShadowed(
-                nXPosSpeed,
-                nThisRowY,
-                std::to_string(std::lround(m_pPge->getNetwork().getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
-                std::to_string(std::lround(m_pPge->getNetwork().getServer().getRxByteRate(player.m_connHandle, false))));
-            drawTextShadowed(
-                nXPosPending,
-                nThisRowY,
-                std::to_string(m_pPge->getNetwork().getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
-                std::to_string(m_pPge->getNetwork().getServer().getPendingUnreliableBytes(player.m_connHandle, false)));
-            drawTextShadowed(
-                nXPosUnAckd,
-                nThisRowY,
-                std::to_string(m_pPge->getNetwork().getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)));
-            drawTextShadowed(
-                nXPosInternalQueueTime,
-                nThisRowY,
-                std::to_string(m_pPge->getNetwork().getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)));
-        }
-    }
+            // not changing padding anymore since it requires border flags which I dont use now
+            //if (iHdrCol < 5)
+            //{
+            //    // 1-line header texts should be roughly vertically centered
+            //    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 10.f /* vertical padding in pixels */));
+            //}
+            ImGui::TableSetupColumn(
+                hdr,
+                ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable,
+                /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
+                iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
+            
+            // not changing padding anymore since it requires border flags which I dont use now
+            //if (iHdrCol < 5)
+            //{
+            //    ImGui::PopStyleVar();
+            //}
 
+            iHdrCol++;
+        }
+
+        // ImGui calculates multi-line header text height properly so we dont need to set custom row height.
+        // TODO: unfortunately, I cannot use my centering function for header cells the same way as I can for ordinary cells, even when I tried
+        // to emit header cells manually using TableHeader(). This is why all text in header cells are not adjusted.
+        // Only WA I can think about is if I simply dont use the header feature, instead I'm manually manipulating properties for row 0 in the loop.
+        ImGui::TableHeadersRow();
+        for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
+        {
+            for (const auto& player : m_pGameMode->getFragTable())
+            {
+                ImGui::TableNextRow();
+                if (m_pNetworking->isMyConnection(player.m_connHandle))
+                {
+                    // applies only to the current row, no need to reset
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
+                }
+
+                const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
+                    3 : static_cast<int>(vecHeaderLabels.size());
+                for (int iCol = 0; iCol < nColumnCount; iCol++)
+                {
+                    ImGui::TableSetColumnIndex(iCol);
+                    switch (iCol)
+                    {
+                    case 0:
+                        ImGuiTextTableCurrentCellShortenedFit(
+                            player.m_sName
+                            /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
+                            /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
+                            3);
+                        break;
+                    case 1:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
+                        break;
+                    case 2:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
+                        break;
+                    case 3:
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
+                        break;
+                    case 4:
+                    {
+                        std::stringstream ssQuality;
+                        ssQuality << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getServer().getQualityLocal(player.m_connHandle, false) <<
+                            "/" << m_pPge->getNetwork().getServer().getQualityRemote(player.m_connHandle, false);
+                        ImGuiTextTableCurrentCellRightAdjusted(ssQuality.str().c_str() /*"0.90/-0.90"*/);
+                    }
+                    break;
+                    case 5:
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            (std::to_string(std::lround(m_pPge->getNetwork().getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
+                                std::to_string(std::lround(m_pPge->getNetwork().getServer().getRxByteRate(player.m_connHandle, false)))).c_str()
+                            /*"999/9999"*/);
+                        break;
+                    case 6:
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            (std::to_string(m_pPge->getNetwork().getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
+                                std::to_string(m_pPge->getNetwork().getServer().getPendingUnreliableBytes(player.m_connHandle, false))).c_str()
+                            /*"999/9999"*/);
+                        break;
+                    case 7:
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            std::to_string(m_pPge->getNetwork().getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)).c_str()
+                            /*"999"*/);
+                        break;
+                    case 8:
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            std::to_string(m_pPge->getNetwork().getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)).c_str()
+                            /*"9999"*/);
+                        break;
+                    default:
+                        assert(false); // crash in debug
+                    }
+                } // end for iCol
+            } // end for players
+        } // end for iReplicateRowsForExperimenting
+        ImGui::Unindent(fTableColIndentPixels);
+        ImGui::EndTable();
+    } // end BeginTable
+    // not changing padding anymore since it requires border flags which I dont use now
+    //ImGui::PopStyleVar();
 }  // drawGameObjectivesServer()
 
 void proofps_dd::GUI::drawGameObjectivesClient(float nThisRowY)
@@ -1593,6 +1720,13 @@ void proofps_dd::GUI::drawGameObjectivesClient(float nThisRowY)
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pGameMode);
     assert(m_pPge);
+
+    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so sophisticated and flexible I decided to use it here!
+    //ImGui::BeginTable();
+
+    drawTextShadowed(nXPosPlayerName, nThisRowY, "Player Name");
+    drawTextShadowed(nXPosFrags, nThisRowY, "Frags");
+    drawTextShadowed(nXPosDeaths, nThisRowY, "Deaths");
 
     nThisRowY += fDefaultFontSizePixels;
 
@@ -1688,13 +1822,9 @@ void proofps_dd::GUI::drawGameObjectives()
         nYPosStart += 2 * fDefaultFontSizePixels;
     }
 
-    drawTextShadowed(nXPosPlayerName, nYPosStart, "Player Name");
-    drawTextShadowed(nXPosFrags, nYPosStart, "Frags");
-    drawTextShadowed(nXPosDeaths, nYPosStart, "Deaths");
-
     if (m_pNetworking->isServer())
     {
-        drawGameObjectivesServer(nYPosStart);
+        drawGameObjectivesServer();
     }
     else
     {
@@ -1751,6 +1881,22 @@ float proofps_dd::GUI::getDearImGui2DposXforRightAdjustedText(const std::string&
     return fImGuiX - ImGui::CalcTextSize(text.c_str()).x;
 }
 
+float proofps_dd::GUI::getDearImGui2DposXforTableCurrentCellCenteredText(const std::string& text)
+{
+    const float fPosX = ImGui::GetCursorPosX() + (ImGui::GetColumnWidth() - ImGui::CalcTextSize(text.c_str()).x
+        - ImGui::GetScrollX() /* amount of scrolling */ - /* 2 * */ ImGui::GetStyle().ItemSpacing.x) / 2.f;
+
+    return fPosX > ImGui::GetCursorPosX() ? fPosX : ImGui::GetCursorPosX();
+}
+
+float proofps_dd::GUI::getDearImGui2DposXforTableCurrentCellRightAdjustedText(const std::string& text)
+{
+    const float fPosX = ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - ImGui::CalcTextSize(text.c_str()).x
+        - ImGui::GetScrollX() /* amount of scrolling */ - /* 2 * */ ImGui::GetStyle().ItemSpacing.x;
+
+    return fPosX > ImGui::GetCursorPosX() ? fPosX : ImGui::GetCursorPosX();
+}
+
 float proofps_dd::GUI::getDearImGui2DposXforWindowCenteredText(const std::string& text)
 {
     return getDearImGui2DposXforCenteredText(text, ImGui::GetWindowSize().x * 0.5f);
@@ -1767,6 +1913,93 @@ void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGui
     ImGui::SetCursorPos(ImVec2(fImGuiX + 1, fImGuiY + 1));
     ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%s", text.c_str());
     drawText(fImGuiX, fImGuiY, text);
+}
+
+/**
+* Renders the given text in the current cell, with automatic shortening if cell width is not enough for the whole text.
+* I dont know why Dear ImGui is not always automatically shortening too long text in cells with "..." so I made this function.
+* 
+* However, this function is very useful especially when shortening player names, since in case of colliding player names, server
+* appends a 3-digit unique number to the end of each player name, and we can see those numbers even if name is too long, if we set
+* nAppendLastNChars to 3, to be able to distinguish players with too long names!
+* 
+* @param text              The text to be rendered in current cell.
+* @param nAppendLastNChars How many last characters of 'text' should be rendered in the cell after "..." if we are shortening. 
+*/
+void proofps_dd::GUI::ImGuiTextTableCurrentCellShortenedFit(const std::string& text, size_t nAppendLastNChars)
+{
+    if (text.empty())
+    {
+        return;
+    }
+
+    const auto fFullTextRequiredWidth = ImGui::CalcTextSize(text.c_str()).x;
+    if (fFullTextRequiredWidth == 0.f)
+    {
+        assert(false); // should never happen since text is not empty
+        return;
+    }
+    
+    const auto fAvailWidthInCell = ImGui::GetContentRegionAvail().x;
+    const int nFirstNCharsFitInCell = static_cast<int>((std::floor(std::min(1.f, fAvailWidthInCell / fFullTextRequiredWidth) * text.length())));
+    if (nFirstNCharsFitInCell <= 0)
+    {
+        // can happen if column width is too small
+        ImGui::TextUnformatted("#");  // even if this '#' does not fit, it should be partially rendered!
+        return;
+    }
+
+    if (nFirstNCharsFitInCell == static_cast<int>(text.length()))
+    {
+        ImGui::TextUnformatted(text.c_str());
+    }
+    else
+    {
+        if (text.length() < nAppendLastNChars)
+        {
+            ImGui::TextUnformatted("#");  // even if this '#' does not fit, it should be partially rendered!
+            return;
+        }
+
+        const std::string sShortenedTextDottedEnd = std::string("...") + text.substr(text.length() - nAppendLastNChars);
+        const auto fShortenedDottedTextEndRequiredWidth = ImGui::CalcTextSize(sShortenedTextDottedEnd.c_str()).x;
+        if (fShortenedDottedTextEndRequiredWidth == 0.f)
+        {
+            assert(false); // should never happen since text is not empty
+            return;
+        }
+        if (fShortenedDottedTextEndRequiredWidth >= fFullTextRequiredWidth)
+        {
+            // might happen if text end is something like "   ..." or "      " (only spaces)
+            ImGui::TextUnformatted(text.c_str());
+            return;
+        }
+        if (fAvailWidthInCell < fShortenedDottedTextEndRequiredWidth)
+        {
+            // can happen if column width is too small
+            ImGui::TextUnformatted("###");  // even if this '###' does not fit, it should be partially rendered!
+            return;
+        }
+
+        const int nShortenedFirstNCharsFitInCell = static_cast<int>(
+            (std::floor(
+                std::min(1.f, (fAvailWidthInCell - fShortenedDottedTextEndRequiredWidth) / (fFullTextRequiredWidth)) * text.length())
+            ));
+        const std::string sShortened = text.substr(0, nShortenedFirstNCharsFitInCell) + sShortenedTextDottedEnd;
+        ImGui::TextUnformatted(sShortened.c_str());
+    }
+} // ImGuiTextTableCurrentCellShortenedFit()
+
+void proofps_dd::GUI::ImGuiTextTableCurrentCellCentered(const std::string& text)
+{
+    ImGui::SetCursorPosX(getDearImGui2DposXforTableCurrentCellCenteredText(text));
+    ImGui::TextUnformatted(text.c_str());
+}
+
+void proofps_dd::GUI::ImGuiTextTableCurrentCellRightAdjusted(const std::string& text)
+{
+    ImGui::SetCursorPosX(getDearImGui2DposXforTableCurrentCellRightAdjustedText(text));
+    ImGui::TextUnformatted(text.c_str());
 }
 
 proofps_dd::GUI::GUI()

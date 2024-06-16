@@ -417,7 +417,7 @@ namespace proofps_dd
     struct MsgUserNameChangeAndBootupDone
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserNameChangeAndBootupDone;
-        static const uint8_t nUserNameBufferLength = 11;  // for now very short, to keep the frag table look nice
+        static const uint8_t nUserNameBufferLength = sizeof("megszentsegtelenithetetlensegeskedeseitekert");
 
         static bool initPkt(
             pge_network::PgePacket& pkt,

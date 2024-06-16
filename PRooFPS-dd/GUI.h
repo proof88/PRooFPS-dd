@@ -144,7 +144,7 @@ namespace proofps_dd
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static void updateDeathKillEvents();
         static void hideGameObjectives();
-        static void drawGameObjectivesServer(float nThisRowY);
+        static void drawGameObjectivesServer();
         static void drawGameObjectivesClient(float nThisRowY);
         static void drawGameObjectives();
 
@@ -154,9 +154,14 @@ namespace proofps_dd
         static float getDearImGui2DposYFromPure2DposY(const float& fPureY);
         static float getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX);
         static float getDearImGui2DposXforRightAdjustedText(const std::string& text, const float& fImGuiX);
+        static float getDearImGui2DposXforTableCurrentCellCenteredText(const std::string& text);
+        static float getDearImGui2DposXforTableCurrentCellRightAdjustedText(const std::string& text);
         static float getDearImGui2DposXforWindowCenteredText(const std::string& text);
         static void drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text);
         static void drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text);
+        static void ImGuiTextTableCurrentCellShortenedFit(const std::string& text, size_t nAppendLastNChars = 0);
+        static void ImGuiTextTableCurrentCellCentered(const std::string& text);
+        static void ImGuiTextTableCurrentCellRightAdjusted(const std::string& text);
 
         static void drawDearImGuiCb(); // this needs to be static, causing a lot of other members also need to be static
 
