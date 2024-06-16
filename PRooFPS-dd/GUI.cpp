@@ -1822,43 +1822,6 @@ void proofps_dd::GUI::drawGameObjectivesClient()
         ImGui::Unindent(fTableColIndentPixels);
         ImGui::EndTable();
     } // end BeginTable
-
-    /* debug data */
-
-//    nThisRowY += 2 * fDefaultFontSizePixels;
-//    drawTextShadowed(nXPosPlayerName, nThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
-//
-//    nThisRowY += fDefaultFontSizePixels;
-//    std::stringstream ssQuality;
-//    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
-//        "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
-//    drawTextShadowed(nXPosPlayerName, nThisRowY, ssQuality.str());
-//
-//    nThisRowY += fDefaultFontSizePixels;
-//    drawTextShadowed(
-//        nXPosPlayerName,
-//        nThisRowY,
-//        "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
-//        " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
-//
-//    nThisRowY += fDefaultFontSizePixels;
-//    drawTextShadowed(
-//        nXPosPlayerName,
-//        nThisRowY,
-//        "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
-//        "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
-//
-//    nThisRowY += fDefaultFontSizePixels;
-//    drawTextShadowed(
-//        nXPosPlayerName,
-//        nThisRowY,
-//        "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
-//
-//    nThisRowY += fDefaultFontSizePixels;
-//    drawTextShadowed(
-//        nXPosPlayerName,
-//        nThisRowY,
-//        "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
 }  // drawGameObjectivesClient()
 
 void proofps_dd::GUI::drawGameObjectives()
@@ -1910,10 +1873,49 @@ void proofps_dd::GUI::drawGameObjectives()
     }
 } // drawGameObjectives()
 
-void proofps_dd::GUI::drawClientConnectionDebugInfo()
+void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
     assert(m_pNetworking && !m_pNetworking->isServer());
+    assert(m_pPge);
+
+    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Client Network Live Data");
+
+    fThisRowY += 2 * fDefaultFontSizePixels;
+
+    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
+
+    fThisRowY += fDefaultFontSizePixels;
+    std::stringstream ssQuality;
+    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
+        "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
+    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, ssQuality.str());
+
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX,
+        fThisRowY,
+        "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
+        " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
+
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX,
+        fThisRowY,
+        "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
+        "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
+
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX,
+        fThisRowY,
+        "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
+
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextShadowed(
+        fGameInfoPagesStartX,
+        fThisRowY,
+        "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
 }
 
 void proofps_dd::GUI::drawGameServerConfig()
@@ -1971,7 +1973,8 @@ void proofps_dd::GUI::drawGameServerConfig()
     
     if (!m_pNetworking->isServer())
     {
-        drawClientConnectionDebugInfo();
+        fThisRowY += 2 * fDefaultFontSizePixels;
+        drawClientConnectionDebugInfo(fThisRowY);
     }
 }
 

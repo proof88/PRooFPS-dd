@@ -156,7 +156,7 @@ namespace proofps_dd
         static void drawGameObjectivesServer();
         static void drawGameObjectivesClient();
         static void drawGameObjectives();
-        static void drawClientConnectionDebugInfo();
+        static void drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();
         static void drawGameInfoPages();
 
