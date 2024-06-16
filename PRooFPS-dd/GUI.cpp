@@ -468,7 +468,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
     ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sVersion));
     ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
-    ImGui::Text("%s", sVersion.c_str());
+    ImGui::TextUnformatted(sVersion.c_str());
 
     const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
     ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sLatestAlpVersion));
@@ -481,7 +481,7 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
     ImGui::AlignTextToFramePadding();
     static std::string sHintClName; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintClName, cvarClName);
-    ImGui::Text("Player Name:");
+    ImGui::TextUnformatted("Player Name:");
     ImGui::SameLine();
     const auto fInputBoxPosX = ImGui::GetCursorPosX();
     
@@ -510,7 +510,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::Text("[  C R E A T E  G A M E  ]");
+    ImGui::TextUnformatted("[  C R E A T E  G A M E  ]");
 
     ImGui::Separator();
     ImGui::Indent();
@@ -519,7 +519,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();  // in newer Dear ImGUI there is another separator that can contain a text too!
 
-    ImGui::Text("[ Map Configuration ]");
+    ImGui::TextUnformatted("[ Map Configuration ]");
 
     ImGui::Indent();
     {
@@ -534,10 +534,10 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         const float fMapMoveBtnsPosX = fBasePosX + fMapListboxesWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
         const float fMapsAvailListBoxX = fMapMoveBtnsPosX + fMapMoveBtnsWidth + fMapMoveBtnsVerticalDistanceFromListBoxes;
 
-        ImGui::Text("Mapcycle:");
+        ImGui::TextUnformatted("Mapcycle:");
 
         ImGui::SameLine(fMapsAvailListBoxX);
-        ImGui::Text("Available Maps:");
+        ImGui::TextUnformatted("Available Maps:");
 
         const auto fBasePosY = ImGui::GetCursorPosY();
 
@@ -683,7 +683,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvMap; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvMap, cvarSvMap);
-        ImGui::Text("Force-Start on Map:");
+        ImGui::TextUnformatted("Force-Start on Map:");
 
         ImGui::SameLine();
         ImGui::PushItemWidth(150);
@@ -733,14 +733,14 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();
 
-    ImGui::Text("[ Game Goal ]");
+    ImGui::TextUnformatted("[ Game Goal ]");
     ImGui::Indent();
     {
         PGEcfgVariable& cvarSvDmFragLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit];
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvDmFragLimit; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvDmFragLimit, cvarSvDmFragLimit);
-        ImGui::Text("Frag Limit:");
+        ImGui::TextUnformatted("Frag Limit:");
         ImGui::SameLine();
         int nCvarSvDmFragLimit = cvarSvDmFragLimit.getAsInt();
         ImGui::PushItemWidth(100);
@@ -755,7 +755,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvDmTimeLimit; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvDmTimeLimit, cvarSvDmTimeLimit);
-        ImGui::Text("Time Limit:");
+        ImGui::TextUnformatted("Time Limit:");
         ImGui::SameLine();
         int nCvarSvDmTimeLimit = cvarSvDmTimeLimit.getAsInt();
         ImGui::PushItemWidth(100);
@@ -770,7 +770,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
     ImGui::Separator();
 
-    ImGui::Text("[ Miscellaneous ]");
+    ImGui::TextUnformatted("[ Miscellaneous ]");
     ImGui::Indent();
     {
         PGEcfgVariable& cvarTickrate = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
@@ -781,7 +781,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             ImGui::AlignTextToFramePadding();
             static std::string sHintTickrate; // static so it is built up by addHintToItemByCVar() only once
             addHintToItemByCVar(sHintTickrate, cvarTickrate);
-            ImGui::Text("Tickrate:");
+            ImGui::TextUnformatted("Tickrate:");
             
             ImGui::SameLine();
             if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
@@ -809,7 +809,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             ImGui::AlignTextToFramePadding();
             static std::string sHintClientUpdateRate; // static so it is built up by addHintToItemByCVar() only once
             addHintToItemByCVar(sHintClientUpdateRate, cvarClientUpdateRate);
-            ImGui::Text("Client Updates:");
+            ImGui::TextUnformatted("Client Updates:");
 
             ImGui::SameLine();
             // this is configuration logic here forced on the GUI, I dont know how I could avoid this special disabling/enabling behavior here,
@@ -845,7 +845,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             ImGui::AlignTextToFramePadding();
             static std::string sHintMidAirStrafe; // static so it is built up by addHintToItemByCVar() only once
             addHintToItemByCVar(sHintMidAirStrafe, cvarSvAllowStrafeMidAir);
-            ImGui::Text("Mid-Air Strafe:");
+            ImGui::TextUnformatted("Mid-Air Strafe:");
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Full##midairstrafe",
@@ -878,7 +878,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
-        ImGui::Text("Mid-Air Somersault Auto-Crouch:");
+        ImGui::TextUnformatted("Mid-Air Somersault Auto-Crouch:");
         ImGui::SameLine();
         bool bSvSomersaultMidAirAutoCrouch = cvarSvSomersaultMidAirAutoCrouch.getAsBool();
         if (ImGui::Checkbox("##cbSomersaultMidAirAutoCrouch", &bSvSomersaultMidAirAutoCrouch))
@@ -890,7 +890,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvSomersaultMidAirJumpForceMultiplier; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvSomersaultMidAirJumpForceMultiplier, cvarSvSomersaultMidAirJumpForceMultiplier);
-        ImGui::Text("Mid-Air Somersault Jump Force Multiplier:");
+        ImGui::TextUnformatted("Mid-Air Somersault Jump Force Multiplier:");
         ImGui::SameLine();
         float fSvSomersaultMidAirJumpForceMultiplier = cvarSvSomersaultMidAirJumpForceMultiplier.getAsFloat();
         ImGui::PushItemWidth(70);
@@ -908,7 +908,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvDmRespawnDelaySecs; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvDmRespawnDelaySecs, cvarSvDmPlayerRespawnDelaySecs);
-        ImGui::Text("Player Respawn Delay:");
+        ImGui::TextUnformatted("Player Respawn Delay:");
         ImGui::SameLine();
         int nSvDmPlayerRespawnDelaySecs = cvarSvDmPlayerRespawnDelaySecs.getAsInt();
         ImGui::PushItemWidth(70);
@@ -926,7 +926,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvDmRespawnInvulnerabilityDelaySecs; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvDmRespawnInvulnerabilityDelaySecs, cvarSvDmPlayerRespawnInvulnerabilityDelaySecs);
-        ImGui::Text("Player Respawn Invulnerability Delay:");
+        ImGui::TextUnformatted("Player Respawn Invulnerability Delay:");
         ImGui::SameLine();
         int nSvDmPlayerRespawnInvulnerabilityDelaySecs = cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.getAsInt();
         ImGui::PushItemWidth(70);
@@ -1023,7 +1023,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::Text("[  J O I N  G A M E  ]");
+    ImGui::TextUnformatted("[  J O I N  G A M E  ]");
 
     ImGui::Separator();
     ImGui::Indent();
@@ -1037,7 +1037,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintClServerIp; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintClServerIp, cvarClServerIp);
-    ImGui::Text("Server IP:");
+    ImGui::TextUnformatted("Server IP:");
 
     ImGui::SameLine(fInputBoxPosX);
     static char szServerIP[16];
@@ -1104,7 +1104,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::Text("[  S E T T I N G S  ]");
+    ImGui::TextUnformatted("[  S E T T I N G S  ]");
 
     ImGui::Separator();
     ImGui::Indent();
@@ -1113,7 +1113,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGfxFullscreen; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGfxFullscreen, cvarGfxFullscreen);
-    ImGui::Text("Fullscreen:");
+    ImGui::TextUnformatted("Fullscreen:");
     ImGui::SameLine();
     bool bFullscreen = !cvarGfxFullscreen.getAsBool();
     if (ImGui::Checkbox("##cbFullscreen", &bFullscreen))
@@ -1127,7 +1127,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Apply Setting", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::Text("The game will restart now to apply the new configuration.");
+        ImGui::TextUnformatted("The game will restart now to apply the new configuration.");
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
         {
@@ -1158,7 +1158,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGfxVSync; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGfxVSync, cvarGfxVSync);
-    ImGui::Text("V-Sync:");
+    ImGui::TextUnformatted("V-Sync:");
     ImGui::SameLine();
     // TODO: VSync validation should be also moved to Config::validate(), however first the optional string argument support
     // should be implemented for validate(), otherwise it looks bad we always validate everything and try set vsync just because any
@@ -1186,13 +1186,13 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     {
         ImGui::EndDisabled();
         ImGui::SameLine();
-        ImGui::Text("V-Sync is NOT supported on this hardware!");
+        ImGui::TextUnformatted("V-Sync is NOT supported on this hardware!");
     }
 
     ImGui::BeginGroup();
     {
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Camera Follows:");
+        ImGui::TextUnformatted("Camera Follows:");
         ImGui::SameLine();
         // dont forget there is also 3-param version of RadioButton
         if (ImGui::RadioButton("XHair and Player", m_pPge->getConfigProfiles().getVars()[CVAR_GFX_CAM_FOLLOWS_XHAIR].getAsBool()))
@@ -1212,7 +1212,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGfxCamTilt; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGfxCamTilt, cvarGfxCamTilt);
-    ImGui::Text("Camera Tilting:");
+    ImGui::TextUnformatted("Camera Tilting:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbCamTilt", &bGfxCamTilting))
     {
@@ -1224,7 +1224,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGfxCamRoll; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGfxCamRoll, cvarGfxCamRoll);
-    ImGui::Text("Camera Rolling:");
+    ImGui::TextUnformatted("Camera Rolling:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbCamRoll", &bGfxCamRolling))
     {
@@ -1236,7 +1236,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGuiXHairIdentifiesPlayers; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGuiXHairIdentifiesPlayers, cvarGuiXHairIdentifiesPlayers);
-    ImGui::Text("Crosshair Identifies Players:");
+    ImGui::TextUnformatted("Crosshair Identifies Players:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbGuiXHairIdentifiesPlayers", &bGuiXHairIdentifiesPlayers))
     {
@@ -1248,7 +1248,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGuiMinimapShow; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGuiMinimapShow, cvarGuiMinimapShow);
-    ImGui::Text("Show Minimap:");
+    ImGui::TextUnformatted("Show Minimap:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbGuiMinimapShow", &bGuiMinimapShow))
     {
@@ -1260,7 +1260,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGuiMinimapTransparent; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGuiMinimapTransparent, cvarGuiMinimapTransparent);
-    ImGui::Text("Minimap Transparency:");
+    ImGui::TextUnformatted("Minimap Transparency:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbGuiMinimapTransparent", &bGuiMinimapTransparent))
     {
@@ -1905,7 +1905,7 @@ float proofps_dd::GUI::getDearImGui2DposXforWindowCenteredText(const std::string
 void proofps_dd::GUI::drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text)
 {
     ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
-    ImGui::Text("%s", text.c_str());
+    ImGui::TextUnformatted(text.c_str());
 }
 
 void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text)
