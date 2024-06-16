@@ -1715,67 +1715,139 @@ void proofps_dd::GUI::drawGameObjectivesServer()
     //ImGui::PopStyleVar();
 }  // drawGameObjectivesServer()
 
-void proofps_dd::GUI::drawGameObjectivesClient(float nThisRowY)
+void proofps_dd::GUI::drawGameObjectivesClient()
 {
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pGameMode);
     assert(m_pPge);
 
-    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so sophisticated and flexible I decided to use it here!
-    //ImGui::BeginTable();
+    static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
+        "Player Name",
+        "Frags",
+        "Deaths"
+    );
 
-    drawTextShadowed(nXPosPlayerName, nThisRowY, "Player Name");
-    drawTextShadowed(nXPosFrags, nThisRowY, "Frags");
-    drawTextShadowed(nXPosDeaths, nThisRowY, "Deaths");
+    static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
+        0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
+        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */,
+        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x
+    );
 
-    nThisRowY += fDefaultFontSizePixels;
+    assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
 
-    drawTextShadowed(nXPosPlayerName, nThisRowY, "======================================");
+    static const float fColsTotalWidthAfterCol0 = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
 
-    for (const auto& player : m_pGameMode->getFragTable())
+    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
+
+    constexpr ImGuiTableFlags tblFlags =
+        ImGuiTableFlags_RowBg |
+        ImGuiTableFlags_ScrollY |
+        ImGuiTableFlags_SizingStretchProp;
+
+    static constexpr float fTableColIndentPixels = 4.f; // not sure why I dont use this in above calculations instead of ImGui::GetStyle().ItemSpacing.x
+
+    const float fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f; // we might maximize this because looks too wide in full hd
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
+    const float fPlayerNameColWidthPixels = fTableWidthPixels - fColsTotalWidthAfterCol0;
+
+    ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
+
+    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
+    if (ImGui::BeginTable("tbl_frag_cl", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
     {
-        nThisRowY = nThisRowY + fDefaultFontSizePixels;
-        drawTextShadowed(nXPosPlayerName, nThisRowY, player.m_sName);
-        drawTextShadowed(nXPosFrags, nThisRowY, std::to_string(player.m_nFrags));
-        drawTextShadowed(nXPosDeaths, nThisRowY, std::to_string(player.m_nDeaths));
-    }
+        ImGui::TableSetupScrollFreeze(1, 1);
+        ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
+        size_t iHdrCol = 0;
+        for (const auto& hdr : vecHeaderLabels)
+        {
+            ImGui::TableSetupColumn(
+                hdr,
+                ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable,
+                /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
+                iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
+
+            iHdrCol++;
+        }
+
+        // ImGui calculates multi-line header text height properly so we dont need to set custom row height.
+        ImGui::TableHeadersRow();
+        for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
+        {
+            for (const auto& player : m_pGameMode->getFragTable())
+            {
+                ImGui::TableNextRow();
+                if (m_pNetworking->isMyConnection(player.m_connHandle))
+                {
+                    // applies only to the current row, no need to reset
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
+                }
+
+                const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
+                    3 : static_cast<int>(vecHeaderLabels.size());
+                for (int iCol = 0; iCol < nColumnCount; iCol++)
+                {
+                    ImGui::TableSetColumnIndex(iCol);
+                    switch (iCol)
+                    {
+                    case 0:
+                        ImGuiTextTableCurrentCellShortenedFit(
+                            player.m_sName
+                            /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
+                            /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
+                            3);
+                        break;
+                    case 1:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
+                        break;
+                    case 2:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
+                        break;
+                    default:
+                        assert(false); // crash in debug
+                    }
+                } // end for iCol
+            } // end for players
+        } // end for iReplicateRowsForExperimenting
+        ImGui::Unindent(fTableColIndentPixels);
+        ImGui::EndTable();
+    } // end BeginTable
 
     /* debug data */
 
-    nThisRowY += 2 * fDefaultFontSizePixels;
-    drawTextShadowed(nXPosPlayerName, nThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
-
-    nThisRowY += fDefaultFontSizePixels;
-    std::stringstream ssQuality;
-    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
-        "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
-    drawTextShadowed(nXPosPlayerName, nThisRowY, ssQuality.str());
-
-    nThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        nXPosPlayerName,
-        nThisRowY,
-        "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
-        " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
-
-    nThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        nXPosPlayerName,
-        nThisRowY,
-        "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
-        "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
-
-    nThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        nXPosPlayerName,
-        nThisRowY,
-        "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
-
-    nThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        nXPosPlayerName,
-        nThisRowY,
-        "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
+//    nThisRowY += 2 * fDefaultFontSizePixels;
+//    drawTextShadowed(nXPosPlayerName, nThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
+//
+//    nThisRowY += fDefaultFontSizePixels;
+//    std::stringstream ssQuality;
+//    ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
+//        "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
+//    drawTextShadowed(nXPosPlayerName, nThisRowY, ssQuality.str());
+//
+//    nThisRowY += fDefaultFontSizePixels;
+//    drawTextShadowed(
+//        nXPosPlayerName,
+//        nThisRowY,
+//        "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
+//        " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
+//
+//    nThisRowY += fDefaultFontSizePixels;
+//    drawTextShadowed(
+//        nXPosPlayerName,
+//        nThisRowY,
+//        "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
+//        "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
+//
+//    nThisRowY += fDefaultFontSizePixels;
+//    drawTextShadowed(
+//        nXPosPlayerName,
+//        nThisRowY,
+//        "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
+//
+//    nThisRowY += fDefaultFontSizePixels;
+//    drawTextShadowed(
+//        nXPosPlayerName,
+//        nThisRowY,
+//        "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
 }  // drawGameObjectivesClient()
 
 void proofps_dd::GUI::drawGameObjectives()
@@ -1816,7 +1888,8 @@ void proofps_dd::GUI::drawGameObjectives()
         }
         if (pDeathMatchMode->getTimeLimitSecs() > 0)
         {
-            sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) + " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
+            sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
+                " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
         drawTextShadowed(nXPosPlayerName, nYPosStart, sLimits);
         nYPosStart += 2 * fDefaultFontSizePixels;
@@ -1828,7 +1901,7 @@ void proofps_dd::GUI::drawGameObjectives()
     }
     else
     {
-        drawGameObjectivesClient(nYPosStart);
+        drawGameObjectivesClient();
     }
 
     hideGameObjectives();

@@ -145,7 +145,7 @@ namespace proofps_dd
         static void updateDeathKillEvents();
         static void hideGameObjectives();
         static void drawGameObjectivesServer();
-        static void drawGameObjectivesClient(float nThisRowY);
+        static void drawGameObjectivesClient();
         static void drawGameObjectives();
 
         /* Misc */
