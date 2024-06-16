@@ -2074,7 +2074,11 @@ void proofps_dd::GUI::drawText(const float& fImGuiX, const float& fImGuiY, const
 void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text)
 {
     ImGui::SetCursorPos(ImVec2(fImGuiX + 1, fImGuiY + 1));
-    ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%s", text.c_str());
+    // instead of TextColored(), I'm changing StyleColor + call TextUnformatted() because I dont use format string so this is faster 
+    //ImGui::TextColored(ImVec4(0.0f, 0.0f, 0.0f, 1.0f), "%s", text.c_str());
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+    ImGui::TextUnformatted(text.c_str());
+    ImGui::PopStyleColor();
     drawText(fImGuiX, fImGuiY, text);
 }
 
