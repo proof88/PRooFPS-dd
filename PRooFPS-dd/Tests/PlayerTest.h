@@ -202,7 +202,7 @@ private:
             {
                 return assertFalse(true, (std::string("player ") + std::to_string(i) + " insert").c_str());
             }
-            proofps_dd::Player::genUniqueUserName(szNewUserName, "ASDASDADSASDASDASD", mapPlayers);
+            proofps_dd::Player::genUniqueUserName(szNewUserName, "ASDASDASD0ASDASDASD0ASDASDASD0ASDASDASD0ASDASDASD0", mapPlayers);
             proofps_dd::Player& insertedPlayer = insertRes.first->second;
             insertedPlayer.setName(szNewUserName);
         }
@@ -210,7 +210,10 @@ private:
         // checkpoint 2
         for (const auto& connHandlePlayerPair : mapPlayers)
         {
-            b &= assertEquals("ASDASDA", connHandlePlayerPair.second.getName().substr(0, 7), "player name cp 2") &
+            b &= assertEquals(
+                    "ASDASDASD0ASDASDASD0ASDASDASD0ASDASDASD0A",
+                    connHandlePlayerPair.second.getName().substr(0, proofps_dd::MsgUserNameChangeAndBootupDone::nUserNameBufferLength - 4u),
+                    "player name cp 2") &
                 assertEquals(connHandlePlayerPair.second.getName().length(), proofps_dd::MsgUserNameChangeAndBootupDone::nUserNameBufferLength-1u, "player name length cp 2");
             const auto insertRes = namesSet.insert(connHandlePlayerPair.second.getName());
             b &= assertTrue(insertRes.second, "insert into set 2");

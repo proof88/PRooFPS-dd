@@ -1,5 +1,5 @@
 # Do not put comment lines into this file like this one, the game is not preserving them!
 
-map_warena.txt
 map_warhouse.txt
+map_warena.txt
 map_mutans.txt
