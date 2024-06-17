@@ -350,15 +350,33 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY
     m_pPge->getPure().getUImanager().textPermanentLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
 
-void proofps_dd::GUI::showRespawnTimer()
+void proofps_dd::GUI::showRespawnTimer(
+    const Player* const pKillerPlayer)
 {
+    assert(m_pGameMode);
+    if (m_pGameMode->isGameWon())
+    {
+        return;
+    }
+
+    assert(m_pMapPlayers);
     m_timePlayerDied = std::chrono::steady_clock::now();
     m_bShowRespawnTimer = true;
+
+    m_sRespawnTimerExtraText.clear();
+    m_sRespawnTimerExtraText2.clear();
+    if (pKillerPlayer)
+    {
+        m_sRespawnTimerExtraText = pKillerPlayer->getName() + " killed you with";
+        m_sRespawnTimerExtraText2 = std::to_string(pKillerPlayer->getHealth().getNew()) + "% HP and 0% AP remaining.";
+    }
 }
 
 void proofps_dd::GUI::hideRespawnTimer()
 {
     m_bShowRespawnTimer = false;
+    m_sRespawnTimerExtraText.clear();
+    m_sRespawnTimerExtraText2.clear();
 }
 
 void proofps_dd::GUI::setGameModeInstance(proofps_dd::GameMode& gm)
@@ -382,6 +400,8 @@ proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::Men
 
 bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
+std::string proofps_dd::GUI::m_sRespawnTimerExtraText;
+std::string proofps_dd::GUI::m_sRespawnTimerExtraText2;
 
 bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
@@ -1403,7 +1423,10 @@ void proofps_dd::GUI::drawRespawnTimer()
     const float fTextPosX = getDearImGui2DposXforWindowCenteredText(szRespawnWaitText);
 
     assert(m_pPge);
-    drawTextShadowed(fTextPosX, m_pPge->getPure().getCamera().getViewport().size.height / 2.f, szRespawnWaitText);
+    drawTextShadowed(
+        fTextPosX,
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - fDefaultFontSizePixels,
+        szRespawnWaitText);
 
     assert(m_pConfig);
     if (m_pConfig->getPlayerRespawnDelaySeconds() == 0)
@@ -1432,6 +1455,21 @@ void proofps_dd::GUI::drawRespawnTimer()
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
+
+    if (!m_sRespawnTimerExtraText.empty())
+    {
+        drawTextShadowed(
+            getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText),
+            ImGui::GetCursorPosY(),
+            m_sRespawnTimerExtraText);
+    }
+    if (!m_sRespawnTimerExtraText2.empty())
+    {
+        drawTextShadowed(
+            getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText2),
+            ImGui::GetCursorPosY(),
+            m_sRespawnTimerExtraText2);
+    }
 }
 
 void proofps_dd::GUI::drawXHairHoverText()

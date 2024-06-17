@@ -64,7 +64,7 @@ namespace proofps_dd
         void handlePlayerDied(
             Player& player,
             XHair& xhair,
-            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide,
+            const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide,
             proofps_dd::GameMode& gameMode);
         void handlePlayerRespawned(Player& player, XHair& xhair);
         void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);

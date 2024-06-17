@@ -94,7 +94,8 @@ namespace proofps_dd
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;
 
-        void showRespawnTimer();
+        void showRespawnTimer(
+            const Player* const pKillerPlayer);
         void hideRespawnTimer();
 
         void setGameModeInstance(proofps_dd::GameMode& gm);
@@ -117,6 +118,8 @@ namespace proofps_dd
 
         static bool m_bShowRespawnTimer;
         static std::chrono::time_point<std::chrono::steady_clock> m_timePlayerDied;
+        static std::string m_sRespawnTimerExtraText;
+        static std::string m_sRespawnTimerExtraText2;
         static bool m_bShowHealthAndArmor;
 
         /* Misc */

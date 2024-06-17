@@ -58,21 +58,20 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     XHair& xhair,
-    pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide,
-    proofps_dd::GameMode& gameMode)
+    const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide,
+    proofps_dd::GameMode& /*gameMode*/)
 {
+    // here design is good because server and client share the same code
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
         xhair.hide();
-        
-        if (!gameMode.isGameWon())
-        {
-            m_gui.showRespawnTimer();
-        }
     }
 
+    // design was good until this line, in the future we should change MsgDeathNotificationFromServer to be injected also to server, thus
+    // the same message handling would do everything for both server and client
+    // !!! BADDESIGN !!!
     if (m_pge.getNetwork().isServer())
     {
         // important: killer info is just for informational purpose so we can display it, however
@@ -83,12 +82,14 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
         // server displays death notification on gui here, client displays in handleDeathNotificationFromServer() as we send the pkt out below
         assert(m_gui.getDeathKillEvents());
         std::string sKillerName;
+        const Player* pPlayerKiller = nullptr;
         if (nKillerConnHandleServerSide != player.getServerSideConnectionHandle())
         {
             const auto itPlayerKiller = m_mapPlayers.find(nKillerConnHandleServerSide);
             if (m_mapPlayers.end() != itPlayerKiller)
             {
                 sKillerName = itPlayerKiller->second.getName();
+                pPlayerKiller = &(itPlayerKiller->second);
             }
         }
         m_gui.getDeathKillEvents()->addDeathKillEvent(sKillerName, player.getName());
@@ -99,6 +100,12 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
             player.getServerSideConnectionHandle(),
             nKillerConnHandleServerSide);
         m_pge.getNetwork().getServer().sendToAllClientsExcept(pktDeathNotificationFromServer);
+
+        // from v0.2.5, server shows respawn timer here for themselves, client shows upon receiving MsgDeathNotificationFromServer
+        if (isMyConnection(player.getServerSideConnectionHandle()))
+        {
+            m_gui.showRespawnTimer(pPlayerKiller);
+        }
     }
 }
 
@@ -869,10 +876,17 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     else
     {
         // killer connhandle is set to player's connhandle also if killer got disconnected in the meantime, so that is not necessarily suicide!
-        if (msg.m_nKillerConnHandleServerSide != itPlayerDied->first)
+        if (msg.m_nKillerConnHandleServerSide != nDeadConnHandleServerSide)
         {
             sKillerName = itPlayerKiller->second.getName();
         }
+    }
+
+    // from v0.2.5, client shows respawn timer here instead of in handlePlayerDied()
+    if (isMyConnection(nDeadConnHandleServerSide))
+    {
+        m_gui.showRespawnTimer(
+            sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
     }
 
     // Server does death notification on GUI in HandlePlayerDied(), clients do here.
