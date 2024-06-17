@@ -174,6 +174,7 @@ namespace proofps_dd
         static float getDearImGui2DposXforWindowCenteredText(const std::string& text);
         static void drawText(const float& fImGuiX, const float& fImGuiY, const std::string& text);
         static void drawTextShadowed(const float& fImGuiX, const float& fImGuiY, const std::string& text);
+        static void drawTextHighlighted(const float& fImGuiX, const float& fImGuiY, const std::string& text);
         static void ImGuiTextTableCurrentCellShortenedFit(const std::string& text, size_t nAppendLastNChars = 0);
         static void ImGuiTextTableCurrentCellCentered(const std::string& text);
         static void ImGuiTextTableCurrentCellRightAdjusted(const std::string& text);

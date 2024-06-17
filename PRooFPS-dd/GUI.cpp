@@ -1514,7 +1514,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - fDefaultFontSizePixels - 10 /* spacing from viewport bottom edge */;
     if (m_pNetworking->isServer())
     {
-        drawTextShadowed(
+        drawTextHighlighted(
             10,
             fStartY,
             "Server, User name: " + player.getName() +
@@ -1522,7 +1522,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
     else
     {
-        drawTextShadowed(
+        drawTextHighlighted(
             10,
             fStartY,
             "Client, User name: " + player.getName() +
@@ -1539,7 +1539,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
 
         if (itCVarWpnName != wpnCurrent->getVars().end())
         {
-            drawTextShadowed(
+            drawTextHighlighted(
                 10,
                 ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
                 itCVarWpnName->second.getAsString() + ": " +
@@ -1548,8 +1548,8 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         }
     }
     
-    drawTextShadowed(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: 0 %");
-    drawTextShadowed(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
+    drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: 0 %");
+    drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
 }
 
 void proofps_dd::GUI::updateDeathKillEvents()
@@ -1882,7 +1882,7 @@ void proofps_dd::GUI::drawGameObjectives()
 
     if (m_pGameMode->isGameWon())
     {
-        drawTextShadowed(fGameInfoPagesStartX, nYPosStart, "Game Ended! Waiting for restart ...");
+        drawTextHighlighted(fGameInfoPagesStartX, nYPosStart, "Game Ended! Waiting for restart ...");
         nYPosStart += 2 * fDefaultFontSizePixels;
     }
     else
@@ -1897,7 +1897,7 @@ void proofps_dd::GUI::drawGameObjectives()
             sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
                 " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
-        drawTextShadowed(fGameInfoPagesStartX, nYPosStart, sLimits);
+        drawTextHighlighted(fGameInfoPagesStartX, nYPosStart, sLimits);
         nYPosStart += 2 * fDefaultFontSizePixels;
     }
 
@@ -1917,41 +1917,43 @@ void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pPge);
 
-    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Client Network Live Data");
+    drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Network Live Data");
 
     fThisRowY += 2 * fDefaultFontSizePixels;
 
-    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
+    static constexpr float fIndentX = 20.f;
+
+    drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
 
     fThisRowY += fDefaultFontSizePixels;
     std::stringstream ssQuality;
     ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
         "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
-    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, ssQuality.str());
+    drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, ssQuality.str());
 
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
         " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
 
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
         "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
 
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
 
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
 }
@@ -1963,50 +1965,52 @@ void proofps_dd::GUI::drawGameServerConfig()
     assert(m_pNetworking);
 
     float fThisRowY = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
-    drawTextShadowed(fGameInfoPagesStartX, fThisRowY, "Server Config");
+    drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Server Config");
+
+    static constexpr float fIndentX = 20.f;
 
     if (!m_pNetworking->isServer())
     {
         fThisRowY += 2 * fDefaultFontSizePixels;
-        drawTextShadowed(fGameInfoPagesStartX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
+        drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
     }
 
     fThisRowY += 2 * fDefaultFontSizePixels;
 
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Max Framerate: ") + std::to_string(m_pConfig->getServerInfo().m_nMaxFps) + " FPS");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Tickrate: ") + std::to_string(m_pConfig->getServerInfo().m_nTickrate) + " Hz");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Min Physics Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nPhysicsRateMin) + " Hz");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Client Update Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nClientUpdateRate) + " Hz");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnTimeSecs) + " s");
     fThisRowY += fDefaultFontSizePixels;
-    drawTextShadowed(
-        fGameInfoPagesStartX, fThisRowY,
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
     if (!m_pNetworking->isServer())
@@ -2118,6 +2122,24 @@ void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGui
     ImGui::TextUnformatted(text.c_str());
     ImGui::PopStyleColor();
     drawText(fImGuiX, fImGuiY, text);
+}
+
+void proofps_dd::GUI::drawTextHighlighted(const float& fImGuiX, const float& fImGuiY, const std::string& text)
+{
+    // first we draw an invisible text so we can use its itemrect when drawing our bg rect
+    ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::TextUnformatted(text.c_str());
+    ImGui::PopStyleColor();
+
+    static const auto imClrTableHeaderBgU32 = ImGui::GetColorU32(ImGui::GetStyle().Colors[ImGuiCol_TableHeaderBg]);
+    
+    ImDrawList* const dl = ImGui::GetWindowDrawList();
+    assert(dl);
+    dl->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), imClrTableHeaderBgU32);
+
+    ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
+    ImGui::TextUnformatted(text.c_str());
 }
 
 /**
