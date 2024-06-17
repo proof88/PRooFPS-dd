@@ -36,7 +36,7 @@ namespace proofps_dd
 
         static constexpr float fObjWidth = 0.95f;
         static constexpr float fObjHeightStanding = 1.88f;
-        static constexpr float fObjHeightCrouchScaling = 0.5f;
+        static constexpr float fObjHeightCrouchScaling = 0.48f;
 
         // Physics modifies these as per nPhysicsRate
         static constexpr float fBaseSpeedWalk = 2.f;
