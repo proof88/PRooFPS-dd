@@ -1564,7 +1564,7 @@ void proofps_dd::GUI::updateDeathKillEvents()
     ImGui::SetCursorPosY(50);
     for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
     {
-        drawTextShadowed(
+        drawTextHighlighted(
             getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
             ImGui::GetCursorPos().y,
             it->second);
