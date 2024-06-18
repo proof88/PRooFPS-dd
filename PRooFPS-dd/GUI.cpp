@@ -1571,6 +1571,41 @@ void proofps_dd::GUI::updateDeathKillEvents()
     }
 }
 
+void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
+    float& fTableWidthPixels,
+    float& fPlayerNameColWidthPixels,
+    float fPlayerNameColReqWidthPixels /* can be greater than 0 for an initial required width in pixels */,
+    const float& fTableColIndentPixels,
+    const float& fColsTotalWidthAfterPlayerNameCol)
+{
+    assert(m_pGameMode);
+
+    // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
+    // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
+    // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
+    for (const auto& player : m_pGameMode->getFragTable())
+    {
+        const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+        if (fPlayerNameReqWidthPixels > fPlayerNameColReqWidthPixels)
+        {
+            fPlayerNameColReqWidthPixels = fPlayerNameReqWidthPixels;
+        }
+    }
+
+    const float fTableMaxWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    const float fAvailWidthForPlayerNameColPixels = fTableMaxWidthPixels - fColsTotalWidthAfterPlayerNameCol;
+    if (fAvailWidthForPlayerNameColPixels > fPlayerNameColReqWidthPixels)
+    {
+        fPlayerNameColWidthPixels = fPlayerNameColReqWidthPixels + 20.f /* somehow I need this extra few pixels added */;
+        fTableWidthPixels = fPlayerNameColWidthPixels + fColsTotalWidthAfterPlayerNameCol;
+    }
+    else
+    {
+        fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
+        fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    }
+}
+
 void proofps_dd::GUI::drawGameObjectivesServer()
 {
     assert(m_pNetworking && m_pNetworking->isServer());
@@ -1590,7 +1625,7 @@ void proofps_dd::GUI::drawGameObjectivesServer()
         "tIntQ\n(us)"
     );
 
-    static constexpr float fTableColIndentPixels = 4.f; //
+    static constexpr float fTableColIndentPixels = 4.f;
     static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
         0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
         ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
@@ -1641,33 +1676,15 @@ void proofps_dd::GUI::drawGameObjectivesServer()
     * unknown reason, but I think this weighted config will be just fine.
     */
 
-    // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
-    // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
-    // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
-    float fPlayerNameColReqMaxWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-    for (const auto& player : m_pGameMode->getFragTable())
-    {
-        const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-        if (fPlayerNameReqWidthPixels > fPlayerNameColReqMaxWidthPixels)
-        {
-            fPlayerNameColReqMaxWidthPixels = fPlayerNameReqWidthPixels;
-        }
-    }
-
-    const float fTableMaxWidthPixels = ImGui::GetWindowSize().x * 0.9f;
-    const float fAvailWidthForPlayerNameColPixels = fTableMaxWidthPixels - fColsTotalWidthAfterPlayerNameCol;
-    float fPlayerNameColWidthPixels;
     float fTableWidthPixels;
-    if (fAvailWidthForPlayerNameColPixels > fPlayerNameColReqMaxWidthPixels)
-    {
-        fPlayerNameColWidthPixels = fPlayerNameColReqMaxWidthPixels + 20.f /* somehow I need this extra few pixels added */;
-        fTableWidthPixels = fPlayerNameColWidthPixels + fColsTotalWidthAfterPlayerNameCol;
-    }
-    else
-    {
-        fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
-        fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
-    }
+    float fPlayerNameColWidthPixels;
+    float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+    calculatePlayerNameColWidthAndTableWidthPixels(
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fPlayerNameColReqWidthPixels,
+        fTableColIndentPixels,
+        fColsTotalWidthAfterPlayerNameCol);
 
     ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
     const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
@@ -1818,33 +1835,15 @@ void proofps_dd::GUI::drawGameObjectivesClient()
         ImGuiTableFlags_ScrollY |
         ImGuiTableFlags_SizingStretchProp;
 
-    // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
-    // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
-    // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
-    float fPlayerNameColReqMaxWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-    for (const auto& player : m_pGameMode->getFragTable())
-    {
-        const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-        if (fPlayerNameReqWidthPixels > fPlayerNameColReqMaxWidthPixels)
-        {
-            fPlayerNameColReqMaxWidthPixels = fPlayerNameReqWidthPixels;
-        }
-    }
-
-    const float fTableMaxWidthPixels = ImGui::GetWindowSize().x * 0.9f;
-    const float fAvailWidthForPlayerNameColPixels = fTableMaxWidthPixels - fColsTotalWidthAfterPlayerNameCol;
-    float fPlayerNameColWidthPixels;
     float fTableWidthPixels;
-    if (fAvailWidthForPlayerNameColPixels > fPlayerNameColReqMaxWidthPixels)
-    {
-        fPlayerNameColWidthPixels = fPlayerNameColReqMaxWidthPixels + 20.f /* somehow I need this extra few pixels added */;
-        fTableWidthPixels = fPlayerNameColWidthPixels + fColsTotalWidthAfterPlayerNameCol;
-    }
-    else
-    {
-        fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
-        fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
-    }
+    float fPlayerNameColWidthPixels;
+    float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+    calculatePlayerNameColWidthAndTableWidthPixels(
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fPlayerNameColReqWidthPixels,
+        fTableColIndentPixels,
+        fColsTotalWidthAfterPlayerNameCol);
 
     ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
     const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;

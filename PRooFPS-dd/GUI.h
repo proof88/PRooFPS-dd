@@ -156,6 +156,12 @@ namespace proofps_dd
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static void updateDeathKillEvents();
+        static void calculatePlayerNameColWidthAndTableWidthPixels(
+            float& fTableWidthPixels,
+            float& fPlayerNameColWidthPixels,
+            float fPlayerNameColReqWidthPixels,
+            const float& fTableColIndentPixels,
+            const float& fColsTotalWidthAfterPlayerNameCol);
         static void drawGameObjectivesServer();
         static void drawGameObjectivesClient();
         static void drawGameObjectives();
