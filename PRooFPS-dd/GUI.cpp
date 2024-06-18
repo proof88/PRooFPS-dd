@@ -1606,7 +1606,7 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
     }
 }
 
-void proofps_dd::GUI::drawGameObjectivesServer()
+void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && m_pNetworking->isServer());
     assert(m_pGameMode);
@@ -1686,8 +1686,19 @@ void proofps_dd::GUI::drawGameObjectivesServer()
         fTableColIndentPixels,
         fColsTotalWidthAfterPlayerNameCol);
 
-    ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
+    const float fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
+    
+    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
+    ImGui::SetCursorPos(
+        ImVec2(
+            (fTableWidthPixels < fTableCaptionWidthPixels) ?
+                std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) : 
+                fTableStartPosX, 
+            fStartPosY));
+    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
+
+    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
     
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
@@ -1804,7 +1815,7 @@ void proofps_dd::GUI::drawGameObjectivesServer()
     //ImGui::PopStyleVar();
 }  // drawGameObjectivesServer()
 
-void proofps_dd::GUI::drawGameObjectivesClient()
+void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pGameMode);
@@ -1845,8 +1856,19 @@ void proofps_dd::GUI::drawGameObjectivesClient()
         fTableColIndentPixels,
         fColsTotalWidthAfterPlayerNameCol);
 
-    ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
+    const float fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
+
+    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
+    ImGui::SetCursorPos(
+        ImVec2(
+            (fTableWidthPixels < fTableCaptionWidthPixels) ?
+            std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) :
+            fTableStartPosX,
+            fStartPosY));
+    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
+
+    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
 
     // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
     if (ImGui::BeginTable("tbl_frag_cl", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
@@ -1925,36 +1947,32 @@ void proofps_dd::GUI::drawGameObjectives()
         return;
     }
 
-    float nYPosStart = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
-
+    std::string sTableHeaderText;
     if (m_pGameMode->isGameWon())
     {
-        drawTextHighlighted(fGameInfoPagesStartX, nYPosStart, "Game Ended! Waiting for restart ...");
-        nYPosStart += 2 * fDefaultFontSizePixels;
+        sTableHeaderText = "Game Ended! Waiting for restart ...";
     }
     else
     {
-        std::string sLimits = "DeathMatch";
+        sTableHeaderText = "DeathMatch";
         if (pDeathMatchMode->getFragLimit() > 0)
         {
-            sLimits += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
+            sTableHeaderText += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
         }
         if (pDeathMatchMode->getTimeLimitSecs() > 0)
         {
-            sLimits += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
+            sTableHeaderText += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
                 " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
-        drawTextHighlighted(fGameInfoPagesStartX, nYPosStart, sLimits);
-        nYPosStart += 2 * fDefaultFontSizePixels;
     }
 
     if (m_pNetworking->isServer())
     {
-        drawGameObjectivesServer();
+        drawGameObjectivesServer(sTableHeaderText, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
     }
     else
     {
-        drawGameObjectivesClient();
+        drawGameObjectivesClient(sTableHeaderText, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
     }
 } // drawGameObjectives()
 
@@ -1964,7 +1982,7 @@ void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_pPge);
 
-    drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Network Live Data");
+    drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Live Network Data");
 
     fThisRowY += 2 * fDefaultFontSizePixels;
 

@@ -162,8 +162,8 @@ namespace proofps_dd
             float fPlayerNameColReqWidthPixels,
             const float& fTableColIndentPixels,
             const float& fColsTotalWidthAfterPlayerNameCol);
-        static void drawGameObjectivesServer();
-        static void drawGameObjectivesClient();
+        static void drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY);
+        static void drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY);
         static void drawGameObjectives();
         static void drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();
