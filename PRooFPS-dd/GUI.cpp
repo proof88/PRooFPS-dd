@@ -1590,21 +1590,22 @@ void proofps_dd::GUI::drawGameObjectivesServer()
         "tIntQ\n(us)"
     );
 
+    static constexpr float fTableColIndentPixels = 4.f; //
     static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
         0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
-        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */,
-        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[7]).x + 2 * ImGui::GetStyle().ItemSpacing.x,
-        ImGui::CalcTextSize(vecHeaderLabels[8]).x + 2 * ImGui::GetStyle().ItemSpacing.x
+        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[7]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[8]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
     );
 
     assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
 
-    static const float fColsTotalWidthAfterCol0 = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+    static const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
 
     static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
 
@@ -1640,13 +1641,36 @@ void proofps_dd::GUI::drawGameObjectivesServer()
     * unknown reason, but I think this weighted config will be just fine.
     */
 
-    static constexpr float fTableColIndentPixels = 4.f; // not sure why I dont use this in above calculations instead of ImGui::GetStyle().ItemSpacing.x
+    // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
+    // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
+    // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
+    float fPlayerNameColReqMaxWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+    for (const auto& player : m_pGameMode->getFragTable())
+    {
+        const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+        if (fPlayerNameReqWidthPixels > fPlayerNameColReqMaxWidthPixels)
+        {
+            fPlayerNameColReqMaxWidthPixels = fPlayerNameReqWidthPixels;
+        }
+    }
 
-    const float fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f; // we might maximize this because looks too wide in full hd
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
-    const float fPlayerNameColWidthPixels = fTableWidthPixels - fColsTotalWidthAfterCol0;
+    const float fTableMaxWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    const float fAvailWidthForPlayerNameColPixels = fTableMaxWidthPixels - fColsTotalWidthAfterPlayerNameCol;
+    float fPlayerNameColWidthPixels;
+    float fTableWidthPixels;
+    if (fAvailWidthForPlayerNameColPixels > fPlayerNameColReqMaxWidthPixels)
+    {
+        fPlayerNameColWidthPixels = fPlayerNameColReqMaxWidthPixels + 20.f /* somehow I need this extra few pixels added */;
+        fTableWidthPixels = fPlayerNameColWidthPixels + fColsTotalWidthAfterPlayerNameCol;
+    }
+    else
+    {
+        fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
+        fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    }
 
     ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
     
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
@@ -1776,15 +1800,16 @@ void proofps_dd::GUI::drawGameObjectivesClient()
         "Deaths"
     );
 
+    static constexpr float fTableColIndentPixels = 4.f;
     static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
         0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
-        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */,
-        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x
+        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
     );
 
     assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
 
-    static const float fColsTotalWidthAfterCol0 = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+    static const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
 
     static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
 
@@ -1793,13 +1818,36 @@ void proofps_dd::GUI::drawGameObjectivesClient()
         ImGuiTableFlags_ScrollY |
         ImGuiTableFlags_SizingStretchProp;
 
-    static constexpr float fTableColIndentPixels = 4.f; // not sure why I dont use this in above calculations instead of ImGui::GetStyle().ItemSpacing.x
+    // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
+    // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
+    // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
+    float fPlayerNameColReqMaxWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+    for (const auto& player : m_pGameMode->getFragTable())
+    {
+        const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+        if (fPlayerNameReqWidthPixels > fPlayerNameColReqMaxWidthPixels)
+        {
+            fPlayerNameColReqMaxWidthPixels = fPlayerNameReqWidthPixels;
+        }
+    }
 
-    const float fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f; // we might maximize this because looks too wide in full hd
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
-    const float fPlayerNameColWidthPixels = fTableWidthPixels - fColsTotalWidthAfterCol0;
+    const float fTableMaxWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    const float fAvailWidthForPlayerNameColPixels = fTableMaxWidthPixels - fColsTotalWidthAfterPlayerNameCol;
+    float fPlayerNameColWidthPixels;
+    float fTableWidthPixels;
+    if (fAvailWidthForPlayerNameColPixels > fPlayerNameColReqMaxWidthPixels)
+    {
+        fPlayerNameColWidthPixels = fPlayerNameColReqMaxWidthPixels + 20.f /* somehow I need this extra few pixels added */;
+        fTableWidthPixels = fPlayerNameColWidthPixels + fColsTotalWidthAfterPlayerNameCol;
+    }
+    else
+    {
+        fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
+        fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
+    }
 
     ImGui::SetCursorPos(ImVec2(std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f), ImGui::GetCursorPosY()));
+    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f;
 
     // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
     if (ImGui::BeginTable("tbl_frag_cl", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
