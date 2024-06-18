@@ -30,7 +30,7 @@ This version brings the following new features, all related to the HUD (Heads Up
  - XHair: when the xhair is hovering over another player, the targeted player's name, HP and AP is displayed under the xhair (enable/disable by CVAR `gui_xhair_identifies_players`, transparency CVAR `gui_minimap_transparent`);
  - XHair: when our weapon runs out of loaded bullets, xhair changes its color to red;
  - XHair: blinking during reloading our weapon;
- - Frag Table: finally rendered by Dear ImGui instead of the legacy text rendering method, using the Table API of Dear ImGui, where oversized contents within table cells are not overlapping other cells, player name column is dynamically sized to player names, and in case of oversized name, it is displayed in an intelligent shortened way.
+ - Frag Table: finally rendered by Dear ImGui instead of the legacy text rendering method, using the Table API of Dear ImGui, where oversized contents within table cells are not overlapping other cells, player name column is dynamically sized to player names, and in case of oversized name, it is displayed in an intelligent shortened way. Because of this, finally I could remove the 10-chars player name restriction as well (changed it to 44).
 
 This version fixes the following bugs:
  - When a client player's weapon received state update from server, and the player was dead, the weapon could re-appear during the respawn countdown.
