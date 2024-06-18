@@ -20,7 +20,7 @@ that is the latest "Approofed für Lan Party" version that was actually tested o
 
 ## v0.2.5.0 Private Beta (Jun 18, 2024)
 
-A compressed build for Windows is available for [download here](TODO).
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1aeAHzyzymTpu_TWFa2OqtRaQc43ydbTG/view?usp=drive_link).
 
 This version brings the following new features, all related to the HUD (Heads Up Display):
  - Minimap: a small rectangular area in the top left of the screen representing the map, with a smaller rectangle representing our viewport, and dots representing all players' position on the map (enable/disable by CVAR `gui_minimap_show`);
