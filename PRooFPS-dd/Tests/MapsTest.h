@@ -133,6 +133,7 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 1") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
             assertEquals(0u, maps.getItems().size(), "item count 1") &
+            assertTrue(maps.getJumppads().empty(), "jumppad count 1") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
             assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 1") &
             assertNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
@@ -158,6 +159,7 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 2") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
             assertEquals(0u, maps.getItems().size(), "item count 2") &
+            assertTrue(maps.getJumppads().empty(), "jumppad count 2") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
             assertFalse(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 2") &
             assertNotNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
@@ -204,6 +206,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+
         return b;
     }
 
@@ -236,6 +241,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+
         return b;
     }
 
@@ -267,6 +275,9 @@ private:
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
 
         return b;
     }
@@ -371,7 +382,10 @@ private:
             }
         }
 
-        // all visible block objects are just clones of referenc objects
+        // jump pads
+        b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count");
+
+        // all visible block objects are just clones of reference objects
         for (int i = 0; i < maps.getBlockCount(); i++)
         {
             assertNotNull((maps.getBlocks()[i])->getReferredObject(), (std::string("block ") + std::to_string(i) + " is NOT cloned object!").c_str());
@@ -425,6 +439,9 @@ private:
         // items
         b &= assertEquals(6u, maps.getItems().size(), "item count 1");
         b &= assertEquals(6u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+
+        // jump pads
+        b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 1");
         
         // ################################# TRY LOAD AGAIN ###################################
         b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 2");
@@ -454,6 +471,9 @@ private:
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count 2");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
+
+        // jump pads
+        b &= assertEquals(0u, maps.getJumppads().size(), "jumppad count 2");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
@@ -495,6 +515,9 @@ private:
         // items
         b &= assertEquals(6u, maps.getItems().size(), "item count 3");
         b &= assertEquals(6u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+
+        // jump pads
+        b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 3");
 
         return b;
     }

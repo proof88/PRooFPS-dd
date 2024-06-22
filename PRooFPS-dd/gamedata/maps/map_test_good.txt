@@ -30,7 +30,7 @@ Gravity = 2.0
 # Remaining chars to be used as foreground blocks in this map: KLQT
 
 #B = floor.bmp # intentionally commented to test if B blocks really assigned red texture
-D = floor.bmp
+D = conc02light.bmp
 F = floor.bmp
 G = floor.bmp
 H = floor.bmp
@@ -63,9 +63,22 @@ r = brick1.bmp
 # Number of spawn points might define the max allowed players on the map in the future but
 # now players don't collide, so it is not yet a hard limit.
 # A spawn point is similar to pickupable items but it is not visible.
-# Background block might be implicitly created with the same rule as with pickupable items.
-# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
-# tunnel where only crouching would be available is considered as map design error.
+# A background block might be implicitly created with the same rule as with pickupable items.
+# Since a player can spawn only in standing position, placing a spawnpoint in a low-height
+# tunnel where only crouching is possible, is considered as map design error.
+
+# '^' char represents a vertical jump pad that launches the player in the air vertically (upwards).
+# '<' char is reserved for (not yet supported) a jump pad that launches the player in the up-left direction.
+# '>' char is reserved for (not yet supported) a jump pad that launches the player in the up-right direction.
+# Jump pads are foreground blocks like walls thus the player collides with them.
+# If there is a previous neighboring foreground block next to them, its texture will be applied, otherwise
+# the texture specified for that specific jump pad character will be used.
+# They work only when approached from specific direction, e.g. vertical jump pad launches the player only if
+# the player approaches it from above.
+
+^ = floor.bmp
+
+# '\' and '/' chars are reserved for (not yet supported) stairs.
 
 # If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
 # layout line.
@@ -79,12 +92,12 @@ r = brick1.bmp
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
-ooooacnooooooooooooooooooooooo  oooooooo
+ooooacno^ooooooooooooooooooooo  oooooooo
 nnnnnnnnnnn4nnnnnnnnnnnnnnnnnn  nnnnnnnn
 oSoooooooooJoooooSoooooooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrrrrrrrrrrrr  rrrrrrrr
 aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  aaaaaaaa 2 +
-BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD B B  
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
 BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
 
 # After or in between the map layout lines, we do not accept anything else.

@@ -55,9 +55,20 @@ c = dirt2.bmp
 # Number of spawn points might define the max allowed players on the map in the future but
 # now players don't collide, so it is not yet a hard limit.
 # A spawn point is similar to pickupable items but it is not visible.
-# Background block might be implicitly created with the same rule as with pickupable items.
-# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
-# tunnel where only crouching would be available is considered as map design error.
+# A background block might be implicitly created with the same rule as with pickupable items.
+# Since a player can spawn only in standing position, placing a spawnpoint in a low-height
+# tunnel where only crouching is possible, is considered as map design error.
+
+# '^' char represents a vertical jump pad that launches the player in the air vertically (upwards).
+# '<' char is reserved for (not yet supported) a jump pad that launches the player in the up-left direction.
+# '>' char is reserved for (not yet supported) a jump pad that launches the player in the up-right direction.
+# Jump pads are foreground blocks like walls thus the player collides with them.
+# If there is a previous neighboring foreground block next to them, its texture will be applied, otherwise
+# the texture specified for that specific jump pad character will be used.
+# They work only when approached from specific direction, e.g. vertical jump pad launches the player only if
+# the player approaches it from above.
+
+# '\' and '/' chars are reserved for (not yet supported) stairs.
 
 # If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
 # layout line. 

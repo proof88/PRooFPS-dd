@@ -26,6 +26,7 @@ proofps_dd::Maps::Maps(
     m_cfgProfiles(cfgProfiles),
     m_gfx(gfx),
     m_texRed(PGENULL),
+    m_texDecorJumpPadVertical(PGENULL),
     m_blocks(NULL),
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
@@ -67,8 +68,9 @@ bool proofps_dd::Maps::initialize()
 
     bool bInitialized = false;
     m_texRed = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "red.bmp").c_str());
+    m_texDecorJumpPadVertical = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "decor-jump-pad2-from-www.flaticon.com.bmp").c_str());
 
-    if (m_texRed)
+    if (m_texRed && m_texDecorJumpPadVertical)
     {
         bInitialized = m_mapcycle.initialize();
     }
@@ -102,6 +104,9 @@ void proofps_dd::Maps::shutdown()
 
         /* Mapcycle and Available Maps Handling */
         m_mapcycle.shutdown();
+
+        delete m_texDecorJumpPadVertical;
+        m_texDecorJumpPadVertical = PGENULL;
 
         delete m_texRed;
         m_texRed = PGENULL;
@@ -364,7 +369,7 @@ void proofps_dd::Maps::unload()
 
     for (auto& pairChar2RefBlockObject3D : m_mapReferenceBlockObject3Ds)
     {
-        delete pairChar2RefBlockObject3D.second;
+        delete pairChar2RefBlockObject3D.second; // will remove from object3dmanager too
     }
     m_mapReferenceBlockObject3Ds.clear();
 
@@ -373,6 +378,12 @@ void proofps_dd::Maps::unload()
         delete itemPair.second;
     }
     m_items.clear();
+    for (auto& pDecorObj : m_decorations)
+    {
+        delete pDecorObj; // will remove from object3dmanager too
+    }
+    m_decorations.clear();
+    m_jumppads.clear();
     proofps_dd::MapItem::resetGlobalData();
 
     m_width = 0;
@@ -538,6 +549,11 @@ const std::map<std::string, PGEcfgVariable>& proofps_dd::Maps::getVars() const
     return m_vars;
 }
 
+const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const
+{
+    return m_jumppads;
+}
+
 void proofps_dd::Maps::update(const float& fps)
 {
     // invoked by both server and client
@@ -684,6 +700,7 @@ void proofps_dd::Maps::lineHandleAssignment(std::string& sVar, std::string& sVal
 /**
  * This function to be invoked for every single line of the map layout definition.
  * Map layout definition is the last part of a map file, containing the blocks building up the map (walls, floor, etc.).
+ * 
  * @param sLine   The current line of the map layout definition we want to process.
  * @param y       The current height we are currently placing newly created blocks for this line of the map definition layout.
  * @param bDryRun If true, blocks are not allocated thus the map is not actually created, however the following
@@ -726,6 +743,10 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     // So iObjectBgToBeCopied is > -1 only if there is neighbor background block created previously.
     int iObjectBgToBeCopied = -1;
 
+    // The idea with special foreground block copying the previous neighbor foreground block is similar as
+    // described above with special background blocks.
+    int iObjectFgToBeCopied = -1;
+
     while ( iLinePos != sLine.length() )
     {
         const char c = sLine[iLinePos];
@@ -742,20 +763,21 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         if ( !bForeground && !bBackground )
         {
             iObjectBgToBeCopied = -1;
+            iObjectFgToBeCopied = -1;
             continue;
         }
 
         if (bForeground && bBackground)
         {
             const std::string sc(1, c); // WA for CConsole lack support of %c
-            getConsole().EOLn("%s Block defined as both foreground and background: %s!", __FUNCTION__, sc.c_str());
+            getConsole().EOLn("%s Block defined as both foreground and background: %s!", __func__, sc.c_str());
             assert(false);
             return false;
         }
 
         // special background block handling
         bool bCopyPreviousBgBlock = false;
-        bool bSpecialBlock = false;
+        bool bSpecialBgBlock = false;
         switch (c)
         {
         case '+':
@@ -765,7 +787,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
-            bSpecialBlock = true;
+            bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
@@ -776,7 +798,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
-            bSpecialBlock = true;
+            bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
@@ -787,7 +809,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
-            bSpecialBlock = true;
+            bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
@@ -798,7 +820,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_BAZOOKA, PureVector(x, y, GAME_ITEMS_POS_Z));
                 m_items.insert({ pMapItem->getId(), pMapItem });
             }
-            bSpecialBlock = true;
+            bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
@@ -826,7 +848,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 }
                 m_spawnpoints.insert(vecSpawnPointPos);
             }
-            bSpecialBlock = true;
+            bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
@@ -834,19 +856,63 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             break;
         }
 
+        // special foreground block handling
+        bool bCopyPreviousFgBlock = false;
+        bool bSpecialFgBlock = false;
+        bool bJumppad = false;
+        switch (c)
+        {
+        case '^':
+        {
+            if (bDryRun)
+            {
+                PureObject3D* const pDecorObj = m_gfx.getObject3DManager().createPlane(1.f, 1.2f);
+                pDecorObj->getPosVec().Set(
+                    x,
+                    y + proofps_dd::Maps::fMapBlockSizeHeight + pDecorObj->getSizeVec().getY() / 2.f,
+                    GAME_DECOR_POS_Z);
+                pDecorObj->getMaterial().setTexture(m_texDecorJumpPadVertical);
+                pDecorObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+                pDecorObj->getMaterial(false).getTextureEnvColor().SetAlpha(200u);
+                m_decorations.push_back(pDecorObj);
+            }
+            bJumppad = true;
+            bSpecialFgBlock = true;
+            bCopyPreviousFgBlock = iObjectFgToBeCopied > -1;
+            break;
+        }
+        default:
+            break;
+        }
+
+        if (bSpecialFgBlock && bSpecialBgBlock)
+        {
+            const std::string sc(1, c); // WA for CConsole lack support of %c
+            getConsole().EOLn("%s Block defined as both special foreground and special background: %s!", __func__, sc.c_str());
+            assert(false);
+            return false;
+        }
+
         PureObject3D* pNewBlockObj = nullptr;
-        if (!bSpecialBlock || (bSpecialBlock && bCopyPreviousBgBlock))
+        if (!bSpecialBgBlock || (bSpecialBgBlock && bCopyPreviousBgBlock))
         {
             m_blocks_h++;
-            if (!bSpecialBlock && bBackground)
+            if (!bSpecialBgBlock && bBackground)
             {
                 iObjectBgToBeCopied = m_blocks_h - 1;
+            } else if (!bSpecialFgBlock && bForeground)
+            {
+                iObjectFgToBeCopied = m_blocks_h - 1;
             }
             if (!bDryRun)
             {
-                if (bSpecialBlock && bCopyPreviousBgBlock)
+                if (bSpecialBgBlock && bCopyPreviousBgBlock)
                 {
                     pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectBgToBeCopied]->getReferredObject()));
+                }
+                else if (bSpecialFgBlock && bCopyPreviousFgBlock)
+                {
+                    pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectFgToBeCopied]->getReferredObject()));
                 }
                 else
                 {
@@ -859,7 +925,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                         if (m_Block2Texture.find(c) == m_Block2Texture.end())
                         {
                             const std::string sc(1, c); // WA for CConsole lack support of %c
-                            getConsole().EOLn("%s No texture defined for block %s!", __FUNCTION__, sc.c_str());
+                            getConsole().EOLn("%s No texture defined for block %s!", __func__, sc.c_str());
                             tex = m_texRed;
                         }
                         else
@@ -868,7 +934,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                             tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
                             if (!tex)
                             {
-                                getConsole().EOLn("%s Could not load texture %s!", __FUNCTION__, sTexName.c_str());
+                                getConsole().EOLn("%s Could not load texture %s!", __func__, sTexName.c_str());
                                 tex = m_texRed;
                             }
                         }
@@ -876,7 +942,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                         {
                             // should happen only if default red texture could not be loaded, but that should had been detected in initialize() tho
                             const std::string sc(1, c); // WA for CConsole lack support of %c
-                            getConsole().EOLn("%s Not assigning any texture for block %s!", __FUNCTION__, sc.c_str());
+                            getConsole().EOLn("%s Not assigning any texture for block %s!", __func__, sc.c_str());
                         }
                         m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
                     }
@@ -894,6 +960,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 if (!bDryRun)
                 {
                     m_foregroundBlocks[m_foregroundBlocks_h - 1] = pNewBlockObj;
+
+                    if (bJumppad)
+                    {
+                        m_jumppads.push_back(pNewBlockObj);
+                    }
                 }
             }
         }
@@ -901,12 +972,6 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         if (!pNewBlockObj)
         {
             continue;
-        }
-
-        if (bForeground)
-        {
-            // only foreground blocks should be checked for collision
-            pNewBlockObj->SetColliding_TO_BE_REMOVED(true);
         }
 
         pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::Maps::fMapBlockSizeDepth);

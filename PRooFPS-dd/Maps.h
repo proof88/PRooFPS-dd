@@ -82,6 +82,7 @@ namespace proofps_dd
         int getBlockCount() const;
         int getForegroundBlockCount() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
+        const std::vector<PureObject3D*>& getJumppads() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         void update(const float& fps);
 
@@ -99,20 +100,32 @@ namespace proofps_dd
 
         static constexpr float GAME_PLAYERS_POS_Z = -1.2f;
         static constexpr float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
+        static constexpr float GAME_DECOR_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f;  // decors are close to the wall surfaces
 
         const std::set<char> foregroundBlocks = {
-            'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T'
+            'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T',
+            /* the special foreground stuff (e.g. jump pads) are treated as foreground blocks, see special handling in lineHandleLayout(): */
+            '^' /* jump pad vertical */,
+            '<' /* jump pad up-left */,
+            '>' /* jump pad up-right */,
+            '\\' /* stairs descending to the right */,
+            '/'  /* stairs ascending to the right */
         };
 
         const std::set<char> backgroundBlocks = {
             'a', 'c', 'e', 'm', 'n', 'p', 'o', 'r', 'u', 'v', 'w', 'x', 'y', 'z',
             /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
-            '+', '2', '3', '4', 'S'
+            '+' /* medkit */,
+            '2' /* weapon key 2 */,
+            '3' /* weapon key 3 */,
+            '4' /* weapon key 4 */,
+            'S' /* spawnpoint */
         };
 
         PGEcfgProfiles& m_cfgProfiles;
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
+        PureTexture* m_texDecorJumpPadVertical;  // TODO: unique_ptr
         std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */
 
         /* Current map handling */
@@ -135,6 +148,8 @@ namespace proofps_dd
         PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
+        std::vector<PureObject3D*> m_decorations;
+        std::vector<PureObject3D*> m_jumppads;
 
         /* Mapcycle and Available maps handling */
         Mapcycle m_mapcycle;
