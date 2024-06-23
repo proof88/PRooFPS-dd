@@ -385,14 +385,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
         // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
         // could be fetched into cache for even faster iteration on its elements ...
 
-        // at this point, player.getPos().getY() is already updated by Gravity()
         const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
         const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
-
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
+        // At this point, player.getPos().getY() is already updated by Gravity().
         // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
         // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+        // Object3D is then repositioned to Player's own position vector.
         // On the long run we should use colliders so physics does not depend on graphics.
         const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getScaledSizeVec().getX() / 2.f;
         const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getScaledSizeVec().getX() / 2.f;
@@ -400,66 +400,57 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
         const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
-            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+            // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
+            // check for vertical collision with regular foreground blocks.
+            // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
+            // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
+            // regular one first and break from the loop immediately then.
+            bool bCollided = false;
+            for (const auto& pObjJumppad : m_maps.getJumppads())
             {
-                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                assert(obj);  // we dont store nulls there
+                assert(pObjJumppad);  // we dont store nulls there
+                bCollided = serverPlayerCollisionWithWalls_LoopKernelVertical(
+                    player,
+                    pObjJumppad,
+                    true /* identifies as jump pad */,
+                    fPlayerHalfHeight,
+                    fPlayerOPos1XMinusHalf,
+                    fPlayerOPos1XPlusHalf,
+                    fPlayerPos1YMinusHalf,
+                    fPlayerPos1YPlusHalf,
+                    fBlockSizeXhalf,
+                    fBlockSizeYhalf);
 
-                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+                if (bCollided)
                 {
+                    // there is no need to check further, since we handle collision with only 1 jumppad at a time
+                    break;
+                }
+            } // end for jumppads
+
+            for (int i = 0; !bCollided && (i < m_maps.getForegroundBlockCount()); i++)
+            {
+                const PureObject3D* const pObj = m_maps.getForegroundBlocks()[i];
+                assert(pObj);  // we dont store nulls there
+                
+                const auto itJumppad = std::find(m_maps.getJumppads().begin(), m_maps.getJumppads().end(), pObj);
+                if (itJumppad != m_maps.getJumppads().end())
+                {
+                    // we already checked them in above loop
                     continue;
                 }
 
-                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
-                {
-                    continue;
-                }
-
-                const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-                const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
-                // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-                // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-                // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-                player.getPos().set(
-                    PureVector(
-                        player.getPos().getNew().getX(),
-                        obj->getPosVec().getY() + fAlignCloseToWall,
-                        player.getPos().getNew().getZ()
-                    ));
-
-                if (nAlignUnderOrAboveWall == 1)
-                {
-                    // we fell from above
-
-                    //if (player.isFalling())
-                    //{
-                    //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-                    //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
-                    //        static_cast<int>(nFallDurationMillisecs),
-                    //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
-                    //}
-                    
-                    player.setCanFall(false);
-                    
-                    // maybe not null everything out in the future but only decrement the components by
-                    // some value, since if there is an explosion-induced force, it shouldnt be nulled out
-                    // at this moment. Currently we want to null out the strafe-jump-induced force.
-                    // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
-                    // we can zero out jumpforce here completely!
-                    player.getJumpForce().Set(0.f, 0.f, 0.f);
-                    player.setGravity(0.f);
-                }
-                else
-                {
-                    // we hit ceiling with our head during jumping
-                    //getConsole().EOLn("start falling (hit ceiling)");
-                    player.setCanFall(true);
-                    player.stopJumping();
-                    player.getHasJustStoppedJumpingInThisTick() = true;
-                    player.setGravity(0.f);
-                }
-
-                break;
+                bCollided = serverPlayerCollisionWithWalls_LoopKernelVertical(
+                    player,
+                    pObj,
+                    false /* identifies as regular fg block */,
+                    fPlayerHalfHeight,
+                    fPlayerOPos1XMinusHalf,
+                    fPlayerOPos1XPlusHalf,
+                    fPlayerPos1YMinusHalf,
+                    fPlayerPos1YPlusHalf,
+                    fBlockSizeXhalf,
+                    fBlockSizeYhalf);
             } // end for i
         } // end if YPPos changed
 
@@ -561,8 +552,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
             }
         }
 
-        // Note that because we are handling jumping here, we are 1 frame late. We should handle it at the beginning of the Gravity() function,
-        // to actually start jumping in the same frame as when we detected the player initiated the jumping.
+        // serverPlayerCollisionWithWalls_LoopKernelVertical() could had also set WillJumpInNextTick() to true above, in that case, we are
+        // jumping in the same tick as that condition was detected.
+        // However, we also handle player-input-induced jumping here, in that case we are 1 frame late.
+        // We should handle it at the beginning of the Gravity() function, to actually start jumping in the same frame as when we detected the
+        // player initiated the jumping.
         // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
         // that is essential for the jump() function below to record the X-forces for the player.
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
@@ -627,6 +621,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
         {
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
+                // TODO: RFR: we can introduce a HorizontalKernel function similar to the VerticalKernel stuff above
                 const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                 assert(obj);  // we dont store nulls there
 
@@ -676,6 +671,83 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
             }
         }
     } // end for player
+}
+
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
+    proofps_dd::Player& player,
+    const PureObject3D* obj,
+    const bool& bJumppad,
+    const float& fPlayerHalfHeight,
+    const float& fPlayerOPos1XMinusHalf,
+    const float& fPlayerOPos1XPlusHalf,
+    const float& fPlayerPos1YMinusHalf,
+    const float& fPlayerPos1YPlusHalf,
+    const float& fBlockSizeXhalf,
+    const float& fBlockSizeYhalf)
+{
+    assert(obj);
+
+    if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+    {
+        return false;
+    }
+
+    if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
+    {
+        return false;
+    }
+
+    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
+    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
+    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
+    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
+    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
+    player.getPos().set(
+        PureVector(
+            player.getPos().getNew().getX(),
+            obj->getPosVec().getY() + fAlignCloseToWall,
+            player.getPos().getNew().getZ()
+        ));
+
+    if (nAlignUnderOrAboveWall == 1)
+    {
+        // we fell from above
+
+        //if (player.isFalling())
+        //{
+        //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+        //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
+        //        static_cast<int>(nFallDurationMillisecs),
+        //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
+        //}
+
+        player.setCanFall(false);
+
+        // maybe not null everything out in the future but only decrement the components by
+        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
+        // at this moment. Currently we want to null out the strafe-jump-induced force.
+        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
+        // we can zero out jumpforce here completely!
+        player.getJumpForce().Set(0.f, 0.f, 0.f);
+        player.setGravity(0.f);
+
+        if (bJumppad)
+        {
+            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func
+            player.setWillJumpInNextTick(true);
+        }
+    }
+    else
+    {
+        // we hit ceiling with our head during jumping
+        //getConsole().EOLn("start falling (hit ceiling)");
+        player.setCanFall(true);
+        player.stopJumping();
+        player.getHasJustStoppedJumpingInThisTick() = true;
+        player.setGravity(0.f);
+    }
+
+    return true;
 }
 
 
