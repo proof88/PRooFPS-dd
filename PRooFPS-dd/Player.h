@@ -194,8 +194,8 @@ namespace proofps_dd
         void setJumpAllowed(bool b);
         void jump();
         void stopJumping();
-        bool getWillJumpInNextTick() const;
-        void setWillJumpInNextTick(bool flag);
+        float getWillJumpInNextTick() const;
+        void setWillJumpInNextTick(float factor);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
         PureVector& getJumpForce();
 
@@ -315,7 +315,11 @@ namespace proofps_dd
         float m_fGravity = 0.f;
         bool m_bJumping = false;
         bool m_bAllowJump = false;
-        bool m_bWillJump = false;
+        /**
+        * Before v0.2.6 this was a boolean value, but then I changed it to float so it also means how strong the jump will be.
+        * 0 means false in the pre-v0.2.6 world, and any positive value means true (= player will jump).
+        */
+        float m_fWillJumpMultFactor = 0.f;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall = true;
         bool m_bFalling = true;

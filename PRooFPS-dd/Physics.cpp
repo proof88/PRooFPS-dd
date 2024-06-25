@@ -552,7 +552,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
             }
         }
 
-        // serverPlayerCollisionWithWalls_LoopKernelVertical() could had also set WillJumpInNextTick() to true above, in that case, we are
+        // serverPlayerCollisionWithWalls_LoopKernelVertical() could had also set WillJumpInNextTick() to true (i.e. non-0) above, in that case, we are
         // jumping in the same tick as that condition was detected.
         // However, we also handle player-input-induced jumping here, in that case we are 1 frame late.
         // We should handle it at the beginning of the Gravity() function, to actually start jumping in the same frame as when we detected the
@@ -560,7 +560,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
         // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
         // that is essential for the jump() function below to record the X-forces for the player.
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
-        if (player.getWillJumpInNextTick())
+        if (player.getWillJumpInNextTick() > 0.f)
         {
             //getConsole().EOLn("start jumping");
             // now we can actually jump and have the correct forces be saved for the jump
@@ -734,7 +734,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         if (bJumppad)
         {
             // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func
-            player.setWillJumpInNextTick(true);
+            player.setWillJumpInNextTick(1.f);
         }
     }
     else

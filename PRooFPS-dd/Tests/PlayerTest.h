@@ -295,7 +295,7 @@ private:
             assertTrue(player.getWantToStandup(), "getWantToStandup") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
-            assertFalse(player.getWillJumpInNextTick(), "will jump") &
+            assertEquals(0.f, player.getWillJumpInNextTick(), "will jump") &
             assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
             assertFalse(player.getWillSomersaultInNextTick(), "will somersault") &
             assertFalse(player.isSomersaulting(), "isSomersaulting") &
@@ -655,7 +655,7 @@ private:
         player.jump();
         player.startSomersaultServer(true);
         player.setJumpAllowed(true); // jump() has set it to false, but we forcing it now back to true and expect it to be reset by die()
-        player.setWillJumpInNextTick(true); // this should be also reset
+        player.setWillJumpInNextTick(1.f); // this should be also reset
         player.setWillSomersaultInNextTick(true); // this should be also reset
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
 
@@ -666,7 +666,7 @@ private:
             assertEquals(100, playerConst.getHealth().getOld(), "old health 1") &
             assertFalse(player.getAttack(), "attack 1") &
             assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1") &
-            assertFalse(player.getWillJumpInNextTick(), "will jump 1") &
+            assertEquals(0.f, player.getWillJumpInNextTick(), "will jump 1") &
             assertEquals(proofps_dd::Strafe::NONE, playerConst.getStrafe(), "strafe 1") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe 1") &
             assertFalse(playerConst.isSomersaulting(), "somersaulting 1") &
@@ -815,17 +815,17 @@ private:
                 assertTrue(player.getWantToStandup(), "wantstandup 1");
 
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump = std::chrono::steady_clock::now();
-            player.setWillJumpInNextTick(true);
+            player.setWillJumpInNextTick(2.f); // any positive value means jumping
             const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump = player.getTimeLastSetWillJump();
             b &= assertTrue(timeLastSetWillJump > timeBeforeSetWillJump, "cmp timeBefore") &
                 assertTrue(timeLastSetWillJump < std::chrono::steady_clock::now(), "cmp timeAfter");
-            b &= assertTrue(player.getWillJumpInNextTick(), "will jump 1");
+            b &= assertEquals(2.f, player.getWillJumpInNextTick(), "will jump 1");
             player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 2") &
                 assertTrue(player.isJumping(), "jumping 2") &
                 assertEquals(fExpectedInitialGravity, player.getGravity(), (std::string("gravity 2 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 2") &
-                assertFalse(player.getWillJumpInNextTick(), "will jump 2") &
+                assertEquals(0.f, player.getWillJumpInNextTick(), "will jump 2") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 2") &
                 assertTrue(player.getWantToStandup(), "wantstandup 2");
 
@@ -839,8 +839,8 @@ private:
 
             // negative test
             player.setJumpAllowed(false);
-            player.setWillJumpInNextTick(true);
-            b &= assertFalse(player.getWillJumpInNextTick(), "will jump 3") &
+            player.setWillJumpInNextTick(1.f);
+            b &= assertEquals(0.f, player.getWillJumpInNextTick(), "will jump 3") &
                 assertTrue(player.getTimeLastSetWillJump() == timeLastSetWillJump, "time last setwilljump unchanged") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 4") &
                 assertTrue(player.getWantToStandup(), "wantstandup 4");
@@ -859,11 +859,12 @@ private:
             player.setCanFall(false);
             player.setStrafe(proofps_dd::Strafe::RIGHT);
             player.startSomersaultServer(false);
-            player.setWillJumpInNextTick(true);
+            player.setWillJumpInNextTick(1.f);
             player.jump();
             b &= assertTrue(player.isSomersaulting(), "somersaulting 1") &
                 assertFalse(player.isJumping(), "jumping 5") &
-                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 5");
+                assertEquals(vecExpectedForce, player.getJumpForce(), "jump force 5") &
+                assertEquals(0.f, player.getWillJumpInNextTick(), "will jump 5");
 
         } // end for i
 

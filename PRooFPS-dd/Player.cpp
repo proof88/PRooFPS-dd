@@ -104,7 +104,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
     m_bAllowJump(other.m_bAllowJump),
-    m_bWillJump(other.m_bWillJump),
+    m_fWillJumpMultFactor(other.m_fWillJumpMultFactor),
     m_bCanFall(other.m_bCanFall),
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
@@ -144,7 +144,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
     m_bAllowJump = other.m_bAllowJump;
-    m_bWillJump = other.m_bWillJump;
+    m_fWillJumpMultFactor = other.m_fWillJumpMultFactor;
     m_bCanFall = other.m_bCanFall;
     m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
@@ -419,7 +419,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     {
         setStrafe(Strafe::NONE);
         m_prevActualStrafe = Strafe::NONE;
-        setWillJumpInNextTick(false);
+        setWillJumpInNextTick(0.f);
         getJumpForce().SetZero();
         resetSomersaultServer();
         setWillSomersaultInNextTick(false);
@@ -628,7 +628,7 @@ void proofps_dd::Player::setJumpAllowed(bool b) {
 }
 
 void proofps_dd::Player::jump() {
-    m_bWillJump = false;
+    m_fWillJumpMultFactor = 0.f;
 
     if (isJumping() || !jumpAllowed() || isSomersaulting())
     {
@@ -656,19 +656,27 @@ void proofps_dd::Player::stopJumping() {
     m_bJumping = false;
 }
 
-bool proofps_dd::Player::getWillJumpInNextTick() const
+float proofps_dd::Player::getWillJumpInNextTick() const
 {
-    return m_bWillJump;
+    return m_fWillJumpMultFactor;
 }
 
-void proofps_dd::Player::setWillJumpInNextTick(bool flag)
+/**
+* Sets the multiplier for jump force that will be used for the next jump.
+* The jump can happen in the current or in the next tick, depending on WHEN this function is called.
+* See Physics code for details.
+* 
+* @param factor Multiplier for Player::fJumpGravityStartFromStanding. Use 1.0 to trigger a regular jump from standing position.
+*               Use 0 to cancel the jump triggering in the current or in the next tick.
+*/
+void proofps_dd::Player::setWillJumpInNextTick(float factor)
 {
     if (!jumpAllowed())
     {
         return;
     }
 
-    m_bWillJump = flag;
+    m_fWillJumpMultFactor = factor;
     m_timeLastWillJump = std::chrono::steady_clock::now();
 }
 
