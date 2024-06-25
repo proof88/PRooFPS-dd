@@ -32,7 +32,8 @@ proofps_dd::Maps::Maps(
     m_foregroundBlocks(NULL),
     m_foregroundBlocks_h(0),
     m_width(0),
-    m_height(0)
+    m_height(0),
+    m_nValidJumppadVarsCount(0)
 {
     proofps_dd::MapItem::resetGlobalData();
 }
@@ -285,6 +286,14 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
     }
     f.close();
 
+    // variables are loaded during dry-run, but blocks are not, thus this is the earliest time to fail if their count does not match!
+    const auto nJumppadVarsCount = getJumppadValidVarsCount();
+    if (m_jumppads.size() != nJumppadVarsCount)
+    {
+        getConsole().EOLn("ERROR: jumppads size (%u) != valid jumppad vars count (%u)", m_jumppads.size(), nJumppadVarsCount);
+        bParseError = true;
+    }
+
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
         texFilterMinOriginal,
         texFilterMagOriginal);
@@ -393,6 +402,7 @@ void proofps_dd::Maps::unload()
     m_blocksVertexPosMin.SetZero();
     m_blocksVertexPosMax.SetZero();
     m_vars.clear();
+    m_nValidJumppadVarsCount = 0;
     m_spawnpoints.clear();
 
     getConsole().OOOLn("Maps::unload() done!");
@@ -547,6 +557,33 @@ const std::map<proofps_dd::MapItem::MapItemId, proofps_dd::MapItem*>& proofps_dd
 const std::map<std::string, PGEcfgVariable>& proofps_dd::Maps::getVars() const
 {
     return m_vars;
+}
+
+size_t proofps_dd::Maps::getJumppadValidVarsCount()
+{
+    // This is a lazy evaluator, so it will count valid vars only at first call, and in subsequent calls it will just return the
+    // previously calculated value.
+    // It keeps recalculating when number of previously calculated valid vars are not matching with the number of jump pads.
+    // This is to make sure it always returns valid value, just in case someone would call it in the middle of map loading.
+    // In that case speed is not an issue, later during actual gameplay it will be very fast due to no recalculating.
+    // And obviously 0 == 0 case is also very straightforward: it does not calculate if there is no jumppad in map layout.
+    if (m_jumppads.size() == m_nValidJumppadVarsCount)
+    {
+        return m_nValidJumppadVarsCount;
+    }
+
+    m_nValidJumppadVarsCount = 0;
+    for (const auto& var : m_vars)
+    {
+        if (var.first.find("jumppad_") != std::string::npos)
+        {
+            if (!var.second.getAsString().empty() && (var.second.getAsFloat() > 0.f))
+            {
+                m_nValidJumppadVarsCount++;
+            }
+        }
+    }
+    return m_nValidJumppadVarsCount;
 }
 
 const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const

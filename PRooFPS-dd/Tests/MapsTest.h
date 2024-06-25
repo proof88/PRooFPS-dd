@@ -70,6 +70,8 @@ protected:
         AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
         AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
         AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
+        AddSubTest("test_map_load_bad_jumppad_count", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_count);
+        AddSubTest("test_map_load_bad_jumppad_force_value", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_force_value);
         AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
@@ -208,6 +210,7 @@ private:
 
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
 
         return b;
     }
@@ -243,6 +246,7 @@ private:
 
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
 
         return b;
     }
@@ -278,6 +282,79 @@ private:
 
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+
+        return b;
+    }
+
+    bool test_map_load_bad_jumppad_count()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
+        b &= assertNull(maps.getBlocks(), "blocks");
+        b &= assertEquals(0, maps.getBlockCount(), "block count");
+        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
+        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+
+        return b;
+    }
+
+    bool test_map_load_bad_jumppad_force_value()
+    {
+        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
+        b &= assertNull(maps.getBlocks(), "blocks");
+        b &= assertEquals(0, maps.getBlockCount(), "block count");
+        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
+        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
 
         return b;
     }
@@ -314,7 +391,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count");
         
         // variables
-        b &= assertEquals(2u, maps.getVars().size(), "getVars");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2a");
@@ -384,6 +461,7 @@ private:
 
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count");
+        b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count");
 
         // all visible block objects are just clones of reference objects
         for (int i = 0; i < maps.getBlockCount(); i++)
@@ -428,7 +506,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 1");
 
         // variables
-        b &= assertEquals(2u, maps.getVars().size(), "getVars 1");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars 1");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1a");
@@ -442,6 +520,7 @@ private:
 
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 1");
+        b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count 1");
         
         // ################################# TRY LOAD AGAIN ###################################
         b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 2");
@@ -474,6 +553,7 @@ private:
 
         // jump pads
         b &= assertEquals(0u, maps.getJumppads().size(), "jumppad count 2");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count 2");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
@@ -504,7 +584,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 3");
 
         // variables
-        b &= assertEquals(2u, maps.getVars().size(), "getVars 3");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars 3");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3a");
@@ -518,6 +598,7 @@ private:
 
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 3");
+        b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count 3");
 
         return b;
     }
