@@ -628,6 +628,7 @@ void proofps_dd::Player::setJumpAllowed(bool b) {
 }
 
 void proofps_dd::Player::jump() {
+    const float fOriginalWillJumpMultFactor = m_fWillJumpMultFactor;
     m_fWillJumpMultFactor = 0.f;
 
     if (isJumping() || !jumpAllowed() || isSomersaulting())
@@ -639,7 +640,18 @@ void proofps_dd::Player::jump() {
     m_bJumping = true;
     m_bFalling = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
-    m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
+
+    if (fOriginalWillJumpMultFactor == 1.f)
+    {
+        // this looks to be a regular player input-induced jump;
+        // it is not an issue if it is actually a jumppad, because anyway who would make jumppad with 1.f mult factor?!
+        m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
+    }
+    else
+    {
+        // this looks to be a jumppad-induced jump
+        m_fGravity = fOriginalWillJumpMultFactor * proofps_dd::Player::fJumpGravityStartFromStanding;
+    }
 
     //static int nJumpCounter = 0;
     //nJumpCounter++;

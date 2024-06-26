@@ -89,12 +89,13 @@ y = paperboxes.bmp
 # layout definition lines, from line to line, top to bottom, where each line is processed from left to right.
 # Number of jump pad force definition variables must equal to the number of jump pads in the map layout.
 #
-# The value you set in the variable is a multiplier to a regular player-induced jump force.
+# The value you set in the variable is a multiplier to a regular player-induced jump force INITIALLY
+# (e.g. setting 2.0 might result in a jump which is not exactly 2 times higher, you should experiment with different values).
 # This value must be positive.
 # For example, to define the jump force for jump pad 0, with magnitude being the same as a regular jump:
 # jumppad_0 = 1.0
 #
-# To define a jump force that is 30% bigger than regular jump:
+# To define a jump force that is _initially_ 30% bigger than regular jump (might not be exactly result in a 30% bigger jump):
 # jumppad_0 = 1.3
 
 # '\' and '/' chars are reserved for (not yet supported) stairs.
