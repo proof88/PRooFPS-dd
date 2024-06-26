@@ -142,6 +142,12 @@ private:
             assertTrue(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 1") &
             assertNull(maps.getMapcycle().availableMapsGetAsCharPtrArray(), "available maps charptrarray 1") &
             assertTrue(maps.getMapcycle().availableMapsNoChangingGet().empty(), "available maps no changing empty 1")) != 0;
+
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor 1");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
         
         b &= assertTrue(maps.initialize(), "init");
         b &= (assertTrue(maps.isInitialized(), "inited 2") &
@@ -168,6 +174,12 @@ private:
             assertFalse(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 2") &
             assertNotNull(maps.getMapcycle().availableMapsGetAsCharPtrArray(), "available maps charptrarray 2") &
             assertFalse(maps.getMapcycle().availableMapsNoChangingGet().empty(), "available maps no changing empty 2")) != 0;
+
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor 2");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         b &= assertTrue(
             checkConstCharPtrArrayElemsPointingToContainerElems(maps.getMapcycle().mapcycleGet(), maps.getMapcycle().mapcycleGetAsCharPtrArray()),
@@ -211,6 +223,11 @@ private:
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         return b;
     }
@@ -247,6 +264,11 @@ private:
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         return b;
     }
@@ -283,6 +305,11 @@ private:
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         return b;
     }
@@ -319,6 +346,11 @@ private:
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         return b;
     }
@@ -355,6 +387,11 @@ private:
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         return b;
     }
@@ -462,6 +499,11 @@ private:
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count");
         b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor a 1");
+            b &= assertEquals(2.f, maps.getJumppadForceFactor(1), "jumppad force factor b 1");
+        }
+        catch (const std::exception&) { b = false; /* should not come here */ }
 
         // all visible block objects are just clones of reference objects
         for (int i = 0; i < maps.getBlockCount(); i++)
@@ -521,6 +563,11 @@ private:
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 1");
         b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count 1");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor a 1");
+            b &= assertEquals(2.f, maps.getJumppadForceFactor(1), "jumppad force factor b 1");
+        }
+        catch (const std::exception&) { b = false; /* should not come here */ }
         
         // ################################# TRY LOAD AGAIN ###################################
         b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 2");
@@ -554,6 +601,11 @@ private:
         // jump pads
         b &= assertEquals(0u, maps.getJumppads().size(), "jumppad count 2");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count 2");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor 2");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
@@ -599,6 +651,11 @@ private:
         // jump pads
         b &= assertEquals(2u, maps.getJumppads().size(), "jumppad count 3");
         b &= assertEquals(2u, maps.getJumppadValidVarsCount(), "jumppad vars count 3");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactor(0), "jumppad force factor a 3");
+            b &= assertEquals(2.f, maps.getJumppadForceFactor(1), "jumppad force factor b 3");
+        }
+        catch (const std::exception&) { b = false; /* should not come here */ }
 
         return b;
     }

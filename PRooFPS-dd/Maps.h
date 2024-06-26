@@ -85,6 +85,7 @@ namespace proofps_dd
         const std::vector<PureObject3D*>& getJumppads() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         size_t getJumppadValidVarsCount();
+        float getJumppadForceFactor(const size_t& index) const;
         void update(const float& fps);
 
         bool handleMapItemUpdateFromServer(
@@ -152,6 +153,7 @@ namespace proofps_dd
         std::vector<PureObject3D*> m_decorations;
         std::vector<PureObject3D*> m_jumppads;
         size_t m_nValidJumppadVarsCount;
+        std::vector<float> m_fJumppadForceFactors;
 
         /* Mapcycle and Available maps handling */
         Mapcycle m_mapcycle;

@@ -95,7 +95,7 @@ r = brick1.bmp
 # jumppad_0 = 1.3
 
 jumppad_0 = 1.0
-jumppad_1 = 1.0
+jumppad_1 = 2.0
 
 # '\' and '/' chars are reserved for (not yet supported) stairs.
 

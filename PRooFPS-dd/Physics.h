@@ -89,7 +89,7 @@ namespace proofps_dd
         bool serverPlayerCollisionWithWalls_LoopKernelVertical(
             Player& player,
             const PureObject3D* obj,
-            const bool& bJumppad,
+            const int& iJumppad,
             const float& fPlayerHalfHeight,
             const float& fPlayerOPos1XMinusHalf,
             const float& fPlayerOPos1XPlusHalf,

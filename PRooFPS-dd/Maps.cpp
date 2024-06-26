@@ -305,6 +305,13 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         return false;
     }
 
+    m_fJumppadForceFactors.clear();
+    for (size_t iJumppad = 0; iJumppad < nJumppadVarsCount; iJumppad++)
+    {
+        const auto fJumppadForce = m_vars.at("jumppad_" + std::to_string(iJumppad)).getAsFloat(); // at() should not throw if bParseError stayed true
+        m_fJumppadForceFactors.push_back(fJumppadForce);
+    }
+
     getConsole().OLn("Just built up the map with m_blocks_h %d, m_foregroundBlocks_h %d ...", m_blocks_h, m_foregroundBlocks_h);
 
     m_blockPosMin = m_blocks[0]->getPosVec();
@@ -393,6 +400,7 @@ void proofps_dd::Maps::unload()
     }
     m_decorations.clear();
     m_jumppads.clear();
+    m_fJumppadForceFactors.clear();
     proofps_dd::MapItem::resetGlobalData();
 
     m_width = 0;
@@ -584,6 +592,18 @@ size_t proofps_dd::Maps::getJumppadValidVarsCount()
         }
     }
     return m_nValidJumppadVarsCount;
+}
+
+float proofps_dd::Maps::getJumppadForceFactor(const size_t& index) const
+{
+    if (index >= m_nValidJumppadVarsCount)
+    {
+        throw std::runtime_error("getJumppadForceFactor(): Invalid jumppad index: " + std::to_string(index));
+    }
+
+    // the above condition and load() should make sure this assertion can never fail even during unit tests!
+    assert(index < m_fJumppadForceFactors.size());
+    return m_fJumppadForceFactors[index];
 }
 
 const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const

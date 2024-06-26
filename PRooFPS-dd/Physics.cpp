@@ -406,13 +406,13 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
             // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
             // regular one first and break from the loop immediately then.
             bool bCollided = false;
-            for (const auto& pObjJumppad : m_maps.getJumppads())
+            for (size_t iJumppad = 0; iJumppad < m_maps.getJumppads().size(); iJumppad++)
             {
-                assert(pObjJumppad);  // we dont store nulls there
+                assert(m_maps.getJumppads()[iJumppad]);  // we dont store nulls there
                 bCollided = serverPlayerCollisionWithWalls_LoopKernelVertical(
                     player,
-                    pObjJumppad,
-                    true /* identifies as jump pad */,
+                    m_maps.getJumppads()[iJumppad],
+                    static_cast<int>(iJumppad),
                     fPlayerHalfHeight,
                     fPlayerOPos1XMinusHalf,
                     fPlayerOPos1XPlusHalf,
@@ -443,7 +443,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
                 bCollided = serverPlayerCollisionWithWalls_LoopKernelVertical(
                     player,
                     pObj,
-                    false /* identifies as regular fg block */,
+                    -1,
                     fPlayerHalfHeight,
                     fPlayerOPos1XMinusHalf,
                     fPlayerOPos1XPlusHalf,
@@ -676,7 +676,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
 bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     proofps_dd::Player& player,
     const PureObject3D* obj,
-    const bool& bJumppad,
+    const int& iJumppad /* -1 means no jumppad */,
     const float& fPlayerHalfHeight,
     const float& fPlayerOPos1XMinusHalf,
     const float& fPlayerOPos1XPlusHalf,
@@ -731,10 +731,10 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         player.getJumpForce().Set(0.f, 0.f, 0.f);
         player.setGravity(0.f);
 
-        if (bJumppad)
+        if (iJumppad >= 0)
         {
             // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func
-            player.setWillJumpInNextTick(1.f);
+            player.setWillJumpInNextTick(m_maps.getJumppadForceFactor(iJumppad));
         }
     }
     else
