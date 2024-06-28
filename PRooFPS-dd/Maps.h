@@ -16,8 +16,7 @@
 #include <vector>
 
 #include "CConsole.h"
-#include "Config/PGEcfgVariable.h"
-#include "Pure/include/external/PR00FsUltimateRenderingEngine.h"
+#include "PGE.h" // we use audio also from here so it is easier to just include everything
 
 #include "Mapcycle.h"
 #include "MapItem.h"
@@ -42,6 +41,7 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         Maps(
+            pge_audio::PgeAudio& audio,
             PGEcfgProfiles& cfgProfiles,
             PR00FsUltimateRenderingEngine& gfx);
         ~Maps();
@@ -88,6 +88,8 @@ namespace proofps_dd
         float getJumppadForceFactor(const size_t& index) const;
         void update(const float& fps);
 
+        void handleJumppadTriggered(const size_t& index);
+
         bool handleMapItemUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
             const MsgMapItemUpdateFromServer& msg);
@@ -124,10 +126,12 @@ namespace proofps_dd
             'S' /* spawnpoint */
         };
 
+        pge_audio::PgeAudio& m_audio;
         PGEcfgProfiles& m_cfgProfiles;
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
         PureTexture* m_texDecorJumpPadVertical;  // TODO: unique_ptr
+        SoLoud::Wav m_sndJumppad;
         std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */
 
         /* Current map handling */

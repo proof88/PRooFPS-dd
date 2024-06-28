@@ -21,8 +21,10 @@ static constexpr float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
 
 
 proofps_dd::Maps::Maps(
+    pge_audio::PgeAudio& audio,
     PGEcfgProfiles& cfgProfiles,
     PR00FsUltimateRenderingEngine& gfx) :
+    m_audio(audio),
     m_cfgProfiles(cfgProfiles),
     m_gfx(gfx),
     m_texRed(PGENULL),
@@ -76,6 +78,8 @@ bool proofps_dd::Maps::initialize()
         bInitialized = m_mapcycle.initialize();
     }
 
+    m_audio.loadSound(m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
+
     if (!bInitialized)
     {
         shutdown();
@@ -99,6 +103,10 @@ void proofps_dd::Maps::shutdown()
     getConsole().OLnOI("Maps::shutdown() ...");
     if (isInitialized())
     {
+        // There is no specific need to delete loaded sounds, and I could not find specific functions to free up loaded sound data.
+        // When initialize() is invoked again, and we load sounds again, SoLoud frees up previously allocated sound data for the
+        // same wavs, so in that case memory cannot leak.
+
         /* Current map handling */
         unload();
         m_sServerMapFilenameToLoad.clear();
@@ -629,6 +637,17 @@ void proofps_dd::Maps::update(const float& fps)
 
         mapItem.update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
     }
+}
+
+void proofps_dd::Maps::handleJumppadTriggered(const size_t& index)
+{
+    if (index >= m_nValidJumppadVarsCount)
+    {
+        throw std::runtime_error("getJumppadForceFactor(): Invalid jumppad index: " + std::to_string(index));
+    }
+
+    m_sndJumppad.stop();
+    m_audio.getAudioEngineCore().play(m_sndJumppad);
 }
 
 bool proofps_dd::Maps::handleMapItemUpdateFromServer(

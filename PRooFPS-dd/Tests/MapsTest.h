@@ -21,8 +21,9 @@ class TestableMaps :
 {
 public:
     TestableMaps(
+        pge_audio::PgeAudio& audio,
         PGEcfgProfiles& cfgProfiles,
-        PR00FsUltimateRenderingEngine& gfx) : Maps(cfgProfiles, gfx)
+        PR00FsUltimateRenderingEngine& gfx) : Maps(audio, cfgProfiles, gfx)
     {};
 
     virtual ~TestableMaps() {};
@@ -110,6 +111,7 @@ private:
     static const unsigned int MAP_TEST_W = 44u;
     static const unsigned int MAP_TEST_H = 10u;
 
+    pge_audio::PgeAudio m_audio;  // we just use it uninitialized, dont deal with sounds in unit tests
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* engine;
     std::function<void(int)> m_cbDisplayMapLoadingProgressUpdate;
@@ -118,7 +120,7 @@ private:
 
     bool test_initially_empty()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = (assertFalse(maps.isInitialized(), "inited 1") &
             assertFalse(maps.loaded(), "loaded 1") &
             assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 1") &
@@ -193,7 +195,7 @@ private:
 
     bool test_map_load_bad_filename()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -234,7 +236,7 @@ private:
 
     bool test_map_load_bad_assignment()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -275,7 +277,7 @@ private:
 
     bool test_map_load_bad_order()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -316,7 +318,7 @@ private:
 
     bool test_map_load_bad_jumppad_count()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -357,7 +359,7 @@ private:
 
     bool test_map_load_bad_jumppad_force_value()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertFalse(maps.loaded(), "loaded");
@@ -398,7 +400,7 @@ private:
 
     bool test_map_load_good()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -516,7 +518,7 @@ private:
 
     bool test_map_unload_and_load_again()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
 
         // ###################################### LOAD 1 ######################################
         bool b = assertTrue(maps.initialize(), "init");
@@ -662,7 +664,7 @@ private:
 
     bool test_map_shutdown()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         b &= assertTrue(maps.isInitialized(), "initialized");
@@ -691,7 +693,7 @@ private:
 
     bool test_map_server_decide_first_map_to_be_loaded()
     {
-        TestableMaps maps(m_cfgProfiles, *engine);
+        TestableMaps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertEquals("", maps.serverDecideFirstMapAndUpdateNextMapToBeLoaded(), "server decide 1");
         b &= assertEquals("", maps.getNextMapToBeLoaded(), "next map to load 1");
 
@@ -727,7 +729,7 @@ private:
 
     bool test_map_get_random_spawnpoint()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -754,7 +756,7 @@ private:
 
     bool test_map_get_leftmost_spawnpoint()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -783,7 +785,7 @@ private:
 
     bool test_map_get_rightmost_spawnpoint()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -812,7 +814,7 @@ private:
 
     bool test_map_update()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
@@ -841,7 +843,7 @@ private:
 
     bool test_map_handle_map_item_update_from_server()
     {
-        proofps_dd::Maps maps(m_cfgProfiles, *engine);
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");

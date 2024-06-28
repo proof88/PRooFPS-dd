@@ -94,7 +94,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this, m_mapPlayers)),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
-    m_maps(getConfigProfiles(), getPure()),
+    m_maps(getAudio(), getConfigProfiles(), getPure()),
     m_fps(GAME_MAXFPS_DEF),
     m_fps_counter(0),
     m_fps_lastmeasure(0),
