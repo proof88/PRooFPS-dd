@@ -295,6 +295,8 @@ private:
             assertTrue(player.getWantToStandup(), "getWantToStandup") &
             assertFalse(player.jumpAllowed(), "can jump") &
             assertFalse(player.isJumping(), "jumping") &
+            assertFalse(player.isJumpingInitiatedFromCrouching(), "isJumpingInitiatedFromCrouching") &
+            assertFalse(player.isJumpInitiatedByJumppad(), "isJumpInitiatedByJumppad") &
             assertEquals(0.f, player.getWillJumpInNextTick(), "will jump") &
             assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
             assertFalse(player.getWillSomersaultInNextTick(), "will somersault") &
@@ -652,10 +654,10 @@ private:
         player.getJumpForce().Set(1,2,3); // this should be also reset
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.setStrafe(proofps_dd::Strafe::LEFT); // we are doing this so we can test if prevActualStrafe is also reset!
+        player.setWillJumpInNextTick(1.f); // this should be also reset
         player.jump();
         player.startSomersaultServer(true);
         player.setJumpAllowed(true); // jump() has set it to false, but we forcing it now back to true and expect it to be reset by die()
-        player.setWillJumpInNextTick(1.f); // this should be also reset
         player.setWillSomersaultInNextTick(true); // this should be also reset
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 0");
 
@@ -1013,18 +1015,19 @@ private:
         player.getPos().set(PureVector(1.f, 1.f, 1.f)); // new
         player.setGravity(5.f);
 
-        // negative case
+        // negative case: not even jumping
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1");
-        b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
-        b &= assertEquals(5.f, player.getGravity(), "gravity 1");
-        b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 1");
+        b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce neg 1");
+        b &= assertEquals(5.f, player.getGravity(), "gravity neg 1");
+        b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x neg 1");
 
-        // negative case
+        // negative case: initiated jump from crouching
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
@@ -1032,16 +1035,17 @@ private:
         player.getCrouchStateCurrent() = true; // and we are still crouching
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 2");
-        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
-        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 2");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 2");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 2");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 2");
 
-        // negative case
+        // negative case: not initiated crouching after jumping but startSomersaultServer() is triggered
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1050,16 +1054,36 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault without manual crouch after jump if auto crouch is disabled");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 3");
-        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
-        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 3");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 3");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 3");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 3");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 3");
+
+        // negative case: all input is properly executed but based on jump factor, it is a jumppad-induced jump!
+        player.stopJumping();
+        player.setJumpAllowed(true); // allow jump again
+        player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
+        player.setGravity(5.f);
+        player.setWillJumpInNextTick(2.f); // here we indicate jumppad-induced jump with non-1.f mult factor
+        player.jump();
+        vecOriginalJumpForce = player.getJumpForce();
+        fOriginalGravity = player.getGravity();
+        fOriginalImpactForceX = player.getImpactForce().getX();
+        player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
+        player.setWillSomersaultInNextTick(true);
+        player.startSomersaultServer(bJumpInducedSomersault);
+        b &= assertFalse(player.isSomersaulting(), "cannot somersault if jumppad triggered the jump");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 4");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 4");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 4");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 4");
 
         // positive case
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1068,12 +1092,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 1");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 4");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 4");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
-        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 4");
-        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity 4");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 4");
+        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce pos 4");
+        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity pos 4");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 4");
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
@@ -1084,6 +1108,7 @@ private:
         player.setGravity(5.f);
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.5f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1092,12 +1117,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 5");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 5");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
-        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 5");
-        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity 5");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 5");
+        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce pos 5");
+        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity pos 5");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 5");
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
@@ -1108,6 +1133,7 @@ private:
         player.setGravity(5.f);
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(1.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1116,12 +1142,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 6");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 6");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
-        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 6");
-        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity 6");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 6");
+        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce pos 6");
+        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity pos 6");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 6");
 
         return b;
     }
@@ -1138,18 +1164,19 @@ private:
         player.getPos().set(PureVector(1.f, 1.f, 1.f)); // new
         player.setGravity(5.f);
 
-        // negative case
+        // negative case: not even jumping
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         bool b = assertFalse(player.isSomersaulting(), "cannot somersault on ground");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1");
-        b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce 1");
-        b &= assertEquals(5.f, player.getGravity(), "gravity 1");
-        b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 1");
+        b &= assertEquals(PureVector(), player.getJumpForce(), "jumpforce neg 1");
+        b &= assertEquals(5.f, player.getGravity(), "gravity neg 1");
+        b &= assertEquals(0.f, player.getImpactForce().getX(), "impact force x neg 1");
 
-        // negative case
+        // negative case: initiated jump from crouching
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
@@ -1158,16 +1185,17 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 1");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 2");
-        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 2");
-        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 2");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 2");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 2");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 2");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 2");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 2");
 
-        // negative case
+        // negative case: initiated jump from crouching, but not crouching anymore in-air, basically almost same as previous case
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1176,29 +1204,29 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertFalse(player.isSomersaulting(), "cannot somersault from crouch-jumping from ground 2");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 3");
-        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce 3");
-        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity 3");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 3");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 3");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 3");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 3");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 3");
 
-        // positive case
-        player.resetSomersaultServer();
+        // negative case: all input is properly executed but based on jump factor, it is a jumppad-induced jump!
         player.stopJumping();
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(2.f); // here we indicate jumppad-induced jump with non-1.f mult factor
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
         fOriginalImpactForceX = player.getImpactForce().getX();
-        player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump (although not needed since auto-crouch is enabled)
+        player.getCrouchStateCurrent() = false; // but we are NOT crouching anymore (although not needed since auto-crouch is enabled)
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
-        b &= assertTrue(player.isSomersaulting(), "finally true 1");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 4");
-        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce 4");
-        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity 4");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 4");
+        b &= assertFalse(player.isSomersaulting(), "cannot somersault if jumppad triggered the jump");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault neg 4");
+        b &= assertEquals(vecOriginalJumpForce, player.getJumpForce(), "jumpforce neg 4");
+        b &= assertEquals(fOriginalGravity, player.getGravity(), "gravity neg 4");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x neg 4");
 
         // positive case
         player.resetSomersaultServer();
@@ -1206,6 +1234,28 @@ private:
         player.setJumpAllowed(true); // allow jump again
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
+        player.jump();
+        vecOriginalJumpForce = player.getJumpForce();
+        fOriginalGravity = player.getGravity();
+        fOriginalImpactForceX = player.getImpactForce().getX();
+        // in the meantime we have started crouching AFTER triggering jump (although not needed since auto-crouch is enabled, but in this case we test this anyway)
+        player.getCrouchStateCurrent() = true;
+        player.setWillSomersaultInNextTick(true);
+        player.startSomersaultServer(bJumpInducedSomersault);
+        b &= assertTrue(player.isSomersaulting(), "finally true 1");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 4");
+        b &= assertEquals(vecOriginalJumpForce * 2, player.getJumpForce(), "jumpforce pos 4");
+        b &= assertEquals(fOriginalGravity * 2, player.getGravity(), "gravity pos 4");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 4");
+
+        // positive case
+        player.resetSomersaultServer();
+        player.stopJumping();
+        player.setJumpAllowed(true); // allow jump again
+        player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
+        player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1214,12 +1264,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 2");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 5");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 5");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 1 when strafe is NONE");
-        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce 5");
-        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity 5");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 5");
+        b &= assertEquals(vecOriginalJumpForce * 2.f, player.getJumpForce(), "jumpforce pos 5");
+        b &= assertEquals(fOriginalGravity * 2.f, player.getGravity(), "gravity pos 5");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 5");
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
@@ -1230,6 +1280,7 @@ private:
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1238,12 +1289,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 3");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 6");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 6");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(-0.1f, player.getSomersaultAngle(), "angle 2 when strafe is RIGHT");
-        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce 6");
-        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity 6");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 6");
+        b &= assertEquals(vecOriginalJumpForce * 1.5f, player.getJumpForce(), "jumpforce pos 6");
+        b &= assertEquals(fOriginalGravity * 1.5f, player.getGravity(), "gravity pos 6");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 6");
 
         // positive case
         // same as previous but we change Strafe and Multiplier for Jump Force
@@ -1254,6 +1305,7 @@ private:
         player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
         player.setGravity(5.f);
         player.setStrafe(proofps_dd::Strafe::LEFT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         vecOriginalJumpForce = player.getJumpForce();
         fOriginalGravity = player.getGravity();
@@ -1262,12 +1314,12 @@ private:
         player.setWillSomersaultInNextTick(true);
         player.startSomersaultServer(bJumpInducedSomersault);
         b &= assertTrue(player.isSomersaulting(), "finally true 4");
-        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault 7");
+        b &= assertFalse(player.getWillSomersaultInNextTick(), "will somersault pos 7");
         // somersault angle also depends on player angle Y but for know this amount of testing is enough
         b &= assertEquals(0.1f, player.getSomersaultAngle(), "angle 3 when strafe is LEFT");
-        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce 7");
-        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity 7");
-        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x 7");
+        b &= assertEquals(vecOriginalJumpForce * 1.f, player.getJumpForce(), "jumpforce pos 7");
+        b &= assertEquals(fOriginalGravity * 1.f, player.getGravity(), "gravity pos 7");
+        b &= assertEquals(fOriginalImpactForceX, player.getImpactForce().getX(), "impact force x pos 7");
 
         return b;
     }
@@ -1287,6 +1339,7 @@ private:
         // negative case
         player.getCrouchInput() = true; // at the moment of triggering jump (still being on the ground), we are pressing crouch
         player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         auto vecOriginalJumpForce = player.getJumpForce();
         auto fOriginalGravity = player.getGravity();
@@ -1431,6 +1484,7 @@ private:
         player.setJumpAllowed(true);
 
         // Strafe is NONE
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         player.startSomersaultServer(true);
         bool b = assertTrue(player.isSomersaulting(), "somersaulting 1");
@@ -1447,6 +1501,7 @@ private:
         player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::RIGHT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         player.startSomersaultServer(true);
         b &= assertTrue(player.isSomersaulting(), "somersaulting 4");
@@ -1463,6 +1518,7 @@ private:
         player.resetSomersaultServer();
         player.setJumpAllowed(true); // allow jump again
         player.setStrafe(proofps_dd::Strafe::LEFT);
+        player.setWillJumpInNextTick(1.f); // need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
         player.jump();
         player.startSomersaultServer(true);
         b &= assertTrue(player.isSomersaulting(), "somersaulting 7");

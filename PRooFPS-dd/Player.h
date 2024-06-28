@@ -202,6 +202,7 @@ namespace proofps_dd
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
         const bool& isJumpingInitiatedFromCrouching() const;
+        const bool& isJumpInitiatedByJumppad() const;
         bool& getWantToStandup();
         float getProposedNewPosYforStandup() const;
         void doCrouchServer();
@@ -339,6 +340,9 @@ namespace proofps_dd
         /** We need to save current crouching state at the moment of initiating jump-up, so that we can check in any later moment of
             jumping up if somersaulting can be initiated: it must not be initiated when player was already crouching at the moment of jump-up. */
         bool m_bCrouchingWasActiveWhenInitiatedJump = false;
+
+        /** We need to save if jumping was initiated by jumppad because we should not allow mid-air somersaulting in such case. */
+        bool m_bJumpWasInitiatedByJumppad = false;
 
         /** True when player wants standing position as per input, regardless of currently crouching or not.
             This is an input to the physics engine.

@@ -113,6 +113,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
     m_bCrouchingWasActiveWhenInitiatedJump(other.m_bCrouchingWasActiveWhenInitiatedJump),
+    m_bJumpWasInitiatedByJumppad(other.m_bJumpWasInitiatedByJumppad),
     m_bWantToStandup(other.m_bWantToStandup),
     m_bWillSomersault(other.m_bWillSomersault),
     m_fSomersaultAngleZ(other.m_fSomersaultAngleZ),
@@ -153,6 +154,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
     m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
     m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
+    m_bJumpWasInitiatedByJumppad = other.m_bJumpWasInitiatedByJumppad;
     m_bWantToStandup = other.m_bWantToStandup;
     m_bWillSomersault = other.m_bWillSomersault;
     m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
@@ -645,12 +647,15 @@ void proofps_dd::Player::jump() {
     {
         // this looks to be a regular player input-induced jump;
         // it is not an issue if it is actually a jumppad, because anyway who would make jumppad with 1.f mult factor?!
+        // So anyone who want their jumppad-induced jump to be properly idendified, should use non-1.f mult factor.
         m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
+        m_bJumpWasInitiatedByJumppad = false;
     }
     else
     {
         // this looks to be a jumppad-induced jump
         m_fGravity = fOriginalWillJumpMultFactor * proofps_dd::Player::fJumpGravityStartFromStanding;
+        m_bJumpWasInitiatedByJumppad = true;
     }
 
     //static int nJumpCounter = 0;
@@ -716,6 +721,11 @@ bool& proofps_dd::Player::getCrouchStateCurrent()
 const bool& proofps_dd::Player::isJumpingInitiatedFromCrouching() const
 {
     return m_bCrouchingWasActiveWhenInitiatedJump;
+}
+
+const bool& proofps_dd::Player::isJumpInitiatedByJumppad() const
+{
+    return m_bJumpWasInitiatedByJumppad;
 }
 
 bool& proofps_dd::Player::getWantToStandup()
@@ -848,7 +858,7 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
     if (bJumpInduced)
     {
         // mid-air sanity check
-        if ((isJumping() && isJumpingInitiatedFromCrouching()) || (isJumping() != bJumpInduced))
+        if ((isJumping() && isJumpingInitiatedFromCrouching()) || (isJumping() != bJumpInduced) || isJumpInitiatedByJumppad())
         {
             return;
         }
