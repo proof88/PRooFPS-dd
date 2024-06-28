@@ -154,7 +154,7 @@ namespace proofps_dd
         PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
-        std::vector<PureObject3D*> m_decorations;
+        std::vector<PureObject3D*> m_decorations; // for now this is only for the up sign of jumppads
         std::vector<PureObject3D*> m_jumppads;
         size_t m_nValidJumppadVarsCount;
         std::vector<float> m_fJumppadForceFactors;

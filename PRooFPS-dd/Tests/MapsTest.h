@@ -836,6 +836,8 @@ private:
                 assertNotEquals(vOriginalItemPosY[i], itemPair.second->getPos().getY(), ("item " + std::to_string(i) + " pos y").c_str());
                 i++;
             }
+
+            // we could also test if decorations alpha is changing, but I'm just skipping that test
         }
 
         return b;

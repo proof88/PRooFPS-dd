@@ -149,6 +149,8 @@ private:
 
         std::set<std::string> vExpectedAvailableMaps = {
             "map_test_bad_assignment.txt",
+            "map_test_bad_jumppad_count.txt",
+            "map_test_bad_jumppad_force_value.txt",
             "map_test_bad_order.txt",
             "map_test_good.txt"/*,
             "map_warena.txt",
@@ -191,6 +193,8 @@ private:
         std::set<std::string> vExpectedAvailableMaps = {
             "map_mutans.txt",
             "map_test_bad_assignment.txt",
+            "map_test_bad_jumppad_count.txt",
+            "map_test_bad_jumppad_force_value.txt",
             "map_test_bad_order.txt",
             "map_test_good.txt",
             "map_warena.txt",

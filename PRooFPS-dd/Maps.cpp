@@ -14,8 +14,6 @@
 #include "Consts.h"
 #include "Maps.h"
 
-static constexpr float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
-
 
 // ############################### PUBLIC ################################
 
@@ -622,6 +620,9 @@ const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const
 void proofps_dd::Maps::update(const float& fps)
 {
     // invoked by both server and client
+
+    static constexpr float MAPITEM_VERTICAL_ANIM_UPDATE_SPEED = 480.0f;
+    
     for (auto& itemPair : getItems())
     {
         if (!itemPair.second)
@@ -636,6 +637,41 @@ void proofps_dd::Maps::update(const float& fps)
         }
 
         mapItem.update(MAPITEM_VERTICAL_ANIM_UPDATE_SPEED / fps);
+    }
+
+    static constexpr float DECOR_ALPHA_CHANGE_SPEED = 180.0f;
+    static constexpr float fDecorAlphaMin = 100.f;
+    static constexpr float fDecorAlphaMax = 200.f;
+    static_assert(fDecorAlphaMin >= 0, "will be casted to TPureUByte");
+    static_assert(fDecorAlphaMin <= 255, "will be casted to TPureUByte");
+    static float fDecorAlpha = 200.f;
+    static bool bDecorAlphaUp = false;
+
+    if (bDecorAlphaUp)
+    {
+        fDecorAlpha += DECOR_ALPHA_CHANGE_SPEED / fps;
+        if (fDecorAlpha > fDecorAlphaMax)
+        {
+            fDecorAlpha = fDecorAlphaMax;
+            bDecorAlphaUp = false;
+        }
+    }
+    else
+    {
+        fDecorAlpha -= DECOR_ALPHA_CHANGE_SPEED / fps;
+        if (fDecorAlpha < fDecorAlphaMin)
+        {
+            fDecorAlpha = fDecorAlphaMin;
+            bDecorAlphaUp = true;
+        }
+    }
+
+    for (auto& pDecor : m_decorations)
+    {
+        assert(pDecor);  // we dont store nulls here
+        pDecor->getMaterial(false).getTextureEnvColor().SetAlpha(
+            static_cast<TPureUByte>(std::llroundl(fDecorAlpha))
+        );
     }
 }
 
