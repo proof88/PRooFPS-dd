@@ -734,7 +734,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         if (iJumppad >= 0)
         {
             // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
-            player.setWillJumpInNextTick(m_maps.getJumppadForceFactor(iJumppad), -3.f /* TODO */);
+            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
             m_maps.handleJumppadTriggered(iJumppad);
         }
     }

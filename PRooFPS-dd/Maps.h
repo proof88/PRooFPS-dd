@@ -85,7 +85,7 @@ namespace proofps_dd
         const std::vector<PureObject3D*>& getJumppads() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         size_t getJumppadValidVarsCount();
-        float getJumppadForceFactor(const size_t& index) const;
+        const TPURE_XY& getJumppadForceFactors(const size_t& index) const;
         void update(const float& fps);
 
         void handleJumppadTriggered(const size_t& index);
@@ -157,7 +157,7 @@ namespace proofps_dd
         std::vector<PureObject3D*> m_decorations; // for now this is only for the up sign of jumppads
         std::vector<PureObject3D*> m_jumppads;
         size_t m_nValidJumppadVarsCount;
-        std::vector<float> m_fJumppadForceFactors;
+        std::vector<TPURE_XY> m_fJumppadForceFactors;
 
         /* Mapcycle and Available maps handling */
         Mapcycle m_mapcycle;

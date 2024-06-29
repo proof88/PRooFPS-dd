@@ -311,13 +311,6 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         return false;
     }
 
-    m_fJumppadForceFactors.clear();
-    for (size_t iJumppad = 0; iJumppad < nJumppadVarsCount; iJumppad++)
-    {
-        const auto fJumppadForce = m_vars.at("jumppad_" + std::to_string(iJumppad)).getAsFloat(); // at() should not throw if bParseError stayed true
-        m_fJumppadForceFactors.push_back(fJumppadForce);
-    }
-
     getConsole().OLn("Just built up the map with m_blocks_h %d, m_foregroundBlocks_h %d ...", m_blocks_h, m_foregroundBlocks_h);
 
     m_blockPosMin = m_blocks[0]->getPosVec();
@@ -586,25 +579,62 @@ size_t proofps_dd::Maps::getJumppadValidVarsCount()
         return m_nValidJumppadVarsCount;
     }
 
+    m_fJumppadForceFactors.clear();
     m_nValidJumppadVarsCount = 0;
+    size_t iJumppad = 0;
     for (const auto& var : m_vars)
     {
         if (var.first.find("jumppad_") != std::string::npos)
         {
-            if (!var.second.getAsString().empty() && (var.second.getAsFloat() > 0.f))
+            if (var.first != (std::string("jumppad_") + std::to_string(iJumppad)))
             {
-                m_nValidJumppadVarsCount++;
+                getConsole().EOLn(
+                    "PRooFPSddPGE::%s(): index error: variable name is %s but our running index is %u!",
+                    __func__,
+                    var.first.c_str(),
+                    iJumppad);
+                continue;
             }
+
+            if (var.second.getAsString().empty())
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): variable %s empty!", __func__, var.first.c_str());
+                continue;
+            }
+
+            const auto itCommaChar = var.second.getAsString().find(' ');
+            if (itCommaChar == std::string::npos)
+            {
+                const float fForceY = var.second.getAsFloat();
+                if (fForceY > 0.f)
+                {
+                    m_fJumppadForceFactors.push_back({0.f, fForceY});
+                    m_nValidJumppadVarsCount++;
+                }
+            }
+            else
+            {
+                std::stringstream sstr(var.second.getAsString());
+                TPURE_XY fForces{};
+                sstr >> fForces.y;
+                sstr >> fForces.x;
+                if (fForces.y > 0.f)
+                {
+                    m_fJumppadForceFactors.push_back(fForces);
+                    m_nValidJumppadVarsCount++;
+                }
+            }
+            iJumppad++;
         }
     }
     return m_nValidJumppadVarsCount;
 }
 
-float proofps_dd::Maps::getJumppadForceFactor(const size_t& index) const
+const TPURE_XY& proofps_dd::Maps::getJumppadForceFactors(const size_t& index) const
 {
     if (index >= m_nValidJumppadVarsCount)
     {
-        throw std::runtime_error("getJumppadForceFactor(): Invalid jumppad index: " + std::to_string(index));
+        throw std::runtime_error("getJumppadForceFactors(): Invalid jumppad index: " + std::to_string(index));
     }
 
     // the above condition and load() should make sure this assertion can never fail even during unit tests!
@@ -679,7 +709,7 @@ void proofps_dd::Maps::handleJumppadTriggered(const size_t& index)
 {
     if (index >= m_nValidJumppadVarsCount)
     {
-        throw std::runtime_error("getJumppadForceFactor(): Invalid jumppad index: " + std::to_string(index));
+        throw std::runtime_error("getJumppadForceFactors(): Invalid jumppad index: " + std::to_string(index));
     }
 
     m_sndJumppad.stop();
