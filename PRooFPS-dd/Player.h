@@ -192,10 +192,11 @@ namespace proofps_dd
         bool& getHasJustStoppedJumpingInThisTick();
         bool jumpAllowed() const;
         void setJumpAllowed(bool b);
-        void jump();
+        void jump(const float& fRunSpeedPerTickForJumppadHorizontalForce = 0.f);
         void stopJumping();
-        float getWillJumpInNextTick() const;
-        void setWillJumpInNextTick(float factor);
+        float getWillJumpXInNextTick() const;
+        float getWillJumpYInNextTick() const;
+        void setWillJumpInNextTick(float factorY, float factorX);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
         PureVector& getJumpForce();
 
@@ -317,10 +318,15 @@ namespace proofps_dd
         bool m_bJumping = false;
         bool m_bAllowJump = false;
         /**
+        * Since v0.2.6 we also record horizontal jump factor which is non-0 for jumppads triggering horizontal force.
+        */
+        float m_fWillJumpMultFactorX = 0.f;
+        /**
         * Before v0.2.6 this was a boolean value, but then I changed it to float so it also means how strong the jump will be.
         * 0 means false in the pre-v0.2.6 world, and any positive value means true (= player will jump).
+        * Also I added Y to the end of the name because now we also record FactorX in separate var.
         */
-        float m_fWillJumpMultFactor = 0.f;
+        float m_fWillJumpMultFactorY = 0.f;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall = true;
         bool m_bFalling = true;

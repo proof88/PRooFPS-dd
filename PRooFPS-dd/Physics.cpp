@@ -443,7 +443,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
                 bCollided = serverPlayerCollisionWithWalls_LoopKernelVertical(
                     player,
                     pObj,
-                    -1,
+                    -1 /* invalid jumppad index */,
                     fPlayerHalfHeight,
                     fPlayerOPos1XMinusHalf,
                     fPlayerOPos1XPlusHalf,
@@ -560,11 +560,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
         // However, we are handling it here because X-pos is updated by strafe here so here we will have actually different new and old X-pos,
         // that is essential for the jump() function below to record the X-forces for the player.
         // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
-        if (player.getWillJumpInNextTick() > 0.f)
+        if (player.getWillJumpYInNextTick() > 0.f)
         {
             //getConsole().EOLn("start jumping");
             // now we can actually jump and have the correct forces be saved for the jump
-            player.jump(); // resets setWillJumpInNextTick()
+            player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
         }
 
         // PPPKKKGGGGGG
@@ -734,7 +734,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         if (iJumppad >= 0)
         {
             // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
-            player.setWillJumpInNextTick(m_maps.getJumppadForceFactor(iJumppad));
+            player.setWillJumpInNextTick(m_maps.getJumppadForceFactor(iJumppad), -3.f /* TODO */);
             m_maps.handleJumppadTriggered(iJumppad);
         }
     }

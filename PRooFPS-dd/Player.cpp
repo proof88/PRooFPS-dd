@@ -104,7 +104,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
     m_bAllowJump(other.m_bAllowJump),
-    m_fWillJumpMultFactor(other.m_fWillJumpMultFactor),
+    m_fWillJumpMultFactorX(other.m_fWillJumpMultFactorX),
+    m_fWillJumpMultFactorY(other.m_fWillJumpMultFactorY),
     m_bCanFall(other.m_bCanFall),
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
@@ -145,7 +146,8 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
     m_bAllowJump = other.m_bAllowJump;
-    m_fWillJumpMultFactor = other.m_fWillJumpMultFactor;
+    m_fWillJumpMultFactorX = other.m_fWillJumpMultFactorX;
+    m_fWillJumpMultFactorY = other.m_fWillJumpMultFactorY;
     m_bCanFall = other.m_bCanFall;
     m_bFalling = other.m_bFalling;
     m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
@@ -421,7 +423,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     {
         setStrafe(Strafe::NONE);
         m_prevActualStrafe = Strafe::NONE;
-        setWillJumpInNextTick(0.f);
+        setWillJumpInNextTick(0.f, 0.f);
         getJumpForce().SetZero();
         resetSomersaultServer();
         setWillSomersaultInNextTick(false);
@@ -629,9 +631,22 @@ void proofps_dd::Player::setJumpAllowed(bool b) {
     m_bAllowJump = b;
 }
 
-void proofps_dd::Player::jump() {
-    const float fOriginalWillJumpMultFactor = m_fWillJumpMultFactor;
-    m_fWillJumpMultFactor = 0.f;
+/**
+* Triggers a jump.
+* Prior calling to setWillJumpInNextTick() is mandatory for setting up jump multiplier factors for calculating forces.
+* 
+* Cannot trigger another jump if already jumping or somersaulting.
+* 
+* Since jump() is also used to trigger jumppad-induced jumps, that could be also trigger horizontal force,
+* we have fRunSpeedPerTickForJumppadHorizontalForce optional argument for such calculation.
+* 
+* @param fRunSpeedPerTickForJumppadHorizontalForce Optional, only used in case of jumppad-induced jumps to calculate horizontal jump force.
+*/
+void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalForce) {
+    const float fOriginalWillJumpMultFactorX = m_fWillJumpMultFactorX;
+    const float fOriginalWillJumpMultFactorY = m_fWillJumpMultFactorY;
+    m_fWillJumpMultFactorX = 0.f;
+    m_fWillJumpMultFactorY = 0.f;
 
     if (isJumping() || !jumpAllowed() || isSomersaulting())
     {
@@ -643,26 +658,28 @@ void proofps_dd::Player::jump() {
     m_bFalling = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
 
-    if (fOriginalWillJumpMultFactor == 1.f)
+    if (fOriginalWillJumpMultFactorY == 1.f)
     {
         // this looks to be a regular player input-induced jump;
-        // it is not an issue if it is actually a jumppad, because anyway who would make jumppad with 1.f mult factor?!
-        // So anyone who want their jumppad-induced jump to be properly idendified, should use non-1.f mult factor.
+        // it is not an issue if it is actually by a jumppad, because anyway who would make jumppad with 1.f mult factor?!
+        // So anyone who want their jumppad-induced jump to be properly identified, should use non-1.f mult factor.
         m_fGravity = m_bCrouchingWasActiveWhenInitiatedJump ? proofps_dd::Player::fJumpGravityStartFromCrouching : proofps_dd::Player::fJumpGravityStartFromStanding;
         m_bJumpWasInitiatedByJumppad = false;
+        m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
     }
     else
     {
         // this looks to be a jumppad-induced jump
-        m_fGravity = fOriginalWillJumpMultFactor * proofps_dd::Player::fJumpGravityStartFromStanding;
+        m_fGravity = fOriginalWillJumpMultFactorY * proofps_dd::Player::fJumpGravityStartFromStanding;
         m_bJumpWasInitiatedByJumppad = true;
+        m_vecJumpForce.SetX(fOriginalWillJumpMultFactorX * fRunSpeedPerTickForJumppadHorizontalForce);
     }
 
     //static int nJumpCounter = 0;
     //nJumpCounter++;
     //getConsole().EOLn("%s() %d: fGravity: %f, crouchInput: %b ", __func__, nJumpCounter, m_fGravity, m_bCrouchingWasActiveWhenInitiatedJump);
 
-    m_vecJumpForce.SetX(getPos().getNew().getX() - getPos().getOld().getX());
+    
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
     //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
@@ -673,27 +690,34 @@ void proofps_dd::Player::stopJumping() {
     m_bJumping = false;
 }
 
-float proofps_dd::Player::getWillJumpInNextTick() const
+float proofps_dd::Player::getWillJumpXInNextTick() const
 {
-    return m_fWillJumpMultFactor;
+    return m_fWillJumpMultFactorX;
+}
+
+float proofps_dd::Player::getWillJumpYInNextTick() const
+{
+    return m_fWillJumpMultFactorY;
 }
 
 /**
-* Sets the multiplier for jump force that will be used for the next jump.
+* Sets the multipliers for jump force that will be used for the next jump.
 * The jump can happen in the current or in the next tick, depending on WHEN this function is called.
 * See Physics code for details.
 * 
-* @param factor Multiplier for Player::fJumpGravityStartFromStanding. Use 1.0 to trigger a regular jump from standing position.
-*               Use 0 to cancel the jump triggering in the current or in the next tick.
+* @param factorY Multiplier for Player::fJumpGravityStartFromStanding. Use 1.0 to trigger a regular jump from standing position.
+*                Any value that is not 0 or 1.0 is considered to be a jumppad-induced jump when jump() is invoked.
+*                Use 0 to cancel the jump triggering in the current or in the next tick.
 */
-void proofps_dd::Player::setWillJumpInNextTick(float factor)
+void proofps_dd::Player::setWillJumpInNextTick(float factorY, float factorX)
 {
     if (!jumpAllowed())
     {
         return;
     }
 
-    m_fWillJumpMultFactor = factor;
+    m_fWillJumpMultFactorY = factorY;
+    m_fWillJumpMultFactorX = factorX;
     m_timeLastWillJump = std::chrono::steady_clock::now();
 }
 
@@ -885,7 +909,7 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
         }
     }
 
-    // just set the initial m_fSomersaultAngleZ by setting a small value, so stepSomersaultAngleServer() will know in which direction it should change angle
+    // just set the initial m_fSomersaultAngleZ by setting a small value, so stepSomersaultAngleServer() will know in which direction it should continue changing angle
     switch (m_strafe)
     {
     case Strafe::LEFT:
