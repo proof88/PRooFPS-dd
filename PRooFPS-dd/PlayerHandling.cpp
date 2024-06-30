@@ -231,10 +231,12 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             // server already loads the map for itself at this point
             if (m_maps.getFilename() != m_maps.getNextMapToBeLoaded())
             {
+                // save it just for error log, because upon error even getNextMapToBeLoaded() will be reset
+                const std::string sNextMapToBeLoaded = m_maps.getNextMapToBeLoaded();
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
                 if (!m_maps.load(m_maps.getNextMapToBeLoaded().c_str(), cbDisplayMapLoadingProgressUpdate))
                 {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, m_maps.getNextMapToBeLoaded().c_str());
+                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, sNextMapToBeLoaded.c_str());
                     assert(false);
                     return false;
                 }

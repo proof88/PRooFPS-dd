@@ -579,6 +579,16 @@ size_t proofps_dd::Maps::getJumppadValidVarsCount()
         return m_nValidJumppadVarsCount;
     }
 
+    if (m_decorations.size() != m_jumppads.size())
+    {
+        getConsole().EOLn(
+            "PRooFPSddPGE::%s(): decorations count %u != jumppads count %u!",
+            __func__,
+            m_decorations.size(),
+            m_jumppads.size());
+        return 0;
+    }
+
     m_fJumppadForceFactors.clear();
     m_nValidJumppadVarsCount = 0;
     size_t iJumppad = 0;
@@ -622,8 +632,44 @@ size_t proofps_dd::Maps::getJumppadValidVarsCount()
                 {
                     m_fJumppadForceFactors.push_back(fForces);
                     m_nValidJumppadVarsCount++;
+
+                    // This trick I'm doing here is without any serious scientific background and not even something I should be proud of, but
+                    // this is how it works: since the jumppad mult factors are specified as Y and X force multipliers, which are input to the
+                    // Physics engine for calculating the INITIAL jump force, and we here in Maps do not know how Physics is doing the calculations,
+                    // we are just making an ESTIMATION about the resulting jump angle the player will experience!
+                    // We are ASSUMING that a relatively big X multiplier (compared to the Y multiplier) will result in a more horizontal force,
+                    // rather than a more vertical force, and vice versa.
+                    // So, by treating the Y and X multipliers as components of a force vector, and by normalizing this vector, we will have a ROUGH
+                    // estimation of the horizontal force compared to the vertical force, and, if we treat this horizontal force component
+                    // as sine of the Z angle of the force (where -90° <= Z angle <= 90°), we can make a ROUGH ESTIMATION about the Z angle of
+                    // the force, and we set that angle for the decoration arrow. Which might be a wrong estimation since we dont have a clue about
+                    // how really these multipliers contribute to the final movement, because at this point Physics is a blackbox to Maps.
+                    // Still, I find this working more or less ok, so I leave it here.
+                    // I'm treating normalized x value as sine, because after normalization, vec will have: -1 <= x <= 1, and 0 means 0°.
+                    PureVector vecForces(fForces.x, fForces.y, 0.f);
+                    vecForces.Normalize();
+                    //const float fForcesXYratio = fForces.x / fForces.y;
+                    //getConsole().EOLn("PRooFPSddPGE::%s(): jumppad %u forces ratio: %f!", __func__, iJumppad, fForcesXYratio);
+                    //getConsole().EOLn("PRooFPSddPGE::%s(): jumppad %u forces vec normalized: x: %f, y: %f!", __func__, iJumppad, vecForces.getX(), vecForces.getY());
+
+                    assert(m_decorations[iJumppad]);  // no nulls here
+                    
+                    // I'm flipping the object, otherwise positive Z angle would turn it to the left instead right
+                    m_decorations[iJumppad]->getAngleVec().SetY(180.f);
+                    m_decorations[iJumppad]->SetDoubleSided(true);
+
+                    m_decorations[iJumppad]->getAngleVec().SetZ(
+                        PFL::radToDeg(std::asinf(vecForces.getX()))
+                    );
+
+                    // maybe it is also a good idea to displace this decoration horizontally based on the horizontal component:
+                    // (would not need this if we could modify the center of the object before rotation i.e. pivot point)
+                    m_decorations[iJumppad]->getPosVec().SetX(
+                        m_decorations[iJumppad]->getPosVec().getX() + vecForces.getX()
+                    );
                 }
             }
+
             iJumppad++;
         }
     }
@@ -1030,7 +1076,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         if (bSpecialFgBlock && bSpecialBgBlock)
         {
             const std::string sc(1, c); // WA for CConsole lack support of %c
-            getConsole().EOLn("%s Block defined as both special foreground and special background: %s!", __func__, sc.c_str());
+            getConsole().EOLn("%s Block defined both as special foreground and special background: %s!", __func__, sc.c_str());
             assert(false);
             return false;
         }
