@@ -78,6 +78,9 @@ y = paperboxes.bmp
 # the texture specified for the '^' character will be used.
 # Jump pads work only when approached from above, otherwise they don't launch the player in the air.
 
+# The following texture is used for jump pads not having an immediate left foregound block neighbor next to them.
+^ = dirt2light.bmp
+
 # You need to define how much jump force should be applied to the player by each jump pad.
 # The way to do that is to define variables with the following naming convention:
 # jumppad_#
@@ -113,6 +116,15 @@ y = paperboxes.bmp
 # To define a jump force that also moves the player horizontally, with the vertical component _initially_ 100% bigger than with regular running:
 # jumppad_0 = 1.3 2
 
+# Underground pad 1
+jumppad_0 = 1.3 23
+
+# Underground pad 2
+jumppad_1 = 1.3 23
+
+# Bottom-right corner pad
+jumppad_2 = 3.7 -0.3 
+
 # '\' and '/' chars are reserved for (not yet supported) stairs.
 
 # If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
@@ -124,27 +136,32 @@ y = paperboxes.bmp
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2            +  4    S 4  3           2          S c+cccc
-FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF
-FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF
-FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaac22cccccccFF
-FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF
-cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF
-FFFFccSc3cccaaaaaaaaavvvaaa3aauSuaaaaaaaaaaaSaaa24accccFFF3FFFF
-FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23aaaa2aaaGGGGGFFcccFF3FFFF
-FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF
-cc4cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHccccc3ccFFFF
-FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF
-FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF
-FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2aaaaorDyFFFcc+c2FFFF
-BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB
-BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB
-IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII
-IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII
-IIIIIIIIIIIxxxxxxxx3IIIII3xIIIII3xx2IIIIIIII+xxIIIIIIIxIIIIIIII
-IIIIIIIIIIIxx4x3IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ccS   2            +  4    S 4  3           2          S c+cccc   
+FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
+FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
+FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaac22cccccccFF   
+FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF   
+cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF   
+FFFFccSc3cccaaaaaaaaavvvaaa3aauSuaaaaaaaaaaaSaaa24accccFFF3FFFF   
+FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23aaaa2aaaGGGGGFFcccFF3FFFF   
+FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF   
+cc4cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHccccc3ccFFFF   
+FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF   
+FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF   
+FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2aaaaorDyFFFcc+c2FFFF   
+BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB   
+BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB   
+IIIIIIIIIxxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIIIIII   
+IIIIIIIIIIxxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxxIIIIIII   
+IIIIIIIIIIIxxxxxxxx3IIIII3xIIIII3xx2IIIIIIII+xxIIIIIIIxIIIIIIII   
+IIIIIIIIIIIxx4x3IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
+IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxxxxxxxxxxxxxx433333333334xxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxx++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxx^^xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  I
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ^I
 
 # After or in between the map layout lines, we do not accept anything else.
