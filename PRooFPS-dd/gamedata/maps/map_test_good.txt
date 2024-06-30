@@ -73,7 +73,7 @@ r = brick1.bmp
 # the texture specified for the '^' character will be used.
 # Jump pads work only when approached from above, otherwise they don't launch the player in the air.
 
-# The following texture is used for jump pads not having an immediate foregound block neighbor next to them.
+# The following texture is used for jump pads not having an immediate left foregound block neighbor next to them.
 ^ = floor.bmp
 
 # You need to define how much jump force should be applied to the player by each jump pad.

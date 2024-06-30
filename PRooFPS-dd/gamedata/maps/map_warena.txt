@@ -65,6 +65,9 @@ c = dirt2.bmp
 # the texture specified for the '^' character will be used.
 # Jump pads work only when approached from above, otherwise they don't launch the player in the air.
 
+# The following texture is used for jump pads not having an immediate left foregound block neighbor next to them.
+^ = brick1light.bmp
+
 # You need to define how much jump force should be applied to the player by each jump pad.
 # The way to do that is to define variables with the following naming convention:
 # jumppad_#
@@ -100,6 +103,18 @@ c = dirt2.bmp
 # To define a jump force that also moves the player horizontally, with the vertical component _initially_ 100% bigger than with regular running:
 # jumppad_0 = 1.3 2
 
+# Mid-arena left pad, launch to left base
+jumppad_0 = 1.3 -6
+
+# Mid-arena right pad, launch to right base
+jumppad_1 = 1.3 6
+
+# Left base pad, launch to the middle
+jumppad_2 = 2 6
+
+# Right base pad, launch to the middle
+jumppad_3 = 2 -6
+
 # '\' and '/' chars are reserved for (not yet supported) stairs.
 
 # If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
@@ -113,11 +128,11 @@ c = dirt2.bmp
 
 BBBB                                            S3S4S4S3S                                            BBBB
 BBBB                                            a3333333a                                            BBBB
-BBBB                                           aBBBBBBaBBa                                           BBBB
+BBBB                                         ^ aBBBBBBaBBa ^                                         BBBB
 BBBB    SSSSSS4                               a3aaaaaaaaa3a                               4SSSSSS    BBBB
 BBBBa3aa333333a                               a  aaaaaBa  a                               a333333aa3aBBBB
 BBBBaaaaBBBBBBa                              aa   aa aa   aa                              aBBBBBBaaaaBBBB
-BBBBBa2aaaBaaaa                              aa   aaBaa   aa                              aaaaBaaa2aBBBBB
+BBBBBa2aaaBaaaa ^                            aa   aaBaa   aa                            ^ aaaaBaaa2aBBBBB
 BBBBBBaaaaaaaaa          cccc4ccccc          aa  aBaaaaa  aa          ccccc4cccc          aaaaaaaaaBBBBBB
 BBBBBBBaaSSSaaa        cccDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDccc        aaaSSSaaBBBBBBB
 BBBBBBBBa++++Baccccc43+cDDDDDDDDDDDDcccccccaaaaBaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+34cccccaB++++aBBBBBBBB
