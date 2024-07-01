@@ -80,6 +80,22 @@ proofps_dd::Player::Player(
     m_gfx(gfx)
 {
     BuildPlayerObject(true);
+
+    // load audio only once whenever 1st player object is created, does not matter if that is server or current client player,
+    // because these are static instances need to be set up only once for our player only
+    if (!m_sndWpnAmmo && !m_sndWpnNew && !m_sndMedkit)
+    {
+        // no need to destruct in dtor, static destructions will take care anyway when exiting
+        m_sndWpnAmmo = new SoLoud::Wav();
+        m_sndWpnNew = new SoLoud::Wav();
+        m_sndMedkit = new SoLoud::Wav();
+
+        // new would had thrown above in case of alloc failure, no need to check
+        m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
+        m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
+        m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
+
+    }
 }
 
 proofps_dd::Player::Player(const proofps_dd::Player& other) :
@@ -1166,6 +1182,9 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, already available, just inc unmag to: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
+            assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
+            m_sndWpnAmmo->stop();
+            m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
         }
         else
         {
@@ -1173,6 +1192,9 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
+            assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
+            m_sndWpnNew->stop();
+            m_audio.getAudioEngineCore().play(*m_sndWpnNew);
         }
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
         proofps_dd::MsgWpnUpdateFromServer::initPkt(
@@ -1187,6 +1209,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
+        m_sndMedkit->stop();
+        m_audio.getAudioEngineCore().play(*m_sndMedkit);
         break;
     default:
         getConsole().EOLn(
@@ -1213,6 +1237,9 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
 };
 
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
+SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);

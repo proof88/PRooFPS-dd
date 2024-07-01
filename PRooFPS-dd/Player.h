@@ -17,7 +17,7 @@
 
 #include "CConsole.h"
 
-#include "PGE.h"
+#include "PGE.h" // we use audio also from here so it is easier to just include everything
 #include "Config/PgeOldNewValue.h"
 
 #include "Config.h"
@@ -256,6 +256,11 @@ namespace proofps_dd
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
         static uint32_t m_nPlayerInstanceCntr;
+
+        // these sounds are static because need to load only once and played only for current player
+        static SoLoud::Wav* m_sndWpnAmmo;
+        static SoLoud::Wav* m_sndWpnNew;
+        static SoLoud::Wav* m_sndMedkit;
 
         pge_network::PgeNetworkConnectionHandle m_connHandleServerSide;   /**< Used by both server and clients to identify the connection.
                                                                            Clients don't use it for direct communication.
