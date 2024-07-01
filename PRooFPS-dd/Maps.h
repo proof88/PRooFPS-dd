@@ -132,7 +132,8 @@ namespace proofps_dd
         PR00FsUltimateRenderingEngine& m_gfx;
         PureTexture* m_texRed;  // TODO: unique_ptr
         PureTexture* m_texDecorJumpPadVertical;  // TODO: unique_ptr
-        SoLoud::Wav m_sndPlayerLandNoDamage;
+        SoLoud::Wav m_sndPlayerLandSmallFall;
+        SoLoud::Wav m_sndPlayerLandBigFall;
         SoLoud::Wav m_sndPlayerLandDamage;
         SoLoud::Wav m_sndJumppad;
         std::string m_sServerMapFilenameToLoad;                      /**< We set this as soon as we get to know which map we should load. */

@@ -76,7 +76,8 @@ bool proofps_dd::Maps::initialize()
         bInitialized = m_mapcycle.initialize();
     }
 
-    m_audio.loadSound(m_sndPlayerLandNoDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/player_land_nodamage.wav");
+    m_audio.loadSound(m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/player_land_smallfall.wav");
+    m_audio.loadSound(m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/player_land_bigfall.wav");
     m_audio.loadSound(m_sndPlayerLandDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/player_land_damage.wav");
     m_audio.loadSound(m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
 
@@ -755,12 +756,17 @@ void proofps_dd::Maps::update(const float& fps)
 
 void proofps_dd::Maps::handlePlayerLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
 {
-    m_sndPlayerLandNoDamage.stop();
+    m_sndPlayerLandSmallFall.stop();
+    m_sndPlayerLandBigFall.stop();
     m_sndPlayerLandDamage.stop();
 
     if (fFallHeight >= 1.f)
     {
-        m_audio.getAudioEngineCore().play(m_sndPlayerLandNoDamage);
+        m_audio.getAudioEngineCore().play(m_sndPlayerLandBigFall);
+    }
+    else
+    {
+        m_audio.getAudioEngineCore().play(m_sndPlayerLandSmallFall);
     }
 
     if (bDamageTaken && !bDied)
