@@ -725,7 +725,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
             serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *m_gameMode);
-            serverPlayerCollisionWithWalls(m_config.getPhysicsRate());
+            serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *m_gameMode);
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
         serverUpdateBullets(*m_gameMode, *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());

@@ -365,7 +365,10 @@ void proofps_dd::Physics::serverGravity(
     }
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPhysicsRate)
+void proofps_dd::Physics::serverPlayerCollisionWithWalls(
+    const unsigned int& nPhysicsRate,
+    XHair& xhair,
+    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */)
 {
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
@@ -419,7 +422,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
                     fPlayerPos1YMinusHalf,
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
-                    fBlockSizeYhalf);
+                    fBlockSizeYhalf,
+                    xhair,
+                    gameMode);
 
                 if (bCollided)
                 {
@@ -450,7 +455,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(const unsigned int& nPh
                     fPlayerPos1YMinusHalf,
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
-                    fBlockSizeYhalf);
+                    fBlockSizeYhalf,
+                    xhair,
+                    gameMode);
             } // end for i
         } // end if YPPos changed
 
@@ -683,7 +690,10 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     const float& fPlayerPos1YMinusHalf,
     const float& fPlayerPos1YPlusHalf,
     const float& fBlockSizeXhalf,
-    const float& fBlockSizeYhalf)
+    const float& fBlockSizeYhalf,
+    XHair& xhair,
+    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */
+    )
 {
     assert(obj);
 
@@ -713,13 +723,28 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     {
         // we fell from above
 
-        //if (player.isFalling())
-        //{
-        //    const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-        //    getConsole().EOLn("Finished falling for %d millisecs, height: %f",
-        //        static_cast<int>(nFallDurationMillisecs),
-        //        player.getHeightStartedFalling() - player.getPos().getNew().getY());
-        //}
+        // handle fall damage
+        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
+        {
+            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+            int nDamage = 0;
+            if (fFallHeight > 5.f)
+            {
+                nDamage = static_cast<int>(std::lroundf((fFallHeight - 5.f) * 10));
+                player.doDamage(nDamage);
+                if (std::as_const(player).getHealth() == 0)
+                {
+                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
+                }
+            }
+            m_maps.handlePlayerLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
+            //    static_cast<int>(nFallDurationMillisecs),
+            //    fFallHeight,
+            //    nDamage);
+        }
 
         player.setCanFall(false);
 
