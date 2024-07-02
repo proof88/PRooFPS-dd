@@ -83,17 +83,19 @@ proofps_dd::Player::Player(
 
     // load audio only once whenever 1st player object is created, does not matter if that is server or current client player,
     // because these are static instances need to be set up only once for our player only
-    if (!m_sndWpnAmmo && !m_sndWpnNew && !m_sndMedkit)
+    if (!m_sndWpnAmmo)
     {
         // no need to destruct in dtor, static destructions will take care anyway when exiting
         m_sndWpnAmmo = new SoLoud::Wav();
         m_sndWpnNew = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
+        m_sndFallYell = new SoLoud::Wav();
 
         // new would had thrown above in case of alloc failure, no need to check
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
+        m_audio.loadSound(*m_sndFallYell, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/the-howie-scream-2.wav");
 
     }
 }
@@ -426,6 +428,9 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     m_timeDied = std::chrono::steady_clock::now();
     if (bMe)
     {
+        assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+        m_sndFallYell->stop();
+
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
     }
     else
@@ -1218,6 +1223,44 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
 }
 
+void proofps_dd::Player::handleFallingFromHigh()
+{
+    assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+
+    //getConsole().EOLn("Player::%s() check", __func__);
+
+    /*
+    * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
+    * This is good enough for us, but for the future keep in mind the following:
+    * SoLoud::isValidVoiceHandle() might return false when the sound is still playing.
+    * It might be because of buffered playing, and the handle is invalidated right after SoLoud
+    * finished dealing with it (but the sound from buffer is not yet finished, which is not SoLoud's but the
+    * backend's territory).
+    * Some related issues on github might help understand the problem:
+    *  - https://github.com/jarikomppa/soloud/issues/102
+    *  - https://github.com/jarikomppa/soloud/issues/252
+    *  - https://github.com/jarikomppa/soloud/issues/76
+    * 
+    * Anyway, for us this is not a problem for now.
+    */
+
+    // should use WavInstance::hasEnded(), but where is WavInstance ??? I have Wav only ...
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+    {
+        // already playing
+        return;
+    }
+
+    //getConsole().EOLn("Player::%s() play", __func__);
+    m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
+}
+
+void proofps_dd::Player::handleLanded()
+{
+    assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+    m_sndFallYell->stop();
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -1240,6 +1283,8 @@ uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndFallYell = nullptr;
+SoLoud::handle proofps_dd::Player::m_handleFallYell = 0;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);

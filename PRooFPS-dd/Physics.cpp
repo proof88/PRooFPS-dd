@@ -459,6 +459,17 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     xhair,
                     gameMode);
             } // end for i
+
+            if (!bCollided && player.isFalling())
+            {
+                // we have been in the air for a while now
+
+                const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+                if (fFallHeight >= 6.f)
+                {
+                    player.handleFallingFromHigh();
+                }
+            }
         } // end if YPPos changed
 
         if (player.isSomersaulting())
@@ -746,6 +757,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
             //    nDamage);
         }
 
+        player.handleLanded();
         player.setCanFall(false);
 
         // maybe not null everything out in the future but only decrement the components by

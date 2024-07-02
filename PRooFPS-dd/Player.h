@@ -239,6 +239,9 @@ namespace proofps_dd
         bool canTakeItem(const MapItem& item) const;
         void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 
+        void handleFallingFromHigh();
+        void handleLanded();
+
     private:
 
         enum class OldNewValueName
@@ -261,6 +264,8 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndWpnAmmo;
         static SoLoud::Wav* m_sndWpnNew;
         static SoLoud::Wav* m_sndMedkit;
+        static SoLoud::Wav* m_sndFallYell;
+        static SoLoud::handle m_handleFallYell;
 
         pge_network::PgeNetworkConnectionHandle m_connHandleServerSide;   /**< Used by both server and clients to identify the connection.
                                                                            Clients don't use it for direct communication.
