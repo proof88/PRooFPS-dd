@@ -240,7 +240,7 @@ namespace proofps_dd
         void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 
         void handleFallingFromHigh();
-        void handleLanded();
+        void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
 
     private:
 
@@ -266,6 +266,9 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndMedkit;
         static SoLoud::Wav* m_sndFallYell;
         static SoLoud::handle m_handleFallYell;
+        static SoLoud::Wav* m_sndPlayerLandSmallFall;
+        static SoLoud::Wav* m_sndPlayerLandBigFall;
+        static SoLoud::Wav* m_sndPlayerDamage;
 
         pge_network::PgeNetworkConnectionHandle m_connHandleServerSide;   /**< Used by both server and clients to identify the connection.
                                                                            Clients don't use it for direct communication.

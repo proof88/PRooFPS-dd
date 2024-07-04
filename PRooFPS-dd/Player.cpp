@@ -90,12 +90,18 @@ proofps_dd::Player::Player(
         m_sndWpnNew = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
         m_sndFallYell = new SoLoud::Wav();
+        m_sndPlayerLandSmallFall = new SoLoud::Wav();
+        m_sndPlayerLandBigFall = new SoLoud::Wav();
+        m_sndPlayerDamage = new SoLoud::Wav();
 
         // new would had thrown above in case of alloc failure, no need to check
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
-        m_audio.loadSound(*m_sndFallYell, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/the-howie-scream-2.wav");
+        m_audio.loadSound(*m_sndFallYell, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
+        m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
+        m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
+        m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
 
     }
 }
@@ -1255,10 +1261,34 @@ void proofps_dd::Player::handleFallingFromHigh()
     m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
 }
 
-void proofps_dd::Player::handleLanded()
+void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
 {
+    assert(m_sndPlayerLandSmallFall);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndPlayerLandBigFall);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
     assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+
+    m_sndPlayerLandSmallFall->stop();
+    m_sndPlayerLandBigFall->stop();
+    m_sndPlayerDamage->stop();
     m_sndFallYell->stop();
+
+    getConsole().EOLn("Player::%s()", __func__);
+
+    if (fFallHeight >= 1.f)
+    {
+        m_audio.getAudioEngineCore().play(*m_sndPlayerLandBigFall);
+    }
+    else
+    {
+        m_audio.getAudioEngineCore().play(*m_sndPlayerLandSmallFall);
+    }
+
+    if (bDamageTaken && !bDied)
+    {
+        // no need to play this in case of dieing because die sound is played anyway on separate path
+        m_audio.getAudioEngineCore().play(*m_sndPlayerDamage);
+    }
 }
 
 
@@ -1285,6 +1315,9 @@ SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell = nullptr;
 SoLoud::handle proofps_dd::Player::m_handleFallYell = 0;
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerDamage = nullptr;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);

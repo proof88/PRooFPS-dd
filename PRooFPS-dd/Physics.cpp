@@ -460,7 +460,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     gameMode);
             } // end for i
 
-            if (!bCollided && player.isFalling())
+            if (!bCollided && player.isFalling() && (std::as_const(player).getHealth() > 0))
             {
                 // we have been in the air for a while now
 
@@ -733,13 +733,15 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     if (nAlignUnderOrAboveWall == 1)
     {
         // we fell from above
+        const bool bOriginalFalling = player.isFalling();
+        float fFallHeight = 0.f;
+        int nDamage = 0;
 
         // handle fall damage
         if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
         {
             //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-            const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-            int nDamage = 0;
+            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
             if (fFallHeight > 5.f)
             {
                 nDamage = static_cast<int>(std::lroundf((fFallHeight - 5.f) * 10));
@@ -750,14 +752,17 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
                     handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
                 }
             }
-            m_maps.handlePlayerLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+
             //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
             //    static_cast<int>(nFallDurationMillisecs),
             //    fFallHeight,
             //    nDamage);
         }
 
-        player.handleLanded();
+        if (bOriginalFalling)
+        {
+            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+        }
         player.setCanFall(false);
 
         // maybe not null everything out in the future but only decrement the components by
