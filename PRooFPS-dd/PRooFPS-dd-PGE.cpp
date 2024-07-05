@@ -535,6 +535,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgDeathNotificationFromServer>(pkt));
             break;
+        case proofps_dd::MsgPlayerEventFromServer::id:
+            bRet = handlePlayerEventFromServer(
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt));
+            break;
         default:
             bRet = false;
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, proofpsAppMsgId);

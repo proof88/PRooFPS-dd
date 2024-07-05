@@ -37,6 +37,7 @@ namespace proofps_dd
         WpnUpdateFromServer,
         CurrentWpnUpdateFromServer,
         DeathNotificationFromServer,
+        PlayerEventFromServer,
         LastMsgId
     };
 
@@ -59,6 +60,7 @@ namespace proofps_dd
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::PlayerEventFromServer,       "MsgPlayerEventFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::DeathNotificationFromServer, "MsgDeathNotificationFromServer" }
     );
 
@@ -947,6 +949,91 @@ namespace proofps_dd
     static_assert(std::is_trivial_v<MsgDeathNotificationFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgDeathNotificationFromServer>);
     static_assert(std::is_standard_layout_v<MsgDeathNotificationFromServer>);
-    
+
+    // server -> clients
+    // This kind of message is to inform clients about Player-specific events which are less frequent than the MsgUserUpdateFromServer stuff.
+    // Also, while on the long run I'm planning to send MsgUserUpdateFromServer unreliable, this MsgPlayerEventFromServer will stay reliable. 
+    // This should be some kind of RPC stuff, basically I want to invoke a function of Player class on the other side, however
+    // I'm not exactly sure of all details, so I just started using this with simple PlayerEventIds and we will see where it goes on the long run.
+    struct MsgPlayerEventFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::PlayerEventFromServer;
+
+        // This is weird, but I have to do like this, because I cannot include Player.h into this header, so I'm using this general data type
+        // that can hold different values, Player class will know exactly what they mean.
+        // Not planning to use std::optional, since Player class exactly knows what data it should expect, based on m_iPlayerEventId.
+        // Also, I need to keep this struct trivial (std::is_trivial_v must be true) so it can be easily memcpy'd, I cannot do that with std::optional member.
+        union UOptionalData
+        {
+            bool  m_bValue;
+            int   m_nValue;
+            float m_fValue;
+
+            // struct stays trivial with these operator= defines, it helps a lot by allowing simple data types to be directly assigned
+            // as it is done in initPkt()
+            
+            UOptionalData& operator=(const bool& b)
+            {
+                m_bValue = b;
+                return *this;
+            }
+
+            UOptionalData& operator=(const int& n)
+            {
+                m_nValue = n;
+                return *this;
+            }
+
+            UOptionalData& operator=(const float& f)
+            {
+                m_fValue = f;
+                return *this;
+            }
+        };
+
+        // With this optional template argument list, you don't even need to specify those extra parameters.
+        // What I'm thinking of as an improvement is to have arbitrary number of arguments and then those are loaded into an array in the pkt
+        // instead of those specific m_optData# members, but for now this is good enough!
+        template<typename OptSimpleData1 = int, typename OptSimpleData2 = OptSimpleData1, typename OptSimpleData3 = OptSimpleData1>
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
+            const pge_network::TByte& iPlayerEventId,
+            const OptSimpleData1& optData1 = {},
+            const OptSimpleData2& optData2 = {}, 
+            const OptSimpleData3& optData3 = {})
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgPlayerEventFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgPlayerEventFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgPlayerEventFromServer& msgPlayerEvent = reinterpret_cast<proofps_dd::MsgPlayerEventFromServer&>(*pMsgAppData);
+            msgPlayerEvent.m_iPlayerEventId = iPlayerEventId;
+            msgPlayerEvent.m_optData1 = optData1;
+            msgPlayerEvent.m_optData2 = optData2;
+            msgPlayerEvent.m_optData3 = optData3;
+
+            return true;
+        }
+
+        pge_network::TByte m_iPlayerEventId;
+
+        // meaning of these members is determined by m_iPlayerEventId
+        UOptionalData m_optData1;
+        UOptionalData m_optData2;
+        UOptionalData m_optData3;
+    };  // struct MsgPlayerEventFromServer
+    static_assert(std::is_trivial_v<MsgPlayerEventFromServer>);
+    static_assert(std::is_trivially_copyable_v<MsgPlayerEventFromServer>);
+    static_assert(std::is_standard_layout_v<MsgPlayerEventFromServer>);
 
 } // namespace proofps_dd

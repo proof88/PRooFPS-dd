@@ -28,6 +28,12 @@
 namespace proofps_dd
 {
 
+    enum PlayerEventId : pge_network::TByte
+    {
+        FallingFromHigh = 0,
+        Landed
+    };
+
     class Player
     {
     public:

@@ -898,6 +898,42 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     return true;
 }
 
+bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgPlayerEventFromServer& msg)
+{
+    getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
+
+    const auto it = m_mapPlayers.find(connHandleServerSide);
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
+    }
+
+    const bool bCurrentClient = isMyConnection(connHandleServerSide);
+    
+    // in this version, this message should be received only for current player, not for other players!
+    assert(bCurrentClient);
+    
+    auto& player = it->second;
+
+    // PlayerEventId
+    switch (msg.m_iPlayerEventId)
+    {
+    case PlayerEventId::FallingFromHigh:
+        player.handleFallingFromHigh();
+        break;
+    case PlayerEventId::Landed:
+        player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue);
+        break;
+    default:
+        getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
+        assert(false);  // crash in debug
+        return false;
+    }
+
+    return true;
+}
+
 void proofps_dd::PlayerHandling::updatePlayersVisuals(
     const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode)

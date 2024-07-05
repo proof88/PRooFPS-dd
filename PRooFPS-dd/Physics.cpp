@@ -467,7 +467,21 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                 const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
                 if (fFallHeight >= 6.f)
                 {
-                    player.handleFallingFromHigh();
+                    if (player.getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+                    {
+                        // TODO: on the long run, handleFallingFromHigh() should send out pkt, if it knows if it is server instance or not
+                        player.handleFallingFromHigh();
+                    }
+                    else
+                    {
+                        // in the future this pkt sending should be integrated into handleFallingFromHigh() which will send it if it is server instance
+                        pge_network::PgePacket pktPlayerEvent;
+                        proofps_dd::MsgPlayerEventFromServer::initPkt(
+                            pktPlayerEvent,
+                            player.getServerSideConnectionHandle(),
+                            PlayerEventId::FallingFromHigh);
+                        m_pge.getNetwork().getServer().send(pktPlayerEvent, player.getServerSideConnectionHandle());
+                    }
                 }
             }
         } // end if YPPos changed
@@ -761,7 +775,24 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
 
         if (bOriginalFalling)
         {
-            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+            if (player.getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+            {
+                // TODO: on the long run, handleLanded() should send out pkt, if it knows if it is server instance or not
+                player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+            }
+            else
+            {
+                // in the future this pkt sending should be integrated into handleLanded() which will send it if it is server instance
+                pge_network::PgePacket pktPlayerEvent;
+                proofps_dd::MsgPlayerEventFromServer::initPkt(
+                    pktPlayerEvent,
+                    player.getServerSideConnectionHandle(),
+                    PlayerEventId::Landed,
+                    fFallHeight,
+                    (nDamage > 0),
+                    (std::as_const(player).getHealth() == 0));
+                m_pge.getNetwork().getServer().send(pktPlayerEvent, player.getServerSideConnectionHandle());
+            }
         }
         player.setCanFall(false);
 

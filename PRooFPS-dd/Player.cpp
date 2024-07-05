@@ -1233,7 +1233,7 @@ void proofps_dd::Player::handleFallingFromHigh()
 {
     assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
 
-    //getConsole().EOLn("Player::%s() check", __func__);
+    getConsole().EOLn("Player::%s() check", __func__);
 
     /*
     * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
@@ -1257,7 +1257,7 @@ void proofps_dd::Player::handleFallingFromHigh()
         return;
     }
 
-    //getConsole().EOLn("Player::%s() play", __func__);
+    getConsole().EOLn("Player::%s() play", __func__);
     m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
 }
 

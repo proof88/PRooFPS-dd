@@ -105,6 +105,10 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode);
         bool handleDeathNotificationFromServer(
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
+        bool handlePlayerEventFromServer(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgPlayerEventFromServer& msg
+        );
         void updatePlayersVisuals(
             const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode);
