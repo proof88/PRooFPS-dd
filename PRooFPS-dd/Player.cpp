@@ -96,6 +96,8 @@ proofps_dd::Player::Player(
         m_sndPlayerLandBigFall = new SoLoud::Wav();
         m_sndPlayerDamage = new SoLoud::Wav();
 
+        // not nice but currently this is how I skip loading sounds for unit tests
+#ifndef TESTING
         // new would had thrown above in case of alloc failure, no need to check
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
@@ -104,6 +106,7 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
         m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
         m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
+#endif
 
     }
 }
@@ -1196,6 +1199,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         }
 
         item.take();
+        // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
+        // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
         if (pWpnBecomingAvailable->isAvailable())
         {
             // just increase bullet count
@@ -1235,7 +1240,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
-        handleTakeItem(MapItemType::ITEM_HEALTH);
+        handleTakeNonWeaponItem(MapItemType::ITEM_HEALTH);
         break;
     default:
         getConsole().EOLn(
@@ -1351,7 +1356,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     }
 }
 
-void proofps_dd::Player::handleTakeItem(const proofps_dd::MapItemType& eMapItemType)
+void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType)
 {
     // both server and client execute this function, so be careful with conditions here
 

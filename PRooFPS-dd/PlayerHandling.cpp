@@ -927,7 +927,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
         player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue);
         break;
     case PlayerEventId::ItemTake:
-        player.handleTakeItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
+        player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);

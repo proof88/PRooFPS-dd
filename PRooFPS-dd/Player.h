@@ -250,7 +250,7 @@ namespace proofps_dd
 
         void handleFallingFromHigh();
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
-        void handleTakeItem(const proofps_dd::MapItemType& eMapItemType);
+        void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
 
     private:
 

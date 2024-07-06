@@ -90,9 +90,12 @@ protected:
         AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
         AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
         AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
-        AddSubTest("test_handle_falling_from_high", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high);
-        AddSubTest("test_handle_landed", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed);
-        AddSubTest("test_handle_take_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item);
+        AddSubTest("test_handle_falling_from_high_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_server_instance);
+        AddSubTest("test_handle_falling_from_high_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_client_instance);
+        AddSubTest("test_handle_landed_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_server_instance);
+        AddSubTest("test_handle_landed_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_client_instance);
+        AddSubTest("test_handle_take_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_server_instance);
+        AddSubTest("test_handle_take_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_client_instance);
     }
 
     virtual bool setUp() override
@@ -1932,40 +1935,205 @@ private:
         return b;
     }
 
-    bool test_handle_falling_from_high()
+    bool test_handle_falling_from_high_server_instance()
     {
-        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
-        // for now we dont test anything here yet, just invoke and expect no crash
+        bool b = true;
+        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        playerServer.handleFallingFromHigh();
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
-        // TODO: test pkt send
-        player.handleFallingFromHigh();
+        // no sound play (I cannot check sound now, need stubs for that), tx to client player
+        playerClient.handleFallingFromHigh();
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
 
-        return true;
+        // calling again must not do anything, values should stay unchanged
+        playerClient.handleFallingFromHigh();
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        return b;
     }
 
-    bool test_handle_landed()
+    bool test_handle_falling_from_high_client_instance()
     {
-        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
 
-        // TODO: test pkt send
-        // TODO: test if flag is flipped in different cases
-        player.handleLanded(1.f, false, false);
+        // client-only test
+        m_network.shutdown();
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as client");
+        }
 
-        return true;
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        bool b = true;
+
+        // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
+        playerClient.handleFallingFromHigh();
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        return b;
     }
 
-    bool test_handle_take_item()
+    bool test_handle_landed_server_instance()
     {
-        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
-        // TODO: test pkt send
-        player.handleTakeItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        bool b = true;
+        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        playerServer.handleLanded(1.f, false, false);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
-        return true;
+        // no sound play (I cannot check sound now, need stubs for that), tx to client player
+        playerClient.handleLanded(1.f, false, false);
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
+
+        // same actions as above, no protective flag is in place that needs to be cleared first
+        playerClient.handleLanded(1.f, false, false);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        return b;
+    }
+
+    bool test_handle_landed_client_instance()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+
+        // client-only test
+        m_network.shutdown();
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as client");
+        }
+
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        bool b = true;
+
+        // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
+        playerClient.handleLanded(1.f, false, false);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        return b;
+    }
+
+    bool test_handle_take_item_server_instance()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+
+        bool b = true;
+        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        playerServer.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        // no sound play (I cannot check sound now, need stubs for that), tx to client player
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
+
+        // same actions as above, no protective flag is in place that needs to be cleared first
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        return b;
+    }
+
+    bool test_handle_take_item_client_instance()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+
+        // client-only test
+        m_network.shutdown();
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as client");
+        }
+
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        bool b = true;
+
+        // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        return b;
     }
 
 };
