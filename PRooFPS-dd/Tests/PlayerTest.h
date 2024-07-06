@@ -92,6 +92,7 @@ protected:
         AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
         AddSubTest("test_handle_falling_from_high", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high);
         AddSubTest("test_handle_landed", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed);
+        AddSubTest("test_handle_take_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item);
     }
 
     virtual bool setUp() override
@@ -1937,6 +1938,8 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
 
         // for now we dont test anything here yet, just invoke and expect no crash
+
+        // TODO: test pkt send
         player.handleFallingFromHigh();
 
         return true;
@@ -1947,7 +1950,20 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
 
+        // TODO: test pkt send
+        // TODO: test if flag is flipped in different cases
         player.handleLanded(1.f, false, false);
+
+        return true;
+    }
+
+    bool test_handle_take_item()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+
+        // TODO: test pkt send
+        player.handleTakeItem(proofps_dd::MapItemType::ITEM_HEALTH);
 
         return true;
     }

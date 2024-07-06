@@ -1171,7 +1171,8 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
 
 void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate)
 {
-    // invoked only on server
+    assert(m_network.isServer());
+
     switch (item.getType())
     {
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
@@ -1219,6 +1220,9 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             m_audio.getAudioEngineCore().play(*m_sndWpnNew);
         }
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
+        
+        // this is very inconsistent: for weapon items, we inform clients with MsgWpnUpdateFromServer, but for other items, we send PlayerEventFromServer,
+        // maybe in future we can clarify ...
         proofps_dd::MsgWpnUpdateFromServer::initPkt(
             pktWpnUpdate,
             0 /* ignored by client anyway */,
@@ -1230,9 +1234,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.take();
-        setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC));
-        m_sndMedkit->stop();
-        m_audio.getAudioEngineCore().play(*m_sndMedkit);
+        setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
+        handleTakeItem(MapItemType::ITEM_HEALTH);
         break;
     default:
         getConsole().EOLn(
@@ -1344,6 +1347,41 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
             fFallHeight,
             bDamageTaken,
             bDied);
+        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+    }
+}
+
+void proofps_dd::Player::handleTakeItem(const proofps_dd::MapItemType& eMapItemType)
+{
+    // both server and client execute this function, so be careful with conditions here
+
+    // this function is not invoked for all taken items, because this was introduced in v0.2.6, far later than MsgWpnUpdateFromServer,
+    // so for example it does not get invoked for picked up weapons.
+
+    assert(m_sndMedkit);  // otherwise new operator would had thrown already in ctor
+
+    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    {
+        switch (eMapItemType)
+        {
+        case MapItemType::ITEM_HEALTH:
+            //getConsole().EOLn("Player::%s() playing sound", __func__);
+            m_sndMedkit->stop();
+            m_audio.getAudioEngineCore().play(*m_sndMedkit);
+            break;
+        default:
+            getConsole().EOLn(
+                "Player::%s(): unhandled item type %d!", __func__, eMapItemType);
+        }
+    }
+    else if (m_network.isServer())
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            getServerSideConnectionHandle(),
+            PlayerEventId::ItemTake,
+            static_cast<int>(eMapItemType));
         m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
     }
 }

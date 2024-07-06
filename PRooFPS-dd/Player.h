@@ -31,7 +31,8 @@ namespace proofps_dd
     enum PlayerEventId : pge_network::TByte
     {
         FallingFromHigh = 0,
-        Landed
+        Landed,
+        ItemTake
     };
 
     class Player
@@ -249,6 +250,7 @@ namespace proofps_dd
 
         void handleFallingFromHigh();
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
+        void handleTakeItem(const proofps_dd::MapItemType& eMapItemType);
 
     private:
 
