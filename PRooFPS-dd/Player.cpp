@@ -435,6 +435,7 @@ PureVector& proofps_dd::Player::getImpactForce()
 
 void proofps_dd::Player::die(bool bMe, bool bServer)
 {
+    // TODO: in newer version Player already has Network instance, so bServer here is obsolete!
     m_timeDied = std::chrono::steady_clock::now();
     if (bMe)
     {
@@ -452,6 +453,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     hide();
     if (bServer)
     {
+        m_bFallingHighTriggered = false;
         setStrafe(Strafe::NONE);
         m_prevActualStrafe = Strafe::NONE;
         setWillJumpInNextTick(0.f, 0.f);
@@ -595,6 +597,11 @@ bool proofps_dd::Player::canFall() const
 
 void proofps_dd::Player::setCanFall(bool state) {
     m_bCanFall = state;
+
+    if (!state)
+    {
+        m_bFallingHighTriggered = false;
+    }
 }
 
 bool proofps_dd::Player::isInAir() const
@@ -1237,32 +1244,58 @@ void proofps_dd::Player::handleFallingFromHigh()
 {
     assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
 
-    getConsole().EOLn("Player::%s() check", __func__);
+    //getConsole().EOLn("Player::%s() check", __func__);
 
-    /*
-    * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
-    * This is good enough for us, but for the future keep in mind the following:
-    * SoLoud::isValidVoiceHandle() might return false when the sound is still playing.
-    * It might be because of buffered playing, and the handle is invalidated right after SoLoud
-    * finished dealing with it (but the sound from buffer is not yet finished, which is not SoLoud's but the
-    * backend's territory).
-    * Some related issues on github might help understand the problem:
-    *  - https://github.com/jarikomppa/soloud/issues/102
-    *  - https://github.com/jarikomppa/soloud/issues/252
-    *  - https://github.com/jarikomppa/soloud/issues/76
-    * 
-    * Anyway, for us this is not a problem for now.
-    */
-
-    // should use WavInstance::hasEnded(), but where is WavInstance ??? I have Wav only ...
-    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+    if (m_network.isServer())
     {
-        // already playing
-        return;
+        // for now, let just server control and depend on this variable, I'm afraid in some cases client might dont have the proper state, since
+        // only server invokes all functions that might change its value
+        if (m_bFallingHighTriggered)
+        {
+            return;
+        }
+        m_bFallingHighTriggered = true;
     }
 
-    getConsole().EOLn("Player::%s() play", __func__);
-    m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
+    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    {
+        // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
+
+        /*
+        * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
+        * This is good enough for us, but for the future keep in mind the following:
+        * SoLoud::isValidVoiceHandle() might return false when the sound is still playing.
+        * It might be because of buffered playing, and the handle is invalidated right after SoLoud
+        * finished dealing with it (but the sound from buffer is not yet finished, which is not SoLoud's but the
+        * backend's territory).
+        * Some related issues on github might help understand the problem:
+        *  - https://github.com/jarikomppa/soloud/issues/102
+        *  - https://github.com/jarikomppa/soloud/issues/252
+        *  - https://github.com/jarikomppa/soloud/issues/76
+        *
+        * Anyway, for us this is not a problem for now.
+        */
+
+        // should use WavInstance::hasEnded(), but where is WavInstance ??? I have Wav only ...
+        if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+        {
+            // already playing, even though we later introduced m_bFallingHighTriggered flag, I'm still checking if sound
+            // instance is being played so later I can easily copy this logic when needed.
+            return;
+        }
+
+        //getConsole().EOLn("Player::%s() play", __func__);
+        m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
+    }
+    else if (m_network.isServer())
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            getServerSideConnectionHandle(),
+            PlayerEventId::FallingFromHigh);
+        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+    }
 }
 
 void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
@@ -1274,7 +1307,9 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
     assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
 
-    if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+    m_bFallingHighTriggered = false;
+
+    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
         // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
         m_sndPlayerLandSmallFall->stop();
@@ -1282,7 +1317,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
         m_sndPlayerDamage->stop();
         m_sndFallYell->stop();
 
-        getConsole().EOLn("Player::%s()", __func__);
+        //getConsole().EOLn("Player::%s() playing sound", __func__);
 
         if (fFallHeight >= 1.f)
         {

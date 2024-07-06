@@ -357,6 +357,13 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedFalling;
         float m_fHeightStartedFalling = 0.f;
         bool m_bHasJustStoppedJumping = false;
+        
+        /**
+        *   This flag is set by handleFallingFromHigh(), we need to use this flag to make sure the actions are triggered only once when
+        *   the player is falling from high. This is because Physics calls handleFallingFromHigh() in each physics step when the player
+        *   is falling from high. Reset of this flag should be whenever falling high is interrupted, e.g. when player landed on ground.
+        */
+        bool m_bFallingHighTriggered = false;
 
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.
