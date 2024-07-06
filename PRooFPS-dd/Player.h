@@ -111,8 +111,10 @@ namespace proofps_dd
             PGEcfgProfiles& cfgProfiles,
             std::list<Bullet>& bullets,
             PR00FsUltimateRenderingEngine& gfx,
+            pge_network::PgeINetwork& network,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const std::string& sIpAddress);
+            const std::string& sIpAddress
+            );
         ~Player();
 
         Player(const Player&);
@@ -331,6 +333,7 @@ namespace proofps_dd
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
         PR00FsUltimateRenderingEngine& m_gfx;
+        pge_network::PgeINetwork& m_network;
 
         PureVector m_vecJumpForce;
         float m_fGravity = 0.f;

@@ -69,6 +69,7 @@ proofps_dd::Player::Player(
     PGEcfgProfiles& cfgProfiles,
     std::list<Bullet>& bullets,
     PR00FsUltimateRenderingEngine& gfx,
+    pge_network::PgeINetwork& network,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const std::string& sIpAddress) :
     m_audio(audio),
@@ -77,7 +78,8 @@ proofps_dd::Player::Player(
     m_wpnMgr(audio, cfgProfiles, gfx, bullets),
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
-    m_gfx(gfx)
+    m_gfx(gfx),
+    m_network(network)
 {
     BuildPlayerObject(true);
 
@@ -124,6 +126,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
     m_gfx(other.m_gfx),
+    m_network(other.m_network),
     m_vecJumpForce(other.m_vecJumpForce),
     m_fGravity(other.m_fGravity),
     m_bJumping(other.m_bJumping),
@@ -166,6 +169,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
     m_bullets = other.m_bullets;
     m_gfx = other.m_gfx;
+    m_network = other.m_network;
     m_vecJumpForce = other.m_vecJumpForce;
     m_fGravity = other.m_fGravity;
     m_bJumping = other.m_bJumping;
@@ -1263,31 +1267,49 @@ void proofps_dd::Player::handleFallingFromHigh()
 
 void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
 {
+    // both server and client execute this function, so be careful with conditions here 
+
     assert(m_sndPlayerLandSmallFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerLandBigFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
     assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
 
-    m_sndPlayerLandSmallFall->stop();
-    m_sndPlayerLandBigFall->stop();
-    m_sndPlayerDamage->stop();
-    m_sndFallYell->stop();
-
-    getConsole().EOLn("Player::%s()", __func__);
-
-    if (fFallHeight >= 1.f)
+    if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
     {
-        m_audio.getAudioEngineCore().play(*m_sndPlayerLandBigFall);
+        // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
+        m_sndPlayerLandSmallFall->stop();
+        m_sndPlayerLandBigFall->stop();
+        m_sndPlayerDamage->stop();
+        m_sndFallYell->stop();
+
+        getConsole().EOLn("Player::%s()", __func__);
+
+        if (fFallHeight >= 1.f)
+        {
+            m_audio.getAudioEngineCore().play(*m_sndPlayerLandBigFall);
+        }
+        else
+        {
+            m_audio.getAudioEngineCore().play(*m_sndPlayerLandSmallFall);
+        }
+
+        if (bDamageTaken && !bDied)
+        {
+            // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
+            m_audio.getAudioEngineCore().play(*m_sndPlayerDamage);
+        }
     }
-    else
+    else if (m_network.isServer())
     {
-        m_audio.getAudioEngineCore().play(*m_sndPlayerLandSmallFall);
-    }
-
-    if (bDamageTaken && !bDied)
-    {
-        // no need to play this in case of dieing because die sound is played anyway on separate path
-        m_audio.getAudioEngineCore().play(*m_sndPlayerDamage);
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            getServerSideConnectionHandle(),
+            PlayerEventId::Landed,
+            fFallHeight,
+            bDamageTaken,
+            bDied);
+        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
     }
 }
 

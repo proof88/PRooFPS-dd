@@ -65,6 +65,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
+        // TODO: other sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
         m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
         xhair.hide();
     }

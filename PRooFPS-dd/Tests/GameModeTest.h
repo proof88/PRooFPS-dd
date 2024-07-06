@@ -82,9 +82,15 @@ protected:
 
     virtual bool setUp() override
     {
-        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        bool b = assertTrue(m_engine && m_engine->isInitialized(), "engine inited");
 
-        return m_network.initialize();
+        if (b)
+        {
+            m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+            b &= assertTrue(m_network.initialize(), "network inited");
+        }
+
+        return b;
     }
 
     virtual void TearDown() override
@@ -236,22 +242,22 @@ private:
             b &= assertFalse(gm->renamePlayer("alma", "gg"), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertFalse(gm->renamePlayer("", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 2;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 1;
             player2.getDeaths() = 0;
 
-            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
 
-            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
@@ -447,22 +453,22 @@ private:
 
             dm->setFragLimit(11);
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 0;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 0;
             player2.getDeaths() = 0;
 
-            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
 
-            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
@@ -510,22 +516,22 @@ private:
 
             dm->setFragLimit(11);
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
 
-            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
 
-            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
@@ -573,22 +579,22 @@ private:
 
             dm->setFragLimit(11);
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
 
-            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player player3(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
 
-            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            proofps_dd::Player player4(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
@@ -634,12 +640,12 @@ private:
 
         dm->setFragLimit(11);
 
-        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
         player1.getFrags() = 10;
         player1.getDeaths() = 0;
 
-        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Apple");
         player2.getFrags() = 5;
         player2.getDeaths() = 2;
@@ -714,17 +720,17 @@ private:
 
             dm->setFragLimit(11);
 
-            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
 
-            proofps_dd::Player playerApple(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player playerApple(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             playerApple.setName("Apple");
             playerApple.getFrags() = 5;
             playerApple.getDeaths() = 2;
 
-            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -816,7 +822,7 @@ private:
 
             dm->setFragLimit(10);
 
-            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
@@ -835,7 +841,7 @@ private:
 
             b &= assertTrue(dm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -875,7 +881,7 @@ private:
 
             dm->setFragLimit(10);
 
-            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player playerAdam(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
@@ -887,7 +893,7 @@ private:
 
             b &= assertTrue(dm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            proofps_dd::Player playerJoe(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -939,12 +945,12 @@ private:
             dm->setTimeLimitSecs(25u);
             dm->setFragLimit(15u);
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -1043,12 +1049,12 @@ private:
             dm->setTimeLimitSecs(25u);
             dm->setFragLimit(15u);
 
-            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
 
-            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -1231,12 +1237,12 @@ private:
             b &= assertFalse(true, "tx msg count");
         }
 
-        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
 
-        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Adam");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
@@ -1285,12 +1291,12 @@ private:
             return assertFalse(true, "testInitDeathmatch fail");
         }
 
-        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        proofps_dd::Player player1(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
 
-        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        proofps_dd::Player player2(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Apple");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;

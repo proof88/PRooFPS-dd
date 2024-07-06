@@ -1285,7 +1285,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     const auto insertRes = m_mapPlayers.insert(
         {
             connHandleServerSide,
-            Player(getAudio(), getConfigProfiles(), getBullets(), getPure(), connHandleServerSide, msg.m_szIpAddress)
+            Player(getAudio(), getConfigProfiles(), getBullets(), getPure(), getNetwork(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)
     {
