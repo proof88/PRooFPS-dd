@@ -278,7 +278,8 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndWpnNew;
         static SoLoud::Wav* m_sndMedkit;
         static SoLoud::Wav* m_sndJumppad;
-        static SoLoud::Wav* m_sndFallYell;
+        static SoLoud::Wav* m_sndFallYell_1;
+        static SoLoud::Wav* m_sndFallYell_2;
         static SoLoud::handle m_handleFallYell;
         static SoLoud::Wav* m_sndPlayerLandSmallFall;
         static SoLoud::Wav* m_sndPlayerLandBigFall;

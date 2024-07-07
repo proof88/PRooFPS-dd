@@ -92,7 +92,8 @@ proofps_dd::Player::Player(
         m_sndWpnNew = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
         m_sndJumppad = new SoLoud::Wav();
-        m_sndFallYell = new SoLoud::Wav();
+        m_sndFallYell_1 = new SoLoud::Wav();
+        m_sndFallYell_2 = new SoLoud::Wav();
         m_sndPlayerLandSmallFall = new SoLoud::Wav();
         m_sndPlayerLandBigFall = new SoLoud::Wav();
         m_sndPlayerDamage = new SoLoud::Wav();
@@ -104,7 +105,8 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
         m_audio.loadSound(*m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
-        m_audio.loadSound(*m_sndFallYell, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
+        m_audio.loadSound(*m_sndFallYell_1, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
+        m_audio.loadSound(*m_sndFallYell_2, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-wilhelm-scream.wav");
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
         m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
         m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
@@ -444,8 +446,10 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     m_timeDied = std::chrono::steady_clock::now();
     if (bMe)
     {
-        assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
-        m_sndFallYell->stop();
+        assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
+        assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
+        m_sndFallYell_1->stop();
+        m_sndFallYell_2->stop();
 
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
     }
@@ -1250,7 +1254,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
 
 void proofps_dd::Player::handleFallingFromHigh()
 {
-    assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
 
     //getConsole().EOLn("Player::%s() check", __func__);
 
@@ -1292,8 +1297,13 @@ void proofps_dd::Player::handleFallingFromHigh()
             return;
         }
 
-        //getConsole().EOLn("Player::%s() play", __func__);
-        m_handleFallYell = m_audio.getAudioEngineCore().play(*m_sndFallYell);
+        // for now, everyone is generating random for themselves since this is played for a single player, but in the future
+        // when this will be changed to 3D sound and triggered for all players, server's random choice will need to be accepted!
+        const int iScream = PFL::random(0, 1);
+        //getConsole().EOLn("Player::%s() play scream: %d", __func__, iScream);
+        m_handleFallYell = (iScream == 0) ?
+            m_audio.getAudioEngineCore().play(*m_sndFallYell_1) :
+            m_audio.getAudioEngineCore().play(*m_sndFallYell_2);
     }
     else if (m_network.isServer())
     {
@@ -1313,7 +1323,8 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     assert(m_sndPlayerLandSmallFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerLandBigFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
-    assert(m_sndFallYell);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
 
     m_bFallingHighTriggered = false;
 
@@ -1323,7 +1334,8 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
         m_sndPlayerLandSmallFall->stop();
         m_sndPlayerLandBigFall->stop();
         m_sndPlayerDamage->stop();
-        m_sndFallYell->stop();
+        m_sndFallYell_1->stop();
+        m_sndFallYell_2->stop();
 
         //getConsole().EOLn("Player::%s() playing sound", __func__);
 
@@ -1458,7 +1470,8 @@ SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
-SoLoud::Wav* proofps_dd::Player::m_sndFallYell = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndFallYell_1 = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndFallYell_2 = nullptr;
 SoLoud::handle proofps_dd::Player::m_handleFallYell = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
