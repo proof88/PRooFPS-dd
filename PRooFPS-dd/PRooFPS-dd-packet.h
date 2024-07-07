@@ -91,6 +91,7 @@ namespace proofps_dd
             const unsigned int& nFragLimit,
             const unsigned int& nTimeLimitSecs,
             const unsigned int& nTimeRemainingMillisecs,
+            const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSecs)
         {
@@ -119,6 +120,8 @@ namespace proofps_dd
             msgServerInfo.m_nTimeLimitSecs = nTimeLimitSecs;
             msgServerInfo.m_nTimeRemainingMillisecs = nTimeRemainingMillisecs;
 
+            msgServerInfo.m_nFallDamageMultiplier = nFallDamageMultiplier;
+
             msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
             msgServerInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
 
@@ -134,6 +137,8 @@ namespace proofps_dd
         unsigned int m_nFragLimit;
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nTimeRemainingMillisecs;
+
+        int m_nFallDamageMultiplier;
 
         unsigned int m_nRespawnTimeSecs;
         unsigned int m_nRespawnInvulnerabilityTimeSecs;

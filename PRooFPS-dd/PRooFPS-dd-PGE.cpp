@@ -330,6 +330,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 // the main loop itself would be able to detect exiting from the menu and invoke stuff only once!
                 serverSetAllowStrafeMidAir(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool());
                 serverSetAllowStrafeMidAirFull(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool());
+                serverSetFallDamageMultiplier(m_config.getFallDamageMultiplier());
                 serverUpdateWeapons(*m_gameMode);
             }
 

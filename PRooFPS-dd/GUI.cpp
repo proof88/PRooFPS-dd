@@ -872,6 +872,24 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         }
         ImGui::EndGroup();
 
+        PGEcfgVariable& cvarSvFallDamageMultiplier = m_pPge->getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvFallDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvFallDamageMultiplier, cvarSvFallDamageMultiplier);
+        ImGui::TextUnformatted("Fall Damage Multiplier:");
+        ImGui::SameLine();
+        int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
+        ImGui::PushItemWidth(70);
+        if (ImGui::SliderInt(
+            "##sliderSvallDamageMultiplier",
+            &nSvFallDamageMultiplier,
+            0, 10, "%d",
+            ImGuiSliderFlags_AlwaysClamp))
+        {
+            cvarSvFallDamageMultiplier.Set(nSvFallDamageMultiplier);
+        }
+        ImGui::PopItemWidth();
+
         ImGui::BeginGroup();
         {
             PGEcfgVariable& cvarSvAllowStrafeMidAir = m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR];
@@ -2069,6 +2087,10 @@ void proofps_dd::GUI::drawGameServerConfig()
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
+    fThisRowY += fDefaultFontSizePixels;
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("Fall Damage Multiplier: ") + std::to_string(m_pConfig->getServerInfo().m_nFallDamageMultiplier) + "x");
     fThisRowY += fDefaultFontSizePixels;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,

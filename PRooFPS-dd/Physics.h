@@ -80,6 +80,7 @@ namespace proofps_dd
         
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
+        void serverSetFallDamageMultiplier(int n);
         void serverGravity(
             XHair& xhair,
             const unsigned int& nPhysicsRate,
@@ -114,6 +115,7 @@ namespace proofps_dd
         proofps_dd::Sounds& m_sounds;
         bool m_bAllowStrafeMidAir;
         bool m_bAllowStrafeMidAirFull;
+        int m_nFallDamageMultiplier;
 
     }; // class Physics
 

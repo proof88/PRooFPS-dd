@@ -235,6 +235,18 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Client update rate in config, forcing to Tickrate: %u Hz", m_nClientUpdateRate);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER].getAsString().empty())
+    {
+        m_nFallDamageMultiplier = m_pge.getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER].getAsInt();
+        getConsole().OLn("Fall Damage Multiplier from config: %d", m_nFallDamageMultiplier);
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER].Set(SV_FALL_DAMAGE_MULTIPLIER_DEF);
+        m_nFallDamageMultiplier = SV_FALL_DAMAGE_MULTIPLIER_DEF;
+        getConsole().OLn("Missing Fall Damage Multiplier in config, forcing default: %d", m_nFallDamageMultiplier);
+    }
+
     const char* const szCVarReconnectDelay = m_pge.getNetwork().isServer() ? CVAR_SV_RECONNECT_DELAY : CVAR_CL_RECONNECT_DELAY;
 
     if (!m_pge.getConfigProfiles().getVars()[szCVarReconnectDelay].getAsString().empty())
@@ -367,6 +379,11 @@ const bool& proofps_dd::Config::getCameraRolling() const
     return m_bCamRolling;
 }
 
+const int& proofps_dd::Config::getFallDamageMultiplier() const
+{
+    return m_nFallDamageMultiplier;
+}
+
 const unsigned int& proofps_dd::Config::getPlayerRespawnDelaySeconds() const
 {
     return m_nPlayerRespawnDelaySecs;
@@ -391,6 +408,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 
     m_bServerInfoReceived = true;
     m_serverInfo = msgServerInfo;
+    m_nFallDamageMultiplier = m_serverInfo.m_nFallDamageMultiplier;
     m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
     m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
 
@@ -420,6 +438,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
     getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
     getConsole().OLn("nTimeRemainingMsecs   : %u ms",  m_serverInfo.m_nTimeRemainingMillisecs);
+    getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     getConsole().OLnOO("");
@@ -437,6 +456,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     const GameModeType& iGameModeType,
     const unsigned int& nFragLimit,
     const unsigned int& nTimeLimitSecs,
+    const int& nFallDamageMultiplier,
     const unsigned int& nRespawnTimeSecs,
     const unsigned int& nRespawnInvulnerabilityTimeSecs)
 {
@@ -448,6 +468,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_iGameModeType = iGameModeType;
     m_serverInfo.m_nFragLimit = nFragLimit;
     m_serverInfo.m_nTimeLimitSecs = nTimeLimitSecs;
+
+    m_serverInfo.m_nFallDamageMultiplier = nFallDamageMultiplier;
 
     m_serverInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
     m_serverInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
@@ -463,6 +485,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
     getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
     getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     getConsole().OLnOO("");

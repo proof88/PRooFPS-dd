@@ -32,7 +32,8 @@ proofps_dd::Physics::Physics(
     m_maps(maps),
     m_sounds(sounds),
     m_bAllowStrafeMidAir(true),
-    m_bAllowStrafeMidAirFull(false)
+    m_bAllowStrafeMidAirFull(false),
+    m_nFallDamageMultiplier(0)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -238,6 +239,11 @@ void proofps_dd::Physics::serverSetAllowStrafeMidAir(bool bAllow)
 void proofps_dd::Physics::serverSetAllowStrafeMidAirFull(bool bAllow)
 {
     m_bAllowStrafeMidAirFull = bAllow;
+}
+
+void proofps_dd::Physics::serverSetFallDamageMultiplier(int n)
+{
+    m_nFallDamageMultiplier = n;
 }
 
 void proofps_dd::Physics::serverGravity(
@@ -742,9 +748,10 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         {
             //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
             fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-            if (fFallHeight > 5.f)
+            static constexpr float fFallDamageFromHeight = 3.f;
+            if (fFallHeight > fFallDamageFromHeight)
             {
-                nDamage = static_cast<int>(std::lroundf((fFallHeight - 5.f) * 10));
+                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
                 player.doDamage(nDamage);
                 if (std::as_const(player).getHealth() == 0)
                 {

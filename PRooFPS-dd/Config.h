@@ -62,6 +62,9 @@ namespace proofps_dd
 
     static constexpr unsigned int GAME_NETWORK_RECONNECT_SECONDS = 2;
 
+    static constexpr char* CVAR_SV_FALL_DAMAGE_MULTIPLIER = "sv_fall_damage_multiplier";
+    static constexpr int   SV_FALL_DAMAGE_MULTIPLIER_DEF = 10;
+
     static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
     static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
 
@@ -96,6 +99,8 @@ namespace proofps_dd
         const bool& getCameraTilting() const;
         const bool& getCameraRolling() const;
 
+        const int& getFallDamageMultiplier() const;
+
         const unsigned int& getPlayerRespawnDelaySeconds() const;
         const unsigned int& getPlayerRespawnInvulnerabilityDelaySeconds() const;
 
@@ -111,6 +116,7 @@ namespace proofps_dd
             const GameModeType& iGameModeType,
             const unsigned int& nFragLimit,
             const unsigned int& nTimeLimitSecs,
+            const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSec);
 
@@ -135,6 +141,8 @@ namespace proofps_dd
         unsigned int m_nSecondsReconnectDelay = GAME_NETWORK_RECONNECT_SECONDS;
 
         float m_fSomersaultMidAirJumpForceMultiplier /* initialization postponed to .cpp ctor so I dont need to include Player.h here */;
+
+        int m_nFallDamageMultiplier = SV_FALL_DAMAGE_MULTIPLIER_DEF;
 
         bool m_bCamFollowsXHair = true;
         bool m_bCamTilting = true;

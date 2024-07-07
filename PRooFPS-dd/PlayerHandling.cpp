@@ -495,6 +495,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 gameMode.getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
+                config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds());
             
@@ -521,6 +522,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
                 pDeathMatchMode->getTimeRemainingMillisecs(),
+                config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds()))
             {
@@ -655,6 +657,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
                 pDeathMatchMode->getTimeRemainingMillisecs(),
+                config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds()))
             {
