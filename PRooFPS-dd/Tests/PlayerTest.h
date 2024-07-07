@@ -96,6 +96,7 @@ protected:
         AddSubTest("test_handle_landed_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_client_instance);
         AddSubTest("test_handle_take_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_server_instance);
         AddSubTest("test_handle_take_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_client_instance);
+        AddSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
     }
 
     virtual bool setUp() override
@@ -2134,6 +2135,17 @@ private:
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         return b;
+    }
+
+    bool test_handle_take_weapon_item()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
+
+        // for now we dont test anything, just invoke and expect not to crash
+        playerServer.handleTakeWeaponItem(true);
+
+        return true;
     }
 
 };

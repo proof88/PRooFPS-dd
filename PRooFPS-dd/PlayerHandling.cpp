@@ -901,7 +901,7 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
 
 bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgPlayerEventFromServer& msg)
 {
-    getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
+    //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)

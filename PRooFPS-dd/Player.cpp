@@ -1199,6 +1199,10 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         }
 
         item.take();
+        if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+        {
+            handleTakeWeaponItem(!pWpnBecomingAvailable->isAvailable());
+        }
         // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
         // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
         if (pWpnBecomingAvailable->isAvailable())
@@ -1210,9 +1214,6 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, already available, just inc unmag to: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
-            assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
-            m_sndWpnAmmo->stop();
-            m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
         }
         else
         {
@@ -1220,9 +1221,6 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
-            assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
-            m_sndWpnNew->stop();
-            m_audio.getAudioEngineCore().play(*m_sndWpnNew);
         }
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
         
@@ -1388,6 +1386,26 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             PlayerEventId::ItemTake,
             static_cast<int>(eMapItemType));
         m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+    }
+}
+
+void proofps_dd::Player::handleTakeWeaponItem(const bool& bJustBecameAvailable)
+{
+    // both server and client execute this function, so be careful with conditions here
+
+    //getConsole().EOLn("Player::%s(): play sound", __func__);
+
+    if (bJustBecameAvailable)
+    {
+        assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
+        m_sndWpnNew->stop();
+        m_audio.getAudioEngineCore().play(*m_sndWpnNew);
+    }
+    else
+    {
+        assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
+        m_sndWpnAmmo->stop();
+        m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
     }
 }
 

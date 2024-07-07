@@ -838,6 +838,10 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
             msg.m_nUnmagBulletCount);
     }
 
+    // server invokes handleTakeWeaponItem() in Player::takeItem()
+    // we can be sure that this update is for the current client and not about other players, so we can play sound too
+    player.handleTakeWeaponItem(!wpn->isAvailable() && msg.m_bAvailable);
+
     wpn->SetAvailable(msg.m_bAvailable);
     wpn->SetMagBulletCount(msg.m_nMagBulletCount);
     wpn->SetUnmagBulletCount(msg.m_nUnmagBulletCount);
