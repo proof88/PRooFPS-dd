@@ -929,6 +929,9 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
     case PlayerEventId::ItemTake:
         player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
         break;
+    case PlayerEventId::JumppadActivated:
+        player.handleJumppadActivated();
+        break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
         assert(false);  // crash in debug

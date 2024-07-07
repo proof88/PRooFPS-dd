@@ -76,8 +76,6 @@ bool proofps_dd::Maps::initialize()
         bInitialized = m_mapcycle.initialize();
     }
 
-    m_audio.loadSound(m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
-
     if (!bInitialized)
     {
         shutdown();
@@ -749,17 +747,6 @@ void proofps_dd::Maps::update(const float& fps)
             static_cast<TPureUByte>(std::llroundl(fDecorAlpha))
         );
     }
-}
-
-void proofps_dd::Maps::handleJumppadTriggered(const size_t& index)
-{
-    if (index >= m_nValidJumppadVarsCount)
-    {
-        throw std::runtime_error("getJumppadForceFactors(): Invalid jumppad index: " + std::to_string(index));
-    }
-
-    m_sndJumppad.stop();
-    m_audio.getAudioEngineCore().play(m_sndJumppad);
 }
 
 bool proofps_dd::Maps::handleMapItemUpdateFromServer(

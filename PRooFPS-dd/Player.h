@@ -32,7 +32,8 @@ namespace proofps_dd
     {
         FallingFromHigh = 0,
         Landed,
-        ItemTake
+        ItemTake,
+        JumppadActivated
     };
 
     class Player
@@ -252,6 +253,7 @@ namespace proofps_dd
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(const bool& bJustBecameAvailable);
+        void handleJumppadActivated();
 
     private:
 
@@ -275,6 +277,7 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndWpnAmmo;
         static SoLoud::Wav* m_sndWpnNew;
         static SoLoud::Wav* m_sndMedkit;
+        static SoLoud::Wav* m_sndJumppad;
         static SoLoud::Wav* m_sndFallYell;
         static SoLoud::handle m_handleFallYell;
         static SoLoud::Wav* m_sndPlayerLandSmallFall;

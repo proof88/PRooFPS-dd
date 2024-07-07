@@ -91,6 +91,7 @@ proofps_dd::Player::Player(
         m_sndWpnAmmo = new SoLoud::Wav();
         m_sndWpnNew = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
+        m_sndJumppad = new SoLoud::Wav();
         m_sndFallYell = new SoLoud::Wav();
         m_sndPlayerLandSmallFall = new SoLoud::Wav();
         m_sndPlayerLandBigFall = new SoLoud::Wav();
@@ -102,6 +103,7 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
+        m_audio.loadSound(*m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
         m_audio.loadSound(*m_sndFallYell, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
         m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
@@ -1409,6 +1411,30 @@ void proofps_dd::Player::handleTakeWeaponItem(const bool& bJustBecameAvailable)
     }
 }
 
+void proofps_dd::Player::handleJumppadActivated()
+{
+    assert(m_sndJumppad);  // otherwise new operator would had thrown already in ctor
+
+    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    {
+        // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
+
+        //getConsole().EOLn("PRooFPSddPGE::%s(): play sound", __func__);
+
+        m_sndJumppad->stop();
+        m_audio.getAudioEngineCore().play(*m_sndJumppad);
+    }
+    else if (m_network.isServer())
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            getServerSideConnectionHandle(),
+            PlayerEventId::JumppadActivated);
+        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+    }
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -1431,6 +1457,7 @@ uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell = nullptr;
 SoLoud::handle proofps_dd::Player::m_handleFallYell = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
