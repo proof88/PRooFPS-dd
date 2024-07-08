@@ -500,9 +500,19 @@ bool& proofps_dd::Player::getRespawnFlag()
 
 void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
+    //getConsole().EOLn(
+    //    "PRooFPSddPGE::%s(): jumpforce: %f, %f, %f, gravity: %f",
+    //    __func__,
+    //    getJumpForce().getX(),
+    //    getJumpForce().getY(),
+    //    getJumpForce().getZ(),
+    //    getGravity());
+
     doStandupShared();
     getWantToStandup() = true;
     getImpactForce().SetZero();
+    getJumpForce().Set(0.f, 0.f, 0.f);
+    setGravity(0.f);
     m_prevActualStrafe = Strafe::NONE;
 
     for (auto pWpn : m_wpnMgr.getWeapons())

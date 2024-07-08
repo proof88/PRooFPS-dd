@@ -774,6 +774,8 @@ private:
         //  # tunnel where only crouching would be available is considered as map design error."
         player.getCrouchStateCurrent() = true;  // respawn event is allowed to set it to false
         player.getImpactForce().Set(1,2,3);
+        player.getJumpForce().Set(1,2,3);
+        player.setGravity(-15);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.setStrafe(proofps_dd::Strafe::LEFT); // we are doing this so we can test if prevActualStrafe is also reset!
 
@@ -787,6 +789,8 @@ private:
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
             assertTrue(player.getWantToStandup(), "wantstandup") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
+            assertEquals(PureVector(), player.getJumpForce(), "jump force") &
+            assertEquals(0.f, player.getGravity(), "gravity") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe")) != 0;
     }
 

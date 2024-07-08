@@ -63,7 +63,7 @@ namespace proofps_dd
     static constexpr unsigned int GAME_NETWORK_RECONNECT_SECONDS = 2;
 
     static constexpr char* CVAR_SV_FALL_DAMAGE_MULTIPLIER = "sv_fall_damage_multiplier";
-    static constexpr int   SV_FALL_DAMAGE_MULTIPLIER_DEF = 10;
+    static constexpr int   SV_FALL_DAMAGE_MULTIPLIER_DEF = 3;
 
     static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR = "sv_allow_strafe_mid_air";
     static constexpr char* CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL = "sv_allow_strafe_mid_air_full";
