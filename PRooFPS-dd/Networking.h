@@ -40,7 +40,7 @@ namespace proofps_dd
         bool isMyConnection(const pge_network::PgeNetworkConnectionHandle& connHandleServerSide) const;
         const pge_network::PgeNetworkConnectionHandle& getMyServerSideConnectionHandle() const;
 
-        bool reinitialize();
+        bool reinitializeNetworking();
         bool isServer() const;
 
     protected:

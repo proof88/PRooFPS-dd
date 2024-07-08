@@ -55,11 +55,25 @@ bool proofps_dd::Networking::isMyConnection(const pge_network::PgeNetworkConnect
     return m_nServerSideConnectionHandle == connHandleServerSide;
 }
 
-bool proofps_dd::Networking::reinitialize()
+bool proofps_dd::Networking::reinitializeNetworking()
 {
     bool bRet = m_pge.getNetwork().reinitialize();
     if (bRet)
     {
+        // We tell the names of our app messages to the network engine so it can properly log message stats with message names
+        if (m_pge.getNetwork().getServerClientInstance()->getMsgAppId2StringMap().empty())
+        {
+            // never need to clear the map since its content should not change in between server and client instance switches
+            for (const auto& msgAppId2StringPair : MapMsgAppId2String)
+            {
+                m_pge.getNetwork().getServerClientInstance()->getMsgAppId2StringMap().insert(
+                    { static_cast<pge_network::MsgApp::TMsgId>(msgAppId2StringPair.msgId),
+                      std::string(msgAppId2StringPair.zstring) }
+                );
+            }
+        }
+
+        // however allowlisting needs to be invoked always since different messages are allowed for server and clients
         allowListAppMessages();
     }
     return bRet;

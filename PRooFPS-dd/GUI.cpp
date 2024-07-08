@@ -1035,7 +1035,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to save mapcycle!");
             }
-            if (!m_pNetworking->isServer() && !m_pNetworking->reinitialize())
+            if (!m_pNetworking->isServer() && !m_pNetworking->reinitializeNetworking())
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from client to server mode!");
             }
@@ -1137,7 +1137,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to save current config profile!");
             }
-            if (m_pNetworking->isServer() && !m_pNetworking->reinitialize())
+            if (m_pNetworking->isServer() && !m_pNetworking->reinitializeNetworking())
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from server to client mode!");
             }

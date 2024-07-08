@@ -746,7 +746,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         // handle fall damage
         if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
         {
-            const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
             fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
             static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
             if (fFallHeight > fFallDamageFromHeight)
@@ -760,10 +760,10 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
                 }
             }
 
-            getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
-                static_cast<int>(nFallDurationMillisecs),
-                fFallHeight,
-                nDamage);
+            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
+            //    static_cast<int>(nFallDurationMillisecs),
+            //    fFallHeight,
+            //    nDamage);
         }
 
         if (bOriginalFalling)

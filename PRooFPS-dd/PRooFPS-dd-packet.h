@@ -47,7 +47,7 @@ namespace proofps_dd
         const char* const zstring;
     };
 
-    const auto MapMsgAppId2String = PFL::std_array_of<PRooFPSappMsgId2ZStringPair>
+    constexpr auto MapMsgAppId2String = PFL::std_array_of<PRooFPSappMsgId2ZStringPair>
     (
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::ServerInfoFromServer,        "MsgServerInfoFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::GameSessionStateFromServer,  "MsgGameSessionStateFromServer" },

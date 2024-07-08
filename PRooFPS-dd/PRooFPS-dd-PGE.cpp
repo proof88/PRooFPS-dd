@@ -207,18 +207,9 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         return false;
     }
 
-    // We tell the names of our app messages to the network engine so it can properly log message stats with message names
-    for (const auto& msgAppId2StringPair : MapMsgAppId2String)
-    {
-        getNetwork().getServerClientInstance()->getMsgAppId2StringMap().insert(
-            { static_cast<pge_network::MsgApp::TMsgId>(msgAppId2StringPair.msgId),
-              std::string(msgAppId2StringPair.zstring) }
-        );
-    }
-
     // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
 
-    allowListAppMessages();
+    reinitializeNetworking();
 
     if (getNetwork().isServer() && !getConfigProfiles().getVars()[proofps_dd::GUI::CVAR_GUI_MAINMENU].getAsBool())
     {
