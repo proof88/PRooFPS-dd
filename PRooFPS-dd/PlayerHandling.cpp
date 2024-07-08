@@ -384,7 +384,10 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
         m_gui.hideRespawnTimer();
         m_gui.hideGameObjectives();
+        assert(m_gui.getDeathKillEvents());
+        assert(m_gui.getItemPickupEvents());
         m_gui.getDeathKillEvents()->clear();
+        m_gui.getItemPickupEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }

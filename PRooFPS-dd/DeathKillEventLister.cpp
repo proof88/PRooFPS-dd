@@ -23,9 +23,8 @@ CConsole& proofps_dd::DeathKillEventLister::getConsole() const
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
-proofps_dd::DeathKillEventLister::DeathKillEventLister(
-    PR00FsUltimateRenderingEngine& gfx) :
-    EventLister(gfx, 5 /* time limit secs */, 8 /* event count limit */)
+proofps_dd::DeathKillEventLister::DeathKillEventLister() :
+    EventLister(5 /* time limit secs */, 8 /* event count limit */)
 {
 
 }

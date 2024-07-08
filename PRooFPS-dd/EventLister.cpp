@@ -24,10 +24,8 @@ CConsole& proofps_dd::EventLister::getConsole() const
 }
 
 proofps_dd::EventLister::EventLister(
-    PR00FsUltimateRenderingEngine& gfx,
     const unsigned int& nEventTimeLimitSecs,
     const size_t& nEventCountLimit) :
-    m_gfx(gfx),
     m_nEventTimeLimitSecs(nEventTimeLimitSecs),
     m_nEventCountLimit(nEventCountLimit)
 {

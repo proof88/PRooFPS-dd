@@ -24,7 +24,7 @@ namespace proofps_dd
 
         CConsole& getConsole() const;
 
-        DeathKillEventLister(PR00FsUltimateRenderingEngine& gfx);
+        DeathKillEventLister();
 
         void addDeathKillEvent(const std::string& sKiller, const std::string& sKilled);
 

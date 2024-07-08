@@ -21,11 +21,9 @@ class EventListerTest :
 {
 public:
 
-    EventListerTest(PGEcfgProfiles& cfgProfiles) :
-        UnitTest(__FILE__),
-        m_cfgProfiles(cfgProfiles)
+    EventListerTest() :
+        UnitTest(__FILE__)
     {
-        engine = NULL;
     }
 
     EventListerTest(const EventListerTest&) = delete;
@@ -39,11 +37,6 @@ protected:
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), true);
 
-        PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(m_cfgProfiles);
-
-        engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
-        engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
-
         AddSubTest("test_initial_values", (PFNUNITSUBTEST)&EventListerTest::test_initial_values);
         AddSubTest("test_show_hide", (PFNUNITSUBTEST)&EventListerTest::test_show_hide);
         AddSubTest("test_add_event", (PFNUNITSUBTEST)&EventListerTest::test_add_event);
@@ -52,23 +45,8 @@ protected:
 
     }
 
-    virtual bool setUp() override
-    {
-        return assertTrue(engine && engine->isInitialized());
-    }
-
-    virtual void TearDown() override
-    {
-    }
-
     virtual void Finalize() override
     {
-        if (engine)
-        {
-            engine->shutdown();
-            engine = NULL;
-        }
-
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), false);
     }
 
@@ -76,9 +54,6 @@ private:
 
     static constexpr size_t nMaxEventCount = 3u;
     static constexpr unsigned int nMaxEventTimeSecs = 2u;
-
-    PGEcfgProfiles& m_cfgProfiles;
-    PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
 
@@ -108,7 +83,7 @@ private:
 
     bool test_initial_values()
     {
-        proofps_dd::EventLister events(*engine, nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         bool b = (assertTrue(events.getEvents().empty(), "empty") &
             assertFalse(events.visible(), "visible") &
@@ -120,7 +95,7 @@ private:
 
     bool test_show_hide()
     {
-        proofps_dd::EventLister events(*engine, nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         bool b = assertFalse(events.visible(), "visible 1");
 
@@ -138,7 +113,7 @@ private:
 
     bool test_add_event()
     {
-        proofps_dd::EventLister events(*engine, nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         const std::vector<std::string> vecExpectedStrings =
         { {"event 3"},
@@ -166,7 +141,7 @@ private:
 
     bool test_clear()
     {
-        proofps_dd::EventLister events(*engine, nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         events.addEvent("event 1");
         events.addEvent("event 2");
@@ -178,7 +153,7 @@ private:
 
     bool test_update()
     {
-        proofps_dd::EventLister events(*engine, nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         const std::vector<std::string> vecExpectedStrings1 =
         { {"event 3"},

@@ -13,8 +13,6 @@
 
 #include "CConsole.h"
 
-#include "PGE.h"
-
 #include "Consts.h"
 
 namespace proofps_dd
@@ -35,7 +33,6 @@ namespace proofps_dd
         CConsole& getConsole() const;
 
         EventLister(
-            PR00FsUltimateRenderingEngine& gfx,
             const unsigned int& nEventTimeLimitSecs,
             const size_t& nEventCountLimit);
 
@@ -62,7 +59,6 @@ namespace proofps_dd
 
     private:
 
-        PR00FsUltimateRenderingEngine& m_gfx;
         bool m_bVisible = false;
         std::deque<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>> m_qEvents;
         unsigned int m_nEventTimeLimitSecs;

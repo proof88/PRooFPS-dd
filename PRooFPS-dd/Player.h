@@ -22,6 +22,7 @@
 
 #include "Config.h"
 #include "Durations.h"
+#include "EventLister.h"
 #include "PRooFPS-dd-packet.h"
 #include "Strafe.h"
 
@@ -112,6 +113,7 @@ namespace proofps_dd
             pge_audio::PgeAudio& audio,
             PGEcfgProfiles& cfgProfiles,
             std::list<Bullet>& bullets,
+            EventLister& eventsItemPickup,
             PR00FsUltimateRenderingEngine& gfx,
             pge_network::PgeINetwork& network,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
@@ -339,6 +341,7 @@ namespace proofps_dd
         pge_audio::PgeAudio& m_audio;
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
+        EventLister& m_eventsItemPickup;
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeINetwork& m_network;
 

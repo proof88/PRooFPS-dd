@@ -75,7 +75,8 @@ void proofps_dd::GUI::initialize()
 
     m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
 
-    m_pEventsDeathKill = new DeathKillEventLister(m_pPge->getPure());
+    m_pEventsDeathKill = new DeathKillEventLister();
+    m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 5 /* event count limit */);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -213,6 +214,18 @@ void proofps_dd::GUI::shutdown()
         m_pObjLoadingScreenLogoImg = nullptr;
     }
 
+    if (m_pEventsDeathKill)
+    {
+        delete m_pEventsDeathKill;
+        m_pEventsDeathKill = nullptr;
+    }
+
+    if (m_pEventsItemPickup)
+    {
+        delete m_pEventsItemPickup;
+        m_pEventsItemPickup = nullptr;
+    }
+
     if (m_pXHair)
     {
         delete m_pXHair;
@@ -319,6 +332,11 @@ proofps_dd::DeathKillEventLister* proofps_dd::GUI::getDeathKillEvents()
     return m_pEventsDeathKill;
 }
 
+proofps_dd::EventLister* proofps_dd::GUI::getItemPickupEvents()
+{
+    return m_pEventsItemPickup;
+}
+
 void proofps_dd::GUI::showGameObjectives()
 {
     m_gameInfoPageCurrent = GameInfoPage::FragTable;
@@ -408,6 +426,7 @@ bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
+proofps_dd::EventLister* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -1400,6 +1419,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
         drawRespawnTimer();
         updateXHair();
         updateDeathKillEvents();
+        updateItemPickupEvents();
 
         assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
         m_pMinimap->draw();
@@ -1581,6 +1601,23 @@ void proofps_dd::GUI::updateDeathKillEvents()
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY(50);
     for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
+    {
+        drawTextHighlighted(
+            getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+            ImGui::GetCursorPos().y,
+            it->second);
+    }
+}
+
+void proofps_dd::GUI::updateItemPickupEvents()
+{
+    assert(m_pEventsItemPickup);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsItemPickup->update();
+
+    const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
+    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * fDefaultFontSizePixels + 20);
+    for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
     {
         drawTextHighlighted(
             getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),

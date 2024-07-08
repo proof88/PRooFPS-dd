@@ -29,6 +29,7 @@ public:
         UnitTest(__FILE__),
         m_cfgProfiles(cfgProfiles),
         m_engine(nullptr),
+        m_events(8 /* time limit secs */, 5 /* event count limit */),
         m_network(cfgProfiles)
     {}
 
@@ -103,6 +104,8 @@ protected:
 
     virtual bool setUp() override
     {
+        m_events.clear();
+
         bool b = assertTrue(m_engine && m_engine->isInitialized(), "engine inited");
         
         if (b)
@@ -146,6 +149,7 @@ private:
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* m_engine;
     std::list<Bullet> m_bullets;
+    proofps_dd::EventLister m_events;
     pge_network::PgeNetworkStub m_network;
 
     // ---------------------------------------------------------------------------
@@ -184,7 +188,7 @@ private:
             const auto insertRes = mapPlayers.insert(
                 {
                     connHandle,
-                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
+                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
                 });
             b &= insertRes.second;
             if (!b)
@@ -216,7 +220,7 @@ private:
             const auto insertRes = mapPlayers.insert(
                 {
                     connHandle,
-                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
+                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
                 });
             b &= insertRes.second;
             if (!b)
@@ -251,7 +255,7 @@ private:
             const auto insertRes = mapPlayers.insert(
                 {
                     connHandle,
-                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
+                    proofps_dd::Player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandle, std::string("192.168.1.") + std::to_string(i))
                 });
             b &= insertRes.second;
             if (!b)
@@ -283,7 +287,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, sIpAddr);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, sIpAddr);
         const auto& playerConst = player;
 
         return (assertEquals(connHandleExpected, player.getServerSideConnectionHandle(), "connhandle") &
@@ -356,7 +360,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, sIpAddr);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, sIpAddr);
         player.setName("apple");
         bool b = assertEquals("apple", player.getName(), "apple");
 
@@ -368,7 +372,7 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         const std::string sIpAddr = "192.168.1.12";
 
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, sIpAddr);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, sIpAddr);
         player.setTimeBootedUp();
 
         bool b = true;
@@ -380,7 +384,7 @@ private:
 
     bool test_set_expecting_after_boot_up_delayed_update()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.setExpectingAfterBootUpDelayedUpdate(false);
         bool b = assertFalse(player.isExpectingAfterBootUpDelayedUpdate(), "exp 1");
@@ -394,7 +398,7 @@ private:
     bool test_show()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
@@ -416,7 +420,7 @@ private:
     bool test_hide()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
@@ -437,7 +441,7 @@ private:
     bool test_set_visibility_state()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
@@ -464,7 +468,7 @@ private:
 
     bool test_dirtiness_one_by_one()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         bool b = (assertFalse(player.isDirty(), "dirty 1") &
             assertFalse(player.isNetDirty(), "net dirty 1")) != 0;
@@ -546,7 +550,7 @@ private:
 
     bool test_update_old_frags_and_deaths()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.getFrags() = 2;
         player.getDeaths() = 1;
@@ -570,7 +574,7 @@ private:
 
     bool test_set_just_created_and_expecting_start_pos()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.setJustCreatedAndExpectingStartPos(false);
         bool b = assertFalse(player.isJustCreatedAndExpectingStartPos(), "exp 1");
@@ -583,7 +587,7 @@ private:
 
     bool test_update_old_pos()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const PureVector vecPosOriginal(1.f, 2.f, 3.f);
         const TPureFloat fAngleYOriginal = 90.f;
@@ -617,7 +621,7 @@ private:
 
     bool test_set_health_and_update_old_health()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         const auto& playerConst = player;
 
         player.setHealth(200);
@@ -641,7 +645,7 @@ private:
 
     bool test_do_damage()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         const auto& playerConst = player;
 
         player.doDamage(25);
@@ -663,7 +667,7 @@ private:
     {
         constexpr bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         player.setJumpAllowed(true);
@@ -722,7 +726,7 @@ private:
     {
         constexpr bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
@@ -760,7 +764,7 @@ private:
     {
         const bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
@@ -797,7 +801,7 @@ private:
     bool test_set_invulnerability()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
 
         player.setInvulnerability(false);
 
@@ -819,7 +823,7 @@ private:
         // use loop with 2 cycles for 2 different starting state: standing and crouching.
         for (int i = 0; i < 2; i++)
         {
-            proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+            proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
             player.getPos().set(PureVector(1.f, 2.f, 3.f));
             player.getPos().commit();
@@ -939,7 +943,7 @@ private:
 
     bool test_set_can_fall()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.setCanFall(false);
         bool b = assertFalse(player.canFall(), "can fall 1");
@@ -952,7 +956,7 @@ private:
 
     bool test_gravity()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         bool b = assertTrue(player.isFalling(), "is falling 1");
         
@@ -969,7 +973,7 @@ private:
 
     bool test_set_has_just_started_falling()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         
         player.getPos().set(
             PureVector(0.f, 5.f, 0.f)
@@ -1005,7 +1009,7 @@ private:
 
     bool test_is_in_air()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         // we are on the ground now
         player.setCanFall(false);
@@ -1033,7 +1037,7 @@ private:
     bool test_start_somersault_server_mid_air_when_auto_crouch_is_disabled()
     {
         constexpr bool bJumpInducedSomersault = true;
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(false);
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f);
         
@@ -1183,7 +1187,7 @@ private:
     bool test_start_somersault_server_mid_air_when_auto_crouch_is_enabled()
     {
         constexpr bool bJumpInducedSomersault = true;
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f);
         player.setJumpAllowed(true);
@@ -1355,7 +1359,7 @@ private:
     bool test_start_somersault_server_on_ground()
     {
         constexpr bool bJumpInducedSomersault = false;
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true); // should affect mid-air somersault only
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirJumpForceMultiplier].Set(2.f); // jump forces must NOT change in this test
         player.setJumpAllowed(true);
@@ -1507,7 +1511,7 @@ private:
 
     bool test_step_somersault_angle_server()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         player.setJumpAllowed(true);
 
@@ -1564,7 +1568,7 @@ private:
 
     bool test_set_somersault_client()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         bool b = assertFalse(player.isSomersaulting(), "somersaulting 1");
 
         player.setSomersaultClient(30.f);
@@ -1578,7 +1582,7 @@ private:
 
     bool test_set_run()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggleRun = std::chrono::steady_clock::now();
         player.setRun(false);
@@ -1591,7 +1595,7 @@ private:
 
     bool test_set_strafe()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         std::chrono::time_point<std::chrono::steady_clock> timeBeforeStrafe = std::chrono::steady_clock::now();
         player.setStrafe(proofps_dd::Strafe::LEFT);
@@ -1631,7 +1635,7 @@ private:
 
     bool test_server_do_crouch()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         
         // we are on the ground now
         player.setCanFall(false);
@@ -1661,7 +1665,7 @@ private:
 
     bool test_client_do_crouch()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
         player.doCrouchShared();
@@ -1675,7 +1679,7 @@ private:
 
     bool test_get_proposed_new_pos_y_for_standup()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         // we are crouching on the ground now
         player.setCanFall(false);
@@ -1699,7 +1703,7 @@ private:
 
     bool test_server_do_standup()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         // we are crouching on the ground now
         player.setCanFall(false);
@@ -1736,7 +1740,7 @@ private:
 
     bool test_client_do_standup()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
         player.doCrouchShared();
         const auto pOrigTex = player.getObject3D()->getMaterial().getTexture();
@@ -1752,7 +1756,7 @@ private:
 
     bool test_attack()
     {
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::No)))
         {
             return false;
@@ -1806,7 +1810,7 @@ private:
     bool test_can_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miHealth(*m_engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
 
         bool b = assertFalse(player.canTakeItem(miHealth), "1");
@@ -1820,7 +1824,7 @@ private:
     bool test_can_take_item_weapon()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         const proofps_dd::MapItem miMchgun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const proofps_dd::MapItem miBazooka(*m_engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
@@ -1843,7 +1847,7 @@ private:
     bool test_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
         proofps_dd::MapItem miHealth(*m_engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
         pge_network::PgePacket newPktWpnUpdate;
@@ -1858,7 +1862,7 @@ private:
     bool test_take_item_weapon()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         proofps_dd::MapItem miPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miMchGun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         proofps_dd::MapItem miBazooka(*m_engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
@@ -1946,8 +1950,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -1999,7 +2003,7 @@ private:
             return assertFalse(true, "network reinit as client");
         }
 
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
@@ -2013,8 +2017,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2066,7 +2070,7 @@ private:
             return assertFalse(true, "network reinit as client");
         }
 
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
@@ -2080,8 +2084,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2133,7 +2137,7 @@ private:
             return assertFalse(true, "network reinit as client");
         }
 
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
@@ -2146,7 +2150,7 @@ private:
     bool test_handle_take_weapon_item()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
-        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
 
         // for now we dont test anything, just invoke and expect not to crash
         playerServer.handleTakeWeaponItem(true);
@@ -2158,8 +2162,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
-        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleServer, "192.168.1.11");
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2211,7 +2215,7 @@ private:
             return assertFalse(true, "network reinit as client");
         }
 
-        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)

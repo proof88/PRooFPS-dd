@@ -68,6 +68,7 @@ proofps_dd::Player::Player(
     pge_audio::PgeAudio& audio,
     PGEcfgProfiles& cfgProfiles,
     std::list<Bullet>& bullets,
+    EventLister& eventsItemPickup,
     PR00FsUltimateRenderingEngine& gfx,
     pge_network::PgeINetwork& network,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
@@ -78,6 +79,7 @@ proofps_dd::Player::Player(
     m_wpnMgr(audio, cfgProfiles, gfx, bullets),
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
+    m_eventsItemPickup(eventsItemPickup),
     m_gfx(gfx),
     m_network(network)
 {
@@ -132,6 +134,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_audio(other.m_audio),
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
+    m_eventsItemPickup(other.m_eventsItemPickup),
     m_gfx(other.m_gfx),
     m_network(other.m_network),
     m_vecJumpForce(other.m_vecJumpForce),
@@ -175,6 +178,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     //m_audio = other.m_audio;  // deleted function
     //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
     m_bullets = other.m_bullets;
+    //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
     m_gfx = other.m_gfx;
     m_network = other.m_network;
     m_vecJumpForce = other.m_vecJumpForce;
@@ -1395,6 +1399,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_sndMedkit->stop();
             m_audio.getAudioEngineCore().play(*m_sndMedkit);
+            m_eventsItemPickup.addEvent("Medkit: +" + std::to_string(MapItem::ITEM_HEALTH_HP_INC) + " HP");
             break;
         default:
             getConsole().EOLn(
