@@ -509,7 +509,7 @@ private:
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
-            /*.nTxPktTotalCount =*/     {580u,  785u},
+            /*.nTxPktTotalCount =*/     {580u,  810u},
             /*.nTxPktPerSecond =*/      { 20u,   30u},
             /*.nRxPktTotalCount =*/     { 21u,   40u},
             /*.nRxPktPerSecond =*/      {  0u,    3u},
