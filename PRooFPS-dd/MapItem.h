@@ -26,7 +26,7 @@ namespace proofps_dd
         ITEM_HEALTH
     };
     
-    std::ostream& operator<< (std::ostream& s, const MapItemType& mi);
+    std::ostream& operator<< (std::ostream& s, const MapItemType& eMapItemType);
     
     class MapItem
     {
@@ -34,23 +34,21 @@ namespace proofps_dd
     
         typedef uint32_t MapItemId;
     
-        static const uint32_t ITEM_HEALTH_HP_INC = 20;
-        static const uint32_t ITEM_HEALTH_RESPAWN_SECS = 10;
-    
-        static const uint32_t ITEM_WPN_PISTOL_RESPAWN_SECS = 20;
-    
-        static const uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 20;
-
-        static const uint32_t ITEM_WPN_BAZOOKA_RESPAWN_SECS = 20;
+        static constexpr uint32_t ITEM_HEALTH_HP_INC = 20;
+        static constexpr uint32_t ITEM_HEALTH_RESPAWN_SECS = 10;
+        static constexpr uint32_t ITEM_WPN_PISTOL_RESPAWN_SECS = 20;
+        static constexpr uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 20;
+        static constexpr uint32_t ITEM_WPN_BAZOOKA_RESPAWN_SECS = 20;
     
         static const MapItemId& getGlobalMapItemId();
         static void resetGlobalData();
     
         static uint32_t getItemRespawnTimeSecs(const MapItem& mapItem);
+        static std::string toString(const MapItemType& eMapItemType);
     
         // ---------------------------------------------------------------------------
     
-        MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& itemType, const PureVector& pos);
+        MapItem(PR00FsUltimateRenderingEngine& gfx, const MapItemType& eMapItemType, const PureVector& pos);
         ~MapItem();
 
         MapItem(const MapItem&) = delete;
@@ -63,6 +61,7 @@ namespace proofps_dd
         const PureVector&   getPos() const;
         const PureObject3D& getObject3D() const;
         //PureObject3D&     getObject3D();
+        std::string toString() const;
     
         bool isTaken() const;
         void take();
@@ -84,7 +83,7 @@ namespace proofps_dd
         PR00FsUltimateRenderingEngine&                     m_gfx;
         PureObject3D*                                      m_obj;
         float                                              m_fObjPosOriginalY;     /**< The vertical floating movement is relative to this coord. */
-        MapItemType                                        m_itemType;
+        MapItemType                                        m_eMapItemType;
         bool                                               m_bTaken;
         std::chrono::time_point<std::chrono::steady_clock> m_timeTaken;
         float                                              m_fSinusMotionDegrees;  /**< For iterating the vertical floating movement. */

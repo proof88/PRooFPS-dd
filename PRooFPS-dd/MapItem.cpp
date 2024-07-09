@@ -14,32 +14,16 @@
 // ############################### PUBLIC ################################
 
 
-std::ostream& proofps_dd::operator<< (std::ostream& s, const proofps_dd::MapItemType& mit)
+std::ostream& proofps_dd::operator<< (std::ostream& s, const proofps_dd::MapItemType& eMapItemType)
 {
-    switch (mit)
-    {
-    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
-        return (s << "WpnPistol");
-    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
-        return (s << "WpnMchgun");
-    case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
-        return (s << "WpnBazooka");
-    case proofps_dd::MapItemType::ITEM_HEALTH:
-        return (s << "Health");
-    default:
-        break;
-    }
-    return (s << "Unknown Item");
+    return (s << MapItem::toString(eMapItemType));
 }
 
-const uint32_t proofps_dd::MapItem::ITEM_HEALTH_HP_INC;
-const uint32_t proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS;
-
-const uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
-
-const uint32_t proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
-
-const uint32_t proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS;
+constexpr uint32_t proofps_dd::MapItem::ITEM_HEALTH_HP_INC;
+constexpr uint32_t proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS;
+constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
+constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
+constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS;
 
 const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getGlobalMapItemId()
 {
@@ -73,23 +57,40 @@ uint32_t proofps_dd::MapItem::getItemRespawnTimeSecs(const proofps_dd::MapItem& 
     }
 }
 
-proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_dd::MapItemType& itemType, const PureVector& pos) :
+std::string proofps_dd::MapItem::toString(const proofps_dd::MapItemType& eMapItemType)
+{
+    switch (eMapItemType)
+    {
+    case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
+        return "Pistol";
+    case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
+        return "Machine Gun";
+    case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
+        return "Bazooka";
+    case proofps_dd::MapItemType::ITEM_HEALTH:
+        return "MedKit";
+    default:
+        return "Unknown Item";
+    }
+}
+
+proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_dd::MapItemType& eMapItemType, const PureVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
     m_obj(nullptr),
     m_fObjPosOriginalY(pos.getY()),
-    m_itemType(itemType),
+    m_eMapItemType(eMapItemType),
     m_bTaken(false),
     m_fSinusMotionDegrees(0.f)
 {
-    const auto it = m_mapReferenceObjects.find(itemType);
+    const auto it = m_mapReferenceObjects.find(eMapItemType);
     if (it == m_mapReferenceObjects.end())
     {
         // TODO: throw when createPlane() fails
-        m_mapReferenceObjects[itemType] = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
-        m_mapReferenceObjects[itemType]->Hide();
+        m_mapReferenceObjects[eMapItemType] = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
+        m_mapReferenceObjects[eMapItemType]->Hide();
         PureTexture* tex = nullptr;
-        switch (itemType)
+        switch (eMapItemType)
         {
         case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
@@ -110,11 +111,11 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
 
         if (tex)
         {
-            m_mapReferenceObjects[itemType]->getMaterial().setTexture(tex);
+            m_mapReferenceObjects[eMapItemType]->getMaterial().setTexture(tex);
         }
     }
 
-    m_obj = gfx.getObject3DManager().createCloned(*m_mapReferenceObjects[itemType]);
+    m_obj = gfx.getObject3DManager().createCloned(*m_mapReferenceObjects[eMapItemType]);
     m_obj->Show();
     m_obj->getPosVec() = pos;
 }
@@ -136,7 +137,7 @@ const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getId() const
 
 const proofps_dd::MapItemType& proofps_dd::MapItem::getType() const
 {
-    return m_itemType;
+    return m_eMapItemType;
 }
 
 const PureVector& proofps_dd::MapItem::getPos() const
@@ -153,6 +154,11 @@ const PureObject3D& proofps_dd::MapItem::getObject3D() const
 //{
 //    return *m_obj;
 //}
+
+std::string proofps_dd::MapItem::toString() const
+{
+    return MapItem::toString(m_eMapItemType);
+}
 
 bool proofps_dd::MapItem::isTaken() const
 {

@@ -2153,7 +2153,7 @@ private:
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleServer, "192.168.1.11");
 
         // for now we dont test anything, just invoke and expect not to crash
-        playerServer.handleTakeWeaponItem(true);
+        playerServer.handleTakeWeaponItem(proofps_dd::MapItemType::ITEM_WPN_PISTOL, true);
 
         return true;
     }

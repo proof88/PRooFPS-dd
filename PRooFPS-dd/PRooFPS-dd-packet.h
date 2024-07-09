@@ -832,7 +832,8 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
-            const std::string& sWpnName,
+            const std::string& sWpnName /* eMapItemType makes it obsolete */,
+            const MapItemType& eMapItemType,
             bool bAvailable,
             unsigned int nMagBulletCount,
             unsigned int nUnmagBulletCount)
@@ -852,6 +853,7 @@ namespace proofps_dd
 
             proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = reinterpret_cast<proofps_dd::MsgWpnUpdateFromServer&>(*pMsgAppData);
             strncpy_s(msgWpnUpdate.m_szWpnName, nWpnNameNameMaxLength, sWpnName.c_str(), sWpnName.length());
+            msgWpnUpdate.m_eMapItemType = eMapItemType;
             msgWpnUpdate.m_bAvailable = bAvailable;
             msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
             msgWpnUpdate.m_nUnmagBulletCount = nUnmagBulletCount;
@@ -866,7 +868,8 @@ namespace proofps_dd
             return msgWpnUpdate.m_bAvailable;
         }
 
-        char m_szWpnName[nWpnNameNameMaxLength];
+        char m_szWpnName[nWpnNameNameMaxLength];  /* eMapItemType makes it obsolete */
+        MapItemType m_eMapItemType;
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;

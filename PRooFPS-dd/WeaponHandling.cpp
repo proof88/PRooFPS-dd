@@ -628,7 +628,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
             handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew());
-            handleWeaponBulletCountsChangeShared(
+            handleCurrentWeaponBulletCountsChangeShared(
                 nOldMagCount,
                 wpn->getMagBulletCount(),
                 nOldUnmagCount,
@@ -642,6 +642,10 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 pktWpnUpdatePrivate,
                 pge_network::ServerConnHandle /* ignored by client anyway */,
                 wpn->getFilename(),
+                MapItemType::ITEM_HEALTH /* intentionally setting nonsense type, because itemType should be valid only in case of item pickup for now */,
+                /* IMPORTANT: later if we remove wpn filename from message, even here we will need to use correct itemType, so we will be unable to distinguish
+                   from wpn reload induced ammo increase or item pickup induced ammo increase in handleWpnUpdateFromServer(), thus we will need to add a flag
+                   that clearly indicates if scenario is item pickup or not! */
                 wpn->isAvailable(),
                 wpn->getMagBulletCount(),
                 wpn->getUnmagBulletCount()))
@@ -821,6 +825,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     }
 
     Player& player = playerIt->second;
+    // TODO: since from v0.2.6 we also have msg.m_eMapItemType, we should get rid of msg.m_szWpnName
     Weapon* const wpn = player.getWeaponManager().getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
@@ -831,16 +836,21 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
 
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
     {
-        handleWeaponBulletCountsChangeShared(
+        handleCurrentWeaponBulletCountsChangeShared(
             wpn->getMagBulletCount(),
             msg.m_nMagBulletCount,
             wpn->getUnmagBulletCount(),
             msg.m_nUnmagBulletCount);
     }
 
-    // server invokes handleTakeWeaponItem() in Player::takeItem()
-    // we can be sure that this update is for the current client and not about other players, so we can play sound too
-    player.handleTakeWeaponItem(!wpn->isAvailable() && msg.m_bAvailable);
+    // since we receive this message also for any other kind of weapon update, we need to understand if this is item pickup scenario or not, and as a hack,
+    // currently MapItemType::ITEM_HEALTH is sent (from serverUpdateWeapons()) when it is NOT an item pickup scenario!
+    if (msg.m_eMapItemType != MapItemType::ITEM_HEALTH)
+    {
+        // server invokes handleTakeWeaponItem() in Player::takeItem();
+        // we can be sure that this update is for the current client and not about other players, so we can play sound too
+        player.handleTakeWeaponItem(msg.m_eMapItemType, !wpn->isAvailable() && msg.m_bAvailable);
+    }
 
     wpn->SetAvailable(msg.m_bAvailable);
     wpn->SetMagBulletCount(msg.m_nMagBulletCount);
@@ -891,7 +901,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
             //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
             m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
 
-            handleWeaponBulletCountsChangeShared(
+            handleCurrentWeaponBulletCountsChangeShared(
                 player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(),
                 wpn->getMagBulletCount(),
                 player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount(),
@@ -946,7 +956,7 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(const Weapon::Sta
     }
 }
 
-void proofps_dd::WeaponHandling::handleWeaponBulletCountsChangeShared(
+void proofps_dd::WeaponHandling::handleCurrentWeaponBulletCountsChangeShared(
     const TPureUInt& nOldMagCount,
     const TPureUInt& nNewMagCount,
     const TPureUInt& /*nOldUnmagCount*/,

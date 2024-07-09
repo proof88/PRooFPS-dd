@@ -254,7 +254,7 @@ namespace proofps_dd
         void handleFallingFromHigh();
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
-        void handleTakeWeaponItem(const bool& bJustBecameAvailable);
+        void handleTakeWeaponItem(const proofps_dd::MapItemType& eMapItemType, const bool& bJustBecameAvailable);
         void handleJumppadActivated();
 
     private:

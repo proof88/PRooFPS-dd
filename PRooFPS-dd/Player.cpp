@@ -1221,7 +1221,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         item.take();
         if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
         {
-            handleTakeWeaponItem(!pWpnBecomingAvailable->isAvailable());
+            handleTakeWeaponItem(item.getType(), !pWpnBecomingAvailable->isAvailable());
         }
         // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
         // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
@@ -1250,6 +1250,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             pktWpnUpdate,
             0 /* ignored by client anyway */,
             sWeaponBecomingAvailable,
+            item.getType(),
             pWpnBecomingAvailable->isAvailable(),
             pWpnBecomingAvailable->getMagBulletCount(),
             pWpnBecomingAvailable->getUnmagBulletCount());  // becomes available on client side (after pkt being sent)
@@ -1418,7 +1419,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
     }
 }
 
-void proofps_dd::Player::handleTakeWeaponItem(const bool& bJustBecameAvailable)
+void proofps_dd::Player::handleTakeWeaponItem(const proofps_dd::MapItemType& eMapItemType, const bool& bJustBecameAvailable)
 {
     // both server and client execute this function, so be careful with conditions here
 
@@ -1429,12 +1430,14 @@ void proofps_dd::Player::handleTakeWeaponItem(const bool& bJustBecameAvailable)
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
         m_sndWpnNew->stop();
         m_audio.getAudioEngineCore().play(*m_sndWpnNew);
+        m_eventsItemPickup.addEvent("NEW: " + MapItem::toString(eMapItemType));
     }
     else
     {
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
         m_sndWpnAmmo->stop();
         m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
+        m_eventsItemPickup.addEvent("Ammo: " + MapItem::toString(eMapItemType));
     }
 }
 

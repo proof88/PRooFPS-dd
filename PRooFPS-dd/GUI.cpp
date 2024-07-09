@@ -76,7 +76,7 @@ void proofps_dd::GUI::initialize()
     m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
 
     m_pEventsDeathKill = new DeathKillEventLister();
-    m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 5 /* event count limit */);
+    m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -1616,7 +1616,7 @@ void proofps_dd::GUI::updateItemPickupEvents()
     m_pEventsItemPickup->update();
 
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
-    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * fDefaultFontSizePixels + 20);
+    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (fDefaultFontSizePixels + 3) + 20);
     for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
     {
         drawTextHighlighted(

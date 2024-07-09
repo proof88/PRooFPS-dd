@@ -382,9 +382,9 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                         // Would be nice to think about a design change.
                         // Player movement is fine, but weapon handling is a bit different between server and client, leading to the need of
                         // invoking some functions at multiple places, such as:
-                        // - handleWeaponBulletCountsChangeShared();
+                        // - handleCurrentWeaponBulletCountsChangeShared();
                         // - handleWeaponStateChangeShared().
-                        wpnHandling.handleWeaponBulletCountsChangeShared(
+                        wpnHandling.handleCurrentWeaponBulletCountsChangeShared(
                             prevWpn->getMagBulletCount(),
                             pTargetWpn->getMagBulletCount(),
                             prevWpn->getUnmagBulletCount(),
