@@ -1219,18 +1219,14 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         }
 
         item.take();
-        if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
-        {
-            handleTakeWeaponItem(item.getType(), !pWpnBecomingAvailable->isAvailable());
-        }
-        // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
-        // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
+        int nAmmoIncrease = 0;
         if (pWpnBecomingAvailable->isAvailable())
         {
             // just increase bullet count
             // TODO: this will be a problem for non-reloadable wpns such as rail gun, because there this value will be 0,
             // but we will think about it later then ... probably in such case bullets_default will be used
-            pWpnBecomingAvailable->IncBulletCount(pWpnBecomingAvailable->getVars()["reloadable"].getAsInt());
+            nAmmoIncrease = pWpnBecomingAvailable->getVars()["reloadable"].getAsInt();
+            pWpnBecomingAvailable->IncBulletCount(nAmmoIncrease);
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, already available, just inc unmag to: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getUnmagBulletCount());
@@ -1242,6 +1238,14 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             //    "Player::%s(): weapon %s pickup, becomes available with mag: %u, unmag: %u",
             //    __func__, sWeaponBecomingAvailable.c_str(), pWpnBecomingAvailable->getMagBulletCount(), pWpnBecomingAvailable->getUnmagBulletCount());
         }
+
+        // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
+        // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
+        if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+        {
+            handleTakeWeaponItem(item.getType(), !pWpnBecomingAvailable->isAvailable(), nAmmoIncrease);
+        }
+
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
         
         // this is very inconsistent: for weapon items, we inform clients with MsgWpnUpdateFromServer, but for other items, we send PlayerEventFromServer,
@@ -1253,7 +1257,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             item.getType(),
             pWpnBecomingAvailable->isAvailable(),
             pWpnBecomingAvailable->getMagBulletCount(),
-            pWpnBecomingAvailable->getUnmagBulletCount());  // becomes available on client side (after pkt being sent)
+            pWpnBecomingAvailable->getUnmagBulletCount(),
+            nAmmoIncrease);  // becomes available on client side (after pkt being sent)
         break;
     }
     case proofps_dd::MapItemType::ITEM_HEALTH:
@@ -1419,25 +1424,31 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
     }
 }
 
-void proofps_dd::Player::handleTakeWeaponItem(const proofps_dd::MapItemType& eMapItemType, const bool& bJustBecameAvailable)
+void proofps_dd::Player::handleTakeWeaponItem(
+    const proofps_dd::MapItemType& eMapItemType,
+    const bool& bJustBecameAvailable,
+    const int& nAmmoIncrease /* valid only if bJustBecameAvailable is false */)
 {
     // both server and client execute this function, so be careful with conditions here
 
     //getConsole().EOLn("Player::%s(): play sound", __func__);
+    
+    // ITEM_HEALTH is used for weapon updates that are not item pickups, here we should always have the actually valid weapon item type
+    assert(eMapItemType != MapItemType::ITEM_HEALTH);
 
     if (bJustBecameAvailable)
     {
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
         m_sndWpnNew->stop();
         m_audio.getAudioEngineCore().play(*m_sndWpnNew);
-        m_eventsItemPickup.addEvent("NEW: " + MapItem::toString(eMapItemType));
+        m_eventsItemPickup.addEvent("+ Weapon: " + MapItem::toString(eMapItemType));
     }
     else
     {
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
         m_sndWpnAmmo->stop();
         m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
-        m_eventsItemPickup.addEvent("Ammo: " + MapItem::toString(eMapItemType));
+        m_eventsItemPickup.addEvent("+" + std::to_string(nAmmoIncrease) + " Ammo (" + MapItem::toString(eMapItemType) + ")");
     }
 }
 

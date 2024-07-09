@@ -836,7 +836,8 @@ namespace proofps_dd
             const MapItemType& eMapItemType,
             bool bAvailable,
             unsigned int nMagBulletCount,
-            unsigned int nUnmagBulletCount)
+            unsigned int nUnmagBulletCount,
+            unsigned int nAmmoIncrease)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgWpnUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -857,6 +858,7 @@ namespace proofps_dd
             msgWpnUpdate.m_bAvailable = bAvailable;
             msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
             msgWpnUpdate.m_nUnmagBulletCount = nUnmagBulletCount;
+            msgWpnUpdate.m_nAmmoIncrease = nAmmoIncrease;
 
             return true;
         }
@@ -873,6 +875,7 @@ namespace proofps_dd
         bool m_bAvailable;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
+        unsigned int m_nAmmoIncrease; // it is not always easy for client to find out the actual increase so always include it too
     };  // struct MsgWpnUpdateFromServer
     static_assert(std::is_trivial_v<MsgWpnUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgWpnUpdateFromServer>);

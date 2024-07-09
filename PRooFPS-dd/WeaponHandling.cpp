@@ -648,7 +648,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                    that clearly indicates if scenario is item pickup or not! */
                 wpn->isAvailable(),
                 wpn->getMagBulletCount(),
-                wpn->getUnmagBulletCount()))
+                wpn->getUnmagBulletCount(),
+                0 /* unused when itemType is MapItemType::ITEM_HEALTH */))
             {
                 getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
@@ -849,7 +850,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     {
         // server invokes handleTakeWeaponItem() in Player::takeItem();
         // we can be sure that this update is for the current client and not about other players, so we can play sound too
-        player.handleTakeWeaponItem(msg.m_eMapItemType, !wpn->isAvailable() && msg.m_bAvailable);
+        player.handleTakeWeaponItem(msg.m_eMapItemType, !wpn->isAvailable() && msg.m_bAvailable, msg.m_nAmmoIncrease);
     }
 
     wpn->SetAvailable(msg.m_bAvailable);
