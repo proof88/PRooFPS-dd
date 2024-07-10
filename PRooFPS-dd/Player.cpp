@@ -301,7 +301,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeStartedInvulnerability;
 }
 
-void proofps_dd::Player::updateVisuals(const proofps_dd::Config& config, bool bServer)
+void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bool bServer)
 {
     if (getInvulnerability())
     {
@@ -322,6 +322,14 @@ void proofps_dd::Player::updateVisuals(const proofps_dd::Config& config, bool bS
         {
             show();
         }
+    }
+
+    // so far this is the only 3D sound that needs continuous position update because it is relatively longer than others AND played when player position is rapidly changing,
+    // AND other players need to continuously hear from the updated position e.g. we want them experience the sound coming down from above with the falling player :)
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+    {
+        const PureVector& playerPos = getPos().getNew();
+        m_audio.getAudioEngineCore().set3dSourcePosition(m_handleFallYell, playerPos.getX(), playerPos.getY(), playerPos.getZ());
     }
 }
 
@@ -1326,13 +1334,16 @@ void proofps_dd::Player::handleFallingFromHigh()
             return;
         }
 
+        const PureVector& playerPos = getPos().getNew();
         // for now, everyone is generating random for themselves since this is played for a single player, but in the future
         // when this will be changed to 3D sound and triggered for all players, server's random choice will need to be accepted!
         const int iScream = PFL::random(0, 1);
         //getConsole().EOLn("Player::%s() play scream: %d", __func__, iScream);
+        // https://solhsa.com/soloud/core3d.html
+        // https://solhsa.com/soloud/concepts3d.html
         m_handleFallYell = (iScream == 0) ?
-            m_audio.getAudioEngineCore().play(*m_sndFallYell_1) :
-            m_audio.getAudioEngineCore().play(*m_sndFallYell_2);
+            m_audio.getAudioEngineCore().play3d(*m_sndFallYell_1, playerPos.getX(), playerPos.getY(), playerPos.getZ()) :
+            m_audio.getAudioEngineCore().play3d(*m_sndFallYell_2, playerPos.getX(), playerPos.getY(), playerPos.getZ());
     }
     else if (m_network.isServer())
     {
@@ -1368,19 +1379,25 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
 
         //getConsole().EOLn("Player::%s() playing sound", __func__);
 
+        const PureVector& playerPos = getPos().getNew();
         if (fFallHeight >= 1.f)
         {
-            m_audio.getAudioEngineCore().play(*m_sndPlayerLandBigFall);
+            m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandBigFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+            //getConsole().EOLn(
+            //    "Player::%s() XYZ: %f, %f, %f; Camera XYZ: %f, %f, %f",
+            //    __func__,
+            //    playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            //    m_gfx.getCamera().getPosVec().getX(), m_gfx.getCamera().getPosVec().getY(), m_gfx.getCamera().getPosVec().getZ());
         }
         else
         {
-            m_audio.getAudioEngineCore().play(*m_sndPlayerLandSmallFall);
+            m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandSmallFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
         }
 
         if (bDamageTaken && !bDied)
         {
             // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
-            m_audio.getAudioEngineCore().play(*m_sndPlayerDamage);
+            m_audio.getAudioEngineCore().play3d(*m_sndPlayerDamage, playerPos.getX(), playerPos.getY(), playerPos.getZ());
         }
     }
     else if (m_network.isServer())
@@ -1408,12 +1425,13 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
+        const PureVector& playerPos = getPos().getNew();
         switch (eMapItemType)
         {
         case MapItemType::ITEM_HEALTH:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_sndMedkit->stop();
-            m_audio.getAudioEngineCore().play(*m_sndMedkit);
+            m_audio.getAudioEngineCore().play3d(*m_sndMedkit, playerPos.getX(), playerPos.getY(), playerPos.getZ());
             m_eventsItemPickup.addEvent("Medkit: +" + std::to_string(MapItem::ITEM_HEALTH_HP_INC) + " HP");
             break;
         default:
@@ -1445,18 +1463,19 @@ void proofps_dd::Player::handleTakeWeaponItem(
     // ITEM_HEALTH is used for weapon updates that are not item pickups, here we should always have the actually valid weapon item type
     assert(eMapItemType != MapItemType::ITEM_HEALTH);
 
+    const PureVector& playerPos = getPos().getNew();
     if (bJustBecameAvailable)
     {
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
         m_sndWpnNew->stop();
-        m_audio.getAudioEngineCore().play(*m_sndWpnNew);
+        m_audio.getAudioEngineCore().play3d(*m_sndWpnNew, playerPos.getX(), playerPos.getY(), playerPos.getZ());
         m_eventsItemPickup.addEvent("+ Weapon: " + MapItem::toString(eMapItemType));
     }
     else
     {
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
         m_sndWpnAmmo->stop();
-        m_audio.getAudioEngineCore().play(*m_sndWpnAmmo);
+        m_audio.getAudioEngineCore().play3d(*m_sndWpnAmmo, playerPos.getX(), playerPos.getY(), playerPos.getZ());
         m_eventsItemPickup.addEvent("+" + std::to_string(nAmmoIncrease) + " Ammo (" + MapItem::toString(eMapItemType) + ")");
     }
 }
@@ -1472,7 +1491,8 @@ void proofps_dd::Player::handleJumppadActivated()
         //getConsole().EOLn("PRooFPSddPGE::%s(): play sound", __func__);
 
         m_sndJumppad->stop();
-        m_audio.getAudioEngineCore().play(*m_sndJumppad);
+        const PureVector& playerPos = getPos().getNew();
+        m_audio.getAudioEngineCore().play3d(*m_sndJumppad, playerPos.getX(), playerPos.getY(), playerPos.getZ());
     }
     else if (m_network.isServer())
     {

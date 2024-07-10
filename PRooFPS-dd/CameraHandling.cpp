@@ -87,16 +87,25 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
     if (bCamRollAllowed && player.isSomersaulting())
     {
         cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(cam, player);
-
-        // return early, as during somersault camera rolling we don't need sophisticated camera movement
-        m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        return;
+    }
+    else
+    {
+        cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
     }
 
-    cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+    /*
+    * Looks like it is enough if I pass (0,0,1) as At vector.
+    * Anyway, in the future if there is any fishy 3D audio issue related to orientation, remember these tickets:
+    *  - https://github.com/jarikomppa/soloud/issues/94
+    *  - https://github.com/jarikomppa/soloud/issues/105
+    */
+    m_pge.getAudio().getAudioEngineCore().set3dListenerParameters(
+        cam.getPosVec().getX(), cam.getPosVec().getY(), cam.getPosVec().getZ(),
+        0, 0, 1 /*cam.getTargetVec().getX(), cam.getTargetVec().getY(), cam.getTargetVec().getZ()*/,
+        cam.getUpVec().getX(), cam.getUpVec().getY(), cam.getUpVec().getZ());
+    m_pge.getAudio().getAudioEngineCore().update3dAudio();
 
     m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-
 }
 
 PureVector& proofps_dd::CameraHandling::cameraGetShakeForce()

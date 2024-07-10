@@ -66,7 +66,8 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         // TODO: other sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
-        m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndPlayerDie);
+        const PureVector& playerPos = player.getPos().getNew();
+        m_pge.getAudio().getAudioEngineCore().play3d(m_sounds.m_sndPlayerDie, playerPos.getX(), playerPos.getY(), playerPos.getZ());
         xhair.hide();
     }
 
@@ -964,7 +965,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
     {
         auto& player = playerPair.second;
 
-        player.updateVisuals(config, m_pge.getNetwork().isServer());
+        player.updateAudioVisuals(config, m_pge.getNetwork().isServer());
         
         if (bXHairIdentifiesPlayers)
         {

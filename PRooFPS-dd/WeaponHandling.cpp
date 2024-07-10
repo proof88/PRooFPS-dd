@@ -437,7 +437,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     
     const Explosion& xpl = m_explosions.back();
 
-    m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndExplosion);
+    m_pge.getAudio().getAudioEngineCore().play3d(m_sounds.m_sndExplosion, pos.getX(), pos.getY(), pos.getZ());
 
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
@@ -532,7 +532,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 
     Explosion& xpl = m_explosions.back();
 
-    m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndExplosion);
+    m_pge.getAudio().getAudioEngineCore().play3d(m_sounds.m_sndExplosion, pos.getX(), pos.getY(), pos.getZ());
 
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
@@ -612,7 +612,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
                 // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
                 // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
-                m_pge.getAudio().getAudioEngineCore().play(wpn->getFiringSound());
+                const PureVector& playerPos = player.getPos().getNew();
+                m_pge.getAudio().getAudioEngineCore().play3d(wpn->getFiringSound(), playerPos.getX(), playerPos.getY(), playerPos.getZ());
             }
         }  // end player.getAttack() && attack()
 
@@ -770,7 +771,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             }
             else
             {
-                m_pge.getAudio().getAudioEngineCore().play(wpn->getFiringSound());
+                m_pge.getAudio().getAudioEngineCore().play3d(wpn->getFiringSound(), msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
             }
         }
 

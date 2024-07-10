@@ -140,7 +140,7 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
-        void updateVisuals(const proofps_dd::Config& config, bool bServer);
+        void updateAudioVisuals(const proofps_dd::Config& config, bool bServer);
 
         void show();
         void hide();
