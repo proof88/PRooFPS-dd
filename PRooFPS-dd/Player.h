@@ -242,6 +242,8 @@ namespace proofps_dd
         const proofps_dd::Strafe& getPreviousActualStrafe() const;
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastActualStrafe() const;
 
+        float& getStrafeSpeed();
+
         bool& getAttack();
         bool attack();
 
@@ -413,6 +415,10 @@ namespace proofps_dd
         proofps_dd::Strafe m_strafe = Strafe::NONE;  // continuous op
         proofps_dd::Strafe m_prevActualStrafe = Strafe::NONE;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastStrafe;
+
+        /* Server is changing this in every physics tick to target strafe speed to have a smoother strafe start feeling, and to have a workaround
+           for situations when player would not be able to fall into a 1-block-wide hole, this way they can when they try strafing from non-strafe status. */
+        float m_strafeSpeed = 0.f;
 
         bool m_bAttack = false;       // continuous op
 

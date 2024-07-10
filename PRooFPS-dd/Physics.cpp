@@ -260,7 +260,7 @@ void proofps_dd::Physics::serverGravity(
        Note that originally I wanted to lerp GAME_JUMP_GRAVITY_START as commented at its definition. */
 
     const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    const float GAME_GRAVITY_CONST = PFL::lerp(80.f, 90.f, GAME_PHYSICS_RATE_LERP_FACTOR);
+    const float GAME_GRAVITY_CONST = PFL::lerp(80.f /* 20 Hz */, 90.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
     const float GAME_IMPACT_FORCE_Y_CHANGE = PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
@@ -523,18 +523,45 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
         const auto& playerConst = player;
         if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
         {
-            float fStrafeSpeed =
+            float fTargetStrafeSpeed =
                 player.getCrouchStateCurrent() ?
                 (player.isSomersaulting() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_CROUCH) :
                 (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
             if (player.getStrafe() == proofps_dd::Strafe::LEFT)
             {
-                fStrafeSpeed = -fStrafeSpeed;
+                fTargetStrafeSpeed = -fTargetStrafeSpeed;
+            }
+
+            // in case of strafe input direction change, always start changing strafe speed from 0, otherwise it will feel like
+            // we have thruster that we need to work against :D (jetpack-like)
+            if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() < 0.f))
+                ||
+                ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() > 0.f)))
+            {
+                player.getStrafeSpeed() = 0.f;
+            }
+
+            // using same way of calculation here as in serverGravity()
+            const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+            const float GAME_STRAFE_PHYSICS_RATE_DIVIDER = PFL::lerp(5.f /* 20 Hz */, 10.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+            // unlike as in serverGravity() here I divide by the lerped value instead of multiply, I dont know why I multiply in serverGravity() anyway, but
+            // obviously I need to divide here as lower physics rate results in higher strafe speeds, need to have the per-tick change higher also!
+            const float fPlayerStrafeChangePerTick = 
+                fTargetStrafeSpeed / GAME_STRAFE_PHYSICS_RATE_DIVIDER
+                /* no need to divide by nPhysicsRate as those const values assigned to fTargetStrafeSpeed are already divided by it */;
+            player.getStrafeSpeed() += fPlayerStrafeChangePerTick;
+            
+            // always limit strafe speed to target strafe speed
+            if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() > fTargetStrafeSpeed))
+                ||
+                ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() < fTargetStrafeSpeed)))
+            {
+                player.getStrafeSpeed() = fTargetStrafeSpeed;
             }
 
             if (player.getHasJustStartedFallingNaturallyInThisTick())
             {
-                player.getJumpForce().SetX(fStrafeSpeed);
+                player.getJumpForce().SetX(player.getStrafeSpeed());
                 vecOriginalJumpForce = player.getJumpForce();
             }
 
@@ -544,7 +571,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
                     (vecOriginalJumpForce.getX() == 0.f) ||
                     /* if we have horizontal jump force, we cannot add more to it in the same direction */
-                    ((vecOriginalJumpForce.getX() > 0.f) && (fStrafeSpeed < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (fStrafeSpeed > 0.f))
+                    ((vecOriginalJumpForce.getX() > 0.f) && (player.getStrafeSpeed() < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (player.getStrafeSpeed() > 0.f))
                  ))
                )
             {
@@ -561,7 +588,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
-                        player.getPos().getNew().getX() + fStrafeSpeed,
+                        player.getPos().getNew().getX() + player.getStrafeSpeed(),
                         player.getPos().getNew().getY(),
                         player.getPos().getNew().getZ()
                     ));

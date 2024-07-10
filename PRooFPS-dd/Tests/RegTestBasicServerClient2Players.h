@@ -165,7 +165,7 @@ protected:
 
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(350));
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 input_sim_test::keybdPress(VK_SPACE, 100); // jump over the hole
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 input_sim_test::keybdPress(VK_SPACE, 100); // 1st crate
@@ -184,7 +184,7 @@ protected:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             input_sim_test::keybdPressNoRelease(VK_LEFT);
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(850));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 input_sim_test::keybdPress(VK_SPACE, 100); // jump over the hole
                 std::this_thread::sleep_for(std::chrono::milliseconds(3500));
             }

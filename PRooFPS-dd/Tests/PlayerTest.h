@@ -334,6 +334,7 @@ private:
             assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe") &
             assertEquals(0, player.getTimeLastActualStrafe().time_since_epoch().count(), "time last strafe") &
+            assertEquals(0.f, player.getStrafeSpeed(), "strafe speed") &
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
@@ -698,6 +699,7 @@ private:
             assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y 1") &
             assertEquals(proofps_dd::Strafe::NONE, playerConst.getStrafe(), "strafe 1") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe 1") &
+            assertEquals(0.f, player.getStrafeSpeed(), "strafe speed") &
             assertFalse(playerConst.isSomersaulting(), "somersaulting 1") &
             assertFalse(player.getWillSomersaultInNextTick(), "will somersault 1") &
             assertNotEquals(0, nFirstTimeDiedSinceEpoch, "time died a 1") &
@@ -1611,10 +1613,12 @@ private:
             assertTrue(player.getTimeLastActualStrafe() >= timeBeforeStrafe, "cmp timeBefore 2") &
             assertTrue(player.getTimeLastActualStrafe() <= std::chrono::steady_clock::now(), "cmp timeAfter 2");
 
+        player.getStrafeSpeed() = 3.f;
         const std::chrono::time_point<std::chrono::steady_clock> timeBeforeStopStrafe = std::chrono::steady_clock::now();
         player.setStrafe(proofps_dd::Strafe::NONE);
         b &= assertEquals(proofps_dd::Strafe::NONE, player.getStrafe(), "strafe 3");
         b &= assertEquals(proofps_dd::Strafe::RIGHT, player.getPreviousActualStrafe(), "prev actual strafe 3") &
+            assertEquals(0.f, player.getStrafeSpeed(), "strafe speed") &
             assertTrue(player.getTimeLastActualStrafe() >= timeBeforeStrafe, "cmp timeBefore 3") &
             assertTrue(player.getTimeLastActualStrafe() < timeBeforeStopStrafe, "cmp timeAfter 3");
 

@@ -1110,6 +1110,10 @@ void proofps_dd::Player::setStrafe(const proofps_dd::Strafe& strafe)
     {
         m_timeLastStrafe = std::chrono::steady_clock::now();
     }
+    else
+    {
+        m_strafeSpeed = 0.f;
+    }
 }
 
 /**
@@ -1124,6 +1128,11 @@ const proofps_dd::Strafe& proofps_dd::Player::getPreviousActualStrafe() const
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastActualStrafe() const
 {
     return m_timeLastStrafe;
+}
+
+float& proofps_dd::Player::getStrafeSpeed()
+{
+    return m_strafeSpeed;
 }
 
 bool& proofps_dd::Player::getAttack()
