@@ -473,7 +473,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                 const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
                 if (fFallHeight >= 6.f)
                 {
-                    player.handleFallingFromHigh();
+                    player.handleFallingFromHigh(0 /* relevant for clients, but for server it is unused as input, server will update this parameter within function */);
                 }
             }
         } // end if YPPos changed

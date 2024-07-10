@@ -919,24 +919,24 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
 
     const bool bCurrentClient = isMyConnection(connHandleServerSide);
     
-    // in this version, this message should be received only for current player, not for other players!
-    assert(bCurrentClient);
-    
     auto& player = it->second;
 
     // PlayerEventId
     switch (msg.m_iPlayerEventId)
     {
     case PlayerEventId::FallingFromHigh:
-        player.handleFallingFromHigh();
+        player.handleFallingFromHigh(msg.m_optData1.m_nValue);
         break;
     case PlayerEventId::Landed:
+        assert(bCurrentClient);
         player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue);
         break;
     case PlayerEventId::ItemTake:
+        assert(bCurrentClient);
         player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
         break;
     case PlayerEventId::JumppadActivated:
+        assert(bCurrentClient);
         player.handleJumppadActivated();
         break;
     default:

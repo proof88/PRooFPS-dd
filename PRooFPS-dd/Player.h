@@ -253,7 +253,7 @@ namespace proofps_dd
         bool canTakeItem(const MapItem& item) const;
         void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
 
-        void handleFallingFromHigh();
+        void handleFallingFromHigh(int iServerScream);
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(
@@ -287,7 +287,6 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndJumppad;
         static SoLoud::Wav* m_sndFallYell_1;
         static SoLoud::Wav* m_sndFallYell_2;
-        static SoLoud::handle m_handleFallYell;
         static SoLoud::Wav* m_sndPlayerLandSmallFall;
         static SoLoud::Wav* m_sndPlayerLandBigFall;
         static SoLoud::Wav* m_sndPlayerDamage;
@@ -379,6 +378,7 @@ namespace proofps_dd
         *   is falling from high. Reset of this flag should be whenever falling high is interrupted, e.g. when player landed on ground.
         */
         bool m_bFallingHighTriggered = false;
+        SoLoud::handle m_handleFallYell = 0;
 
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.

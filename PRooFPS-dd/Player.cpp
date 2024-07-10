@@ -1289,12 +1289,10 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
 }
 
-void proofps_dd::Player::handleFallingFromHigh()
+void proofps_dd::Player::handleFallingFromHigh(int iServerScream)
 {
     assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
     assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
-
-    //getConsole().EOLn("Player::%s() check", __func__);
 
     if (m_network.isServer())
     {
@@ -1305,12 +1303,15 @@ void proofps_dd::Player::handleFallingFromHigh()
             return;
         }
         m_bFallingHighTriggered = true;
+
+        // server selects which scream to play, then this is also sent to clients so clients dont select, just accept server's choice
+        iServerScream = PFL::random(0, 1);
+        getConsole().EOLn("Player::%s() server selected: %d", __func__, iServerScream);
     }
 
-    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    if ((m_network.isServer() && (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+        || !m_network.isServer())
     {
-        // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
-
         /*
         * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
         * This is good enough for us, but for the future keep in mind the following:
@@ -1335,25 +1336,32 @@ void proofps_dd::Player::handleFallingFromHigh()
         }
 
         const PureVector& playerPos = getPos().getNew();
-        // for now, everyone is generating random for themselves since this is played for a single player, but in the future
-        // when this will be changed to 3D sound and triggered for all players, server's random choice will need to be accepted!
-        const int iScream = PFL::random(0, 1);
-        //getConsole().EOLn("Player::%s() play scream: %d", __func__, iScream);
+        
+        getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
+        
         // https://solhsa.com/soloud/core3d.html
         // https://solhsa.com/soloud/concepts3d.html
-        m_handleFallYell = (iScream == 0) ?
+        m_handleFallYell = (iServerScream == 0) ?
             m_audio.getAudioEngineCore().play3d(*m_sndFallYell_1, playerPos.getX(), playerPos.getY(), playerPos.getZ()) :
             m_audio.getAudioEngineCore().play3d(*m_sndFallYell_2, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        
+        if (!m_network.isServer())
+        {
+            return;
+        }
     }
-    else if (m_network.isServer())
-    {
-        pge_network::PgePacket pktPlayerEvent;
-        proofps_dd::MsgPlayerEventFromServer::initPkt(
-            pktPlayerEvent,
-            getServerSideConnectionHandle(),
-            PlayerEventId::FallingFromHigh);
-        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
-    }
+
+    // if we are here, we are server for sure
+    assert(m_network.isServer());
+
+    getConsole().EOLn("Player::%s() sending scream: %d", __func__, iServerScream);
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::FallingFromHigh,
+        iServerScream);
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 
 void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
@@ -1374,8 +1382,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
         m_sndPlayerLandSmallFall->stop();
         m_sndPlayerLandBigFall->stop();
         m_sndPlayerDamage->stop();
-        m_sndFallYell_1->stop();
-        m_sndFallYell_2->stop();
+        m_audio.getAudioEngineCore().stop(m_handleFallYell);
 
         //getConsole().EOLn("Player::%s() playing sound", __func__);
 
@@ -1530,7 +1537,6 @@ SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_1 = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_2 = nullptr;
-SoLoud::handle proofps_dd::Player::m_handleFallYell = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerDamage = nullptr;
