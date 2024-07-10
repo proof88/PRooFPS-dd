@@ -378,7 +378,12 @@ namespace proofps_dd
         *   is falling from high. Reset of this flag should be whenever falling high is interrupted, e.g. when player landed on ground.
         */
         bool m_bFallingHighTriggered = false;
+
+        // these sounds for which we store handles, they are played for any player so other players can also hear them
         SoLoud::handle m_handleFallYell = 0;
+        SoLoud::handle m_handleSndPlayerLandSmallFall = 0;
+        SoLoud::handle m_handleSndPlayerLandBigFall = 0;
+        SoLoud::handle m_handleSndPlayerDamage = 0;
 
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.

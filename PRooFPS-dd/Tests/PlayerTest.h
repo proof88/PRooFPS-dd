@@ -1959,11 +1959,11 @@ private:
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
-        playerServer.handleFallingFromHigh();
+        playerServer.handleFallingFromHigh(0);
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         // no sound play (I cannot check sound now, need stubs for that), tx to client player
-        playerClient.handleFallingFromHigh();
+        playerClient.handleFallingFromHigh(0);
         b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
         try
         {
@@ -1978,7 +1978,7 @@ private:
         }
 
         // calling again must not do anything, values should stay unchanged
-        playerClient.handleFallingFromHigh();
+        playerClient.handleFallingFromHigh(0);
         b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
@@ -2011,7 +2011,7 @@ private:
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
-        playerClient.handleFallingFromHigh();
+        playerClient.handleFallingFromHigh(0);
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         return b;

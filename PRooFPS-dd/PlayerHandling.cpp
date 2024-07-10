@@ -928,7 +928,6 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
         player.handleFallingFromHigh(msg.m_optData1.m_nValue);
         break;
     case PlayerEventId::Landed:
-        assert(bCurrentClient);
         player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue);
         break;
     case PlayerEventId::ItemTake:

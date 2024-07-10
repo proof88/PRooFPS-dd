@@ -456,13 +456,9 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
 {
     // TODO: in newer version Player already has Network instance, so bServer here is obsolete!
     m_timeDied = std::chrono::steady_clock::now();
+    m_audio.getAudioEngineCore().stop(m_handleFallYell);
     if (bMe)
     {
-        assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
-        assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
-        m_sndFallYell_1->stop();
-        m_sndFallYell_2->stop();
-
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
     }
     else
@@ -1289,7 +1285,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     }
 }
 
-void proofps_dd::Player::handleFallingFromHigh(int iServerScream)
+void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only in case of client, server just sets it within this func */)
 {
     assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
     assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
@@ -1309,52 +1305,45 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream)
         getConsole().EOLn("Player::%s() server selected: %d", __func__, iServerScream);
     }
 
-    if ((m_network.isServer() && (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
-        || !m_network.isServer())
+    /*
+    * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
+    * This is good enough for us, but for the future keep in mind the following:
+    * SoLoud::isValidVoiceHandle() might return false when the sound is still playing.
+    * It might be because of buffered playing, and the handle is invalidated right after SoLoud
+    * finished dealing with it (but the sound from buffer is not yet finished, which is not SoLoud's but the
+    * backend's territory).
+    * Some related issues on github might help understand the problem:
+    *  - https://github.com/jarikomppa/soloud/issues/102
+    *  - https://github.com/jarikomppa/soloud/issues/252
+    *  - https://github.com/jarikomppa/soloud/issues/76
+    *
+    * Anyway, for us this is not a problem for now.
+    */
+
+    // should use WavInstance::hasEnded(), but where is WavInstance ??? I have Wav only ...
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
     {
-        /*
-        * SoLoud::play() returns a voice handle for us, that stays valid until the sound is being played.
-        * This is good enough for us, but for the future keep in mind the following:
-        * SoLoud::isValidVoiceHandle() might return false when the sound is still playing.
-        * It might be because of buffered playing, and the handle is invalidated right after SoLoud
-        * finished dealing with it (but the sound from buffer is not yet finished, which is not SoLoud's but the
-        * backend's territory).
-        * Some related issues on github might help understand the problem:
-        *  - https://github.com/jarikomppa/soloud/issues/102
-        *  - https://github.com/jarikomppa/soloud/issues/252
-        *  - https://github.com/jarikomppa/soloud/issues/76
-        *
-        * Anyway, for us this is not a problem for now.
-        */
-
-        // should use WavInstance::hasEnded(), but where is WavInstance ??? I have Wav only ...
-        if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
-        {
-            // already playing, even though we later introduced m_bFallingHighTriggered flag, I'm still checking if sound
-            // instance is being played so later I can easily copy this logic when needed.
-            return;
-        }
-
-        const PureVector& playerPos = getPos().getNew();
-        
-        getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
-        
-        // https://solhsa.com/soloud/core3d.html
-        // https://solhsa.com/soloud/concepts3d.html
-        m_handleFallYell = (iServerScream == 0) ?
-            m_audio.getAudioEngineCore().play3d(*m_sndFallYell_1, playerPos.getX(), playerPos.getY(), playerPos.getZ()) :
-            m_audio.getAudioEngineCore().play3d(*m_sndFallYell_2, playerPos.getX(), playerPos.getY(), playerPos.getZ());
-        
-        if (!m_network.isServer())
-        {
-            return;
-        }
+        // already playing, even though we later introduced m_bFallingHighTriggered flag, I'm still checking if sound
+        // instance is being played so later I can easily copy this logic when needed.
+        return;
     }
 
-    // if we are here, we are server for sure
-    assert(m_network.isServer());
+    const PureVector& playerPos = getPos().getNew();
+    
+    getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
+    
+    // https://solhsa.com/soloud/core3d.html
+    // https://solhsa.com/soloud/concepts3d.html
+    m_handleFallYell = (iServerScream == 0) ?
+        m_audio.getAudioEngineCore().play3d(*m_sndFallYell_1, playerPos.getX(), playerPos.getY(), playerPos.getZ()) :
+        m_audio.getAudioEngineCore().play3d(*m_sndFallYell_2, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+    
+    if (!m_network.isServer())
+    {
+        return;
+    }
 
-    getConsole().EOLn("Player::%s() sending scream: %d", __func__, iServerScream);
+    getConsole().EOLn("Player::%s() server sending scream: %d", __func__, iServerScream);
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,
@@ -1371,54 +1360,53 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     assert(m_sndPlayerLandSmallFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerLandBigFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
-    assert(m_sndFallYell_1);  // otherwise new operator would had thrown already in ctor
-    assert(m_sndFallYell_2);  // otherwise new operator would had thrown already in ctor
 
     m_bFallingHighTriggered = false;
 
-    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    // whichever is currently being played for this player, needs to be stopped first
+    m_audio.getAudioEngineCore().stop(m_handleSndPlayerLandSmallFall);
+    m_audio.getAudioEngineCore().stop(m_handleSndPlayerLandBigFall);
+    m_audio.getAudioEngineCore().stop(m_handleSndPlayerDamage);
+    m_audio.getAudioEngineCore().stop(m_handleFallYell);
+
+    getConsole().EOLn("Player::%s() playing sound", __func__);
+
+    const PureVector& playerPos = getPos().getNew();
+    if (fFallHeight >= 1.f)
     {
-        // both server and clients fall here if connHandle matches, and for clients connHandle will match only for them for now ...
-        m_sndPlayerLandSmallFall->stop();
-        m_sndPlayerLandBigFall->stop();
-        m_sndPlayerDamage->stop();
-        m_audio.getAudioEngineCore().stop(m_handleFallYell);
-
-        //getConsole().EOLn("Player::%s() playing sound", __func__);
-
-        const PureVector& playerPos = getPos().getNew();
-        if (fFallHeight >= 1.f)
-        {
-            m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandBigFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
-            //getConsole().EOLn(
-            //    "Player::%s() XYZ: %f, %f, %f; Camera XYZ: %f, %f, %f",
-            //    __func__,
-            //    playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            //    m_gfx.getCamera().getPosVec().getX(), m_gfx.getCamera().getPosVec().getY(), m_gfx.getCamera().getPosVec().getZ());
-        }
-        else
-        {
-            m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandSmallFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
-        }
-
-        if (bDamageTaken && !bDied)
-        {
-            // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
-            m_audio.getAudioEngineCore().play3d(*m_sndPlayerDamage, playerPos.getX(), playerPos.getY(), playerPos.getZ());
-        }
+        m_handleSndPlayerLandBigFall = m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandBigFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        //getConsole().EOLn(
+        //    "Player::%s() XYZ: %f, %f, %f; Camera XYZ: %f, %f, %f",
+        //    __func__,
+        //    playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+        //    m_gfx.getCamera().getPosVec().getX(), m_gfx.getCamera().getPosVec().getY(), m_gfx.getCamera().getPosVec().getZ());
     }
-    else if (m_network.isServer())
+    else
     {
-        pge_network::PgePacket pktPlayerEvent;
-        proofps_dd::MsgPlayerEventFromServer::initPkt(
-            pktPlayerEvent,
-            getServerSideConnectionHandle(),
-            PlayerEventId::Landed,
-            fFallHeight,
-            bDamageTaken,
-            bDied);
-        m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+        m_handleSndPlayerLandSmallFall = m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandSmallFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
     }
+
+    if (bDamageTaken && !bDied)
+    {
+        // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
+        m_handleSndPlayerDamage = m_audio.getAudioEngineCore().play3d(*m_sndPlayerDamage, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+    }
+
+    if (!m_network.isServer())
+    {
+        return;
+    }
+
+    getConsole().EOLn("Player::%s() server sending pkt", __func__);
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::Landed,
+        fFallHeight,
+        bDamageTaken,
+        bDied);
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 
 void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType)
