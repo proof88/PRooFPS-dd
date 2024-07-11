@@ -1308,7 +1308,7 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
 
         // server selects which scream to play, then this is also sent to clients so clients dont select, just accept server's choice
         iServerScream = PFL::random(0, 1);
-        getConsole().EOLn("Player::%s() server selected: %d", __func__, iServerScream);
+        //getConsole().EOLn("Player::%s() server selected: %d", __func__, iServerScream);
     }
 
     /*
@@ -1336,7 +1336,7 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
 
     const PureVector& playerPos = getPos().getNew();
     
-    getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
+    //getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
     
     // https://solhsa.com/soloud/core3d.html
     // https://solhsa.com/soloud/concepts3d.html
@@ -1361,7 +1361,7 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
         return;
     }
 
-    getConsole().EOLn("Player::%s() server sending scream: %d", __func__, iServerScream);
+    //getConsole().EOLn("Player::%s() server sending scream: %d", __func__, iServerScream);
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,
@@ -1387,7 +1387,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     m_audio.getAudioEngineCore().stop(m_handleSndPlayerDamage);
     m_audio.getAudioEngineCore().stop(m_handleFallYell);
 
-    getConsole().EOLn("Player::%s() playing sound", __func__);
+    //getConsole().EOLn("Player::%s() playing sound", __func__);
 
     const PureVector& playerPos = getPos().getNew();
     if (fFallHeight >= 1.f)
@@ -1437,7 +1437,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
         return;
     }
 
-    getConsole().EOLn("Player::%s() server sending pkt", __func__);
+    //getConsole().EOLn("Player::%s() server sending pkt", __func__);
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,
