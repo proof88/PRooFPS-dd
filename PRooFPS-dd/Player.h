@@ -379,7 +379,8 @@ namespace proofps_dd
         */
         bool m_bFallingHighTriggered = false;
 
-        // these sounds for which we store handles, they are played for any player so other players can also hear them
+        // these sounds for which we store handles, they are played for any player so other players can also hear them, remember
+        // for these we should set proper attenuation model with min/max distance!
         SoLoud::handle m_handleFallYell = 0;
         SoLoud::handle m_handleSndPlayerLandSmallFall = 0;
         SoLoud::handle m_handleSndPlayerLandBigFall = 0;

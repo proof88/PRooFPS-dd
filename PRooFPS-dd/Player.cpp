@@ -13,6 +13,12 @@
 #include "Consts.h"
 
 
+static constexpr float SndPlayerLandedDistMin = 4.f;
+static constexpr float SndPlayerLandedDistMax = 8.f;
+static constexpr float SndPlayerHighFallYellDistMin = 9.f;
+static constexpr float SndPlayerHighFallYellDistMax = 22.f;
+
+
 // ############################### PUBLIC ################################
 
 
@@ -1335,8 +1341,20 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
     // https://solhsa.com/soloud/core3d.html
     // https://solhsa.com/soloud/concepts3d.html
     m_handleFallYell = (iServerScream == 0) ?
-        m_audio.getAudioEngineCore().play3d(*m_sndFallYell_1, playerPos.getX(), playerPos.getY(), playerPos.getZ()) :
-        m_audio.getAudioEngineCore().play3d(*m_sndFallYell_2, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_audio.getAudioEngineCore().play3d(
+            *m_sndFallYell_1,
+            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            0.f, 0.f, 0.f, /* velocity xyz */
+            0.f /* volume */) :
+        m_audio.getAudioEngineCore().play3d(
+            *m_sndFallYell_2,
+            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            0.f, 0.f, 0.f, /* velocity xyz */
+            0.f /* volume */);
+    /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
+    m_audio.getAudioEngineCore().setVolume(m_handleFallYell, 1.f);
+    m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleFallYell, SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
+    m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleFallYell, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     
     if (!m_network.isServer())
     {
@@ -1374,7 +1392,15 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     const PureVector& playerPos = getPos().getNew();
     if (fFallHeight >= 1.f)
     {
-        m_handleSndPlayerLandBigFall = m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandBigFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        // because of inaudible sound becomes audible, needs this hack: https://github.com/jarikomppa/soloud/issues/175
+        m_handleSndPlayerLandBigFall = m_audio.getAudioEngineCore().play3d(
+            *m_sndPlayerLandBigFall,
+            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            0.f, 0.f, 0.f, /* velocity xyz */
+            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
+        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerLandBigFall, 1.f);
+        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandBigFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandBigFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
         //getConsole().EOLn(
         //    "Player::%s() XYZ: %f, %f, %f; Camera XYZ: %f, %f, %f",
         //    __func__,
@@ -1383,13 +1409,27 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     }
     else
     {
-        m_handleSndPlayerLandSmallFall = m_audio.getAudioEngineCore().play3d(*m_sndPlayerLandSmallFall, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_handleSndPlayerLandSmallFall = m_audio.getAudioEngineCore().play3d(
+            *m_sndPlayerLandSmallFall,
+            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            0.f, 0.f, 0.f, /* velocity xyz */
+            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
+        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerLandSmallFall, 1.f);
+        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandSmallFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandSmallFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
 
     if (bDamageTaken && !bDied)
     {
         // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
-        m_handleSndPlayerDamage = m_audio.getAudioEngineCore().play3d(*m_sndPlayerDamage, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_handleSndPlayerDamage = m_audio.getAudioEngineCore().play3d(
+            *m_sndPlayerDamage,
+            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
+            0.f, 0.f, 0.f, /* velocity xyz */
+            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
+        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerDamage, 1.f);
+        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerDamage, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerDamage, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
 
     if (!m_network.isServer())
