@@ -487,7 +487,7 @@ const PureVector& proofps_dd::Maps::getRandomSpawnpoint() const
         throw std::runtime_error("No spawnpoints!");
     }
     const int iElem = PFL::random(0, m_spawnpoints.size()-1);
-    //getConsole().EOLn("Maps::%s(): %d", __func__, iElem);
+    getConsole().EOLn("Maps::%s(): %d, count: %u", __func__, iElem, m_spawnpoints.size());
     auto it = m_spawnpoints.begin();
     std::advance(it, iElem);
 

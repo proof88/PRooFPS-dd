@@ -514,6 +514,9 @@ bool& proofps_dd::Player::getRespawnFlag()
 
 void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
+    // Remember this function is NOT invoked when just connected to a new game!
+    // For setting initial stuff after connect, use handleUserUpdateFromServer(), where it checks for isJustCreatedAndExpectingStartPos()!
+    // 
     //getConsole().EOLn(
     //    "PRooFPSddPGE::%s(): jumpforce: %f, %f, %f, gravity: %f",
     //    __func__,
@@ -527,6 +530,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     getImpactForce().SetZero();
     getJumpForce().Set(0.f, 0.f, 0.f);
     setGravity(0.f);
+    setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
 
     for (auto pWpn : m_wpnMgr.getWeapons())
@@ -655,6 +659,8 @@ void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
         m_timeStartedFalling = std::chrono::steady_clock::now();
         m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
+
+        //getConsole().EOLn("PRooFPSddPGE::%s(): m_fHeightStartedFalling: %f!", __func__, m_fHeightStartedFalling);
     }
 }
 

@@ -115,6 +115,9 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
     Player& player,
     XHair& xhair)
 {
+    // Remember this function is NOT invoked when just connected to a new game!
+    // For setting initial stuff after connect, use handleUserUpdateFromServer(), where it checks for isJustCreatedAndExpectingStartPos()!
+    
     const Weapon* const wpnDefaultAvailable = player.getWeaponManager().getWeaponByFilename(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetupFromServer()
@@ -750,6 +753,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         // PPPKKKGGGGGG
         player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
         player.getPos().commit(); // both server and client commits in this case
+        player.setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
 
         if (m_pge.getNetwork().isServer())
         {
