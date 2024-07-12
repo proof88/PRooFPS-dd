@@ -134,6 +134,21 @@ void proofps_dd::GUI::initialize()
            - https://github.com/iamclint/ImGuiDesigner
     */
 
+    // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
+    // Anyway, for I will just use height for scaling the default font size.
+    // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
+    // And under display resolution I actually mean window client size.
+    m_fFontSizePxHudGeneral = fDefaultFontSizePixels * (m_pPge->getPure().getWindow().getClientHeight() / 768.f);
+    if (m_fFontSizePxHudGeneral <= 0.f)
+    {
+        m_fFontSizePxHudGeneral = fDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneral was non-positive, reset to: %f", __func__, m_fFontSizePxHudGeneral);
+    }
+    else
+    {
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneral: %f", __func__, m_fFontSizePxHudGeneral);
+    }
+
     ImGui::GetIO().Fonts->AddFontDefault();
     m_pImFontFragTable = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
     // TODO: by the time we get here, m_fFontSizePxHudGeneral should be set according to display resolution!!!
@@ -1447,11 +1462,8 @@ void proofps_dd::GUI::drawDearImGuiCb()
         }
 
         ImGui::PopFont();
-        ImGui::PushFont(m_pImFontFragTable);
 
         drawGameInfoPages();
-
-        ImGui::PopFont();
 
         ImGui::End();
 
@@ -1617,7 +1629,7 @@ void proofps_dd::GUI::updateDeathKillEvents()
     m_pEventsDeathKill->update();
 
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
-    ImGui::SetCursorPosY(50);
+    ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneral); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
     for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
     {
         drawTextHighlighted(
@@ -2167,10 +2179,14 @@ void proofps_dd::GUI::drawGameInfoPages()
     switch (m_gameInfoPageCurrent)
     {
     case proofps_dd::GUI::GameInfoPage::FragTable:
+        ImGui::PushFont(m_pImFontFragTable);
         drawGameObjectives();
+        ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::ServerConfig:
+        ImGui::PushFont(m_pImFontHudGeneral);
         drawGameServerConfig();
+        ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::None:
         // fall-through
