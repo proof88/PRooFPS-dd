@@ -133,7 +133,9 @@ namespace proofps_dd
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
 
-        static ImFont* m_pImFont;
+        static ImFont* m_pImFontFragTable;
+        static ImFont* m_pImFontHudGeneral;
+        static float m_fFontSizePxHudGeneral;
 
         static GameInfoPage m_gameInfoPageCurrent;
         static GameMode* m_pGameMode;

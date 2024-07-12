@@ -135,8 +135,19 @@ void proofps_dd::GUI::initialize()
     */
 
     ImGui::GetIO().Fonts->AddFontDefault();
-    m_pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
-    assert(m_pImFont);
+    m_pImFontFragTable = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
+    // TODO: by the time we get here, m_fFontSizePxHudGeneral should be set according to display resolution!!!
+    // This also means that upon windowed/fullscreen mode change, we should reinit GUI, but this is already happening.
+    /*
+    * Currently there is no proper font scaling in Dear ImGui, i.e. different size font needs to be built as different font.
+    * See tickets:
+    *  - https://github.com/ocornut/imgui/issues/797
+    *  - https://github.com/ocornut/imgui/pull/3471
+    *  - https://github.com/ocornut/imgui/issues/6967
+    */
+    m_pImFontHudGeneral = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneral);
+    assert(m_pImFontFragTable);
+    assert(m_pImFontHudGeneral);
     assert(ImGui::GetIO().Fonts->Build());
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
@@ -198,7 +209,7 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
 
-    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(fDefaultFontSizePixels)));
+    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(m_fFontSizePxHudGeneral)));
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 } // initialize()
 
@@ -431,7 +442,9 @@ PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
-ImFont* proofps_dd::GUI::m_pImFont = nullptr;
+ImFont* proofps_dd::GUI::m_pImFontFragTable = nullptr;
+ImFont* proofps_dd::GUI::m_pImFontHudGeneral = nullptr;
+float proofps_dd::GUI::m_fFontSizePxHudGeneral = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 proofps_dd::GameMode* proofps_dd::GUI::m_pGameMode = nullptr;
@@ -1413,8 +1426,10 @@ void proofps_dd::GUI::drawDearImGuiCb()
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollWithMouse);
 
-        assert(m_pImFont);  // initialize() created it before configuring this to be the callback for PURE
-        ImGui::PushFont(m_pImFont);
+        // initialize() created these fonts before configuring this as PURE GUI callback function
+        assert(m_pImFontFragTable);
+        assert(m_pImFontHudGeneral);
+        ImGui::PushFont(m_pImFontHudGeneral);
 
         drawRespawnTimer();
         updateXHair();
@@ -1430,6 +1445,9 @@ void proofps_dd::GUI::drawDearImGuiCb()
         {
             drawCurrentPlayerInfo(it->second);
         }
+
+        ImGui::PopFont();
+        ImGui::PushFont(m_pImFontFragTable);
 
         drawGameInfoPages();
 
@@ -1463,7 +1481,7 @@ void proofps_dd::GUI::drawRespawnTimer()
     assert(m_pPge);
     drawTextShadowed(
         fTextPosX,
-        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - fDefaultFontSizePixels,
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral,
         szRespawnWaitText);
 
     assert(m_pConfig);
@@ -1549,7 +1567,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
 
     // we start at the bottom of the screen, in reverse order from bottom to top
-    const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - fDefaultFontSizePixels - 10 /* spacing from viewport bottom edge */;
+    const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - m_fFontSizePxHudGeneral - 10 /* spacing from viewport bottom edge */;
     if (m_pNetworking->isServer())
     {
         drawTextHighlighted(
@@ -1616,7 +1634,7 @@ void proofps_dd::GUI::updateItemPickupEvents()
     m_pEventsItemPickup->update();
 
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
-    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (fDefaultFontSizePixels + 3) + 20);
+    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneral + 3) + 20);
     for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
     {
         drawTextHighlighted(
@@ -2039,39 +2057,39 @@ void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Live Network Data");
 
-    fThisRowY += 2 * fDefaultFontSizePixels;
+    fThisRowY += 2 * m_fFontSizePxHudGeneral;
 
     static constexpr float fIndentX = 20.f;
 
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
 
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     std::stringstream ssQuality;
     ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
         "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, ssQuality.str());
 
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
         " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
 
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
         "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
 
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
 
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
@@ -2091,55 +2109,55 @@ void proofps_dd::GUI::drawGameServerConfig()
 
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * fDefaultFontSizePixels;
+        fThisRowY += 2 * m_fFontSizePxHudGeneral;
         drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
     }
 
-    fThisRowY += 2 * fDefaultFontSizePixels;
+    fThisRowY += 2 * m_fFontSizePxHudGeneral;
 
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Max Framerate: ") + std::to_string(m_pConfig->getServerInfo().m_nMaxFps) + " FPS");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Tickrate: ") + std::to_string(m_pConfig->getServerInfo().m_nTickrate) + " Hz");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Min Physics Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nPhysicsRateMin) + " Hz");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Client Update Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nClientUpdateRate) + " Hz");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Fall Damage Multiplier: ") + std::to_string(m_pConfig->getServerInfo().m_nFallDamageMultiplier) + "x");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnTimeSecs) + " s");
-    fThisRowY += fDefaultFontSizePixels;
+    fThisRowY += m_fFontSizePxHudGeneral;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * fDefaultFontSizePixels;
+        fThisRowY += 2 * m_fFontSizePxHudGeneral;
         drawClientConnectionDebugInfo(fThisRowY);
     }
 }
