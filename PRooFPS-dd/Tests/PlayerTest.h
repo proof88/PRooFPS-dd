@@ -1958,13 +1958,9 @@ private:
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
-        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        // (I cannot check sound now, need stubs for that)
         playerServer.handleFallingFromHigh(0);
-        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
-
-        // no sound play (I cannot check sound now, need stubs for that), tx to client player
-        playerClient.handleFallingFromHigh(0);
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
         try
         {
             b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
@@ -1974,17 +1970,47 @@ private:
         }
         catch (...)
         {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        // (I cannot check sound now, need stubs for that)
+        playerClient.handleFallingFromHigh(0);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
             b &= assertFalse(true, "no such tx msg found 1");
         }
 
         // calling again must not do anything, values should stay unchanged
-        playerClient.handleFallingFromHigh(0);
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        playerServer.handleFallingFromHigh(0);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
-                "tx msg count 2"
+                "tx msg count 3"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        // calling again must not do anything, values should stay unchanged
+        playerClient.handleFallingFromHigh(0);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 4");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 4"
             );
         }
         catch (...)
@@ -2025,16 +2051,16 @@ private:
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleClient, "192.168.1.12");
 
         bool b = true;
-        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        // (I cannot check sound now, need stubs for that)
         playerServer.handleLanded(1.f, false, false);
-        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
-        // no sound play (I cannot check sound now, need stubs for that), tx to client player
+        // (I cannot check sound now, need stubs for that)
         playerClient.handleLanded(1.f, false, false);
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
                 "tx msg count 1"
             );
@@ -2046,10 +2072,10 @@ private:
 
         // same actions as above, no protective flag is in place that needs to be cleared first
         playerClient.handleLanded(1.f, false, false);
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
                 "tx msg count 2"
             );
