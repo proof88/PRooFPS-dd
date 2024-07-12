@@ -516,7 +516,15 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         if (m_pge.getNetwork().isServer())
         {
             // for testing purpose only, we can teleport server player to random spawn point
+            // TODO: probably we should just call serverRespawnPlayer() but cannot access that from here :/
+
             player.getPos() = m_maps.getRandomSpawnpoint();
+            // no need to commit, otherwise server wont even inject userupdatemsg to itself!
+            //player.getPos().commit();
+            getConsole().EOLn(
+                "%s(): server forced respawn to XY: %f, %f",
+                __func__,
+                player.getPos().getNew().getX(), player.getPos().getNew().getY());
             player.getRespawnFlag() = true;
         }
 
@@ -524,7 +532,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         getConsole().SetLoggingState("PureRendererHWfixedPipe", true);
         m_pge.getPure().getRenderer()->ResetStatistics();
         getConsole().SetLoggingState("PureRendererHWfixedPipe", false);
-
+        
         getConsole().SetLoggingState(getLoggerModuleName(), true);
         getConsole().OLn("");
         getConsole().OLn("FramesElapsedSinceLastDurationsReset: %d", m_durations.m_nFramesElapsedSinceLastDurationsReset);
@@ -544,7 +552,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_durations.m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
         getConsole().OLn("");
         getConsole().SetLoggingState(getLoggerModuleName(), false);
-
+        
         m_durations.reset();
     }
 

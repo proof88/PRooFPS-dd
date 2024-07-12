@@ -699,6 +699,14 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
             {
                 player.clearNetDirty();
 
+                //if (playerPair.second.getRespawnFlag())
+                //{
+                //    getConsole().EOLn(
+                //        "%s(): player XY: %f, %f",
+                //        __func__,
+                //        player.getPos().getNew().getX(), player.getPos().getNew().getY());
+                //}
+
                 // we always reset respawn flag here
                 playerPair.second.getRespawnFlag() = false;
 

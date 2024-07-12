@@ -271,6 +271,12 @@ void proofps_dd::Physics::serverGravity(
     {
         auto& player = playerPair.second;
 
+        if (player.getRespawnFlag())
+        {
+            // do not do anything until server clears this flag!
+            continue;
+        }
+
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
@@ -384,6 +390,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
+        if (player.getRespawnFlag())
+        {
+            // do not do anything until server clears this flag!
+            continue;
+        }
 
         const PureObject3D* const plobj = player.getObject3D();
         PureVector vecOriginalJumpForce = player.getJumpForce();
@@ -700,7 +711,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
                 const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
                 const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
-                //getConsole().EOLn("x align to wall");
+                //getConsole().EOLn(
+                //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
+                //    player.getPos().getOld().getX(),
+                //    player.getPos().getNew().getX(),
+                //    fAlignNextToWall);
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
