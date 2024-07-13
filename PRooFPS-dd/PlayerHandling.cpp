@@ -14,10 +14,6 @@
 #include "PRooFPS-dd-packet.h"
 
 
-static constexpr float SndPlayerDieDistMin = 4.f;
-static constexpr float SndPlayerDieDistMax = 8.f;
-
-
 // ############################### PUBLIC ################################
 
 
@@ -67,10 +63,9 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
 {
     // here design is good because server and client share the same code
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
-    // TODO: other sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
-    const auto sndPlayerDieHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerDie, player.getPos().getNew());
-    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndPlayerDieHandle, SndPlayerDieDistMin, SndPlayerDieDistMax);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndPlayerDieHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+    
+    // TODO: other player-related sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
+    m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerDie, player.getPos().getNew());
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {

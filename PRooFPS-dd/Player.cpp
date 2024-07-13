@@ -125,6 +125,26 @@ proofps_dd::Player::Player(
         m_sndWpnNew->setSingleInstance(true);
         m_sndWpnAmmo->setSingleInstance(true);
         m_sndMedkit->setSingleInstance(true);
+        m_sndJumppad->setSingleInstance(true);
+
+        // These are hearable by other players as well so min/max distance is very important.
+        // Those can be set for the audio source instances as well after starting playing, but we just set them for the audio sources here because
+        // we dont need different values for each instance.
+        // And for these obviously we dont need to set "single instance" since they are allowed to be played in multiple instances in parallel.
+        m_sndFallYell_1->set3dMinMaxDistance(SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
+        m_sndFallYell_1->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        m_sndFallYell_2->set3dMinMaxDistance(SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
+        m_sndFallYell_2->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        m_sndPlayerLandSmallFall->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_sndPlayerLandSmallFall->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        m_sndPlayerLandBigFall->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_sndPlayerLandBigFall->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        m_sndPlayerDamage->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
+        m_sndPlayerDamage->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
 }
 
@@ -1350,8 +1370,6 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
         (iServerScream == 0) ?
         m_audio.play3dSound(*m_sndFallYell_1, getPos().getNew()) :
         m_audio.play3dSound(*m_sndFallYell_2, getPos().getNew());
-    m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleFallYell, SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
-    m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleFallYell, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     
     if (!m_network.isServer())
     {
@@ -1391,8 +1409,6 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     {
         // because of inaudible sound becomes audible, needs this hack: https://github.com/jarikomppa/soloud/issues/175
         m_handleSndPlayerLandBigFall = m_audio.play3dSound(*m_sndPlayerLandBigFall, playerPos);
-        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandBigFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
-        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandBigFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
         //getConsole().EOLn(
         //    "Player::%s() XYZ: %f, %f, %f; Camera XYZ: %f, %f, %f",
         //    __func__,
@@ -1402,16 +1418,12 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     else
     {
         m_handleSndPlayerLandSmallFall = m_audio.play3dSound(*m_sndPlayerLandSmallFall, playerPos);
-        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandSmallFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
-        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandSmallFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
 
     if (bDamageTaken && !bDied)
     {
         // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
         m_handleSndPlayerDamage = m_audio.play3dSound(*m_sndPlayerDamage, playerPos);
-        m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerDamage, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
-        m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerDamage, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
 
     if (!m_network.isServer())
@@ -1502,7 +1514,6 @@ void proofps_dd::Player::handleJumppadActivated()
 
         //getConsole().EOLn("PRooFPSddPGE::%s(): play sound", __func__);
 
-        m_sndJumppad->stop();
         m_audio.play3dSound(*m_sndJumppad, getPos().getNew());
     }
     else if (m_network.isServer())
