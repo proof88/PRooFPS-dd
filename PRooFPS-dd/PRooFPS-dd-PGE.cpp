@@ -229,6 +229,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("  size of MsgWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgWpnUpdateFromServer));
     getConsole().OLn("  size of MsgCurrentWpnUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgCurrentWpnUpdateFromServer));
     getConsole().OLn("  size of MsgMapItemUpdateFromServer: %u Bytes", sizeof(proofps_dd::MsgMapItemUpdateFromServer));
+    getConsole().OLn("  size of MsgPlayerEventFromServer: %u Bytes", sizeof(proofps_dd::MsgPlayerEventFromServer));
+    getConsole().OLn("  size of MsgDeathNotificationFromServer: %u Bytes", sizeof(proofps_dd::MsgDeathNotificationFromServer));
     getConsole().OLn("");
 
     getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");

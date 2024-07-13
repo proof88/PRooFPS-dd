@@ -15,8 +15,8 @@
 #include "WeaponHandling.h"
 
 
-static constexpr float SndWpnFireDistMin = 5.f;
-static constexpr float SndWpnFireDistMax = 10.f;
+static constexpr float SndWpnFireDistMin = 6.f;
+static constexpr float SndWpnFireDistMax = 14.f;
 static constexpr float SndExplosionDistMin = 6.f;
 static constexpr float SndExplosionDistMax = 14.f;
 
@@ -615,17 +615,15 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger() in player.attack()
                 bSendPrivateWpnUpdatePktToTheClientOnly = true;
             }
-            else
-            {
-                // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
-                // this is lame, as I think the weapon object itself should play when it fires a bullet, however currently
-                // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
-                // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
-                // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
-                const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
-                m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
-                m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-            }
+
+            // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
+            // this is lame, as I think the weapon object itself should play when it fires a bullet, however currently
+            // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
+            // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
+            // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
+            const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
+            m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
+            m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
         }  // end player.getAttack() && attack()
 
         if (wpn->update())
@@ -751,6 +749,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
 
     if (m_pge.getBullets().end() == it)
     {
+        // newborn bullet 
+
         if (msg.m_bDelete)
         {
             // this is valid scenario: explained a few lines earlier
@@ -759,34 +759,31 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         // need to create this new bullet first on our side
         //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: NEW bullet id %u", __func__, msg.m_bulletId);
 
-        const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
+        // find the owner of this new bullet
+        const auto playerIt = m_mapPlayers.find(connHandleServerSide);
         if (playerIt == m_mapPlayers.end())
         {
-            // must always find self player
+            // must always find bullet owner player since even player disconnect should come later than their created bullets
             assert(false);
             return false;
         }
 
         Player& player = playerIt->second;
-        if (player.getServerSideConnectionHandle() == connHandleServerSide)
+
+        // I'm playing the sound associated to player's current weapon, although it might happen that with BIG latency, when I receive this update from server,
+        // the player has already switched to another weapon ...
+        // but I think this cannot happen since player inputs and other events are processed and responded by server in order.
+        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+        if (!wpn)
         {
-            // this is my newborn bullet
-            // I'm playing the sound associated to my current weapon, although it might happen that with BIG latency, when I receive this update from server,
-            // I have already switched to another weapon ... but I think this cannot happen since my inputs are processed and responded by server in order.
-            Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-            if (!wpn)
-            {
-                getConsole().EOLn("WeaponHandling::%s(): getWeapon() failed!", __func__);
-                assert(false);
-                return false;
-            }
-            else
-            {
-                const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), msg.m_pos);
-                m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
-                m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-            }
+            getConsole().EOLn("WeaponHandling::%s(): getWeapon() failed!", __func__);
+            assert(false);
+            return false;
         }
+
+        const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), msg.m_pos);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
         m_pge.getBullets().push_back(
             Bullet(
