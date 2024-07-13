@@ -1512,8 +1512,8 @@ void proofps_dd::GUI::drawRespawnTimer()
     //const int timeRemainingUntilRespawnSecs =
     //    std::max(0, static_cast<int>(m_pConfig->getPlayerRespawnDelaySeconds()) - timeDiffSeconds);
 
-    constexpr float fProgressBarSizeX = 200.f;
     constexpr float fProgressBarSizeY = 10.f;
+    const float fProgressBarSizeX = ImGui::CalcTextSize(szRespawnWaitText).x;
     ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2.f - (fProgressBarSizeX / 2.f), ImGui::GetCursorPosY()));
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
