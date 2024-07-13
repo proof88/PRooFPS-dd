@@ -120,6 +120,11 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
 #endif
 
+        // these are played only for self and should be stopped automatically when played again to avoid multiple instances to be played in parallel,
+        // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.
+        m_sndWpnNew->setSingleInstance(true);
+        m_sndWpnAmmo->setSingleInstance(true);
+        m_sndMedkit->setSingleInstance(true);
     }
 }
 
@@ -1441,7 +1446,6 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
         {
         case MapItemType::ITEM_HEALTH:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
-            m_sndMedkit->stop();
             m_audio.play3dSound(*m_sndMedkit, getPos().getNew());
             m_eventsItemPickup.addEvent("Medkit: +" + std::to_string(MapItem::ITEM_HEALTH_HP_INC) + " HP");
             break;
@@ -1477,14 +1481,12 @@ void proofps_dd::Player::handleTakeWeaponItem(
     if (bJustBecameAvailable)
     {
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
-        m_sndWpnNew->stop();
         m_audio.play3dSound(*m_sndWpnNew, getPos().getNew());
         m_eventsItemPickup.addEvent("+ Weapon: " + MapItem::toString(eMapItemType));
     }
     else
     {
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
-        m_sndWpnAmmo->stop();
         m_audio.play3dSound(*m_sndWpnAmmo, getPos().getNew());
         m_eventsItemPickup.addEvent("+" + std::to_string(nAmmoIncrease) + " Ammo (" + MapItem::toString(eMapItemType) + ")");
     }
