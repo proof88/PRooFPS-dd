@@ -443,12 +443,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     
     const Explosion& xpl = m_explosions.back();
 
-    const auto sndExplosionHandle = m_pge.getAudio().getAudioEngineCore().play3d(
-        m_sounds.m_sndExplosion,
-        pos.getX(), pos.getY(), pos.getZ(),
-        0.f, 0.f, 0.f, /* velocity xyz */
-        0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-    m_pge.getAudio().getAudioEngineCore().setVolume(sndExplosionHandle, 1.f);
+    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
     m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
     m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
@@ -545,12 +540,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 
     Explosion& xpl = m_explosions.back();
 
-    const auto sndExplosionHandle = m_pge.getAudio().getAudioEngineCore().play3d(
-        m_sounds.m_sndExplosion,
-        pos.getX(), pos.getY(), pos.getZ(),
-        0.f, 0.f, 0.f, /* velocity xyz */
-        0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-    m_pge.getAudio().getAudioEngineCore().setVolume(sndExplosionHandle, 1.f);
+    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
     m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
     m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
@@ -632,13 +622,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
                 // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
                 // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
-                const PureVector& playerPos = player.getPos().getNew();
-                const auto sndWpnFireHandle = m_pge.getAudio().getAudioEngineCore().play3d(
-                    wpn->getFiringSound(),
-                    playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-                    0.f, 0.f, 0.f, /* velocity xyz */
-                    0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-                m_pge.getAudio().getAudioEngineCore().setVolume(sndWpnFireHandle, 1.f);
+                const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
                 m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
                 m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
             }
@@ -798,12 +782,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             }
             else
             {
-                const auto sndWpnFireHandle = m_pge.getAudio().getAudioEngineCore().play3d(
-                    wpn->getFiringSound(),
-                    msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
-                    0.f, 0.f, 0.f, /* velocity xyz */
-                    0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-                m_pge.getAudio().getAudioEngineCore().setVolume(sndWpnFireHandle, 1.f);
+                const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), msg.m_pos);
                 m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
                 m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
             }

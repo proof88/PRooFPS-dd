@@ -66,8 +66,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
         // TODO: other sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
-        const PureVector& playerPos = player.getPos().getNew();
-        m_pge.getAudio().getAudioEngineCore().play3d(m_sounds.m_sndPlayerDie, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerDie, player.getPos().getNew());
         xhair.hide();
     }
 

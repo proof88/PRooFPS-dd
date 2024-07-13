@@ -1340,25 +1340,11 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
         return;
     }
 
-    const PureVector& playerPos = getPos().getNew();
-    
     //getConsole().EOLn("Player::%s() play scream: %d", __func__, iServerScream);
-    
-    // https://solhsa.com/soloud/core3d.html
-    // https://solhsa.com/soloud/concepts3d.html
-    m_handleFallYell = (iServerScream == 0) ?
-        m_audio.getAudioEngineCore().play3d(
-            *m_sndFallYell_1,
-            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            0.f, 0.f, 0.f, /* velocity xyz */
-            0.f /* volume */) :
-        m_audio.getAudioEngineCore().play3d(
-            *m_sndFallYell_2,
-            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            0.f, 0.f, 0.f, /* velocity xyz */
-            0.f /* volume */);
-    /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-    m_audio.getAudioEngineCore().setVolume(m_handleFallYell, 1.f);
+    m_handleFallYell =
+        (iServerScream == 0) ?
+        m_audio.play3dSound(*m_sndFallYell_1, getPos().getNew()) :
+        m_audio.play3dSound(*m_sndFallYell_2, getPos().getNew());
     m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleFallYell, SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
     m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleFallYell, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     
@@ -1399,12 +1385,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     if (fFallHeight >= 1.f)
     {
         // because of inaudible sound becomes audible, needs this hack: https://github.com/jarikomppa/soloud/issues/175
-        m_handleSndPlayerLandBigFall = m_audio.getAudioEngineCore().play3d(
-            *m_sndPlayerLandBigFall,
-            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            0.f, 0.f, 0.f, /* velocity xyz */
-            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerLandBigFall, 1.f);
+        m_handleSndPlayerLandBigFall = m_audio.play3dSound(*m_sndPlayerLandBigFall, playerPos);
         m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandBigFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandBigFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
         //getConsole().EOLn(
@@ -1415,12 +1396,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     }
     else
     {
-        m_handleSndPlayerLandSmallFall = m_audio.getAudioEngineCore().play3d(
-            *m_sndPlayerLandSmallFall,
-            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            0.f, 0.f, 0.f, /* velocity xyz */
-            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerLandSmallFall, 1.f);
+        m_handleSndPlayerLandSmallFall = m_audio.play3dSound(*m_sndPlayerLandSmallFall, playerPos);
         m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerLandSmallFall, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerLandSmallFall, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
@@ -1428,12 +1404,7 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     if (bDamageTaken && !bDied)
     {
         // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
-        m_handleSndPlayerDamage = m_audio.getAudioEngineCore().play3d(
-            *m_sndPlayerDamage,
-            playerPos.getX(), playerPos.getY(), playerPos.getZ(),
-            0.f, 0.f, 0.f, /* velocity xyz */
-            0.f /* volume */); /* hack: set initial volume 0 and then set it back to 1, as WA for issue: https://github.com/jarikomppa/soloud/issues/175 */
-        m_audio.getAudioEngineCore().setVolume(m_handleSndPlayerDamage, 1.f);
+        m_handleSndPlayerDamage = m_audio.play3dSound(*m_sndPlayerDamage, playerPos);
         m_audio.getAudioEngineCore().set3dSourceMinMaxDistance(m_handleSndPlayerDamage, SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_audio.getAudioEngineCore().set3dSourceAttenuation(m_handleSndPlayerDamage, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
     }
@@ -1466,13 +1437,12 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
-        const PureVector& playerPos = getPos().getNew();
         switch (eMapItemType)
         {
         case MapItemType::ITEM_HEALTH:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_sndMedkit->stop();
-            m_audio.getAudioEngineCore().play3d(*m_sndMedkit, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+            m_audio.play3dSound(*m_sndMedkit, getPos().getNew());
             m_eventsItemPickup.addEvent("Medkit: +" + std::to_string(MapItem::ITEM_HEALTH_HP_INC) + " HP");
             break;
         default:
@@ -1504,19 +1474,18 @@ void proofps_dd::Player::handleTakeWeaponItem(
     // ITEM_HEALTH is used for weapon updates that are not item pickups, here we should always have the actually valid weapon item type
     assert(eMapItemType != MapItemType::ITEM_HEALTH);
 
-    const PureVector& playerPos = getPos().getNew();
     if (bJustBecameAvailable)
     {
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
         m_sndWpnNew->stop();
-        m_audio.getAudioEngineCore().play3d(*m_sndWpnNew, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_audio.play3dSound(*m_sndWpnNew, getPos().getNew());
         m_eventsItemPickup.addEvent("+ Weapon: " + MapItem::toString(eMapItemType));
     }
     else
     {
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
         m_sndWpnAmmo->stop();
-        m_audio.getAudioEngineCore().play3d(*m_sndWpnAmmo, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_audio.play3dSound(*m_sndWpnAmmo, getPos().getNew());
         m_eventsItemPickup.addEvent("+" + std::to_string(nAmmoIncrease) + " Ammo (" + MapItem::toString(eMapItemType) + ")");
     }
 }
@@ -1532,8 +1501,7 @@ void proofps_dd::Player::handleJumppadActivated()
         //getConsole().EOLn("PRooFPSddPGE::%s(): play sound", __func__);
 
         m_sndJumppad->stop();
-        const PureVector& playerPos = getPos().getNew();
-        m_audio.getAudioEngineCore().play3d(*m_sndJumppad, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        m_audio.play3dSound(*m_sndJumppad, getPos().getNew());
     }
     else if (m_network.isServer())
     {
