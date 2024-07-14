@@ -114,8 +114,7 @@ proofps_dd::Player::Player(
         // AudioSource was not yet loaded from file, let's try it now then.
         // If we load stuff now below, and later user turns audio off, that is also fine, no audio will be played, and if later
         // again they turn it on, we can use the previously loaded AudioSource information to create instances for playing.
-        // not nice but currently this is how I skip loading sounds for unit tests
-#ifndef TESTING
+
         // new would had thrown above in case of alloc failure, no need to check
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
@@ -126,7 +125,6 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
         m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
         m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
-#endif
 
         // these are played only for self and should be stopped automatically when played again to avoid multiple instances to be played in parallel,
         // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.
