@@ -66,6 +66,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     
     // TODO: other player-related sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
     m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerDie, player.getPos().getNew());
+    //getConsole().EOLn("PlayerHandling::%s() playing die sound", __func__);
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
@@ -203,7 +204,7 @@ void proofps_dd::PlayerHandling::updatePlayersOldValues()
 
 void proofps_dd::PlayerHandling::writePlayerList()
 {
-    getConsole().OLnOI("PRooFPSddPGE::%s()", __func__);
+    getConsole().OLnOI("PlayerHandling::%s()", __func__);
     for (const auto& playerPair : m_mapPlayers)
     {
         getConsole().OLn("Username: %s; connHandleServerSide: %u; address: %s",
@@ -222,7 +223,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
 {
     if (!m_pge.getNetwork().isServer())
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): client received, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("PlayerHandling::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
         return false;
     }
@@ -242,17 +243,17 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
                 if (!m_maps.load(m_maps.getNextMapToBeLoaded().c_str(), cbDisplayMapLoadingProgressUpdate))
                 {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, sNextMapToBeLoaded.c_str());
+                    getConsole().EOLn("PlayerHandling::%s(): m_maps.load() failed: %s!", __func__, sNextMapToBeLoaded.c_str());
                     assert(false);
                     return false;
                 }
             }
             else
             {
-                getConsole().OLn("PRooFPSddPGE::%s(): map %s already loaded", __func__, m_maps.getNextMapToBeLoaded().c_str());
+                getConsole().OLn("PlayerHandling::%s(): map %s already loaded", __func__, m_maps.getNextMapToBeLoaded().c_str());
             }
 
-            getConsole().OLn("PRooFPSddPGE::%s(): first (local) user connected and I'm server, so this is me (connHandleServerSide: %u)",
+            getConsole().OLn("PlayerHandling::%s(): first (local) user connected and I'm server, so this is me (connHandleServerSide: %u)",
                 __func__, connHandleServerSide);
 
             pge_network::PgePacket newPktSetup;
@@ -271,14 +272,14 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                 }
                 else
                 {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
                     return false;
                 }
             }
             else
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 return false;
             }
@@ -286,7 +287,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         else
         {
             // cannot happen
-            getConsole().EOLn("PRooFPSddPGE::%s(): user (connHandleServerSide: %u) connected with bCurrentClient as true but it is not me, CANNOT HAPPEN!",
+            getConsole().EOLn("PlayerHandling::%s(): user (connHandleServerSide: %u) connected with bCurrentClient as true but it is not me, CANNOT HAPPEN!",
                 __func__, connHandleServerSide);
             assert(false);
             return false;
@@ -296,19 +297,19 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
     {
         if (connHandleServerSide == pge_network::ServerConnHandle)
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): server user (connHandleServerSide: %u) connected but map m_bCurrentClient is false, CANNOT HAPPEN!",
+            getConsole().EOLn("PlayerHandling::%s(): server user (connHandleServerSide: %u) connected but map m_bCurrentClient is false, CANNOT HAPPEN!",
                 __func__, connHandleServerSide);
             assert(false);
             return false;
         }
         // server is processing another user's birth
-        getConsole().OLn("PRooFPSddPGE::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
+        getConsole().OLn("PlayerHandling::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, connHandleServerSide, msg.m_szIpAddress);
 
         pge_network::PgePacket newPktSetup;
         if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, msg.m_szIpAddress, m_maps.getFilename()))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
@@ -320,7 +321,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
             newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0, true /* invulnerable by default */))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
@@ -355,7 +356,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         // When we are trying to join a server but we get bored and user presses ESCAPE, client's disconnect is invoked, which
         // actually starts disconnecting because it thinks we are connected to server, and injects this userDisconnected pkt.
         // 
-        //getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        //getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         //assert(false); // in debug mode, try to understand this scenario
         return true; // in release mode, dont terminate
     }
@@ -371,13 +372,13 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     if (m_pge.getNetwork().isServer())
     {
         getConsole().OLn(
-            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm server",
+            "PlayerHandling::%s(): user %s with connHandleServerSide %u disconnected and I'm server",
             __func__, playerIt->second.getName().c_str(), connHandleServerSide);
     }
     else
     {
         getConsole().OLn(
-            "PRooFPSddPGE::%s(): user %s with connHandleServerSide %u disconnected and I'm client",
+            "PlayerHandling::%s(): user %s with connHandleServerSide %u disconnected and I'm client",
             __func__, playerIt->second.getName().c_str(), connHandleServerSide);
     }
 
@@ -386,7 +387,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
 
     if (bClientShouldRemoveAllPlayers)
     {
-        getConsole().OLn("PRooFPSddPGE::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
+        getConsole().OLn("PlayerHandling::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
         m_gui.hideRespawnTimer();
         m_gui.hideGameObjectives();
         assert(m_gui.getDeathKillEvents());
@@ -625,7 +626,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
     if (!m_pge.getNetwork().isServer())
     {
         // should not happen, but we log it anyway, if in future we might mess up something during a refactor ...
-        getConsole().EOLn("PRooFPSddPGE::%s(): NOT server!", __func__);
+        getConsole().EOLn("PlayerHandling::%s(): NOT server!", __func__);
         assert(false);
         return;
     }
@@ -674,13 +675,13 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 return;
             }
             m_pge.getNetwork().getServer().send(newPktServerInfo, playerPair.first);
-            getConsole().EOLn("PRooFPSddPGE::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
+            getConsole().EOLn("PlayerHandling::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
         } // isExpectingAfterBootUpDelayedUpdate()
 
         if (bSendUserUpdates && player.isNetDirty())
         {
             pge_network::PgePacket newPktUserUpdate;
-            //getConsole().EOLn("PRooFPSddPGE::%s(): send 1!", __func__);
+            //getConsole().EOLn("PlayerHandling::%s(): send 1!", __func__);
             if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                 newPktUserUpdate,
                 playerPair.second.getServerSideConnectionHandle(),
@@ -714,11 +715,11 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
                 m_pge.getNetwork().getServer().sendToAll(newPktUserUpdate);
-                //getConsole().EOLn("PRooFPSddPGE::%s(): send 2, invul: %b!", __func__, playerConst.getInvulnerability());
+                //getConsole().EOLn("PlayerHandling::%s(): send 2, invul: %b!", __func__, playerConst.getInvulnerability());
             }
             else
             {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
             }
         } // bSendUserUpdates
@@ -744,14 +745,14 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
     const bool bCurrentClient = isMyConnection(connHandleServerSide);
     auto& player = it->second;
     const auto& playerConst = player;
-    //getConsole().OLn("PRooFPSddPGE::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
+    //getConsole().OLn("PlayerHandling::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
 
     const bool bOriginalExpectingStartPos = player.isJustCreatedAndExpectingStartPos();
     if (player.isJustCreatedAndExpectingStartPos())
@@ -926,7 +927,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
-        getConsole().EOLn("PRooFPSddPGE::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
     }
 
