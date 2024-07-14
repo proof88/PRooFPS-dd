@@ -1170,7 +1170,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         m_gui.getMinimap()->show();
         m_gui.hideGameObjectives(); // just in case it would had stuck from a previous game session
         
-        getAudio().getAudioEngineCore().play(m_sounds.m_sndLetsgo);
+        getAudio().playSound(m_sounds.m_sndLetsgo);
     }
     else
     {

@@ -91,7 +91,7 @@ proofps_dd::Player::Player(
 {
     BuildPlayerObject(true);
 
-    // load audio only once whenever 1st player object is created, does not matter if that is server or current client player,
+    // load audio sources only once whenever 1st player object is created, does not matter if that is server or current client player,
     // because these are static instances need to be set up only once for our player only
     if (!m_sndWpnAmmo)
     {
@@ -105,7 +105,15 @@ proofps_dd::Player::Player(
         m_sndPlayerLandSmallFall = new SoLoud::Wav();
         m_sndPlayerLandBigFall = new SoLoud::Wav();
         m_sndPlayerDamage = new SoLoud::Wav();
+    }
 
+    // note that due to config can be changed in settings, we need to check if sound is actually loaded and try load again if it was
+    // not loaded previously, as loadSound() loads only if audio is enabled and initialized!
+    if (m_sndWpnAmmo->getLength() == 0.f)
+    {
+        // AudioSource was not yet loaded from file, let's try it now then.
+        // If we load stuff now below, and later user turns audio off, that is also fine, no audio will be played, and if later
+        // again they turn it on, we can use the previously loaded AudioSource information to create instances for playing.
         // not nice but currently this is how I skip loading sounds for unit tests
 #ifndef TESTING
         // new would had thrown above in case of alloc failure, no need to check
@@ -487,7 +495,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
 {
     // TODO: in newer version Player already has Network instance, so bServer here is obsolete!
     m_timeDied = std::chrono::steady_clock::now();
-    m_audio.getAudioEngineCore().stop(m_handleFallYell);
+    m_audio.stopSoundInstance(m_handleFallYell);
     if (bMe)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
@@ -1397,10 +1405,10 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     m_bFallingHighTriggered = false;
 
     // whichever is currently being played for this player, needs to be stopped first
-    m_audio.getAudioEngineCore().stop(m_handleSndPlayerLandSmallFall);
-    m_audio.getAudioEngineCore().stop(m_handleSndPlayerLandBigFall);
-    m_audio.getAudioEngineCore().stop(m_handleSndPlayerDamage);
-    m_audio.getAudioEngineCore().stop(m_handleFallYell);
+    m_audio.stopSoundInstance(m_handleSndPlayerLandSmallFall);
+    m_audio.stopSoundInstance(m_handleSndPlayerLandBigFall);
+    m_audio.stopSoundInstance(m_handleSndPlayerDamage);
+    m_audio.stopSoundInstance(m_handleFallYell);
 
     //getConsole().EOLn("Player::%s() playing sound", __func__);
 

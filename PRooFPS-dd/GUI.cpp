@@ -1196,6 +1196,42 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 } // drawJoinGameMenu
 
+void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId /* must be unique! */)
+{
+    // it is very important: sPopupId must be unique because otherwise we won't exactly know for which setting we
+    // are opening popup for, and clicking on Cancel button will most probably flip the wrong CVAR!
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(sPopupId.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("The game will restart now to apply the new configuration.");
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            getConsole().OLn("Initiating game restart to apply new settings ...");
+            if (!m_pPge->getConfigProfiles().writeConfiguration())
+            {
+                getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
+            m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game with engine reinit
+            m_currentMenu = MenuState::Exiting;
+            m_pPge->getPure().getWindow().Close();
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            // flip the config that we proactively flipped earlier in checkbox handler
+            cvar.Set( !cvar.getAsBool() );
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
@@ -1217,41 +1253,15 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     bool bFullscreen = !cvarGfxFullscreen.getAsBool();
     if (ImGui::Checkbox("##cbFullscreen", &bFullscreen))
     {
-        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox based on this
+        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox behind the dialog box based on this
         cvarGfxFullscreen.Set(!bFullscreen);
 
-        ImGui::OpenPopup("Apply Setting");
+        // IMPORTANT: SAME STRING AS GIVEN TO OpenPopup() should be given to showConfigApplyAndRestartDialogBox() BELOW!
+        // Otherwise in next frame, we might end up invoking showConfigApplyAndRestartDialogBox) with different CVAR somewhere above!
+        // TODO: make this kind of checkbox into a single function so no mistake can be made!
+        ImGui::OpenPopup("Apply Video Setting");
     }
-
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("Apply Setting", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::TextUnformatted("The game will restart now to apply the new configuration.");
-
-        if (ImGui::Button("OK", ImVec2(120, 0)))
-        {
-            getConsole().OLn("Initiating game restart to apply new settings ...");
-            if (!m_pPge->getConfigProfiles().writeConfiguration())
-            {
-                getConsole().EOLn("ERROR: failed to save current config profile!");
-            }
-            m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game
-            m_currentMenu = MenuState::Exiting;
-            m_pPge->getPure().getWindow().Close();
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            // flip the config that we proactively flipped earlier in checkbox handler above
-            m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED].Set(bFullscreen);
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
+    showConfigApplyAndRestartDialogBox(cvarGfxFullscreen, "Apply Video Setting");
 
     PGEcfgVariable& cvarGfxVSync = m_pPge->getConfigProfiles().getVars()[PureScreen::CVAR_GFX_VSYNC];
     ImGui::AlignTextToFramePadding();
@@ -1365,6 +1375,28 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     {
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
+
+    PGEcfgVariable& cvarSfxEnabled = m_pPge->getConfigProfiles().getVars()[pge_audio::PgeAudio::CVAR_SFX_ENABLED];
+    bool bSfxEnabled = cvarSfxEnabled.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSfxEnabled; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSfxEnabled, cvarSfxEnabled);
+    ImGui::TextUnformatted("Audio:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbSfxEnabled", &bSfxEnabled))
+    {
+        // because onGameInitialized() also loads sounds, we need to restart the whole game when audio is re-enabled!
+        // So anyway I'm restarting the game also if we are disabling it here.
+
+        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox behind the dialog box based on this
+        cvarSfxEnabled.Set(bSfxEnabled);
+
+        // IMPORTANT: SAME STRING AS GIVEN TO OpenPopup() should be given to showConfigApplyAndRestartDialogBox() BELOW!
+        // Otherwise in next frame, we might end up invoking showConfigApplyAndRestartDialogBox) with different CVAR somewhere above!
+        // TODO: make this kind of checkbox into a single function so no mistake can be made!
+        ImGui::OpenPopup("Apply Audio Setting");
+    }
+    showConfigApplyAndRestartDialogBox(cvarSfxEnabled, "Apply Audio Setting");
 
     ImGui::Separator();
 

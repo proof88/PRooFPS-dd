@@ -911,7 +911,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         if (isMyConnection(it->first) && (player.getWeaponManager().getCurrentWeapon()->getFilename() != msg.m_szWpnCurrentName))
         {
             //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
-            m_pge.getAudio().getAudioEngineCore().play(m_sounds.m_sndChangeWeapon);
+            m_pge.getAudio().playSound(m_sounds.m_sndChangeWeapon);
 
             handleCurrentWeaponBulletCountsChangeShared(
                 player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(),

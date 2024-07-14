@@ -32,6 +32,7 @@ public:
         UnitTest(__FILE__),
         gm(nullptr),
         dm(nullptr),
+        m_audio(cfgProfiles),
         m_cfgProfiles(cfgProfiles),
         m_events(8 /* time limit secs */, 5 /* event count limit */),
         m_engine(nullptr),

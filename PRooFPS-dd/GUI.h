@@ -150,6 +150,7 @@ namespace proofps_dd
         static float drawPlayerNameInputBox();
         static void drawCreateGameMenu(const float& fRemainingSpaceY);
         static void drawJoinGameMenu(const float& fRemainingSpaceY);
+        static void showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId);
         static void drawSettingsMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
 

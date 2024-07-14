@@ -38,6 +38,7 @@ public:
 
     MapsTest(PGEcfgProfiles& cfgProfiles) :
         MapTestsCommon( __FILE__ ),
+        m_audio(cfgProfiles),
         m_cfgProfiles(cfgProfiles)
     {
         engine = NULL;

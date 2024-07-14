@@ -27,6 +27,7 @@ public:
 
     PlayerTest(PGEcfgProfiles& cfgProfiles) :
         UnitTest(__FILE__),
+        m_audio(cfgProfiles),
         m_cfgProfiles(cfgProfiles),
         m_engine(nullptr),
         m_events(8 /* time limit secs */, 5 /* event count limit */),
