@@ -60,8 +60,8 @@ namespace proofps_dd
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapItemUpdateFromServer,     "MsgMapItemUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" },
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::PlayerEventFromServer,       "MsgPlayerEventFromServer" },
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::DeathNotificationFromServer, "MsgDeathNotificationFromServer" }
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::DeathNotificationFromServer, "MsgDeathNotificationFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::PlayerEventFromServer,       "MsgPlayerEventFromServer" }
     );
 
     // this way nobody will forget updating both the enum and the array
