@@ -334,10 +334,14 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Player Respawn Invulnerability Delay in config, forcing default: %u seconds", m_nPlayerRespawnInvulnerabilityDelaySecs);
     }
 
+    // TODO: I should also validate cl_wpn_empty_mag_nonempty_unmag_behavior and cl_wpn_empty_mag_empty_unmag_behavior here, but for now I wont
+    // because I'm lazy, and anyway, if a client messes it up intentionally, then sorry not sorry! I will fix validation later when this validate()
+    // is not hundreds of lines anymore ...
+
     getConsole().OOOLn("Config validation finished!");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
-} // initialize()
+} // validate()
 
 const unsigned int& proofps_dd::Config::getTickRate() const
 {

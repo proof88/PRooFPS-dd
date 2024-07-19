@@ -72,7 +72,8 @@ namespace proofps_dd
             proofps_dd::XHair& xhair,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
-            const unsigned int nPhysicsRateMin);
+            const unsigned int nPhysicsRateMin,
+            proofps_dd::WeaponHandling& wpnHandling);
 
         PlayerAppActionRequest clientHandleInputWhenDisconnectedFromServer();
 
@@ -110,7 +111,8 @@ namespace proofps_dd
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,
-            const unsigned int nPhysicsRateMin);
+            const unsigned int nPhysicsRateMin,
+            proofps_dd::WeaponHandling& wpnHandling);
 
         PlayerAppActionRequest clientKeyboardWhenDisconnectedFromServer();
 

@@ -72,6 +72,8 @@ namespace proofps_dd
     static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
     static constexpr char* CVAR_GFX_CAM_ROLLING = "gfx_cam_rolling";
 
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehavior = "cl_wpn_empty_mag_nonempty_unmag_behavior";
+
     class Config
     {
     public:

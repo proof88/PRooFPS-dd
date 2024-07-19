@@ -76,7 +76,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::XHair& xhair,
     const unsigned int nTickrate,
     const unsigned int nClUpdateRate,
-    const unsigned int nPhysicsRateMin)
+    const unsigned int nPhysicsRateMin,
+    proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way as it is explained in serverHandleUserCmdMoveFromClient() */)
 {
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
@@ -84,7 +85,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
-        clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+        clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin, wpnHandling);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
         clientMouseWhenConnectedToServer(gameMode, pkt, player, xhair.getObject3D());
@@ -477,7 +478,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::Player& player,
     const unsigned int nTickrate,
     const unsigned int nClUpdateRate,
-    const unsigned int nPhysicsRateMin)
+    const unsigned int nPhysicsRateMin,
+    proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way as it is explained in serverHandleUserCmdMoveFromClient() */)
 {
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -601,12 +603,17 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         bToggleRunWalk = true;
     }
 
-    bool bRequestReload = false;
+    bool bRequestReload = wpnHandling.getWeaponAutoReloadRequest();
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
     {
-        //getConsole().EOLn("InputHandling::%s(): bRequestReload became true!", __func__);
         bRequestReload = true;
     }
+    wpnHandling.clearWeaponAutoReloadRequest();
+
+    //if (bRequestReload)
+    //{
+    //    getConsole().EOLn("InputHandling::%s(): bRequestReload became true!", __func__);
+    //}
 
     unsigned char cWeaponSwitch = '\0';
     if (!bRequestReload)
@@ -855,6 +862,8 @@ void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveTo
 
         m_fLastWeaponAngleZSent = player.getWeaponAngle().getNew().getZ();
         proofps_dd::MsgUserCmdFromClient::setWpnAngles(pkt, m_fLastWeaponAngleZSent);
+
+        //getConsole().EOLn("InputHandling::%s(): sending pkt with bRequestReload %b", __func__, proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt));
 
         // shouldSend() at this point means that there were actual change in user input so MsgUserCmdFromClient will be sent out.
         // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of

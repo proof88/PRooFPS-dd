@@ -26,6 +26,10 @@
 namespace proofps_dd
 {
 
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop = "no-op";
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload = "auto-reload";
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded = "auto-switch-to-best-loaded";
+
     class WeaponHandling :
         protected virtual proofps_dd::Physics
     {
@@ -81,6 +85,9 @@ namespace proofps_dd
             const TPureUInt& nOldUnmagCount,
             const TPureUInt& nNewUnmagCount);
 
+        const bool& getWeaponAutoReloadRequest() const;
+        void clearWeaponAutoReloadRequest();
+
     protected:
 
         void deleteWeaponHandlingAll();
@@ -113,7 +120,9 @@ namespace proofps_dd
             const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);
         void handleWeaponStateChangeShared(
             const Weapon::State& oldState,
-            const Weapon::State& newState);
+            const Weapon::State& newState,
+            const TPureUInt& nMagCount,
+            const TPureUInt& nUnmagCount);
 
     private:
 
@@ -127,6 +136,7 @@ namespace proofps_dd
         proofps_dd::Sounds& m_sounds;
 
         std::list<Explosion> m_explosions;
+        bool m_bWpnAutoReloadRequest = false;
 
     }; // class WeaponHandling
 

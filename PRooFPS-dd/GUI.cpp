@@ -17,6 +17,7 @@
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+#include "WeaponHandling.h"
 
 
 static constexpr float fDefaultFontSizePixels = 20.f;
@@ -1375,6 +1376,30 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     {
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
+
+    ImGui::BeginGroup();
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("When Weapon Becomes Empty BUT HAS Spare Ammo, Then:");
+        ImGui::Indent();
+        PGEcfgVariable& cvarClWpnEmptyMagNonemptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior];
+
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Auto-Reload Current Weapon", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload);
+        }
+        if (ImGui::RadioButton("Auto-Switch to Next Best Loaded Weapon", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded);
+        }
+        if (ImGui::RadioButton("Do Nothing", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop);
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
 
     PGEcfgVariable& cvarSfxEnabled = m_pPge->getConfigProfiles().getVars()[pge_audio::PgeAudio::CVAR_SFX_ENABLED];
     bool bSfxEnabled = cvarSfxEnabled.getAsBool();

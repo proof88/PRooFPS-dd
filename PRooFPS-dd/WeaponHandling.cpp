@@ -66,9 +66,361 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
     return "WeaponHandling";
 }
 
+bool proofps_dd::WeaponHandling::initializeWeaponHandling()
+{
+    // Which key should switch to which weapon
+    WeaponManager::getKeypressToWeaponMap() = {
+        {'2', "pistol.txt"},
+        {'3', "machinegun.txt"},
+        {'4', "bazooka.txt"}
+    };
+
+    Explosion::resetGlobalExplosionId();
+    return Explosion::initExplosionsReference(m_pge);
+}
+
+float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
+    const Player& player,
+    const Explosion& xpl,
+    const TPureFloat& fDamageAreaPulse,
+    const int& nDamageHp,
+    PureVector& vecImpactForce)
+{
+    PureVector vDirPerAxis;
+    PureVector vDistancePerAxis;
+    const float fDistance = distance_NoZ_with_distancePerAxis(
+        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+        xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
+        vDirPerAxis, vDistancePerAxis);
+
+    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
+
+    if (fRadiusDamage > 0.f)
+    {
+        // to determine the direction of impact, we should use the center positions of player and explosion, however
+        // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
+        // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
+        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+        vecImpactForce.Set(fImpactX, fImpactY, 0.f);
+    }
+
+    return fRadiusDamage;
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize,
+    const TPureFloat& fDamageAreaPulse,
+    const int& nDamageHp,
+    XHair& xhair,
+    PureVector& vecCamShakeForce,
+    proofps_dd::GameMode& gameMode)
+{
+    m_explosions.push_back(
+        Explosion(
+            m_pge.getPure(),
+            connHandle,
+            pos,
+            fDamageAreaSize));
+
+    const Explosion& xpl = m_explosions.back();
+
+    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
+    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
+    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+    // apply area damage to players
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+        const auto& playerConst = player;
+
+        if (playerConst.getHealth() <= 0)
+        {
+            continue;
+        }
+
+        PureVector vecImpactForce;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+        );
+        if (fRadiusDamage > 0.f)
+        {
+            /* player.getImpactForce() is decreased in Physics */
+            player.getImpactForce() += vecImpactForce;
+
+            if (playerConst.getServerSideConnectionHandle() == 0)
+            {
+                // this is server player so shake camera!
+                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
+                vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
+            }
+
+            if (player.getInvulnerability())
+            {
+                // even for invulnerable players we let the impact for to be modified as usual above
+                continue;
+            }
+
+            player.doDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+            if (playerConst.getHealth() == 0)
+            {
+                const auto itKiller = m_mapPlayers.find(xpl.getOwner());
+                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
+                if (itKiller == m_mapPlayers.end())
+                {
+                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
+                    // we still want to display the death notification without the killer's name, but we won't decrease
+                    // frag count for the player because HandlePlayerDied() is not doing that.
+                    nKillerConnHandleServerSide = playerConst.getServerSideConnectionHandle();
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                    //    __func__, playerPair.first.c_str());
+                }
+                else
+                {
+                    nKillerConnHandleServerSide = itKiller->first;
+
+                    // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
+                    // in that case frags should be decremented!
+                    if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
+                    {
+                        itKiller->second.getFrags()--;
+                    }
+                    else
+                    {
+                        itKiller->second.getFrags()++;
+                    }
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                    //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                }
+                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                handlePlayerDied(player, xhair, nKillerConnHandleServerSide, gameMode);
+            }
+        }
+    }
+
+    return m_explosions.back();
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
+    const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos,
+    const int& nDamageHp,
+    const TPureFloat& fDamageAreaSize,
+    const TPureFloat& fDamageAreaPulse,
+    PureVector& vecCamShakeForce)
+{
+    m_explosions.push_back(
+        Explosion(
+            m_pge.getPure(),
+            id /* explosion id is not used on client-side */,
+            connHandle,
+            pos,
+            fDamageAreaSize));
+
+    Explosion& xpl = m_explosions.back();
+
+    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
+    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
+    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
+    if (playerIt == m_mapPlayers.end())
+    {
+        // must always find self player
+        assert(false);
+        return xpl;
+    }
+
+    const auto& playerConst = playerIt->second;
+    if (playerConst.getHealth() > 0)
+    {
+        // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
+        PureVector vecImpactForce;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+        );
+
+        if (fRadiusDamage > 0.f)
+        {
+            // close enough, shake camera!
+            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
+            vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
+        }
+    }
+
+    return xpl;
+}
+
+void proofps_dd::WeaponHandling::handleCurrentWeaponBulletCountsChangeShared(
+    const TPureUInt& nOldMagCount,
+    const TPureUInt& nNewMagCount,
+    const TPureUInt& /*nOldUnmagCount*/,
+    const TPureUInt& /*nNewUnmagCount*/)
+{
+    // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
+
+    if ((nOldMagCount > 0) && (nNewMagCount == 0))
+    {
+        m_gui.getXHair()->handleMagEmpty();
+
+        // we cannot set wpn auto reload request flag here because this is too early: we don't yet know the updated state of the weapon,
+        // or it still not went back to idle after becoming empty ... so we set the flag in handleWeaponStateChangeShared()!
+    }
+    else if ((nOldMagCount == 0) && (nNewMagCount > 0))
+    {
+        m_gui.getXHair()->handleMagLoaded();
+    }
+}
+
+const bool& proofps_dd::WeaponHandling::getWeaponAutoReloadRequest() const
+{
+    return m_bWpnAutoReloadRequest;
+}
+
+void proofps_dd::WeaponHandling::clearWeaponAutoReloadRequest()
+{
+    m_bWpnAutoReloadRequest = false;
+}
+
 
 // ############################## PROTECTED ##############################
 
+
+void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
+{
+    m_explosions.clear();
+    Explosion::destroyExplosionsReference();
+    Explosion::resetGlobalExplosionId();
+
+    m_pge.getBullets().clear();
+    Bullet::resetGlobalBulletId();
+}
+
+void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
+{
+    if (gameMode.isGameWon())
+    {
+        return;
+    }
+
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        const pge_network::PgeNetworkConnectionHandle& playerServerSideConnHandle = playerPair.first;
+        Player& player = playerPair.second;
+        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+        if (!wpn)
+        {
+            continue;
+        }
+
+        const auto nOldMagCount = wpn->getMagBulletCount();
+        const auto nOldUnmagCount = wpn->getUnmagBulletCount();
+        bool bSendPrivateWpnUpdatePktToTheClientOnly = false;
+        if (player.getAttack() && player.attack())
+        {
+            //getConsole().EOLn("WeaponHandling::%s(): player %u attack", __func__, playerServerSideConnHandle);
+            // server will have the new bullet, clients will learn about the new bullet when server is sending out
+            // the regular bullet updates;
+            // but we send out the wpn update for bullet count change here for that single client
+            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
+            {
+                // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger() in player.attack()
+                bSendPrivateWpnUpdatePktToTheClientOnly = true;
+            }
+
+            // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
+            // this is lame, as I think the weapon object itself should play when it fires a bullet, however currently
+            // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
+            // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
+            // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
+            const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
+            m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
+            m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+        }  // end player.getAttack() && attack()
+
+        if (wpn->update())
+        {
+            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
+            {
+                // server doesn't need to send this msg to itself, it already executed bullet count change by wpn->update()
+                bSendPrivateWpnUpdatePktToTheClientOnly = true;
+            }
+        }
+
+        if (playerServerSideConnHandle == pge_network::ServerConnHandle)
+        {
+            handleCurrentWeaponBulletCountsChangeShared(
+                nOldMagCount,
+                wpn->getMagBulletCount(),
+                nOldUnmagCount,
+                wpn->getUnmagBulletCount());
+            handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+        }
+
+        // to make the auto weapon reload work properly for clients, MsgWpnUpdateFromServer should be always sent out earlier than MsgCurrentWpnUpdateFromServer, because
+        // they will initiate the auto reload for MsgCurrentWpnUpdateFromServer if relevant bullet mag and unmag conditions meet, and we need them updated!
+        if (bSendPrivateWpnUpdatePktToTheClientOnly)
+        {
+            pge_network::PgePacket pktWpnUpdatePrivate;
+            if (!proofps_dd::MsgWpnUpdateFromServer::initPkt(
+                pktWpnUpdatePrivate,
+                pge_network::ServerConnHandle /* ignored by client anyway */,
+                wpn->getFilename(),
+                MapItemType::ITEM_HEALTH /* intentionally setting nonsense type, because itemType should be valid only in case of item pickup for now */,
+                /* IMPORTANT: later if we remove wpn filename from message, even here we will need to use correct itemType, so we will be unable to distinguish
+                   from wpn reload induced ammo increase or item pickup induced ammo increase in handleWpnUpdateFromServer(), thus we will need to add a flag
+                   that clearly indicates if scenario is item pickup or not! */
+                wpn->isAvailable(),
+                wpn->getMagBulletCount(),
+                wpn->getUnmagBulletCount(),
+                0 /* unused when itemType is MapItemType::ITEM_HEALTH */))
+            {
+                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                continue;
+            }
+            m_pge.getNetwork().getServer().send(pktWpnUpdatePrivate, playerServerSideConnHandle);
+        }
+
+        bool bSendPublicWpnUpdatePktToAllClients = false;
+        if (wpn->getState().isDirty())
+        {
+            bSendPublicWpnUpdatePktToAllClients = true;
+            wpn->updateOldValues();
+        }
+
+        if (bSendPublicWpnUpdatePktToAllClients)
+        {
+            // we use the same msg as being used for handling weapon change in InputHandling, however it cannot happen that same type of message
+            // is sent out twice in same tick to clients since in case of weapon change the weapon state is not changing for sure!
+            pge_network::PgePacket pktWpnUpdateCurrentPublic;
+            if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
+                pktWpnUpdateCurrentPublic,
+                playerServerSideConnHandle,
+                wpn->getFilename(),
+                wpn->getState().getNew()))
+            {
+                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                continue;
+            }
+            //getConsole().EOLn("WeaponHandling::%s(): sending weapon state old: %d, new: %d", __func__, wpn->getState().getOld(), wpn->getState().getNew());
+            m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrentPublic);
+        }
+    }  // end for playerPair
+
+    m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
 
 bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) const
 {
@@ -379,325 +731,6 @@ void proofps_dd::WeaponHandling::clientUpdateExplosions(proofps_dd::GameMode& ga
     serverUpdateExplosions(gameMode, nPhysicsRate);
 }
 
-bool proofps_dd::WeaponHandling::initializeWeaponHandling()
-{
-    // Which key should switch to which weapon
-    WeaponManager::getKeypressToWeaponMap() = {
-        {'2', "pistol.txt"},
-        {'3', "machinegun.txt"},
-        {'4', "bazooka.txt"}
-    };
-
-    Explosion::resetGlobalExplosionId();
-    return Explosion::initExplosionsReference(m_pge);
-}
-
-float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
-    const Player& player,
-    const Explosion& xpl,
-    const TPureFloat& fDamageAreaPulse,
-    const int& nDamageHp,
-    PureVector& vecImpactForce)
-{
-    PureVector vDirPerAxis;
-    PureVector vDistancePerAxis;
-    const float fDistance = distance_NoZ_with_distancePerAxis(
-        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-        xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
-        vDirPerAxis, vDistancePerAxis);
-
-    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
-
-    if (fRadiusDamage > 0.f)
-    {
-        // to determine the direction of impact, we should use the center positions of player and explosion, however
-        // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
-        // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
-        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
-        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
-        vecImpactForce.Set(fImpactX, fImpactY, 0.f);
-    }
-
-    return fRadiusDamage;
-}
-
-proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
-    const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos,
-    const TPureFloat& fDamageAreaSize,
-    const TPureFloat& fDamageAreaPulse,
-    const int& nDamageHp,
-    XHair& xhair,
-    PureVector& vecCamShakeForce,
-    proofps_dd::GameMode& gameMode)
-{
-    m_explosions.push_back(
-        Explosion(
-            m_pge.getPure(),
-            connHandle,
-            pos,
-            fDamageAreaSize));
-    
-    const Explosion& xpl = m_explosions.back();
-
-    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-
-    // apply area damage to players
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-        const auto& playerConst = player;
-
-        if (playerConst.getHealth() <= 0)
-        {
-            continue;
-        }
-
-        PureVector vecImpactForce;
-        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
-        );
-        if (fRadiusDamage > 0.f)
-        {
-            /* player.getImpactForce() is decreased in Physics */
-            player.getImpactForce() += vecImpactForce;
-            
-            if (playerConst.getServerSideConnectionHandle() == 0)
-            {
-                // this is server player so shake camera!
-                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
-                vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
-            }
-            
-            if (player.getInvulnerability())
-            {
-                // even for invulnerable players we let the impact for to be modified as usual above
-                continue;
-            }
-
-            player.doDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
-            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
-            if (playerConst.getHealth() == 0)
-            {
-                const auto itKiller = m_mapPlayers.find(xpl.getOwner());
-                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                if (itKiller == m_mapPlayers.end())
-                {
-                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
-                    // we still want to display the death notification without the killer's name, but we won't decrease
-                    // frag count for the player because HandlePlayerDied() is not doing that.
-                    nKillerConnHandleServerSide = playerConst.getServerSideConnectionHandle();
-                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                    //    __func__, playerPair.first.c_str());
-                }
-                else
-                {
-                    nKillerConnHandleServerSide = itKiller->first;
-
-                    // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
-                    // in that case frags should be decremented!
-                    if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
-                    {
-                        itKiller->second.getFrags()--;
-                    }
-                    else
-                    {
-                        itKiller->second.getFrags()++;
-                    }
-                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                    //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
-                }
-                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                handlePlayerDied(player, xhair, nKillerConnHandleServerSide, gameMode);
-            }
-        }
-    }
-
-    return m_explosions.back();
-}
-
-proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
-    const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
-    const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos,
-    const int& nDamageHp,
-    const TPureFloat& fDamageAreaSize,
-    const TPureFloat& fDamageAreaPulse,
-    PureVector& vecCamShakeForce)
-{
-    m_explosions.push_back(
-        Explosion(
-            m_pge.getPure(),
-            id /* explosion id is not used on client-side */,
-            connHandle,
-            pos,
-            fDamageAreaSize));
-
-    Explosion& xpl = m_explosions.back();
-
-    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-
-    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
-    if (playerIt == m_mapPlayers.end())
-    {
-        // must always find self player
-        assert(false);
-        return xpl;
-    }
-
-    const auto& playerConst = playerIt->second;
-    if (playerConst.getHealth() > 0)
-    {
-        // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
-        PureVector vecImpactForce;
-        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
-        );
-
-        if (fRadiusDamage > 0.f)
-        {
-            // close enough, shake camera!
-            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
-            vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
-        }
-    }
-
-    return xpl;
-}
-
-void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
-{
-    m_explosions.clear();
-    Explosion::destroyExplosionsReference();
-    Explosion::resetGlobalExplosionId();
-
-    m_pge.getBullets().clear();
-    Bullet::resetGlobalBulletId();
-}
-
-void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
-{
-    if (gameMode.isGameWon())
-    {
-        return;
-    }
-
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    for (auto& playerPair : m_mapPlayers)
-    {
-        const pge_network::PgeNetworkConnectionHandle& playerServerSideConnHandle = playerPair.first;
-        Player& player = playerPair.second;
-        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-        if (!wpn)
-        {
-            continue;
-        }
-
-        const auto nOldMagCount = wpn->getMagBulletCount();
-        const auto nOldUnmagCount = wpn->getUnmagBulletCount();
-        bool bSendPrivateWpnUpdatePktToTheClientOnly = false;
-        if (player.getAttack() && player.attack())
-        {
-            //getConsole().EOLn("WeaponHandling::%s(): player %u attack", __func__, playerServerSideConnHandle);
-            // server will have the new bullet, clients will learn about the new bullet when server is sending out
-            // the regular bullet updates;
-            // but we send out the wpn update for bullet count change here for that single client
-            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
-            {
-                // server doesn't need to send this msg to itself, it already executed bullet count change by pullTrigger() in player.attack()
-                bSendPrivateWpnUpdatePktToTheClientOnly = true;
-            }
-
-            // here server plays the firing sound, clients play for themselves when they receive newborn bullet update;
-            // this is lame, as I think the weapon object itself should play when it fires a bullet, however currently
-            // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
-            // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
-            // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
-            const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
-            m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
-            m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-        }  // end player.getAttack() && attack()
-
-        if (wpn->update())
-        {
-            if (playerServerSideConnHandle != pge_network::ServerConnHandle)
-            {
-                // server doesn't need to send this msg to itself, it already executed bullet count change by wpn->update()
-                bSendPrivateWpnUpdatePktToTheClientOnly = true;
-            }
-        }
-
-        if (playerServerSideConnHandle == pge_network::ServerConnHandle)
-        {
-            handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew());
-            handleCurrentWeaponBulletCountsChangeShared(
-                nOldMagCount,
-                wpn->getMagBulletCount(),
-                nOldUnmagCount,
-                wpn->getUnmagBulletCount());
-        }
-
-        if (bSendPrivateWpnUpdatePktToTheClientOnly)
-        {
-            pge_network::PgePacket pktWpnUpdatePrivate;
-            if (!proofps_dd::MsgWpnUpdateFromServer::initPkt(
-                pktWpnUpdatePrivate,
-                pge_network::ServerConnHandle /* ignored by client anyway */,
-                wpn->getFilename(),
-                MapItemType::ITEM_HEALTH /* intentionally setting nonsense type, because itemType should be valid only in case of item pickup for now */,
-                /* IMPORTANT: later if we remove wpn filename from message, even here we will need to use correct itemType, so we will be unable to distinguish
-                   from wpn reload induced ammo increase or item pickup induced ammo increase in handleWpnUpdateFromServer(), thus we will need to add a flag
-                   that clearly indicates if scenario is item pickup or not! */
-                wpn->isAvailable(),
-                wpn->getMagBulletCount(),
-                wpn->getUnmagBulletCount(),
-                0 /* unused when itemType is MapItemType::ITEM_HEALTH */))
-            {
-                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                continue;
-            }
-            m_pge.getNetwork().getServer().send(pktWpnUpdatePrivate, playerServerSideConnHandle);
-        }
-
-        bool bSendPublicWpnUpdatePktToAllClients = false;
-        if (wpn->getState().isDirty())
-        {
-            bSendPublicWpnUpdatePktToAllClients = true;
-            wpn->updateOldValues();
-        }
-
-        if (bSendPublicWpnUpdatePktToAllClients)
-        {
-            // we use the same msg as being used for handling weapon change in InputHandling, however it cannot happen that same type of message
-            // is sent out twice in same tick to clients since in case of weapon change the weapon state is not changing for sure!
-            pge_network::PgePacket pktWpnUpdateCurrentPublic;
-            if (!proofps_dd::MsgCurrentWpnUpdateFromServer::initPkt(
-                pktWpnUpdateCurrentPublic,
-                playerServerSideConnHandle,
-                wpn->getFilename(),
-                wpn->getState().getNew()))
-            {
-                getConsole().EOLn("WeaponHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                continue;
-            }
-            //getConsole().EOLn("WeaponHandling::%s(): sending weapon state old: %d, new: %d", __func__, wpn->getState().getOld(), wpn->getState().getNew());
-            m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrentPublic);
-        }
-    }  // end for playerPair
-
-    m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
 bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgBulletUpdateFromServer& msg,
@@ -903,7 +936,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     wpn->clientReceiveStateFromServer(msg.m_state);
     if (isMyConnection(it->first))
     {
-        handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state);
+        handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
     }
     
     if (std::as_const(player).getHealth() > 0)
@@ -935,7 +968,11 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     return true;
 }
 
-void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(const Weapon::State& oldState, const Weapon::State& newState)
+void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
+    const Weapon::State& oldState,
+    const Weapon::State& newState,
+    const TPureUInt& nMagCount,
+    const TPureUInt& nUnmagCount)
 {
     // processing weapon state change for the CURRENT player on THIS machine, no matter if we are server or client
 
@@ -955,34 +992,29 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(const Weapon::Sta
         }
         break;
     }
-    default:
+    default: /* oldState is either WPN_READY or WPN_SHOOTING as of v0.2.7 */
         switch (newState)
         {
         case Weapon::State::WPN_RELOADING:
             m_gui.getXHair()->startBlinking();
             break;
+        case Weapon::State::WPN_READY:
+            if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload)
+            {
+                if ((nMagCount == 0) && (nUnmagCount != 0))
+                {
+                    // This is when auto wpn reload should kick in, but since server should do the reload, we need to ask it do try do that for us.
+                    // The easiest way would be from InputHandling, so I set this flag that supposed to be checked by InputHandling at its next run!
+                    // Basically this is how we "signal" InputHandling to do this for "us"!
+                    m_bWpnAutoReloadRequest = true;
+                    //getConsole().EOLn("WeaponHandling::%s(): auto requesting wpn reload!", __func__);
+                }
+            }
+            break;
         default:
             break;
         }
         break;
-    }
-}
-
-void proofps_dd::WeaponHandling::handleCurrentWeaponBulletCountsChangeShared(
-    const TPureUInt& nOldMagCount,
-    const TPureUInt& nNewMagCount,
-    const TPureUInt& /*nOldUnmagCount*/,
-    const TPureUInt& /*nNewUnmagCount*/)
-{
-    // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
-
-    if ((nOldMagCount > 0) && (nNewMagCount == 0))
-    {
-        m_gui.getXHair()->handleMagEmpty();
-    }
-    else if ((nOldMagCount == 0) && (nNewMagCount > 0))
-    {
-        m_gui.getXHair()->handleMagLoaded();
     }
 }
 
