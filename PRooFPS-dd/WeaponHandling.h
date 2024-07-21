@@ -28,7 +28,12 @@ namespace proofps_dd
 
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop = "no-op";
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload = "auto-reload";
-    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded = "auto-switch-to-best-loaded";
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded = "auto-switch-to-best-non-empty";
+    static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable = "auto-switch-to-best-empty-but-reloadable";
+
+    static constexpr char* szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop = "no-op";
+    static constexpr char* szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded = "auto-switch-to-best-non-empty";
+    static constexpr char* szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable = "auto-switch-to-best-empty-but-reloadable";
 
     class WeaponHandling :
         protected virtual proofps_dd::Physics
@@ -88,6 +93,12 @@ namespace proofps_dd
         const bool& getWeaponAutoReloadRequest() const;
         void clearWeaponAutoReloadRequest();
 
+        const bool& getWeaponAutoSwitchToBestLoadedRequest() const;
+        void clearWeaponAutoSwitchToBestLoadedRequest();
+
+        const bool& getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() const;
+        void clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+
     protected:
 
         void deleteWeaponHandlingAll();
@@ -137,6 +148,8 @@ namespace proofps_dd
 
         std::list<Explosion> m_explosions;
         bool m_bWpnAutoReloadRequest = false;
+        bool m_bWpnAutoSwitchToBestLoadedRequest = false;
+        bool m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
 
     }; // class WeaponHandling
 

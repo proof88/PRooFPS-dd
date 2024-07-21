@@ -1322,6 +1322,16 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             }
             loadedWpn->SetOwner(connHandleServerSide);
             loadedWpn->getObject3D().SetName(loadedWpn->getObject3D().getName() + " (for user " + std::to_string(connHandleServerSide) + ")");
+
+            if (m_mapPlayers.size() == 1)
+            {
+                // just log some weapon info only when 1st player is created to avoid spamming
+                getConsole().OLn("PRooFPSddPGE::%s(): weapon %s dpfr: %f, dpsr: %f",
+                    __func__,
+                    loadedWpn->getFilename().c_str(),
+                    loadedWpn->getDamagePerFireRating(),
+                    loadedWpn->getDamagePerSecondRating());
+            }
         }
     }
 

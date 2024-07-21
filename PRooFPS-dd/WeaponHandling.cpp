@@ -290,6 +290,26 @@ void proofps_dd::WeaponHandling::clearWeaponAutoReloadRequest()
     m_bWpnAutoReloadRequest = false;
 }
 
+const bool& proofps_dd::WeaponHandling::getWeaponAutoSwitchToBestLoadedRequest() const
+{
+    return m_bWpnAutoSwitchToBestLoadedRequest;
+}
+
+void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestLoadedRequest()
+{
+    m_bWpnAutoSwitchToBestLoadedRequest = false;
+}
+
+const bool& proofps_dd::WeaponHandling::getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() const
+{
+    return m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest;
+}
+
+void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest()
+{
+    m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -976,6 +996,8 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
 {
     // processing weapon state change for the CURRENT player on THIS machine, no matter if we are server or client
 
+    // TODO: it MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
+
     switch (oldState)
     {
     case Weapon::State::WPN_RELOADING:
@@ -992,24 +1014,74 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
         }
         break;
     }
-    default: /* oldState is either WPN_READY or WPN_SHOOTING as of v0.2.7 */
+    case Weapon::State::WPN_SHOOTING:
+        switch (newState)
+        {
+        case Weapon::State::WPN_READY:
+            getConsole().EOLn("WeaponHandling::%s() state change: SHOOTING -> READY", __func__);
+            // this is when depending on user setting, we might reload current or switch to another (or do nothing)
+            if (nMagCount == 0)
+            {
+                if (nUnmagCount != 0)
+                {
+                    if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload)
+                    {
+                        // Since server should do the reload, we need to ask it do try do that for us.
+                        // The easiest way would be from InputHandling as a real user keypress for reload, so I set this flag that supposed to be checked by InputHandling
+                        // at its next run! Basically this is how we "signal" InputHandling to do this for "us"!
+                        m_bWpnAutoReloadRequest = true;
+                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto requesting wpn reload!", __func__);
+                    }
+                    else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded)
+                    {
+                        // This is also handled in InputHandling like a real user weapon change keypress
+                        m_bWpnAutoSwitchToBestLoadedRequest = true;
+                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best loaded wpn!", __func__);
+                    }
+                    else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable)
+                    {
+                        // This is also handled in InputHandling like a real user weapon change keypress
+                        m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
+                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best wpn with any kind of ammo!", __func__);
+                    }
+                    else
+                    {
+                        getConsole().EOLn("WeaponHandling::%s(): has unmag, configured to do nothing!", __func__);
+                    }
+                }
+                else
+                {
+                    // this look redundant coding now, I might change later, for now I need this only for clarity of what I'm doing
+                    if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded)
+                    {
+                        // This is also handled in InputHandling like a real user weapon change keypress
+                        m_bWpnAutoSwitchToBestLoadedRequest = true;
+                        getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best loaded wpn!", __func__);
+                    }
+                    else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable)
+                    {
+                        // This is also handled in InputHandling like a real user weapon change keypress
+                        m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
+                        getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best wpn with any kind of ammo!", __func__);
+                    }
+                    else
+                    {
+                        getConsole().EOLn("WeaponHandling::%s(): no unmag, configured to do nothing!", __func__);
+                    }
+                }
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    default: /* oldState is WPN_READY as of v0.2.7 */
+        // TODO: we might think about if we need to trigger any of the configured auto-xxx things here.
+        // It might make sense, when we somehow switched to a weapon for which here we fall READY->READY, might trigger auto-reload, but not sure now.
         switch (newState)
         {
         case Weapon::State::WPN_RELOADING:
             m_gui.getXHair()->startBlinking();
-            break;
-        case Weapon::State::WPN_READY:
-            if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload)
-            {
-                if ((nMagCount == 0) && (nUnmagCount != 0))
-                {
-                    // This is when auto wpn reload should kick in, but since server should do the reload, we need to ask it do try do that for us.
-                    // The easiest way would be from InputHandling, so I set this flag that supposed to be checked by InputHandling at its next run!
-                    // Basically this is how we "signal" InputHandling to do this for "us"!
-                    m_bWpnAutoReloadRequest = true;
-                    //getConsole().EOLn("WeaponHandling::%s(): auto requesting wpn reload!", __func__);
-                }
-            }
             break;
         default:
             break;

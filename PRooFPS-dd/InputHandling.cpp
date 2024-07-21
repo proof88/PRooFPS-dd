@@ -358,7 +358,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
             if (!pTargetWpn->isAvailable())
             {
-                getConsole().EOLn("InputHandling::%s(): weapon not found for name %s!", __func__, itTargetWpn->second.c_str());
+                getConsole().EOLn("InputHandling::%s(): weapon not available: %s!", __func__, itTargetWpn->second.c_str());
                 assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
                 return true;    // in release mode, dont terminate the server, just silently ignore!
                 // TODO: I might disconnect this client!
@@ -402,8 +402,8 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 }
                 it->second.getWeaponManager().getCurrentWeapon()->UpdatePosition(it->second.getObject3D()->getPosVec(), player.isSomersaulting());
 
-                //getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
-                //    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
+                getConsole().OLn("InputHandling::%s(): player %s switching to %s!",
+                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
 
                 // all clients must be updated about this player's weapon switch
                 pge_network::PgePacket pktWpnUpdateCurrent;
@@ -624,31 +624,62 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             ).count();
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
-            for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+            if (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest())
             {
-                if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+                getConsole().EOLn("InputHandling::%s(): trying auto switch to best with mag ammo ...", __func__);
+                const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
+                if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
-                    const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
-                    if (!pTargetWpn)
+                    getConsole().EOLn("InputHandling::%s(): auto switch to best with mag ammo: did not find better!", __func__);
+                    cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
+                }
+            }
+            else if (wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+            {
+                getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
+                const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
+                if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
+                {
+                    getConsole().EOLn("InputHandling::%s(): auto switch to best with any ammo: did not find better!", __func__);
+                    cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
+                }
+            }
+            else
+            {
+                for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+                {
+                    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
                     {
-                        getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
-                            __func__, keyWpnPair.second.c_str());
+                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
+                        if (!pTargetWpn)
+                        {
+                            getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
+                                __func__, keyWpnPair.second.c_str());
+                            break;
+                        }
+                        if (!pTargetWpn->isAvailable())
+                        {
+                            //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
+                            //    __func__, key.second.c_str());
+                            break;
+                        }
+                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+                        {
+                            cWeaponSwitch = keyWpnPair.first;
+                        }
                         break;
                     }
-                    if (!pTargetWpn->isAvailable())
-                    {
-                        //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
-                        //    __func__, key.second.c_str());
-                        break;
-                    }
-                    if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                    {
-                        cWeaponSwitch = keyWpnPair.first;
-                    }
-                    break;
                 }
             }
         }
+    }
+    wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
+    wpnHandling.clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+
+    // at this point, if cWeaponSwitch is NOT nullchar, we really want to switch to something else either manually or auto
+    if (cWeaponSwitch != '\0')
+    {
+        getConsole().EOLn("InputHandling::%s(): send request to switch to: %s!", __func__, std::to_string(cWeaponSwitch).c_str());
     }
 
     if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))

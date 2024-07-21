@@ -1236,7 +1236,7 @@ void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, c
 void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 145.f;
+    constexpr float fContentHeight = 250.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -1385,17 +1385,45 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         PGEcfgVariable& cvarClWpnEmptyMagNonemptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior];
 
         // dont forget there is also 3-param version of RadioButton
-        if (ImGui::RadioButton("Auto-Reload Current Weapon", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
+        if (ImGui::RadioButton("Auto-Reload Current Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
         {
             cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload);
         }
-        if (ImGui::RadioButton("Auto-Switch to Next Best Loaded Weapon", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded))
+        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded))
         {
             cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded);
         }
-        if (ImGui::RadioButton("Do Nothing", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop))
+        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable);
+        }
+        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop))
         {
             cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop);
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+
+    ImGui::BeginGroup();
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("When Weapon Becomes Empty AND Has NO Spare Ammo, Then:");
+        ImGui::Indent();
+        PGEcfgVariable& cvarClWpnEmptyMagEmptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior];
+
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded);
+        }
+        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable);
+        }
+        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop);
         }
         ImGui::Unindent();
     }
