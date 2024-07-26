@@ -384,6 +384,9 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 wpn->getMagBulletCount(),
                 nOldUnmagCount,
                 wpn->getUnmagBulletCount());
+            // TODO: would be nice to find a way to AVOID calling this every frame on server, but we have code inside even for READY->READY state change,
+            // as being recognized as possible weapon change case when we might also need to initiate the auto-reload.
+            // Client is not invoking this every frame, only when receiving MsgWpnUpdateCurrentFromServer.
             handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
         }
 
@@ -1005,7 +1008,7 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
         switch (newState)
         {
         case Weapon::State::WPN_READY:
-        /* fall-through */
+            /* fall-through */
         case Weapon::State::WPN_SHOOTING:
             m_gui.getXHair()->stopBlinking();
             break;
@@ -1018,12 +1021,16 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
         switch (newState)
         {
         case Weapon::State::WPN_READY:
-            getConsole().EOLn("WeaponHandling::%s() state change: SHOOTING -> READY", __func__);
+            getConsole().EOLn(
+                "WeaponHandling::%s() state change: %s -> %s", __func__, Weapon::stateToString(oldState).c_str(), Weapon::stateToString(newState).c_str());
+
             // this is when depending on user setting, we might reload current or switch to another (or do nothing)
             if (nMagCount == 0)
             {
                 if (nUnmagCount != 0)
                 {
+                    /* "when current goes empty BUT HAS spare ammo" setting */
+
                     if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload)
                     {
                         // Since server should do the reload, we need to ask it do try do that for us.
@@ -1051,6 +1058,8 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
                 }
                 else
                 {
+                    /* "when current goes empty AND has NO spare ammo" setting */
+
                     // this look redundant coding now, I might change later, for now I need this only for clarity of what I'm doing
                     if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded)
                     {
@@ -1070,23 +1079,40 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
                     }
                 }
             }
-            break;
+            break; // end case SHOOTING -> READY
         default:
             break;
         }
         break;
-    default: /* oldState is WPN_READY as of v0.2.7 */
-        // TODO: we might think about if we need to trigger any of the configured auto-xxx things here.
-        // It might make sense, when we somehow switched to a weapon for which here we fall READY->READY, might trigger auto-reload, but not sure now.
+    case Weapon::State::WPN_READY:
         switch (newState)
         {
         case Weapon::State::WPN_RELOADING:
             m_gui.getXHair()->startBlinking();
             break;
+        case Weapon::State::WPN_READY:
+            // READY -> READY, so most probably this is the result of weapon change, thus here we dont initiate any switch, but can initiate reload
+
+            if ((nMagCount == 0) && (nUnmagCount != 0))
+            {
+                if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag].getAsBool())
+                {
+                    m_bWpnAutoReloadRequest = true;
+                    getConsole().EOLn("WeaponHandling::%s(): READY -> READY, has unmag, auto requesting wpn reload!", __func__);
+                }
+                else
+                {
+                    getConsole().EOLn("WeaponHandling::%s(): READY -> READY, switched to, has unmag, but auto reload is NOT configured!", __func__);
+                }
+            }
+
+            break;
         default:
             break;
         }
         break;
+    default:
+        getConsole().EOLn("WeaponHandling::%s(): unhandled old state: %s!", __func__, Weapon::stateToString(oldState).c_str());
     }
 }
 

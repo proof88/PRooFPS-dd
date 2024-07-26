@@ -16,15 +16,72 @@
 
  - change configuration to "DebugTest_PRooFPS-dd" and make sure all tests pass;
 
- - manual test: start a server instance and 2 client instances, then:
+ - manual tests: start a server instance and 2 client instances, then:
    - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
    - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
    - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto;
 
- - 3D sound check:
-   - mute server and 1 client instance, check if you hear proper sound in the unmuted client instance;
-   - mute the client instance, unmute the other client, check for same proper sounds;
-   - mute both client instances, unmute server and check for same proper sounds.
+   - weapon auto-change settings (needs to be tested separately on server and client instances!):
+     - the idea is that we always make the pistol empty, and expect change to either mchgun or bazooka, because
+       as of v0.2.7, bazooka's dpfr and dpsr are both bigger than mchgun's values, so it does not matter which value is
+       actually being checked by the findNextBestWeapon functionality (I dont even remember but this way we dont need to remember).
+
+     - tests for the "when current goes empty BUT HAS spare ammo" setting:
+       - change "when current goes empty AND has NO spare ammo" setting to "do nothing" to make sure that does not interfere with this setting;
+       - "auto-reload" current case:
+         - trivial how to test.
+       - "do nothing" case:
+         - trivial how to test.
+       - "auto-switch to best non-empty" case:
+         - make pistol have non-0 mag + non-0 unmag;
+         - have bazooka 0 mag + 0 unmag ammo;
+         - have mchgun non-0 mag + 0 unmag ammo;
+         - make pistol current;
+         - make pistol empty, expect auto-switch to mchgun;
+         - we stop test here, because emptying mchgun would test "when current goes empty AND has NO spare ammo" but we test it separately later.
+       - "auto-switch to best empty but reloadable" case:
+         - make pistol have non-0 mag + non-0 unmag;
+         - have bazooka 0 mag + non-0 unmag ammo;
+         - have mchgun 0 mag + non-0 unmag ammo;
+         - make pistol current;
+         - make pistol empty, expect auto-switch to bazooka;
+         - if "Auto-Reload when Switched to Empty Weapon" is set in settings, expect bazooka to be auto-reloaded;
+           - we stop test here, because emptying bazooka would test "when current goes empty AND has NO spare ammo" but we test it separately later.
+
+     - tests for the "when current goes empty AND has NO spare ammo" setting:
+       - change "when current goes empty BUT HAS spare ammo" setting to "do nothing" to make sure that does not interfere with this setting;
+       - "do nothing" case:
+         - trivial how to test.
+       - "auto-switch to best non-empty" case:
+         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
+           - 1st step should be skipped: pistol shall have 0 unmag;
+           - same steps and expectation;
+           - after the steps and we have mchgun current, additional steps: pick up pistol ammo so it will have non-0 unmag;
+           - make mchgun empty;
+           - TODO: game will tell no better found, but in this case with extra feature FTR2, should act like "auto-switch to best empty but reloadable",
+             switching to pistol (and we expect auto-reload of pistol by FTR1), and if still not found better, try reload current if unmag is non-0!;
+           - make pistol empty;
+           - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
+       - "auto-switch to best empty but reloadable" case:
+         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
+           - 1st step should be skipped: pistol shall have 0 unmag;
+           - same steps and expectation;
+           - after the steps and we have bazooka current, additional steps as follows;
+           - make bazooka empty;
+           - expect auto-switch to mchgun;
+           - if "Auto-Reload when Switched to Empty Weapon" is set in settings, expect mchgun to be auto-reloaded;
+           - make mchgun empty;
+           - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
+
+     - TODO: that for some cases, FTR3 might be also needed: when manually switching to a weapon having 0 mag + non-0 unmag, should reload
+       weapon when user trying to fire! Maybe this should be a general feature: firing request might be transformed to reload request!
+
+   - TODO: in case of item pickup event, should try reload if current weapon is empty and has just got non-zero unmag!
+
+   - 3D sound check:
+     - mute server and 1 client instance, check if you hear proper sound in the unmuted client instance;
+     - mute the client instance, unmute the other client, check for same proper sounds;
+     - mute both client instances, unmute server and check for same proper sounds.
 
  - check game in fullscreen too, since now it is also officially supported!
 

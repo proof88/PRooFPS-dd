@@ -25,7 +25,6 @@
 
 namespace proofps_dd
 {
-
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop = "no-op";
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload = "auto-reload";
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded = "auto-switch-to-best-non-empty";

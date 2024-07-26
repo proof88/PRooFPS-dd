@@ -1245,6 +1245,28 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::Separator();
     ImGui::Indent();
 
+    PGEcfgVariable& cvarSfxEnabled = m_pPge->getConfigProfiles().getVars()[pge_audio::PgeAudio::CVAR_SFX_ENABLED];
+    bool bSfxEnabled = cvarSfxEnabled.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSfxEnabled; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSfxEnabled, cvarSfxEnabled);
+    ImGui::TextUnformatted("Audio:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbSfxEnabled", &bSfxEnabled))
+    {
+        // because onGameInitialized() also loads sounds, we need to restart the whole game when audio is re-enabled!
+        // So anyway I'm restarting the game also if we are disabling it here.
+
+        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox behind the dialog box based on this
+        cvarSfxEnabled.Set(bSfxEnabled);
+
+        // IMPORTANT: SAME STRING AS GIVEN TO OpenPopup() should be given to showConfigApplyAndRestartDialogBox() BELOW!
+        // Otherwise in next frame, we might end up invoking showConfigApplyAndRestartDialogBox() with different CVAR somewhere above!
+        // TODO: make this kind of checkbox into a single function so no mistake can be made!
+        ImGui::OpenPopup("Apply Audio Setting");
+    }
+    showConfigApplyAndRestartDialogBox(cvarSfxEnabled, "Apply Audio Setting");
+
     PGEcfgVariable& cvarGfxFullscreen = m_pPge->getConfigProfiles().getVars()[PGE::CVAR_GFX_WINDOWED];
     ImGui::AlignTextToFramePadding();
     static std::string sHintGfxFullscreen; // static so it is built up by addHintToItemByCVar() only once
@@ -1377,6 +1399,18 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
 
+    PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag = m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag];
+    bool bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag = cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag, cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag);
+    ImGui::TextUnformatted("Auto-Reload when Switched to Empty Weapon:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag", &bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag))
+    {
+        cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag.Set(bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag);
+    }
+
     ImGui::BeginGroup();
     {
         ImGui::AlignTextToFramePadding();
@@ -1428,28 +1462,6 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         ImGui::Unindent();
     }
     ImGui::EndGroup();
-
-    PGEcfgVariable& cvarSfxEnabled = m_pPge->getConfigProfiles().getVars()[pge_audio::PgeAudio::CVAR_SFX_ENABLED];
-    bool bSfxEnabled = cvarSfxEnabled.getAsBool();
-    ImGui::AlignTextToFramePadding();
-    static std::string sHintSfxEnabled; // static so it is built up by addHintToItemByCVar() only once
-    addHintToItemByCVar(sHintSfxEnabled, cvarSfxEnabled);
-    ImGui::TextUnformatted("Audio:");
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##cbSfxEnabled", &bSfxEnabled))
-    {
-        // because onGameInitialized() also loads sounds, we need to restart the whole game when audio is re-enabled!
-        // So anyway I'm restarting the game also if we are disabling it here.
-
-        // even tho the user can still cancel, here we always flip the config because we are rendering the checkbox behind the dialog box based on this
-        cvarSfxEnabled.Set(bSfxEnabled);
-
-        // IMPORTANT: SAME STRING AS GIVEN TO OpenPopup() should be given to showConfigApplyAndRestartDialogBox() BELOW!
-        // Otherwise in next frame, we might end up invoking showConfigApplyAndRestartDialogBox) with different CVAR somewhere above!
-        // TODO: make this kind of checkbox into a single function so no mistake can be made!
-        ImGui::OpenPopup("Apply Audio Setting");
-    }
-    showConfigApplyAndRestartDialogBox(cvarSfxEnabled, "Apply Audio Setting");
 
     ImGui::Separator();
 
