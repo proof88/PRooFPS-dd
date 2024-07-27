@@ -632,8 +632,17 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
+                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better weapon found!");
                     getConsole().EOLn("InputHandling::%s(): auto switch to best with mag ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
+                }
+                else
+                {
+                    const auto itCVarWpnName = pNextBestWpnFound->getVars().find("name");
+                    if (itCVarWpnName != pNextBestWpnFound->getVars().end())
+                    {
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to " + itCVarWpnName->second.getAsString());
+                    }
                 }
             }
             else if (wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
@@ -642,8 +651,17 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
+                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better weapon found!");
                     getConsole().EOLn("InputHandling::%s(): auto switch to best with any ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
+                }
+                else
+                {
+                    const auto itCVarWpnName = pNextBestWpnFound->getVars().find("name");
+                    if (itCVarWpnName != pNextBestWpnFound->getVars().end())
+                    {
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to " + itCVarWpnName->second.getAsString());
+                    }
                 }
             }
             else

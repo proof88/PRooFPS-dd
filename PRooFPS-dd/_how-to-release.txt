@@ -79,6 +79,8 @@
      - TODO: that for some cases, FTR3 might be also needed: when manually switching to a weapon having 0 mag + non-0 unmag, should reload
        weapon when user trying to fire! Maybe this should be a general feature: firing request might be transformed to reload request!
 
+     - TODO: FTR4: in came of ammo pickup, if current weapon is total empty, try to auto switch to (the) reloadable weapon!
+
    - if "Pickup-/Switch-Induced Auto-Reload" is set, an empty weapon should be auto-reloaded when:
      - switching to it either manually or by an auto-switch;
      - spare ammo becoming available by picking up.
