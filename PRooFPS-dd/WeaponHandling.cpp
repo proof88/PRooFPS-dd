@@ -291,7 +291,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
 
         // we fired a bullet and magazine became empty, but cannot yet set wpn auto reload request flag here because this is too early:
         // we don't yet know the updated state of the weapon, or it still not went back to idle/ready after becoming empty ...
-        // so we set the flag in handleWeaponStateChangeShared() upon the proper state is set!
+        // so we set the flag in handleCurrentPlayersCurrentWeaponStateChangeShared() upon the proper state is set!
     }
     else if ((nOldMagCount == 0) && (nNewMagCount > 0))
     {
@@ -301,14 +301,14 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
     {
         // somehow, now we have just got spare ammo for the current empty weapon, we might initiate auto-reload for this ammo pickup case.
         // Unlike with the weapon change- or weapon state change-induced auto-reload, the ammo pickup-induced auto-reload is handled here.
-        // Since this function might be called earlier than handleWeaponStateChangeShared(), I'm making sure prev state and current state are both READY,
-        // so this function does not hijack other "auto" settings that might be initiated in handleWeaponStateChangeShared().
+        // Since this function might be called earlier than handleCurrentPlayersCurrentWeaponStateChangeShared(), I'm making sure prev state and current state are both READY,
+        // so this function does not hijack other "auto" settings that might be initiated in handleCurrentPlayersCurrentWeaponStateChangeShared().
         // Would be logical to handle this pickup-induced auto-reload where we handle item pickups for player, but did not find proper place:
         // neither player.takeItem() nor player.handleTakeWeaponItem() looks suitable.
         // Anyway, since both client and server invokes this function upon change in unmag ammo, this looks to be the perfect place.
 
         // TODO: since in some cases, multiple "auto" flags might be set, I recommend using a common function which allows setting any flag
-        // only if non of the flags is set yet! E.g.: handleWeaponStateChangeShared() already set something before invoking this function.
+        // only if non of the flags is set yet! E.g.: handleCurrentPlayersCurrentWeaponStateChangeShared() already set something before invoking this function.
         if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
         {
             m_bWpnAutoReloadRequest = true;
@@ -429,8 +429,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                 wpn->getState().getNew());
             // TODO: would be nice to find a way to AVOID calling this every frame on server, but we have code inside even for READY->READY state change,
             // as being recognized as possible weapon change case when we might also need to initiate the auto-reload.
-            // Client is not invoking this every frame, only when receiving MsgWpnUpdateCurrentFromServer.
-            handleWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+            // Client is not invoking this every frame, only when receiving a message.
+            handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
         }
 
         // to make the auto weapon reload work properly for clients, MsgWpnUpdateFromServer should be always sent out earlier than MsgCurrentWpnUpdateFromServer, because
@@ -950,10 +950,10 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     }
 
     wpn->clientReceiveStateFromServer(msg.m_state);
-    handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
-
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
     {
+        handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+
         handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
             wpn->getMagBulletCount(),
             msg.m_nMagBulletCount,
@@ -1014,7 +1014,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     wpn->clientReceiveStateFromServer(msg.m_state);
     if (isMyConnection(it->first))
     {
-        handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+        handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
     }
     
     if (std::as_const(player).getHealth() > 0)
@@ -1048,7 +1048,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     return true;
 }
 
-void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
+void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeShared(
     const Weapon::State& oldState,
     const Weapon::State& newState,
     const TPureUInt& nMagCount,

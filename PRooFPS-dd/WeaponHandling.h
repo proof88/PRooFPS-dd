@@ -130,7 +130,7 @@ namespace proofps_dd
         bool handleWpnUpdateCurrentFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);
-        void handleWeaponStateChangeShared(
+        void handleCurrentPlayersCurrentWeaponStateChangeShared(
             const Weapon::State& oldState,
             const Weapon::State& newState,
             const TPureUInt& nMagCount,
