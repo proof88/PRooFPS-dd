@@ -1414,10 +1414,12 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 
     ImGui::BeginGroup();
     {
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted("When Weapon Becomes Empty BUT HAS Spare Ammo, Then:");
-        ImGui::Indent();
         PGEcfgVariable& cvarClWpnEmptyMagNonemptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnEmptyMagNonemptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnEmptyMagNonemptyUnmagBehavior, cvarClWpnEmptyMagNonemptyUnmagBehavior);
+        ImGui::TextUnformatted("If Weapon is Empty after Firing, BUT HAS Spare Ammo, then:");
+        ImGui::Indent();
 
         // dont forget there is also 3-param version of RadioButton
         if (ImGui::RadioButton("Auto-Reload Current Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
@@ -1442,10 +1444,12 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 
     ImGui::BeginGroup();
     {
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted("When Weapon Becomes Empty AND Has NO Spare Ammo, Then:");
-        ImGui::Indent();
         PGEcfgVariable& cvarClWpnEmptyMagEmptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnEmptyMagEmptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnEmptyMagEmptyUnmagBehavior, cvarClWpnEmptyMagEmptyUnmagBehavior);
+        ImGui::TextUnformatted("If Weapon is Empty after Firing, AND has NO Spare Ammo, then:");
+        ImGui::Indent();
 
         // dont forget there is also 3-param version of RadioButton
         if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded))
@@ -1491,7 +1495,7 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     // - Dear ImGui viewport (0,0) is the TOP LEFT, and positive Y goes DOWNWARDS from the TOP.
     const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
     const float fLogoImgHeight = m_pObjLoadingScreenLogoImg->getSizeVec().getY();
-    constexpr float fMenuWndWidth = 470.f; // just put here the widest submenu's required width
+    constexpr float fMenuWndWidth = 500.f; // just put here the widest submenu's required width
     const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight;
     ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_FirstUseEver);
