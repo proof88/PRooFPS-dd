@@ -836,6 +836,7 @@ namespace proofps_dd
             const std::string& sWpnName /* eMapItemType makes it obsolete */,
             const MapItemType& eMapItemType,
             bool bAvailable,
+            const Weapon::State& state,
             unsigned int nMagBulletCount,
             unsigned int nUnmagBulletCount,
             unsigned int nAmmoIncrease)
@@ -857,6 +858,7 @@ namespace proofps_dd
             strncpy_s(msgWpnUpdate.m_szWpnName, nWpnNameNameMaxLength, sWpnName.c_str(), sWpnName.length());
             msgWpnUpdate.m_eMapItemType = eMapItemType;
             msgWpnUpdate.m_bAvailable = bAvailable;
+            msgWpnUpdate.m_state = state;
             msgWpnUpdate.m_nMagBulletCount = nMagBulletCount;
             msgWpnUpdate.m_nUnmagBulletCount = nUnmagBulletCount;
             msgWpnUpdate.m_nAmmoIncrease = nAmmoIncrease;
@@ -874,6 +876,7 @@ namespace proofps_dd
         char m_szWpnName[nWpnNameNameMaxLength];  /* eMapItemType makes it obsolete */
         MapItemType m_eMapItemType;
         bool m_bAvailable;
+        Weapon::State m_state;
         unsigned int m_nMagBulletCount;
         unsigned int m_nUnmagBulletCount;
         unsigned int m_nAmmoIncrease; // it is not always easy for client to find out the actual increase so always include it too

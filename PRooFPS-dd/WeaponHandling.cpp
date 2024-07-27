@@ -262,7 +262,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
     const TPureUInt& nOldMagCount,
     const TPureUInt& nNewMagCount,
-    const TPureUInt& /*nOldUnmagCount*/,
+    const TPureUInt& nOldUnmagCount,
     const TPureUInt& nNewUnmagCount,
     const Weapon::State& oldState,
     const Weapon::State& newState)
@@ -270,6 +270,20 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
     // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
 
     // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
+
+    if (!m_pge.getNetwork().isServer())
+    {
+        // because on server this is continuously invoked by serverUpdateWeapons() and flooding
+        getConsole().EOLn(
+            "WeaponHandling::%s() nOldMagCount: %u, nNewMagCount: %u, nOldUnmagCount: %u, nNewUnmagCount: %u, oldState: %s, newState: %s!",
+            __func__,
+            nOldMagCount,
+            nNewMagCount,
+            nOldUnmagCount,
+            nNewUnmagCount,
+            Weapon::stateToString(oldState).c_str(),
+            Weapon::stateToString(newState).c_str());
+    }
 
     if ((nOldMagCount > 0) && (nNewMagCount == 0))
     {
@@ -421,6 +435,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         // to make the auto weapon reload work properly for clients, MsgWpnUpdateFromServer should be always sent out earlier than MsgCurrentWpnUpdateFromServer, because
         // they will initiate the auto reload for MsgCurrentWpnUpdateFromServer if relevant bullet mag and unmag conditions meet, and we need them updated!
+        // But they also need the latest status too, so from v0.2.7 I include weapon state in this msg too. Previously it was only in MsgCurrentWpnUpdateFromServer.
         if (bSendPrivateWpnUpdatePktToTheClientOnly)
         {
             pge_network::PgePacket pktWpnUpdatePrivate;
@@ -433,6 +448,7 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
                    from wpn reload induced ammo increase or item pickup induced ammo increase in handleWpnUpdateFromServer(), thus we will need to add a flag
                    that clearly indicates if scenario is item pickup or not! */
                 wpn->isAvailable(),
+                wpn->getState().getNew(),
                 wpn->getMagBulletCount(),
                 wpn->getUnmagBulletCount(),
                 0 /* unused when itemType is MapItemType::ITEM_HEALTH */))
@@ -911,8 +927,10 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
         return false;
     }
 
-    //getConsole().OLn("WeaponHandling::%s(): received: %s, available: %s, mag: %u, unmag: %u!",
-    //    __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+    getConsole().OLn("WeaponHandling::%s(): received: %s, available: %s, state: %s, mag: %u, unmag: %u!",
+        __func__, msg.m_szWpnName, msg.m_bAvailable ? "yes" : "no", Weapon::stateToString(msg.m_state).c_str(), msg.m_nMagBulletCount, msg.m_nUnmagBulletCount);
+
+    // this is private message, it always refers to me and one of my weapons (it is always my current weapon on server side, should be current here too).
 
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
@@ -930,6 +948,9 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
         assert(false);
         return false;
     }
+
+    wpn->clientReceiveStateFromServer(msg.m_state);
+    handleWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
 
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
     {
@@ -986,6 +1007,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
         assert(false);
         return false;
     }
+
+    // this is public message, it may refer to any other play, thus I should always check with isMyConnection() to know if it is related to me or not!
 
     // state must be set always, no matter if we are alive or not!
     wpn->clientReceiveStateFromServer(msg.m_state);

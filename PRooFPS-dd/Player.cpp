@@ -1312,6 +1312,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             sWeaponBecomingAvailable,
             item.getType(),
             pWpnBecomingAvailable->isAvailable(),
+            pWpnBecomingAvailable->getState().getNew(),
             pWpnBecomingAvailable->getMagBulletCount(),
             pWpnBecomingAvailable->getUnmagBulletCount(),
             nAmmoIncrease);  // becomes available on client side (after pkt being sent)
