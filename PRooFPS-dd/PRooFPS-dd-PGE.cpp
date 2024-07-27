@@ -707,6 +707,8 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
 void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     const long long& /*durElapsedMicrosecs*/)
 {
+    // @TICK-RATE START
+
     /*
     * This function is executed every tick.
     * If executed rarely i.e. with very low tickrate e.g. 1 tick/sec, players and bullets might "jump" over walls.
@@ -726,6 +728,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     const bool bWin = m_gameMode->serverCheckAndUpdateWinningConditions(getNetwork());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
+        // @PHYSICS-RATE START
+
         if (!bWin)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -737,9 +741,13 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
         updatePlayersOldValues();
+
+        // @PHYSICS-RATE END
     }  // for iPhyIter
     serverUpdateRespawnTimers(m_config, *m_gameMode, m_durations);
     serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *m_gameMode);
+
+    // @TICK-RATE END
 }
 
 /**

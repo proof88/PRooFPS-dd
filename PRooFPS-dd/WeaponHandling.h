@@ -83,11 +83,13 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaPulse,
             PureVector& vecCamShakeForce);
 
-        void handleCurrentWeaponBulletCountsChangeShared(
+        void handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
             const TPureUInt& nOldMagCount,
             const TPureUInt& nNewMagCount,
             const TPureUInt& nOldUnmagCount,
-            const TPureUInt& nNewUnmagCount);
+            const TPureUInt& nNewUnmagCount,
+            const Weapon::State& oldState,
+            const Weapon::State& newState);
 
         const bool& getWeaponAutoReloadRequest() const;
         void clearWeaponAutoReloadRequest();

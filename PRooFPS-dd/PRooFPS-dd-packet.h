@@ -823,7 +823,8 @@ namespace proofps_dd
     static_assert(std::is_standard_layout_v<MsgMapItemUpdateFromServer>);
 
     // server -> clients
-    // availability and bullet counts update to a single client after specific events, e.g. shoot
+    // availability and bullet counts update to a single client after specific events, e.g. shoot.
+    // In contrast to MsgCurrentWpnUpdateFromServer, this is private data, i.e. not related to any other client.
     struct MsgWpnUpdateFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::WpnUpdateFromServer;
@@ -883,6 +884,7 @@ namespace proofps_dd
 
     // server -> clients
     // current weapon of a specific client, sent to all clients after specific events, e.g. weapon switch, state update, etc.
+    // In contrast to MsgWpnUpdateFromServer, this is public data, i.e. might related to any other client.
     // We need to send state update to all clients because only this way clients can properly audio-visualize other players' weapon state on their side.
     struct MsgCurrentWpnUpdateFromServer
     {
@@ -972,8 +974,9 @@ namespace proofps_dd
 
         // This is weird, but I have to do like this, because I cannot include Player.h into this header, so I'm using this general data type
         // that can hold different values, Player class will know exactly what they mean.
-        // Not planning to use std::optional, since Player class exactly knows what data it should expect, based on m_iPlayerEventId.
-        // Also, I need to keep this struct trivial (std::is_trivial_v must be true) so it can be easily memcpy'd, I cannot do that with std::optional member.
+        // Not planning to use std::optional, since Player class exactly knows what data it should expect, based on m_iPlayerEventId, I don't need to call
+        // has_value() or similar stuff.
+        // Also, I need to keep this struct trivial (i.e. std::is_trivial_v must be true) so it can be easily memcpy'd, I cannot do that with std::optional member.
         union UOptionalData
         {
             bool  m_bValue;

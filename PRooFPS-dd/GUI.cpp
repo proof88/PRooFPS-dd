@@ -1236,7 +1236,7 @@ void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, c
 void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 250.f;
+    constexpr float fContentHeight = 300.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -1368,7 +1368,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::AlignTextToFramePadding();
     static std::string sHintGuiXHairIdentifiesPlayers; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintGuiXHairIdentifiesPlayers, cvarGuiXHairIdentifiesPlayers);
-    ImGui::TextUnformatted("Crosshair Identifies Players:");
+    ImGui::TextUnformatted("XHair Identifies Players:");
     ImGui::SameLine();
     if (ImGui::Checkbox("##cbGuiXHairIdentifiesPlayers", &bGuiXHairIdentifiesPlayers))
     {
@@ -1399,16 +1399,17 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
 
-    PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag = m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag];
-    bool bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag = cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag.getAsBool();
+    PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag =
+        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag];
+    bool bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag = cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.getAsBool();
     ImGui::AlignTextToFramePadding();
     static std::string sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag; // static so it is built up by addHintToItemByCVar() only once
-    addHintToItemByCVar(sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag, cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag);
-    ImGui::TextUnformatted("Auto-Reload when Switched to Empty Weapon:");
+    addHintToItemByCVar(sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag, cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
+    ImGui::TextUnformatted("Pickup-/Switch-Induced Auto-Reload:");
     ImGui::SameLine();
-    if (ImGui::Checkbox("##cbWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag", &bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag))
+    if (ImGui::Checkbox("##cbWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag", &bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag))
     {
-        cvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag.Set(bWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag);
+        cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.Set(bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
     }
 
     ImGui::BeginGroup();

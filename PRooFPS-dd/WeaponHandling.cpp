@@ -259,24 +259,51 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     return xpl;
 }
 
-void proofps_dd::WeaponHandling::handleCurrentWeaponBulletCountsChangeShared(
+void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
     const TPureUInt& nOldMagCount,
     const TPureUInt& nNewMagCount,
     const TPureUInt& /*nOldUnmagCount*/,
-    const TPureUInt& /*nNewUnmagCount*/)
+    const TPureUInt& nNewUnmagCount,
+    const Weapon::State& oldState,
+    const Weapon::State& newState)
 {
     // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
+
+    // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
 
     if ((nOldMagCount > 0) && (nNewMagCount == 0))
     {
         m_gui.getXHair()->handleMagEmpty();
 
-        // we cannot set wpn auto reload request flag here because this is too early: we don't yet know the updated state of the weapon,
-        // or it still not went back to idle after becoming empty ... so we set the flag in handleWeaponStateChangeShared()!
+        // we fired a bullet and magazine became empty, but cannot yet set wpn auto reload request flag here because this is too early:
+        // we don't yet know the updated state of the weapon, or it still not went back to idle/ready after becoming empty ...
+        // so we set the flag in handleWeaponStateChangeShared() upon the proper state is set!
     }
     else if ((nOldMagCount == 0) && (nNewMagCount > 0))
     {
         m_gui.getXHair()->handleMagLoaded();
+    }
+    else if ((newState == Weapon::WPN_READY) && (oldState == Weapon::WPN_READY) && (nOldMagCount == 0) && (nNewMagCount == 0) && (nNewUnmagCount != 0))
+    {
+        // somehow, now we have just got spare ammo for the current empty weapon, we might initiate auto-reload for this ammo pickup case.
+        // Unlike with the weapon change- or weapon state change-induced auto-reload, the ammo pickup-induced auto-reload is handled here.
+        // Since this function might be called earlier than handleWeaponStateChangeShared(), I'm making sure prev state and current state are both READY,
+        // so this function does not hijack other "auto" settings that might be initiated in handleWeaponStateChangeShared().
+        // Would be logical to handle this pickup-induced auto-reload where we handle item pickups for player, but did not find proper place:
+        // neither player.takeItem() nor player.handleTakeWeaponItem() looks suitable.
+        // Anyway, since both client and server invokes this function upon change in unmag ammo, this looks to be the perfect place.
+
+        // TODO: since in some cases, multiple "auto" flags might be set, I recommend using a common function which allows setting any flag
+        // only if non of the flags is set yet! E.g.: handleWeaponStateChangeShared() already set something before invoking this function.
+        if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
+        {
+            m_bWpnAutoReloadRequest = true;
+                getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, auto requesting wpn reload!", __func__);
+        }
+        else
+        {
+            getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, but auto reload is NOT configured!", __func__);
+        }
     }
 }
 
@@ -379,11 +406,13 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
-            handleCurrentWeaponBulletCountsChangeShared(
+            handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
                 nOldMagCount,
                 wpn->getMagBulletCount(),
                 nOldUnmagCount,
-                wpn->getUnmagBulletCount());
+                wpn->getUnmagBulletCount(),
+                wpn->getState().getOld(),
+                wpn->getState().getNew());
             // TODO: would be nice to find a way to AVOID calling this every frame on server, but we have code inside even for READY->READY state change,
             // as being recognized as possible weapon change case when we might also need to initiate the auto-reload.
             // Client is not invoking this every frame, only when receiving MsgWpnUpdateCurrentFromServer.
@@ -904,19 +933,22 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
 
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
     {
-        handleCurrentWeaponBulletCountsChangeShared(
+        handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
             wpn->getMagBulletCount(),
             msg.m_nMagBulletCount,
             wpn->getUnmagBulletCount(),
-            msg.m_nUnmagBulletCount);
+            msg.m_nUnmagBulletCount,
+            wpn->getState().getOld(),
+            wpn->getState().getNew());
     }
 
     // since we receive this message also for any other kind of weapon update, we need to understand if this is item pickup scenario or not, and as a hack,
     // currently MapItemType::ITEM_HEALTH is sent (from serverUpdateWeapons()) when it is NOT an item pickup scenario!
+    // For example, ITEM_HEALTH is set in this msg when the bullet count change is due to firing or reload!
     if (msg.m_eMapItemType != MapItemType::ITEM_HEALTH)
     {
         // server invokes handleTakeWeaponItem() in Player::takeItem();
-        // we can be sure that this update is for the current client and not about other players, so we can play sound too
+        // we can be sure that this update is for the CURRENT client and not about other players, so we can play sound too
         player.handleTakeWeaponItem(msg.m_eMapItemType, !wpn->isAvailable() && msg.m_bAvailable, msg.m_nAmmoIncrease);
     }
 
@@ -969,11 +1001,13 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
             //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
             m_pge.getAudio().playSound(m_sounds.m_sndChangeWeapon);
 
-            handleCurrentWeaponBulletCountsChangeShared(
+            handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
                 player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(),
                 wpn->getMagBulletCount(),
                 player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount(),
-                wpn->getUnmagBulletCount());
+                wpn->getUnmagBulletCount(),
+                wpn->getState().getOld(),
+                wpn->getState().getNew());
         }
 
         if (!player.getWeaponManager().setCurrentWeapon(wpn,
@@ -998,6 +1032,8 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
     const TPureUInt& nUnmagCount)
 {
     // processing weapon state change for the CURRENT player on THIS machine, no matter if we are server or client
+
+    // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
 
     // TODO: it MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
 
@@ -1095,7 +1131,7 @@ void proofps_dd::WeaponHandling::handleWeaponStateChangeShared(
 
             if ((nMagCount == 0) && (nUnmagCount != 0))
             {
-                if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag].getAsBool())
+                if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
                 {
                     m_bWpnAutoReloadRequest = true;
                     getConsole().EOLn("WeaponHandling::%s(): READY -> READY, has unmag, auto requesting wpn reload!", __func__);

@@ -385,11 +385,13 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                         // invoking some functions at multiple places, such as:
                         // - handleCurrentWeaponBulletCountsChangeShared();
                         // - handleWeaponStateChangeShared().
-                        wpnHandling.handleCurrentWeaponBulletCountsChangeShared(
+                        wpnHandling.handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
                             prevWpn->getMagBulletCount(),
                             pTargetWpn->getMagBulletCount(),
                             prevWpn->getUnmagBulletCount(),
-                            pTargetWpn->getUnmagBulletCount()
+                            pTargetWpn->getUnmagBulletCount(),
+                            pTargetWpn->getState().getOld(),
+                            pTargetWpn->getState().getNew()
                         );
                     }
                 }
