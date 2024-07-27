@@ -626,13 +626,20 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             ).count();
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
+            const Weapon* pNextBestWpnFound = nullptr;
             if (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest())
             {
                 getConsole().EOLn("InputHandling::%s(): trying auto switch to best with mag ammo ...", __func__);
-                const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
+                pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
+                if (pNextBestWpnFound == nullptr)
+                {
+                    getConsole().EOLn("InputHandling::%s(): SHOULD NOT HAPPEN: getNextBestAvailableWeapon() returned nullptr!", __func__);
+                    assert(false);  // crash in debug
+                    return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;  // graceful exit in release mode
+                }
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
-                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better weapon found!");
+                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better loaded weapon found!");
                     getConsole().EOLn("InputHandling::%s(): auto switch to best with mag ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
                 }
@@ -641,17 +648,20 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     const auto itCVarWpnName = pNextBestWpnFound->getVars().find("name");
                     if (itCVarWpnName != pNextBestWpnFound->getVars().end())
                     {
-                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to " + itCVarWpnName->second.getAsString());
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to loaded " + itCVarWpnName->second.getAsString());
                     }
                 }
             }
-            else if (wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+
+            if (wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() ||
+                /* 2nd part of condition is: could not find better loaded wpn, so with best-effort we are trying to find a reloadable */
+                (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest() && (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())))
             {
                 getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
-                const auto pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
+                pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
-                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better weapon found!");
+                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better reloadable weapon found!");
                     getConsole().EOLn("InputHandling::%s(): auto switch to best with any ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
                 }
@@ -660,12 +670,13 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     const auto itCVarWpnName = pNextBestWpnFound->getVars().find("name");
                     if (itCVarWpnName != pNextBestWpnFound->getVars().end())
                     {
-                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to " + itCVarWpnName->second.getAsString());
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch to reloadable " + itCVarWpnName->second.getAsString());
                     }
                 }
             }
-            else
+            else if (cWeaponSwitch == '\0') /* none of above auto-switch methods selected any weapon */
             {
+                // scan for any manual switch request
                 for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
                 {
                     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
