@@ -633,7 +633,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
                 if (pNextBestWpnFound == nullptr)
                 {
-                    getConsole().EOLn("InputHandling::%s(): SHOULD NOT HAPPEN: getNextBestAvailableWeapon() returned nullptr!", __func__);
+                    getConsole().EOLn("InputHandling::%s(): SHOULD NOT HAPPEN: getNextBestAvailableWeapon() 1 returned nullptr!", __func__);
                     assert(false);  // crash in debug
                     return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;  // graceful exit in release mode
                 }
@@ -659,6 +659,12 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             {
                 getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
+                if (pNextBestWpnFound == nullptr)
+                {
+                    getConsole().EOLn("InputHandling::%s(): SHOULD NOT HAPPEN: getNextBestAvailableWeapon() 2 returned nullptr!", __func__);
+                    assert(false);  // crash in debug
+                    return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;  // graceful exit in release mode
+                }
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
                     m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better reloadable weapon found!");
@@ -674,7 +680,22 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     }
                 }
             }
-            else if (cWeaponSwitch == '\0') /* none of above auto-switch methods selected any weapon */
+
+            if ((wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() || wpnHandling.getWeaponAutoSwitchToBestLoadedRequest()) &&
+                /* either of auto-switches is set but still no better wpn found, check if current could be auto-reloaded?
+                   Remember, we are here because reload was not requested. Thus, this reload is really last-resort. */
+                (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon()))
+            {
+                // pNextBestWpnFound cannot be null, because we have explicit null-handling blocks in above cases
+                assert(pNextBestWpnFound != nullptr);
+                if (pNextBestWpnFound->getUnmagBulletCount() != 0)
+                {
+                    m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Last-resort Auto-Reload");
+                    getConsole().EOLn("InputHandling::%s(): auto switch: did not find better, doing last-resort auto-reload!", __func__);
+                    bRequestReload = true;
+                }
+            }
+            else if (cWeaponSwitch == '\0') /* none of above auto-switch methods selected any weapon, and no last-resort auto-reload was initiated either */
             {
                 // scan for any manual switch request
                 for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())

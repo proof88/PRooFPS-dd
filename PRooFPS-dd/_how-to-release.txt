@@ -58,12 +58,14 @@
          - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
            - 1st step should be skipped: pistol shall have 0 unmag;
            - same steps and expectation;
-         - after the steps and we have mchgun current, additional steps: pick up pistol ammo so it will have non-0 unmag;
+         - after the steps and we have mchgun current: pick up pistol ammo so it will have non-0 unmag;
          - make mchgun empty;
-         - TODO: game will tell no better found, but in this case with extra feature FTR2, should act like "auto-switch to best empty but reloadable",
-           switching to pistol (and we expect auto-reload of pistol by FTR1), and if still not found better, try reload current if unmag is non-0!;
+         - game will tell no better found, but in this case it should act like "auto-switch to best empty but reloadable" with best-effort,
+           switching to pistol;
+         - if "Pickup-/Switch-Induced Auto-Reload" is set, we expect auto-reload of pistol;
          - make pistol empty;
-         - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
+         - game should not change to any weapon because there is no better left, but should auto-reload of pistol as last-resort,
+           even if "Pickup-/Switch-Induced Auto-Reload" is not set.
 
        - "auto-switch to best empty but reloadable" case:
          - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
@@ -81,6 +83,10 @@
    - if "Pickup-/Switch-Induced Auto-Reload" is set, an empty weapon should be auto-reloaded when:
      - switching to it either manually or by an auto-switch;
      - spare ammo becoming available by picking up.
+     This setting is not affected by the "last-resort" auto-reload that is available when either of the "auto-switch to next best ..." settings is set, and
+     also, this setting should not affect that "last-resort" auto-reload.
+     If one does not want "last-resort" auto-reload, if no better weapon found, then the "Do Nothing option" should be selected for both of the
+     "auto-switch to next best ..." settings.
 
    - 3D sound check:
      - mute server and 1 client instance, check if you hear proper sound in the unmuted client instance;
