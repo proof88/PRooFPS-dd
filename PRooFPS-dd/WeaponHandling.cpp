@@ -293,7 +293,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
         // we don't yet know the updated state of the weapon, or it still not went back to idle/ready after becoming empty ...
         // so we set the flag in handleCurrentPlayersCurrentWeaponStateChangeShared() upon the proper state is set!
     }
-    else if ((nOldMagCount == 0) && (nNewMagCount > 0))
+    else if (nNewMagCount > 0)
     {
         m_gui.getXHair()->handleMagLoaded();
     }
