@@ -78,7 +78,8 @@
          - make mchgun empty;
          - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
 
-     - TODO: FTR4: in case of ammo pickup, if current weapon is total empty, try to auto switch to (the) reloadable weapon!
+     - TODO: in case of ammo pickup, if current weapon is total empty, try to auto switch to (the) reloadable weapon!
+       This is not being tested for v0.2.7, it is separate feature for v0.2.8!
 
    - if "Pickup-/Switch-Induced Auto-Reload" is set, an empty weapon should be auto-reloaded when:
      - switching to it either manually or by an auto-switch;
