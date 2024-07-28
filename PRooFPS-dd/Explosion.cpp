@@ -316,14 +316,14 @@ const float& proofps_dd::Explosion::getDamageAreaSize() const
 
 float proofps_dd::Explosion::getDamageAtDistance(
     const float& fDistance,
-    const int& nDamageHp) const
+    const int& nDamage) const
 {
     // fDistance is distance between explosion center and other entity's center,
     // m_fDamageAreaSize is radius
     assert(fDistance >= 0.f);
     assert(m_fDamageAreaSize > 0.f);
 
-    return nDamageHp * std::max(0.f, (1 - (fDistance / m_fDamageAreaSize)));
+    return nDamage * std::max(0.f, (1 - (fDistance / m_fDamageAreaSize)));
 }
 
 bool proofps_dd::Explosion::shouldBeDeleted() const

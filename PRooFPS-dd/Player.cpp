@@ -466,6 +466,16 @@ CConsole& proofps_dd::Player::getConsole() const
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
+const PgeOldNewValue<int>& proofps_dd::Player::getArmor() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvArmor));
+}
+
+void proofps_dd::Player::setArmor(int value) {
+    getArmor().set(std::max(0, std::min(value, 100)));
+}
+
 const PgeOldNewValue<int>& proofps_dd::Player::getHealth() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
@@ -476,12 +486,31 @@ void proofps_dd::Player::setHealth(int value) {
     getHealth().set(std::max(0, std::min(value, 100)));
 }
 
-void proofps_dd::Player::doDamage(int dmg) {
-    getHealth().set(getHealth().getNew() - dmg);
-    if (getHealth().getNew() < 0)
+/**
+* Input can be the calculated damage caused by bullet, or falling from high, etc.
+* AP is able to decrease the suffered HP damage, but not vice versa.
+* This means a player can die even if AP stays positive.
+* 
+* @param dmgAP The input damage that will be applied to AP. It simply decreases AP.
+* @param dmgHP The input damage that will be applied to HP. This damage is decreased by AP before being applied to HP.
+*/
+void proofps_dd::Player::doDamage(int dmgAP, int dmgHP) {
+    if ((dmgAP < 0) || (dmgHP < 0))
     {
-        getHealth().set(0);
+        getConsole().EOLn("Player::%s(): INVALID dmgAP: %d or dmgHP: %d", __func__, dmgAP, dmgHP);
+        return;
     }
+
+    getArmor().set(
+        std::max(0, getArmor().getNew() - dmgAP)
+    );
+
+    const int newDmgHp = static_cast<int>(std::lroundf((
+        1.f - (getArmor().getNew() / 100.f)) * dmgHP
+    ));
+    getHealth().set(
+        std::max(0, getHealth().getNew() - newDmgHp)
+    );
 }
 
 PureVector& proofps_dd::Player::getImpactForce()
@@ -563,6 +592,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     setGravity(0.f);
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
+    setArmor(0);
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
@@ -691,7 +721,7 @@ void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
         m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
 
-        //getConsole().EOLn("PRooFPSddPGE::%s(): m_fHeightStartedFalling: %f!", __func__, m_fHeightStartedFalling);
+        //getConsole().EOLn("Player::%s(): m_fHeightStartedFalling: %f!", __func__, m_fHeightStartedFalling);
     }
 }
 
@@ -1583,6 +1613,12 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
 
     m_timeCtor = std::chrono::steady_clock::now();
+}
+
+PgeOldNewValue<int>& proofps_dd::Player::getArmor()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvArmor));
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getHealth()

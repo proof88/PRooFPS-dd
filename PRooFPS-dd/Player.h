@@ -155,9 +155,11 @@ namespace proofps_dd
         bool isNetDirty() const;
         void clearNetDirty();
 
+        const PgeOldNewValue<int>& getArmor() const;
+        void setArmor(int value);
         const PgeOldNewValue<int>& getHealth() const;
         void setHealth(int value);
-        void doDamage(int dmg);
+        void doDamage(int dmgAP, int dmgHP);
         PureVector& getImpactForce();
         void die(bool bMe, bool bServer);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeDied() const;
@@ -266,6 +268,7 @@ namespace proofps_dd
 
         enum class OldNewValueName
         {
+            OvArmor,
             OvHealth,
             OvFrags,
             OvDeaths,
@@ -315,6 +318,7 @@ namespace proofps_dd
             PgeOldNewValue<TPureFloat>,
             PgeOldNewValue<PureVector>
             >> m_vecOldNewValues = {
+                {OldNewValueName::OvArmor,    PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvHealth,   PgeOldNewValue<int>(100)},
                 {OldNewValueName::OvFrags,    PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvDeaths,   PgeOldNewValue<int>(0)},
@@ -432,6 +436,7 @@ namespace proofps_dd
 
         void BuildPlayerObject(bool blend);
 
+        PgeOldNewValue<int>& getArmor();
         PgeOldNewValue<int>& getHealth();
 
     }; // class Player

@@ -83,6 +83,7 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
     const Player& player,
     const Explosion& xpl,
     const TPureFloat& fDamageAreaPulse,
+    int& nDamageAp,
     const int& nDamageHp,
     PureVector& vecImpactForce)
 {
@@ -94,8 +95,11 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
         vDirPerAxis, vDistancePerAxis);
 
+    nDamageAp = static_cast<int>(std::lroundf(xpl.getDamageAtDistance(fDistance, nDamageAp)));
     const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
 
+    // basically we calculate impact force from nDamageHp property of the bullet because this is explosive bullet, its damage_hp property
+    // shall be bigger than its damage_ap, that is why we use damage_hp for this.
     if (fRadiusDamage > 0.f)
     {
         // to determine the direction of impact, we should use the center positions of player and explosion, however
@@ -116,6 +120,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize,
     const TPureFloat& fDamageAreaPulse,
+    const int& nDamageAp,
     const int& nDamageHp,
     XHair& xhair,
     PureVector& vecCamShakeForce,
@@ -146,8 +151,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         }
 
         PureVector vecImpactForce;
+        int nDamageApCalculated = nDamageAp;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+            playerConst, xpl, fDamageAreaPulse, nDamageApCalculated, nDamageHp, vecImpactForce
         );
         if (fRadiusDamage > 0.f)
         {
@@ -167,7 +173,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 continue;
             }
 
-            player.doDamage(static_cast<int>(std::lroundf(fRadiusDamage)));
+            player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
             if (playerConst.getHealth() == 0)
             {
@@ -243,9 +249,10 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     if (playerConst.getHealth() > 0)
     {
         // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
+        int nDamageApDummyVar;
         PureVector vecImpactForce;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageHp, vecImpactForce
+            playerConst, xpl, fDamageAreaPulse, nDamageApDummyVar, nDamageHp, vecImpactForce
         );
 
         if (fRadiusDamage > 0.f)
@@ -565,7 +572,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     if (bullet.getAreaDamageSize() == 0.f)
                     {
                         // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
-                        player.doDamage(bullet.getDamageHp());
+                        player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
                         if (playerConst.getHealth() == 0)
                         {
                             const auto itKiller = m_mapPlayers.find(bullet.getOwner());
@@ -661,6 +668,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getObject3D().getPosVec(),
                         bullet.getAreaDamageSize(),
                         bullet.getAreaDamagePulse(),
+                        bullet.getDamageAp(),
                         bullet.getDamageHp(),
                         xhair,
                         vecCamShakeForce,

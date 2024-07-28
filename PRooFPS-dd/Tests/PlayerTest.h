@@ -64,6 +64,7 @@ protected:
         AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
         AddSubTest("test_set_just_created_and_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_just_created_and_expecting_start_pos);
         AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
+        AddSubTest("test_set_armor_and_update_old_armor", (PFNUNITSUBTEST)&PlayerTest::test_set_armor_and_update_old_armor);
         AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
         AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
         AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
@@ -301,6 +302,8 @@ private:
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertFalse(player.isDirty(), "isDirty") &
             assertFalse(player.isNetDirty(), "isNetDirty") &
+            assertFalse(playerConst.getArmor().isDirty(), "old armor") &
+            assertEquals(0, playerConst.getArmor(), "armor") &
             assertFalse(playerConst.getHealth().isDirty(), "old health") &
             assertEquals(100, playerConst.getHealth(), "health") &
             assertFalse(player.getDeaths().isDirty(), "old deaths") &
@@ -475,6 +478,15 @@ private:
         bool b = (assertFalse(player.isDirty(), "dirty 1") &
             assertFalse(player.isNetDirty(), "net dirty 1")) != 0;
 
+        player.setArmor(5);
+        b &= assertTrue(player.isDirty(), "dirty X 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty X 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty X 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty X 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty X 3");
+
         player.setHealth(5);
         b &= assertTrue(player.isDirty(), "dirty A 1");
         b &= assertFalse(player.isNetDirty(), "net dirty A 1");
@@ -621,6 +633,31 @@ private:
         return b;
     }
 
+    bool test_set_armor_and_update_old_armor()
+    {
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        const auto& playerConst = player;
+
+        player.setArmor(200);
+        bool b = (assertEquals(100, playerConst.getArmor(), "armor 1") &
+            assertTrue(playerConst.getArmor().isDirty(), "dirty 1") &
+            assertTrue(playerConst.isDirty(), "dirty 2")) != 0;
+
+        player.updateOldValues();
+        player.setArmor(-1);
+        b &= (assertEquals(0, playerConst.getArmor(), "armor 2") &
+            assertTrue(playerConst.getArmor().isDirty(), "dirty 3") &
+            assertTrue(playerConst.isDirty(), "dirty 4")) != 0;
+
+        player.updateOldValues();
+        b &= assertTrue(playerConst.isNetDirty(), "is net dirty");
+        b &= (assertEquals(0, playerConst.getArmor().getOld(), "armor 3") &
+            assertFalse(playerConst.getArmor().isDirty(), "dirty 5") &
+            assertFalse(playerConst.isDirty(), "dirty 6")) != 0;
+
+        return b;
+    }
+
     bool test_set_health_and_update_old_health()
     {
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
@@ -650,23 +687,86 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         const auto& playerConst = player;
 
-        player.doDamage(25);
+        /* these are with default 0 AP, so we expect 100% of HP damage to be subtracted from player HP */
+
+        player.doDamage(0 /* AP */, 25);
         bool b = (assertEquals(75, playerConst.getHealth(), "health 1") &
-            assertEquals(100, playerConst.getHealth().getOld(), "old health 1")) != 0;
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 1") &
+            assertEquals(0, playerConst.getArmor(), "armor 1") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 1")) != 0;
 
-        player.doDamage(25);
+        player.doDamage(0 /* AP */, 25);
         b &= (assertEquals(50, playerConst.getHealth(), "health 2") &
-            assertEquals(100, playerConst.getHealth().getOld(), "old health 2")) != 0;
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 2") &
+            assertEquals(0, playerConst.getArmor(), "armor 2") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 2")) != 0;
 
-        player.doDamage(100);
+        player.doDamage(0 /* AP */, 100); /* should not go below 0 */
         b &= (assertEquals(0, playerConst.getHealth(), "health 3") &
-            assertEquals(100, playerConst.getHealth().getOld(), "old health 3")) != 0;
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 3") &
+            assertEquals(0, playerConst.getArmor(), "armor 3") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 3")) != 0;
+
+        /* try doing damage to AP now */
+
+        player.setHealth(100);
+        player.setArmor(100);
+
+        player.doDamage(25 /* AP */, 0);
+        b &= (assertEquals(75, playerConst.getArmor(), "armor 4") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 4") &
+            assertEquals(100, playerConst.getHealth(), "health 4") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 4")) != 0;
+
+        player.doDamage(25 /* AP */, 0);
+        b &= (assertEquals(50, playerConst.getArmor(), "armor 5") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 5") & 
+            assertEquals(100, playerConst.getHealth(), "health 5") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 5")) != 0;
+
+        player.doDamage(100 /* AP */, 0); /* should not go below 0 */
+        b &= (assertEquals(0, playerConst.getArmor(), "armor 6") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 6") &
+            assertEquals(100, playerConst.getHealth(), "health 6") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 6")) != 0;
+
+        /* now see what happens when we have no AP, but do AP damage and HP damage too */
+
+        player.setArmor(0);
+        player.setHealth(100);
+
+        player.doDamage(25 /* AP */, 50);
+        b &= (assertEquals(0, playerConst.getArmor(), "armor 7") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 7") &
+            assertEquals(50, playerConst.getHealth(), "health 7") &
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 7")) != 0;
+
+        /* now see what happens when we have AP, and do AP damage and HP damage too */
+
+        player.setArmor(100);
+        player.setHealth(100);
+
+        player.doDamage(50 /* AP */, 40);
+        b &= (assertEquals(50, playerConst.getArmor(), "armor 8") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 8") &
+            assertEquals(80, playerConst.getHealth(), "health 8") & /* AP 50 decreases damage 40 by 50% to 20 */
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 8")) != 0;
+
+        // do same damage again
+
+        player.doDamage(50 /* AP */, 40);
+        b &= (assertEquals(0, playerConst.getArmor(), "armor 9") &
+            assertEquals(0, playerConst.getArmor().getOld(), "old armor 9") &
+            assertEquals(40, playerConst.getHealth(), "health 9") & /* AP 0 decreases damage 40 by 0% */
+            assertEquals(100, playerConst.getHealth().getOld(), "old health 9")) != 0;
 
         return b;
     }
 
     bool test_die_server()
     {
+        // armor is not tested since it has nothing to do with dieing
+
         constexpr bool bServer = true;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
@@ -727,6 +827,8 @@ private:
 
     bool test_die_client()
     {
+        // armor is not tested since it has nothing to do with dieing
+
         constexpr bool bServer = false;
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, connHandleExpected, "192.168.1.12");
@@ -785,10 +887,12 @@ private:
         player.setGravity(-15);
         player.setStrafe(proofps_dd::Strafe::RIGHT);
         player.setStrafe(proofps_dd::Strafe::LEFT); // we are doing this so we can test if prevActualStrafe is also reset!
+        player.setArmor(50);
 
         player.die(true, bServer);
         player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
 
+        const auto& playerConst = player;
         return (b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
             assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
@@ -798,7 +902,8 @@ private:
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(0.f, player.getGravity(), "gravity") &
-            assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe")) != 0;
+            assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe") &
+            assertEquals(0, playerConst.getArmor(), "armor")) != 0;
     }
 
     bool test_set_invulnerability()

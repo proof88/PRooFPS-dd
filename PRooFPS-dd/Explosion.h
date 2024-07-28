@@ -72,7 +72,7 @@ namespace proofps_dd
         const float& getDamageAreaSize() const;
         float getDamageAtDistance(
             const float& fDistance,
-            const int& nDamageHp) const;
+            const int& nDamage) const;
 
         bool shouldBeDeleted() const;
 

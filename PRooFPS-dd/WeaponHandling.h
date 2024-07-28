@@ -63,6 +63,7 @@ namespace proofps_dd
             const Player& player,
             const Explosion& xpl,
             const TPureFloat& fDamageAreaPulse,
+            int& nDamageAp,
             const int& nDamageHp,
             PureVector& vecImpactForce);
         Explosion& createExplosionServer(
@@ -70,6 +71,7 @@ namespace proofps_dd
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize,
             const TPureFloat& fDamageAreaPulse,
+            const int& nDamageAp,
             const int& nDamageHp,
             XHair& xhair,
             PureVector& vecCamShakeForce,
