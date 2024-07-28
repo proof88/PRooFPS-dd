@@ -241,8 +241,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
     getAudio().loadSound(m_sounds.m_sndExplosion,     std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/xplosion.wav");
 
-    static constexpr float SndPlayerDieDistMin = 4.f;
-    static constexpr float SndPlayerDieDistMax = 8.f;
+    static constexpr float SndPlayerDieDistMin = 6.f;
+    static constexpr float SndPlayerDieDistMax = 12.f;
 
     m_sounds.m_sndPlayerDie.set3dMinMaxDistance(SndPlayerDieDistMin, SndPlayerDieDistMax);
     m_sounds.m_sndPlayerDie.set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
