@@ -413,7 +413,9 @@ void proofps_dd::GUI::showRespawnTimer(
     if (pKillerPlayer)
     {
         m_sRespawnTimerExtraText = pKillerPlayer->getName() + " killed you with";
-        m_sRespawnTimerExtraText2 = std::to_string(pKillerPlayer->getHealth().getNew()) + "% HP and 0% AP remaining.";
+        m_sRespawnTimerExtraText2 =
+            std::to_string(pKillerPlayer->getHealth().getNew()) + "% HP and " +
+            std::to_string(pKillerPlayer->getArmor().getNew()) + "% AP remaining.";
     }
 }
 
