@@ -23,7 +23,8 @@ namespace proofps_dd
         ITEM_WPN_PISTOL,
         ITEM_WPN_MACHINEGUN,
         ITEM_WPN_BAZOOKA,
-        ITEM_HEALTH
+        ITEM_HEALTH,
+        ITEM_ARMOR
     };
     
     std::ostream& operator<< (std::ostream& s, const MapItemType& eMapItemType);
@@ -34,6 +35,8 @@ namespace proofps_dd
     
         typedef uint32_t MapItemId;
     
+        static constexpr uint32_t ITEM_ARMOR_AP_INC = 50;
+        static constexpr uint32_t ITEM_ARMOR_RESPAWN_SECS = 10;
         static constexpr uint32_t ITEM_HEALTH_HP_INC = 20;
         static constexpr uint32_t ITEM_HEALTH_RESPAWN_SECS = 10;
         static constexpr uint32_t ITEM_WPN_PISTOL_RESPAWN_SECS = 20;

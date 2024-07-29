@@ -955,6 +955,17 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         bool bSpecialBgBlock = false;
         switch (c)
         {
+        case ',':
+        {
+            if (bDryRun)
+            {
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_ARMOR, PureVector(x, y, GAME_ITEMS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
+            bSpecialBgBlock = true;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
+            break;
+        }
         case '+':
         {
             if (bDryRun)

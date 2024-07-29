@@ -98,6 +98,7 @@ proofps_dd::Player::Player(
         // no need to destruct in dtor, static destructions will take care anyway when exiting
         m_sndWpnAmmo = new SoLoud::Wav();
         m_sndWpnNew = new SoLoud::Wav();
+        m_sndArmor = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
         m_sndJumppad = new SoLoud::Wav();
         m_sndFallYell_1 = new SoLoud::Wav();
@@ -118,6 +119,7 @@ proofps_dd::Player::Player(
         // new would had thrown above in case of alloc failure, no need to check
         m_audio.loadSound(*m_sndWpnAmmo, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_ammo.wav");
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
+        m_audio.loadSound(*m_sndArmor, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_armor.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
         m_audio.loadSound(*m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
         m_audio.loadSound(*m_sndFallYell_1, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
@@ -130,6 +132,7 @@ proofps_dd::Player::Player(
         // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.
         m_sndWpnNew->setSingleInstance(true);
         m_sndWpnAmmo->setSingleInstance(true);
+        m_sndArmor->setSingleInstance(true);
         m_sndMedkit->setSingleInstance(true);
         m_sndJumppad->setSingleInstance(true);
 
@@ -1270,6 +1273,8 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
         }
         return pWpn->canIncBulletCount();
     }
+    case proofps_dd::MapItemType::ITEM_ARMOR:
+        return (getArmor() < 100);
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
     default:
@@ -1348,6 +1353,11 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
             nAmmoIncrease);  // becomes available on client side (after pkt being sent)
         break;
     }
+    case proofps_dd::MapItemType::ITEM_ARMOR:
+        item.take();
+        setArmor(getArmor() + static_cast<int>(MapItem::ITEM_ARMOR_AP_INC)); // client will learn about new AP from the usual UserUpdateFromServer
+        handleTakeNonWeaponItem(MapItemType::ITEM_ARMOR);
+        break;
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
@@ -1487,12 +1497,18 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
     // this function is not invoked for all taken items, because this was introduced in v0.2.6, far later than MsgWpnUpdateFromServer,
     // so for example it does not get invoked for picked up weapons.
 
-    assert(m_sndMedkit);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndArmor);   // otherwise new operator would had thrown already in ctor
+    assert(m_sndMedkit);  
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
         switch (eMapItemType)
         {
+        case MapItemType::ITEM_ARMOR:
+            //getConsole().EOLn("Player::%s() playing sound", __func__);
+            m_audio.play3dSound(*m_sndArmor, getPos().getNew());
+            m_eventsItemPickup.addEvent("Armor: +" + std::to_string(MapItem::ITEM_ARMOR_AP_INC) + " AP");
+            break;
         case MapItemType::ITEM_HEALTH:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_audio.play3dSound(*m_sndMedkit, getPos().getNew());
@@ -1531,7 +1547,7 @@ void proofps_dd::Player::handleTakeWeaponItem(
     {
         assert(m_sndWpnNew);  // otherwise new operator would had thrown already in ctor
         m_audio.play3dSound(*m_sndWpnNew, getPos().getNew());
-        m_eventsItemPickup.addEvent("+ Weapon: " + MapItem::toString(eMapItemType));
+        m_eventsItemPickup.addEvent("+ NEW Weapon: " + MapItem::toString(eMapItemType));
     }
     else
     {
@@ -1585,6 +1601,7 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndArmor = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_1 = nullptr;

@@ -106,12 +106,14 @@ private:
 
     bool test_get_item_respawn_time_secs()
     {
+        proofps_dd::MapItem miArmor(*engine, proofps_dd::MapItemType::ITEM_ARMOR, PureVector(1, 2, 3));
         proofps_dd::MapItem miHealth(*engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
         proofps_dd::MapItem miWpnPistol(*engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miWpnMchGun(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         proofps_dd::MapItem miWpnBazooka(*engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
         
-        return (assertEquals(proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miHealth), "health") &
+        return (assertEquals(proofps_dd::MapItem::ITEM_ARMOR_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miArmor), "armor") & 
+            assertEquals(proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miHealth), "health") &
             assertEquals(proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnPistol), "pistol") &
             assertEquals(proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnMchGun), "mchgun") &
             assertEquals(proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS, proofps_dd::MapItem::getItemRespawnTimeSecs(miWpnBazooka), "bazooka")) != 0;

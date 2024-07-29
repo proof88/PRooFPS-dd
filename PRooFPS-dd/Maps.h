@@ -108,8 +108,6 @@ namespace proofps_dd
             'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T',
             /* the special foreground stuff (e.g. jump pads) are treated as foreground blocks, see special handling in lineHandleLayout(): */
             '^' /* jump pad vertical */,
-            '<' /* jump pad up-left */,
-            '>' /* jump pad up-right */,
             '\\' /* stairs descending to the right */,
             '/'  /* stairs ascending to the right */
         };
@@ -117,6 +115,7 @@ namespace proofps_dd
         const std::set<char> backgroundBlocks = {
             'a', 'c', 'e', 'm', 'n', 'p', 'o', 'r', 'u', 'v', 'w', 'x', 'y', 'z',
             /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
+            ',' /* armor */,
             '+' /* medkit */,
             '2' /* weapon key 2 */,
             '3' /* weapon key 3 */,

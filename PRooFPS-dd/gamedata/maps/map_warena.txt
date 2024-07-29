@@ -45,6 +45,7 @@ c = dirt2.bmp
 # '2' char represents pistol.
 # '3' char represents machine gun.
 # '4' char represents bazooka.
+# ',' char represents armor.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
@@ -131,10 +132,10 @@ BBBB                                            a3333333a                       
 BBBB                                         ^ aBBBBBBaBBa ^                                         BBBB
 BBBB    SSSSSS4                               a3aaaaaaaaa3a                               4SSSSSS    BBBB
 BBBBa3aa333333a                               a  aaaaaBa  a                               a333333aa3aBBBB
-BBBBaaaaBBBBBBa                              aa   aa aa   aa                              aBBBBBBaaaaBBBB
+BBBBaaaaBBBBBBa ,                            aa   aa aa   aa                            , aBBBBBBaaaaBBBB
 BBBBBa2aaaBaaaa ^                            aa   aaBaa   aa                            ^ aaaaBaaa2aBBBBB
-BBBBBBaaaaaaaaa          cccc4ccccc          aa  aBaaaaa  aa          ccccc4cccc          aaaaaaaaaBBBBBB
-BBBBBBBaaSSSaaa        cccDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDccc        aaaSSSaaBBBBBBB
+BBBBBBaa,,aaaaa          cccc4ccccc          aa  aBaaaaa  aa          ccccc4cccc          aaaaa,,aaBBBBBB
+BBBBBBBaaSSSaaa        c,cDDDDDDDDccc       aaaaaaaaaaaaaaaaa       cccDDDDDDDDc,c        aaaSSSaaBBBBBBB
 BBBBBBBBa++++Baccccc43+cDDDDDDDDDDDDcccccccaaaaBaaa+++aaaaaaaacccccccDDDDDDDDDDDDc+34cccccaB++++aBBBBBBBB
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD

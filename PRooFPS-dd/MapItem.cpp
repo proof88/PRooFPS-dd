@@ -19,6 +19,8 @@ std::ostream& proofps_dd::operator<< (std::ostream& s, const proofps_dd::MapItem
     return (s << MapItem::toString(eMapItemType));
 }
 
+constexpr uint32_t proofps_dd::MapItem::ITEM_ARMOR_AP_INC;
+constexpr uint32_t proofps_dd::MapItem::ITEM_ARMOR_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_HEALTH_HP_INC;
 constexpr uint32_t proofps_dd::MapItem::ITEM_HEALTH_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
@@ -50,6 +52,8 @@ uint32_t proofps_dd::MapItem::getItemRespawnTimeSecs(const proofps_dd::MapItem& 
         return ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
         return ITEM_WPN_BAZOOKA_RESPAWN_SECS;
+    case proofps_dd::MapItemType::ITEM_ARMOR:
+        return ITEM_ARMOR_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return ITEM_HEALTH_RESPAWN_SECS;
     default:
@@ -67,6 +71,8 @@ std::string proofps_dd::MapItem::toString(const proofps_dd::MapItemType& eMapIte
         return "Machine Gun";
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
         return "Bazooka";
+    case proofps_dd::MapItemType::ITEM_ARMOR:
+        return "Armor";
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return "MedKit";
     default:
@@ -100,6 +106,9 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
             break;
         case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_bazooka.bmp");
+            break;
+        case proofps_dd::MapItemType::ITEM_ARMOR:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_armor.bmp");
             break;
         case proofps_dd::MapItemType::ITEM_HEALTH:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");

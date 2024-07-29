@@ -58,7 +58,7 @@ y = paperboxes.bmp
 # '2' char represents pistol.
 # '3' char represents machine gun.
 # '4' char represents bazooka.
-# '+' char represents health/medkit.
+# ',' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
 # next to them. In such case, that previous background block's texture will be
@@ -136,18 +136,18 @@ jumppad_2 = 3.7 -0.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2            +  4    S 4  3           2          S c+cccc   
+ccS   2,           +  4    S 4  3           2          S c+cccc   
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
-FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaac22cccccccFF   
+FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHa,c22cccccccFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF   
 cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF   
-FFFFccSc3cccaaaaaaaaavvvaaa3aauSuaaaaaaaaaaaSaaa24accccFFF3FFFF   
-FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23aaaa2aaaGGGGGFFcccFF3FFFF   
+FFFFccSc3cccaaaaaaaa,vvvaaa3aauSuaaaaaaaaaaaSaaa24accccFFF3FFFF   
+FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23a,aa2aaaGGGGGFFcccFF3FFFF   
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF   
 cc4cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHccccc3ccFFFF   
-FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF   
-FFFFFccccFFFa+ Saenaavvvaaaaaauuuaaaaaaaaaa  SaenaacFccccccFFFF   
+FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
+FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  SaenaacFccccccFFFF   
 FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2aaaaorDyFFFcc+c2FFFF   
 BBBBBBBwwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB   
 BBBBBBBBwwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwwwBBBBB   

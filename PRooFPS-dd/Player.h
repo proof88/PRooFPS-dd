@@ -286,6 +286,7 @@ namespace proofps_dd
         // these sounds are static because need to load only once and played only for current player
         static SoLoud::Wav* m_sndWpnAmmo;
         static SoLoud::Wav* m_sndWpnNew;
+        static SoLoud::Wav* m_sndArmor;
         static SoLoud::Wav* m_sndMedkit;
         static SoLoud::Wav* m_sndJumppad;
         static SoLoud::Wav* m_sndFallYell_1;
