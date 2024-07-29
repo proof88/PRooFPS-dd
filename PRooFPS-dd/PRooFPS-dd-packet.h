@@ -609,6 +609,7 @@ namespace proofps_dd
             TPureFloat fWpnAngleZ,
             bool bCrouch,
             float fSomersaultAngle,
+            int nArmor,
             int nHealth,
             bool bRespawn,
             int nFrags,
@@ -640,6 +641,7 @@ namespace proofps_dd
             // this is why I'm sending both now: on client-side, client must set player's angle Z to fPlayerAngleZ, and set somersault angle
             // to m_fSomersaultAngle, logically they mean different thing, but as of v0.2.2.0 they are the same.
             msgUserCmdUpdate.m_fSomersaultAngle = fSomersaultAngle;
+            msgUserCmdUpdate.m_nArmor = nArmor;
             msgUserCmdUpdate.m_nHealth = nHealth;
             msgUserCmdUpdate.m_bRespawn = bRespawn;
             msgUserCmdUpdate.m_nFrags = nFrags;
@@ -657,6 +659,7 @@ namespace proofps_dd
         TPureFloat m_fWpnAngleZ;
         bool m_bCrouch;
         float m_fSomersaultAngle;
+        int m_nArmor;
         int m_nHealth;
         bool m_bRespawn;
         int m_nFrags;

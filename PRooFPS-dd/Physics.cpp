@@ -794,7 +794,8 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
             if (fFallHeight > fFallDamageFromHeight)
             {
                 nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
-                player.doDamage(nDamage, nDamage); // for now, falling from high does not affect AP
+                // player invulnerability does NOT affect physics damage so we always do damage here!
+                player.doDamage(nDamage, nDamage);
                 if (std::as_const(player).getHealth() == 0)
                 {
                     // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer

@@ -264,7 +264,15 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     m_maps.getRandomSpawnpoint();
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
-                    newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0, false))
+                    newPktUserUpdate,
+                    connHandleServerSide,
+                    vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(),
+                    0.f /* player angle Y */, 0.f /* player angle Z */, 0.f /* weapon angle Z */,
+                    false /* bCrouch */, 0.f /* fSomersaultAngle */,
+                    0 /* AP */, 100 /* HP */,
+                    false /* bRespawn */,
+                    0 /* nFrags */, 0 /* nDeaths */,
+                    false /* bInvulnerability */))
                 {
                     // server injects this msg to self so resources for player will be allocated upon processing these
                     m_pge.getNetwork().getServer().send(newPktSetup);
@@ -319,7 +327,15 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             m_maps.getRandomSpawnpoint();
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
-            newPktUserUpdate, connHandleServerSide, vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(), 0.f, 0.f, 0.f, false, 0.f, 100, false, 0, 0, true /* invulnerable by default */))
+            newPktUserUpdate,
+            connHandleServerSide,
+            vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(),
+            0.f /* player angle Y */, 0.f /* player angle Z */, 0.f /* weapon angle Z */,
+            false /* fSomersaultAngle */, 0.f /* fSomersaultAngle*/,
+            0 /* AP */, 100 /* HP */,
+            false /* bRespawn */,
+            0 /* nFrags */, 0 /* nDeaths */,
+            true /* invulnerable by default */))
         {
             getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -693,6 +709,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 player.getWeaponAngle().getNew().getZ(),
                 player.getCrouchStateCurrent(),
                 player.getSomersaultAngle(),
+                playerConst.getArmor().getNew(),
                 playerConst.getHealth().getNew(),
                 player.getRespawnFlag(),
                 playerConst.getFrags(),
@@ -824,6 +841,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     //getConsole().OLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, player.getHealth(), player.getHealth().getOld());
+    player.setArmor(msg.m_nArmor);
     player.setHealth(msg.m_nHealth);
 
     if (msg.m_bRespawn)

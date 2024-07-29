@@ -1238,8 +1238,9 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                     false /* TODO: why are we not sending out the current crouch state??? */,
                     it.second.getSomersaultAngle(),
+                    it.second.getArmor(),
                     it.second.getHealth(),
-                    false,
+                    false /* bRespawn */,
                     it.second.getFrags(),
                     it.second.getDeaths(),
                     it.second.getInvulnerability()))
