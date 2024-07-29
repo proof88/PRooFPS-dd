@@ -629,7 +629,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             const Weapon* pNextBestWpnFound = nullptr;
             if (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest())
             {
-                getConsole().EOLn("InputHandling::%s(): trying auto switch to best with mag ammo ...", __func__);
+                //getConsole().EOLn("InputHandling::%s(): trying auto switch to best with mag ammo ...", __func__);
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
                 if (pNextBestWpnFound == nullptr)
                 {
@@ -640,7 +640,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
                     m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better loaded weapon found!");
-                    getConsole().EOLn("InputHandling::%s(): auto switch to best with mag ammo: did not find better!", __func__);
+                    //getConsole().EOLn("InputHandling::%s(): auto switch to best with mag ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
                 }
                 else
@@ -657,7 +657,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 /* 2nd part of condition is: could not find better loaded wpn, so with best-effort we are trying to find a reloadable */
                 (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest() && (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())))
             {
-                getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
+                //getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
                 if (pNextBestWpnFound == nullptr)
                 {
@@ -668,7 +668,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 if (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())
                 {
                     m_gui.getItemPickupEvents()->addEvent("Auto-Switch: No better reloadable weapon found!");
-                    getConsole().EOLn("InputHandling::%s(): auto switch to best with any ammo: did not find better!", __func__);
+                    //getConsole().EOLn("InputHandling::%s(): auto switch to best with any ammo: did not find better!", __func__);
                     cWeaponSwitch = '\0'; // did not found better wpn so set key back to null, so we dont send switch request to server
                 }
                 else
@@ -691,7 +691,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 if (pNextBestWpnFound->getUnmagBulletCount() != 0)
                 {
                     m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Last-resort Auto-Reload");
-                    getConsole().EOLn("InputHandling::%s(): auto switch: did not find better, doing last-resort auto-reload!", __func__);
+                    //getConsole().EOLn("InputHandling::%s(): auto switch: did not find better, doing last-resort auto-reload!", __func__);
                     bRequestReload = true;
                 }
             }
@@ -729,10 +729,10 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     wpnHandling.clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
 
     // at this point, if cWeaponSwitch is NOT nullchar, we really want to switch to something else either manually or auto
-    if (cWeaponSwitch != '\0')
-    {
-        getConsole().EOLn("InputHandling::%s(): send request to switch to: %s!", __func__, std::to_string(cWeaponSwitch).c_str());
-    }
+    //if (cWeaponSwitch != '\0')
+    //{
+    //    getConsole().EOLn("InputHandling::%s(): send request to switch to: %s!", __func__, std::to_string(cWeaponSwitch).c_str());
+    //}
 
     if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
     {

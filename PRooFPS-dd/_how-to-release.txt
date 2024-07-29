@@ -78,6 +78,11 @@
          - make mchgun empty;
          - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
 
+     - TODO: on client-side: if mouse down held after last shot, wpn wont be reloaded automatically.
+             Worst-case, we could add an auto mechanism for this in inputhandling.
+
+     - TODO: after auto-switching weapon, if mouse button is held between switches, the new weapon is fired immediately.
+
      - TODO: in case of ammo pickup, if current weapon is total empty, try to auto switch to (the) reloadable weapon!
        This is not being tested for v0.2.7, it is separate feature for v0.2.8!
 

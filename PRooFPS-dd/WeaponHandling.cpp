@@ -269,7 +269,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
     const TPureUInt& nOldMagCount,
     const TPureUInt& nNewMagCount,
-    const TPureUInt& nOldUnmagCount,
+    const TPureUInt& /*nOldUnmagCount*/,
     const TPureUInt& nNewUnmagCount,
     const Weapon::State& oldState,
     const Weapon::State& newState)
@@ -278,19 +278,19 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
 
     // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
 
-    if (!m_pge.getNetwork().isServer())
-    {
-        // because on server this is continuously invoked by serverUpdateWeapons() and flooding
-        getConsole().EOLn(
-            "WeaponHandling::%s() nOldMagCount: %u, nNewMagCount: %u, nOldUnmagCount: %u, nNewUnmagCount: %u, oldState: %s, newState: %s!",
-            __func__,
-            nOldMagCount,
-            nNewMagCount,
-            nOldUnmagCount,
-            nNewUnmagCount,
-            Weapon::stateToString(oldState).c_str(),
-            Weapon::stateToString(newState).c_str());
-    }
+    //if (!m_pge.getNetwork().isServer())
+    //{
+    //    // because on server this is continuously invoked by serverUpdateWeapons() and flooding
+    //    getConsole().EOLn(
+    //        "WeaponHandling::%s() nOldMagCount: %u, nNewMagCount: %u, nOldUnmagCount: %u, nNewUnmagCount: %u, oldState: %s, newState: %s!",
+    //        __func__,
+    //        nOldMagCount,
+    //        nNewMagCount,
+    //        nOldUnmagCount,
+    //        nNewUnmagCount,
+    //        Weapon::stateToString(oldState).c_str(),
+    //        Weapon::stateToString(newState).c_str());
+    //}
 
     if ((nOldMagCount > 0) && (nNewMagCount == 0))
     {
@@ -319,11 +319,11 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
         if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
         {
             m_bWpnAutoReloadRequest = true;
-                getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, auto requesting wpn reload!", __func__);
+            //getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, auto requesting wpn reload!", __func__);
         }
         else
         {
-            getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, but auto reload is NOT configured!", __func__);
+            //getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, but auto reload is NOT configured!", __func__);
         }
     }
 }
@@ -1088,8 +1088,8 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
         switch (newState)
         {
         case Weapon::State::WPN_READY:
-            getConsole().EOLn(
-                "WeaponHandling::%s() state change: %s -> %s", __func__, Weapon::stateToString(oldState).c_str(), Weapon::stateToString(newState).c_str());
+            //getConsole().EOLn(
+            //    "WeaponHandling::%s() state change: %s -> %s", __func__, Weapon::stateToString(oldState).c_str(), Weapon::stateToString(newState).c_str());
 
             // this is when depending on user setting, we might reload current or switch to another (or do nothing)
             if (nMagCount == 0)
@@ -1104,23 +1104,23 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                         // The easiest way would be from InputHandling as a real user keypress for reload, so I set this flag that supposed to be checked by InputHandling
                         // at its next run! Basically this is how we "signal" InputHandling to do this for "us"!
                         m_bWpnAutoReloadRequest = true;
-                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto requesting wpn reload!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto requesting wpn reload!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
                         m_bWpnAutoSwitchToBestLoadedRequest = true;
-                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best loaded wpn!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best loaded wpn!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
                         m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
-                        getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best wpn with any kind of ammo!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best wpn with any kind of ammo!", __func__);
                     }
                     else
                     {
-                        getConsole().EOLn("WeaponHandling::%s(): has unmag, configured to do nothing!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): has unmag, configured to do nothing!", __func__);
                     }
                 }
                 else
@@ -1132,17 +1132,17 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
                         m_bWpnAutoSwitchToBestLoadedRequest = true;
-                        getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best loaded wpn!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best loaded wpn!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
                         m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
-                        getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best wpn with any kind of ammo!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best wpn with any kind of ammo!", __func__);
                     }
                     else
                     {
-                        getConsole().EOLn("WeaponHandling::%s(): no unmag, configured to do nothing!", __func__);
+                        //getConsole().EOLn("WeaponHandling::%s(): no unmag, configured to do nothing!", __func__);
                     }
                 }
             }
@@ -1165,11 +1165,11 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                 if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
                 {
                     m_bWpnAutoReloadRequest = true;
-                    getConsole().EOLn("WeaponHandling::%s(): READY -> READY, has unmag, auto requesting wpn reload!", __func__);
+                    //getConsole().EOLn("WeaponHandling::%s(): READY -> READY, has unmag, auto requesting wpn reload!", __func__);
                 }
                 else
                 {
-                    getConsole().EOLn("WeaponHandling::%s(): READY -> READY, switched to, has unmag, but auto reload is NOT configured!", __func__);
+                    //getConsole().EOLn("WeaponHandling::%s(): READY -> READY, switched to, has unmag, but auto reload is NOT configured!", __func__);
                 }
             }
 
