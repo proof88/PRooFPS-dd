@@ -316,6 +316,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
 
         // TODO: since in some cases, multiple "auto" flags might be set, I recommend using a common function which allows setting any flag
         // only if non of the flags is set yet! E.g.: handleCurrentPlayersCurrentWeaponStateChangeShared() already set something before invoking this function.
+        // But for now it is ok not having such, because InputHandling follows order and not doing multiple colliding actions anyway.
         if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
         {
             m_bWpnAutoReloadRequest = true;
@@ -1067,6 +1068,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
     // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
 
     // TODO: it MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
+    // However, InputHandling clears all auto-behaviors before returning in case of health 0, so this is not an issue now.
 
     switch (oldState)
     {

@@ -483,6 +483,15 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     const unsigned int nPhysicsRateMin,
     proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way as it is explained in serverHandleUserCmdMoveFromClient() */)
 {
+    // fetch auto-behaviors into vars so we can clear them right away before any early return, this is to make sure we always clear them!
+    const bool bWeaponAutoReloadWasRequested = wpnHandling.getWeaponAutoReloadRequest();
+    const bool bAutoSwitchToBestLoadedWasRequested = wpnHandling.getWeaponAutoSwitchToBestLoadedRequest();
+    const bool bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+
+    wpnHandling.clearWeaponAutoReloadRequest();
+    wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
+    wpnHandling.clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
@@ -605,12 +614,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         bToggleRunWalk = true;
     }
 
-    bool bRequestReload = wpnHandling.getWeaponAutoReloadRequest();
+    bool bRequestReload = bWeaponAutoReloadWasRequested;
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
     {
         bRequestReload = true;
     }
-    wpnHandling.clearWeaponAutoReloadRequest();
 
     //if (bRequestReload)
     //{
@@ -627,7 +635,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
             const Weapon* pNextBestWpnFound = nullptr;
-            if (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest())
+            if (bAutoSwitchToBestLoadedWasRequested)
             {
                 //getConsole().EOLn("InputHandling::%s(): trying auto switch to best with mag ammo ...", __func__);
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, true /* must have mag bullet */);
@@ -653,9 +661,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 }
             }
 
-            if (wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() ||
+            if (bAutoSwitchToBestWithAnyKindOfAmmoWasRequested ||
                 /* 2nd part of condition is: could not find better loaded wpn, so with best-effort we are trying to find a reloadable */
-                (wpnHandling.getWeaponAutoSwitchToBestLoadedRequest() && (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())))
+                (bAutoSwitchToBestLoadedWasRequested && (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon())))
             {
                 //getConsole().EOLn("InputHandling::%s(): trying auto switch to best with any ammo ...", __func__);
                 pNextBestWpnFound = player.getWeaponManager().getNextBestAvailableWeapon(cWeaponSwitch, false /* must have either mag or unmag bullet */);
@@ -681,7 +689,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 }
             }
 
-            if ((wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() || wpnHandling.getWeaponAutoSwitchToBestLoadedRequest()) &&
+            if ((bAutoSwitchToBestWithAnyKindOfAmmoWasRequested || bAutoSwitchToBestLoadedWasRequested) &&
                 /* either of auto-switches is set but still no better wpn found, check if current could be auto-reloaded?
                    Remember, we are here because reload was not requested. Thus, this reload is really last-resort. */
                 (pNextBestWpnFound == player.getWeaponManager().getCurrentWeapon()))
@@ -725,8 +733,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             }
         }
     }
-    wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
-    wpnHandling.clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
 
     // at this point, if cWeaponSwitch is NOT nullchar, we really want to switch to something else either manually or auto
     //if (cWeaponSwitch != '\0')
