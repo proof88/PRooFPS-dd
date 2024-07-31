@@ -539,6 +539,14 @@ namespace proofps_dd
             return msgUserCmdMove.m_bRequestReload;
         }
 
+        static void setReloadRequest(pge_network::PgePacket& pkt, bool state)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt);
+            msgUserCmdMove.m_bShouldSend = true;
+            msgUserCmdMove.m_bRequestReload = state;
+        }
+
         static void setMouse(
             pge_network::PgePacket& pkt,
             bool bShootAction)
