@@ -819,28 +819,8 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
-    if (!m_bAttack && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
+    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
     {
-        if (proofps_dd::MsgUserCmdFromClient::getWeaponSwitch(pkt) == '\0')
-        {
-            // neither manual, nor auto switch is being requested, and not even reload, check again if we could reload?
-            // This WA here is needed because: on client side, if player keeps holding fire button down while wpn goes empty,
-            // the reload request we set by keyboard will be ignored by server because the trigger is not released!
-            // So, set the reload request here again since we just release mouse fire button!
-            if (player.getWeaponManager().getCurrentWeapon() &&
-                (player.getWeaponManager().getCurrentWeapon()->getMagBulletCount() == 0) &&
-                (player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount() != 0) &&
-                (player.getWeaponManager().getCurrentWeapon()->getState().getNew() == Weapon::State::WPN_READY) &&
-                /* imagine someone holding fire button for a while after weapon empty, then releasing it and start complaining about
-                   wpn not auto-reloading even though it is configured after switch/pickup ammo ... this is why we tie this to this
-                   config and not the auto-behaviors for weapon going empty after firing it. */
-                (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool()))
-            {
-                proofps_dd::MsgUserCmdFromClient::setReloadRequest(pkt, true);
-                getConsole().EOLn("InputHandling::%s(): auto-reload from mouse up!", __func__);
-            }
-        }
-
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
             clientMouseWheel(nMouseWheelChange, pkt, player);
