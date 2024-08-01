@@ -416,15 +416,18 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                     pTargetWpn->getState().getNew());
                 m_pge.getNetwork().getServer().sendToAllClientsExcept(pktWpnUpdateCurrent);
             }
-            else
-            {
-                // should not happen because client should NOT send message in such case
-                getConsole().OLn("InputHandling::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
-                    __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
-                assert(false);  // in debug mode, terminate the game
-                return true;   // in release mode, dont terminate the server, just silently ignore!
-                // TODO: I might disconnect this client!
-            }
+            //else
+            //{
+            //    // UPDATE 2024-08-01: this can happen if player has at least 2 weapons, dies, and during the respawn
+            //    // countdown, we rapidly scroll up&down or keep pressing the button for switching to the another weapon,
+            //    // so I just commented this out, not much use of this else block anyway.
+            // 
+            //    // should not happen because client should NOT send message in such case
+            //    getConsole().OLn("InputHandling::%s(): player %s already has target wpn %s, CLIENT SHOULD NOT SEND THIS!",
+            //        __func__, sClientUserName.c_str(), itTargetWpn->second.c_str());
+            //    assert(false);  // in debug mode, terminate the game
+            //    return true;   // in release mode, dont terminate the server, just silently ignore!
+            //}
         }
     }
 
@@ -484,9 +487,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way as it is explained in serverHandleUserCmdMoveFromClient() */)
 {
     // fetch auto-behaviors into vars so we can clear them right away before any early return, this is to make sure we always clear them!
-    const bool bWeaponAutoReloadWasRequested = wpnHandling.getWeaponAutoReloadRequest();
-    const bool bAutoSwitchToBestLoadedWasRequested = wpnHandling.getWeaponAutoSwitchToBestLoadedRequest();
-    const bool bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+    bool bWeaponAutoReloadWasRequested = wpnHandling.getWeaponAutoReloadRequest();
+    bool bAutoSwitchToBestLoadedWasRequested = wpnHandling.getWeaponAutoSwitchToBestLoadedRequest();
+    bool bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
 
     wpnHandling.clearWeaponAutoReloadRequest();
     wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
@@ -614,6 +617,31 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         bToggleRunWalk = true;
     }
 
+    const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
+    if (bFireButtonPressed)
+    {
+        // neither of these auto-behaviors can be executed if user is still pressing fire button, however
+        // whichever is requested by WeaponHandling, should be postponed to later when fire button is finally released.
+        if (bWeaponAutoReloadWasRequested)
+        {
+            //getConsole().EOLn("InputHandling::%s(): scheduled auto-reload for next time!", __func__);
+            wpnHandling.scheduleWeaponAutoReloadRequest();
+            bWeaponAutoReloadWasRequested = false;
+        }
+        else if (bAutoSwitchToBestLoadedWasRequested)
+        {
+            //getConsole().EOLn("InputHandling::%s(): scheduled auto-switch to best loaded for next time!", __func__);
+            wpnHandling.scheduleWeaponAutoSwitchToBestLoadedRequest();
+            bAutoSwitchToBestLoadedWasRequested = false;
+        }
+        else if (bAutoSwitchToBestWithAnyKindOfAmmoWasRequested)
+        {
+            //getConsole().EOLn("InputHandling::%s(): scheduled auto-switch to best any for next time!", __func__);
+            wpnHandling.scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+            bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = false;
+        }
+    }
+
     bool bRequestReload = bWeaponAutoReloadWasRequested;
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
     {
@@ -703,7 +731,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     bRequestReload = true;
                 }
             }
-            else if (cWeaponSwitch == '\0') /* none of above auto-switch methods selected any weapon, and no last-resort auto-reload was initiated either */
+            else if ((cWeaponSwitch == '\0') && !bFireButtonPressed) /* none of above auto-switch methods selected any weapon, and no last-resort auto-reload was initiated either */
             {
                 // scan for any manual switch request
                 for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
@@ -780,12 +808,14 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
+    const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
+
     bool bShootActionBeingSent = false;
     const auto nSecsSinceLastWeaponSwitchMillisecs =
         static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
         ).count());
-    if (m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT))
+    if (bFireButtonPressed)
     {
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
         // as respawn request
@@ -819,7 +849,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
-    if (!bShootActionBeingSent && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
+    if (!bFireButtonPressed && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
     {
         if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {

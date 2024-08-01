@@ -95,12 +95,15 @@ namespace proofps_dd
 
         const bool& getWeaponAutoReloadRequest() const;
         void clearWeaponAutoReloadRequest();
+        void scheduleWeaponAutoReloadRequest();
 
         const bool& getWeaponAutoSwitchToBestLoadedRequest() const;
         void clearWeaponAutoSwitchToBestLoadedRequest();
+        void scheduleWeaponAutoSwitchToBestLoadedRequest();
 
         const bool& getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() const;
         void clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+        void scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
 
     protected:
 

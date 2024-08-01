@@ -319,7 +319,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
         // But for now it is ok not having such, because InputHandling follows order and not doing multiple colliding actions anyway.
         if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
         {
-            m_bWpnAutoReloadRequest = true;
+            scheduleWeaponAutoReloadRequest();
             //getConsole().EOLn("WeaponHandling::%s(): empty, has unmag, auto requesting wpn reload!", __func__);
         }
         else
@@ -339,6 +339,16 @@ void proofps_dd::WeaponHandling::clearWeaponAutoReloadRequest()
     m_bWpnAutoReloadRequest = false;
 }
 
+void proofps_dd::WeaponHandling::scheduleWeaponAutoReloadRequest()
+{
+    if (getWeaponAutoSwitchToBestLoadedRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+    {
+        return;
+    }
+
+    m_bWpnAutoReloadRequest = true;
+}
+
 const bool& proofps_dd::WeaponHandling::getWeaponAutoSwitchToBestLoadedRequest() const
 {
     return m_bWpnAutoSwitchToBestLoadedRequest;
@@ -349,6 +359,16 @@ void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestLoadedRequest()
     m_bWpnAutoSwitchToBestLoadedRequest = false;
 }
 
+void proofps_dd::WeaponHandling::scheduleWeaponAutoSwitchToBestLoadedRequest()
+{
+    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+    {
+        return;
+    }
+
+    m_bWpnAutoSwitchToBestLoadedRequest = true;
+}
+
 const bool& proofps_dd::WeaponHandling::getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() const
 {
     return m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest;
@@ -357,6 +377,16 @@ const bool& proofps_dd::WeaponHandling::getWeaponAutoSwitchToBestWithAnyKindOfAm
 void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest()
 {
     m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
+}
+
+void proofps_dd::WeaponHandling::scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest()
+{
+    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestLoadedRequest())
+    {
+        return;
+    }
+
+    m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
 }
 
 
@@ -1105,19 +1135,19 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                         // Since server should do the reload, we need to ask it do try do that for us.
                         // The easiest way would be from InputHandling as a real user keypress for reload, so I set this flag that supposed to be checked by InputHandling
                         // at its next run! Basically this is how we "signal" InputHandling to do this for "us"!
-                        m_bWpnAutoReloadRequest = true;
+                        scheduleWeaponAutoReloadRequest();
                         //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto requesting wpn reload!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
-                        m_bWpnAutoSwitchToBestLoadedRequest = true;
+                        scheduleWeaponAutoSwitchToBestLoadedRequest();
                         //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best loaded wpn!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
-                        m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
+                        scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
                         //getConsole().EOLn("WeaponHandling::%s(): has unmag, auto switch to best wpn with any kind of ammo!", __func__);
                     }
                     else
@@ -1133,13 +1163,13 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                     if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
-                        m_bWpnAutoSwitchToBestLoadedRequest = true;
+                        scheduleWeaponAutoSwitchToBestLoadedRequest();
                         //getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best loaded wpn!", __func__);
                     }
                     else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior].getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable)
                     {
                         // This is also handled in InputHandling like a real user weapon change keypress
-                        m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
+                        scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
                         //getConsole().EOLn("WeaponHandling::%s(): no unmag, auto switch to best wpn with any kind of ammo!", __func__);
                     }
                     else
@@ -1166,7 +1196,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
             {
                 if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
                 {
-                    m_bWpnAutoReloadRequest = true;
+                    scheduleWeaponAutoReloadRequest();
                     //getConsole().EOLn("WeaponHandling::%s(): READY -> READY, has unmag, auto requesting wpn reload!", __func__);
                 }
                 else
