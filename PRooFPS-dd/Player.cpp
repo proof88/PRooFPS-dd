@@ -494,8 +494,10 @@ void proofps_dd::Player::setHealth(int value) {
 * AP is able to decrease the suffered HP damage, but not vice versa.
 * This means a player can die even if AP stays positive.
 * 
-* @param dmgAP The input damage that will be applied to AP. It simply decreases AP.
-* @param dmgHP The input damage that will be applied to HP. This damage is decreased by AP before being applied to HP.
+* @param dmgAP The input damage that will be applied to AP.
+*              It simply decreases AP by this value.
+* @param dmgHP The input damage that will be applied to HP.
+*              This damage is decreased by the decreased AP before being applied to HP.
 */
 void proofps_dd::Player::doDamage(int dmgAP, int dmgHP) {
     if ((dmgAP < 0) || (dmgHP < 0))
