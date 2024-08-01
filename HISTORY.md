@@ -19,6 +19,17 @@ that is the latest "Approofed für Lan Party" version that was actually tested o
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.2.7.0 Private Beta (Aug 1, 2024)
+
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/16QYDMoym2gqJh81LV-YYPc8-6XG8Rrl2/view?usp=sharing).
+
+This version brings the following 3 new features:
+ - Weapon Auto-Reload: current weapon is automatically reloaded if spare ammo is available.
+ - Weapon Auto-Switch: if current weapon runs out of ammo, the game auto-switches to the next best weapon. Based on config, can switch to loaded or reloadable weapon.
+ - Armor: player can now pick up a new item called Armor which gives some AP to the player. Armor gives protection over HP.
+
+Note that weapon auto-switch does not work yet when we pick up a better weapon, currently it just switches when the current weapon goes empty.
+
 ## v0.2.6.0 Private Beta (Jul 14, 2024)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1nIdAWqx1dva6QCfJVhB7QNCC7bbswZP_/view?usp=drive_link).
