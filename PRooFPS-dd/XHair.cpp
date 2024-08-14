@@ -10,6 +10,11 @@
 #include "stdafx.h"  // PCH
 #include "XHair.h"
 
+static const PureColor clrDefault{ 255, 203, 50, 255 };
+static const PureColor clrEmpty{ 255, 0, 0, 255 };
+static const PureColor clrCooldown{ 100, 100, 100, 255 };
+
+
 // ############################### PUBLIC ################################
 
 
@@ -43,9 +48,10 @@ proofps_dd::XHair::XHair(PGE& pge) :
     // for bitmaps not having proper alpha bits (e.g. saved by irfanview or mspaint), use (PURE_SRC_ALPHA, PURE_ONE)
     // otherwise (bitmaps saved by Flash) just use (PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA) to utilize real alpha
     m_pObjXHair->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    PureTexture* const xhairtex = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair.bmp").c_str());
+    PureTexture* const xhairtex = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair_gray.bmp").c_str());
     m_pObjXHair->getMaterial().setTexture(xhairtex);
     m_pObjXHair->Hide();
+    handleMagLoaded();
 }
 
 proofps_dd::XHair::~XHair()
@@ -199,12 +205,25 @@ void proofps_dd::XHair::stopBlinking()
 
 void proofps_dd::XHair::handleMagEmpty()
 {
-    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(255, 0, 0, 255);
+    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
+        clrEmpty.getRed(), clrEmpty.getGreen(), clrEmpty.getBlue(), clrEmpty.getAlpha());
 }
 
 void proofps_dd::XHair::handleMagLoaded()
 {
-    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(255, 255, 255, 255);
+    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
+        clrDefault.getRed(), clrDefault.getGreen(), clrDefault.getBlue(), clrDefault.getAlpha());
+}
+
+void proofps_dd::XHair::handleCooldownStart()
+{
+    m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
+        clrCooldown.getRed(), clrCooldown.getGreen(), clrCooldown.getBlue(), clrCooldown.getAlpha());
+}
+
+void proofps_dd::XHair::handleCooldownEnd()
+{
+    handleMagLoaded();
 }
 
 void proofps_dd::XHair::updateVisuals()

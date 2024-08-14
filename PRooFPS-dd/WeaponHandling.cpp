@@ -302,7 +302,14 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
     }
     else if (nNewMagCount > 0)
     {
-        m_gui.getXHair()->handleMagLoaded();
+        if (newState == Weapon::WPN_SHOOTING)
+        {
+            m_gui.getXHair()->handleCooldownStart();
+        }
+        else
+        {
+            m_gui.getXHair()->handleMagLoaded();
+        }
     }
     else if ((newState == Weapon::WPN_READY) && (oldState == Weapon::WPN_READY) && (nOldMagCount == 0) && (nNewMagCount == 0) && (nNewUnmagCount != 0))
     {
@@ -313,10 +320,6 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
         // Would be logical to handle this pickup-induced auto-reload where we handle item pickups for player, but did not find proper place:
         // neither player.takeItem() nor player.handleTakeWeaponItem() looks suitable.
         // Anyway, since both client and server invokes this function upon change in unmag ammo, this looks to be the perfect place.
-
-        // TODO: since in some cases, multiple "auto" flags might be set, I recommend using a common function which allows setting any flag
-        // only if non of the flags is set yet! E.g.: handleCurrentPlayersCurrentWeaponStateChangeShared() already set something before invoking this function.
-        // But for now it is ok not having such, because InputHandling follows order and not doing multiple colliding actions anyway.
         if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag].getAsBool())
         {
             scheduleWeaponAutoReloadRequest();
@@ -1097,7 +1100,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
 
     // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
 
-    // TODO: it MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
+    // It MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
     // However, InputHandling clears all auto-behaviors before returning in case of health 0, so this is not an issue now.
 
     switch (oldState)
@@ -1177,6 +1180,11 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
                         //getConsole().EOLn("WeaponHandling::%s(): no unmag, configured to do nothing!", __func__);
                     }
                 }
+            }
+            else
+            {
+                // required by client, server handles this in handleCurrentPlayersCurrentWeaponBulletCountsChangeShared()
+                m_gui.getXHair()->handleCooldownEnd();
             }
             break; // end case SHOOTING -> READY
         default:

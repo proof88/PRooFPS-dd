@@ -57,6 +57,9 @@ namespace proofps_dd
         void handleMagEmpty();
         void handleMagLoaded();
 
+        void handleCooldownStart();
+        void handleCooldownEnd();
+
         void updateVisuals();
 
     protected:
