@@ -16,6 +16,9 @@
 
 #include "SharedWithTest.h"
 
+static constexpr float SndWpnDryFireDistMin = 6.f;
+static constexpr float SndWpnDryFireDistMax = 14.f;
+
 
 // ############################### PUBLIC ################################
 
@@ -830,6 +833,20 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
             {
                 proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
                 bShootActionBeingSent = true;
+
+                // this is very bad, but I decided to play weapon dry fire here, because:
+                // - client does not get response from server for dry fire;
+                // - client also has enough data to decide if fire will be dry or not.
+                // Ideally, the pullTrigger() executed on server side should generate transparent traffic towards client which
+                // would trigger the dry fire sound, but such mechanism does not exist currently.
+                // Downside of this approach is that this can be heard only by current player and not by other players around.
+                Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+                if (wpn && (wpn->getState() == Weapon::WPN_READY) && (wpn->getMagBulletCount() == 0))
+                {
+                    const auto sndWpnDryFireHandle = m_pge.getAudio().play3dSound(wpn->getDryFiringSound(), player.getPos().getNew());
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnDryFireHandle, SndWpnDryFireDistMin, SndWpnDryFireDistMax);
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnDryFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                }
             }
         }
     }
