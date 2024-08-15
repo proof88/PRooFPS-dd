@@ -135,11 +135,15 @@ void proofps_dd::GUI::initialize()
            - https://github.com/iamclint/ImGuiDesigner
     */
 
+    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
+
+    m_pXHair->getObject3D().SetScaling(fScalingFactor);
+
     // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
     // Anyway, for I will just use height for scaling the default font size.
     // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
     // And under display resolution I actually mean window client size.
-    m_fFontSizePxHudGeneral = fDefaultFontSizePixels * (m_pPge->getPure().getWindow().getClientHeight() / 768.f);
+    m_fFontSizePxHudGeneral = fDefaultFontSizePixels * fScalingFactor;
     if (m_fFontSizePxHudGeneral <= 0.f)
     {
         m_fFontSizePxHudGeneral = fDefaultFontSizePixels;
