@@ -17,6 +17,8 @@
 
 static constexpr float SndWpnFireDistMin = 6.f;
 static constexpr float SndWpnFireDistMax = 14.f;
+static constexpr float SndWpnReloadDistMin = SndWpnFireDistMin;
+static constexpr float SndWpnReloadDistMax = SndWpnFireDistMax;
 static constexpr float SndExplosionDistMin = 6.f;
 static constexpr float SndExplosionDistMax = 14.f;
 
@@ -267,7 +269,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
 }
 
 void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
-    const TPureUInt& nOldMagCount,
+    const Player& player,
+    Weapon& wpnCurrent,
+    const TPureUInt& nOldMagCount,  /* passing arguments separately because sometimes we use different values */
     const TPureUInt& nNewMagCount,
     const TPureUInt& /*nOldUnmagCount*/,
     const TPureUInt& nNewUnmagCount,
@@ -277,6 +281,14 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
     // processing weapon bullets count change for the CURRENT player on THIS machine, no matter if we are server or client
 
     // since auto-reload and auto-switch settings are client-only, they can be also used in this function.
+
+    // It MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
+    // However, InputHandling clears all auto-behaviors before returning in case of health 0, so this is not an issue now.
+    // But we also might play sounds here so better return early when player is dead.
+    if (player.getHealth() == 0)
+    {
+        return;
+    }
 
     //if (!m_pge.getNetwork().isServer())
     //{
@@ -309,6 +321,17 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsCh
         else
         {
             m_gui.getXHair()->handleMagLoaded();
+
+            if (((newState == Weapon::WPN_RELOADING) || (oldState == Weapon::WPN_RELOADING)) && (nNewMagCount == (nOldMagCount + 1)))
+            {
+                if (!wpnCurrent.getVars()["reload_per_mag"].getAsBool())
+                {
+                    // Reload sounds are only played for the specific player, and players cannot hear each other's reload.
+                    m_sndWpnReloadStartHandle = m_pge.getAudio().play3dSound(wpnCurrent.getReloadStartSound(), player.getPos().getNew());
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(m_sndWpnReloadStartHandle, SndWpnReloadDistMin, SndWpnReloadDistMax);
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(m_sndWpnReloadStartHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                }
+            }
         }
     }
     else if ((newState == Weapon::WPN_READY) && (oldState == Weapon::WPN_READY) && (nOldMagCount == 0) && (nNewMagCount == 0) && (nNewUnmagCount != 0))
@@ -445,6 +468,13 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             // firing i.e. pullTrigger() is not actually happening on client-side. On the long run we should send a shoot action flag to client
             // so it will execute its weapon object's pullTrigger(). Probably this will be needed for other purpose as well
             // such as handling weapon statuses better on client-side, for animation, more sounds, etc.
+            // Reload sounds are only played for the specific player, and players cannot hear each other's reload.
+            if (playerServerSideConnHandle == pge_network::ServerConnHandle)
+            {
+                // my newborn bullet, so reload sounds must be killed asap
+                m_pge.getAudio().stopSoundInstance(m_sndWpnReloadStartHandle);
+                m_pge.getAudio().stopSoundInstance(m_sndWpnReloadEndHandle);
+            }
             const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), player.getPos().getNew());
             m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
             m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
@@ -462,6 +492,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
             handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
+                player,
+                *wpn,
                 nOldMagCount,
                 wpn->getMagBulletCount(),
                 nOldUnmagCount,
@@ -471,7 +503,8 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
             // TODO: would be nice to find a way to AVOID calling this every frame on server, but we have code inside even for READY->READY state change,
             // as being recognized as possible weapon change case when we might also need to initiate the auto-reload.
             // Client is not invoking this every frame, only when receiving a message.
-            handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+            handleCurrentPlayersCurrentWeaponStateChangeShared(
+                player, *wpn, wpn->getState().getOld(), wpn->getState().getNew(), wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
         }
 
         // to make the auto weapon reload work properly for clients, MsgWpnUpdateFromServer should be always sent out earlier than MsgCurrentWpnUpdateFromServer, because
@@ -924,6 +957,12 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             return false;
         }
 
+        if (isMyConnection(connHandleServerSide))
+        {
+            // my bullet just fired so reload sounds must be killed asap
+            m_pge.getAudio().stopSoundInstance(m_sndWpnReloadStartHandle);
+            m_pge.getAudio().stopSoundInstance(m_sndWpnReloadEndHandle);
+        }
         const auto sndWpnFireHandle = m_pge.getAudio().play3dSound(wpn->getFiringSound(), msg.m_pos);
         m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
         m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
@@ -994,9 +1033,11 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     wpn->clientReceiveStateFromServer(msg.m_state);
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
     {
-        handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+        handleCurrentPlayersCurrentWeaponStateChangeShared(player, *wpn, wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
 
         handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
+            player,
+            *wpn,
             wpn->getMagBulletCount(),
             msg.m_nMagBulletCount,
             wpn->getUnmagBulletCount(),
@@ -1056,7 +1097,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
     wpn->clientReceiveStateFromServer(msg.m_state);
     if (isMyConnection(it->first))
     {
-        handleCurrentPlayersCurrentWeaponStateChangeShared(wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
+        handleCurrentPlayersCurrentWeaponStateChangeShared(player, *wpn, wpn->getState().getOld(), msg.m_state, wpn->getMagBulletCount(), wpn->getUnmagBulletCount());
     }
     
     if (std::as_const(player).getHealth() > 0)
@@ -1067,6 +1108,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
             m_pge.getAudio().playSound(m_sounds.m_sndChangeWeapon);
 
             handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
+                player,
+                *wpn,
                 player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(),
                 wpn->getMagBulletCount(),
                 player.getWeaponManager().getCurrentWeapon()->getUnmagBulletCount(),
@@ -1091,7 +1134,9 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
 }
 
 void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeShared(
-    const Weapon::State& oldState,
+    const Player& player,
+    Weapon& wpnCurrent,
+    const Weapon::State& oldState /* passing arguments separately because sometimes we use different values */,
     const Weapon::State& newState,
     const TPureUInt& nMagCount,
     const TPureUInt& nUnmagCount)
@@ -1102,6 +1147,11 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
 
     // It MIGHT happen we receive this when player is dead, we should check and NOT do auto requests in that case!
     // However, InputHandling clears all auto-behaviors before returning in case of health 0, so this is not an issue now.
+    // But we also might play sounds here so better return early when player is dead.
+    if (player.getHealth() == 0)
+    {
+        return;
+    }
 
     switch (oldState)
     {
@@ -1110,7 +1160,15 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
         switch (newState)
         {
         case Weapon::State::WPN_READY:
-            /* fall-through */
+            if (wpnCurrent.getVars()["reload_per_mag"].getAsBool())
+            {
+                // Reload sounds are only played for the specific player, and players cannot hear each other's reload.
+                // Reload end sound valid only for per-magazine reload weapons but we just dont check here, getReloadEndSound() is just not loaded.
+                m_sndWpnReloadEndHandle = m_pge.getAudio().play3dSound(wpnCurrent.getReloadEndSound(), player.getPos().getNew());
+                m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(m_sndWpnReloadEndHandle, SndWpnReloadDistMin, SndWpnReloadDistMax);
+                m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(m_sndWpnReloadEndHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+            }
+            [[fallthrough]];
         case Weapon::State::WPN_SHOOTING:
             m_gui.getXHair()->stopBlinking();
             break;
@@ -1196,6 +1254,15 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
         {
         case Weapon::State::WPN_RELOADING:
             m_gui.getXHair()->startBlinking();
+            {
+                if (wpnCurrent.getVars()["reload_per_mag"].getAsBool())
+                {
+                    // Reload sounds are only played for the specific player, and players cannot hear each other's reload.
+                    m_sndWpnReloadStartHandle = m_pge.getAudio().play3dSound(wpnCurrent.getReloadStartSound(), player.getPos().getNew());
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(m_sndWpnReloadStartHandle, SndWpnReloadDistMin, SndWpnReloadDistMax);
+                    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(m_sndWpnReloadStartHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                }
+            }
             break;
         case Weapon::State::WPN_READY:
             // READY -> READY, so most probably this is the result of weapon change, thus here we dont initiate any switch, but can initiate reload

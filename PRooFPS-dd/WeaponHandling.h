@@ -86,6 +86,8 @@ namespace proofps_dd
             PureVector& vecCamShakeForce);
 
         void handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
+            const Player& player,
+            Weapon& wpnCurrent,
             const TPureUInt& nOldMagCount,
             const TPureUInt& nNewMagCount,
             const TPureUInt& nOldUnmagCount,
@@ -136,6 +138,8 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgCurrentWpnUpdateFromServer& msg);
         void handleCurrentPlayersCurrentWeaponStateChangeShared(
+            const Player& player,
+            Weapon& wpnCurrent,
             const Weapon::State& oldState,
             const Weapon::State& newState,
             const TPureUInt& nMagCount,
@@ -151,6 +155,8 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
+        SoLoud::handle m_sndWpnReloadStartHandle;
+        SoLoud::handle m_sndWpnReloadEndHandle;
 
         std::list<Explosion> m_explosions;
         bool m_bWpnAutoReloadRequest = false;

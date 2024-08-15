@@ -38,7 +38,7 @@ bullets_default = 30
 # No effect if reloadable is 0.
 # Per-magazine examples are usual rifles, most pistols.
 # Per-bullet examples are some shotguns or legacy PR00FPS bazooka.
-# Note that per-bullet weapons can be fired also during the reload process,
+# Note that per-bullet weapons can be fired also during the reload process (cancelling further reloading),
 # while per-magazine weapons obviously cannot be fired during reload.
 reload_per_mag = true
 
@@ -50,6 +50,20 @@ reload_whole_mag = true
 # If reload_per_mag is true, this time means the complete reload process.
 # If reload_per_mag is false, this time meant to be per-bullet!
 reload_time = 1500
+
+# Note on reload sounds:
+# - if reload_per_mag is true (e.g. pistol), then:
+#   - reload_start_snd is played at READY -> RELOADING state transition (beginning to reload);
+#   - reload_end_snd is played at RELOADING -> READY transition (finished reload);
+# - if reload_per_mag is false (e.g. bazooka), then:
+#   - reload_start_snd is played in RELOADING state whenever mag bullet count is increased by 1;
+#   - reload_end_snd is not used.
+
+# Sound of reload start
+reload_start_snd = m4a1_clipin.wav
+
+# Sound of reload end (must be empty when reload_per_mag is false)
+reload_end_snd = m4a1_boltpull.wav
 
 #################
 #               #
@@ -84,7 +98,10 @@ firing_mode_max = auto
 # Cannot be 0.
 firing_cooldown = 150
 
+# Sound of a regular shot fired
 firing_snd = m4a1_unsil-1.wav
+
+# Sound of pulled trigger with zero loaded bullet
 firing_dry_snd = dryfire_rifle.wav
 
 #####################

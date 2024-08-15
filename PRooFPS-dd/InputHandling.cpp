@@ -389,6 +389,8 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                         // - handleCurrentWeaponBulletCountsChangeShared();
                         // - handleWeaponStateChangeShared().
                         wpnHandling.handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
+                            player,
+                            *pTargetWpn,
                             prevWpn->getMagBulletCount(),
                             pTargetWpn->getMagBulletCount(),
                             prevWpn->getUnmagBulletCount(),
