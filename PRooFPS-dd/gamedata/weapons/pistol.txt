@@ -111,21 +111,28 @@ firing_dry_snd = dryfire_pistol.wav
 #####################
 
 # Accuracy is basically the maximum angle between the weapon and
-# the actual fired bullet.
+# the actual fired bullet: this is the relative angle.
 # So bigger angle means less accuracy.
 
-# The angle of the fired bullet is randomized within this value (degrees)
+# Weapon accuracy.
+# The absolute maximum relative angle of the fired bullet (degrees), when player is NOT moving.
+# Relative angle is randomized in [-acc_angle, acc_angle] range.
+# 0 means maximum accuracy i.e. always shooting the middle of the crosshair.
+# Cannot be negative.
 acc_angle = 5.0
 
-# Multipliers of acc_angle in different cases.
+# Multipliers of acc_angle in different player poses.
 # Multiple multipliers can be in effect at the same time, e.g.
-# moving while ducking, then both m_walk and m_duck will be used.
+# moving while ducking, then both m_walk and m_duck will be used: acc_angle_pose = acc_angle * acc_m_walk * acc_m_duck .
+# Thus values above 1.0 decrease accuracy, values below 1.0 increase accuracy.
+# Cannot be negative.
 acc_m_walk = 1.2
 acc_m_run  = 3.0
 acc_m_duck = 0.6
 
 # Recoil also multiplies accuracy angle.
 # 1.0 means no recoil.
+# Cannot be less than 1.0.
 recoil_m = 1.1
 
 # Time needed for recoil to disappear after 1 shot, in millisecs.
