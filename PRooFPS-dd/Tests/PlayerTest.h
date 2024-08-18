@@ -88,6 +88,7 @@ protected:
         AddSubTest("test_get_proposed_new_pos_y_for_standup", (PFNUNITSUBTEST)&PlayerTest::test_get_proposed_new_pos_y_for_standup);
         AddSubTest("test_server_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_server_do_standup);
         AddSubTest("test_client_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_client_do_standup);
+        AddSubTest("test_is_moving", (PFNUNITSUBTEST)&PlayerTest::test_is_moving);
         AddSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
         AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
         AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
@@ -339,6 +340,7 @@ private:
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe") &
             assertEquals(0, player.getTimeLastActualStrafe().time_since_epoch().count(), "time last strafe") &
             assertEquals(0.f, player.getStrafeSpeed(), "strafe speed") &
+            assertTrue(player.isMoving(), "moving") /* moving because isInAir() is true, due to canFall() is by default true */ &
             assertFalse(player.getAttack(), "attack") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
@@ -1860,6 +1862,86 @@ private:
             assertFalse(player.getCrouchStateCurrent(), "crouch current state 1") &
             assertNotEquals(pOrigTex, player.getObject3D()->getMaterial().getTexture(), "texture 1") &
             assertTrue(player.getWantToStandup(), "want standup intact 1")) != 0;
+
+        return b;
+    }
+
+    bool test_is_moving()
+    {
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_events, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        bool b = true;
+
+        // we are on the ground now
+        player.setCanFall(false);
+        player.setJumpAllowed(true);
+        b &= assertFalse(player.isMoving(), "still on the ground 1");
+
+        // simple jump
+        player.jump();
+        b &= assertTrue(player.isMoving(), "jump");
+
+        // copied from test_is_in_air: reached max Y pos, this is the moment when we are stationary!
+        player.stopJumping();
+        b &= assertFalse(player.isMoving(), "stationary in-air");
+
+        // ccopied from test_is_in_air: canFall needs to be set manually
+        player.setCanFall(true);
+        b &= assertTrue(player.isMoving(), "falling");
+
+        player.setCanFall(false);
+        player.setJumpAllowed(true); // allow jump again
+
+        b &= assertFalse(player.isMoving(), "still on the ground 2");
+
+        // jump-induced somersault
+        player.getCrouchInput() = false; // at the moment of triggering jump (still being on the ground), we are not pressing crouch
+        player.setGravity(5.f);
+        player.setWillJumpInNextTick(1.f, 0.f); // Y need to be 1.f, otherwise startSomersaultServer() thinks it is jumppad-induced jump and rejects
+        player.jump();
+        player.getCrouchStateCurrent() = true; // in the meantime we have started crouching AFTER triggering jump
+        player.setWillSomersaultInNextTick(true);
+        player.startSomersaultServer(true);
+        b &= assertTrue(player.isMoving(), "somersault from jump");
+        player.resetSomersaultServer();
+        player.getCrouchStateCurrent() = false;
+        player.stopJumping();
+        player.setCanFall(false);
+        player.setJumpAllowed(true); // allow jump again
+
+        b &= assertFalse(player.isMoving(), "still on the ground 3");
+
+        // on-ground somersaulting
+        player.getCrouchInput() = true;
+        player.setStrafe(proofps_dd::Strafe::RIGHT);
+        player.setWillSomersaultInNextTick(true);
+        player.startSomersaultServer(false);
+        b &= assertTrue(player.isMoving(), "somersault from crouch");
+        player.resetSomersaultServer();
+        player.getCrouchInput() = false;
+        player.setStrafe(proofps_dd::Strafe::NONE);
+
+        b &= assertFalse(player.isMoving(), "still on the ground 4");
+
+        // strafe to left
+        player.setStrafe(proofps_dd::Strafe::LEFT);
+        b &= assertTrue(player.isMoving(), "strafe to left");
+        player.setStrafe(proofps_dd::Strafe::NONE);
+
+        b &= assertFalse(player.isMoving(), "still on the ground 5");
+
+        // strafe to right
+        player.setStrafe(proofps_dd::Strafe::RIGHT);
+        b &= assertTrue(player.isMoving(), "strafe to right");
+        player.setStrafe(proofps_dd::Strafe::NONE);
+
+        b &= assertFalse(player.isMoving(), "still on the ground 6");
+
+        // something else is moving us
+        player.getPos().set({ 1.f, 0.f, 0.f });
+        b &= assertTrue(player.isMoving(), "old pos != new pos");
+        player.getPos().commit();
+
+        b &= assertFalse(player.isMoving(), "still on the ground 7");
 
         return b;
     }

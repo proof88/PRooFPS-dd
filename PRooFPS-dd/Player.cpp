@@ -1217,6 +1217,24 @@ float& proofps_dd::Player::getStrafeSpeed()
     return m_strafeSpeed;
 }
 
+/**
+* Tells if the player is stationary or not.
+* This function was created to be used in any phase of a frame.
+* There are some situations when checking (getPos().getOld() == getPos().getNew()) won't work, for
+* example, if we are checking that condition before the next physics tick in the current frame.
+* It might use previous frame's data, so it should be used only if the truth of the returned value being
+* false/late by 1 frame is not a problem.
+* 
+* @return True if player is considered to be moving based on previous or current frame data, false otherwise.
+*/
+bool proofps_dd::Player::isMoving() const
+{
+    return isSomersaulting() ||
+        isInAir() /* although we COULD be stationary in air, for now we always treat it as moving */ ||
+        (getStrafe() != Strafe::NONE) /* this is based in player's input, NOT NECESSARILY moving, but even we are blocked by a wall, we treat it as moving */ ||
+        (getPos().getOld() != getPos().getNew() /* works fine if called AFTER the current physics tick, otherwise won't */);
+}
+
 bool& proofps_dd::Player::getAttack()
 {
     return m_bAttack;
@@ -1235,7 +1253,11 @@ bool proofps_dd::Player::attack()
         return false;
     }
 
-    return wpn->pullTrigger();
+    /* Invoked by serverUpdateWeapons() thus passing bMoving as old vs new positions won't work, because
+       the physics tick will come later. Thus, we need to use previous tick's data to understand if we
+       are moving or not. */
+
+    return wpn->pullTrigger(isMoving(), isRunning(), getCrouchStateCurrent());
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getFrags()

@@ -246,6 +246,8 @@ namespace proofps_dd
 
         float& getStrafeSpeed();
 
+        bool isMoving() const;
+
         bool& getAttack();
         bool attack();
 

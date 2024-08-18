@@ -119,15 +119,15 @@ firing_dry_snd = dryfire_bazooka.wav
 # Relative angle is randomized in [-acc_angle, acc_angle] range.
 # 0 means maximum accuracy i.e. always shooting the middle of the crosshair.
 # Cannot be negative.
-acc_angle = 5.0
+acc_angle = 0.8
 
 # Multipliers of acc_angle in different player poses.
 # Multiple multipliers can be in effect at the same time, e.g.
 # moving while ducking, then both m_walk and m_duck will be used: acc_angle_pose = acc_angle * acc_m_walk * acc_m_duck .
 # Thus values above 1.0 decrease accuracy, values below 1.0 increase accuracy.
 # Cannot be negative.
-acc_m_walk = 1.2
-acc_m_run  = 3.0
+acc_m_walk = 1.5
+acc_m_run  = 2.5
 acc_m_duck = 0.6
 
 # Recoil also multiplies accuracy angle.

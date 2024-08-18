@@ -119,7 +119,7 @@ firing_dry_snd = dryfire_rifle.wav
 # Relative angle is randomized in [-acc_angle, acc_angle] range.
 # 0 means maximum accuracy i.e. always shooting the middle of the crosshair.
 # Cannot be negative.
-acc_angle = 5.0
+acc_angle = 2.0
 
 # Multipliers of acc_angle in different player poses.
 # Multiple multipliers can be in effect at the same time, e.g.
