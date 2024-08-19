@@ -491,6 +491,12 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
+            // TODO: temporal, will be handled in userUpdates()
+            // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
+            m_gui.getXHair()->setRelativeScaling(
+                PFL::lerp(0.5f, 1.2f, wpn->getMomentaryAccuracy(player.isMoving(), player.isRunning(), player.getCrouchStateCurrent()) / wpn->getLowestAccuracyPossible())
+            );
+
             handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
                 player,
                 *wpn,

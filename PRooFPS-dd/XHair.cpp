@@ -229,6 +229,30 @@ void proofps_dd::XHair::handleCooldownEnd()
     handleMagLoaded();
 }
 
+/**
+* Sets the base/initial scaling for the crosshair.
+* This base scaling is basically the minimum scaling for the crosshair during the entire gameplay.
+* This to be called at GUI initialization, once the GUI knows the display resolution dependent scaling factor for GUI elements.
+*/
+void proofps_dd::XHair::setBaseScaling(float scaleFactor)
+{
+    m_fBaseScaling = scaleFactor;
+    getObject3D().SetScaling(scaleFactor);
+}
+
+/**
+* Sets the relative scaling for the crosshair.
+* This relative scaling basically represents the current weapon's momentary accuracy, you can directly pass it.
+* Value of 1.f represents the base scaling which represents the weapon's base accuracy i.e. when the player is standing still and recoil factor is not considered.
+* Passing negative value is considered as programming error.
+*/
+void proofps_dd::XHair::setRelativeScaling(float relativeScaleFactor)
+{
+    assert(relativeScaleFactor >= 0.f);
+
+    getObject3D().SetScaling(m_fBaseScaling * relativeScaleFactor);
+}
+
 void proofps_dd::XHair::updateVisuals()
 {
     // expected to be invoked every frame

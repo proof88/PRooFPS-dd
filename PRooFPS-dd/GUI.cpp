@@ -137,7 +137,9 @@ void proofps_dd::GUI::initialize()
 
     const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
 
-    m_pXHair->getObject3D().SetScaling(fScalingFactor);
+    // note that setRelativeScaling() called with weapon accuracy also has impact on the general scaling so lerp() values
+    // there should be also adjusted if we modify base scaling here!
+    m_pXHair->setBaseScaling(fScalingFactor * 1.5f);
 
     // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
     // Anyway, for I will just use height for scaling the default font size.

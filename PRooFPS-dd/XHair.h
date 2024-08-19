@@ -60,6 +60,9 @@ namespace proofps_dd
         void handleCooldownStart();
         void handleCooldownEnd();
 
+        void setBaseScaling(float scaleFactor);
+        void setRelativeScaling(float relativeScaleFactor);
+
         void updateVisuals();
 
     protected:
@@ -79,6 +82,7 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedBlinking;
         bool m_bVisible = false;
         bool m_bBlinking = false;
+        float m_fBaseScaling = 1.f;
 
         // ---------------------------------------------------------------------------
 
