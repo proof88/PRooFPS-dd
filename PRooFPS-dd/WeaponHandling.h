@@ -145,6 +145,12 @@ namespace proofps_dd
             const TPureUInt& nMagCount,
             const TPureUInt& nUnmagCount);
 
+        void handleAutoSwitchUponWeaponPickupShared(
+            const Player& player,
+            Weapon& wpnCurrent,
+            Weapon& wpnPicked,
+            const bool& bHasJustBecomeAvailable);
+
     private:
 
         // ---------------------------------------------------------------------------

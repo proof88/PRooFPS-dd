@@ -259,7 +259,10 @@ namespace proofps_dd
         const PgeOldNewValue<int>& getFrags() const;
 
         bool canTakeItem(const MapItem& item) const;
-        void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate);
+        void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable);
+
+        const Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType) const;
+        Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType);
 
         void handleFallingFromHigh(int iServerScream);
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);

@@ -1025,7 +1025,8 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                     proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
                     if (player.canTakeItem(mapItem))
                     {
-                        player.takeItem(mapItem, newPktWpnUpdate);  // this also invokes mapItem.Take()
+                        bool bHasJustBecomeAvailable = false;
+                        player.takeItem(mapItem, newPktWpnUpdate, bHasJustBecomeAvailable);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         // although item update is always sent, wpn update is sent only if takeItem() flipped the availability of the wpn,
                         // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
@@ -1034,6 +1035,20 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                             if (playerPair.second.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
                             {
                                 getNetwork().getServer().send(newPktWpnUpdate, playerPair.second.getServerSideConnectionHandle());
+                            }
+                            else
+                            {
+                                // server handles pickup-induced switch here, clients do that in MsgWpnUpdateFromServer handler
+                                // TODO: pWpnPicked maybe const!
+                                auto* pWpnPicked = player.getWeaponInstanceByMapItemType(mapItem.getType());
+                                if (pWpnPicked && player.getWeaponManager().getCurrentWeapon())
+                                {
+                                    handleAutoSwitchUponWeaponPickupShared(player, *player.getWeaponManager().getCurrentWeapon(), *pWpnPicked, bHasJustBecomeAvailable);
+                                }
+                                else
+                                {
+                                    getConsole().EOLn("PRooFPSddPGE::%s(): either current or picked wpn is nullptr around line %d!", __func__, __LINE__);
+                                }
                             }
                         }
                         break; // a player can collide with only one item at a time since there are no overlapping items

@@ -1025,7 +1025,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     }
 
     Player& player = playerIt->second;
-    // TODO: since from v0.2.6 we also have msg.m_eMapItemType, we should get rid of msg.m_szWpnName
+    // TODO: since from v0.2.6 we also have msg.m_eMapItemType, we should get rid of msg.m_szWpnName,
+    // and use the getWeaponInstanceByMapItemType() as already used later in this function from v0.2.8!
     Weapon* const wpn = player.getWeaponManager().getWeaponByFilename(msg.m_szWpnName);
     if (!wpn)
     {
@@ -1033,6 +1034,8 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
         assert(false);
         return false;
     }
+
+    assert(player.getWeaponManager().getCurrentWeapon());
 
     wpn->clientReceiveStateFromServer(msg.m_state);
     if (player.getWeaponManager().getCurrentWeapon()->getFilename() == msg.m_szWpnName)
@@ -1048,6 +1051,24 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
             msg.m_nUnmagBulletCount,
             wpn->getState().getOld(),
             wpn->getState().getNew());
+    }
+    else
+    {
+        // as explained few lines below, we need to check for ITEM_HEALTH cases even in weapon handling function to distinguish between different cases!
+        if (msg.m_eMapItemType != MapItemType::ITEM_HEALTH)
+        {
+            auto* pWpnPicked = player.getWeaponInstanceByMapItemType(msg.m_eMapItemType);
+            if (pWpnPicked)
+            {
+                handleAutoSwitchUponWeaponPickupShared(player, *player.getWeaponManager().getCurrentWeapon(), *pWpnPicked, !pWpnPicked->isAvailable() && msg.m_bAvailable);
+            }
+            else
+            {
+                getConsole().EOLn("WeaponHandling::%s(): did not find wpn by map item type %d at line %d!", __func__, msg.m_eMapItemType, __LINE__);
+                assert(false);
+                return false;
+            }
+        }
     }
 
     // since we receive this message also for any other kind of weapon update, we need to understand if this is item pickup scenario or not, and as a hack,
@@ -1292,6 +1313,28 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
     default:
         getConsole().EOLn("WeaponHandling::%s(): unhandled old state: %s!", __func__, Weapon::stateToString(oldState).c_str());
     }
+}
+
+/**
+* This function was made specifically for deciding if we initiate auto-switch upon picking up a weapon.
+* The pickup-induced auto-reload and firing-induced actions are handled in separate functions.
+*/
+void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Player& /*player*/, Weapon& wpnCurrent, Weapon& wpnPicked, const bool& bHasJustBecomeAvailable)
+{
+    if (&wpnCurrent == &wpnPicked)
+    {
+        // since both weapons are residing in the same player's same container, comparing their address is enough to know they are the same weapon
+        return;
+    }
+
+    getConsole().EOLn(
+        "WeaponHandling::%s(): wpn %s different than current (%s) has just got picked up, bHasJustBecomeAvailable: %b!",
+        __func__,
+        wpnPicked.getFilename().c_str(),
+        wpnCurrent.getFilename().c_str(),
+        bHasJustBecomeAvailable);
+
+
 }
 
 
