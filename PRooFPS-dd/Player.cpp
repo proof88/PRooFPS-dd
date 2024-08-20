@@ -885,6 +885,11 @@ bool& proofps_dd::Player::getCrouchStateCurrent()
     return m_bCrouchingStateCurrent;
 }
 
+const bool& proofps_dd::Player::getCrouchStateCurrent() const
+{
+    return m_bCrouchingStateCurrent;
+}
+
 const bool& proofps_dd::Player::isJumpingInitiatedFromCrouching() const
 {
     return m_bCrouchingWasActiveWhenInitiatedJump;
@@ -1258,6 +1263,19 @@ bool proofps_dd::Player::attack()
        are moving or not. */
 
     return wpn->pullTrigger(isMoving(), isRunning(), getCrouchStateCurrent());
+}
+
+const PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvWpnMomentaryAccuracy));
+}
+
+void proofps_dd::Player::setWeaponMomentaryAccuracy(float value)
+{
+    assert(value >= 0.f);
+
+    getWeaponMomentaryAccuracy().set(value);
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getFrags()
@@ -1666,4 +1684,10 @@ PgeOldNewValue<int>& proofps_dd::Player::getHealth()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvHealth));
+}
+
+PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvWpnMomentaryAccuracy));
 }

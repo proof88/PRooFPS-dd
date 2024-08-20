@@ -216,6 +216,7 @@ namespace proofps_dd
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
+        const bool& getCrouchStateCurrent() const;
         const bool& isJumpingInitiatedFromCrouching() const;
         const bool& isJumpInitiatedByJumppad() const;
         bool& getWantToStandup();
@@ -251,6 +252,9 @@ namespace proofps_dd
         bool& getAttack();
         bool attack();
 
+        const PgeOldNewValue<float>& getWeaponMomentaryAccuracy() const;
+        void setWeaponMomentaryAccuracy(float value);
+
         PgeOldNewValue<int>& getFrags();
         const PgeOldNewValue<int>& getFrags() const;
 
@@ -278,6 +282,7 @@ namespace proofps_dd
             OvAngleY,
             OvAngleZ,
             OvWpnAngle,
+            OvWpnMomentaryAccuracy,
             OvCrouchInput,
             OvInvulnerability
         };
@@ -321,18 +326,19 @@ namespace proofps_dd
             PgeOldNewValue<TPureFloat>,
             PgeOldNewValue<PureVector>
             >> m_vecOldNewValues = {
-                {OldNewValueName::OvArmor,    PgeOldNewValue<int>(0)},
-                {OldNewValueName::OvHealth,   PgeOldNewValue<int>(100)},
-                {OldNewValueName::OvFrags,    PgeOldNewValue<int>(0)},
-                {OldNewValueName::OvDeaths,   PgeOldNewValue<int>(0)},
-                {OldNewValueName::OvPos,      PgeOldNewValue<PureVector>()},
-                {OldNewValueName::OvAngleY,   PgeOldNewValue<TPureFloat>(0.f)},
-                {OldNewValueName::OvAngleZ,   PgeOldNewValue<TPureFloat>(0.f)},
-                {OldNewValueName::OvWpnAngle, PgeOldNewValue<PureVector>()},
+                {OldNewValueName::OvArmor,                PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvHealth,               PgeOldNewValue<int>(100)},
+                {OldNewValueName::OvFrags,                PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvDeaths,               PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvPos,                  PgeOldNewValue<PureVector>()},
+                {OldNewValueName::OvAngleY,               PgeOldNewValue<TPureFloat>(0.f)},
+                {OldNewValueName::OvAngleZ,               PgeOldNewValue<TPureFloat>(0.f)},
+                {OldNewValueName::OvWpnAngle,             PgeOldNewValue<PureVector>()},
+                {OldNewValueName::OvWpnMomentaryAccuracy, PgeOldNewValue<TPureFloat>(0.f)},
                 /** Current state of player crouch input, regardless of current crouching state.
                     Player is setting it as per input.
                     Continuous op. */
-                {OldNewValueName::OvCrouchInput,   PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvCrouchInput, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
         };
 
@@ -441,6 +447,7 @@ namespace proofps_dd
 
         PgeOldNewValue<int>& getArmor();
         PgeOldNewValue<int>& getHealth();
+        PgeOldNewValue<float>& getWeaponMomentaryAccuracy();
 
     }; // class Player
 

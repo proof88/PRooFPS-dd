@@ -267,7 +267,9 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     newPktUserUpdate,
                     connHandleServerSide,
                     vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(),
-                    0.f /* player angle Y */, 0.f /* player angle Z */, 0.f /* weapon angle Z */,
+                    0.f /* player angle Y */, 0.f /* player angle Z */,
+                    0.f /* weapon angle Z */,
+                    0.f /* weapon momentary accuracy */,
                     false /* bCrouch */, 0.f /* fSomersaultAngle */,
                     0 /* AP */, 100 /* HP */,
                     false /* bRespawn */,
@@ -330,7 +332,9 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             newPktUserUpdate,
             connHandleServerSide,
             vecStartPos.getX(), vecStartPos.getY(), vecStartPos.getZ(),
-            0.f /* player angle Y */, 0.f /* player angle Z */, 0.f /* weapon angle Z */,
+            0.f /* player angle Y */, 0.f /* player angle Z */,
+            0.f /* weapon angle Z */,
+            0.f /* weapon momentary accuracy */,
             false /* fSomersaultAngle */, 0.f /* fSomersaultAngle*/,
             0 /* AP */, 100 /* HP */,
             false /* bRespawn */,
@@ -707,6 +711,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 playerConst.getAngleY(),
                 playerConst.getAngleZ(),
                 player.getWeaponAngle().getNew().getZ(),
+                playerConst.getWeaponMomentaryAccuracy(),
                 player.getCrouchStateCurrent(),
                 player.getSomersaultAngle(),
                 playerConst.getArmor().getNew(),
@@ -835,6 +840,12 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetY(player.getObject3D()->getAngleVec().getY());
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
+
+    player.setWeaponMomentaryAccuracy(msg.m_fWpnMomentaryAccuracy);
+    // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
+    m_gui.getXHair()->setRelativeScaling(
+        PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
+    );
 
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;

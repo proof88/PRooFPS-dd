@@ -342,6 +342,7 @@ private:
             assertEquals(0.f, player.getStrafeSpeed(), "strafe speed") &
             assertTrue(player.isMoving(), "moving") /* moving because isInAir() is true, due to canFall() is by default true */ &
             assertFalse(player.getAttack(), "attack") &
+            assertEquals(0.f, playerConst.getWeaponMomentaryAccuracy(), "wpn aim") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
             assertTrue(player.getInvulnerability(), "invulnerability") &
@@ -533,6 +534,15 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty E 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty E 3");
+
+        player.setWeaponMomentaryAccuracy(2.f);
+        b &= assertTrue(player.isDirty(), "dirty W 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty W 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty W 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty W 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty W 3");
 
         player.getPos().set(PureVector(5.f, 6.f, 7.f));
         b &= assertTrue(player.isDirty(), "dirty F 1");

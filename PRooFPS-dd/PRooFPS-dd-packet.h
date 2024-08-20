@@ -607,6 +607,7 @@ namespace proofps_dd
             TPureFloat fPlayerAngleY,
             TPureFloat fPlayerAngleZ,
             TPureFloat fWpnAngleZ,
+            float fWpnMomentaryAccuracy,
             bool bCrouch,
             float fSomersaultAngle,
             int nArmor,
@@ -636,6 +637,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_fPlayerAngleY = fPlayerAngleY;
             msgUserCmdUpdate.m_fPlayerAngleZ = fPlayerAngleZ;
             msgUserCmdUpdate.m_fWpnAngleZ = fWpnAngleZ;
+            msgUserCmdUpdate.m_fWpnMomentaryAccuracy = fWpnMomentaryAccuracy;
             msgUserCmdUpdate.m_bCrouch = bCrouch;
             // currently this is redundant: this is the same angle as fPlayerAngleZ, however in the future they might not be always the same,
             // this is why I'm sending both now: on client-side, client must set player's angle Z to fPlayerAngleZ, and set somersault angle
@@ -657,6 +659,7 @@ namespace proofps_dd
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fPlayerAngleZ;
         TPureFloat m_fWpnAngleZ;
+        float m_fWpnMomentaryAccuracy;
         bool m_bCrouch;
         float m_fSomersaultAngle;
         int m_nArmor;

@@ -792,6 +792,29 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     // after we have adjusted xhair 2D coords based on user input above, update 3D coords for this frame
     // TODO: get rid of this by changing XHair design as explained within the function itself!
     m_gui.getXHair()->updateUnprojectedCoords(getPure().getCamera());
+
+    //if (!isServer())
+    //{
+    //    // debugging how much the client is aware of some of its states
+    //    static int i = 0;
+    //    i++;
+    //    
+    //    if (i > 100)
+    //    {
+    //        i = 0;
+    //        getConsole().EOLn(
+    //            "%s(): bMoving: %b, isSomersaulting(): %b, isInAir(): %b, (getStrafe() != Strafe::NONE): %b, (getPos().getOld() != getPos().getNew()): %b, bRunning: %b, bDuck: %b, recoil: %f",
+    //            __func__,
+    //            player.isMoving(),
+    //            player.isSomersaulting(),
+    //            player.isInAir(),
+    //            (player.getStrafe() != Strafe::NONE),
+    //            (player.getPos().getOld() != player.getPos().getNew()),
+    //            player.isRunning(),
+    //            player.getCrouchStateCurrent(),
+    //            player.getWeaponManager().getCurrentWeapon()->getMomentaryRecoilMultiplier());
+    //    }
+    //}
     
     cameraUpdatePosAndAngle(
         player,
@@ -1236,6 +1259,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getObject3D()->getAngleVec().getY(),
                     it.second.getObject3D()->getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
+                    it.second.getWeaponManager().getCurrentWeapon()->getMomentaryAccuracy(it.second.isMoving(), it.second.isRunning(), it.second.getCrouchStateCurrent()),
                     false /* TODO: why are we not sending out the current crouch state??? */,
                     it.second.getSomersaultAngle(),
                     it.second.getArmor(),
