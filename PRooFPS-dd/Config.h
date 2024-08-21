@@ -72,6 +72,8 @@ namespace proofps_dd
     static constexpr char* CVAR_GFX_CAM_TILTING = "gfx_cam_tilting";
     static constexpr char* CVAR_GFX_CAM_ROLLING = "gfx_cam_rolling";
 
+    static constexpr char* szCvarClWpnAutoSwitchWhenPickedUpNewWeapon = "cl_wpn_auto_switch_when_picked_up_new_wpn";
+    static constexpr char* szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag = "cl_wpn_auto_switch_when_picked_up_any_ammo_empty_mag";
     static constexpr char* szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag = "cl_wpn_auto_reload_when_picked_up_ammo_or_switched_to_empty_mag_nonempty_unmag";
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehavior = "cl_wpn_empty_mag_nonempty_unmag_behavior";
     static constexpr char* szCvarClWpnEmptyMagEmptyUnmagBehavior = "cl_wpn_empty_mag_empty_unmag_behavior";

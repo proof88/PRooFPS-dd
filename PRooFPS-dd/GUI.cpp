@@ -1244,7 +1244,7 @@ void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, c
 void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 300.f;
+    constexpr float fContentHeight = 350.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -1405,6 +1405,45 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     if (ImGui::Checkbox("##cbGuiMinimapTransparent", &bGuiMinimapTransparent))
     {
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
+    }
+
+    ImGui::BeginGroup();
+    {
+        PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpNewWeapon = m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnAutoSwitchWhenPickedUpNewWeapon; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
+        ImGui::TextUnformatted("Pickup-Induced Auto-Switch to NEW Weapon:");
+        ImGui::Indent();
+
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Always Auto-Switch to New##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways))
+        {
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways);
+        }
+        if (ImGui::RadioButton("Auto-Switch to New if Better than Current##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter))
+        {
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter);
+        }
+        if (ImGui::RadioButton("Auto-Switch to New if Current is Empty##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty))
+        {
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty);
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+
+    PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag =
+        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag];
+    bool bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag = cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag, cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
+    ImGui::TextUnformatted("Pickup-Induced Auto-Switch to ANY, if Current is Empty:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag", &bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag))
+    {
+        cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.Set(bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
     }
 
     PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag =

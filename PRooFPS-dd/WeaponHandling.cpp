@@ -1323,7 +1323,7 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
 {
     if (&wpnCurrent == &wpnPicked)
     {
-        // since both weapons are residing in the same player's same container, comparing their address is enough to know they are the same weapon
+        // since both weapons are residing in the same player's same container, comparing their address is enough to know if they are the same weapon
         return;
     }
 
@@ -1334,7 +1334,11 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
         wpnCurrent.getFilename().c_str(),
         bHasJustBecomeAvailable);
 
-
+    if (wpnCurrent.getMagBulletCount() == 0)
+    {
+        // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
+        //scheduleWeaponAutoSwitchRequest(&wpnPicked);
+    }
 }
 
 
