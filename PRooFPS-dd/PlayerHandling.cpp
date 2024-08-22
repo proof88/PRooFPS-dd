@@ -842,10 +842,13 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     player.setWeaponMomentaryAccuracy(msg.m_fWpnMomentaryAccuracy);
-    // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
-    m_gui.getXHair()->setRelativeScaling(
-        PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
-    );
+    if (bCurrentClient)
+    {
+        // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
+        m_gui.getXHair()->setRelativeScaling(
+            PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
+        );
+    }
 
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;
