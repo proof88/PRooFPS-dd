@@ -1244,7 +1244,7 @@ void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, c
 void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 350.f;
+    constexpr float fContentHeight = 450.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -1543,8 +1543,9 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
     const float fLogoImgHeight = m_pObjLoadingScreenLogoImg->getSizeVec().getY();
     constexpr float fMenuWndWidth = 500.f; // just put here the widest submenu's required width
-    const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight;
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight), ImGuiCond_FirstUseEver);
+    constexpr float fWAforV28TooTallSettingsMenu = 50.f;
+    const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight + fWAforV28TooTallSettingsMenu;
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight - fWAforV28TooTallSettingsMenu), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("WndMainMenu", nullptr,
