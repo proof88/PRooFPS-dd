@@ -511,7 +511,12 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         /* Since clients do not have enough data to calculate momentary accuracy, and does not worth implementing replicating all of those data,
            we are sending their momentary weapon accuracy in regular user updates. */
-        player.setWeaponMomentaryAccuracy(wpn->getMomentaryAccuracy(player.isMoving(), player.isRunning(), player.getCrouchStateCurrent()));
+        player.setWeaponMomentaryAccuracy(
+            wpn->getMomentaryAccuracy(
+                player.isMoving() && m_pge.getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim].getAsBool(),
+                player.isRunning(),
+                player.getCrouchStateCurrent())
+        );
 
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {

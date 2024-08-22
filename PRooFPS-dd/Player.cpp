@@ -1047,7 +1047,7 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
     if (!getCrouchStateCurrent())
     {
         // for somersaulting on ground, we always require manual crouch, however for mid-air somersaulting, crouching depends on server config!
-        if (bJumpInduced && m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirAutoCrouch].getAsBool())
+        if (bJumpInduced && m_cfgProfiles.getVars()[szCVarSvSomersaultMidAirAutoCrouch].getAsBool())
         {
             doCrouchServer();
         }
@@ -1075,8 +1075,8 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
     {
         // triggering mid-air somersaulting modifies player jump force and gravity, not the impact force
         // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
-        m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat());
-        m_fGravity *= m_cfgProfiles.getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat();
+        m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat());
+        m_fGravity *= m_cfgProfiles.getVars()[szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat();
     }
     else
     {
@@ -1084,15 +1084,15 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
         switch (m_strafe)
         {
         case Strafe::LEFT:
-            if (m_vecImpactForce.getX() > -Player::fSomersaultGroundImpactForceX)
+            if (m_vecImpactForce.getX() > -fSomersaultGroundImpactForceX)
             {
-                m_vecImpactForce.SetX(std::max(-Player::fSomersaultGroundImpactForceX, m_vecImpactForce.getX() - Player::fSomersaultGroundImpactForceX));
+                m_vecImpactForce.SetX(std::max(-fSomersaultGroundImpactForceX, m_vecImpactForce.getX() - fSomersaultGroundImpactForceX));
             }
             break;
         case Strafe::RIGHT:
-            if (m_vecImpactForce.getX() < Player::fSomersaultGroundImpactForceX)
+            if (m_vecImpactForce.getX() < fSomersaultGroundImpactForceX)
             {
-                m_vecImpactForce.SetX(std::min(Player::fSomersaultGroundImpactForceX, m_vecImpactForce.getX() + Player::fSomersaultGroundImpactForceX));
+                m_vecImpactForce.SetX(std::min(fSomersaultGroundImpactForceX, m_vecImpactForce.getX() + fSomersaultGroundImpactForceX));
             }
             break;
         default /* Strafe::NONE */:
@@ -1262,7 +1262,10 @@ bool proofps_dd::Player::attack()
        the physics tick will come later. Thus, we need to use previous tick's data to understand if we
        are moving or not. */
 
-    return wpn->pullTrigger(isMoving(), isRunning(), getCrouchStateCurrent());
+    return wpn->pullTrigger(
+        isMoving() && m_cfgProfiles.getVars()[szCVarSvMovingAffectsAim].getAsBool(),
+        isRunning(),
+        getCrouchStateCurrent());
 }
 
 const PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy() const
@@ -1271,6 +1274,10 @@ const PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy() co
     return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvWpnMomentaryAccuracy));
 }
 
+/**
+* This is just for server sending momentary weapon accuracy to all players, so they can scale their xhair accordingly.
+* Only server is able to calculate players' aim accuracy, it is easier to simply send it to them.
+*/
 void proofps_dd::Player::setWeaponMomentaryAccuracy(float value)
 {
     assert(value >= 0.f);

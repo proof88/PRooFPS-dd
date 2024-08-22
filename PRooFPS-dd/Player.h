@@ -68,6 +68,8 @@ namespace proofps_dd
         // WARNING: change this value with same caution as with above const!
         static constexpr float fJumpGravityStartFromCrouching = 15.f;
 
+        static constexpr char* szCVarSvMovingAffectsAim = "sv_moving_affects_aim";
+
         static constexpr char* szCVarSvSomersaultMidAirAutoCrouch = "sv_somersault_mid_air_auto_crouch";
         static constexpr char* szCVarSvSomersaultMidAirJumpForceMultiplier = "sv_somersault_mid_air_jump_force_multiplier";
 
@@ -337,7 +339,7 @@ namespace proofps_dd
                 {OldNewValueName::OvAngleY,               PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvAngleZ,               PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvWpnAngle,             PgeOldNewValue<PureVector>()},
-                {OldNewValueName::OvWpnMomentaryAccuracy, PgeOldNewValue<TPureFloat>(0.f)},
+                {OldNewValueName::OvWpnMomentaryAccuracy, PgeOldNewValue<TPureFloat>(0.f) /* calculated by server and replicated to all players for xhair scaling */},
                 /** Current state of player crouch input, regardless of current crouching state.
                     Player is setting it as per input.
                     Continuous op. */

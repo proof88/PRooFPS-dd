@@ -596,7 +596,7 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
 void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 315.f;
+    constexpr float fContentHeight = 340.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -945,6 +945,18 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             cvarSvFallDamageMultiplier.Set(nSvFallDamageMultiplier);
         }
         ImGui::PopItemWidth();
+
+        PGEcfgVariable& cvarSvMovingAffectsAim = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintSvMovingAffectsAim; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintSvMovingAffectsAim, cvarSvMovingAffectsAim);
+        ImGui::TextUnformatted("Player Movement Affects Aim Accuracy:");
+        ImGui::SameLine();
+        bool bSvMovingAffectsAim = cvarSvMovingAffectsAim.getAsBool();
+        if (ImGui::Checkbox("##cbMovingAffectsAim", &bSvMovingAffectsAim))
+        {
+            cvarSvMovingAffectsAim.Set(bSvMovingAffectsAim);
+        }
 
         ImGui::BeginGroup();
         {
