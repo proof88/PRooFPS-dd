@@ -1,0 +1,27 @@
+/*
+  ###################################################################################
+  _how-to-auto-test.txt
+  Steps how to run auto tests.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2024
+  ###################################################################################
+*/
+
+Currently there are 2 kinds of automated tests:
+
+ - unit tests
+   - these are compiled as per compiler settings stored in "DebugTest_PRooFPS-dd" configuration;
+
+ - regression tests:
+   - these are starting up PRooFPS-dd.exe in the main PRooFPS-dd directory, and simulating user input,
+     measure packets, check frag table, etc.
+
+All kinds of automated tests can be easily run with the steps below:
+
+ - build a Release version of the game with "Release" configuration;
+
+ - copy the built PRooFPS-dd.exe from Release directory to the main PRooFPS-dd directory, overwrite the existing .exe there.
+
+ - in Tests/PRooFPS-dd-Tests.cpp, check that all tests are uncommented;
+
+ - change configuration to "DebugTest_PRooFPS-dd", build and run it, and make sure all tests pass.

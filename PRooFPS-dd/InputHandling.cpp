@@ -495,10 +495,12 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     bool bWeaponAutoReloadWasRequested = wpnHandling.getWeaponAutoReloadRequest();
     bool bAutoSwitchToBestLoadedWasRequested = wpnHandling.getWeaponAutoSwitchToBestLoadedRequest();
     bool bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+    Weapon* pWeaponPickupInducedAutoSwitchWasRequested = wpnHandling.getWeaponPickupInducedAutoSwitchRequest();
 
     wpnHandling.clearWeaponAutoReloadRequest();
     wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
     wpnHandling.clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+    wpnHandling.clearWeaponPickupInducedAutoSwitchRequest();
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
@@ -625,7 +627,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
     if (bFireButtonPressed)
     {
-        // neither of these auto-behaviors can be executed if user is still pressing fire button, however
+        // neither of the firing-induced auto-reload or auto-switch behaviors can be executed if user is still pressing fire button, however
         // whichever is requested by WeaponHandling, should be postponed to later when fire button is finally released.
         if (bWeaponAutoReloadWasRequested)
         {
@@ -647,7 +649,19 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
-    bool bRequestReload = bWeaponAutoReloadWasRequested;
+    if (bFireButtonPressed ||
+        (player.getWeaponManager().getCurrentWeapon() && (player.getWeaponManager().getCurrentWeapon()->getState() != Weapon::WPN_READY)))
+    {
+        // cannot auto-switch to picked up weapon now if user is still pressing fire button, or the current weapon is still doing something
+        if (pWeaponPickupInducedAutoSwitchWasRequested)
+        {
+            //getConsole().EOLn("InputHandling::%s(): scheduled auto-switch to picked up for next time!", __func__);
+            wpnHandling.scheduleWeaponPickupInducedAutoSwitchRequest(pWeaponPickupInducedAutoSwitchWasRequested);
+            pWeaponPickupInducedAutoSwitchWasRequested = false;
+        }
+    }
+
+    bool bRequestReload = bWeaponAutoReloadWasRequested; // might be false even tho bWeaponAutoReloadWasRequested is rescheduled, but it is not a problem, server will ignore anyway
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('r'), m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
     {
         bRequestReload = true;
@@ -736,31 +750,57 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     bRequestReload = true;
                 }
             }
-            else if ((cWeaponSwitch == '\0') && !bFireButtonPressed) /* none of above auto-switch methods selected any weapon, and no last-resort auto-reload was initiated either */
+            else if ((cWeaponSwitch == '\0') && !bFireButtonPressed)
             {
-                // scan for any manual switch request
-                for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+                /* none of above firing-induced auto-switch methods selected any weapon, and no last-resort auto-reload was initiated either */
+
+                if (pWeaponPickupInducedAutoSwitchWasRequested)
                 {
-                    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
+                    /* we picked up ammo/weapon, and per config auto-switch to it was requested */
+
+                    const auto itKeypressToWeaponMapCurrentWeapon = std::find_if(
+                        WeaponManager::getKeypressToWeaponMap().begin(),
+                        WeaponManager::getKeypressToWeaponMap().end(),
+                        [pWeaponPickupInducedAutoSwitchWasRequested](const auto& keyWpnPair) { return keyWpnPair.second == pWeaponPickupInducedAutoSwitchWasRequested->getFilename(); });
+
+                    if (itKeypressToWeaponMapCurrentWeapon == WeaponManager::getKeypressToWeaponMap().end())
                     {
-                        const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
-                        if (!pTargetWpn)
+                        getConsole().EOLn("PRooFPSddPGE::%s(): could not set cWeaponSwitch based on %s!",
+                            __func__, pWeaponPickupInducedAutoSwitchWasRequested->getFilename().c_str());
+                    }
+                    else
+                    {
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Picked Up " + pWeaponPickupInducedAutoSwitchWasRequested->getVars()["name"].getAsString());
+                        getConsole().EOLn("InputHandling::%s(): auto switch to picked up weapon: %s!", __func__, pWeaponPickupInducedAutoSwitchWasRequested->getFilename().c_str());
+                        cWeaponSwitch = itKeypressToWeaponMapCurrentWeapon->first;
+                    }
+                }
+                else
+                {
+                    // scan for any manual switch request
+                    for (const auto& keyWpnPair : WeaponManager::getKeypressToWeaponMap())
+                    {
+                        if (m_pge.getInput().getKeyboard().isKeyPressedOnce(keyWpnPair.first, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
                         {
-                            getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
-                                __func__, keyWpnPair.second.c_str());
+                            const Weapon* const pTargetWpn = player.getWeaponManager().getWeaponByFilename(keyWpnPair.second);
+                            if (!pTargetWpn)
+                            {
+                                getConsole().EOLn("InputHandling::%s(): not found weapon by name: %s!",
+                                    __func__, keyWpnPair.second.c_str());
+                                break;
+                            }
+                            if (!pTargetWpn->isAvailable())
+                            {
+                                //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
+                                //    __func__, key.second.c_str());
+                                break;
+                            }
+                            if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
+                            {
+                                cWeaponSwitch = keyWpnPair.first;
+                            }
                             break;
                         }
-                        if (!pTargetWpn->isAvailable())
-                        {
-                            //getConsole().OLn("InputHandling::%s(): weapon %s not available!",
-                            //    __func__, key.second.c_str());
-                            break;
-                        }
-                        if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())
-                        {
-                            cWeaponSwitch = keyWpnPair.first;
-                        }
-                        break;
                     }
                 }
             }

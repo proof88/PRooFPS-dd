@@ -4,102 +4,20 @@
   Steps how to give a new release.
   Made by PR00F88, West Whiskhyll Entertainment
   2023
-  EMAIL : PR0o0o0o0o0o0o0o0o0o0oF88@gmail.com
   ###################################################################################
 */
 
  - update game version number in Consts.h (GAME_VERSION);
 
- - build a Release version with "Release" configuration;
+ - delete all previous reg test dumps ("RegTestDump*.txt") from the main PRooFPS-dd directory;
 
- - copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
-
- - change configuration to "DebugTest_PRooFPS-dd" and make sure all tests pass;
-
- - manual tests: start a server instance and 2 client instances, then:
-   - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
-   - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
-   - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto;
-
-   - weapon becoming empty auto-behavior settings (needs to be tested separately on server and client instances!):
-     - the idea is that we always make the pistol empty, and expect change to either mchgun or bazooka, because
-       as of v0.2.7, bazooka's dpfr and dpsr are both bigger than mchgun's values, so it does not matter which value is
-       actually being checked by the findNextBestWeapon functionality (I dont even remember but this way we dont need to remember).
-
-     - tests for the "when current goes empty BUT HAS spare ammo" setting:
-       - "auto-reload" current case:
-         - trivial how to test.
-
-       - "do nothing" case:
-         - trivial how to test.
-
-       - "auto-switch to best non-empty" case:
-         - make pistol have non-0 mag + non-0 unmag;
-         - have bazooka 0 mag + 0 unmag ammo;
-         - have mchgun non-0 mag + 0 unmag ammo;
-         - make pistol current;
-         - make pistol empty, expect auto-switch to mchgun;
-         - we stop test here, because emptying mchgun would test "when current goes empty AND has NO spare ammo" but we test it separately later.
-
-       - "auto-switch to best empty but reloadable" case:
-         - make pistol have non-0 mag + non-0 unmag;
-         - have bazooka 0 mag + non-0 unmag ammo;
-         - have mchgun 0 mag + non-0 unmag ammo;
-         - make pistol current;
-         - make pistol empty, expect auto-switch to bazooka;
-         - if "Pickup-/Switch-Induced Auto-Reload" is set in settings, expect bazooka to be auto-reloaded;
-           - we stop test here, because emptying bazooka would test "when current goes empty AND has NO spare ammo" but we test it separately later.
-
-     - tests for the "when current goes empty AND has NO spare ammo" setting:
-       - "do nothing" case:
-         - trivial how to test.
-
-       - "auto-switch to best non-empty" case:
-         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
-           - 1st step should be skipped: pistol shall have 0 unmag;
-           - same steps and expectation;
-         - pick up pistol ammo so it will have non-0 unmag;
-         - make mchgun empty;
-         - game will tell no better found, but in this case it should act like "auto-switch to best empty but reloadable" with best-effort,
-           switching to pistol;
-         - if "Pickup-/Switch-Induced Auto-Reload" is set, we expect auto-reload of pistol, otherwise reload it manually;
-         - pick up pistol ammo so it will have non-0 unmag again;
-         - make pistol empty;
-         - game should not change to any weapon because there is no better left, but should auto-reload of pistol as last-resort,
-           even if "Pickup-/Switch-Induced Auto-Reload" is not set.
-
-       - "auto-switch to best empty but reloadable" case:
-         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
-           - 1st step should be skipped: pistol shall have 0 unmag;
-           - same steps and expectation;
-         - after the steps and we have bazooka current, additional steps as follows;
-         - make bazooka empty;
-         - expect auto-switch to mchgun;
-         - if "Pickup-/Switch-Induced Auto-Reload" is set in settings, expect mchgun to be auto-reloaded;
-         - make mchgun empty;
-         - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
-
-     - TODO: in case of ammo pickup, if current weapon is total empty, try to auto switch to (the) reloadable weapon!
-       This is not being tested for v0.2.7, it is separate feature for v0.2.8!
-
-   - if "Pickup-/Switch-Induced Auto-Reload" is set, an empty weapon should be auto-reloaded when:
-     - switching to it either manually or by an auto-switch;
-     - spare ammo becoming available by picking up.
-     This setting is not affected by the "last-resort" auto-reload that is available when either of the "auto-switch to next best ..." settings is set, and
-     also, this setting should not affect that "last-resort" auto-reload.
-     If one does not want "last-resort" auto-reload, if no better weapon found, then the "Do Nothing option" should be selected for both of the
-     "auto-switch to next best ..." settings.
-
-   - 3D sound check:
-     - mute server and 1 client instance, check if you hear proper sound in the unmuted client instance;
-     - mute the client instance, unmute the other client, check for same proper sounds;
-     - mute both client instances, unmute server and check for same proper sounds.
-
- - check game in fullscreen too, since now it is also officially supported!
+ - run auto tests as explained in _how-to-auto-test.txt;
 
  - make a separate directory for this new version under OldRegTestDumps directory and copy all
-   "RegTestDump*.txt" files there so we will have a saved reference later for packet numbers later, these
+   the new reg test dumps there so we will have a saved reference later for packet numbers later, these
    are also (should be) version-controlled;
+
+ - run manual tests as explained in _how-to-manual-test.txt;
 
  - update the packet rate and packet data rate calculations in https://github.com/proof88/PGE/blob/master/PGE/docpages/menu-04-Networking.md ;
 

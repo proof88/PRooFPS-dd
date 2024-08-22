@@ -1,0 +1,170 @@
+/*
+  ###################################################################################
+  _how-to-manual-test.txt
+  Steps how to test the game manually.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2024
+  ###################################################################################
+*/
+
+ - Build a Release version with "Release" configuration;
+
+ - Copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
+
+ - Start a server instance and 2 client instances, then:
+   - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
+   - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
+   - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto.
+
+   - 3D sound check:
+     - mute server and 1 client instance, check if you hear proper sound in the unmuted client instance;
+     - mute the client instance, unmute the other client, check for same proper sounds;
+     - mute both client instances, unmute server and check for same proper sounds.
+
+ - Close 1 client instance, so only the server and 1 client instance are running, then test the following in both client and server instances:
+
+   - weapon becoming empty auto-behavior settings (needs to be tested separately on server and client instances!):
+     - the idea is that we always make the pistol empty, and expect change to either mchgun or bazooka, because
+       as of v0.2.7, bazooka's dpfr and dpsr are both bigger than mchgun's values, so it does not matter which value is
+       actually being checked by the findNextBestWeapon functionality (I dont even remember but this way we dont need to remember).
+
+     - tests for the "when current goes empty BUT HAS spare ammo" setting:
+       - "auto-reload" current case:
+         - trivial how to test.
+
+       - "do nothing" case:
+         - trivial how to test.
+
+       - "auto-switch to best non-empty" case:
+         - make pistol have non-0 mag + non-0 unmag;
+         - have bazooka 0 mag + 0 unmag ammo;
+         - have mchgun non-0 mag + 0 unmag ammo;
+         - make pistol current;
+         - make pistol empty, expect auto-switch to mchgun;
+         - we stop test here, because emptying mchgun would test "when current goes empty AND has NO spare ammo" but we test it separately later.
+
+       - "auto-switch to best empty but reloadable" case:
+         - make pistol have non-0 mag + non-0 unmag;
+         - have bazooka 0 mag + non-0 unmag ammo;
+         - have mchgun 0 mag + non-0 unmag ammo;
+         - make pistol current;
+         - make pistol empty, expect auto-switch to bazooka;
+         - if "Pickup-/Switch-Induced Auto-Reload" is set in settings, expect bazooka to be auto-reloaded;
+           - we stop test here, because emptying bazooka would test "when current goes empty AND has NO spare ammo" but we test it separately later.
+
+     - tests for the "when current goes empty AND has NO spare ammo" setting:
+       - "do nothing" case:
+         - trivial how to test.
+
+       - "auto-switch to best non-empty" case:
+         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
+           - 1st step should be skipped: pistol shall have 0 unmag;
+           - same steps and expectation;
+         - pick up pistol ammo so it will have non-0 unmag;
+         - make mchgun empty;
+         - game will tell no better found, but in this case it should act like "auto-switch to best empty but reloadable" with best-effort,
+           switching to pistol;
+         - if "Pickup-/Switch-Induced Auto-Reload" is set, we expect auto-reload of pistol, otherwise reload it manually;
+         - pick up pistol ammo so it will have non-0 unmag again;
+         - make pistol empty;
+         - game should not change to any weapon because there is no better left, but should auto-reload of pistol as last-resort,
+           even if "Pickup-/Switch-Induced Auto-Reload" is not set.
+
+       - "auto-switch to best empty but reloadable" case:
+         - same steps and expectation as with the same case under "when current goes empty BUT HAS spare ammo" config, except:
+           - 1st step should be skipped: pistol shall have 0 unmag;
+           - same steps and expectation;
+         - after the steps and we have bazooka current, additional steps as follows;
+         - make bazooka empty;
+         - expect auto-switch to mchgun;
+         - if "Pickup-/Switch-Induced Auto-Reload" is set in settings, expect mchgun to be auto-reloaded;
+         - make mchgun empty;
+         - game should not change to any weapon (should log "no better weapon found to switch to" if that log is enabled).
+ 
+   - The weapon becoming empty auto-behaviors have a rescheduling mechanism:
+     if firing-induced auto-reload or auto-switch cannot be executed at the moment because the user is still pressing the fire button, the
+     auto-behavior is postponed.
+     Thus, this should be also tested manually!
+   
+   - If "Pickup-/Switch-Induced Auto-Reload" is set, an empty weapon should be auto-reloaded when:
+     - switching to it either manually or by an auto-switch;
+     - spare ammo becoming available by picking up.
+     This setting is not affected by the "last-resort" auto-reload that is available when either of the "auto-switch to next best ..." settings is set, and
+     also, this setting should not affect that "last-resort" auto-reload.
+     If one does not want "last-resort" auto-reload, if no better weapon found, then the "Do Nothing option" should be selected for both of the
+     "auto-switch to next best ..." settings.
+
+   - The Pickup-Induced Auto-Reload also has rescheduling mechanism:
+     if cannot be executed at the moment because the user is still pressing the fire button, the auto-reload is postponed.
+     Thus, this should be also tested manually! 
+
+   - Pickup-induced auto-switch tests:
+
+     - Set "Pickup-Induced Auto-Switch to NEW Weapon" to: "Always Auto-Switch to New";
+     - Set "Pickup-Induced Auto-Switch to ANY, if Current is Empty";
+     - Start game, and:
+       - Pick up Machine Gun, expect auto-switch to it;
+       - Pick up Bazooka, expect auto-switch to it;
+       - Empty Bazooka;
+       - Switch to Machine Gun, Empty Machine Gun;
+       - Switch to Pistol, Empty Pistol;
+       - Pick up Bazooka, expect auto-switch to it;
+       - Empty Bazooka;
+       - Pick up Machine Gun, expect auto-switch to it;
+       - Exit the game.
+
+     - Set "Pickup-Induced Auto-Switch to NEW Weapon" to: "Auto-Switch to New if Better than Current";
+     - Start game, and:
+       - Pick up Bazooka, expect auto-switch to it;
+       - Pick up Machine Gun, expect Bazooka staying the current;
+       - Exit the game.
+
+     - Set "Pickup-Induced Auto-Switch to NEW Weapon" to: "Auto-Switch to New if Current is Empty";
+     - Start game, and:
+       - Pick up Machine Gun, expect Pistol staying the current;
+       - Pick up Bazooka, expect Pistol staying the current;
+       - Change to Bazooka, Empty Bazooka;
+       - Keep Bazooka the current weapon;
+       - Pick up Machine Gun, expect auto-switch to it;
+       - Empty Machine Gun (both mag and unmag to zero);
+       - Switch to Pistol, Empty Pistol (both mag and unmag to zero);
+       - Switch to the empty Machine Gun;
+       - Pick up Pistol, expect auto-switch to it;
+       - Exit the game.
+
+     - Unset "Pickup-Induced Auto-Switch to ANY, if Current is Empty";
+     - Start game, and:
+     - Pick up Machine Gun, expect Pistol staying the current;
+       - Pick up Bazooka, expect Pistol staying the current;
+       - Change to Bazooka, Empty Bazooka;
+       - Keep Bazooka the current weapon;
+       - Pick up Machine Gun, expect Bazooka staying the current;
+       - Switch to Machine Gun, Empty Machine Gun (both mag and unmag to zero);
+       - Switch to Pistol, Empty Pistol (both mag and unmag to zero);
+       - Switch to the empty Machine Gun;
+       - Pick up Pistol, expect Machine Gun staying the current;
+       - Exit the game.
+
+     - Set "Pickup-Induced Auto-Switch to NEW Weapon" to: "Always Auto-Switch to New";
+     - Start game, and:
+       - Pick up Machine Gun, expect auto-switch to it;
+       - Pick up Bazooka, expect auto-switch to it;
+       - Empty Bazooka;
+       - Switch to Machine Gun, Empty Machine Gun;
+       - Switch to Pistol, Empty Pistol;
+       - Pick up Bazooka, expect Pistol staying the current;
+       - Pick up Machine Gun, expect Pistol staying the current;
+       - Exit the game.
+
+   - The Pickup-Induced Auto-Switch behaviors also have rescheduling mechanism:
+     if cannot be executed at the moment because the user is still pressing the fire button, or the current weapon is still not ready (e.g. shooting/cooldown/reloading),
+     the auto-reload is postponed.
+     Thus, this should be also tested manually! 
+
+   - The firing-induced auto-behaviors have priority over the pickup-induced behaviors.
+     This can happen if multiple auto-behaviors might kick in and being rescheduled.
+     Since an auto-behavior is rescheduled only if there is no other pending auto-behavior already rescheduled, and condition for pickup-induced auto-behaviors are checked
+     later than the firing-induced auto-behaviors, a scheduled firing-induced auto-behavior cancels scheduling a pickup-induced auto-behavior.
+     Example situation: the current weapon becomes empty, and player is still pressing the fire button. The weapon can be reloaded automatically, or auto-switch to next best loaded
+     or reloadable weapon can be executed, one of these will be rescheduled, even if in the meantime the player picked up a NEW weapon: switching to the new weapon
+     will NOT be rescheduled, even configuration allows it.

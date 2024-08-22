@@ -271,6 +271,8 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="_how-to-auto-test.txt" />
+    <Text Include="_how-to-manual-test.txt" />
     <Text Include="_how-to-release.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -102,7 +102,7 @@ namespace proofps_dd
         const bool& getWeaponAutoReloadRequest() const;
         void clearWeaponAutoReloadRequest();
         void scheduleWeaponAutoReloadRequest();
-
+        
         const bool& getWeaponAutoSwitchToBestLoadedRequest() const;
         void clearWeaponAutoSwitchToBestLoadedRequest();
         void scheduleWeaponAutoSwitchToBestLoadedRequest();
@@ -110,6 +110,10 @@ namespace proofps_dd
         const bool& getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() const;
         void clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
         void scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+
+        Weapon* getWeaponPickupInducedAutoSwitchRequest() const;
+        void clearWeaponPickupInducedAutoSwitchRequest();
+        void scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn);
 
     protected:
 
@@ -172,6 +176,7 @@ namespace proofps_dd
         bool m_bWpnAutoReloadRequest = false;
         bool m_bWpnAutoSwitchToBestLoadedRequest = false;
         bool m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
+        Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
 
     }; // class WeaponHandling
 

@@ -367,7 +367,7 @@ void proofps_dd::WeaponHandling::clearWeaponAutoReloadRequest()
 
 void proofps_dd::WeaponHandling::scheduleWeaponAutoReloadRequest()
 {
-    if (getWeaponAutoSwitchToBestLoadedRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+    if (getWeaponAutoSwitchToBestLoadedRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() || getWeaponPickupInducedAutoSwitchRequest())
     {
         return;
     }
@@ -387,7 +387,7 @@ void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestLoadedRequest()
 
 void proofps_dd::WeaponHandling::scheduleWeaponAutoSwitchToBestLoadedRequest()
 {
-    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest() || getWeaponPickupInducedAutoSwitchRequest())
     {
         return;
     }
@@ -407,12 +407,32 @@ void proofps_dd::WeaponHandling::clearWeaponAutoSwitchToBestWithAnyKindOfAmmoReq
 
 void proofps_dd::WeaponHandling::scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest()
 {
-    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestLoadedRequest())
+    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestLoadedRequest() || getWeaponPickupInducedAutoSwitchRequest())
     {
         return;
     }
 
     m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
+}
+
+Weapon* proofps_dd::WeaponHandling::getWeaponPickupInducedAutoSwitchRequest() const
+{
+    return m_pWpnAutoSwitchWhenPickedUp;
+}
+
+void proofps_dd::WeaponHandling::clearWeaponPickupInducedAutoSwitchRequest()
+{
+    m_pWpnAutoSwitchWhenPickedUp = nullptr;
+}
+
+void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn)
+{
+    if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestLoadedRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
+    {
+        return;
+    }
+
+    m_pWpnAutoSwitchWhenPickedUp = wpn;
 }
 
 
@@ -1327,17 +1347,36 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
         return;
     }
 
-    getConsole().EOLn(
-        "WeaponHandling::%s(): wpn %s different than current (%s) has just got picked up, bHasJustBecomeAvailable: %b!",
-        __func__,
-        wpnPicked.getFilename().c_str(),
-        wpnCurrent.getFilename().c_str(),
-        bHasJustBecomeAvailable);
+    //getConsole().EOLn(
+    //    "WeaponHandling::%s(): wpn %s different than current (%s) has just got picked up, bHasJustBecomeAvailable: %b!",
+    //    __func__,
+    //    wpnPicked.getFilename().c_str(),
+    //    wpnCurrent.getFilename().c_str(),
+    //    bHasJustBecomeAvailable);
 
-    if (wpnCurrent.getMagBulletCount() == 0)
+    if (bHasJustBecomeAvailable)
+    {
+        if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon].getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways)
+        {
+            // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
+            scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
+            getConsole().EOLn("WeaponHandling::%s(): auto-switch: always!", __func__);
+        }
+        else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon].getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter)
+        {
+            if (wpnCurrent.getDamagePerSecondRating() < wpnPicked.getDamagePerSecondRating())
+            {
+                scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
+                getConsole().EOLn("WeaponHandling::%s(): auto-switch: if better!", __func__);
+            }
+        }
+    }
+    
+    if ((wpnCurrent.getMagBulletCount() == 0) && m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag].getAsBool())
     {
         // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
-        //scheduleWeaponAutoSwitchRequest(&wpnPicked);
+        scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
+        getConsole().EOLn("WeaponHandling::%s(): auto-switch: if empty!", __func__);
     }
 }
 
