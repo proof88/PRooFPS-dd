@@ -771,7 +771,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     else
                     {
                         m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Picked Up " + pWeaponPickupInducedAutoSwitchWasRequested->getVars()["name"].getAsString());
-                        getConsole().EOLn("InputHandling::%s(): auto switch to picked up weapon: %s!", __func__, pWeaponPickupInducedAutoSwitchWasRequested->getFilename().c_str());
+                        //getConsole().EOLn("InputHandling::%s(): auto switch to picked up weapon: %s!", __func__, pWeaponPickupInducedAutoSwitchWasRequested->getFilename().c_str());
                         cWeaponSwitch = itKeypressToWeaponMapCurrentWeapon->first;
                     }
                 }

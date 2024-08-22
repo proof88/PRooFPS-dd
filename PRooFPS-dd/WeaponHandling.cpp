@@ -1360,23 +1360,25 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
         {
             // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
             scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
-            getConsole().EOLn("WeaponHandling::%s(): auto-switch: always!", __func__);
+            //getConsole().EOLn("WeaponHandling::%s(): auto-switch: always!", __func__);
         }
         else if (m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon].getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter)
         {
             if (wpnCurrent.getDamagePerSecondRating() < wpnPicked.getDamagePerSecondRating())
             {
                 scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
-                getConsole().EOLn("WeaponHandling::%s(): auto-switch: if better!", __func__);
+                //getConsole().EOLn("WeaponHandling::%s(): auto-switch: if better!", __func__);
             }
         }
     }
     
-    if ((wpnCurrent.getMagBulletCount() == 0) && m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag].getAsBool())
+    if ((wpnCurrent.getMagBulletCount() == 0) &&
+        (wpnCurrent.getState() != Weapon::WPN_RELOADING) /* obviously dont schedule change empty to non-empty if we are already reloading the current one! */ &&
+        m_pge.getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag].getAsBool())
     {
         // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
         scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
-        getConsole().EOLn("WeaponHandling::%s(): auto-switch: if empty!", __func__);
+        //getConsole().EOLn("WeaponHandling::%s(): auto-switch: if empty!", __func__);
     }
 }
 

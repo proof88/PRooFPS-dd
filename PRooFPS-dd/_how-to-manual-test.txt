@@ -105,11 +105,11 @@
      - Start game, and:
        - Pick up Machine Gun, expect auto-switch to it;
        - Pick up Bazooka, expect auto-switch to it;
-       - Empty Bazooka;
-       - Switch to Machine Gun, Empty Machine Gun;
-       - Switch to Pistol, Empty Pistol;
+       - Empty Bazooka (both mag and unmag to zero);
+       - Switch to Machine Gun, Empty Machine Gun (both mag and unmag to zero);
+       - Switch to Pistol, Empty Pistol (both mag and unmag to zero);
        - Pick up Bazooka, expect auto-switch to it;
-       - Empty Bazooka;
+       - Empty Bazooka (both mag and unmag to zero);
        - Pick up Machine Gun, expect auto-switch to it;
        - Exit the game.
 
@@ -134,7 +134,7 @@
 
      - Unset "Pickup-Induced Auto-Switch to ANY, if Current is Empty";
      - Start game, and:
-     - Pick up Machine Gun, expect Pistol staying the current;
+       - Pick up Machine Gun, expect Pistol staying the current;
        - Pick up Bazooka, expect Pistol staying the current;
        - Change to Bazooka, Empty Bazooka;
        - Keep Bazooka the current weapon;
@@ -146,15 +146,21 @@
        - Exit the game.
 
      - Set "Pickup-Induced Auto-Switch to NEW Weapon" to: "Always Auto-Switch to New";
+     - Keep Unset "Pickup-Induced Auto-Switch to ANY, if Current is Empty";
      - Start game, and:
        - Pick up Machine Gun, expect auto-switch to it;
        - Pick up Bazooka, expect auto-switch to it;
-       - Empty Bazooka;
+       - Empty Bazooka (both mag and unmag to zero);
        - Switch to Machine Gun, Empty Machine Gun;
        - Switch to Pistol, Empty Pistol;
        - Pick up Bazooka, expect Pistol staying the current;
        - Pick up Machine Gun, expect Pistol staying the current;
        - Exit the game.
+
+   - The "Pickup-Induced Auto-Switch to ANY, if Current is Empty" behavior should NOT switch to the picked up weapon, if
+     the current weapon is already being reloaded when the other weapon is picked up.
+     If the picked up weapon is NEW, then this situation is controlled by the "Pickup-Induced Auto-Switch to NEW Weapon" setting:
+     based on the config, it might or might not switch to the new weapon after reloading the current one.
 
    - The Pickup-Induced Auto-Switch behaviors also have rescheduling mechanism:
      if cannot be executed at the moment because the user is still pressing the fire button, or the current weapon is still not ready (e.g. shooting/cooldown/reloading),
