@@ -74,15 +74,26 @@ namespace proofps_dd
 
     private:
 
+        enum class HighlightRect
+        {
+            Upper = 0,
+            Lower,
+            Left,
+            Right
+        };
+
         PGE& m_pge;
         PureObject3D* m_pObjXHair;
+        TPURE_XY m_prevXHairPos;
         PureVector m_vecUnprojected;
         PureObject3D* m_pObjDebugCube;
+        PureObject3D* m_vHLightRects[4] = {};
         std::string m_sIdText;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedBlinking;
         bool m_bVisible = false;
         bool m_bBlinking = false;
         float m_fBaseScaling = 1.f;
+        float m_fRelativeScaleFactor = 1.f;
 
         // ---------------------------------------------------------------------------
 

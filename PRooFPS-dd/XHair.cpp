@@ -31,12 +31,24 @@ CConsole& proofps_dd::XHair::getConsole() const
 proofps_dd::XHair::XHair(PGE& pge) :
     m_pge(pge),
     m_pObjXHair(pge.getPure().getObject3DManager().createPlane(32.f, 32.f)),
-    m_pObjDebugCube(pge.getPure().getObject3DManager().createCube(0.02f))
+    m_pObjDebugCube(pge.getPure().getObject3DManager().createCube(0.02f)),
+    m_vHLightRects{
+        pge.getPure().getObject3DManager().createPlane(1.f, 1.f),
+        pge.getPure().getObject3DManager().createPlane(1.f, 1.f),
+        pge.getPure().getObject3DManager().createPlane(1.f, 1.f),
+        pge.getPure().getObject3DManager().createPlane(1.f, 1.f) }
 {
     if (!m_pObjXHair || !m_pObjDebugCube)
     {
-        throw std::exception(
-            std::string("ERROR: m_pObjXHair or m_pObjDebugCube NULL!").c_str());
+        throw std::exception(std::string("ERROR: m_pObjXHair or m_pObjDebugCube NULL!").c_str());
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (!m_vHLightRects[i])
+        {
+            throw std::exception(std::string("ERROR: a highlight obj is NULL!").c_str());
+        }
     }
 
     m_pObjDebugCube->Hide();  // show it when need to debug xhair 2d -> 3d unprojection
@@ -54,18 +66,37 @@ proofps_dd::XHair::XHair(PGE& pge) :
     PureTexture* const xhairtex = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_xhair_gray.bmp").c_str());
     m_pObjXHair->getMaterial().setTexture(xhairtex);
     m_pObjXHair->Hide();
+
+    PureTexture* const hlighttex = m_pge.getPure().getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "hud_gray.bmp").c_str());
+    for (int i = 0; i < 4; i++)
+    {
+        m_vHLightRects[i]->SetStickedToScreen(true);
+        m_vHLightRects[i]->SetDoubleSided(true);
+        m_vHLightRects[i]->SetTestingAgainstZBuffer(false);
+        m_vHLightRects[i]->SetLit(false);
+        m_vHLightRects[i]->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
+        m_vHLightRects[i]->getMaterial().setTexture(hlighttex);
+        m_vHLightRects[i]->Hide();
+    }
+
     handleMagLoaded();
 }
 
 proofps_dd::XHair::~XHair()
 {
-    if (m_pObjXHair)
+    for (int i = 0; i < 4; i++)
     {
-        delete m_pObjXHair;
+        delete m_vHLightRects[i];
     }
+
     if (m_pObjDebugCube)
     {
         delete m_pObjDebugCube;
+    }
+
+    if (m_pObjXHair)
+    {
+        delete m_pObjXHair;
     }
 }
 
@@ -97,6 +128,8 @@ void proofps_dd::XHair::showInCenter()
 
     m_pObjXHair->getPosVec().Set(0, 0, 0); // reposition to viewport center so it won't appear at random places
     m_pObjXHair->Show();
+    m_prevXHairPos.x = 0.f;
+    m_prevXHairPos.y = 0.f;
     m_bVisible = true;
 }
 
@@ -104,6 +137,12 @@ void proofps_dd::XHair::hide()
 {
     assert(m_pObjXHair); // otherwise ctor would had already thrown
     m_pObjXHair->Hide();
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->Hide();
+    }
+
     m_bVisible = false;
     stopBlinking();
 }
@@ -117,6 +156,8 @@ void proofps_dd::XHair::updateUnprojectedCoords(PureCamera& cam)
 {
     // TODO: explicit call to this function would NOT be required if we did maintain a dirty flag and explicit setX(), setY() functions, which
     // would set the dirty flag, and the getUnprojectedCoords() would invoke updateUnprojectedCoords() if dirty flag is set!
+
+    assert(m_pObjXHair); // ctor would throw otherwise
 
     /* 
        Originally, I was unsure about if we really needed to unproject the 2D xhair's position.
@@ -203,25 +244,56 @@ void proofps_dd::XHair::stopBlinking()
     m_bBlinking = false;
     // during blinking, game maybe invoked hide() for whatever reason, later game may invoke stopBlinking() also for whatever reason, anyway we should enable
     // xhair rendering only if game still did NOT invoke hide() in the meantime
+    assert(m_pObjXHair); // ctor would throw otherwise
     m_pObjXHair->SetRenderingAllowed(m_bVisible);  // visibility state always overrides after-blinking true visibility state
+
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->SetRenderingAllowed(m_bVisible);
+    }
 }
 
 void proofps_dd::XHair::handleMagEmpty()
 {
+    assert(m_pObjXHair); // ctor would throw otherwise
     m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
         clrEmpty.getRed(), clrEmpty.getGreen(), clrEmpty.getBlue(), clrEmpty.getAlpha());
+
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
+            clrEmpty.getRed(), clrEmpty.getGreen(), clrEmpty.getBlue(), clrEmpty.getAlpha());
+    }
 }
 
 void proofps_dd::XHair::handleMagLoaded()
 {
+    assert(m_pObjXHair); // ctor would throw otherwise
     m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
         clrDefault.getRed(), clrDefault.getGreen(), clrDefault.getBlue(), clrDefault.getAlpha());
+
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
+            clrDefault.getRed(), clrDefault.getGreen(), clrDefault.getBlue(), clrDefault.getAlpha());
+    }
 }
 
 void proofps_dd::XHair::handleCooldownStart()
 {
+    assert(m_pObjXHair); // ctor would throw otherwise
     m_pObjXHair->getMaterial(false).getTextureEnvColor().Set(
         clrCooldown.getRed(), clrCooldown.getGreen(), clrCooldown.getBlue(), clrCooldown.getAlpha());
+
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
+            clrCooldown.getRed(), clrCooldown.getGreen(), clrCooldown.getBlue(), clrCooldown.getAlpha());
+    }
 }
 
 void proofps_dd::XHair::handleCooldownEnd()
@@ -250,12 +322,14 @@ void proofps_dd::XHair::setRelativeScaling(float relativeScaleFactor)
 {
     assert(relativeScaleFactor >= 0.f);
 
+    m_fRelativeScaleFactor = relativeScaleFactor;
     getObject3D().SetScaling(m_fBaseScaling * relativeScaleFactor);
 }
 
 void proofps_dd::XHair::updateVisuals()
 {
-    // expected to be invoked every frame
+    // expected to be invoked every frame, by ImGui callback, thus ImGui draw commands are also allowed here
+
     if (!m_bVisible)
     {
         stopBlinking();
@@ -266,8 +340,90 @@ void proofps_dd::XHair::updateVisuals()
     {
         constexpr auto nBlinkPeriodMillisecs = 200;
         const auto nElapsedTimeSinceBlinkingStartMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedBlinking).count();
+        assert(m_pObjXHair); // ctor would throw otherwise
         m_pObjXHair->SetRenderingAllowed(
             ((nElapsedTimeSinceBlinkingStartMillisecs / nBlinkPeriodMillisecs) % 2) == 1);
+    }
+
+    if ((m_pObjXHair->getPosVec().getX() != m_prevXHairPos.x)
+        ||
+        (m_pObjXHair->getPosVec().getY() != m_prevXHairPos.y))
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            assert(m_vHLightRects[i]); // ctor would throw otherwise
+            m_vHLightRects[i]->SetRenderingAllowed(m_pObjXHair->isRenderingAllowed());
+        }
+
+        constexpr float fDistanceFromXHair = 10.f;
+        const float fHLlineThickness = 10.f * m_fBaseScaling;
+        
+        const float fHLupperHeight = std::max(0.f,
+            (m_pge.getPure().getWindow().getClientHeight() / 2.f -
+            m_pObjXHair->getPosVec().getY() -
+            m_pObjXHair->getScaledSizeVec().getY() / 2.f -
+            fDistanceFromXHair));
+        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLupperHeight, 1.f));
+        //getConsole().EOLn("XHair::%s(): fHLupperHeight: %f!", __func__, fHLupperHeight);
+        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
+        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetY(
+            m_pObjXHair->getPosVec().getY() +
+            fHLupperHeight / 2.f +
+            m_pObjXHair->getScaledSizeVec().getY() / 2.f +
+            fDistanceFromXHair);
+
+        const float fHLlowerHeight = std::max(0.f,
+            (m_pge.getPure().getWindow().getClientHeight() / 2.f +
+                m_pObjXHair->getPosVec().getY() +
+                m_pObjXHair->getScaledSizeVec().getY() / 2.f +
+                fDistanceFromXHair));
+        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLlowerHeight, 1.f));
+        //getConsole().EOLn("XHair::%s(): fHLlowerHeight: %f!", __func__, fHLlowerHeight);
+        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
+        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetY(
+            m_pObjXHair->getPosVec().getY() -
+            fHLlowerHeight / 2.f -
+            m_pObjXHair->getScaledSizeVec().getY() / 2.f -
+            fDistanceFromXHair);
+
+        const float fHLleftWidth = std::max(0.f,
+            (m_pge.getPure().getWindow().getClientWidth() / 2.f +
+                m_pObjXHair->getPosVec().getX() +
+                m_pObjXHair->getScaledSizeVec().getX() / 2.f +
+                fDistanceFromXHair));
+        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->SetScaling(PureVector(fHLleftWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
+        //getConsole().EOLn("XHair::%s(): fHLleftWidth: %f!", __func__, fHLleftWidth);
+        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
+        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetX(
+            m_pObjXHair->getPosVec().getX() -
+            fHLleftWidth / 2.f -
+            m_pObjXHair->getScaledSizeVec().getX() / 2.f -
+            fDistanceFromXHair);
+
+        const float fHLrightWidth = std::max(0.f,
+            (m_pge.getPure().getWindow().getClientWidth() / 2.f -
+                m_pObjXHair->getPosVec().getX() -
+                m_pObjXHair->getScaledSizeVec().getX() / 2.f -
+                fDistanceFromXHair));
+        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->SetScaling(PureVector(fHLrightWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
+        //getConsole().EOLn("XHair::%s(): fHLrightWidth: %f!", __func__, fHLrightWidth);
+        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
+        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetX(
+            m_pObjXHair->getPosVec().getX() +
+            fHLrightWidth / 2.f +
+            m_pObjXHair->getScaledSizeVec().getX() / 2.f +
+            fDistanceFromXHair);
+
+        m_prevXHairPos.x = m_pObjXHair->getPosVec().getX();
+        m_prevXHairPos.y = m_pObjXHair->getPosVec().getY();
+    }
+    else
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            assert(m_vHLightRects[i]); // ctor would throw otherwise
+            m_vHLightRects[i]->SetRenderingAllowed(false);
+        }
     }
 }
 
