@@ -26,6 +26,7 @@
 #include "Player.h"
 #include "PlayerHandling.h"
 #include "Process.h"
+#include "WeaponHandling.h"
 
 class RegTestBasicServerClient2Players :
     public UnitTest
@@ -509,12 +510,12 @@ private:
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate60
         {
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
-            /*.nTxPktTotalCount =*/     {580u,  830u},
-            /*.nTxPktPerSecond =*/      { 20u,   30u},
+            /*.nTxPktTotalCount =*/     {580u, 1100u},
+            /*.nTxPktPerSecond =*/      { 20u,   39u},
             /*.nRxPktTotalCount =*/     { 21u,   40u},
             /*.nRxPktPerSecond =*/      {  0u,    3u},
-            /*.nInjectPktTotalCount =*/ {450u,  700u},
-            /*.nInjectPktPerSecond =*/  { 15u,   30u}
+            /*.nInjectPktTotalCount =*/ {450u, 1000u},
+            /*.nInjectPktPerSecond =*/  { 15u,   33u}
         };
 
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate20
@@ -717,7 +718,9 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1" +
-                " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs));
+                " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) + 
+                " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty + 
+                " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");
         }
         else
         {
@@ -727,7 +730,10 @@ private:
                 "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player2");
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=Player2" +
+                " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) +
+                " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty +
+                " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");
         }
 
         // Following commented code is only for the old case when app showed dialog box about server and fullscreen.

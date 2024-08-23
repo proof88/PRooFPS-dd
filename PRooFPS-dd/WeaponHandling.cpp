@@ -458,6 +458,18 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
+    /* Do not set the momentary weapon accuracy every frame, as triggering MsgUserUpdate just for this would be overkill.
+       Remember, now we are in a per - frame server function.
+       Enough to set it every Nth frame, this is only for xhair scaling anyway, not used in physics. */
+    constexpr int nEveryNthWeaponMomentaryAccuracyIsActuallySet = 4;
+    static int nWeaponMomentaryAccuracySetCounter = 0;
+    nWeaponMomentaryAccuracySetCounter++;
+    const bool bSetWeaponMomentaryAccuracyInThisFrame = (nWeaponMomentaryAccuracySetCounter == nEveryNthWeaponMomentaryAccuracyIsActuallySet);
+    if (bSetWeaponMomentaryAccuracyInThisFrame)
+    {
+        nWeaponMomentaryAccuracySetCounter = 0;
+    }
+
     for (auto& playerPair : m_mapPlayers)
     {
         const pge_network::PgeNetworkConnectionHandle& playerServerSideConnHandle = playerPair.first;
@@ -511,12 +523,15 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
 
         /* Since clients do not have enough data to calculate momentary accuracy, and does not worth implementing replicating all of those data,
            we are sending their momentary weapon accuracy in regular user updates. */
-        player.setWeaponMomentaryAccuracy(
-            wpn->getMomentaryAccuracy(
-                player.isMoving() && m_pge.getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim].getAsBool(),
-                player.isRunning(),
-                player.getCrouchStateCurrent())
-        );
+        if (bSetWeaponMomentaryAccuracyInThisFrame)
+        {
+            player.setWeaponMomentaryAccuracy(
+                wpn->getMomentaryAccuracy(
+                    player.isMoving() && m_pge.getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim].getAsBool(),
+                    player.isRunning(),
+                    player.getCrouchStateCurrent())
+            );
+        }
 
         if (playerServerSideConnHandle == pge_network::ServerConnHandle)
         {
