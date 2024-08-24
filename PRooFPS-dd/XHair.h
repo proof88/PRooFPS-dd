@@ -97,6 +97,8 @@ namespace proofps_dd
 
         // ---------------------------------------------------------------------------
 
+        void adjustHighlightSize(const bool& bCanShowHighlightPerXHairMovement);
+
     }; // class XHair
 
 } // namespace proofps_dd

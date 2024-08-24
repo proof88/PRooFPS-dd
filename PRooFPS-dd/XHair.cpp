@@ -14,6 +14,8 @@ static const PureColor clrDefault{ 255, 203, 50, 255 };
 static const PureColor clrEmpty{ 255, 0, 0, 255 };
 static const PureColor clrCooldown{ 100, 100, 100, 255 };
 
+static constexpr TPureUByte nHighlightAlpha = 80;
+
 
 // ############################### PUBLIC ################################
 
@@ -264,7 +266,7 @@ void proofps_dd::XHair::handleMagEmpty()
     {
         assert(m_vHLightRects[i]); // ctor would throw otherwise
         m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
-            clrEmpty.getRed(), clrEmpty.getGreen(), clrEmpty.getBlue(), clrEmpty.getAlpha());
+            clrEmpty.getRed(), clrEmpty.getGreen(), clrEmpty.getBlue(), nHighlightAlpha);
     }
 }
 
@@ -278,7 +280,7 @@ void proofps_dd::XHair::handleMagLoaded()
     {
         assert(m_vHLightRects[i]); // ctor would throw otherwise
         m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
-            clrDefault.getRed(), clrDefault.getGreen(), clrDefault.getBlue(), clrDefault.getAlpha());
+            clrDefault.getRed(), clrDefault.getGreen(), clrDefault.getBlue(), nHighlightAlpha);
     }
 }
 
@@ -292,7 +294,7 @@ void proofps_dd::XHair::handleCooldownStart()
     {
         assert(m_vHLightRects[i]); // ctor would throw otherwise
         m_vHLightRects[i]->getMaterial(false).getTextureEnvColor().Set(
-            clrCooldown.getRed(), clrCooldown.getGreen(), clrCooldown.getBlue(), clrCooldown.getAlpha());
+            clrCooldown.getRed(), clrCooldown.getGreen(), clrCooldown.getBlue(), nHighlightAlpha);
     }
 }
 
@@ -345,86 +347,107 @@ void proofps_dd::XHair::updateVisuals()
             ((nElapsedTimeSinceBlinkingStartMillisecs / nBlinkPeriodMillisecs) % 2) == 1);
     }
 
+    static std::chrono::time_point<std::chrono::steady_clock> timeXHairLastMoved;
+    bool bCanShowHighlightPerXHairMovement = true;
     if ((m_pObjXHair->getPosVec().getX() != m_prevXHairPos.x)
         ||
         (m_pObjXHair->getPosVec().getY() != m_prevXHairPos.y))
     {
-        for (int i = 0; i < 4; i++)
-        {
-            assert(m_vHLightRects[i]); // ctor would throw otherwise
-            m_vHLightRects[i]->SetRenderingAllowed(m_pObjXHair->isRenderingAllowed());
-        }
-
-        constexpr float fDistanceFromXHair = 10.f;
-        const float fHLlineThickness = 10.f * m_fBaseScaling;
-        
-        const float fHLupperHeight = std::max(0.f,
-            (m_pge.getPure().getWindow().getClientHeight() / 2.f -
-            m_pObjXHair->getPosVec().getY() -
-            m_pObjXHair->getScaledSizeVec().getY() / 2.f -
-            fDistanceFromXHair));
-        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLupperHeight, 1.f));
-        //getConsole().EOLn("XHair::%s(): fHLupperHeight: %f!", __func__, fHLupperHeight);
-        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
-        m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetY(
-            m_pObjXHair->getPosVec().getY() +
-            fHLupperHeight / 2.f +
-            m_pObjXHair->getScaledSizeVec().getY() / 2.f +
-            fDistanceFromXHair);
-
-        const float fHLlowerHeight = std::max(0.f,
-            (m_pge.getPure().getWindow().getClientHeight() / 2.f +
-                m_pObjXHair->getPosVec().getY() +
-                m_pObjXHair->getScaledSizeVec().getY() / 2.f +
-                fDistanceFromXHair));
-        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLlowerHeight, 1.f));
-        //getConsole().EOLn("XHair::%s(): fHLlowerHeight: %f!", __func__, fHLlowerHeight);
-        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
-        m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetY(
-            m_pObjXHair->getPosVec().getY() -
-            fHLlowerHeight / 2.f -
-            m_pObjXHair->getScaledSizeVec().getY() / 2.f -
-            fDistanceFromXHair);
-
-        const float fHLleftWidth = std::max(0.f,
-            (m_pge.getPure().getWindow().getClientWidth() / 2.f +
-                m_pObjXHair->getPosVec().getX() +
-                m_pObjXHair->getScaledSizeVec().getX() / 2.f +
-                fDistanceFromXHair));
-        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->SetScaling(PureVector(fHLleftWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
-        //getConsole().EOLn("XHair::%s(): fHLleftWidth: %f!", __func__, fHLleftWidth);
-        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
-        m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetX(
-            m_pObjXHair->getPosVec().getX() -
-            fHLleftWidth / 2.f -
-            m_pObjXHair->getScaledSizeVec().getX() / 2.f -
-            fDistanceFromXHair);
-
-        const float fHLrightWidth = std::max(0.f,
-            (m_pge.getPure().getWindow().getClientWidth() / 2.f -
-                m_pObjXHair->getPosVec().getX() -
-                m_pObjXHair->getScaledSizeVec().getX() / 2.f -
-                fDistanceFromXHair));
-        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->SetScaling(PureVector(fHLrightWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
-        //getConsole().EOLn("XHair::%s(): fHLrightWidth: %f!", __func__, fHLrightWidth);
-        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
-        m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetX(
-            m_pObjXHair->getPosVec().getX() +
-            fHLrightWidth / 2.f +
-            m_pObjXHair->getScaledSizeVec().getX() / 2.f +
-            fDistanceFromXHair);
+        timeXHairLastMoved = std::chrono::steady_clock::now();
 
         m_prevXHairPos.x = m_pObjXHair->getPosVec().getX();
         m_prevXHairPos.y = m_pObjXHair->getPosVec().getY();
     }
     else
     {
-        for (int i = 0; i < 4; i++)
+        constexpr float fXHairPostMoveTimeoutMillisecs = 1000;
+        if ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeXHairLastMoved)).count() >= fXHairPostMoveTimeoutMillisecs)
         {
-            assert(m_vHLightRects[i]); // ctor would throw otherwise
-            m_vHLightRects[i]->SetRenderingAllowed(false);
+            bCanShowHighlightPerXHairMovement = false;
+            for (int i = 0; i < 4; i++)
+            {
+                assert(m_vHLightRects[i]); // ctor would throw otherwise
+                m_vHLightRects[i]->SetRenderingAllowed(false);
+            }
         }
     }
+
+    // must keep adjusting highlight here, since it is needed even if xhair not being moved, still its scale can change due to shooting, etc.
+    adjustHighlightSize(bCanShowHighlightPerXHairMovement);
+}
+
+void proofps_dd::XHair::adjustHighlightSize(const bool& bCanShowHighlightPerXHairMovement)
+{
+    const bool bHighlightVisibleFinal = bCanShowHighlightPerXHairMovement && m_pObjXHair->isRenderingAllowed();
+    for (int i = 0; i < 4; i++)
+    {
+        assert(m_vHLightRects[i]); // ctor would throw otherwise
+        m_vHLightRects[i]->SetRenderingAllowed(bHighlightVisibleFinal);
+    }
+
+    if (!bHighlightVisibleFinal)
+    {
+        return;
+    }
+
+    constexpr float fDistanceFromXHair = 10.f;
+    const float fHLlineThickness = 10.f * m_fBaseScaling;
+
+    const float fHLupperHeight = std::max(0.f,
+        (m_pge.getPure().getWindow().getClientHeight() / 2.f -
+            m_pObjXHair->getPosVec().getY() -
+            m_pObjXHair->getScaledSizeVec().getY() / 2.f -
+            fDistanceFromXHair));
+    m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLupperHeight, 1.f));
+    //getConsole().EOLn("XHair::%s(): fHLupperHeight: %f!", __func__, fHLupperHeight);
+    m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
+    m_vHLightRects[static_cast<int>(HighlightRect::Upper)]->getPosVec().SetY(
+        m_pObjXHair->getPosVec().getY() +
+        fHLupperHeight / 2.f +
+        m_pObjXHair->getScaledSizeVec().getY() / 2.f +
+        fDistanceFromXHair);
+
+    const float fHLlowerHeight = std::max(0.f,
+        (m_pge.getPure().getWindow().getClientHeight() / 2.f +
+            m_pObjXHair->getPosVec().getY() +
+            m_pObjXHair->getScaledSizeVec().getY() / 2.f +
+            fDistanceFromXHair));
+    m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->SetScaling(PureVector(fHLlineThickness * m_fRelativeScaleFactor, fHLlowerHeight, 1.f));
+    //getConsole().EOLn("XHair::%s(): fHLlowerHeight: %f!", __func__, fHLlowerHeight);
+    m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetX(m_pObjXHair->getPosVec().getX());
+    m_vHLightRects[static_cast<int>(HighlightRect::Lower)]->getPosVec().SetY(
+        m_pObjXHair->getPosVec().getY() -
+        fHLlowerHeight / 2.f -
+        m_pObjXHair->getScaledSizeVec().getY() / 2.f -
+        fDistanceFromXHair);
+
+    const float fHLleftWidth = std::max(0.f,
+        (m_pge.getPure().getWindow().getClientWidth() / 2.f +
+            m_pObjXHair->getPosVec().getX() +
+            m_pObjXHair->getScaledSizeVec().getX() / 2.f +
+            fDistanceFromXHair));
+    m_vHLightRects[static_cast<int>(HighlightRect::Left)]->SetScaling(PureVector(fHLleftWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
+    //getConsole().EOLn("XHair::%s(): fHLleftWidth: %f!", __func__, fHLleftWidth);
+    m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
+    m_vHLightRects[static_cast<int>(HighlightRect::Left)]->getPosVec().SetX(
+        m_pObjXHair->getPosVec().getX() -
+        fHLleftWidth / 2.f -
+        m_pObjXHair->getScaledSizeVec().getX() / 2.f -
+        fDistanceFromXHair);
+
+    const float fHLrightWidth = std::max(0.f,
+        (m_pge.getPure().getWindow().getClientWidth() / 2.f -
+            m_pObjXHair->getPosVec().getX() -
+            m_pObjXHair->getScaledSizeVec().getX() / 2.f -
+            fDistanceFromXHair));
+    m_vHLightRects[static_cast<int>(HighlightRect::Right)]->SetScaling(PureVector(fHLrightWidth, fHLlineThickness * m_fRelativeScaleFactor, 1.f));
+    //getConsole().EOLn("XHair::%s(): fHLrightWidth: %f!", __func__, fHLrightWidth);
+    m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetY(m_pObjXHair->getPosVec().getY());
+    m_vHLightRects[static_cast<int>(HighlightRect::Right)]->getPosVec().SetX(
+        m_pObjXHair->getPosVec().getX() +
+        fHLrightWidth / 2.f +
+        m_pObjXHair->getScaledSizeVec().getX() / 2.f +
+        fDistanceFromXHair);
 }
 
 
