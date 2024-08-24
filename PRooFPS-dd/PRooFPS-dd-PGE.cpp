@@ -792,6 +792,9 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     // after we have adjusted xhair 2D coords based on user input above, update 3D coords for this frame
     // TODO: get rid of this by changing XHair design as explained within the function itself!
     m_gui.getXHair()->updateUnprojectedCoords(getPure().getCamera());
+    // TODO: basically 1 single public setPosVec() should be added to XHair, which will automatically invoke these functions too!
+    // Everywhere objXHair.getPosVec().Set() should be replaced by a new function: m_gui.getXHair().setPosVec().
+    m_gui.getXHair()->updateVisuals();
 
     //if (!isServer())
     //{

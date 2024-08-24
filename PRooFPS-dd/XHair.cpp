@@ -330,7 +330,7 @@ void proofps_dd::XHair::setRelativeScaling(float relativeScaleFactor)
 
 void proofps_dd::XHair::updateVisuals()
 {
-    // expected to be invoked every frame, by ImGui callback, thus ImGui draw commands are also allowed here
+    // expected to be invoked every frame, by the game itself, after updating XHair object position by user input
 
     if (!m_bVisible)
     {
@@ -347,34 +347,15 @@ void proofps_dd::XHair::updateVisuals()
             ((nElapsedTimeSinceBlinkingStartMillisecs / nBlinkPeriodMillisecs) % 2) == 1);
     }
 
-    static std::chrono::time_point<std::chrono::steady_clock> timeXHairLastMoved;
-    bool bCanShowHighlightPerXHairMovement = true;
-    if ((m_pObjXHair->getPosVec().getX() != m_prevXHairPos.x)
-        ||
-        (m_pObjXHair->getPosVec().getY() != m_prevXHairPos.y))
-    {
-        timeXHairLastMoved = std::chrono::steady_clock::now();
-
-        m_prevXHairPos.x = m_pObjXHair->getPosVec().getX();
-        m_prevXHairPos.y = m_pObjXHair->getPosVec().getY();
-    }
-    else
-    {
-        constexpr float fXHairPostMoveTimeoutMillisecs = 1000;
-        if ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeXHairLastMoved)).count() >= fXHairPostMoveTimeoutMillisecs)
-        {
-            bCanShowHighlightPerXHairMovement = false;
-            for (int i = 0; i < 4; i++)
-            {
-                assert(m_vHLightRects[i]); // ctor would throw otherwise
-                m_vHLightRects[i]->SetRenderingAllowed(false);
-            }
-        }
-    }
-
-    // must keep adjusting highlight here, since it is needed even if xhair not being moved, still its scale can change due to shooting, etc.
-    adjustHighlightSize(bCanShowHighlightPerXHairMovement);
+    updateHighlight();
 }
+
+
+// ############################## PROTECTED ##############################
+
+
+// ############################### PRIVATE ###############################
+
 
 void proofps_dd::XHair::adjustHighlightSize(const bool& bCanShowHighlightPerXHairMovement)
 {
@@ -450,9 +431,36 @@ void proofps_dd::XHair::adjustHighlightSize(const bool& bCanShowHighlightPerXHai
         fDistanceFromXHair);
 }
 
+void proofps_dd::XHair::updateHighlight()
+{
+    // expected to be invoked every frame
 
-// ############################## PROTECTED ##############################
+    static std::chrono::time_point<std::chrono::steady_clock> timeXHairLastMoved;
+    bool bCanShowHighlightPerXHairMovement = true;
+    if ((m_pObjXHair->getPosVec().getX() != m_prevXHairPos.x)
+        ||
+        (m_pObjXHair->getPosVec().getY() != m_prevXHairPos.y))
+    {
+        timeXHairLastMoved = std::chrono::steady_clock::now();
 
+        m_prevXHairPos.x = m_pObjXHair->getPosVec().getX();
+        m_prevXHairPos.y = m_pObjXHair->getPosVec().getY();
+    }
+    else
+    {
+        constexpr float fXHairPostMoveTimeoutMillisecs = 1000;
+        if ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeXHairLastMoved)).count() >= fXHairPostMoveTimeoutMillisecs)
+        {
+            bCanShowHighlightPerXHairMovement = false;
+            for (int i = 0; i < 4; i++)
+            {
+                assert(m_vHLightRects[i]); // ctor would throw otherwise
+                m_vHLightRects[i]->SetRenderingAllowed(false);
+            }
+        }
+    }
 
-// ############################### PRIVATE ###############################
+    // must keep adjusting highlight here, since it is needed even if xhair not being moved, still its scale can change due to shooting, etc.
+    adjustHighlightSize(bCanShowHighlightPerXHairMovement);
+}
 

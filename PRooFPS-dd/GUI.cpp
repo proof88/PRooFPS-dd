@@ -1588,6 +1588,10 @@ void proofps_dd::GUI::drawWindowForMainMenu()
 
 /**
  * Primary GUI draw function called back by PURE.
+ * 
+ * PURE invokes this function every frame, AFTER rendering the 2D sticked-to-screen objects (PureObject3D::SetStickedToScreen()).
+ * Thus, calculations in this function having effect on the PURE sticked-to-screen objects, will be visible only in the next frame.
+ * So in general it is highly recommended to do ONLY Dear ImGui-specific stuff here.
  */
 void proofps_dd::GUI::drawDearImGuiCb()
 {
@@ -1722,9 +1726,8 @@ void proofps_dd::GUI::updateXHair()
 {
     assert(m_pXHair);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
 
-    // in the future this function can be moved to XHair class with drawXHairHoverText(), but first drawTextShadowed need to be moved to separate class
+    // in the future this , but first drawTextShadowed need to be moved to separate class
     // so that both GUI and XHair classes can utilize it
-    m_pXHair->updateVisuals();
     drawXHairHoverText();
 }
 
