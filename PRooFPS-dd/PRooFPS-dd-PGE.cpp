@@ -679,6 +679,8 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     // during map loading.
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
+    m_gui.getItemPickupEvents()->clear();
+    m_gui.getPlayerHpChangeEvents()->clear();
     m_gui.getXHair()->hide();
     m_gui.getMinimap()->hide();
     for (auto& connHandlePlayerPair : m_mapPlayers)

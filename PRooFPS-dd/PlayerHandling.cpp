@@ -412,8 +412,10 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         m_gui.hideGameObjectives();
         assert(m_gui.getDeathKillEvents());
         assert(m_gui.getItemPickupEvents());
+        assert(m_gui.getPlayerHpChangeEvents());
         m_gui.getDeathKillEvents()->clear();
         m_gui.getItemPickupEvents()->clear();
+        m_gui.getPlayerHpChangeEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }
@@ -860,28 +862,37 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     if (bCurrentClient)
     {
-        // server already has both new and old HP updated when we get here, so the easiest trick is to have a static var so we always
-        // know the old HP, no matter if server or client
+        // !!!BESTPRACTICE!!!
+        // Server already has both new and old HP updated when we get here, and msg.m_nHealth contains the same value obviously.
+        // So the easiest trick is to have a static var so we always know the old HP, no matter if we are server or client.
+        // This way server and client can have this same shared code, instead of only client doing it here, and server doing it
+        // at some other place.
+        // Obviously it would be better if server would NOT update these values before injecting MsgUserUpdate but now this is
+        // how it is.
         static int nPrevHP = 100;
 
-        if (std::as_const(player).getHealth() != nPrevHP)
+        if (bOriginalExpectingStartPos)
         {
-            assert(m_gui.getPlayerHpChangeEvents());
-            if (std::as_const(player).getHealth() > nPrevHP)
+            // We might be after map change, do not show any HP change for refilled HP!
+            // Even though Player instances are recreated, this static var remembers, so we need to reset it.
+            nPrevHP = 100;
+        }
+        else
+        {
+            if (std::as_const(player).getHealth() != nPrevHP)
             {
-                // TODO: true and false branches only to manually add the plus sign, but obviously this would also work without if-else:
-                // std::as_const(player).getHealth() - nPrevHP
-                // However the plus sign would not be there.
-                // The EventLister should be specialized so that it could automatically add the plus sign in case of positive number.
-                // Also, it could use green automatically for positive values, red for negative values.
-                m_gui.getPlayerHpChangeEvents()->addEvent(std::string("+") + std::to_string(std::as_const(player).getHealth() - nPrevHP));
-            }
-            else if (std::as_const(player).getHealth() < nPrevHP)
-            {
-                m_gui.getPlayerHpChangeEvents()->addEvent(std::string("-") + std::to_string(nPrevHP - std::as_const(player).getHealth()));
-            }
+                assert(m_gui.getPlayerHpChangeEvents());
+                const int nHpChange = std::as_const(player).getHealth() - nPrevHP;
 
-            nPrevHP = std::as_const(player).getHealth();
+                // As of v0.2.8 the max HP is 100, and we should not list +100% as HP change because that is basically respawn, and
+                // when it happens, it is obvious to the player so don't make HP change event for that.
+                if (nHpChange < 100)
+                {
+                    m_gui.getPlayerHpChangeEvents()->addEvent(std::to_string(nHpChange));
+                }
+
+                nPrevHP = std::as_const(player).getHealth();
+            }
         }
     }
 

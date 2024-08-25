@@ -248,16 +248,22 @@ void proofps_dd::GUI::shutdown()
         m_pObjLoadingScreenLogoImg = nullptr;
     }
 
-    if (m_pEventsDeathKill)
+    if (m_pEventsPlayerHpChange)
     {
-        delete m_pEventsDeathKill;
-        m_pEventsDeathKill = nullptr;
+        delete m_pEventsPlayerHpChange;
+        m_pEventsPlayerHpChange = nullptr;
     }
 
     if (m_pEventsItemPickup)
     {
         delete m_pEventsItemPickup;
         m_pEventsItemPickup = nullptr;
+    }
+
+    if (m_pEventsDeathKill)
+    {
+        delete m_pEventsDeathKill;
+        m_pEventsDeathKill = nullptr;
     }
 
     if (m_pXHair)
@@ -1841,14 +1847,33 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
 
     ImGui::SameLine();
 
-    // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
+    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
     for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
     {
+        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+        int nHpChange = 0;
+        try
+        {
+            nHpChange = static_cast<int>(std::stol(it->second));
+        }
+        catch (const std::exception&) {}
+
+        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            (nHpChange > 0) ?
+            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+        );
+            
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            it->second);
+            (nHpChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
         ImGui::SameLine();
+
+        ImGui::PopStyleColor();
     }
 }
 
