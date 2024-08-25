@@ -25,9 +25,11 @@ CConsole& proofps_dd::EventLister::getConsole() const
 
 proofps_dd::EventLister::EventLister(
     const unsigned int& nEventTimeLimitSecs,
-    const size_t& nEventCountLimit) :
+    const size_t& nEventCountLimit,
+    const Orientation& eOrientation) :
     m_nEventTimeLimitSecs(nEventTimeLimitSecs),
-    m_nEventCountLimit(nEventCountLimit)
+    m_nEventCountLimit(nEventCountLimit),
+    m_eOrientation(eOrientation)
 {
 }
 
@@ -39,6 +41,11 @@ const unsigned int& proofps_dd::EventLister::getEventTimeLimitSecs() const
 const size_t& proofps_dd::EventLister::getEventCountLimit() const
 {
     return m_nEventCountLimit;
+}
+
+const proofps_dd::EventLister::Orientation& proofps_dd::EventLister::getOrientation() const
+{
+    return m_eOrientation;
 }
 
 void proofps_dd::EventLister::show()

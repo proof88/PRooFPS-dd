@@ -26,6 +26,12 @@ namespace proofps_dd
     {
     public:
 
+        enum class Orientation
+        {
+            Vertical,
+            Horizontal
+        };
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
@@ -34,10 +40,12 @@ namespace proofps_dd
 
         EventLister(
             const unsigned int& nEventTimeLimitSecs,
-            const size_t& nEventCountLimit);
+            const size_t& nEventCountLimit,
+            const Orientation& eOrientation = Orientation::Vertical);
 
         const unsigned int& getEventTimeLimitSecs() const;
         const size_t& getEventCountLimit() const;
+        const Orientation& getOrientation() const;
 
         void show();
         void hide();
@@ -63,6 +71,7 @@ namespace proofps_dd
         std::deque<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>> m_qEvents;
         unsigned int m_nEventTimeLimitSecs;
         size_t m_nEventCountLimit;
+        Orientation m_eOrientation;
 
         // ---------------------------------------------------------------------------
 

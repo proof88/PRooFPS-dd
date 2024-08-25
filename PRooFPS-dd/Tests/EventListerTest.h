@@ -57,7 +57,7 @@ private:
 
     // ---------------------------------------------------------------------------
 
-    bool is_event_lister_contains_same_elems_as_vector(
+    bool does_event_lister_has_same_elems_as_vector(
         const proofps_dd::EventLister& events,
         const std::vector<std::string>& vecExpectedStrings)
     {
@@ -66,7 +66,7 @@ private:
             return false;
         }
 
-        //CConsole::getConsoleInstance().EOLn("is_event_lister_contains_same_elems_as_vector start");
+        //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector start");
         bool b = true;
         int iVec = 0;
         for (auto it = events.getEvents().rbegin(); b && (it != events.getEvents().rend()); ++it)
@@ -75,7 +75,7 @@ private:
             b &= (vecExpectedStrings[iVec] == it->second);
             iVec++;
         }
-        //CConsole::getConsoleInstance().EOLn("is_event_lister_contains_same_elems_as_vector end");
+        //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector end");
         //CConsole::getConsoleInstance().EOLn("");
 
         return b;
@@ -83,12 +83,15 @@ private:
 
     bool test_initial_values()
     {
-        proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister eventsVertical(nMaxEventTimeSecs, nMaxEventCount);
+        proofps_dd::EventLister eventsHorizontal(nMaxEventTimeSecs, nMaxEventCount, proofps_dd::EventLister::Orientation::Horizontal);
 
-        bool b = (assertTrue(events.getEvents().empty(), "empty") &
-            assertFalse(events.visible(), "visible") &
-            assertEquals(nMaxEventTimeSecs, events.getEventTimeLimitSecs(), "time limit") &
-            assertEquals(nMaxEventCount, events.getEventCountLimit(), "count limit")) != 0;
+        bool b = (assertTrue(eventsVertical.getEvents().empty(), "empty") &
+            assertFalse(eventsVertical.visible(), "visible") &
+            assertEquals(nMaxEventTimeSecs, eventsVertical.getEventTimeLimitSecs(), "time limit") &
+            assertEquals(nMaxEventCount, eventsVertical.getEventCountLimit(), "count limit") &
+            assertTrue(proofps_dd::EventLister::Orientation::Vertical == eventsVertical.getOrientation(), "orientation vertical") &
+            assertTrue(proofps_dd::EventLister::Orientation::Horizontal == eventsHorizontal.getOrientation(), "orientation horizontal")) != 0;
 
         return b;
     }
@@ -125,7 +128,7 @@ private:
         events.addEvent("event 3");
 
         bool b = assertFalse(events.getEvents().empty(), "empty");
-        b &= assertTrue(is_event_lister_contains_same_elems_as_vector(events, vecExpectedStrings), "case 1");
+        b &= assertTrue(does_event_lister_has_same_elems_as_vector(events, vecExpectedStrings), "case 1");
 
         events.addEvent("event 4");
 
@@ -134,7 +137,7 @@ private:
           {"event 3"},
           {"event 2"} };
 
-        b &= assertTrue(is_event_lister_contains_same_elems_as_vector(events, vecExpectedStrings2), "case 2");
+        b &= assertTrue(does_event_lister_has_same_elems_as_vector(events, vecExpectedStrings2), "case 2");
 
         return b;
     }
@@ -194,7 +197,7 @@ private:
 
             for (size_t i = 0; i < vecExpectedStringCases.size(); i++)
             {
-                if (is_event_lister_contains_same_elems_as_vector(events, vecExpectedStringCases[i]))
+                if (does_event_lister_has_same_elems_as_vector(events, vecExpectedStringCases[i]))
                 {
                     expectedStringCasesObserved.insert(i+1);
                     break;

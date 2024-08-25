@@ -853,10 +853,37 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;
 
-    //getConsole().OLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, player.getHealth(), player.getHealth().getOld());
+    //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
+    //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
     player.setArmor(msg.m_nArmor);
     player.setHealth(msg.m_nHealth);
+
+    if (bCurrentClient)
+    {
+        // server already has both new and old HP updated when we get here, so the easiest trick is to have a static var so we always
+        // know the old HP, no matter if server or client
+        static int nPrevHP = 100;
+
+        if (std::as_const(player).getHealth() != nPrevHP)
+        {
+            assert(m_gui.getPlayerHpChangeEvents());
+            if (std::as_const(player).getHealth() > nPrevHP)
+            {
+                // TODO: true and false branches only to manually add the plus sign, but obviously this would also work without if-else:
+                // std::as_const(player).getHealth() - nPrevHP
+                // However the plus sign would not be there.
+                // The EventLister should be specialized so that it could automatically add the plus sign in case of positive number.
+                // Also, it could use green automatically for positive values, red for negative values.
+                m_gui.getPlayerHpChangeEvents()->addEvent(std::string("+") + std::to_string(std::as_const(player).getHealth() - nPrevHP));
+            }
+            else if (std::as_const(player).getHealth() < nPrevHP)
+            {
+                m_gui.getPlayerHpChangeEvents()->addEvent(std::string("-") + std::to_string(nPrevHP - std::as_const(player).getHealth()));
+            }
+
+            nPrevHP = std::as_const(player).getHealth();
+        }
+    }
 
     if (msg.m_bRespawn)
     {

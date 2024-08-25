@@ -78,6 +78,7 @@ void proofps_dd::GUI::initialize()
 
     m_pEventsDeathKill = new DeathKillEventLister();
     m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
+    m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -370,6 +371,11 @@ proofps_dd::EventLister* proofps_dd::GUI::getItemPickupEvents()
     return m_pEventsItemPickup;
 }
 
+proofps_dd::EventLister* proofps_dd::GUI::getPlayerHpChangeEvents()
+{
+    return m_pEventsPlayerHpChange;
+}
+
 void proofps_dd::GUI::showGameObjectives()
 {
     m_gameInfoPageCurrent = GameInfoPage::FragTable;
@@ -462,6 +468,7 @@ proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
+proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -1782,7 +1789,10 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
     
     drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: " + std::to_string(player.getArmor()) + " %");
+
+
     drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
+    updatePlayerHpChangeEvents();
 }
 
 void proofps_dd::GUI::updateDeathKillEvents()
@@ -1818,6 +1828,24 @@ void proofps_dd::GUI::updateItemPickupEvents()
             getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
             ImGui::GetCursorPos().y,
             it->second);
+    }
+}
+
+void proofps_dd::GUI::updatePlayerHpChangeEvents()
+{
+    assert(m_pEventsPlayerHpChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsPlayerHpChange->update();
+
+    ImGui::SameLine();
+
+    for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
+    {
+        drawTextHighlighted(
+            ImGui::GetCursorPos().x,
+            ImGui::GetCursorPos().y,
+            it->second);
+        ImGui::SameLine();
     }
 }
 
