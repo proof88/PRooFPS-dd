@@ -89,6 +89,7 @@ namespace proofps_dd
         DeathKillEventLister* getDeathKillEvents();
         EventLister* getItemPickupEvents();
         EventLister* getPlayerHpChangeEvents();
+        EventLister* getPlayerApChangeEvents();
         void showGameObjectives();
         void hideGameObjectives();
         void showAndLoopGameInfoPages();
@@ -131,6 +132,7 @@ namespace proofps_dd
         static DeathKillEventLister* m_pEventsDeathKill;
         static EventLister* m_pEventsItemPickup;
         static EventLister* m_pEventsPlayerHpChange;
+        static EventLister* m_pEventsPlayerApChange;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
@@ -165,6 +167,7 @@ namespace proofps_dd
         static void updateDeathKillEvents();
         static void updateItemPickupEvents();
         static void updatePlayerHpChangeEvents();
+        static void updatePlayerApChangeEvents();
         static void calculatePlayerNameColWidthAndTableWidthPixels(
             float& fTableWidthPixels,
             float& fPlayerNameColWidthPixels,

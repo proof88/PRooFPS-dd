@@ -413,9 +413,11 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         assert(m_gui.getDeathKillEvents());
         assert(m_gui.getItemPickupEvents());
         assert(m_gui.getPlayerHpChangeEvents());
+        assert(m_gui.getPlayerApChangeEvents());
         m_gui.getDeathKillEvents()->clear();
         m_gui.getItemPickupEvents()->clear();
         m_gui.getPlayerHpChangeEvents()->clear();
+        m_gui.getPlayerApChangeEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }
@@ -870,12 +872,14 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         // Obviously it would be better if server would NOT update these values before injecting MsgUserUpdate but now this is
         // how it is.
         static int nPrevHP = 100;
+        static int nPrevAP = 0;
 
-        if (bOriginalExpectingStartPos)
+        if (bOriginalExpectingStartPos || msg.m_bRespawn)
         {
             // We might be after map change, do not show any HP change for refilled HP!
             // Even though Player instances are recreated, this static var remembers, so we need to reset it.
             nPrevHP = 100;
+            nPrevAP = 0;
         }
         else
         {
@@ -892,6 +896,15 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
                 }
 
                 nPrevHP = std::as_const(player).getHealth();
+            }
+            if (std::as_const(player).getArmor() != nPrevAP)
+            {
+                assert(m_gui.getPlayerApChangeEvents());
+                const int nApChange = std::as_const(player).getArmor() - nPrevAP;
+
+                m_gui.getPlayerApChangeEvents()->addEvent(std::to_string(nApChange));
+
+                nPrevAP = std::as_const(player).getArmor();
             }
         }
     }

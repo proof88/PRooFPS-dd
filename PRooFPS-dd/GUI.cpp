@@ -79,6 +79,7 @@ void proofps_dd::GUI::initialize()
     m_pEventsDeathKill = new DeathKillEventLister();
     m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
     m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
+    m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -248,6 +249,12 @@ void proofps_dd::GUI::shutdown()
         m_pObjLoadingScreenLogoImg = nullptr;
     }
 
+    if (m_pEventsPlayerApChange)
+    {
+        delete m_pEventsPlayerApChange;
+        m_pEventsPlayerApChange = nullptr;
+    }
+
     if (m_pEventsPlayerHpChange)
     {
         delete m_pEventsPlayerHpChange;
@@ -382,6 +389,11 @@ proofps_dd::EventLister* proofps_dd::GUI::getPlayerHpChangeEvents()
     return m_pEventsPlayerHpChange;
 }
 
+proofps_dd::EventLister* proofps_dd::GUI::getPlayerApChangeEvents()
+{
+    return m_pEventsPlayerApChange;
+}
+
 void proofps_dd::GUI::showGameObjectives()
 {
     m_gameInfoPageCurrent = GameInfoPage::FragTable;
@@ -475,6 +487,7 @@ proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
+proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -1795,7 +1808,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
     
     drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: " + std::to_string(player.getArmor()) + " %");
-
+    updatePlayerApChangeEvents();
 
     drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
     updatePlayerHpChangeEvents();
@@ -1845,11 +1858,11 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
 
     m_pEventsPlayerHpChange->update();
 
-    ImGui::SameLine();
-
     // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
     for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
     {
+        ImGui::SameLine();
+
         // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
         // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
         int nHpChange = 0;
@@ -1871,8 +1884,46 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
             (nHpChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
-        ImGui::SameLine();
+        
+        ImGui::PopStyleColor();
+    }
+}
 
+void proofps_dd::GUI::updatePlayerApChangeEvents()
+{
+    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
+
+    assert(m_pEventsPlayerApChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsPlayerApChange->update();
+
+    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
+    for (auto it = m_pEventsPlayerApChange->getEvents().rbegin(); it != m_pEventsPlayerApChange->getEvents().rend(); ++it)
+    {
+        ImGui::SameLine();
+        
+        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+        int nApChange = 0;
+        try
+        {
+            nApChange = static_cast<int>(std::stol(it->second));
+        }
+        catch (const std::exception&) {}
+
+        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            (nApChange > 0) ?
+            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+        );
+
+        drawTextHighlighted(
+            ImGui::GetCursorPos().x,
+            ImGui::GetCursorPos().y,
+            (nApChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
+        
         ImGui::PopStyleColor();
     }
 }
