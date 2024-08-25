@@ -345,6 +345,9 @@
     <ClInclude Include="Tests\EventListerTest.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
+    <ClInclude Include="DrawableEventLister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -423,6 +426,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DeathKillEventLister.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawableEventLister.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

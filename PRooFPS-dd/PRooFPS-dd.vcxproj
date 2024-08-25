@@ -195,6 +195,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="Consts.h" />
     <ClInclude Include="DeathKillEventLister.h" />
+    <ClInclude Include="DrawableEventLister.h" />
     <ClInclude Include="Durations.h" />
     <ClInclude Include="EventLister.h" />
     <ClInclude Include="Explosion.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="CameraHandling.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="DeathKillEventLister.cpp" />
+    <ClCompile Include="DrawableEventLister.cpp" />
     <ClCompile Include="EventLister.cpp" />
     <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />

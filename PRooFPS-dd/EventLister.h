@@ -53,6 +53,8 @@ namespace proofps_dd
 
         void update();
 
+        virtual void draw() {};
+
         void addEvent(const std::string& sEvent);
         void clear();
 

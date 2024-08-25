@@ -1803,6 +1803,7 @@ void proofps_dd::GUI::updateDeathKillEvents()
     
     m_pEventsDeathKill->update();
 
+    // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneral); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
     for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
@@ -1820,6 +1821,7 @@ void proofps_dd::GUI::updateItemPickupEvents()
 
     m_pEventsItemPickup->update();
 
+    // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneral + 3) + 20);
     for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
@@ -1839,6 +1841,7 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
 
     ImGui::SameLine();
 
+    // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
     {
         drawTextHighlighted(
