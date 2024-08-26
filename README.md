@@ -85,7 +85,21 @@ This seems to be an issue which does not happen on all computers but when it hap
 Sometimes simply **switching to another application and then switching back to the game (ALT+TAB, then ALT+TAB again)** resolves the issue, so this should be the first thing you try.  
 As a next idea to resolve this issue, go to the Properties of your "Display Capture" Source and try to **change the Capture Method to "DXGI Desktop Duplication"**, also make sure **"Capture Mouse" is checked**.  
 If this does not help, **remove "Display Capture"** from Sources, start the game, then switch to OBS Studio (ALT+TAB), add a **"Window Capture" Source** and select the game window. You might also need to change the Capture Method too.  
-If the issue still persists, try to upgrade OBS Studio, your video card driver, or just simply turn Fullscreen mode off in game settings when you are using OBS Studio in parallel.
+If the issue still persists, try to upgrade OBS Studio, your video card driver, or just simply turn Fullscreen mode off in game settings when you are using OBS Studio in parallel.  
+This is NOT considered as a game bug.
+
+### My Display Resolution is Small, I Cannot See the Bottom of the Window, How to Fix It?
+
+The game starts up in windowed mode, in a 1024x768 pixels client-size window. Thus, 720p screens won't show the bottom of the window.  
+After starting the game, go to the Settings menu, and enable Fullscreen. This will restart the game in a window with client size matching the display resolution thus the entire game content will be visible.  
+If you cannot see the entire Settings menu in fullscreen mode, don't worry, you can use the mouse cursor to scroll vertically in the menu.  
+This is NOT considered as a game bug, however in the future the windowed mode will default to 800x600, and the window will be resizable.
+
+### Somehow the Main Menu is NOT Centered Horizontally, the Crosshair also Disappears Towards the Right and Bottom Edges of the Screen, How to Fix It?
+
+Most probably this is because your screen DPI scaling setting in the operating system is not set to 100% but to a larger value. The game currently does not support different DPI scalings.  
+Only workaround is to set DPI scaling to 100%.  
+This is considered as a game bug, the issue is tracked (https://github.com/proof88/PRooFPS-dd/issues/183) and will be resolved in the future.
 
 ### Why the Compressed Release is So Big?
 
