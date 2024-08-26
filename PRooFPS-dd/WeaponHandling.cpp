@@ -979,13 +979,16 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         // need to create this new bullet first on our side
         //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: NEW bullet id %u", __func__, msg.m_bulletId);
 
-        // find the owner of this new bullet
+        // Find the owner of this new bullet.
+        // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
+        // Explained in details in handlePlayerEventFromServer().
+        // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
         const auto playerIt = m_mapPlayers.find(connHandleServerSide);
         if (playerIt == m_mapPlayers.end())
         {
-            // must always find bullet owner player since even player disconnect should come later than their created bullets
-            assert(false);
-            return false;
+            // in theory, must always find bullet owner player since even player disconnect should come later than their created bullets
+            assert(false);  // keep crashing in debug mode, nobody will connect to server during ongoing shooting with debug builds!
+            return true; // WA
         }
 
         Player& player = playerIt->second;
@@ -1057,6 +1060,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
 
     // this is private message, it always refers to me and one of my weapons (it is always my current weapon on server side, should be current here too).
 
+    // Because of issue 268 (https://github.com/proof88/PRooFPS-dd/issues/268) is about receiving msg about other players, but this msg is for me, WA should not be applied here!
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
     {
@@ -1139,12 +1143,17 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
 
     //getConsole().EOLn("WeaponHandling::%s(): received: %s for player %u, state: %d",  __func__, msg.m_szWpnCurrentName, connHandleServerSide, static_cast<int>(msg.m_state));
 
+    // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
+    // Explained in details in handlePlayerEventFromServer().
+    // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
+    // For this message, it can happen right after changing map to warena where players most probably pick up a new weapon right after spawning, and due to
+    // pickup-induced auto-switch to new is configured, they will switch to it automatically, triggering this kind of message being sent to all clients.
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
-        getConsole().EOLn("WeaponHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        assert(false);
-        return false;
+        getConsole().EOLn("WeaponHandling::%s(): failed to find user with connHandleServerSide: %u, WA in place, ignoring error!", __func__, connHandleServerSide);
+        //assert(false);
+        return true; // WA
     }
 
     auto& player = it->second;

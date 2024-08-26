@@ -369,9 +369,13 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     const pge_network::MsgUserDisconnectedFromServer&,
     proofps_dd::GameMode& gameMode)
 {
+    // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
+    // Explained in details in handlePlayerEventFromServer().
+    // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
     {
+        // ANOTHER CASE ALSO NEEDS WA:
         // TEMPORARILY COMMENTED DUE TO: https://github.com/proof88/PRooFPS-dd/issues/261
         // When we are trying to join a server but we get bored and user presses ESCAPE, client's disconnect is invoked, which
         // actually starts disconnecting because it thinks we are connected to server, and injects this userDisconnected pkt.
@@ -770,11 +774,14 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     const proofps_dd::Config& /*config*/,
     proofps_dd::GameMode& gameMode)
 {
+    // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
+    // Explained in details in handlePlayerEventFromServer().
+    // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
-        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u, WA in place, ignoring error!", __func__, connHandleServerSide);
+        return true; // WA
     }
 
     const bool bCurrentClient = isMyConnection(connHandleServerSide);
@@ -966,12 +973,15 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
 
     //getConsole().EOLn("PlayerHandling::%s(): player %u killed by %u",  __func__, nDeadConnHandleServerSide, msg.m_nKillerConnHandleServerSide);
 
+    // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
+    // Explained in details in handlePlayerEventFromServer().
+    // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
     const auto itPlayerDied = m_mapPlayers.find(nDeadConnHandleServerSide);
     if (m_mapPlayers.end() == itPlayerDied)
     {
-        getConsole().EOLn("PlayerHandling::%s(): failed to find dead with connHandleServerSide: %u!", __func__, nDeadConnHandleServerSide);
-        assert(false);
-        return false; // crash in both debug and release mode: if someone dies on server side, must still exist at that moment in every network instance
+        getConsole().EOLn("PlayerHandling::%s(): failed to find dead with connHandleServerSide: %u, WA in place, ignoring error!", __func__, nDeadConnHandleServerSide);
+        //assert(false);
+        return true; // WA
     }
 
     std::string sKillerName;
@@ -1009,11 +1019,26 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
+    // !!!BADDESIGN!!!
+    // https://github.com/proof88/PRooFPS-dd/issues/268
+    // Because of this issue, it can happen that a newly connecting client who not yet has received the list of other players, receives a player related update
+    // like this. This typically happens when server uses sendToAllClientsExcept():
+    // Flow is like:
+    // - new client is connecting, accepted at server GNS/PGE level;
+    // - server PGE invokes server APP packet handling callbacks, APP handles MsgUserConnected, injects MsgUserSetup;
+    // - server PGE invokes onGameRunning(), server APP identifies a new event, informs players about it using sendToAllClientsExcept();
+    // - new client receives message about a player it does NOT yet know, here the error can occur;
+    // - server would send the list of other players to the new client only in next loop's packet handling, when processing the injected MsgUserSetup.
+    // Until a good solution is provided, workaround is to NOT to treat such error on client side as critical, just ignoring that message.
+    // One solution I can think about is that APP layer must use its own layer for sending out packets, for those who are present in the m_mapPlayers list.
+    // Not directly calling PGE networking functions.
+    // This would be a thin layer over PGE networking functions.
+    // Due to this, now this WA is applied: return true from non-serveronly msg handling functions if connHandle is not found in m_mapPlayers.
     const auto it = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == it)
     {
-        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;  // might NOT be fatal error in some circumstances, although I cannot think about any, but dont terminate the app for this ...
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u, WA in place, ignoring error!", __func__, connHandleServerSide);
+        return true; // WA
     }
 
     const bool bCurrentClient = isMyConnection(connHandleServerSide);
