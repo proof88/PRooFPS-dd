@@ -23,10 +23,21 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 
 ## v0.2.8.0 Private Beta (Aug 26, 2024)
 
-A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1V4wl4JHIYGnKYFpQFEQwgYPqdISptjk6/view?usp=drive_link).
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1V4wl4JHIYGnKYFpQFEQwgYPqdISptjk6/view?usp=sharing).
 
 This version brings the following new features:
- - **xxx** ....
+ - **Weapon Auto-Switch:** now ammo/weapon pickup can also trigger auto-switch. This pickup-induced auto-switch behavior can be also fine-tuned in configuration,
+distinguishing between picking up new or already owned weapon. CVARs: `cl_wpn_auto_switch_when_picked_up_new_wpn`, `cl_wpn_auto_switch_when_picked_up_any_ammo_empty_mag`.
+ - **Weapon Aim Accuracy:** weapons now have their specific aim accuracy properties (base accuracy and recoil factor). The final aim accuracy also depends on player movement and pose.
+The server can be configured (CVAR: `sv_moving_affects_aim`) to include or exclude player movement in the final aim accuracy calculations.
+This can change between a more Counter-Strike-style or a more Quake-style aim accuracy model.
+ - **HUD: XHair:** xhair size is now dynamically scaled to the momentary weapon aim accuracy.
+ - **HUD: XHair:** xhair size is now scaled based on display resolution.
+ - **HUD: XHair:** the color of the xhair changes to gray during firing cooldown (the minimum time needed to elapse between 2 shots).
+ - **HUD: XHair:** when xhair is moved, it is highlighted on the screen for easier tracking in an intense fight scene.
+ - **HUD: HP/AP/Ammo Changes:** the last 3-3 HP/AP/Ammo change is also visible next to the current HP/AP/Ammo values. For example, if player is injured by falling damage or by being shot,
+the amount of HP decrease is explicitly showed.
+ - **Weapon Sounds:** all weapons have reload sounds now. An attempt to fire an empty weapon will trigger a dry fire sound.
 
 ## v0.2.7.0 Private Beta (Aug 01, 2024)
 
