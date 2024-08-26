@@ -80,6 +80,7 @@ void proofps_dd::GUI::initialize()
     m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
     m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
     m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
+    m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -249,6 +250,12 @@ void proofps_dd::GUI::shutdown()
         m_pObjLoadingScreenLogoImg = nullptr;
     }
 
+    if (m_pEventsPlayerAmmoChange)
+    {
+        delete m_pEventsPlayerAmmoChange;
+        m_pEventsPlayerAmmoChange = nullptr;
+    }
+
     if (m_pEventsPlayerApChange)
     {
         delete m_pEventsPlayerApChange;
@@ -394,6 +401,11 @@ proofps_dd::EventLister* proofps_dd::GUI::getPlayerApChangeEvents()
     return m_pEventsPlayerApChange;
 }
 
+proofps_dd::EventLister* proofps_dd::GUI::getPlayerAmmoChangeEvents()
+{
+    return m_pEventsPlayerAmmoChange;
+}
+
 void proofps_dd::GUI::showGameObjectives()
 {
     m_gameInfoPageCurrent = GameInfoPage::FragTable;
@@ -488,6 +500,7 @@ proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
 proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
+proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerAmmoChange = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -1804,6 +1817,10 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
                 itCVarWpnName->second.getAsString() + ": " +
                 std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
                 std::to_string(wpnCurrent->getUnmagBulletCount()));
+            
+            // obviously we don't know if these events are for this weapon because player might had already changed the weapon since ammo pickup,
+            // so in case of weapon change, we definitely need to clear these ammo change events
+            updatePlayerAmmoChangeEvents();
         }
     }
     
@@ -1924,6 +1941,46 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
             ImGui::GetCursorPos().y,
             (nApChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
         
+        ImGui::PopStyleColor();
+    }
+}
+
+void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
+{
+    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
+
+    assert(m_pEventsPlayerAmmoChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsPlayerAmmoChange->update();
+
+    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
+    for (auto it = m_pEventsPlayerAmmoChange->getEvents().rbegin(); it != m_pEventsPlayerAmmoChange->getEvents().rend(); ++it)
+    {
+        ImGui::SameLine();
+
+        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+        int nAmmoChange = 0;
+        try
+        {
+            nAmmoChange = static_cast<int>(std::stol(it->second));
+        }
+        catch (const std::exception&) {}
+
+        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+        // note that we put only positive changes into this event list, but anyway I leave the code handle non-positive as well
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            (nAmmoChange > 0) ?
+            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+        );
+
+        drawTextHighlighted(
+            ImGui::GetCursorPos().x,
+            ImGui::GetCursorPos().y,
+            (nAmmoChange >= 0) ? ("+" + it->second) : (it->second));
+
         ImGui::PopStyleColor();
     }
 }

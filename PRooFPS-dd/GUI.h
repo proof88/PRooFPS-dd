@@ -90,6 +90,7 @@ namespace proofps_dd
         EventLister* getItemPickupEvents();
         EventLister* getPlayerHpChangeEvents();
         EventLister* getPlayerApChangeEvents();
+        EventLister* getPlayerAmmoChangeEvents();
         void showGameObjectives();
         void hideGameObjectives();
         void showAndLoopGameInfoPages();
@@ -133,6 +134,7 @@ namespace proofps_dd
         static EventLister* m_pEventsItemPickup;
         static EventLister* m_pEventsPlayerHpChange;
         static EventLister* m_pEventsPlayerApChange;
+        static EventLister* m_pEventsPlayerAmmoChange;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
@@ -168,6 +170,7 @@ namespace proofps_dd
         static void updateItemPickupEvents();
         static void updatePlayerHpChangeEvents();
         static void updatePlayerApChangeEvents();
+        static void updatePlayerAmmoChangeEvents();
         static void calculatePlayerNameColWidthAndTableWidthPixels(
             float& fTableWidthPixels,
             float& fPlayerNameColWidthPixels,

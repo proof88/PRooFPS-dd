@@ -372,13 +372,15 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 if (connHandleServerSide == pge_network::ServerConnHandle)
                 {   // server plays for itself because it doesnt inject the MsgCurrentWpnUpdateFromServer to itself
                     m_pge.getAudio().playSound(m_sounds.m_sndChangeWeapon);
+                    assert(m_gui.getPlayerAmmoChangeEvents());
+                    m_gui.getPlayerAmmoChangeEvents()->clear();
                 }
                 const auto prevWpn = player.getWeaponManager().getCurrentWeapon();
                 if (player.getWeaponManager().setCurrentWeapon(pTargetWpn, true, m_pge.getNetwork().isServer()))
                 {
                     if (connHandleServerSide == pge_network::ServerConnHandle)
                     {
-                        // !!!BADDESIGN!!!
+                         // !!!BADDESIGN!!!
                         // this is ridiculous.
                         // InputHandling should not use wpnHandling.
                         // All Weapon-related messages should be injected by server to self, thus the processing of such events

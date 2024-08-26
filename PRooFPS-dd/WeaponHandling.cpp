@@ -1118,7 +1118,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateFromServer(
     {
         // server invokes handleTakeWeaponItem() in Player::takeItem();
         // we can be sure that this update is for the CURRENT client and not about other players, so we can play sound too
-        player.handleTakeWeaponItem(msg.m_eMapItemType, !wpn->isAvailable() && msg.m_bAvailable, msg.m_nAmmoIncrease);
+        player.handleTakeWeaponItem(msg.m_eMapItemType, *wpn, !wpn->isAvailable() && msg.m_bAvailable, msg.m_nAmmoIncrease);
     }
 
     wpn->SetAvailable(msg.m_bAvailable);
@@ -1172,6 +1172,9 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
             //getConsole().OLn("WeaponHandling::%s(): this current weapon update is changing my current weapon!", __func__);
             m_pge.getAudio().playSound(m_sounds.m_sndChangeWeapon);
 
+            assert(m_gui.getPlayerAmmoChangeEvents());
+            m_gui.getPlayerAmmoChangeEvents()->clear();
+
             handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
                 player,
                 *wpn,
@@ -1182,7 +1185,7 @@ bool proofps_dd::WeaponHandling::handleWpnUpdateCurrentFromServer(pge_network::P
                 wpn->getState().getOld(),
                 wpn->getState().getNew());
         }
-
+        
         if (!player.getWeaponManager().setCurrentWeapon(wpn,
             true /* even client should record last switch time to be able to check it on client side too */,
             m_pge.getNetwork().isServer()))

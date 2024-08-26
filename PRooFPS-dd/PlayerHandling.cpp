@@ -414,10 +414,12 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         assert(m_gui.getItemPickupEvents());
         assert(m_gui.getPlayerHpChangeEvents());
         assert(m_gui.getPlayerApChangeEvents());
+        assert(m_gui.getPlayerAmmoChangeEvents());
         m_gui.getDeathKillEvents()->clear();
         m_gui.getItemPickupEvents()->clear();
         m_gui.getPlayerHpChangeEvents()->clear();
         m_gui.getPlayerApChangeEvents()->clear();
+        m_gui.getPlayerAmmoChangeEvents()->clear();
         gameMode.restart(m_pge.getNetwork());
         m_mapPlayers.clear();
     }

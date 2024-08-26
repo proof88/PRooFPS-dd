@@ -116,6 +116,7 @@ namespace proofps_dd
             PGEcfgProfiles& cfgProfiles,
             std::list<Bullet>& bullets,
             EventLister& eventsItemPickup,
+            EventLister& eventsAmmoChange,
             PR00FsUltimateRenderingEngine& gfx,
             pge_network::PgeINetwork& network,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
@@ -271,6 +272,7 @@ namespace proofps_dd
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(
             const proofps_dd::MapItemType& eMapItemType,
+            const Weapon& wpnTaken,
             const bool& bJustBecameAvailable,
             const int& nAmmoIncrease);
         void handleJumppadActivated();
@@ -364,6 +366,7 @@ namespace proofps_dd
         PGEcfgProfiles& m_cfgProfiles;
         std::list<Bullet>& m_bullets;
         EventLister& m_eventsItemPickup;
+        EventLister& m_eventsAmmoChange;
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeINetwork& m_network;
 

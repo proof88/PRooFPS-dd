@@ -75,6 +75,7 @@ proofps_dd::Player::Player(
     PGEcfgProfiles& cfgProfiles,
     std::list<Bullet>& bullets,
     EventLister& eventsItemPickup,
+    EventLister& eventsAmmoChange,
     PR00FsUltimateRenderingEngine& gfx,
     pge_network::PgeINetwork& network,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
@@ -86,6 +87,7 @@ proofps_dd::Player::Player(
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
     m_eventsItemPickup(eventsItemPickup),
+    m_eventsAmmoChange(eventsAmmoChange),
     m_gfx(gfx),
     m_network(network)
 {
@@ -175,6 +177,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
     m_eventsItemPickup(other.m_eventsItemPickup),
+    m_eventsAmmoChange(other.m_eventsAmmoChange),
     m_gfx(other.m_gfx),
     m_network(other.m_network),
     m_vecJumpForce(other.m_vecJumpForce),
@@ -219,6 +222,7 @@ proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& othe
     //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
     m_bullets = other.m_bullets;
     //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
+    //m_eventsAmmoChange = other.m_eventsAmmoChange;  // inaccessible
     m_gfx = other.m_gfx;
     m_network = other.m_network;
     m_vecJumpForce = other.m_vecJumpForce;
@@ -1372,7 +1376,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
         if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
         {
-            handleTakeWeaponItem(item.getType(), bHasJustBecomeAvailable, nAmmoIncrease);
+            handleTakeWeaponItem(item.getType(), *pWpnBecomingAvailable, bHasJustBecomeAvailable, nAmmoIncrease);
         }
 
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
@@ -1607,6 +1611,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 
 void proofps_dd::Player::handleTakeWeaponItem(
     const proofps_dd::MapItemType& eMapItemType,
+    const Weapon& wpnTaken /* TODO: either this or eMapItemType should be removed in the future, redundant info! */,
     const bool& bJustBecameAvailable,
     const int& nAmmoIncrease /* valid only if bJustBecameAvailable is false */)
 {
@@ -1628,6 +1633,12 @@ void proofps_dd::Player::handleTakeWeaponItem(
         assert(m_sndWpnAmmo);  // otherwise new operator would had thrown already in ctor
         m_audio.play3dSound(*m_sndWpnAmmo, getPos().getNew());
         m_eventsItemPickup.addEvent("+" + std::to_string(nAmmoIncrease) + " Ammo (" + MapItem::toString(eMapItemType) + ")");
+
+        if (getWeaponManager().getCurrentWeapon() && (getWeaponManager().getCurrentWeapon() == &wpnTaken))
+        {
+            // we picked up ammo for the current weapon which was already available for the player
+            m_eventsAmmoChange.addEvent(std::to_string(nAmmoIncrease));
+        }
     }
 }
 

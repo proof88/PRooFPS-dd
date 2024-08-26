@@ -682,6 +682,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     m_gui.getItemPickupEvents()->clear();
     m_gui.getPlayerHpChangeEvents()->clear();
     m_gui.getPlayerApChangeEvents()->clear();
+    m_gui.getPlayerAmmoChangeEvents()->clear();
     m_gui.getXHair()->hide();
     m_gui.getMinimap()->hide();
     for (auto& connHandlePlayerPair : m_mapPlayers)
@@ -1340,7 +1341,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     const auto insertRes = m_mapPlayers.insert(
         {
             connHandleServerSide,
-            Player(getAudio(), getConfigProfiles(), getBullets(), *m_gui.getItemPickupEvents(), getPure(), getNetwork(), connHandleServerSide, msg.m_szIpAddress)
+            Player(
+                getAudio(),
+                getConfigProfiles(),
+                getBullets(),
+                *m_gui.getItemPickupEvents(), *m_gui.getPlayerAmmoChangeEvents(),
+                getPure(), getNetwork(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)
     {
