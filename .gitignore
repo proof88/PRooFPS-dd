@@ -341,4 +341,5 @@ PRooFPS-dd/libprotobufd.dll
 PRooFPS-dd/libprotobuf.dll
 *.exe
 PRooFPS-dd/RegTestDump*
+doc/gen/
 

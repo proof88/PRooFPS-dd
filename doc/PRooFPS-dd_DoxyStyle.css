@@ -1,0 +1,41 @@
+/* Overriding some of properties of doxygen's 1.8.20 standard CSS, for PRooFPS-dd documentation */
+/* When need of regenerating the default CSS, don't forget to specify the config file too, e.g.:
+ *   doxygen -w html header.html footer.html customdoxygen.css PRooFPS-dd_Doxyfile
+ */
+
+/* @group Link Styling */
+
+a {
+	text-decoration: underline;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+a.code {
+	text-decoration: none;
+}
+
+a.code:hover  {
+	text-decoration: underline;
+}
+
+a.codeRef {
+	text-decoration: none;
+}
+
+a.codeRef:hover  {
+	text-decoration: underline;
+}
+
+/* @end */
+
+div.fragment {
+  padding: 6px 6px 8px 8px; /*Fixed: last line underline overlap border*/
+  margin: 4px 8px 4px 2px;
+	background-color: #F9FAFB;
+	border: 1px solid #A9AFC2;
+}
+
+
