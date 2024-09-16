@@ -4,6 +4,11 @@ This page is about how to make money with crypto.
 Written by PRooF, using my own experience.  
 !!! NFA and DYOR (Not Financial Advise and Do Your Own Research) !!!
 
+Don't get lost on this page, use the Table of Contents, that's why it is there.
+
+And never forget the most important rule:  
+Never lose money. :)
+
 [TOC]
 
 \section terms Terminology
@@ -34,14 +39,19 @@ When there is a pandemic, a war or an economic breakdown, or any other bigger cr
 
 \section howmuch How Much to Buy?
 
-Easy: the exact amount of money you wouldn't mind losing.  
-A lot of noobs did put a lot of money into crypto after getting their salary because they heard it can go up to 10 times.  
-And then by the end of the month they lost because price went down, and since they needed that money for food, they actually sold crypto with loss.
+The exact amount of money you wouldn't mind losing.  
+A lot of noobs did put most of their salary into crypto because they heard it can go up to 10 times.  
+And then by the end of the month they had to sell their crypto in loss because actually they needed that money to buy food and pay the bills.  
+If you don't have game money then don't buy crypto.
 
 **So only put in the money you would otherwise spend on drinks or other useless stuff.**  
+Also, this is longer term investment, you should not expect big returns within a few weeks!
+
 At the same time, you have to understand: you need money to make money. Small money will bring small money.  
-You put in $100, not much chance of multiplying it by 10 easily. But, if you do it, you can consider yourself lucky, and it is still only $1000, you are still nowhere.  
+You put in $100, not much chance of multiplying it by 10 easily. But, if you make 10x, you can consider yourself lucky, and it is still only $1000, you are still nowhere.  
 Thus, you need to put in big money to make big money!
+
+Later in this document I made a section about what to buy: I believe that for [Easy Level](#whatbuy_easy) and [Medium Level](#whatbuy_medium) you can invest more money with more safety than on other levels.
 
 \section wherebuy Where to Buy?
 
@@ -167,7 +177,7 @@ Examples of recognized DEX are:
  - [Jupiter](https://jup.ag/swap)
  - [Raydium](https://raydium.io/swap/)
 
-\section whenbuy When to Buy?
+\section whenbuy When Buy?
 
 They always say to buy low and sell high.  
 But what is low and what is high?  
@@ -212,19 +222,33 @@ Patience with buying something always brings gains.
 
 \section whatbuy What to Buy?
 
-This is at the same time the both easiest and most difficult questions to answer.
+This question is both the easiest and most difficult to answer.
 
 \subsection whatbuy_easy Easy Level
 
-If you want to invest zero time in it and want nice gains, buy Bitcoin and hold it for years.  
-You can see some possible historical gains in \ref btc_prices "the Example Bitcoin Trades table".
+If you want to invest zero time in it and want nice gains, buy Bitcoin and hold (hodl) it for years.  
+You can simply do this in Revolut too.  
+You can see some possible historical gains in \ref btc_prices "the Example Bitcoin Trades table".  
+This way, you cannot lose money!  
+Keep Bitcoin even during tough times when you are in -50%!
 
-\subsection whatbuy_difficult Medium Level
+<p align="left">
+![](img/panicseller.jpg)
+</p>
 
-If you want to invest more time in it and want even nicer gains in shorter term, then you need to have a diverse portfolio, trading cryptocurrencies of different sectors of the crypto world, need to look at the charts often and make decisions.  
-This is also known as "speculate to accumulate".  
+Bitcoin gives three chances to buy before it goes parabolic:
+ - The first is near the market bottom.
+ - The second is a few months before the halving.
+ - The last is right after the halving.
 
-You need to discover what altcoins are in the market and buy yourself in.  
+<p align="left">
+[![](img/btc3chances_thumb.png)](btc3chances.png)
+</p>
+
+\subsection whatbuy_medium Medium Level
+
+If you want to invest more time in it and want even nicer gains in shorter term (weeks/months), then you need to have more diverse crypto portfolio, with cryptocurrencies of different sectors of the crypto world.  
+You should discover what altcoins are in the market and buy yourself in.  
 Usually the crypto projects have a white paper that explains the aim of the project and how they are planning to achieve the goals, who are in the team, etc.  
 Then using your investor vein, you can decide which project to invest in.  
 
@@ -232,16 +256,40 @@ However, **the sad truth is: most of the time the big gains are not brought by t
 The current hype is like seasons: you don't want to see Christmas movie in the middle of summer, but maybe during winter.  
 So, my recommendation is to always look around on Twitter, Telegram and try to understand what the current hype is about.
 
-For example, spring and summer of 2024 was about meme coins, big hype resulted in bringing in a lot of money, resulting in even more hype and more money.  
+For example, spring and summer of 2024 was about meme coins, especially on the Solana blockchain, big hype resulted in bringing in a lot of money, resulting in even more hype and more money.  
 Maybe it is late to invest them in Sep 2024, but who knows ...
 
-**To minimize time invested, just buy and hold XRP and SDEX for medium-term.**  
-Good entry price for XRP is below $0.51, for SDEX is below $0.011.
+An important thing is: when BTC goes down, everything else also goes down. If BTC goes up, everything else also goes up.  
+But the gains and the loses can be even more higher with altcoins, compared to BTC. This is the reason why we also invest in altcoins.  
+Also, not all altcoins are moving at the same time: it happens that a meme coin goes up, another does the same with a few days delay, so this delay can be used to adjust your positions better.
 
-TODO: add table with meme coins!
+**To minimize time invested, just buy and hold XRP and SDEX for medium-term (weeks/months).**  
+Good entry price for XRP is below $0.51, for SDEX is below $0.011.  
+Take profit when you want, then buy the dip.
 
-But an important thing is: when BTC goes down, everything else also goes down. If BTC goes up, everything else also goes up.  
-But the gains and the loses can be even more higher with altcoins, compared to BTC. This is the reason why we also invest in altcoins.
+Additionally, I recommend short-term (weeks) trading with the following altcoins in the table below.  
+**As of 2024 Sep and Oct I believe in the following tokens to fly multiples times.**  
+Reference price is an idea what I believe as good price to buy yourself in.  
+I did not put recommended sell price, but in general selling in 10-20% profit is always the bare minimum, and personally I expect 20-30% profit at least per trade.
+
+<table>
+<caption id="altcoin_ref_prices">Altcoin Reference Prices</caption>
+<tr><th>Name<th>Ref Price<th>Aug 23 Hype<th>Sep 13 Hype
+<tr><td>NAME<td align="right">PRICE $<td align="right">PRICE $<td align="right">PRICE $
+</table>
+
+Aug 23 Hype: Bitcoin went from $60k to $64k for the first time after its $49k dip on Aug 5.  
+Sep 13 Hype: Bitcoin went from $57k to $60k for the first time after its $52k dip on Sep 6.  
+
+\subsection whatbuy_advanced Advanced / Difficult Level
+
+Speculate to accumulate.  
+The advanced level involves listening to **[signals and analyzing the charts](#signals)**.  
+You can also try **daytrading** which is basically doing the same on daily basis. But this most probably leads to [what happened to Wojak when he tried it](https://www.youtube.com/watch?v=ZcexKILIH10&ab_channel=WagieWojak).
+
+Also, you can try **trading bots** which are auto-trading using your assets, based on custom parameters.  
+Such trading bots are available on CEX for free, you can also see setups of other users as well.  
+And there are external trading bots also which can use your soft wallet to trade, in this case no CEX registration is needed.
 
 \subsection whatbuy_degen Degen Level / Casino
 
@@ -268,12 +316,12 @@ There are 2 ways of making money here:
  - or **you are investing in a coin** made by someone else.
 
 **As of Sep 2024, 99.99% of the coins made here are NOT genuine, NOT made to establish a good community, and try to rip off any investor within a few moments.**  
-The creators of most coins here don't even want their coin to make it to [Raydium](https://raydium.io/swap/) , just want a few people to invest and then rip them off.
+The creators of most coins here don't even want their coin to make it to [Raydium](https://raydium.io/swap/) , just want a few people to invest and then rip them off ASAP.
 
 Thus, if you want to make money by investing into someone's coin here, **the only good buying strategy is**:
  - list the coins whose dev is currently live streaming (that shows some effort from the creator);
  - if the market cap of the coin is shown below $15k, open its page;
- - check the bubble map of the wallets of the holders to understand how bought coins are distributed across the holders;
+ - check the wallet distribution bubble map (even tho not much use nowadays, see #scams_pumpfun_bundle);
  - if you are seeing active trades, invest a minimum amount of money (e.g. 0.1-0.3 SOL);
  - as soon as the value of the coin has increased 10-20%, SELL.
 
@@ -281,10 +329,12 @@ This way, you can ensure the following:
  - you spend minimum time in making money (e.g. 10 minutes);
  - you exit with profit.
 
-**If you do not sell as soon as you are in 10-20% profit, someone else will do, and you either have to wait much more time to be able to sell in profit, or eventually you will have to exit with loss.**  
-People will hate me for writing this, as this is not how this site is supposed to work, but I don't want to be someone else's exit liquidity anymore, that's it.
+People will hate me for writing this, as this is not how this site is supposed to work, but I have aligned based on my negative experiences and I don't want to be someone else's exit liquidity anymore, that's it.
 
-If you want, you can repeat it with the same coin at its next dip, if you think there still will be people buying.
+**If you do not sell as soon as you are in 10-20% profit, someone else will do, and you either have to wait much more time to be able to sell in profit, or eventually you will have to exit with loss.**  
+[Remember what happened to Wojak when he tried day trading!](https://www.youtube.com/watch?v=ZcexKILIH10&ab_channel=WagieWojak)  
+
+If you want, you can repeat the above process with the same coin at its next dip, if you think there still will be people buying.
 
 \subsubsection whatbuy_degen_sunpump Sun Pump
 
@@ -300,7 +350,7 @@ The classic rocket crash game also has its Solana-based versions where you can r
 
 Note that there are other versions for other cryptocurrencies as well, use Google.
 
-\section whensell When to Sell?
+\section whensell When Sell?
 
 It depends on YOUR expectations of the coin.  
 But here is my opinion.
@@ -351,6 +401,8 @@ Especially meme coins because I think those are flying for limited time only. Th
 
 \subsection signals Chart Analysis and Signals
 
+\subsubsection signals_charts Chart Analysis
+
 This topic is not crypto specific, this is coming from the stock market but applies to crypto as well.  
 This is basically the art and/or science of analysing charts and trying to understand the market from the charts, and try to predict the near future of price movement.  
 You should also watch the [linked videos](#videos) having "Trading" in their title.
@@ -358,6 +410,22 @@ You should also watch the [linked videos](#videos) having "Trading" in their tit
 Also I want to mention one of my favourite stuff is the [Ichimoku cloud for predicting price movement](https://www.youtube.com/watch?v=9e7OUfKTw6Y&ab_channel=TheSecretMindset).
 
 Needless to say, chart analysis should be tied together with understanding [the global sentiment](#whenbuy_01).
+
+\subsubsection signals_signals Signals
+
+Your chart analysis can also generate a buy or sell signal but you can also receive signals.
+
+Signals can come from various sources, for example, Telegram groups. NEVER pay for signals or to become member of VIP groups!  
+You can receive chart analysis based signals in free Telegram channels/groups too.  
+I'm not going to recommend any on this page.
+
+Even if a signal tells you should buy, mind [the global sentiment](#whenbuy_01). You may postpone your buy, if the market situation implies a further downtrend.  
+
+Note that such Telegram groups usually have quite a large number of members, so even posting the signal can cause change in the asset's price, since they have influence on buying and selling the asset.  
+What I want to tell by this, is that just by posting a signal, influences the people to drive the price in the same direction as the signal predicts:  
+if signal predicts increasing price, then crowds will be buying the same asset, which causes price increase, then we can say yes, the signal was right. :)
+
+Always avoid pump groups where they say that a specific asset's price will be pumped at a specific time, I call it as [pump scam](#scams_pump_signal).
 
 \subsection memes Memes
 
@@ -389,6 +457,10 @@ I use these:
 
 TODO
 
+\subsubsection scams_pumpfun_bundle Bundled Wallets
+
+TODO
+
 \subsubsection scams_pump_signal Pump Signal
 
 TODO
@@ -410,6 +482,7 @@ TODO
  - [A pénz pszichológiája | Morgan Housel könyvösszefoglaló](https://www.youtube.com/watch?v=4mFZZJ3MVe4&ab_channel=Preprocessor)
  - [Miért nehéz pénzügyileg a magyaroknak? - Jaksity György @ Menta S02E05](https://www.youtube.com/watch?v=BH75kY_KSsc)
 
+ - [When you try day trading](https://www.youtube.com/watch?v=ZcexKILIH10&ab_channel=WagieWojak)
  - [Every Trading Strategy Explained in 12 Minutes](https://www.youtube.com/watch?v=ZX-Tp4zgJYc&ab_channel=DataTrader)
  - [Death Cross and Golden Cross. Powerful Trading Signals for Market Trends](https://www.youtube.com/watch?v=_bidQGwez-0&ab_channel=Crypto4lightTrading)
  - [Ichimoku Trading Was Hard, Until I Found This Powerful Strategy (Cloud Trading Strategies)](https://www.youtube.com/watch?v=9e7OUfKTw6Y&ab_channel=TheSecretMindset)
