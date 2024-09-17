@@ -17,7 +17,8 @@ Never lose money. :)
  - **Blockchain:** a list of records securely linked together via cryptographic hashes. Examples: Ethereum, Tron, Solana. [More on Wikipedia.](https://en.wikipedia.org/wiki/Blockchain)
  - **Cryptocurrency:** digital currency using cryptography for managing transactions. Usually we just say: crypto. They live on a blockchain.
  - **Stable Coin:** a cryptocurrency pegged to another asset, such as a fiat currency or gold, to maintain a stable price. Examples: USDT, USDC. Some also treat Bitcoin as stable coin.
- - **Altcoin:** alternative coin, basically any other coin which is neither stable coin nor Bitcoin.
+ - **Altcoin:** alternative coin, basically any other crypto coin/token which is neither stable coin nor Bitcoin.
+ - **CA:** Contact Address: a public address of a smart contract, you can use to buy/sell tokens. [More on 1inch.](https://help.1inch.io/en/articles/5711414-what-is-the-difference-between-a-wallet-address-contract-address-and-a-private-key)
  - **CEX:** Centralized exchange where you can trade using the wallet provided by the exchange. [Jump to section.](#cex)
  - **DEX:** Decentralized exchange where you can trade using your own soft-wallet. [Jump to section.](#dex)
  - **KYC:** Know Your Customer: a bundle of security measures to fight against money loundering, stealing, etc., basically you have to identify yourself in various ways to the service provider.
@@ -265,21 +266,71 @@ Also, not all altcoins are moving at the same time: it happens that a meme coin 
 
 **To minimize time invested, just buy and hold XRP and SDEX for medium-term (weeks/months).**  
 Good entry price for XRP is below $0.51, for SDEX is below $0.011.  
-Take profit when you want, then buy the dip.
+Take profit when you want, then buy the dip, and repeat the process forever.  
+They are expected to be here with us for long time.
 
 Additionally, I recommend short-term (weeks) trading with the following altcoins in the table below.  
 **As of 2024 Sep and Oct I believe in the following tokens to fly multiples times.**  
-Reference price is an idea what I believe as good price to buy yourself in.  
-I did not put recommended sell price, but in general selling in 10-20% profit is always the bare minimum, and personally I expect 20-30% profit at least per trade.
+The Reference price column is an idea what I believe as good price to buy yourself in. This price is basically when Bitcoin dropped to $48k in early Aug.  
+I believe Bitcoin will drop again to around $50k, thus these **alt coins will also drop to the reference price, which should be treated as our entry price.**  
+I did not put recommended sell price, but in general selling in 10-20% profit is always the bare minimum, and personally I expect 20-30% profit at least per trade.  
+I linked them to CoinMarketCap, **please open the specific link and copy the CA from CoinMarketCap to avoid buying a [copycat token](#scams_copycat).**  
+The order of the altcoins is based on my preference, with highest expected returning tokens on the top.  
+The "Aug 23 Hype" column is the price of the token when Bitcoin went from $60k to $64k for the first time after its $49k dip on Aug 5.  
+The "Sep 13 Hype" column is the price of the token when Bitcoin went from $57k to $60k for the first time after its $52k dip on Sep 6.  
 
 <table>
 <caption id="altcoin_ref_prices">Altcoin Reference Prices</caption>
-<tr><th>Name<th>Ref Price<th>Aug 23 Hype<th>Sep 13 Hype
-<tr><td>NAME<td align="right">PRICE $<td align="right">PRICE $<td align="right">PRICE $
-</table>
+<tr><th>Name<th>Ref Price<th>Aug 23 Hype<th>Sep 13 Hype<th>Category<th>Misc.
+<tr><td>[SAD HAMSTER (HAMMY)](https://coinmarketcap.com/currencies/sad-hamster/)<td align="right">$0.0059<td align="right">$0.013<td align="right">$0.014<td>Meme<td>Solana.
+<tr><td>[Wat](https://coinmarketcap.com/currencies/wat/)<td align="right">$0.0000040<td align="right">$0.0000097<td align="right">$0.0000099<td>Meme<td>Ethereum.
+<tr><td>[SUNDOG](https://coinmarketcap.com/currencies/sundog/)<td align="right">$0.17<td align="right">$0.30<td align="right">$0.36<td>Meme<td>Tron.
+<tr><td>[MOTH](https://coinmarketcap.com/currencies/moth/)<td align="right">$0.0021<td align="right">$0.0039<td align="right">$0.0066<td>Meme<td>Solana. A whale bought in on Sep 8, almost doubling the price.
+<tr><td>[POPCAT](https://coinmarketcap.com/currencies/popcat-sol/)<td align="right">$0.335<td align="right">$0.779<td align="right">$0.745<td>Meme<td>Solana.
+<tr><td>[Hoppy](https://coinmarketcap.com/currencies/hoppy-coin/)<td align="right">$0.000036<td align="right">$0.000080<td align="right">$0.000065<td>Meme<td>Ethereum.
+<tr><td>[dogwifhat](https://coinmarketcap.com/currencies/dogwifhat/)<td align="right">$1.12<td align="right">$2.01<td align="right">$1.63<td>Meme<td>Solana.
+<tr><td>[Apu Apustaja](https://coinmarketcap.com/currencies/apu-apustaja/)<td align="right">$0.00015<td align="right">$0.00035<td align="right">$0.00023<td>Meme<td>Ethereum.
+<tr><td>[POOH](https://coinmarketcap.com/currencies/pooh/)<td align="right">$0.000000011<td align="right">$0.000000026<td align="right">$0.000000020<td>Meme<td>Solana.
+<tr><td>[Silly Dragon](https://coinmarketcap.com/currencies/silly-dragon/)<td align="right">$0.0077<td align="right">$0.0155<td align="right">$0.0114<td>Meme<td>Solana.
+<tr><td>[Pepe](https://coinmarketcap.com/currencies/pepe/)<td align="right">$0.0000065<td align="right">$0.0000097<td align="right">$0.0000080<td>Meme<td>Ethereum.
+<tr><td>[Ginnan the Cat](https://coinmarketcap.com/currencies/ginnan-the-cat/)<td align="right">$0.0000029<td align="right">$0.0000048<td align="right">$0.0000037<td>Meme<td>Solana.
+<tr><td>[Ben the Dog](https://coinmarketcap.com/currencies/ben-the-dog/)<td align="right">$0.010<td align="right">$0.016<td align="right">$0.016<td>Meme<td>Solana.
+<tr><td>[MANEKI](https://coinmarketcap.com/currencies/maneki-coin/)<td align="right">$0.0035<td align="right">$0.0060<td align="right">$0.0060<td>Meme<td>Solana.
+<tr><td>[BONK](https://coinmarketcap.com/currencies/bonk1/)<td align="right">$0.000014<td align="right">$0.000022<td align="right">$0.000017<td>Meme<td>Ethereum.
+<tr><td>[Book of Meme](https://coinmarketcap.com/currencies/book-of-meme/)<td align="right">$0.0050<td align="right">$0.0083<td align="right">$0.0065<td>Meme<td>Solana
+<tr><td>[Wen](https://coinmarketcap.com/currencies/wen/)<td align="right">$0.000070<td align="right">$0.000114<td align="right">$0.000089<td>Meme<td>Solana.
+<tr><td>[Floki](https://coinmarketcap.com/currencies/floki-inu/)<td align="right">$0.00011<td align="right">$0.00016<td align="right">$0.00013<td>Meme<td>Ethereum.
+<tr><td>[Peng](https://coinmarketcap.com/currencies/peng-sol/)<td align="right">$0.12<td align="right">$0.17<td align="right">$0.14<td>Meme<td>Solana.
+<tr><td>[Shiba Inu](https://coinmarketcap.com/currencies/shiba-inu/)<td align="right">$0.000012<td align="right">$0.000016<td align="right">$0.000014<td>Meme<td>Ethereum.
+<tr><td>[Turbo](https://coinmarketcap.com/currencies/turbo/)<td align="right">$0.0039<td align="right">$0.0049<td align="right">$0.0043<td>Meme<td>Ethereum.
+<tr><td>[Dogecoin](https://coinmarketcap.com/currencies/dogecoin/)<td align="right">$0.090<td align="right">$0.114<td align="right">$0.108<td>Meme<td>BNB Chain.
+<tr><td>[walter](https://coinmarketcap.com/currencies/walter/)<td align="right">$0.0010<td align="right">$0.0022<td align="right">$0.0014<td>Meme<td>Solana. Feels a bit dead.
+<tr><td>[ong](https://coinmarketcap.com/dexscan/en/solana/8p7SxnBgw9hghfKnADeKGXDUBDm5L3M24Zd1yzXPuu7m/)<td align="right">$0.00022<td align="right">$0.0020<td align="right">$0.00019<td>Meme<td>Solana. Small ($70k) market cap, casino, danger.
 
-Aug 23 Hype: Bitcoin went from $60k to $64k for the first time after its $49k dip on Aug 5.  
-Sep 13 Hype: Bitcoin went from $57k to $60k for the first time after its $52k dip on Sep 6.  
+
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+<tr><td>[NAME]()<td align="right">$TODO<td align="right">$TODO<td align="right">$TODO<td>TODOCAT<td>TODOMISC
+</table>
 
 \subsection whatbuy_advanced Advanced / Difficult Level
 
@@ -350,6 +401,10 @@ The classic rocket crash game also has its Solana-based versions where you can r
 
 Note that there are other versions for other cryptocurrencies as well, use Google.
 
+\subsubsection whatbuy_degen_cockfight Cock Fight Games
+
+TODO
+
 \section whensell When Sell?
 
 It depends on YOUR expectations of the coin.  
@@ -417,7 +472,7 @@ Your chart analysis can also generate a buy or sell signal but you can also rece
 
 Signals can come from various sources, for example, Telegram groups. NEVER pay for signals or to become member of VIP groups!  
 You can receive chart analysis based signals in free Telegram channels/groups too.  
-I'm not going to recommend any on this page.
+I'm not going to recommend any specific on this page because I'm still not convinced if they are harmless enough but you can ask me in DM/PM.
 
 Even if a signal tells you should buy, mind [the global sentiment](#whenbuy_01). You may postpone your buy, if the market situation implies a further downtrend.  
 
@@ -443,8 +498,8 @@ TODO
 
 Before buying a token on a DEX, we should check if the token is actually safe to trade.  
 This safeness has nothing to do with the price, as the price is very volatile anyway.  
-The smart contract may prevent us from selling the token after buying it. It can do it in multiple ways.  
-To avoid this to happen with us, before buying the coin/token, we should use checkers.  
+The danger is that the smart contract (the code behind the token) may prevent us from selling the token after buying it. It can do it in multiple ways.  
+To avoid this to happen with us, before buying the coin/token, we should use honeypot checkers.  
 I use these:
  - https://apespace.io/honeypot
  - https://www.coinscan.com/honeypot-detector (note that I think it wrongly tells the "Contract Renounced" because it shows "No" even for well-known and safe coins)
