@@ -6,8 +6,9 @@ Written by PRooF, using my own experience.
 
 Don't get lost on this page, use the Table of Contents, that's why it is there.
 
-And never forget the most important rule:  
-Never lose money. :)
+And never forget the most important rule: Never lose money. :)
+
+**[Quick link to my altcoins table.](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)**
 
 [TOC]
 
@@ -71,14 +72,6 @@ High Tx fees.<br/>
 Not all coins/tokens can be found here.
 </table>
 
-**Pros:**
- - Easiest, convenient.
- - Relatively safe coins (e.g. not honeypot).
-
-**Cons:**
- - High Tx fees.
- - Not all coins/tokens can be found here.
-
 Not good for frequent trading because of the extra fees you are paying to Revolut for each transaction.  
 But this one is the most convenient for a beginner. Suitable if you wanna keep your money in crypto for long-term (years) profits.  
 Also, the coins listed here are more safe to buy, i.e. not tricking you into a honeypot, etc. Still, price is volatile, so be careful!  
@@ -99,18 +92,6 @@ Registering takes some time (KYC).<br/>
 Sometimes you need to re-do part of KYC even when you want to send money into the CEX.<br/>
 Can suddenly disappear, so dont keep your money there long-term.
 </table>
-
-**Pros:**
- - Less Tx fees.
- - More coins/tokens can be found here.
- - Can trade between coins without converting to/from fiat money in between.
- - Relatively safe coins (e.g. not honeypot).
- - Tools like trading bots, copy trading.
-
-**Cons:**
- - Registering takes some time (KYC).
- - Sometimes you need to re-do part of KYC even when you want to send money into the CEX.
- - Can suddenly disappear, so dont keep your money there long-term.
 
 **Centralized crypto exchanges** offer various trading options including borrow (loan), bots, and probably more suitable for frequent trading.  
 However, you still gonna pay some extra fee to the CEX but probably less than to Revolut.  
@@ -158,16 +139,6 @@ If you have your soft wallet ready, you do not need to register on DEX.
 Requires you to have your own soft-wallet.<br/>
 Trading safety is not ensured, you might buy a honeypot.
 </table>
-
-**Pros:**
- - Minor Tx fees.
- - Some coins/tokens can be found only here.
- - Can trade between coins without converting to/from fiat money in between.
- - If you have your soft wallet ready, you do not need to register on DEX.
-
-**Cons:**
- - Requires you to have your own soft-wallet.
- - Trading safety is not ensured, you might buy a honeypot.
 
 Unlike CEX, **decentralized exchanges** don't give you a wallet. You have to have your own crypto wallet that you connect to the DEX for trading.  
 But as I already recommended for CEX WoW, you should have your own crypto wallet anyway.  
@@ -241,14 +212,14 @@ Keep Bitcoin even during tough times when you are in -50%!
 ![](img/panicseller.jpg)
 </p>
 
-Bitcoin gives three chances to buy before it goes parabolic:
+As you can see in the below picture, Bitcoin gives three chances to buy before it goes parabolic:
  - The first is near the market bottom.
  - The second is a few months before the halving.
  - The last is right after the halving.
 
-<p align="left">
-[![](img/btc3chances_thumb.png)](btc3chances.png)
-</p>
+<table>
+<tr><td>[![](img/btc3chances_thumb.png)](btc3chances.png)
+</table>
 
 \subsection whatbuy_medium Medium Level
 
@@ -271,9 +242,9 @@ Also, not all altcoins are moving at the same time: it happens that a meme coin 
 **To minimize time invested, just buy and hold XRP and SDEX for medium-term (weeks/months), as an addition to your long-term BTC holding.**  
 Take profit when you want, then buy the dip, and repeat the process forever.  
 They are expected to be here with us for long time.  
-I made a [table of some altcoins](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link) that might be also in your interest.  
+I made a **[table of some altcoins](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)** that might be also in your interest.  
 You can see in that document that I'm monitoring how their prices react to Bitcoin price.  
-**I recommend short-term (weeks) cyclic trading with the top-row altcoins** in [that table](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link).  
+**I recommend short-term (weeks) cyclic trading with the top-row altcoins in [that table](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link).**  
 
 TODO: add "Revolut" in the Misc. column if the token is available on Revolut.
 
