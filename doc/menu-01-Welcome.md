@@ -6,4 +6,4 @@
 
 [PRooFPS-dd on Facebook](https://www.facebook.com/whiskhyll)
 
-![](img/wwe-logo-transparent.png)
+[![](img/wwe-logo-transparent.png)](https://www.facebook.com/whiskhyll)

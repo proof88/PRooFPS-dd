@@ -1,5 +1,10 @@
 ﻿\page networking Networking
 
+PRooFPS-dd uses the networking subsystem of [PGE](https://github.com/proof88/PGE).  
+This page is basically the continuation of [PGE documentation's Networking page](https://proof88.github.io/pge-doc/networking.html).
+
+From v0.2.7, **packet rate calculations are in the [PRooFPS-dd-Packet-Rates Excel workbook](PRooFPS-dd-Packet-Rates.xlsx)!**
+
 [TOC]
 
 \section multiplayer_cheating Cheating in Multiplayer
@@ -7,11 +12,13 @@
 There are many ways to cheat in multiplayer games, and PGE doesn't provide protection against it.  
 However, a good implementation in application level can overcome some forms of cheating.  
 A common approach is to treat the **server as the only authorative instance** and make clients show only a replication of server state.  
-My game [PRooFPS-dd](https://github.com/proof88/PRooFPS-dd) has such client-server model implemented in it.  
+My game [PRooFPS-dd](https://github.com/proof88/PRooFPS-dd) has such client-server model implemented in it.
+
 **For example: player movement.** When a player presses a button to move, it should send a request/command message to the server about the keypress, and the server calculates the actual movement of the player.  
 Then it replies back to the client(s) with the updated position of the player who requested the move, client(s) receive(s) the reply and move(s) the player to the position calculated by the server.  
 Since server takes care of the entire game state, simulate physics, calculate new positions, etc. and replicates game state to clients, it is the only authorative element of the multiplayer game session.  
-This way it is more difficult for clients to do anything from an illegal position, e.g. put themselves out of map bounds intentionally because always the server calculates their position based on client inputs that can be rejected as well.  
+This way it is more difficult for clients to do anything from an illegal position, e.g. put themselves out of map bounds intentionally because always the server calculates their position based on client inputs that can be rejected as well.
+
 **Another example is how the weapons work**: when a player pressen a button to shoot, an attack request is sent to the server, and server decides if the player can actually shoot, and if so, it will create a bullet.  
 Since the server keeps track of the available and current weapons for each player, there is no client-side cheat that will allow the player to use arbitrary weapon, also there is no use of modifying the weapon files on client-side since server is using only the server-side files.
 
@@ -130,6 +137,8 @@ In the comments I mention what kind of messages are generated with approximated 
 
 I also mention **AP (action point)** wherever I think change should be introduced.
 
+<details>
+<summary>**Expand/Collapse Pseudocode**</summary>
 ```.cpp
 
 // some constants just for the pkt count calculations in this example
@@ -237,6 +246,7 @@ PGE::runGame() {
 }
 
 ```
+</details>
 
 \subsection packet_rate Received Packet Rate and Packet Data Rate
 
@@ -356,6 +366,8 @@ just multiply above results by 7 (server sending to itself avoids GNS level thus
 
 The detailed explanation of the packet rates of each function is below:
 
+<details>
+<summary>**Expand/Collapse Pseudocode**</summary>
 ```.cpp
   getNetwork().Update() {
   // no changes since v0.1.2
@@ -555,6 +567,7 @@ The detailed explanation of the packet rates of each function is below:
       //         that is 1 * 16 = 16 PKT/s @ 60 FPS from a single client.
   }
 ```
+</details>
 
 \section future_plans Future Improvement Plans
 
