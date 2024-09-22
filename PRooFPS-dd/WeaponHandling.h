@@ -66,6 +66,7 @@ namespace proofps_dd
         float getDamageAndImpactForceAtDistance(
             const Player& player,
             const Explosion& xpl,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const TPureFloat& fDamageAreaPulse,
             int& nDamageAp,
             const int& nDamageHp,
@@ -74,6 +75,7 @@ namespace proofps_dd
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const TPureFloat& fDamageAreaPulse,
             const int& nDamageAp,
             const int& nDamageHp,
@@ -86,6 +88,7 @@ namespace proofps_dd
             const PureVector& pos,
             const int& nDamageHp,
             const TPureFloat& fDamageAreaSize,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const TPureFloat& fDamageAreaPulse,
             PureVector& vecCamShakeForce);
 

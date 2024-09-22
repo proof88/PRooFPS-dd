@@ -84,6 +84,7 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
     const Player& player,
     const Explosion& xpl,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
     int& nDamageAp,
     const int& nDamageHp,
@@ -97,8 +98,8 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
         vDirPerAxis, vDistancePerAxis);
 
-    nDamageAp = static_cast<int>(std::lroundf(xpl.getDamageAtDistance(fDistance, nDamageAp)));
-    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, nDamageHp);
+    nDamageAp = static_cast<int>(std::lroundf(xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageAp)));
+    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageHp);
 
     // basically we calculate impact force from nDamageHp property of the bullet because this is explosive bullet, its damage_hp property
     // shall be bigger than its damage_ap, that is why we use damage_hp for this.
@@ -108,8 +109,16 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
         // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
         const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
-        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+        const float fDistanceXfactor =
+            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
+            (vDistancePerAxis.getX() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
+            std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+        const float fDistanceYfactor =
+            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
+            (vDistancePerAxis.getY() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
+            std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * fDistanceXfactor;
+        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * fDistanceYfactor;
         //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
         vecImpactForce.Set(fImpactX, fImpactY, 0.f);
     }
@@ -121,6 +130,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
     const int& nDamageAp,
     const int& nDamageHp,
@@ -155,7 +165,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         PureVector vecImpactForce;
         int nDamageApCalculated = nDamageAp;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageApCalculated, nDamageHp, vecImpactForce
+            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApCalculated, nDamageHp, vecImpactForce
         );
         if (fRadiusDamage > 0.f)
         {
@@ -222,6 +232,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const PureVector& pos,
     const int& nDamageHp,
     const TPureFloat& fDamageAreaSize,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
     PureVector& vecCamShakeForce)
 {
@@ -254,7 +265,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
         int nDamageApDummyVar;
         PureVector vecImpactForce;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, fDamageAreaPulse, nDamageApDummyVar, nDamageHp, vecImpactForce
+            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApDummyVar, nDamageHp, vecImpactForce
         );
 
         if (fRadiusDamage > 0.f)
@@ -778,6 +789,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getOwner(),
                         bullet.getObject3D().getPosVec(),
                         bullet.getAreaDamageSize(),
+                        bullet.getAreaDamageEffect(),
                         bullet.getAreaDamagePulse(),
                         bullet.getDamageAp(),
                         bullet.getDamageHp(),
@@ -808,6 +820,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 bullet.getDrag(),
                 bullet.getDamageHp(),
                 bullet.getAreaDamageSize(),
+                bullet.getAreaDamageEffect(),
                 bullet.getAreaDamagePulse()
                 );
             // clients will also delete this bullet on their side because we set pkt's delete flag here
@@ -839,6 +852,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     bullet.getDrag(),
                     bullet.getDamageHp(),
                     bullet.getAreaDamageSize(),
+                    bullet.getAreaDamageEffect(),
                     bullet.getAreaDamagePulse());
                 m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
             }
@@ -950,6 +964,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
                 PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
                 msg.m_nDamageHp,
                 msg.m_fDamageAreaSize,
+                msg.m_eDamageAreaEffect,
                 msg.m_fDamageAreaPulse,
                 vecCamShakeForce);
         }
@@ -1022,7 +1037,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z,
                 msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_nDamageHp,
-                msg.m_fDamageAreaSize, msg.m_fDamageAreaPulse));
+                msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse));
         pBullet = &(m_pge.getBullets().back());
         it = m_pge.getBullets().end();
         it--; // iterator points to this newly inserted last bullet

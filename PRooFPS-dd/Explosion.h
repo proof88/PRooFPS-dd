@@ -72,6 +72,7 @@ namespace proofps_dd
         const float& getDamageAreaSize() const;
         float getDamageAtDistance(
             const float& fDistance,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const int& nDamage) const;
 
         bool shouldBeDeleted() const;

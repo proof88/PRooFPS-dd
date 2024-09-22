@@ -697,6 +697,7 @@ namespace proofps_dd
             const TPureFloat drag,
             const int& nDamageHp,
             const TPureFloat& damageAreaSize,
+            const Bullet::DamageAreaEffect& damageAreaEffect,
             const TPureFloat& damageAreaPulse)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
@@ -728,6 +729,7 @@ namespace proofps_dd
             msgBulletUpdate.m_fDrag = drag;
             msgBulletUpdate.m_nDamageHp = nDamageHp;
             msgBulletUpdate.m_fDamageAreaSize = damageAreaSize;
+            msgBulletUpdate.m_eDamageAreaEffect = damageAreaEffect;
             msgBulletUpdate.m_fDamageAreaPulse = damageAreaPulse;
             msgBulletUpdate.m_bDelete = false;
 
@@ -782,6 +784,7 @@ namespace proofps_dd
         TPureFloat m_fDrag;
         int m_nDamageHp;
         TPureFloat m_fDamageAreaSize;
+        Bullet::DamageAreaEffect m_eDamageAreaEffect;
         TPureFloat m_fDamageAreaPulse;
         bool m_bDelete;
     };  // struct MsgBulletUpdateFromServer
