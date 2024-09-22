@@ -8,7 +8,7 @@ Don't get lost on this page, use the Table of Contents, that's why it is there.
 
 And never forget the most important rule: Never lose money. :)
 
-**[Quick link to my altcoins table.](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)**
+[Quick link to my altcoins table.](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)
 
 [TOC]
 
@@ -19,7 +19,7 @@ And never forget the most important rule: Never lose money. :)
  - **Cryptocurrency:** digital currency using cryptography for managing transactions. Usually we just say: crypto. They live on a blockchain.
  - **Stable Coin:** a cryptocurrency pegged to another asset, such as a fiat currency or gold, to maintain a stable price. Examples: USDT, USDC. Some also treat Bitcoin as stable coin.
  - **Altcoin:** alternative coin, basically any other crypto coin/token which is neither stable coin nor Bitcoin.
- - **CA:** Contact Address: a public address of a smart contract, you can use to buy/sell tokens. [More on 1inch.](https://help.1inch.io/en/articles/5711414-what-is-the-difference-between-a-wallet-address-contract-address-and-a-private-key)
+ - **CA:** Contract Address: a public address of a smart contract, you can use to buy/sell tokens. [More on 1inch.](https://help.1inch.io/en/articles/5711414-what-is-the-difference-between-a-wallet-address-contract-address-and-a-private-key)
  - **CEX:** Centralized exchange where you can trade using the wallet provided by the exchange. [Jump to section.](#cex)
  - **DEX:** Decentralized exchange where you can trade using your own soft-wallet. [Jump to section.](#dex)
  - **KYC:** Know Your Customer: a bundle of security measures to fight against money loundering, stealing, etc., basically you have to identify yourself in various ways to the service provider.
@@ -218,7 +218,8 @@ As you can see in the below picture, Bitcoin gives three chances to buy before i
  - The last is right after the halving.
 
 <table>
-<tr><td>[![](img/btc3chances_thumb.png)](btc3chances.png)
+<tr><td>[![](img/btc3chances_thumb.png)](btc3chances.png)<td>[![](img/btc-4years-peaks-thumb.jpg)](btc-4years-peaks.jpg)<td>[![](img/btc-quarterly-returns-thumb.png)](btc-quarterly-returns.png)<td>[![](img/btc-usa-elections-thumb.jpg)](btc-usa-elections.jpg)
+<tr><td>BTC gives 3 chances<td>BTC 4-year cycles<td>BTC quarterly returns<td>BTC price history and USA elections
 </table>
 
 \subsection whatbuy_medium Medium Level
@@ -242,11 +243,12 @@ Also, not all altcoins are moving at the same time: it happens that a meme coin 
 **To minimize time invested, just buy and hold XRP and SDEX for medium-term (weeks/months), as an addition to your long-term BTC holding.**  
 Take profit when you want, then buy the dip, and repeat the process forever.  
 They are expected to be here with us for long time.  
-I made a **[table of some altcoins](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)** that might be also in your interest.  
+
+You can also try **staking** which even exists in Revolut with cryptocurrencies: you lock some assets and expect passive income profit.
+
+Also, I made a **[table of some altcoins](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)** that might be also in your interest.  
 You can see in that document that I'm monitoring how their prices react to Bitcoin price.  
 **I recommend short-term (weeks) cyclic trading with the top-row altcoins in [that table](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link).**  
-
-TODO: add "Revolut" in the Misc. column if the token is available on Revolut.
 
 \subsection whatbuy_advanced Advanced / Difficult Level
 
@@ -266,9 +268,17 @@ If you think that trading normal crypto is gambling, you are wrong: this level i
 
 \subsubsection whatbuy_degen_general Random Hints
 
-TODO: add about twitter, telegram, whatever.
+Random hints on what to buy, what would be a good deal can come from various sources, including Twitter and Telegram.  
+For example, there are Telegram groups where chart analysis predictions come regularly for various assets, and I can assure many of them actually predicts well.  
+I'm not linking anything here, I'm not advertising any of them, ask me in person.
 
-See [honeypot scam in later section](#scams_honeypot).
+There are people out there who are making money by buying a token early and then involving additional people.  
+If you are fast and see such marketing activity on Twitter, for example in case of a meme coin, AND by scanning twitter it looks like the marketing just started like 20-30 minutes ago, then you are still early, you can buy.  
+Otherwise you are late and others will use you as their exit liquidity.
+
+Even if a signal tells you should buy, mind [the global sentiment](#whenbuy_01). You may postpone your buy, if the market situation implies a further downtrend.
+
+And always check the token with honeypot checkers, see [honeypot scam in later section](#scams_honeypot).
 
 \subsubsection whatbuy_degen_pumpfun Pump Fun
 
@@ -283,14 +293,16 @@ There are 2 ways of making money here:
  - or **you are investing in a coin** made by someone else.
 
 **As of Sep 2024, 99.99% of the coins made here are NOT genuine, NOT made to establish a good community, and try to rip off any investor within a few moments.**  
-The creators of most coins here don't even want their coin to make it to [Raydium](https://raydium.io/swap/) , just want a few people to invest and then rip them off ASAP.
+The creators of most coins here don't even want their coin to make it to [Raydium](https://raydium.io/swap/), just want a few people to invest and then rip them off ASAP.
 
 Thus, if you want to make money by investing into someone's coin here, **the only good buying strategy is**:
  - list the coins whose dev is currently live streaming (that shows some effort from the creator);
- - if the market cap of the coin is shown below $15k, open its page;
- - check the wallet distribution bubble map (even tho not much use nowadays, see #scams_pumpfun_bundle);
+ - if the market cap of the coin is shown below $15k, open its page (I don't really care about coins with already bigger MC here);
+ - check the wallet distribution bubble map (even tho not much use nowadays, see #scams_pumpfun);
  - if you are seeing active trades, invest a minimum amount of money (e.g. 0.1-0.3 SOL);
  - as soon as the value of the coin has increased 10-20%, SELL.
+ 
+Note that the usual fee for a trade here is only around 0.001 SOL, so you don't need to worry much about that.
 
 This way, you can ensure the following:
  - you spend minimum time in making money (e.g. 10 minutes);
@@ -303,6 +315,9 @@ People will hate me for writing this, as this is not how this site is supposed t
 
 If you want, you can repeat the above process with the same coin at its next dip, if you think there still will be people buying.
 
+Still, you can find some real projects here (0.01% of the coins here), which are unique and a community is formed on Telegram who take care of the marketing even after the coin hits [Raydium](https://raydium.io/swap/).  
+In such rare occurrence of finding such, try to hold your investment in that coin and work together with the community in the marketing to bring in more and more people.
+
 \subsubsection whatbuy_degen_sunpump Sun Pump
 
 In Aug 2024 a similar website was born: [SunPump](https://sun.io/?lang=en-US#/pumpVote).  
@@ -311,6 +326,7 @@ A successful meme coin that was created here and reaching higher and higher pric
 
 \subsubsection whatbuy_degen_crash Rocket Crash Games
 
+I never tried these, so hopefully these are not scam!  
 The classic rocket crash game also has its Solana-based versions where you can risk your Solana for possible big gains:
  - [Solana Crash](https://solanacrash.io/)
  - [CrashOut](https://crashout.fun/en-us/solana)
@@ -319,7 +335,7 @@ Note that there are other versions for other cryptocurrencies as well, use Googl
 
 \subsubsection whatbuy_degen_cockfight Cock Fight Games
 
-TODO
+You can [bet on the winning cock](https://www.degencockfight.com/cockfight) using Solana.
 
 \section whensell When Sell?
 
@@ -379,9 +395,20 @@ This topic is not crypto specific, this is coming from the stock market but appl
 This is basically the art and/or science of analysing charts and trying to understand the market from the charts, and try to predict the near future of price movement.  
 You should also watch the [linked videos](#videos) having "Trading" in their title.
 
-Also I want to mention one of my favourite stuff is the [Ichimoku cloud for predicting price movement](https://www.youtube.com/watch?v=9e7OUfKTw6Y&ab_channel=TheSecretMindset).
+Also I want to mention one of my favourite stuff is the **Ichimoku cloud for predicting price movement**: [video](https://www.youtube.com/watch?v=9e7OUfKTw6Y&ab_channel=TheSecretMindset).
 
-TODO: add death cross / golden cross WoW summary.
+**Death Cross / Golden Cross**: it is about the 50-days MA (moving average) relative to the 200-days MA.  
+Long story short: death cross is when the 200-days MA moves ABOVE the 50-days MA line on the price chart, indicating probable end of bearish trend.  
+Golden cross: when the 200-days MA moves BELOW the 50-days MA line on the price chart, indicating bullish trend.  
+If we are approaching the death cross, sell. If you missed it, you can still sell on the day of the death cross that often results in a temporal pump.  
+Buying is recommended around the death cross when prices look really low.  
+You can see example of this on Bitcoin chart: Aug 8 2024.  
+For more details, [check out the related video](https://www.youtube.com/watch?v=_bidQGwez-0&ab_channel=Crypto4lightTrading).
+
+Additional content:
+ - [Stablecoin marketcap drives Bitcoin price?](https://www.tradingview.com/chart/BTCUSD/ikZclopW-Stablecoin-liquidity-is-king-Bitcoin-bullish-thesis/)
+ - [BTC and M2 correlation and detecting BTC bull cycles](https://www.tradingview.com/chart/BTCUSD/HgSSjQqP-BTC-and-M2-correlation-and-detecting-BTC-bull-cycles/)
+ - [Money Flow Divergence Indicator](https://medium.com/limitless-investor/358-return-per-trade-i-created-an-indicator-that-will-change-your-trading-forever-69824d8d0de3)
 
 Needless to say, chart analysis should be tied together with understanding [the global sentiment](#whenbuy_01).
 
@@ -403,17 +430,24 @@ Always avoid pump groups where they say that a specific asset's price will be pu
 
 \subsection memes Memes
 
-TODO explain Matt Furie, Pepe. Add the Pepe diagram. Add Boys' Club.
+There are lot of types of memes, some of them are political.  
+2024 was the year of memes born from [Matt Furie: Boy's Club](https://www.fantagraphics.com/products/boys-club?srsltid=AfmBOor1nhcrxat_thimbWedbrvMq4TIgOBvD27YqhWZKTSv16THEe9r) cartoon characters.  
+Probably the biggest was Pepe which is even used for political reasons.  
+There is a very good documentary about it: [Feels Good Man - IMDB](https://www.imdb.com/title/tt11394182/).
 
-[Feels Good Man - IMDB](https://www.imdb.com/title/tt11394182/)
+Also, this picture explains all the other frogs closely related to Pepe:
+
+TODO add picture when I find it!
 
 \subsection scams Scams
 
-\subsubsection scams_copycat Copycat
+\subsubsection scams_copycat Copycat Scam
 
-TODO
+A copycat token is basically a token created with the same name, logo, etc. as an already existing token, so if someone is not careful enough, might accidentally buy the copycat token instead of the original.  
+Usually the creator of the copycat token already bought themselves in, so after other people also bought themselves in accidentally, the creator simply sells their share with higher price.  
+Worse case is if this copycat token is [a honeypot](#scams_honeypot).
 
-\subsubsection scams_honeypot Honeypot
+\subsubsection scams_honeypot Honeypot Scam
 
 Before buying a token on a DEX, we should check if the token is actually safe to trade.  
 This safeness has nothing to do with the price, as the price is very volatile anyway.  
@@ -428,17 +462,72 @@ I use these:
  - https://rugcheck.xyz/ (specifically for Solana-based coins. Make sure most of the LP is locked, Mint Authority is "-", and all of the top holders are in with low percentage (max 4-5%) per holder).
  - https://www.solsniffer.com
 
-\subsubsection scams_arbitrage Alleged Exploit of Arbitrage
+\subsubsection scams_elonmuskgiveaway Elon Musk Crypto Giveaway Scam
 
-TODO
+It is multiple years old but still being used on various occasions. For example, when Donald Trump gave a speech on Bitcoin Conference in July 2024, there were multiple live streams on YouTube with this scam.  
+This scam is about streaming a pre-recorded video about Elon Musk talking in front of the audience. The video is a deepfake, using Elon's voice and face faked to tell you that if you send Bitcoin or any other coin to their address, you will immediately get back double.  
+Obviously the wallet address you are sending your coins to, is owned by the scammer, and you will never see your coins again.  
+One such [fake YouTube channel is this](https://www.youtube.com/c/SamirAldby29), trying to fake Tesla's YouTube channel. Occasionally you can see the fake live video being streamed here.
 
-\subsubsection scams_pumpfun_bundle Bundled Wallets
+\subsubsection scams_pumpfun Pump Fun Scams
 
-TODO
+In the older days of [Pump.Fun](#whatbuy_degen_pumpfun), there were a lot of original ideas turned into coins that could make a lot of profit for both the creator and the early investors.  
+However, nowadays most coins there are made for ripping off people.  
+So, in recent months the scammers had to come up with more sophisticated methods to make other people believe in the coin not being a scam.
 
-\subsubsection scams_pump_signal Pump Signal
+**Bundled Wallets:** if the creator or anyone has a big share (>4%) of the owned tokens, there is a high risk of dropping the price of the coin by a single person selling all the owned tokens.  
+In such case investory are not buying because of this fear.  
+Thus, it has become nowadays common that a single person uses multiple wallets to buy low amount of tokens. There are tools nowadays which can make this convenient, and a single person can easily trade using many wallets at the same time.  
+This way, for example, even though someone is holding 30% of the tokens using 10 wallets with only 3-3% each, nobody will know it.  
+Also, this brings in another advantage: since more wallets are holding tokens, the token will look more tempting to buy because it will look like many people already invested in it.  
+Unfortunately, we cannot exactly know how many people are holding the token, only the number of wallets is known.
 
-TODO
+**Pre-recorded Live Streams:** scammers realized they can earn the trust of people more easily if they are live streaming also on this site, especially with a web cam or their phone, showing themselves to the public.  
+This is true, but unfortunately, some scammers are streaming pre-recorded videos, which are not really live.  
+To make this even more real, the scammer or friends of the scammer write questions in the live chat, and the person in the video is answering these questions like it was really a real video, even though it is pre-recorded.  
+Usually the person in the video is a cute girl, to gain more fools investing in the coin.
+
+\subsubsection scams_arbitrage Alleged Exploit of Arbitrage Scam
+
+This kind of scam is still being done in some Telegram channels.  
+They explain to you that the difference in price of a token on different crypto exchanges can be used to earn money:  
+you buy a token for a relatively lower price on exchange 1, transfer that token to exchange 2, and sell it there for a bit higher price.  
+Obviously, exchange 2 is a FAKE exchange. However, this scam is very sophisticated. I've been watching this happening for months.  
+Recently, they even posted articles on medium.com about the start of such exchanges, which eventually are fake exchanges, owned by the scammer.  
+Transferring money there is actually sending money directly to the scammer's wallet.
+
+Example: such recent fake exchange is Gilci.  
+They even prepared fake articles and reviews that Google can find, [example](https://www.streetinsider.com/Globe+PR+Wire/Gilci+Introduces+New+Crypto+Trading+Platform+with+Advanced+Features+and+Enhanced+Liquidity/23741892.html).  
+You can even find a ["true review" ( :D ) on Youtube](https://www.youtube.com/watch?v=INlCDVqW69Q&ab_channel=KandyWaldren).  
+On [medium.com there are articles written by fake user](https://medium.com/@MichaelStewart3).
+
+<table>
+<tr><td>[![](img/arbit_scam-01-thumb.jpg)](arbit_scam-01.png)<td>[![](img/arbit_scam-02-thumb.jpg)](arbit_scam-02.png)<td>[![](img/arbit_scam-022-thumb.jpg)](arbit_scam-022.png)<td>[![](img/arbit_scam-023-thumb.jpg)](arbit_scam-023.png)
+<td>[![](img/arbit_scam-03-thumb.jpg)](arbit_scam-03.png)<td>[![](img/arbit_scam-04-thumb.jpg)](arbit_scam-04.png)
+<tr><td>A nice post before the signal<td>Another nice post before the signal<td>One more<td>Reminder before the signal<td>The signal post with video guide<td>The signal post with text guide
+<tr><td>[![](img/arbit_scam-05-thumb.jpg)](arbit_scam-05.png)<td>[![](img/arbit_scam-06-thumb.jpg)](arbit_scam-06.png)
+<td>[![](img/arbit_scam-07-thumb.jpg)](arbit_scam-07.png)<td>[![](img/arbit_scam-08-thumb.jpg)](arbit_scam-08.png)
+<td>[![](img/arbit_scam-10-thumb.jpg)](arbit_scam-10.png)<td>[![](img/arbit_scam-11-thumb.jpg)](arbit_scam-11.png)<td>[![](img/arbit_scam-13-thumb.jpg)](arbit_scam-13.png)
+<tr><td>Took a screenshot from the website, #1<td>Took a screenshot from the website, #2
+<td>Google Hits on Gilci<td>Medium.com articles about Gilci
+<td>Nice post from scammer<td>Fake feedbacks shown by scammer<td>Finishing post from scammer
+</table>
+
+\subsubsection scams_pump_signal Pump Signal Scam
+
+This kind of scam is regularly done in some Telegram channels.  
+They say they will pump up the price of a token with the help of other insiders, whales, marketing, and anyone willing to participate in the group can also take profit by buying the token.  
+They would use the outsiders and FOMOers as their exit liquidity.  
+However, nothing is true of this. There is a single person behind it who makes a token, buys in themselves, and then anyone else buying will be used as exit liquidity.  
+The scammer unexpectedly does a rug pull just a few moments after the pump signal notification, when some people already put some money in.  
+The following screenshots show an example of a recent rug pull:
+
+<table>
+<tr><td>[![](img/dexpumps-scam-01-thumb.png)](dexpumps-scam-01.png)<td>[![](img/dexpumps-scam-02-thumb.png)](dexpumps-scam-02.png)<td>[![](img/dexpumps-scam-03-thumb.png)](dexpumps-scam-03.png)<td>[![](img/dexpumps-scam-04-thumb.png)](dexpumps-scam-04.png)
+</table>
+
+In the above pictures we can see the Telegram posts, the coin name comes exactly at 18:00 CET which is shown as 16:00 GMT in the TradingView chart picture.  
+3 minutes after the signal, rug pull happened, only the scammer earned anything.
 
 \subsection websites Websites
 
@@ -450,6 +539,10 @@ TODO
  - [Crypto Halving Dates](https://halvingdates.com/)
  - [Arkham Intel - Deanonymizing the blockchain](https://platform.arkhamintelligence.com/)
  - [Mi az a DePIN?](https://kriptoakademia.com/2024/03/09/bevezetes-a-depin-vilagaba)
+ - [Trading Skills (Investopedia)](https://www.investopedia.com/trading-skills-and-essentials-4689654)
+ - [Stablecoin marketcap drives Bitcoin price?](https://www.tradingview.com/chart/BTCUSD/ikZclopW-Stablecoin-liquidity-is-king-Bitcoin-bullish-thesis/)
+ - [BTC and M2 correlation and detecting BTC bull cycles](https://www.tradingview.com/chart/BTCUSD/HgSSjQqP-BTC-and-M2-correlation-and-detecting-BTC-bull-cycles/)
+ - [Money Flow Divergence Indicator](https://medium.com/limitless-investor/358-return-per-trade-i-created-an-indicator-that-will-change-your-trading-forever-69824d8d0de3)
  - [Merkle Tree Compression](https://www.metaplex.com/posts/expanding-digital-assets-with-compression-for-nfts)
  - [Render Network Migration Summary](https://github.com/rendernetwork/RNPs/blob/main/RNP-002.md)
 

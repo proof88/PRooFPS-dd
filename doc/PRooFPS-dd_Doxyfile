@@ -1415,7 +1415,27 @@ HTML_EXTRA_STYLESHEET  = PRooFPS-dd_DoxyStyle.css
 
 HTML_EXTRA_FILES       = Gravity-Physics-2.xlsx \
                          PRooFPS-dd-Packet-Rates.xlsx \
-                         img/btc3chances.png
+                         img/btc3chances.png \
+                         img/dexpumps-scam-01.png \
+                         img/dexpumps-scam-02.png \
+                         img/dexpumps-scam-03.png \
+                         img/dexpumps-scam-04.png \
+                         img/btc-4years-peaks.jpg \
+                         img/btc-quarterly-returns.png \
+                         img/btc-usa-elections.jpg \
+                         img/arbit_scam-01.png \
+                         img/arbit_scam-02.png \
+                         img/arbit_scam-03.png \
+                         img/arbit_scam-04.png \
+                         img/arbit_scam-05.png \
+                         img/arbit_scam-06.png \
+                         img/arbit_scam-07.png \
+                         img/arbit_scam-08.png \
+                         img/arbit_scam-10.png \
+                         img/arbit_scam-11.png \
+                         img/arbit_scam-13.png \
+                         img/arbit_scam-022.png \
+                         img/arbit_scam-023.png
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
 # should be rendered with a dark or light theme.
