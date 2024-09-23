@@ -74,7 +74,8 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
     WeaponManager::getKeypressToWeaponMap() = {
         {'2', "pistol.txt"},
         {'3', "machinegun.txt"},
-        {'4', "bazooka.txt"}
+        {'4', "bazooka.txt"},
+        {'5', "pusha.txt"},
     };
 
     Explosion::resetGlobalExplosionId();

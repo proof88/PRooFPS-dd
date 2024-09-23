@@ -120,6 +120,7 @@ namespace proofps_dd
             '2' /* weapon key 2 */,
             '3' /* weapon key 3 */,
             '4' /* weapon key 4 */,
+            '5' /* weapon key 5 */,
             'S' /* spawnpoint */
         };
 

@@ -1308,6 +1308,7 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
+    case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     {
         const Weapon* const pWpn = getWeaponInstanceByMapItemType(item.getType());
         if (!pWpn)
@@ -1341,6 +1342,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
+    case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     {
         Weapon* const pWpnBecomingAvailable = getWeaponInstanceByMapItemType(item.getType());
         if (!pWpnBecomingAvailable)
@@ -1355,9 +1357,10 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         {
             bHasJustBecomeAvailable = false;
             // just increase bullet count
-            // TODO: this will be a problem for non-reloadable wpns such as rail gun, because there this value will be 0,
-            // but we will think about it later then ... probably in such case bullets_default will be used
-            nAmmoIncrease = pWpnBecomingAvailable->getVars()["reloadable"].getAsInt();
+            nAmmoIncrease =
+                (pWpnBecomingAvailable->getVars()["reloadable"].getAsInt() == 0) ?
+                pWpnBecomingAvailable->getVars()["bullets_default"].getAsInt() :
+                pWpnBecomingAvailable->getVars()["reloadable"].getAsInt();
             pWpnBecomingAvailable->IncBulletCount(nAmmoIncrease);
             //getConsole().OLn(
             //    "Player::%s(): weapon %s pickup, already available, just inc unmag to: %u",
@@ -1418,6 +1421,7 @@ const Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemTy
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
+    case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     {
         const auto it = m_mapItemTypeToWeaponFilename.find(mapItemType);
         if (it == m_mapItemTypeToWeaponFilename.end())
@@ -1681,6 +1685,7 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
     {proofps_dd::MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},
     {proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"},
     {proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, "bazooka.txt"},
+    {proofps_dd::MapItemType::ITEM_WPN_PUSHA, "pusha.txt"},
 };
 
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;

@@ -1,0 +1,213 @@
+# Lines starting with hashtag are comments and ignored by loader.
+
+# Blank lines are also ignored by loader.
+
+# Variable name are case-insensitive, so "Name =" is same as "name =" or "NAME =".
+
+# If opened in Notepad++, I recommend setting INI or Makefile syntax highlighting in Language menu.
+
+# Name of the weapon is that will be displayed in GUI.
+Name = Pusha
+
+# Preview Image is not needed to be explicitly defined here, as
+# image file with same name is to be used implicitly as preview.
+
+############
+#          #
+#  RELOAD  #
+#          #
+############
+
+# Max number of bullets player can have for this weapon.
+# For reloadable weapons, this is max unmag count, which is the max number of bullets held outside of the weapon (e.g. in extra magazines).
+# For non-reloadable weapons, this is max mag count (e.g. rail gun).
+cap_max = 999
+
+# Max number of bullets the weapon can hold at a time.
+# This can be also understood as magazine capacity.
+# If 0, it is not reloadable (e.g. rail gun).
+# Cannot be bigger than cap_max.
+reloadable = 0
+
+# By default we have this amount of bullets with this weapon
+# If weapon is reloadable, this amount will be loaded, thus it
+# cannot be greater than "reloadable"
+bullets_default = 15
+
+# If true, reload is per-magazine, not per-bullet.
+# No effect if reloadable is 0.
+# Per-magazine examples are usual rifles, most pistols.
+# Per-bullet examples are some shotguns or legacy PR00FPS bazooka.
+# Note that per-bullet weapons can be fired also during the reload process (cancelling further reloading),
+# while per-magazine weapons obviously cannot be fired during reload.
+reload_per_mag = false
+
+# If true, player loses all bullets of the disposed magazine (realistic).
+# No effect if reload_per_mag is false.
+reload_whole_mag = false
+
+# Reload time in millisecs.
+# If reload_per_mag is true, this time means the complete reload process.
+# If reload_per_mag is false, this time meant to be per-bullet!
+reload_time = 1500
+
+# Note on reload sounds:
+# - if reload_per_mag is true (e.g. pistol), then:
+#   - reload_start_snd is played at READY -> RELOADING state transition (beginning to reload);
+#   - reload_end_snd is played at RELOADING -> READY transition (finished reload);
+# - if reload_per_mag is false (e.g. bazooka), then:
+#   - reload_start_snd is played in RELOADING state whenever mag bullet count is increased by 1;
+#   - reload_end_snd is not used.
+
+# Sound of reload start
+reload_start_snd =
+
+# Sound of reload end (must be empty when reload_per_mag is false)
+reload_end_snd =
+
+#################
+#               #
+#  FIRING MODE  #
+#               #
+#################
+
+# Firing mode defines how bullets are fired by pulling the trigger.
+# Accepted values (from lowest to highest available):
+#  - semi : trigger needs to be pulled-and-released as many times as many bullets we want to fire;
+#  - burst: similar to semi, but 1 trigger pull shots some (limited amount) bullets after each other;
+#  - proj : similar to burst, but 1 trigger pull shots some (limited amount) of projectiles AT ONCE, e.g. shotguns;
+#  - auto : trigger needs to be pulled only once to fire continuously until we have bullet.
+
+# Default firing mode
+# For pistols, this is usually "semi".
+# For shotguns, this is usually "proj".
+# For rifles, this is usually "auto".
+firing_mode_def = semi
+
+# Maximum supported firing mode.
+# User can loop from default to max firing mode using a mode selector.
+# Note that a weapon cannot have both "burst" and "proj" modes. So the user wont be able to loop
+# to "burst" if "proj" is max, and cannot loop to "proj" if "burst" is max.
+# Also, user wont be able to select "proj" if that is not the default.
+# The user is able to select "auto" though even if "proj" is the default, in that case
+# weapon will shot projectiles in automatic mode (e.g. XM1014/Leone YG1265 Auto Shotgun in CS 1.6).
+# Max cannot be less than the default.
+firing_mode_max = semi
+
+# Time needed to elapse between 2 shots, in millisecs.
+# Cannot be 0.
+firing_cooldown = 1000
+
+# Sound of a regular shot fired
+firing_snd = pusha.wav
+
+# Sound of pulled trigger with zero loaded bullet
+firing_dry_snd = dryfire_pusha.wav
+
+#####################
+#                   #
+#  FIRING ACCURACY  #
+#                   #
+#####################
+
+# Accuracy is basically the maximum angle between the weapon and
+# the actual fired bullet: this is the relative angle.
+# So bigger angle means less accuracy.
+
+# Weapon accuracy.
+# The absolute maximum relative angle of the fired bullet (degrees), when player is NOT moving.
+# Relative angle is randomized in [-acc_angle, acc_angle] range.
+# 0 means maximum accuracy i.e. always shooting the middle of the crosshair.
+# Cannot be negative.
+acc_angle = 1.0
+
+# Multipliers of acc_angle in different player poses.
+# Multiple multipliers can be in effect at the same time, e.g.
+# moving while ducking, then both m_walk and m_duck will be used: acc_angle_pose = acc_angle * acc_m_walk * acc_m_duck .
+# Thus values above 1.0 decrease accuracy, values below 1.0 increase accuracy.
+# Cannot be negative.
+acc_m_walk = 1.2
+acc_m_run  = 3.0
+acc_m_duck = 0.6
+
+# Recoil also multiplies accuracy angle.
+# 1.0 means no recoil.
+# Cannot be less than 1.0.
+recoil_m = 1.0
+
+# Time needed for recoil to disappear after 1 shot, in millisecs.
+# No effect when recoil_m is 1.0.
+# Must be greater or equal to firing_cooldown if recoil is enabled (see above).
+recoil_cooldown = 0
+
+# If available, recoil control can improve the accuracy degradation
+# caused by accumulating recoil across multiple shots.
+# No effect when recoil_m is 1.0.
+# Similar to traction control in cars avoiding slipping of tyres
+# during acceleration.
+# Accepted_values:
+#  - off
+#  - low
+#  - medium
+#  - high
+recoil_control = off
+
+################################################
+#                                              #
+#  BULLET TRAVEL PROPERTIES AFTER BEING FIRED  #
+#                                              #
+################################################
+
+bullet_size_x = 0.1
+bullet_size_y = 0.05
+bullet_size_z = 0.0
+
+# Max speed is 1000, it means instant hit, e.g. rail gun
+bullet_speed = 15
+
+# Gravity affecting the travel path of the bullet.
+# 0 means no effect of gravity.
+# Obviously no effect when speed is max.
+# Throwables like grenades are typically affected by gravity.
+bullet_gravity = 0
+
+# Drag or air resistance tells how much the bullet is slowed down by air during travel.
+# 0 means no effect of drag
+# Obviously no effect when speed is max.
+bullet_drag = 0.2
+
+# If fragile, bullet can be destroyed by other bullet.
+# E.g. a rocket can explode in air when hit by another bullet.
+bullet_fragile = false
+
+#####################################
+#                                   #
+#  DAMAGE CAUSED AFTER BULLET HITS  #
+#                                   #
+#####################################
+
+# Damage to health when hit directly.
+# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
+damage_hp = 1
+
+# Damage to armor when hit directly.
+# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
+damage_ap = 1
+
+# Area damage.
+# Radius of circular area within damage is taken by player.
+# 0 means no area damage (only direct hit causes damage).
+# A positive area damage triggers an explosion.
+# HP and AP are both affected by area damage.
+damage_area_size = 1.0
+
+# How area damage should be calculated?
+# No effect when damage_area_size is 0.
+# Accepted values:
+#  - constant: damage is equal everywhere within the area.
+#  - linear  : damage is decreasing within area towards the edges from its center.
+damage_area_effect = linear
+
+# Amount of push force applied to players within damage area.
+# Must be zero if damage_area_size is zero.
+damage_area_pulse = 20.0

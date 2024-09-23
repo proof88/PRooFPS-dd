@@ -53,6 +53,7 @@ r = brick1.bmp
 # '2' char represents pistol.
 # '3' char represents machine gun.
 # '4' char represents bazooka.
+# '5' char represents pusha.
 # ',' char represents armor.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
@@ -134,7 +135,7 @@ ooooacno^ooooooooooooooooooooo  oooooooo
 nnnnnnnnnnn4nnnnnnnnnnnnnnnn^n  nnnnnnnn
 oSoooooooooJoooooSoooooooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrrrrrrrrrrrr  rrrrrrrr
-aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  aaaaa,aa 2 +
+aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +
 BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
 BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
 

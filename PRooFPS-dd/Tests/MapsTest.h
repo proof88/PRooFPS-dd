@@ -440,8 +440,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
         // items
-        b &= assertEquals(7u, maps.getItems().size(), "item count");
-        b &= assertEquals(7u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(8u, maps.getItems().size(), "item count");
+        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         if (b)
         {
             auto it = maps.getItems().begin();
@@ -482,16 +482,16 @@ private:
 
             it++;
             b &= assertNotNull(it->second, "item 4") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 4 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, it->second->getType(), "item 4 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 4 tex");
             }
-            
+
             it++;
             b &= assertNotNull(it->second, "item 5") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 5 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 5 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
             if (b)
             {
@@ -500,11 +500,20 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 6") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 6 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 6 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 6 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 6 tex");
+            }
+            
+            it++;
+            b &= assertNotNull(it->second, "item 7") &&
+                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 7 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 7 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 7 tex");
             }
         }
 
@@ -573,8 +582,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
 
         // items
-        b &= assertEquals(7u, maps.getItems().size(), "item count 1");
-        b &= assertEquals(7u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        b &= assertEquals(8u, maps.getItems().size(), "item count 1");
+        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
 
         // jump pads
         b &= assertEquals(3u, maps.getJumppads().size(), "jumppad count 1");
@@ -665,8 +674,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         // items
-        b &= assertEquals(7u, maps.getItems().size(), "item count 3");
-        b &= assertEquals(7u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        b &= assertEquals(8u, maps.getItems().size(), "item count 3");
+        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
 
         // jump pads
         b &= assertEquals(3u, maps.getJumppads().size(), "jumppad count 3");
