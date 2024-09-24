@@ -182,6 +182,11 @@ bullet_drag = 0.2
 # E.g. a rocket can explode in air when hit by another bullet.
 bullet_fragile = false
 
+# After travelling this distance, bullet gets destroyed even if it did not hit anything.
+# 0 means no distance limit.
+# Cannot be negative.
+bullet_distance_max = 0
+
 #####################################
 #                                   #
 #  DAMAGE CAUSED AFTER BULLET HITS  #

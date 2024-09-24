@@ -659,6 +659,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         else
         {
             bullet.Update(nPhysicsRate);
+
+            if ((bullet.getTravelDistanceMax() > 0.f) && (bullet.getTravelledDistance() >= bullet.getTravelDistanceMax()))
+            {
+                bDeleteBullet = true;
+            }
         }
 
         const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
