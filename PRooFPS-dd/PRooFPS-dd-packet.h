@@ -689,6 +689,7 @@ namespace proofps_dd
             const TPureFloat ax,
             const TPureFloat ay,
             const TPureFloat az,
+            const bool& visible,
             const TPureFloat sx,
             const TPureFloat sy,
             const TPureFloat sz,
@@ -721,6 +722,7 @@ namespace proofps_dd
             msgBulletUpdate.m_angle.x = ax;
             msgBulletUpdate.m_angle.y = ay;
             msgBulletUpdate.m_angle.z = az;
+            msgBulletUpdate.m_visible = visible;
             msgBulletUpdate.m_size.x = sx;
             msgBulletUpdate.m_size.y = sy;
             msgBulletUpdate.m_size.z = sz;
@@ -778,6 +780,7 @@ namespace proofps_dd
         Bullet::BulletId m_bulletId;
         TXYZ m_pos;
         TXYZ m_angle;
+        bool m_visible;
         TXYZ m_size;
         TPureFloat m_fSpeed;
         TPureFloat m_fGravity;

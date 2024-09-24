@@ -813,6 +813,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 bullet.getObject3D().getAngleVec().getX(),
                 bullet.getObject3D().getAngleVec().getY(),
                 bullet.getObject3D().getAngleVec().getZ(),
+                bullet.getObject3D().isRenderingAllowed(),
                 bullet.getObject3D().getSizeVec().getX(),
                 bullet.getObject3D().getSizeVec().getY(),
                 bullet.getObject3D().getSizeVec().getZ(),
@@ -845,6 +846,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     bullet.getObject3D().getAngleVec().getX(),
                     bullet.getObject3D().getAngleVec().getY(),
                     bullet.getObject3D().getAngleVec().getZ(),
+                    bullet.getObject3D().isRenderingAllowed(),
                     bullet.getObject3D().getSizeVec().getX(),
                     bullet.getObject3D().getSizeVec().getY(),
                     bullet.getObject3D().getSizeVec().getZ(),
@@ -1036,6 +1038,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
                 msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
+                msg.m_visible,
                 msg.m_size.x, msg.m_size.y, msg.m_size.z,
                 msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_nDamageHp,
                 msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse));

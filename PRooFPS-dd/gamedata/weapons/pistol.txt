@@ -158,6 +158,8 @@ recoil_control = high
 #                                              #
 ################################################
 
+bullet_visible = true
+
 bullet_size_x = 0.1
 bullet_size_y = 0.05
 bullet_size_z = 0.0
