@@ -233,6 +233,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getConsole().OLn("  size of MsgDeathNotificationFromServer: %u Bytes", sizeof(proofps_dd::MsgDeathNotificationFromServer));
     getConsole().OLn("");
 
+    getAudio().loadSound(m_sounds.m_sndMenuMusic,     std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Monkeys_Spinning_Monkeys.mp3");
+    m_sounds.m_sndMenuMusic.setSingleInstance(true);
     getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");
     getAudio().loadSound(m_sounds.m_sndReloadStart,   std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/de_clipout.wav");
     getAudio().loadSound(m_sounds.m_sndReloadFinish,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/de_clipin.wav");
@@ -392,7 +394,14 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 }
             }
         } // end else validConnection
-    } // m_gui.getMenuState()
+    }
+    else
+    {
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndMenuMusicHandle))
+        {
+            m_sounds.m_sndMenuMusicHandle = getAudio().playSound(m_sounds.m_sndMenuMusic);
+        }
+    }// m_gui.getMenuState()
 
     updateFramesPerSecond(window);
 
@@ -1442,6 +1451,11 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     getConsole().OLn("PRooFPSddPGE::%s(): map: %s", __func__, msg.m_szMapFilename);
 
     // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
+
+    if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndMenuMusicHandle))
+    {
+        m_sounds.m_sndMenuMusicHandle = getAudio().playSound(m_sounds.m_sndMenuMusic);
+    }
 
     // map change request may come anytime, so first we disconnect and clean up
     disconnect(false, "Map change: " + m_maps.getFilename() + " -> " + msg.m_szMapFilename);

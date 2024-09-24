@@ -33,6 +33,8 @@ namespace proofps_dd
         Sounds&& operator=(Sounds&&) = delete;
 
         // TODO: to be moved
+        SoLoud::Wav m_sndMenuMusic;
+        SoLoud::handle m_sndMenuMusicHandle{};
         SoLoud::Wav m_sndLetsgo;
         SoLoud::Wav m_sndReloadStart;
         SoLoud::Wav m_sndReloadFinish;

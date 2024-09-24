@@ -538,6 +538,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds());
             
+            m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
+
             // as last step, restart the game mode now, this is important to be last step, for example remaining game time starts to count down now!
             gameMode.restartWithoutRemovingPlayers(m_pge.getNetwork());
 
@@ -625,6 +627,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
 
         if (msg.m_bCurrentClient)
         {
+            m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
+
             // due to difficulties caused by m_gui.textPermanent() it is easier to use it here than in handleUserSetupFromServer()
             // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
             //m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +

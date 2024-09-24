@@ -666,7 +666,7 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
-        bRet &= assertEquals(2u, evaluateWpnData.size(), "client wpn count");
+        bRet &= assertEquals(3u, evaluateWpnData.size(), "client wpn count");
         if (!bRet)
         {
             return bRet;
