@@ -257,7 +257,7 @@ protected:
 
             // switch back to client again who hopefully won't do any further alignment after switch
             input_sim_test::bringWindowToFront(hClientMainGameWindow);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         {
@@ -613,14 +613,17 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
-        bRet &= assertEquals(1u, evaluateWpnData.size(), "server wpn count");
+        bRet &= assertEquals(2u, evaluateWpnData.size(), "server wpn count");
         if (!bRet)
         {
             return bRet;
         }
-        bRet &= assertEquals(proofps_dd::GAME_WPN_DEFAULT, evaluateWpnData[0].sName, "server wpn 1 name") &
-            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[0].nMagBulletCount, "server wpn 1 mag bullet count") &
-            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "server wpn 1 unmag bullet count");
+
+        bRet &= assertEquals("knife.txt", evaluateWpnData[0].sName, "server wpn 0 name");
+
+        bRet &= assertEquals(proofps_dd::GAME_WPN_DEFAULT, evaluateWpnData[1].sName, "server wpn 1 name") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[1].nMagBulletCount, "server wpn 1 mag bullet count") &
+            assertEquals(0u, evaluateWpnData[1].nUnmagBulletCount, "server wpn 1 unmag bullet count");
 
         bRet &= assertEquals(100, nPlayerHealth, "server player health");
 
@@ -666,7 +669,7 @@ private:
         
         bRet &= evaluateFragTableCommon();
 
-        bRet &= assertEquals(3u, evaluateWpnData.size(), "client wpn count");
+        bRet &= assertEquals(4u, evaluateWpnData.size(), "client wpn count");
         if (!bRet)
         {
             return bRet;
@@ -679,14 +682,16 @@ private:
         // we expect our vector's 1st element to be machinegun and 2nd element to be pistol.
         // On the long run I think we should fix this.
 
+        bRet &= assertEquals("knife.txt", evaluateWpnData[0].sName, "server wpn 0 name");
+
         bRet &= /* client shot 2+4 = 6 bullets with machinegun */
-            assertEquals(cfgWpnMachinegun.getFilename(), evaluateWpnData[0].sName, "client wpn 1 name") &
-            assertEquals(static_cast<TPureUInt>(cfgWpnMachinegun.getVars()["bullets_default"].getAsInt() - 6), evaluateWpnData[0].nMagBulletCount, "client wpn 1 mag bullet count") &
-            assertEquals(0u, evaluateWpnData[0].nUnmagBulletCount, "client wpn 1 unmag bullet count") &
+            assertEquals(cfgWpnMachinegun.getFilename(), evaluateWpnData[1].sName, "client wpn 1 name") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnMachinegun.getVars()["bullets_default"].getAsInt() - 6), evaluateWpnData[1].nMagBulletCount, "client wpn 1 mag bullet count") &
+            assertEquals(0u, evaluateWpnData[1].nUnmagBulletCount, "client wpn 1 unmag bullet count") &
             /* client picked up extra pistol ammo during walking towards server player */
-            assertEquals(cfgWpnPistol.getFilename(), evaluateWpnData[1].sName, "client wpn 2 name") &
-            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[1].nMagBulletCount, "client wpn 2 mag bullet count") &
-            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["reloadable"].getAsInt()), evaluateWpnData[1].nUnmagBulletCount, "client wpn 2 unmag bullet count");
+            assertEquals(cfgWpnPistol.getFilename(), evaluateWpnData[2].sName, "client wpn 2 name") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[2].nMagBulletCount, "client wpn 2 mag bullet count") &
+            assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["reloadable"].getAsInt()), evaluateWpnData[2].nUnmagBulletCount, "client wpn 2 unmag bullet count");
 
         // after being shot twice by pistol
         bRet &= assertEquals(20, nPlayerHealth, "client player health");

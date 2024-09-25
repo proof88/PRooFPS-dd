@@ -162,7 +162,8 @@ private:
 
     bool loadWeaponsForPlayer(proofps_dd::Player& player, const SetDfltWpn& setDefWpn)
     {
-        bool b = assertTrue(player.getWeaponManager().load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol");
+        bool b = assertTrue(player.getWeaponManager().load("gamedata/weapons/knife.txt", 0), "wm wpn load knife");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/pistol.txt", 0), "wm wpn load pistol");
         b &= assertTrue(player.getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn");
         b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun");
         b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/bazooka.txt", 0), "wm wpn load bazooka");
@@ -171,11 +172,12 @@ private:
         {
             pSrcWpn->SetOwner(player.getServerSideConnectionHandle());
         }
-        player.getWeaponManager().getWeapons()[0]->SetAvailable(true);
+        player.getWeaponManager().getWeapons()[0]->SetAvailable(true); // knife
+        player.getWeaponManager().getWeapons()[1]->SetAvailable(true); // pistol
 
         if (setDefWpn == SetDfltWpn::Yes)
         {
-            b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true), "wm current wpn");
+            b &= assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, true), "wm current wpn");
         }
 
         return b;
@@ -2043,7 +2045,7 @@ private:
 
         bool b = assertTrue(player.canTakeItem(miPistol), "1");
 
-        player.getWeaponManager().getWeapons()[0]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[0]->getVars()["cap_max"].getAsInt());
+        player.getWeaponManager().getWeapons()[1]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[0]->getVars()["cap_max"].getAsInt());
         b &= assertFalse(player.canTakeItem(miPistol), "2");
 
         b &= assertTrue(player.canTakeItem(miMchgun), "3");
@@ -2088,12 +2090,12 @@ private:
 
         player.takeItem(miPistol, pktWpnUpdate, bHasJustBecomeAvailable);
         bool bStrSafeChecked = strncmp(
-            player.getWeaponManager().getWeapons()[0]->getFilename().c_str(),
+            player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
-        bool b = (assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
-            static_cast<int>(player.getWeaponManager().getWeapons()[0]->getUnmagBulletCount()), "wpn 1 unmag") &
+        bool b = (assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[1]->getUnmagBulletCount()), "wpn 1 unmag") &
             assertTrue(miPistol.isTaken(), "item 1 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
@@ -2103,22 +2105,22 @@ private:
                 "msg 1 id") &
             assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
-            assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt(),
+            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 1 mag") &
-            assertEquals(player.getWeaponManager().getWeapons()[0]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
+            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag") &
             assertFalse(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 1")) != 0;
 
         bHasJustBecomeAvailable = false;
         player.takeItem(miMchGun, pktWpnUpdate, bHasJustBecomeAvailable);
         bStrSafeChecked = strncmp(
-            player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
+            player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
-        b &= assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
-            static_cast<int>(player.getWeaponManager().getWeapons()[1]->getMagBulletCount()), "wpn 2 mag") &
-            assertTrue(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 available") &
+        b &= assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[2]->getMagBulletCount()), "wpn 2 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[2]->isAvailable(), "wpn 2 available") &
             assertTrue(miMchGun.isTaken(), "item 2 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
@@ -2128,7 +2130,7 @@ private:
                 "msg 2 id") &
             assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &
-            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+            assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 2 mag") &
             assertEquals(0 /* we didnt have machinegun yet, so we expect unmag count to be 0 in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 2 unmag") &
@@ -2137,13 +2139,13 @@ private:
         bHasJustBecomeAvailable = false;
         player.takeItem(miBazooka, pktWpnUpdate, bHasJustBecomeAvailable);
         bStrSafeChecked = strncmp(
-            player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
+            player.getWeaponManager().getWeapons()[3]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
             proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
 
-        b &= assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
-            static_cast<int>(player.getWeaponManager().getWeapons()[2]->getMagBulletCount()), "wpn 3 mag") &
-            assertTrue(player.getWeaponManager().getWeapons()[2]->isAvailable(), "wpn 3 available") &
+        b &= assertEquals(player.getWeaponManager().getWeapons()[3]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[3]->getMagBulletCount()), "wpn 3 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[3]->isAvailable(), "wpn 3 available") &
             assertTrue(miBazooka.isTaken(), "item 3 taken") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
@@ -2153,7 +2155,7 @@ private:
                 "msg 3 id") &
             assertTrue(bStrSafeChecked, "msg 3 sWeaponBecomingAvailable") &
             assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 3 becoming available") &
-            assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+            assertEquals(player.getWeaponManager().getWeapons()[3]->getVars()["reloadable"].getAsInt(),
                 static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 3 mag") &
             assertEquals(0 /* we didnt have bazooka yet, so we expect unmag count to be 0 in msg */,
                 static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 3 unmag") &
