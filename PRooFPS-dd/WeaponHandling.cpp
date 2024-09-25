@@ -72,6 +72,7 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 {
     // Which key should switch to which weapon
     WeaponManager::getKeypressToWeaponMap() = {
+        {'1', "knife.txt"},
         {'2', "pistol.txt"},
         {'3', "machinegun.txt"},
         {'4', "bazooka.txt"},

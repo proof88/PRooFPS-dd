@@ -1438,6 +1438,10 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         return false;
     }
 
+    // and this is when the "default available weapon" concept is not necessarily correct because from v0.3.0 knife also becomes available by default:
+    Weapon* const wpnKnife = insertedPlayer.getWeaponManager().getWeaponByFilename("knife.txt");
+    wpnKnife->SetAvailable(true);
+
     // Note that this is a waste of resources this way.
     // Because clients also store the full weapon instances for themselves, even though they dont use weapon cvars at all!
     // Task: On the long run, there should be a WeaponProxy or WeaponClient or something for the clients which are basically

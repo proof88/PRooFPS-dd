@@ -52,6 +52,7 @@ c = dirt2.bmp
 # created behind them, if there is a previously created NEIGHBOR background block
 # next to them. In such case, that previous background block's texture will be
 # applied, otherwise NO background block will be created behind the item.
+# Currently there is no map item for knife because knife is always available for the player.
 
 # 'S' char represents spawn/start point. Multiple 'S' chars can be placed on the map.
 # Number of spawn points might define the max allowed players on the map in the future but

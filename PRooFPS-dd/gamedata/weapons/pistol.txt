@@ -213,7 +213,7 @@ damage_area_size = 0.0
 # Accepted values:
 #  - constant: damage is equal everywhere within the area.
 #  - linear  : damage is decreasing within area towards the edges from its center.
-damage_area_effect = linear
+damage_area_effect = constant
 
 # Amount of push force applied to players within damage area.
 # Must be zero if damage_area_size is zero.

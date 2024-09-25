@@ -617,6 +617,10 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
             m_wpnMgr.setCurrentWeapon(pWpn, false, bServer);
             pWpn->UpdatePosition(getObject3D()->getPosVec(), false);
         }
+
+        // and this is when the "default available weapon" concept is not necessarily correct because from v0.3.0 knife also becomes available by default:
+        Weapon* const wpnKnife = m_wpnMgr.getWeaponByFilename("knife.txt");
+        wpnKnife->SetAvailable(true);
     }
 
     show();
