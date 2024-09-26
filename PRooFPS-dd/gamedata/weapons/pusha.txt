@@ -12,6 +12,11 @@ Name = Pusha
 # Preview Image is not needed to be explicitly defined here, as
 # image file with same name is to be used implicitly as preview.
 
+# Weapon type, can be one of the following:
+# - melee (e.g. fists, knife)
+# - ranged (e.g. pistol, shotgun).
+type = ranged
+
 ############
 #          #
 #  RELOAD  #
@@ -21,17 +26,20 @@ Name = Pusha
 # Max number of bullets player can have for this weapon.
 # For reloadable weapons, this is max unmag count, which is the max number of bullets held outside of the weapon (e.g. in extra magazines).
 # For non-reloadable weapons, this is max mag count (e.g. rail gun).
+# Must be 1 for melee type weapons.
 cap_max = 999
 
 # Max number of bullets the weapon can hold at a time.
 # This can be also understood as magazine capacity.
 # If 0, it is not reloadable (e.g. rail gun).
 # Cannot be bigger than cap_max.
+# Must be 0 for melee type weapons.
 reloadable = 0
 
 # By default we have this amount of bullets with this weapon
 # If weapon is reloadable, this amount will be loaded, thus it
-# cannot be greater than "reloadable"
+# cannot be greater than "reloadable".
+# Must be 1 for melee type weapons.
 bullets_default = 15
 
 # If true, reload is per-magazine, not per-bullet.
@@ -49,6 +57,7 @@ reload_whole_mag = false
 # Reload time in millisecs.
 # If reload_per_mag is true, this time means the complete reload process.
 # If reload_per_mag is false, this time meant to be per-bullet!
+# Must be 0 for melee type weapons.
 reload_time = 1500
 
 # Note on reload sounds:
@@ -82,6 +91,7 @@ reload_end_snd =
 # For pistols, this is usually "semi".
 # For shotguns, this is usually "proj".
 # For rifles, this is usually "auto".
+# Must be "semi" for melee type weapons.
 firing_mode_def = semi
 
 # Maximum supported firing mode.
@@ -92,6 +102,7 @@ firing_mode_def = semi
 # The user is able to select "auto" though even if "proj" is the default, in that case
 # weapon will shot projectiles in automatic mode (e.g. XM1014/Leone YG1265 Auto Shotgun in CS 1.6).
 # Max cannot be less than the default.
+# Must be "semi" for melee type weapons.
 firing_mode_max = semi
 
 # Time needed to elapse between 2 shots, in millisecs.
