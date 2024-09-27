@@ -248,7 +248,12 @@ You can also try **staking** which even exists in Revolut with cryptocurrencies:
 
 Also, I made a **[table of some altcoins](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)** that might be also in your interest.  
 You can see in that document that I'm monitoring how their prices react to Bitcoin price.  
-**I recommend short-term (weeks) cyclic trading with the top-row altcoins in [that table](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link).**  
+**I recommend short-term (weeks) cyclic trading with the top-row altcoins in [that table](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link).**
+
+Note that usually you have to pay **transaction fee**. This is different amount on different blockchains. Solana chain is considered cheap, Ethereum is reasonably more expensive.  
+You can easily spend a few dollars worth of Eth for only 1 transaction on the Ethereum chain.  
+Therefore, I recommend considering this before investing in a coin on the Ethereum chain.  
+Also, you can time your transaction [for less busy time periods](https://etherscan.io/gastracker) when gas fees are usually lower.
 
 \subsection whatbuy_advanced Advanced / Difficult Level
 
@@ -384,6 +389,9 @@ Again: it depends on YOUR expectations of the coin.
 Unlike Bitcoin, not all altcoins should be kept forever.  
 Especially meme coins because I think those are flying for limited time only. They are great for making money, but not so great for holding them forever.  
 Check [my altcoins table for reference prices](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link) to have idea when they should be sold.
+
+And also consider the transaction fee which differs from blockchain to blockchain and also depends on the load on the network.  
+Transactions can be really pricey on Ethereum chain. Try to time your transaction [for less busy time periods](https://etherscan.io/gastracker) when gas fees are usually lower.
 
 \section appendix Appendix
 
@@ -536,6 +544,7 @@ In the above pictures we can see the Telegram posts, the coin name comes exactly
  - [CoinGecko (similar to CoinMarketCap)](https://www.coingecko.com/)
  - [DexScreener (similar, but specialized for coins/tokens tradable on DEX)](https://dexscreener.com/)
  - [TradingView (for analysing charts)](https://www.tradingview.com/)
+ - [Ethereum Gas Fee Tracker](https://etherscan.io/gastracker)
  - [Crypto Halving Dates](https://halvingdates.com/)
  - [Arkham Intel - Deanonymizing the blockchain](https://platform.arkhamintelligence.com/)
  - [Mi az a DePIN?](https://kriptoakademia.com/2024/03/09/bevezetes-a-depin-vilagaba)
