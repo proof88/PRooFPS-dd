@@ -679,6 +679,14 @@ namespace proofps_dd
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::BulletUpdateFromServer;
 
+        enum class BulletDelete : pge_network::TByte
+        {
+            No = 0,
+            Yes,
+            YesHitWall,
+            YesHitPlayer
+        };
+
         static bool initPkt(
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
@@ -721,48 +729,16 @@ namespace proofps_dd
             msgBulletUpdate.m_fDamageAreaSize = damageAreaSize;
             msgBulletUpdate.m_eDamageAreaEffect = damageAreaEffect;
             msgBulletUpdate.m_fDamageAreaPulse = damageAreaPulse;
-            msgBulletUpdate.m_bDelete = false;
+            msgBulletUpdate.m_delete = BulletDelete::No;
 
             return true;
         }
 
-        // this version doesnt call memset, so other properties left as garbage values
-        static bool initPktForDeleting_WithGarbageValues(
-            pge_network::PgePacket& pkt,
-            const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
-            const Bullet::BulletId bulletId,
-            const TPureFloat px,
-            const TPureFloat py,
-            const TPureFloat pz)
-        {
-            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
-            static_assert(sizeof(MsgBulletUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
-
-            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
-            pge_network::PgePacket::initPktMsgApp(pkt, connHandleServerSide, pge_network::PgePacket::AutoFill::NONE);
-
-            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
-                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgBulletUpdateFromServer));
-            if (!pMsgAppData)
-            {
-                return false;
-            }
-
-            proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(*pMsgAppData);
-            msgBulletUpdate.m_bulletId = bulletId;
-            msgBulletUpdate.m_pos.x = px;
-            msgBulletUpdate.m_pos.y = py;
-            msgBulletUpdate.m_pos.z = pz;
-            msgBulletUpdate.m_bDelete = true;
-
-            return true;
-        }
-
-        static bool& getDelete(pge_network::PgePacket& pkt)
+        static BulletDelete& getDelete(pge_network::PgePacket& pkt)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgBulletUpdateFromServer>(pkt);
-            return msgBulletUpdate.m_bDelete;
+            return msgBulletUpdate.m_delete;
         }
 
         // even though we have the WeaponId since v0.3.0, we still need to have some data members in this message.
@@ -777,7 +753,7 @@ namespace proofps_dd
         TPureFloat m_fDamageAreaSize; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
         Bullet::DamageAreaEffect m_eDamageAreaEffect; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
         TPureFloat m_fDamageAreaPulse; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
-        bool m_bDelete;
+        BulletDelete m_delete;
     };  // struct MsgBulletUpdateFromServer
     static_assert(std::is_trivial_v<MsgBulletUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgBulletUpdateFromServer>);

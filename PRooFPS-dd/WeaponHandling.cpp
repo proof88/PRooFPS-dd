@@ -653,6 +653,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         auto& bullet = *it;
 
         bool bDeleteBullet = false;
+        bool bWallHit = false;
+        bool bPlayerHit = false;
         if (bEndGame)
         {
             bDeleteBullet = true;
@@ -698,6 +700,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         bullet.getObject3D().getSizeVec().getX(), bullet.getObject3D().getSizeVec().getY()))
                 {
                     bDeleteBullet = true;
+                    bPlayerHit = true;
                     if (bullet.getAreaDamageSize() == 0.f)
                     {
                         // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
@@ -778,6 +781,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     }
 
                     bDeleteBullet = true;
+                    bWallHit = true;
                     break; // we can stop since 1 bullet can touch only 1 map element
                 }
             }
@@ -826,7 +830,18 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 bullet.getAreaDamagePulse()
                 );
             // clients will also delete this bullet on their side because we set pkt's delete flag here
-            proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = true;
+            if (bPlayerHit)
+            {
+                proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer;
+            }
+            else if (bWallHit)
+            {
+                proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitWall;
+            }
+            else
+            {
+                proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes;
+            }
             it = bullets.erase(it); // delete it right now, otherwise later we would send further updates to clients about this bullet
             m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
         }
@@ -941,7 +956,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         return false;
     }
 
-    if (msg.m_bDelete)
+    if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
     {
         // Make explosion first if required;
         // unlike server, client makes explosion when server says a bullet should be deleted, in such case client's job is to make explosion
@@ -983,7 +998,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
     {
         // newborn bullet 
 
-        if (msg.m_bDelete)
+        if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
         {
             // this is valid scenario: explained a few lines earlier
             return true;
@@ -1051,7 +1066,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         //getConsole().OLn("WeaponHandling::%s(): received MsgBulletUpdateFromServer: old bullet id %u", __func__, msg.m_bulletId);
         //pBullet = &(*it);
 
-        if (!msg.m_bDelete)
+        if (msg.m_delete == proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
         {
             // for a known bullet, client should not receive position updates from server, so log error!
             getConsole().EOLn("WeaponHandling::%s(): received non-delete update for already known bullet, MUST NOT HAPPEN!", __func__);

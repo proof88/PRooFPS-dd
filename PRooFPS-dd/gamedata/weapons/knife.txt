@@ -204,6 +204,14 @@ bullet_distance_max = 0.8
 #                                   #
 #####################################
 
+# Sound to be played upon hitting non-player object such as wall.
+# Currently valid only for non-ranged weapons.
+damage_wall_snd = knife_hitwall1.wav
+
+# Sound to be played upon hitting a player.
+# Currently valid only for non-ranged weapons.
+damage_player_snd = knife_hit3.wav
+
 # Damage to health when hit directly.
 # If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
 damage_hp = 50
