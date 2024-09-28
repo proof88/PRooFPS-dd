@@ -22,6 +22,9 @@ static constexpr float SndWpnReloadDistMax = SndWpnFireDistMax;
 static constexpr float SndExplosionDistMin = 6.f;
 static constexpr float SndExplosionDistMax = 14.f;
 
+static constexpr float SndMeleeWpnBulletHitDistMin = 6.f;
+static constexpr float SndMeleeWpnBulletHitDistMax = 14.f;
+
 
 // ############################### PUBLIC ################################
 
@@ -636,6 +639,43 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(
+    const WeaponId& wpnId,
+    const float& posX,
+    const float& posY,
+    const float& posZ,
+    const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No);
+    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes);
+
+    // just for playing sound, let's use server player's WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
+    if (m_mapPlayers.empty())
+    {
+        return;
+    }
+
+    Weapon* const wpnForSound = m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
+    if (wpnForSound && (wpnForSound->getType() == Weapon::Type::Melee))
+    {
+        const auto handleSndHit = m_pge.getAudio().play3dSound(
+            ((hitType == proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer) ? wpnForSound->getPlayerHitSound() : wpnForSound->getWallHitSound()),
+            posX, posY, posZ);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndHit, SndMeleeWpnBulletHitDistMin, SndMeleeWpnBulletHitDistMax);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndHit, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+    }
+}
+
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    play3dMeleeWeaponHitSound(wpnId, posVec.getX(), posVec.getY(), posVec.getZ(), hitType);
+}
+
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    play3dMeleeWeaponHitSound(bullet.getWeaponId(), bullet.getObject3D().getPosVec(), hitType);
+}
+
 void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -833,10 +873,12 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             if (bPlayerHit)
             {
                 proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer;
+                play3dMeleeWeaponHitSound(bullet, proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer);
             }
             else if (bWallHit)
             {
                 proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitWall;
+                play3dMeleeWeaponHitSound(bullet, proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitWall);
             }
             else
             {
@@ -958,6 +1000,11 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
 
     if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
     {
+        if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes)
+        {
+            play3dMeleeWeaponHitSound(msg.m_weaponId, msg.m_pos.x, msg.m_pos.y, msg.m_pos.z, msg.m_delete);
+        }
+
         // Make explosion first if required;
         // unlike server, client makes explosion when server says a bullet should be deleted, in such case client's job is to make explosion
         // with same parameters as server makes it, based on bullet properties such as position, area damage size, etc., this is why it is important

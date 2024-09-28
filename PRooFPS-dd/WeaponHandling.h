@@ -125,6 +125,14 @@ namespace proofps_dd
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         
         bool isBulletOutOfMapBounds(const Bullet& bullet) const;
+        void play3dMeleeWeaponHitSound(
+            const WeaponId& wpnId,
+            const float& posX,
+            const float& posY,
+            const float& posZ,
+            const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,
