@@ -14,7 +14,7 @@
 #include <unordered_map>
 
 #include "Network/PgePacket.h"
-#include "Weapons/WeaponManager.h" // for BulletId
+#include "Weapons/WeaponManager.h"
 
 #include "GameMode.h"
 #include "MapItem.h"
@@ -683,19 +683,13 @@ namespace proofps_dd
             pge_network::PgePacket& pkt,
             const pge_network::PgeNetworkConnectionHandle& connHandleServerSide,
             const Bullet::BulletId bulletId,
+            const WeaponId weaponId,
             const TPureFloat px,
             const TPureFloat py,
             const TPureFloat pz,
             const TPureFloat ax,
             const TPureFloat ay,
             const TPureFloat az,
-            const bool& visible,
-            const TPureFloat sx,
-            const TPureFloat sy,
-            const TPureFloat sz,
-            const TPureFloat speed,
-            const TPureFloat gravity,
-            const TPureFloat drag,
             const int& nDamageHp,
             const TPureFloat& damageAreaSize,
             const Bullet::DamageAreaEffect& damageAreaEffect,
@@ -716,19 +710,13 @@ namespace proofps_dd
 
             proofps_dd::MsgBulletUpdateFromServer& msgBulletUpdate = reinterpret_cast<proofps_dd::MsgBulletUpdateFromServer&>(*pMsgAppData);
             msgBulletUpdate.m_bulletId = bulletId;
+            msgBulletUpdate.m_weaponId = weaponId;
             msgBulletUpdate.m_pos.x = px;
             msgBulletUpdate.m_pos.y = py;
             msgBulletUpdate.m_pos.z = pz;
             msgBulletUpdate.m_angle.x = ax;
             msgBulletUpdate.m_angle.y = ay;
             msgBulletUpdate.m_angle.z = az;
-            msgBulletUpdate.m_visible = visible;
-            msgBulletUpdate.m_size.x = sx;
-            msgBulletUpdate.m_size.y = sy;
-            msgBulletUpdate.m_size.z = sz;
-            msgBulletUpdate.m_fSpeed = speed;
-            msgBulletUpdate.m_fGravity = gravity;
-            msgBulletUpdate.m_fDrag = drag;
             msgBulletUpdate.m_nDamageHp = nDamageHp;
             msgBulletUpdate.m_fDamageAreaSize = damageAreaSize;
             msgBulletUpdate.m_eDamageAreaEffect = damageAreaEffect;
@@ -777,18 +765,18 @@ namespace proofps_dd
             return msgBulletUpdate.m_bDelete;
         }
 
+        // even though we have the WeaponId since v0.3.0, we still need to have some data members in this message.
+        // For example, m_nDamageHp could be also retrieved on client-side from Weapon data using WeaponId, BUT
+        // the damage might be modified at the moment of firing the bullet, for example, if shooter has quad damage.
+        // And, even if quad damage expires in the meantime, bullet must maintain it.
         Bullet::BulletId m_bulletId;
+        WeaponId m_weaponId;
         TXYZ m_pos;
         TXYZ m_angle;
-        bool m_visible;
-        TXYZ m_size;
-        TPureFloat m_fSpeed;
-        TPureFloat m_fGravity;
-        TPureFloat m_fDrag;
-        int m_nDamageHp;
-        TPureFloat m_fDamageAreaSize;
-        Bullet::DamageAreaEffect m_eDamageAreaEffect;
-        TPureFloat m_fDamageAreaPulse;
+        int m_nDamageHp; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
+        TPureFloat m_fDamageAreaSize; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
+        Bullet::DamageAreaEffect m_eDamageAreaEffect; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
+        TPureFloat m_fDamageAreaPulse; // v0.3.0: could deduct by WeaponId but might be different under different circumstances so keeping it now ...
         bool m_bDelete;
     };  // struct MsgBulletUpdateFromServer
     static_assert(std::is_trivial_v<MsgBulletUpdateFromServer>);
@@ -886,7 +874,7 @@ namespace proofps_dd
         }
 
         char m_szWpnName[nWpnNameNameMaxLength];  /* eMapItemType makes it obsolete */
-        MapItemType m_eMapItemType;
+        MapItemType m_eMapItemType; /* probably this should be replaced by WeaponId already! */
         bool m_bAvailable;
         Weapon::State m_state;
         unsigned int m_nMagBulletCount;
@@ -931,7 +919,7 @@ namespace proofps_dd
             return true;
         }
 
-        char m_szWpnCurrentName[MsgWpnUpdateFromServer::nWpnNameNameMaxLength];
+        char m_szWpnCurrentName[MsgWpnUpdateFromServer::nWpnNameNameMaxLength];  /* should be replaced by WeaponId already! */
         Weapon::State m_state;
     };  // struct MsgCurrentWpnUpdateFromServer
     static_assert(std::is_trivial_v<MsgCurrentWpnUpdateFromServer>);

@@ -813,19 +813,13 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 newPktBulletUpdate,
                 bullet.getOwner(),
                 bullet.getId(),
+                bullet.getWeaponId(),
                 fBulletPosX,
                 fBulletPosY,
                 bullet.getObject3D().getPosVec().getZ(),
                 bullet.getObject3D().getAngleVec().getX(),
                 bullet.getObject3D().getAngleVec().getY(),
                 bullet.getObject3D().getAngleVec().getZ(),
-                bullet.getObject3D().isRenderingAllowed(),
-                bullet.getObject3D().getSizeVec().getX(),
-                bullet.getObject3D().getSizeVec().getY(),
-                bullet.getObject3D().getSizeVec().getZ(),
-                bullet.getSpeed(),
-                bullet.getGravity(),
-                bullet.getDrag(),
                 bullet.getDamageHp(),
                 bullet.getAreaDamageSize(),
                 bullet.getAreaDamageEffect(),
@@ -846,19 +840,13 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     newPktBulletUpdate,
                     bullet.getOwner(),
                     bullet.getId(),
+                    bullet.getWeaponId(),
                     fBulletPosX,
                     fBulletPosY,
                     bullet.getObject3D().getPosVec().getZ(),
                     bullet.getObject3D().getAngleVec().getX(),
                     bullet.getObject3D().getAngleVec().getY(),
                     bullet.getObject3D().getAngleVec().getZ(),
-                    bullet.getObject3D().isRenderingAllowed(),
-                    bullet.getObject3D().getSizeVec().getX(),
-                    bullet.getObject3D().getSizeVec().getY(),
-                    bullet.getObject3D().getSizeVec().getZ(),
-                    bullet.getSpeed(),
-                    bullet.getGravity(),
-                    bullet.getDrag(),
                     bullet.getDamageHp(),
                     bullet.getAreaDamageSize(),
                     bullet.getAreaDamageEffect(),
@@ -1017,10 +1005,7 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
 
         Player& player = playerIt->second;
 
-        // I'm playing the sound associated to player's current weapon, although it might happen that with BIG latency, when I receive this update from server,
-        // the player has already switched to another weapon ...
-        // but I think this cannot happen since player inputs and other events are processed and responded by server in order.
-        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+        Weapon* const wpn = player.getWeaponManager().getWeaponById(msg.m_weaponId);
         if (!wpn)
         {
             getConsole().EOLn("WeaponHandling::%s(): getWeapon() failed!", __func__);
@@ -1040,13 +1025,22 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
 
         m_pge.getBullets().push_back(
             Bullet(
+                msg.m_weaponId,
                 m_pge.getPure(),
                 msg.m_bulletId,
                 msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
                 msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
-                msg.m_visible,
-                msg.m_size.x, msg.m_size.y, msg.m_size.z,
-                msg.m_fSpeed, msg.m_fGravity, msg.m_fDrag, msg.m_nDamageHp,
+                wpn->getVars()["bullet_visible"].getAsBool(),
+                wpn->getVars()["bullet_size_x"].getAsFloat(),
+                wpn->getVars()["bullet_size_y"].getAsFloat(),
+                wpn->getVars()["bullet_size_z"].getAsFloat(),
+                wpn->getVars()["bullet_speed"].getAsFloat(),
+                wpn->getVars()["bullet_gravity"].getAsFloat(),
+                wpn->getVars()["bullet_drag"].getAsFloat(),
+                /* fragile is not used by client-side ctor */
+                /* distanceMax is not used by client-side ctor */
+                /* damageAP is not used by client-side ctor */
+                msg.m_nDamageHp,
                 msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse));
         pBullet = &(m_pge.getBullets().back());
         it = m_pge.getBullets().end();
