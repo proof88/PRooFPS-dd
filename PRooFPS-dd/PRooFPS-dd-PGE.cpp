@@ -238,7 +238,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");
     getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
-    getAudio().loadSound(m_sounds.m_sndExplosion,     std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/xplosion.wav");
 
     static constexpr float SndPlayerDieDistMin = 6.f;
     static constexpr float SndPlayerDieDistMax = 12.f;
@@ -1394,7 +1393,11 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             {
                 // cannot be empty, Weapon ctor makes it sure!
                 assert(!loadedWpn->getVars()["damage_area_gfx_obj"].getAsString().empty());
-                Explosion::updateReferenceExplosions(*this, loadedWpn->getVars()["damage_area_gfx_obj"].getAsString());
+                assert(!loadedWpn->getVars()["damage_area_snd"].getAsString().empty());
+                Explosion::updateReferenceExplosions(
+                    *this,
+                    loadedWpn->getVars()["damage_area_gfx_obj"].getAsString(),
+                    loadedWpn->getVars()["damage_area_snd"].getAsString());
             }
 
             if (m_mapPlayers.size() == 1)

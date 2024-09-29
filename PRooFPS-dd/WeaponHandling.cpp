@@ -19,8 +19,6 @@ static constexpr float SndWpnFireDistMin = 6.f;
 static constexpr float SndWpnFireDistMax = 14.f;
 static constexpr float SndWpnReloadDistMin = SndWpnFireDistMin;
 static constexpr float SndWpnReloadDistMax = SndWpnFireDistMax;
-static constexpr float SndExplosionDistMin = 6.f;
-static constexpr float SndExplosionDistMax = 14.f;
 
 static constexpr float SndMeleeWpnBulletHitDistMin = 6.f;
 static constexpr float SndMeleeWpnBulletHitDistMax = 14.f;
@@ -148,17 +146,13 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
     m_explosions.push_back(
         Explosion(
-            m_pge.getPure(),
+            m_pge,
             connHandle,
             refId,
             pos,
             fDamageAreaSize));
 
     const Explosion& xpl = m_explosions.back();
-
-    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
@@ -249,7 +243,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
     m_explosions.push_back(
         Explosion(
-            m_pge.getPure(),
+            m_pge,
             id /* explosion id is not used on client-side */,
             connHandle,
             refId,
@@ -257,10 +251,6 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
             fDamageAreaSize));
 
     Explosion& xpl = m_explosions.back();
-
-    const auto sndExplosionHandle = m_pge.getAudio().play3dSound(m_sounds.m_sndExplosion, pos);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndExplosionHandle, SndExplosionDistMin, SndExplosionDistMax);
-    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndExplosionHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
     const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
     if (playerIt == m_mapPlayers.end())
@@ -465,7 +455,7 @@ void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(We
 void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
 {
     m_explosions.clear();
-    Explosion::destroyExplosionsReference();
+    Explosion::destroyReferenceExplosions();
     Explosion::resetGlobalExplosionId();
 
     m_pge.getBullets().clear();

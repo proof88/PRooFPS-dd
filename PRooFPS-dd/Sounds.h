@@ -38,7 +38,6 @@ namespace proofps_dd
         SoLoud::Wav m_sndLetsgo;
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;
-        SoLoud::Wav m_sndExplosion;
 
     protected:
 
