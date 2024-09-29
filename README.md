@@ -56,7 +56,7 @@ In-air salto/somersault: jump-crouch-jump or jump-jump combo, depending on serve
 
 **Weapons**
 
- - **2,3,4 / Mouse Wheel**: change weapon (pistol, machine gun, bazooka);
+ - **1,2,3,4,5 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha);
  - **R**: reload current weapon;
  - **Mouse Click**: attack (fire weapon).
 
