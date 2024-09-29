@@ -1811,12 +1811,22 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
 
         if (itCVarWpnName != wpnCurrent->getVars().end())
         {
-            drawTextHighlighted(
-                10,
-                ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
-                itCVarWpnName->second.getAsString() + ": " +
-                std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
-                std::to_string(wpnCurrent->getUnmagBulletCount()));
+            if (wpnCurrent->getType() == Weapon::Type::Melee)
+            {
+                drawTextHighlighted(
+                    10,
+                    ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+                    itCVarWpnName->second.getAsString());
+            }
+            else
+            {
+                drawTextHighlighted(
+                    10,
+                    ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+                    itCVarWpnName->second.getAsString() + ": " +
+                    std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
+                    std::to_string(wpnCurrent->getUnmagBulletCount()));
+            }
             
             // obviously we don't know if these events are for this weapon because player might had already changed the weapon since ammo pickup,
             // so in case of weapon change, we definitely need to clear these ammo change events
