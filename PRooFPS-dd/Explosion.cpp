@@ -33,113 +33,173 @@ void proofps_dd::Explosion::resetGlobalExplosionId()
     m_globalExplosionId = 0;
 }
 
-bool proofps_dd::Explosion::initExplosionsReference(PGE& pge)
+bool proofps_dd::Explosion::updateReferenceExplosions(PGE& pge, const std::string& filenameWithPath)
 {
-    if (m_pReferenceObjExplosion)
+    const std::string sFilenameOnly = PFL::getFilename(filenameWithPath.c_str());
+    const ExplosionObjRefId refId = PFL::calcHash(sFilenameOnly);
+    if (m_explosionRefObjects.find(refId) != m_explosionRefObjects.end())
     {
         return true;
     }
 
-    m_pReferenceObjExplosion = pge.getPure().getObject3DManager().createFromFile((std::string(GAME_MODELS_DIR) + "rocketl_xpl.obj").c_str());
-    if (!m_pReferenceObjExplosion)
+    PureObject3D* const pReferenceObjExplosion = pge.getPure().getObject3DManager().createFromFile((std::string(GAME_MODELS_DIR) + sFilenameOnly).c_str());
+    if (!pReferenceObjExplosion)
     {
+        CConsole::getConsoleInstance("Explosion").EOLn("Failed to create reference object!");
         return false;
     }
 
-    m_pReferenceObjExplosion->SetDoubleSided(true);
-    m_pReferenceObjExplosion->SetLit(false);
+    pReferenceObjExplosion->SetDoubleSided(true);
+    pReferenceObjExplosion->SetLit(false);
     // We want the animation to start with 0.1 unit size so we set scaling with this formula.
     // For example, diameter of rocketl_xpl.obj is 16 units, so to have a diameter of 1 unit, its scaling should be 1/16,
     // we use getSizeVec().getX() as diameter, considering the model object is always a sphere.
-    m_pReferenceObjExplosion->SetScaling(1 / m_pReferenceObjExplosion->getSizeVec().getX() / 10.f);
-    m_pReferenceObjExplosion->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
-    m_pReferenceObjExplosion->Hide();
+    pReferenceObjExplosion->SetScaling(1 / pReferenceObjExplosion->getSizeVec().getX() / 10.f);
+    pReferenceObjExplosion->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE);
+    pReferenceObjExplosion->Hide();
+
+    m_explosionRefObjects.insert({ refId, pReferenceObjExplosion });
+
+    CConsole::getConsoleInstance("Explosion").EOLn("A new reference object is created from %s!", sFilenameOnly.c_str());
 
     return true;
 }
 
 void proofps_dd::Explosion::destroyExplosionsReference()
 {
-    if (m_pReferenceObjExplosion)
+    for (const auto& refExplosion : m_explosionRefObjects)
     {
-        delete m_pReferenceObjExplosion; // will detach from manager
-        m_pReferenceObjExplosion = nullptr;
+        assert(refExplosion.second);
+        delete refExplosion.second;
     }
+    m_explosionRefObjects.clear();
 }
 
 /**
-    Ctor to be used by PGE server instance: bullet id will be assigned within the ctor.
+    Ctor to be used by PGE server instance: explosion id will be assigned within the ctor.
 */
 proofps_dd::Explosion::Explosion(
     PR00FsUltimateRenderingEngine& gfx,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const ExplosionObjRefId& refId,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize) :
     m_id(m_globalExplosionId++),
     m_gfx(gfx),
     m_connHandle(connHandle),
+    m_refId(refId),
     m_fDamageAreaSize(fDamageAreaSize),
     m_objPrimary(nullptr),
     m_objSecondary(nullptr),
-    m_fScalingPrimary(m_pReferenceObjExplosion->getScaling().getX()),
-    m_fScalingSecondary(m_pReferenceObjExplosion->getScaling().getX()),
     m_bCreateSentToClients(false)
 {
-    // TODO throw exception if cant create!
-    m_objPrimary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    const auto itRef = m_explosionRefObjects.find(refId);
+    if (itRef == m_explosionRefObjects.end())
+    {
+        getConsole().EOLn("Explosion ctor (server): no ref explosion found with id: %u", static_cast<uint32_t>(refId));
+        throw std::runtime_error("Explosion ctor (server): no ref explosion found with id: " + std::to_string(refId));
+    }
+
+    const auto pReferenceObjExplosion = itRef->second;
+    assert(pReferenceObjExplosion);
+
+    m_fScalingPrimary = pReferenceObjExplosion->getScaling().getX();
+    m_fScalingSecondary = pReferenceObjExplosion->getScaling().getX();
+
+    m_objPrimary = gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
     m_objPrimary->Show();
     m_objPrimary->getPosVec() = pos;
 
-    m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary = gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
     m_objSecondary->Hide();
     m_objSecondary->getPosVec() = pos;
+
+    if (!m_objPrimary || !m_objSecondary)
+    {
+        CConsole::getConsoleInstance("Explosion").EOLn("Explosion ctor (server): Failed to create a cloned object!");
+        throw std::runtime_error("Explosion ctor (server): Failed to create a cloned object!");
+    }
 }
 
 /**
-    Ctor to be used by PGE client instance: bullet id as received from server.
+    Ctor to be used by PGE client instance: explosion id as received from server.
 */
 proofps_dd::Explosion::Explosion(
     PR00FsUltimateRenderingEngine& gfx,
     const Explosion::ExplosionId& id,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const ExplosionObjRefId& refId,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize) :
     m_id(id),
     m_gfx(gfx),
     m_connHandle(connHandle),
+    m_refId(refId),
     m_fDamageAreaSize(fDamageAreaSize),
     m_objPrimary(nullptr),
     m_objSecondary(nullptr),
-    m_fScalingPrimary(m_pReferenceObjExplosion->getScaling().getX()),
-    m_fScalingSecondary(m_pReferenceObjExplosion->getScaling().getX()),
     m_bCreateSentToClients(true) /* irrelevant for this client-side ctor but we are client so yes it is sent :) */
 {
-    // TODO throw exception if cant create!
-    m_objPrimary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    const auto itRef = m_explosionRefObjects.find(refId);
+    if (itRef == m_explosionRefObjects.end())
+    {
+        getConsole().EOLn("Explosion ctor (client): no ref explosion found with id: %u", static_cast<uint32_t>(refId));
+        throw std::runtime_error("Explosion ctor (client): no ref explosion found with id: " + std::to_string(refId));
+    }
+
+    const auto pReferenceObjExplosion = itRef->second;
+    assert(pReferenceObjExplosion);
+
+    m_fScalingPrimary = pReferenceObjExplosion->getScaling().getX();
+    m_fScalingSecondary = pReferenceObjExplosion->getScaling().getX();
+
+    m_objPrimary = gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
     m_objPrimary->Show();
     m_objPrimary->getPosVec() = pos;
 
-    m_objSecondary = gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+    m_objSecondary = gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
     m_objSecondary->Hide();
     m_objSecondary->getPosVec() = pos;
+
+    if (!m_objPrimary || !m_objSecondary)
+    {
+        CConsole::getConsoleInstance("Explosion").EOLn("Explosion ctor (client): Failed to create a cloned object!");
+        throw std::runtime_error("Explosion ctor (client): Failed to create a cloned object!");
+    }
 }
 
 proofps_dd::Explosion::Explosion(const proofps_dd::Explosion& other) :
     m_id(other.m_id),
     m_gfx(other.m_gfx),
     m_connHandle(other.m_connHandle),
+    m_refId(other.m_refId),
     m_fDamageAreaSize(other.m_fDamageAreaSize),
     m_fScalingPrimary(other.m_fScalingPrimary),
     m_fScalingSecondary(other.m_fScalingSecondary),
     m_bCreateSentToClients(other.m_bCreateSentToClients)
 {
-    // TODO throw exception if cant create!
+    const auto itRef = m_explosionRefObjects.find(m_refId);
+    if (itRef == m_explosionRefObjects.end())
+    {
+        getConsole().EOLn("Explosion copy ctor: no ref explosion found with id: %u", static_cast<uint32_t>(m_refId));
+        throw std::runtime_error("Explosion copy ctor: no ref explosion found with id: " + std::to_string(m_refId));
+    }
+
+    const auto pReferenceObjExplosion = itRef->second;
+    assert(pReferenceObjExplosion);
+
     if (other.m_objPrimary)
     {
-        m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objPrimary = m_gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
         m_objPrimary->SetRenderingAllowed(other.m_objPrimary->isRenderingAllowed());
         m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
         m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+        
+        if (!m_objPrimary)
+        {
+            CConsole::getConsoleInstance("Explosion").EOLn("Explosion copy ctor: Failed to create a cloned object!");
+            throw std::runtime_error("Explosion copy ctor: Failed to create a cloned object!");
+        }
     }
     else
     {
@@ -148,10 +208,16 @@ proofps_dd::Explosion::Explosion(const proofps_dd::Explosion& other) :
 
     if (other.m_objSecondary)
     {
-        m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objSecondary = m_gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
         m_objSecondary->SetRenderingAllowed(other.m_objSecondary->isRenderingAllowed());
         m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
         m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+
+        if (!m_objSecondary)
+        {
+            CConsole::getConsoleInstance("Explosion").EOLn("Explosion copy ctor: Failed to create a cloned object!");
+            throw std::runtime_error("Explosion copy ctor: Failed to create a cloned object!");
+        }
     }
     else
     {
@@ -164,18 +230,33 @@ proofps_dd::Explosion& proofps_dd::Explosion::operator=(const proofps_dd::Explos
     m_id = other.m_id;
     m_gfx = other.m_gfx;
     m_connHandle = other.m_connHandle;
+    m_refId = other.m_refId;
     m_fDamageAreaSize = other.m_fDamageAreaSize;
     m_fScalingPrimary = other.m_fScalingPrimary;
     m_fScalingSecondary = other.m_fScalingSecondary;
     m_bCreateSentToClients = other.m_bCreateSentToClients;
 
-    // TODO throw exception if cant create!
+    const auto itRef = m_explosionRefObjects.find(m_refId);
+    if (itRef == m_explosionRefObjects.end())
+    {
+        getConsole().EOLn("Explosion copy assignment: no ref explosion found with id: %u", static_cast<uint32_t>(m_refId));
+        throw std::runtime_error("Explosion copy assignment: no ref explosion found with id: " + std::to_string(m_refId));
+    }
+
+    const auto pReferenceObjExplosion = itRef->second;
+    assert(pReferenceObjExplosion);
+
     if (other.m_objPrimary)
     {
-        m_objPrimary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objPrimary = m_gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
         m_objPrimary->SetRenderingAllowed(other.m_objPrimary->isRenderingAllowed());
         m_objPrimary->getPosVec() = other.m_objPrimary->getPosVec();
         m_objPrimary->SetScaling(other.m_objPrimary->getScaling());
+        if (!m_objPrimary)
+        {
+            CConsole::getConsoleInstance("Explosion").EOLn("Explosion copy ctor: Failed to create a cloned object!");
+            throw std::runtime_error("Explosion copy ctor: Failed to create a cloned object!");
+        }
     }
     else
     {
@@ -184,10 +265,15 @@ proofps_dd::Explosion& proofps_dd::Explosion::operator=(const proofps_dd::Explos
 
     if (other.m_objSecondary)
     {
-        m_objSecondary = m_gfx.getObject3DManager().createCloned(*m_pReferenceObjExplosion);
+        m_objSecondary = m_gfx.getObject3DManager().createCloned(*pReferenceObjExplosion);
         m_objSecondary->SetRenderingAllowed(other.m_objSecondary->isRenderingAllowed());
         m_objSecondary->getPosVec() = other.m_objSecondary->getPosVec();
         m_objSecondary->SetScaling(other.m_objSecondary->getScaling());
+        if (!m_objSecondary)
+        {
+            CConsole::getConsoleInstance("Explosion").EOLn("Explosion copy ctor: Failed to create a cloned object!");
+            throw std::runtime_error("Explosion copy ctor: Failed to create a cloned object!");
+        }
     }
     else
     {
@@ -345,4 +431,4 @@ bool proofps_dd::Explosion::shouldBeDeleted() const
 
 
 proofps_dd::Explosion::ExplosionId proofps_dd::Explosion::m_globalExplosionId = 0;
-PureObject3D* proofps_dd::Explosion::m_pReferenceObjExplosion = nullptr;
+std::map<proofps_dd::ExplosionObjRefId, PureObject3D*> proofps_dd::Explosion::m_explosionRefObjects;

@@ -77,6 +77,7 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaSize,
             const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const TPureFloat& fDamageAreaPulse,
+            const std::string& sExplosionGfxObjFilename,
             const int& nDamageAp,
             const int& nDamageHp,
             XHair& xhair,
@@ -90,6 +91,7 @@ namespace proofps_dd
             const TPureFloat& fDamageAreaSize,
             const Bullet::DamageAreaEffect& eDamageAreaEffect,
             const TPureFloat& fDamageAreaPulse,
+            const std::string& sExplosionGfxObjFilename,
             PureVector& vecCamShakeForce);
 
         void handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
@@ -125,6 +127,7 @@ namespace proofps_dd
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         
         bool isBulletOutOfMapBounds(const Bullet& bullet) const;
+        Weapon* getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId);
         void play3dMeleeWeaponHitSound(
             const WeaponId& wpnId,
             const float& posX,

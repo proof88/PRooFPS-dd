@@ -1389,6 +1389,14 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             loadedWpn->SetOwner(connHandleServerSide);
             loadedWpn->getObject3D().SetName(loadedWpn->getObject3D().getName() + " (for user " + std::to_string(connHandleServerSide) + ")");
 
+            // this is where we make sure any kind of explosion has the proper reference created
+            if (loadedWpn->getVars()["damage_area_size"].getAsFloat() > 0.f)
+            {
+                // cannot be empty, Weapon ctor makes it sure!
+                assert(!loadedWpn->getVars()["damage_area_gfx_obj"].getAsString().empty());
+                Explosion::updateReferenceExplosions(*this, loadedWpn->getVars()["damage_area_gfx_obj"].getAsString());
+            }
+
             if (m_mapPlayers.size() == 1)
             {
                 // just log some weapon info only when 1st player is created to avoid spamming

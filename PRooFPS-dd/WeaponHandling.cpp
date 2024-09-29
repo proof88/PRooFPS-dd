@@ -83,7 +83,8 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
     };
 
     Explosion::resetGlobalExplosionId();
-    return Explosion::initExplosionsReference(m_pge);
+
+    return true;
 }
 
 float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
@@ -137,16 +138,19 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const TPureFloat& fDamageAreaSize,
     const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
+    const std::string& sExplosionGfxObjFilename,
     const int& nDamageAp,
     const int& nDamageHp,
     XHair& xhair,
     PureVector& vecCamShakeForce,
     proofps_dd::GameMode& gameMode)
 {
+    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
     m_explosions.push_back(
         Explosion(
             m_pge.getPure(),
             connHandle,
+            refId,
             pos,
             fDamageAreaSize));
 
@@ -239,13 +243,16 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
     const TPureFloat& fDamageAreaSize,
     const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
+    const std::string& sExplosionGfxObjFilename,
     PureVector& vecCamShakeForce)
 {
+    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
     m_explosions.push_back(
         Explosion(
             m_pge.getPure(),
             id /* explosion id is not used on client-side */,
             connHandle,
+            refId,
             pos,
             fDamageAreaSize));
 
@@ -639,6 +646,16 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
 }
 
+Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
+{
+    if (m_mapPlayers.empty())
+    {
+        return nullptr;
+    }
+
+    return m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
+}
+
 void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(
     const WeaponId& wpnId,
     const float& posX,
@@ -649,13 +666,13 @@ void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(
     assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No);
     assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes);
 
-    // just for playing sound, let's use server player's WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
-    if (m_mapPlayers.empty())
+    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
+    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(wpnId);
+    if (!wpnForSound)
     {
         return;
     }
 
-    Weapon* const wpnForSound = m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
     if (wpnForSound && (wpnForSound->getType() == Weapon::Type::Melee))
     {
         const auto handleSndHit = m_pge.getAudio().play3dSound(
@@ -836,17 +853,23 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 if (bullet.getAreaDamageSize() > 0.f)
                 {
-                    createExplosionServer(
-                        bullet.getOwner(),
-                        bullet.getObject3D().getPosVec(),
-                        bullet.getAreaDamageSize(),
-                        bullet.getAreaDamageEffect(),
-                        bullet.getAreaDamagePulse(),
-                        bullet.getDamageAp(),
-                        bullet.getDamageHp(),
-                        xhair,
-                        vecCamShakeForce,
-                        gameMode);
+                    // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
+                    Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                    if (wpnForExplosionData)
+                    {
+                        createExplosionServer(
+                            bullet.getOwner(),
+                            bullet.getObject3D().getPosVec(),
+                            bullet.getAreaDamageSize(),
+                            bullet.getAreaDamageEffect(),
+                            bullet.getAreaDamagePulse(),
+                            wpnForExplosionData->getVars()["damage_area_gfx_obj"].getAsString(),
+                            bullet.getDamageAp(),
+                            bullet.getDamageHp(),
+                            xhair,
+                            vecCamShakeForce,
+                            gameMode);
+                    }
                 }
             }
 
@@ -1016,16 +1039,29 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         // the other player on server-side, we will receive a bullet delete request only from server in that case without any bullet create request prior to it!
         if (msg.m_fDamageAreaSize > 0.f)
         {
-            createExplosionClient(
-                0 /* explosion id is not used on client-side */,
-                connHandleServerSide,
-                /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
-                PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
-                msg.m_nDamageHp,
-                msg.m_fDamageAreaSize,
-                msg.m_eDamageAreaEffect,
-                msg.m_fDamageAreaPulse,
-                vecCamShakeForce);
+            // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
+            Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(msg.m_weaponId);
+            if (wpnForExplosionData)
+            {
+                createExplosionClient(
+                    0 /* explosion id is not used on client-side */,
+                    connHandleServerSide,
+                    /* server puts the last calculated bullet positions into message when it asks us to delete the bullet so we put explosion here */
+                    PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z),
+                    msg.m_nDamageHp,
+                    msg.m_fDamageAreaSize,
+                    msg.m_eDamageAreaEffect,
+                    msg.m_fDamageAreaPulse,
+                    wpnForExplosionData->getVars()["damage_area_gfx_obj"].getAsString(),
+                    vecCamShakeForce);
+            }
+            else
+            {
+                getConsole().EOLn("WeaponHandling::%s(): getWeaponByIdFromAnyPlayersWeaponManager() failed with weapon id: %u!", 
+                   __func__, static_cast<uint32_t>(msg.m_weaponId));
+                assert(false);
+                return false;
+            }
         }
     }
 

@@ -16,6 +16,8 @@
 namespace proofps_dd
 {
 
+    typedef PFL::StringHash ExplosionObjRefId;
+
     class Explosion
     {
 
@@ -28,23 +30,25 @@ namespace proofps_dd
         static ExplosionId getGlobalExplosionId();
         static void resetGlobalExplosionId();
 
-        static bool initExplosionsReference(PGE& pge);
+        static bool updateReferenceExplosions(PGE& pge, const std::string& filenameWithPath);
         static void destroyExplosionsReference();
 
         // ---------------------------------------------------------------------------
 
-        /** Ctor to be used by PGE server instance: bullet id will be assigned within the ctor. */
+        /** Ctor to be used by PGE server instance: explosion id will be assigned within the ctor. */
         Explosion(
             PR00FsUltimateRenderingEngine& gfx,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
+            const ExplosionObjRefId& refId,
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize);
 
-        /** Ctor to be used by PGE client instance: bullet id as received from server. */
+        /** Ctor to be used by PGE client instance: explosion id as received from server. */
         Explosion(
             PR00FsUltimateRenderingEngine& gfx,
             const ExplosionId& id,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
+            const ExplosionObjRefId& refId,
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize);
 
@@ -82,11 +86,13 @@ namespace proofps_dd
     private:
 
         static ExplosionId m_globalExplosionId;                /**< Next unique explosion id for identifying. Used by PGE server instance only. */
-        static PureObject3D* m_pReferenceObjExplosion;
+
+        static std::map<ExplosionObjRefId, PureObject3D*> m_explosionRefObjects;
 
         ExplosionId m_id;                                      /**< Unique explosion id for identifying. Used by PGE server and client instances. */
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeNetworkConnectionHandle m_connHandle;  /**< Owner (caused by) of this explosion. Used by PGE server instance only. */
+        ExplosionObjRefId m_refId;                             /**< Explosion object reference id, used to search in m_explosionRefObjects. Used by PGE server and client instances. */
         TPureFloat m_fDamageAreaSize;                          /**< Originating bullet's fDamageAreaSize. Used by PGE server and client instances. */
 
         PureObject3D* m_objPrimary;                            /**< Associated Primary Pure object to be rendered. Used by PGE server and client instances. TODO: shared ptr. */

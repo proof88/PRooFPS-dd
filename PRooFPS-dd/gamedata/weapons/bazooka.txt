@@ -244,4 +244,4 @@ damage_area_gfx_obj = rocketl_xpl.obj
 
 # Sound to be played as explosion effect.
 # Valid only when damage_area_size is not 0.
-damage_area_snd =
+damage_area_snd = xplosion.wav

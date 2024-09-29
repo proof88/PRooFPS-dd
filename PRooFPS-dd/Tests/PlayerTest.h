@@ -831,7 +831,7 @@ private:
 
         // now we just testing for getTimeDied()
         player.setHealth(100);
-        player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
+        player.respawn(true, *(player.getWeaponManager().getWeapons()[1]), bServer);
         player.die(true, bServer);
 
         const auto nSecondTimeDiedSinceEpoch = playerConst.getTimeDied().time_since_epoch().count();
@@ -894,8 +894,8 @@ private:
         {
             return false;
         };
-        player.getWeaponManager().getWeapons()[1]->SetAvailable(true);
-        bool b = assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, bServer), "set current wpn");
+        player.getWeaponManager().getWeapons()[2]->SetAvailable(true);
+        bool b = assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[2], false, bServer), "set current wpn");
 
         // TODO: maybe we should also check for object height
         player.getWantToStandup() = false;
@@ -910,13 +910,13 @@ private:
         player.setArmor(50);
 
         player.die(true, bServer);
-        player.respawn(true, *(player.getWeaponManager().getWeapons()[0]), bServer);
+        player.respawn(true, *(player.getWeaponManager().getWeapons()[1]), bServer);
 
         const auto& playerConst = player;
         return (b & assertTrue(player.getObject3D()->isRenderingAllowed(), "player object visible") &
             assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible") &
-            assertFalse(player.getWeaponManager().getWeapons()[1]->isAvailable(), "wpn 2 not available") &
-            assertEquals(player.getWeaponManager().getWeapons()[0], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
+            assertFalse(player.getWeaponManager().getWeapons()[2]->isAvailable(), "wpn 2 not available") &
+            assertEquals(player.getWeaponManager().getWeapons()[1], player.getWeaponManager().getCurrentWeapon(), "current wpn") &
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
             assertTrue(player.getWantToStandup(), "wantstandup") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
@@ -1977,7 +1977,7 @@ private:
         player.getAttack() = true;
         b &= assertFalse(player.attack(), "player cannot attack without wpn");
         
-        if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true))
+        if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, true))
         {
             return false;
         }
@@ -2045,7 +2045,7 @@ private:
 
         bool b = assertTrue(player.canTakeItem(miPistol), "1");
 
-        player.getWeaponManager().getWeapons()[1]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[0]->getVars()["cap_max"].getAsInt());
+        player.getWeaponManager().getWeapons()[1]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[1]->getVars()["cap_max"].getAsInt());
         b &= assertFalse(player.canTakeItem(miPistol), "2");
 
         b &= assertTrue(player.canTakeItem(miMchgun), "3");
@@ -2425,7 +2425,7 @@ private:
             return false;
         };
 
-        const Weapon* const wpnPistol = playerServer.getWeaponManager().getWeapons()[0];
+        const Weapon* const wpnPistol = playerServer.getWeaponManager().getWeapons()[1];
         if (!assertNotNull(wpnPistol))
         {
             return false;
