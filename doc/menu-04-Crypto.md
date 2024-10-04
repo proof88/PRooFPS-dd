@@ -237,6 +237,7 @@ For example, spring and summer of 2024 was about meme coins, especially on the S
 Maybe it is late to invest them in Sep 2024, but who knows ...
 
 An important thing is: **when BTC goes down, 99% else also goes down. If BTC goes up, they also go up.**  
+More precisely: **"BTC drives ETH, ETH drives alts"** - as said once by a big whale (ETH is also altcoin but you get it).  
 But the gains and the loses can be even more higher with altcoins, compared to BTC. This is the reason why we also invest in altcoins.  
 Also, not all altcoins are moving at the same time: it happens that a meme coin goes up, another does the same with 1-2 days delay, so this delay can be used to adjust your positions better.
 

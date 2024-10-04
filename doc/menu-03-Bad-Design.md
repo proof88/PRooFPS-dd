@@ -23,3 +23,12 @@ We have already introduced m_eMapItemType in MsgWpnUpdateFromServer, either that
 \section sending_variable Sending Data over Network
 
 TODO
+
+\section memory_handling Memory Handling
+
+https://github.com/gperftools/gperftools
+https://jemalloc.net/
+https://github.com/electronicarts/EASTL
+https://github.com/cacay/MemoryPool/tree/master
+https://github.com/lenonk/memorypool
+https://github.com/danielkrupinski/StringPool?tab=readme-ov-file
