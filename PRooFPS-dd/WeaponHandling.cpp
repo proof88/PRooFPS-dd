@@ -458,7 +458,7 @@ void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
     Explosion::destroyReferenceExplosions();
     Explosion::resetGlobalExplosionId();
 
-    m_pge.getBullets().clear();
+    m_pge.getBullets().deallocate();
     Bullet::resetGlobalBulletId();
 }
 
@@ -633,7 +633,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
         m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight * 4,
         m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
     
-    return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getSizeVec());
+    return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getScaledSizeVec());
 }
 
 Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
@@ -693,10 +693,16 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
     const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
     bool bEndGame = gameMode.isGameWon();
-    std::list<Bullet>& bullets = m_pge.getBullets();
+    PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
     auto it = bullets.begin();
     while (it != bullets.end())
     {
+        if (!it->used())
+        {
+            it++;
+            continue;
+        }
+
         auto& bullet = *it;
 
         bool bDeleteBullet = false;
@@ -744,7 +750,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
                         player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
                         fBulletPosX, fBulletPosY,
-                        bullet.getObject3D().getSizeVec().getX(), bullet.getObject3D().getSizeVec().getY()))
+                        bullet.getObject3D().getScaledSizeVec().getX(), bullet.getObject3D().getScaledSizeVec().getY()))
                 {
                     bDeleteBullet = true;
                     bPlayerHit = true;
@@ -812,10 +818,10 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         continue;
                     }
 
-                    const float fBulletPosXMinusHalf = fBulletPosX - bullet.getObject3D().getSizeVec().getX() / 2.f;
-                    const float fBulletPosXPlusHalf = fBulletPosX - bullet.getObject3D().getSizeVec().getX() / 2.f;
-                    const float fBulletPosYMinusHalf = fBulletPosY - bullet.getObject3D().getSizeVec().getY() / 2.f;
-                    const float fBulletPosYPlusHalf = fBulletPosY - bullet.getObject3D().getSizeVec().getY() / 2.f;
+                    const float fBulletPosXMinusHalf = fBulletPosX - bullet.getObject3D().getScaledSizeVec().getX() / 2.f;
+                    const float fBulletPosXPlusHalf = fBulletPosX - bullet.getObject3D().getScaledSizeVec().getX() / 2.f;
+                    const float fBulletPosYMinusHalf = fBulletPosY - bullet.getObject3D().getScaledSizeVec().getY() / 2.f;
+                    const float fBulletPosYPlusHalf = fBulletPosY - bullet.getObject3D().getScaledSizeVec().getY() / 2.f;
 
                     if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
                     {
@@ -943,10 +949,16 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
 {
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
-    std::list<Bullet>& bullets = m_pge.getBullets();
+    PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
     auto it = bullets.begin();
     while (it != bullets.end())
     {
+        if (!it->used())
+        {
+            it++;
+            continue;
+        }
+
         auto& bullet = *it;
 
         // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
@@ -1055,12 +1067,10 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         }
     }
 
-    Bullet* pBullet = nullptr;
-
     auto it = m_pge.getBullets().begin();
     while (it != m_pge.getBullets().end())
     {
-        if (it->getId() == msg.m_bulletId)
+        if ((it->used()) && (it->getId() == msg.m_bulletId))
         {
             break;
         }
@@ -1111,28 +1121,30 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnFireHandle, SndWpnFireDistMin, SndWpnFireDistMax);
         m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
-        m_pge.getBullets().push_back(
-            Bullet(
-                msg.m_weaponId,
-                m_pge.getPure(),
-                msg.m_bulletId,
-                msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
-                msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
-                wpn->getVars()["bullet_visible"].getAsBool(),
-                wpn->getVars()["bullet_size_x"].getAsFloat(),
-                wpn->getVars()["bullet_size_y"].getAsFloat(),
-                wpn->getVars()["bullet_size_z"].getAsFloat(),
-                wpn->getVars()["bullet_speed"].getAsFloat(),
-                wpn->getVars()["bullet_gravity"].getAsFloat(),
-                wpn->getVars()["bullet_drag"].getAsFloat(),
-                /* fragile is not used by client-side ctor */
-                /* distanceMax is not used by client-side ctor */
-                /* damageAP is not used by client-side ctor */
-                msg.m_nDamageHp,
-                msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse));
-        pBullet = &(m_pge.getBullets().back());
-        it = m_pge.getBullets().end();
-        it--; // iterator points to this newly inserted last bullet
+        // here create() invokes PooledBullet::init(), should invoke the client version!
+        if (!m_pge.getBullets().create(
+            msg.m_bulletId,
+            msg.m_weaponId,
+            m_pge.getPure(),
+            msg.m_pos.x, msg.m_pos.y, msg.m_pos.z,
+            msg.m_angle.x, msg.m_angle.y, msg.m_angle.z,
+            wpn->getVars()["bullet_visible"].getAsBool(),
+            wpn->getVars()["bullet_size_x"].getAsFloat(),
+            wpn->getVars()["bullet_size_y"].getAsFloat(),
+            wpn->getVars()["bullet_size_z"].getAsFloat(),
+            wpn->getVars()["bullet_speed"].getAsFloat(),
+            wpn->getVars()["bullet_gravity"].getAsFloat(),
+            wpn->getVars()["bullet_drag"].getAsFloat(),
+            /* fragile is not used by client-side ctor */
+            /* distanceMax is not used by client-side ctor */
+            /* damageAP is not used by client-side ctor */
+            msg.m_nDamageHp,
+            msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse))
+        {
+            getConsole().EOLn("WeaponHandling::%s():  pool did not create bullet!", __func__);
+            assert(false); // crash in debug
+            return true; // dont crash release
+        }
     }
     else
     {

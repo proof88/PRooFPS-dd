@@ -140,7 +140,7 @@ private:
     proofps_dd::DeathMatchMode* dm;
     pge_audio::PgeAudio m_audio;
     PGEcfgProfiles& m_cfgProfiles;
-    std::list<Bullet> m_bullets;
+    PgeObjectPool<PooledBullet> m_bullets;
     proofps_dd::EventLister m_itemPickupEvents;
     proofps_dd::EventLister m_ammoChangeEvents;
     PR00FsUltimateRenderingEngine* m_engine;

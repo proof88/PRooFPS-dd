@@ -73,7 +73,7 @@ void proofps_dd::Player::genUniqueUserName(
 proofps_dd::Player::Player(
     pge_audio::PgeAudio& audio,
     PGEcfgProfiles& cfgProfiles,
-    std::list<Bullet>& bullets,
+    PgeObjectPool<PooledBullet>& bullets,
     EventLister& eventsItemPickup,
     EventLister& eventsAmmoChange,
     PR00FsUltimateRenderingEngine& gfx,
@@ -207,52 +207,53 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     BuildPlayerObject(true);
 }
 
-proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& other)
-{
-    m_connHandleServerSide = other.m_connHandleServerSide;
-    m_sIpAddress = other.m_sIpAddress;
-    m_sName = other.m_sName;
-    m_bExpectingAfterBootUpDelayedUpdate = other.m_bExpectingAfterBootUpDelayedUpdate;
-    m_vecOldNewValues = other.m_vecOldNewValues;
-    m_bNetDirty = other.m_bNetDirty;
-    m_timeDied = other.m_timeDied;
-    m_bRespawn = other.m_bRespawn;
-    m_vecImpactForce = other.m_vecImpactForce;
-    //m_audio = other.m_audio;  // deleted function
-    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
-    m_bullets = other.m_bullets;
-    //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
-    //m_eventsAmmoChange = other.m_eventsAmmoChange;  // inaccessible
-    m_gfx = other.m_gfx;
-    m_network = other.m_network;
-    m_vecJumpForce = other.m_vecJumpForce;
-    m_fGravity = other.m_fGravity;
-    m_bJumping = other.m_bJumping;
-    m_bAllowJump = other.m_bAllowJump;
-    m_fWillJumpMultFactorX = other.m_fWillJumpMultFactorX;
-    m_fWillJumpMultFactorY = other.m_fWillJumpMultFactorY;
-    m_bCanFall = other.m_bCanFall;
-    m_bFalling = other.m_bFalling;
-    m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
-    m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
-    m_fHeightStartedFalling = other.m_fHeightStartedFalling;
-    m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
-    m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
-    m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
-    m_bJumpWasInitiatedByJumppad = other.m_bJumpWasInitiatedByJumppad;
-    m_bWantToStandup = other.m_bWantToStandup;
-    m_bWillSomersault = other.m_bWillSomersault;
-    m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
-    m_bRunning = other.m_bRunning;
-    m_bJustCreatedAndExpectingStartPos = other.m_bJustCreatedAndExpectingStartPos;
-    m_strafe = other.m_strafe;
-    m_prevActualStrafe = other.m_prevActualStrafe;
-    m_bAttack = other.m_bAttack;
-
-    BuildPlayerObject(true);
-
-    return *this;
-}
+// TODO: delete?
+//proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& other)
+//{
+//    m_connHandleServerSide = other.m_connHandleServerSide;
+//    m_sIpAddress = other.m_sIpAddress;
+//    m_sName = other.m_sName;
+//    m_bExpectingAfterBootUpDelayedUpdate = other.m_bExpectingAfterBootUpDelayedUpdate;
+//    m_vecOldNewValues = other.m_vecOldNewValues;
+//    m_bNetDirty = other.m_bNetDirty;
+//    m_timeDied = other.m_timeDied;
+//    m_bRespawn = other.m_bRespawn;
+//    m_vecImpactForce = other.m_vecImpactForce;
+//    //m_audio = other.m_audio;  // deleted function
+//    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
+//    //m_bullets = other.m_bullets;  // deleted
+//    //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
+//    //m_eventsAmmoChange = other.m_eventsAmmoChange;  // inaccessible
+//    m_gfx = other.m_gfx;
+//    m_network = other.m_network;
+//    m_vecJumpForce = other.m_vecJumpForce;
+//    m_fGravity = other.m_fGravity;
+//    m_bJumping = other.m_bJumping;
+//    m_bAllowJump = other.m_bAllowJump;
+//    m_fWillJumpMultFactorX = other.m_fWillJumpMultFactorX;
+//    m_fWillJumpMultFactorY = other.m_fWillJumpMultFactorY;
+//    m_bCanFall = other.m_bCanFall;
+//    m_bFalling = other.m_bFalling;
+//    m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
+//    m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
+//    m_fHeightStartedFalling = other.m_fHeightStartedFalling;
+//    m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
+//    m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
+//    m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
+//    m_bJumpWasInitiatedByJumppad = other.m_bJumpWasInitiatedByJumppad;
+//    m_bWantToStandup = other.m_bWantToStandup;
+//    m_bWillSomersault = other.m_bWillSomersault;
+//    m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
+//    m_bRunning = other.m_bRunning;
+//    m_bJustCreatedAndExpectingStartPos = other.m_bJustCreatedAndExpectingStartPos;
+//    m_strafe = other.m_strafe;
+//    m_prevActualStrafe = other.m_prevActualStrafe;
+//    m_bAttack = other.m_bAttack;
+//
+//    BuildPlayerObject(true);
+//
+//    return *this;
+//}
 
 proofps_dd::Player::~Player()
 {

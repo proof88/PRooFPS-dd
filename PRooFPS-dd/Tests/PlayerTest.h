@@ -153,7 +153,7 @@ private:
     pge_audio::PgeAudio m_audio;
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* m_engine;
-    std::list<Bullet> m_bullets;
+    PgeObjectPool<PooledBullet> m_bullets;
     proofps_dd::EventLister m_itemPickupEvents;
     proofps_dd::EventLister m_ammoChangeEvents;
     pge_network::PgeNetworkStub m_network;

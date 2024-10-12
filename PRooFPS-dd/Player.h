@@ -114,7 +114,7 @@ namespace proofps_dd
         explicit Player(
             pge_audio::PgeAudio& audio,
             PGEcfgProfiles& cfgProfiles,
-            std::list<Bullet>& bullets,
+            PgeObjectPool<PooledBullet>& bullets,
             EventLister& eventsItemPickup,
             EventLister& eventsAmmoChange,
             PR00FsUltimateRenderingEngine& gfx,
@@ -125,11 +125,11 @@ namespace proofps_dd
         ~Player();
 
         Player(const Player&);
-        Player& operator=(const Player&);
 
         // TODO: add move ctor and move assignment operator
+        Player& operator=(const Player&) = delete;
         Player(Player&&) = delete;
-        Player&& operator=(Player&&) = delete;
+        Player& operator=(Player&&) = delete;
 
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeConstructed() const;
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeBootedUp() const;
@@ -364,7 +364,7 @@ namespace proofps_dd
         WeaponManager m_wpnMgr;
         pge_audio::PgeAudio& m_audio;
         PGEcfgProfiles& m_cfgProfiles;
-        std::list<Bullet>& m_bullets;
+        PgeObjectPool<PooledBullet>& m_bullets;
         EventLister& m_eventsItemPickup;
         EventLister& m_eventsAmmoChange;
         PR00FsUltimateRenderingEngine& m_gfx;

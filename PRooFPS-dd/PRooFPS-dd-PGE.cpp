@@ -201,12 +201,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     getPure().WriteList();
 
-    if (!initializeWeaponHandling())
-    {
-        getConsole().EOLnOO("ERROR: initializeWeaponHandling() failed!");
-        return false;
-    }
-
     // TODO: log level override support: getConsole().SetLoggingState(sTrimmedLine.c_str(), true);
 
     reinitializeNetworking();
@@ -620,7 +614,12 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 
 bool proofps_dd::PRooFPSddPGE::connect()
 {
-    initializeWeaponHandling();
+    if (!initializeWeaponHandling())
+    {
+        getConsole().EOLnOO("ERROR: initializeWeaponHandling() failed!");
+        return false;
+    }
+
     bool bRet;
     const std::string sAppVersion = std::string(GAME_NAME) + " " + std::string(GAME_VERSION);
     if (getNetwork().isServer())
@@ -1410,6 +1409,14 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     loadedWpn->getDamagePerSecondRating());
             }
         }
+    }
+
+    // TODO: set bullets capacity to a dynamic value based on weapon with highest firing rate and roughly max number of players!
+    if (getBullets().capacity() == 0)
+    {
+        CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), true);
+        getBullets().reserve("bullets", 1000, getPure());
+        CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), false);
     }
 
     // TODO: server should send the default weapon to client in this setup message, but for now we set same hardcoded
