@@ -10,6 +10,15 @@ And never forget the most important rule: Never lose money. :)
 
 [Quick link to my altcoins table.](https://docs.google.com/spreadsheets/d/1dRmWWfjfH5j3kHnVBlGKj25zNzYuv04kCtUuxtnEb2U/edit?usp=drive_link)
 
+TODO:
+ - https://www.coinglass.com/LiquidationData
+ - https://www.coinglass.com/LongShortRatio
+ - https://www.coinglass.com/pro/futures/LiquidationHeatMap
+ - https://www.coinglass.com/pro/futures/LiquidationHeatMapNew
+ - https://www.coinglass.com/pro/futures/LiquidationMap
+ - https://www.coinglass.com/pro/futures/LiquidationCountHeatMap
+ - Add to When Buy section: token unlocks (e.g. TIA Oct 31) and halving dates (e.g. BTC) should be also considered! Add link where to check these!
+
 [TOC]
 
 \section terms Terminology
