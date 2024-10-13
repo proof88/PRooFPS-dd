@@ -460,6 +460,7 @@ void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
 
     m_pge.getBullets().deallocate();
     Bullet::resetGlobalBulletId();
+    Bullet::destroyReferenceObject();   // we would not need explicit call if Bullet implemented reference counting
 }
 
 void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)
