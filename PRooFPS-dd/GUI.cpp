@@ -2400,7 +2400,7 @@ void proofps_dd::GUI::drawGameObjectives()
     }
 } // drawGameObjectives()
 
-void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
+float proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
     assert(m_pNetworking && !m_pNetworking->isServer());
@@ -2445,6 +2445,8 @@ void proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Internal Queue Time: " + std::to_string(m_pPge->getNetwork().getClient().getInternalQueueTimeUSecs(false)) + " us");
+
+    return fThisRowY;
 }
 
 void proofps_dd::GUI::drawGameServerConfig()
@@ -2509,8 +2511,14 @@ void proofps_dd::GUI::drawGameServerConfig()
     if (!m_pNetworking->isServer())
     {
         fThisRowY += 2 * m_fFontSizePxHudGeneral;
-        drawClientConnectionDebugInfo(fThisRowY);
+        fThisRowY = drawClientConnectionDebugInfo(fThisRowY);
     }
+
+    fThisRowY += 2 * m_fFontSizePxHudGeneral;
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("BulletPool: ") + std::to_string(m_pPge->getBullets().size()) + " / " + std::to_string(m_pPge->getBullets().capacity()) + " elems (" +
+        std::to_string(m_pPge->getBullets().capacityBytes()) + " Bytes)");
 }
 
 void proofps_dd::GUI::drawGameInfoPages()

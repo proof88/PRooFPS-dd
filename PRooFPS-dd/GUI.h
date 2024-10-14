@@ -180,7 +180,7 @@ namespace proofps_dd
         static void drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY);
         static void drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY);
         static void drawGameObjectives();
-        static void drawClientConnectionDebugInfo(float fThisRowY);
+        static float drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();
         static void drawGameInfoPages();
 
