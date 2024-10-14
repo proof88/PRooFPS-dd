@@ -198,6 +198,10 @@ bullet_fragile = false
 # Cannot be negative.
 bullet_distance_max = 0.8
 
+# Type of particles emitted by the bullet.
+# Can be "none" or "smoke".
+bullet_particle = none
+
 #####################################
 #                                   #
 #  DAMAGE CAUSED AFTER BULLET HITS  #

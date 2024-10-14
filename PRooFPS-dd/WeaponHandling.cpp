@@ -1154,6 +1154,9 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             wpn->getVars()["bullet_drag"].getAsFloat(),
             /* fragile is not used by client-side ctor */
             /* distanceMax is not used by client-side ctor */
+            (wpn->getVars()["bullet_particle"].getAsString() == "smoke" ?
+                Bullet::ParticleType::Smoke :
+                Bullet::ParticleType::None),
             /* damageAP is not used by client-side ctor */
             msg.m_nDamageHp,
             msg.m_fDamageAreaSize, msg.m_eDamageAreaEffect, msg.m_fDamageAreaPulse))
