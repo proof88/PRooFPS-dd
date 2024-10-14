@@ -702,14 +702,17 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
     const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
     bool bEndGame = gameMode.isGameWon();
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
+    size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
     auto it = bullets.begin();
-    while (it != bullets.end())
+    while ((iti != bullets.size()) && (it != bullets.end()))
     {
         if (!it->used())
         {
             it++;
             continue;
         }
+        iti++;
 
         auto& bullet = *it;
 
@@ -732,6 +735,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
         const float fBulletPosY = bullet.getObject3D().getPosVec().getY();
+        const float fBulletScaledSizeX = bullet.getObject3D().getScaledSizeVec().getX();
+        const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
 
         if (!bDeleteBullet)
         {
@@ -753,12 +758,13 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 }
 
                 const auto& playerConst = player;
+                const auto playerScaledSizeVec = player.getObject3D()->getScaledSizeVec();
                 if ((playerConst.getHealth() > 0) &&
                     colliding2_NoZ(
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-                        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+                        playerScaledSizeVec.getX(), playerScaledSizeVec.getY(),
                         fBulletPosX, fBulletPosY,
-                        bullet.getObject3D().getScaledSizeVec().getX(), bullet.getObject3D().getScaledSizeVec().getY()))
+                        fBulletScaledSizeX, fBulletScaledSizeY))
                 {
                     bDeleteBullet = true;
                     bPlayerHit = true;
@@ -826,10 +832,10 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         continue;
                     }
 
-                    const float fBulletPosXMinusHalf = fBulletPosX - bullet.getObject3D().getScaledSizeVec().getX() / 2.f;
-                    const float fBulletPosXPlusHalf = fBulletPosX - bullet.getObject3D().getScaledSizeVec().getX() / 2.f;
-                    const float fBulletPosYMinusHalf = fBulletPosY - bullet.getObject3D().getScaledSizeVec().getY() / 2.f;
-                    const float fBulletPosYPlusHalf = fBulletPosY - bullet.getObject3D().getScaledSizeVec().getY() / 2.f;
+                    const float fBulletPosXMinusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
+                    const float fBulletPosXPlusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
+                    const float fBulletPosYMinusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
+                    const float fBulletPosYPlusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
 
                     if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
                     {
@@ -958,14 +964,17 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
+    size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
     auto it = bullets.begin();
-    while (it != bullets.end())
+    while ((iti != bullets.size()) && (it != bullets.end()))
     {
         if (!it->used())
         {
             it++;
             continue;
         }
+        iti++;
 
         auto& bullet = *it;
 
