@@ -1422,10 +1422,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
     if (getBullets().capacity() == 0)
     {
         // considering a bullet lifetime up to 10 secs, a player can have up to 10 * fMaxFiringRatePerSec active bullets on the map, and
-        // now calculating with 15 max players
+        // max expected number of players is coming from config
         getConsole().OLn("PRooFPSddPGE::%s(): highest firing rate: %f", __func__, fMaxFiringRatePerSec);
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), true);
-        getBullets().reserve("bullets", static_cast<size_t>(std::ceil(15 * 10 * fMaxFiringRatePerSec)), getPure());
+        getBullets().reserve("bullets", static_cast<size_t>(
+            std::ceil(getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsUInt() * 10 * fMaxFiringRatePerSec)), getPure()
+        );
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), false);
     }
 
