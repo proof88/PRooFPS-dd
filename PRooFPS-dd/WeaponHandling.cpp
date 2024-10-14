@@ -452,15 +452,22 @@ void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(We
 // ############################## PROTECTED ##############################
 
 
-void proofps_dd::WeaponHandling::deleteWeaponHandlingAll()
+void proofps_dd::WeaponHandling::deleteWeaponHandlingAll(const bool& bDeallocBullets)
 {
     m_explosions.clear();
     Explosion::destroyReferenceExplosions();
     Explosion::resetGlobalExplosionId();
 
-    m_pge.getBullets().deallocate();
-    Bullet::resetGlobalBulletId();
-    Bullet::destroyReferenceObject();   // we would not need explicit call if Bullet implemented reference counting
+    if (bDeallocBullets)
+    {
+        m_pge.getBullets().deallocate();
+        Bullet::destroyReferenceObject();   // we would not need explicit call if Bullet implemented reference counting
+        Bullet::resetGlobalBulletId();
+    }
+    else
+    {
+        m_pge.getBullets().clear();
+    }
 }
 
 void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameMode)

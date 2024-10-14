@@ -570,8 +570,8 @@ void proofps_dd::PRooFPSddPGE::onGameDestroying()
     //getConsole().SetLoggingState("4LLM0DUL3S", false);
 
     // TODO: check common parts with disconnect()
-    m_mapPlayers.clear();       // Dtors of Player instances will be implicitly called
-    deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
+    m_mapPlayers.clear();           // Dtors of Player instances will be implicitly called
+    deleteWeaponHandlingAll(true);  // Dtors of Bullet instances will be implicitly called
     m_maps.shutdown();
     m_gui.shutdown();
     delete m_gameMode;
@@ -699,7 +699,8 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     }
 
     m_config.setServerInfoNotReceived();
-    deleteWeaponHandlingAll();  // Dtors of Bullet instances will be implicitly called
+    deleteWeaponHandlingAll(
+        false /* no need for bulletpool dealloc, it is unnecessary and slow anyway, and if we are changing map, alloc again will be slow too*/);
     m_maps.unload();
 
     if (bExitFromGameSession)

@@ -122,7 +122,7 @@ namespace proofps_dd
 
     protected:
 
-        void deleteWeaponHandlingAll();
+        void deleteWeaponHandlingAll(const bool& bDeallocBullets);
 
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         
