@@ -334,6 +334,27 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Player Respawn Invulnerability Delay in config, forcing default: %u seconds", m_nPlayerRespawnInvulnerabilityDelaySecs);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsString().empty())
+    {
+        if (m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsInt() > 0)
+        {
+            getConsole().OLn("%s from config: %u", Player::szCVarPlayersMax, m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsUInt());
+        }
+        else
+        {
+            getConsole().EOLn("ERROR: Invalid %s in config: %s, forcing: %u",
+                Player::szCVarPlayersMax, m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsString().c_str(),
+                Player::nPlayersMax);
+            m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].Set(Player::nPlayersMax);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].Set(Player::nPlayersMax);
+        getConsole().OLn("Missing %s in config, forcing default: %u", Player::szCVarPlayersMax, Player::nPlayersMax);
+    }
+    
+
     // TODO: I should also validate cl_wpn_empty_mag_nonempty_unmag_behavior and cl_wpn_empty_mag_empty_unmag_behavior here, but for now I wont
     // because I'm lazy, and anyway, if a client messes it up intentionally, then sorry not sorry! I will fix validation later when this validate()
     // is not hundreds of lines anymore ...

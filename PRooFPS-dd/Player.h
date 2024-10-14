@@ -99,6 +99,9 @@ namespace proofps_dd
         static constexpr unsigned int nSvDmRespawnInvulnerabilityDelaySecsDef = 3;
         static constexpr char* szCVarSvDmRespawnInvulnerabilityDelaySecs = "sv_dm_respawn_invulnerability_delay";
 
+        static constexpr unsigned int nPlayersMax = 15;
+        static constexpr char* szCVarPlayersMax = "players_max";
+
         static const char* getLoggerModuleName();
         static void proofps_dd::Player::genUniqueUserName(
             char szNewUserName[proofps_dd::MsgUserNameChangeAndBootupDone::nUserNameBufferLength],
