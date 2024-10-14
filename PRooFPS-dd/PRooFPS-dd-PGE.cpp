@@ -1366,6 +1366,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         insertedPlayer.setExpectingAfterBootUpDelayedUpdate(false);
     }
 
+    float fMaxFiringRatePerSec = 0.f;
     for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
@@ -1387,35 +1388,44 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             loadedWpn->SetOwner(connHandleServerSide);
             loadedWpn->getObject3D().SetName(loadedWpn->getObject3D().getName() + " (for user " + std::to_string(connHandleServerSide) + ")");
 
-            // this is where we make sure any kind of explosion has the proper reference created
-            if (loadedWpn->getVars()["damage_area_size"].getAsFloat() > 0.f)
-            {
-                // cannot be empty, Weapon ctor makes it sure!
-                assert(!loadedWpn->getVars()["damage_area_gfx_obj"].getAsString().empty());
-                assert(!loadedWpn->getVars()["damage_area_snd"].getAsString().empty());
-                Explosion::updateReferenceExplosions(
-                    *this,
-                    loadedWpn->getVars()["damage_area_gfx_obj"].getAsString(),
-                    loadedWpn->getVars()["damage_area_snd"].getAsString());
-            }
-
             if (m_mapPlayers.size() == 1)
             {
+                // this is where we make sure any kind of explosion has the proper reference created
+                if (loadedWpn->getVars()["damage_area_size"].getAsFloat() > 0.f)
+                {
+                    // cannot be empty, Weapon ctor makes it sure!
+                    assert(!loadedWpn->getVars()["damage_area_gfx_obj"].getAsString().empty());
+                    assert(!loadedWpn->getVars()["damage_area_snd"].getAsString().empty());
+                    Explosion::updateReferenceExplosions(
+                        *this,
+                        loadedWpn->getVars()["damage_area_gfx_obj"].getAsString(),
+                        loadedWpn->getVars()["damage_area_snd"].getAsString());
+                }
+
+                // bullet pool capacity is determined using the fastest firing weapon
+                if (loadedWpn->getFiringRate() > fMaxFiringRatePerSec)
+                {
+                    fMaxFiringRatePerSec = loadedWpn->getFiringRate();
+                }
+
                 // just log some weapon info only when 1st player is created to avoid spamming
-                getConsole().OLn("PRooFPSddPGE::%s(): weapon %s dpfr: %f, dpsr: %f",
+                getConsole().OLn("PRooFPSddPGE::%s(): weapon %s dpfr: %f, fr: %f, dpsr: %f",
                     __func__,
                     loadedWpn->getFilename().c_str(),
                     loadedWpn->getDamagePerFireRating(),
+                    loadedWpn->getFiringRate(),
                     loadedWpn->getDamagePerSecondRating());
             }
         }
     }
 
-    // TODO: set bullets capacity to a dynamic value based on weapon with highest firing rate and roughly max number of players!
     if (getBullets().capacity() == 0)
     {
+        // considering a bullet lifetime up to 10 secs, a player can have up to 10 * fMaxFiringRatePerSec active bullets on the map, and
+        // now calculating with 15 max players
+        getConsole().OLn("PRooFPSddPGE::%s(): highest firing rate: %f", __func__, fMaxFiringRatePerSec);
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), true);
-        getBullets().reserve("bullets", 1000, getPure());
+        getBullets().reserve("bullets", static_cast<size_t>(std::ceil(15 * 10 * fMaxFiringRatePerSec)), getPure());
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), false);
     }
 
