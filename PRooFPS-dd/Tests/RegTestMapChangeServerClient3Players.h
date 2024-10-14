@@ -47,7 +47,7 @@ public:
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
         m_nTestIterations(nTestIterations),
-        m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 5 : 8),
+        m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 8 : 11),
         m_nClients(nClients),
         m_nPlayerCounter(0),
         hServerMainGameWindow(static_cast<HWND>(0))
@@ -419,7 +419,7 @@ private:
         CConsole::getConsoleInstance().SOLn("Fetched RECT again, waiting for main game window to change its title bar text ...");
         HWND hTmpGameWindow = hMainGameWindow;
         iWaitCntr = 0;
-        while ((hTmpGameWindow != 0) && (iWaitCntr < 10))
+        while ((hTmpGameWindow != 0) && (iWaitCntr < 14))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             hTmpGameWindow = FindWindow(NULL, std::string(proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION).c_str());

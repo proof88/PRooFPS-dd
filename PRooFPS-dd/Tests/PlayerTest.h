@@ -118,6 +118,11 @@ protected:
             // by default we are testing server behavior, however in some test cases we manually set it to client for specific testing
             m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
             b &= assertTrue(m_network.initialize(), "network inited");
+
+            if (m_bullets.capacity() == 0)
+            {
+                m_bullets.reserve("bullets", 10u, *m_engine);
+            }
         }
 
         return b;
@@ -131,6 +136,7 @@ protected:
 
     virtual void Finalize() override
     {
+        m_bullets.deallocate();
         if (m_engine)
         {
             m_engine->shutdown();
