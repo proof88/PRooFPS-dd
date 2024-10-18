@@ -37,7 +37,9 @@ namespace proofps_dd
         Smoke(Smoke&&) = delete;
         Smoke& operator=(Smoke&&) = delete;
 
-        void init(const PureVector& pos);
+        void init(
+            const PurePosUpTarget& put,
+            bool bGoingLeft);
 
         virtual void onSetUsed() override;
 
@@ -57,7 +59,9 @@ namespace proofps_dd
         PR00FsUltimateRenderingEngine& m_gfx;
 
         PureObject3D* m_obj;                     /**< Associated Pure object to be rendered. Used by PGE server and client instances. TODO: shared ptr. */
-        TPureFloat m_fScaling;                   /**< To be increased during animation. */
+        TPureFloat m_fScaling;                   /**< To be increased during animation. Used by both PGE client and server instances. */
+        PurePosUpTarget m_put;                   /**< PUT to calculate next position. Used by both PGE client and server instances. */
+        bool m_bGoingLeft;                       /**< True if bullet and smoke going to left, false otherwise. Used by both PGE client and server instances. */
 
         // ---------------------------------------------------------------------------
 

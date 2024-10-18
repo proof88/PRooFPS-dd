@@ -837,7 +837,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
                 {
                     const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                    const bool bGoingLeft = bullet.getObject3D().getAngleVec().getY() == 0.f; // otherwise it would be 180.f
+                    const bool bGoingLeft = (bullet.getObject3D().getAngleVec().getY() == 0.f); // otherwise it would be 180.f
                     const float fMapObjPosX = obj->getPosVec().getX();
                     const float fMapObjPosY = obj->getPosVec().getY();
 
@@ -1603,7 +1603,9 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
         if (nMillisecsElapsedSinceLastParticleEmitted >= 30)
         {
             bullet.updateTimeLastParticleEmitted();
-            m_smokes.create(bullet.getObject3D().getPosVec());
+            m_smokes.create(
+                bullet.getPut(),
+                (bullet.getObject3D().getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
         }
     }
 }

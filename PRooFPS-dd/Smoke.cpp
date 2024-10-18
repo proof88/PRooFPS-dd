@@ -39,7 +39,8 @@ proofps_dd::Smoke::Smoke(
     PgePooledObject(parentPool),
     m_gfx(gfx),
     m_obj(nullptr),
-    m_fScaling(1.f)
+    m_fScaling(1.f),
+    m_bGoingLeft(false)
 {
     build3dObject();
 }
@@ -52,11 +53,15 @@ proofps_dd::Smoke::~Smoke()
     }
 }
 
-void proofps_dd::Smoke::init(const PureVector& pos)
+void proofps_dd::Smoke::init(
+    const PurePosUpTarget& put,
+    bool bGoingLeft)
 {
     assert(m_obj);
-    m_obj->getPosVec() = pos;
+    m_obj->getPosVec() = put.getPosVec();
+    m_put = put;
     m_fScaling = 1.f;
+    m_bGoingLeft = bGoingLeft;
 }
 
 void proofps_dd::Smoke::onSetUsed()
@@ -77,9 +82,9 @@ void proofps_dd::Smoke::update(const unsigned int& nFactor)
         return;
     }
 
-    m_fScaling += 0.5f / static_cast<TPureFloat>(nFactor);
+    m_fScaling += 2.f / static_cast<TPureFloat>(nFactor);
 
-    constexpr float fTargetScaling = 2.f;
+    constexpr float fTargetScaling = 3.f;
     if (m_fScaling >= fTargetScaling)
     {
         remove(); // becomes free again in the pool
@@ -87,7 +92,13 @@ void proofps_dd::Smoke::update(const unsigned int& nFactor)
     else
     {
         m_obj->SetScaling(PureVector(m_fScaling, m_fScaling, m_obj->getScaling().getZ()));
-        m_obj->getPosVec().SetY(m_obj->getPosVec().getY() + (0.1f / static_cast<TPureFloat>(nFactor)));
+        m_put.Move(0.1f / nFactor);
+        m_put.Elevate(0.5f / nFactor);
+        m_obj->getPosVec() = m_put.getPosVec();
+        m_obj->getAngleVec().SetZ(
+            m_obj->getAngleVec().getZ() + ((m_bGoingLeft ? 1 : -1) * (60.f / nFactor))
+        );
+
         const float fAnimationProgress = m_fScaling / fTargetScaling;
         const float fTargetTransparency = 1 - fAnimationProgress;
         m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(fTargetTransparency, fTargetTransparency, fTargetTransparency, 1.f);
@@ -121,6 +132,7 @@ void proofps_dd::Smoke::build3dObject()
 
     // TODO throw exception if cant create!
     m_obj = m_gfx.getObject3DManager().createCloned(*m_pSmokeRefObject);
+    m_obj->getAngleVec().SetZ( static_cast<float>(PFL::random(0, 359)) );
 }
 
 
