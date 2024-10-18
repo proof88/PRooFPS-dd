@@ -23,6 +23,7 @@
 #include "Minimap.h"
 #include "Networking.h"
 #include "Player.h"
+#include "Smoke.h"
 #include "XHair.h"
 
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
@@ -61,7 +62,8 @@ namespace proofps_dd
             proofps_dd::Config& config,
             proofps_dd::Maps& maps,
             proofps_dd::Networking& networking,
-            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);   /**< Gets the singleton instance. */
+            std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+            const PgeObjectPool<proofps_dd::Smoke>& smokes);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
         static CConsole& getConsole();
@@ -113,6 +115,7 @@ namespace proofps_dd
         static Maps* m_pMaps;
         static Networking* m_pNetworking;
         static std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* m_pMapPlayers;
+        static const PgeObjectPool<proofps_dd::Smoke>* m_pSmokes;
 
         /* Main Menu Handling */
 

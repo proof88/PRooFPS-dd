@@ -82,6 +82,11 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 
     Explosion::resetGlobalExplosionId();
 
+    if (m_smokes.capacity() == 0)
+    {
+        m_smokes.reserve("smokes", 100, m_pge.getPure());
+    }
+
     return true;
 }
 
@@ -448,6 +453,11 @@ void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(We
     m_pWpnAutoSwitchWhenPickedUp = wpn;
 }
 
+const PgeObjectPool<proofps_dd::Smoke>& proofps_dd::WeaponHandling::getSmokePool() const
+{
+    return m_smokes;
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -463,10 +473,14 @@ void proofps_dd::WeaponHandling::deleteWeaponHandlingAll(const bool& bDeallocBul
         m_pge.getBullets().deallocate();
         Bullet::destroyReferenceObject();   // we would not need explicit call if Bullet implemented reference counting
         Bullet::resetGlobalBulletId();
+        
+        m_smokes.deallocate();
+        Smoke::destroyReferenceObject();    // we would not need explicit call if Smoke implemented reference counting
     }
     else
     {
         m_pge.getBullets().clear();
+        m_smokes.clear();
     }
 }
 
@@ -740,6 +754,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
         if (!bDeleteBullet)
         {
+            emitParticles(bullet);
+
             // check if bullet is hitting a player
             for (auto& playerPair : m_mapPlayers)
             {
@@ -982,6 +998,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
         // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
         bullet.Update(nPhysicsRate);
+        emitParticles(bullet);
 
         // There was a time when I was thinking that client should check against out of map bounds to cover corner case when we somehow miss
         // the server's signal about that, in that case client would continue simulate bullet travel forever.
@@ -1026,6 +1043,28 @@ void proofps_dd::WeaponHandling::clientUpdateExplosions(proofps_dd::GameMode& ga
     // for now we can do exactly what server does with explosions
 
     serverUpdateExplosions(gameMode, nPhysicsRate);
+}
+
+void proofps_dd::WeaponHandling::updateSmokes(proofps_dd::GameMode&, const unsigned int& nPhysicsRate)
+{
+    // on the long run this function needs to be part of the game engine itself
+
+    auto it = m_smokes.begin();
+    size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
+    while ((iti != m_smokes.size()) && (it != m_smokes.end()))
+    {
+        auto& smoke = *it;
+        if (!smoke.used())
+        {
+            it++;
+            continue;
+        }
+        iti++;
+
+        smoke.update(nPhysicsRate);
+        it++;
+    }
 }
 
 bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
@@ -1550,6 +1589,22 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
         // since these weapons are pre-created for the player, we can simply pass the pointer itself which stays valid until deleting the Player itself!
         scheduleWeaponPickupInducedAutoSwitchRequest(&wpnPicked);
         //getConsole().EOLn("WeaponHandling::%s(): auto-switch: if empty!", __func__);
+    }
+}
+
+void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
+{
+    if (bullet.getParticleType() == Bullet::ParticleType::Smoke)
+    {
+        // generate smoke, note this should be in bullet.update() on the long run
+        const long long nMillisecsElapsedSinceLastParticleEmitted =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - bullet.getTimeLastParticleEmitted()).count();
+        if (nMillisecsElapsedSinceLastParticleEmitted >= 30)
+        {
+            bullet.updateTimeLastParticleEmitted();
+            m_smokes.create(bullet.getObject3D().getPosVec());
+        }
     }
 }
 

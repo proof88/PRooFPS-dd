@@ -91,7 +91,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_maps,
         m_sounds),
     m_config(Config::getConfigInstance(*this, m_maps)),
-    m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this, m_mapPlayers)),
+    m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this, m_mapPlayers, this->getSmokePool())),
     m_gameMode(nullptr),
     m_deathMatchMode(nullptr),
     m_maps(getAudio(), getConfigProfiles(), getPure()),
@@ -748,6 +748,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         }
         serverUpdateBullets(*m_gameMode, *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
         serverUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
+        updateSmokes(*m_gameMode, m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
         updatePlayersOldValues();
 
@@ -774,6 +775,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
     {
         clientUpdateBullets(m_config.getPhysicsRate());
         clientUpdateExplosions(*m_gameMode, m_config.getPhysicsRate());
+        updateSmokes(*m_gameMode, m_config.getPhysicsRate());
     }
 }
 

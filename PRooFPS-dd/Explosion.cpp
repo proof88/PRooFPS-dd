@@ -117,18 +117,19 @@ proofps_dd::Explosion::Explosion(
     m_fScalingSecondary = explRefData.m_pRefObj->getScaling().getX();
 
     m_objPrimary = m_pge.getPure().getObject3DManager().createCloned(*explRefData.m_pRefObj);
-    m_objPrimary->Show();
-    m_objPrimary->getPosVec() = pos;
-
     m_objSecondary = m_pge.getPure().getObject3DManager().createCloned(*explRefData.m_pRefObj);
-    m_objSecondary->Hide();
-    m_objSecondary->getPosVec() = pos;
 
     if (!m_objPrimary || !m_objSecondary)
     {
         CConsole::getConsoleInstance("Explosion").EOLn("Explosion ctor (server): Failed to create a cloned object!");
         throw std::runtime_error("Explosion ctor (server): Failed to create a cloned object!");
     }
+
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = pos;
+
+    m_objSecondary->Hide();
+    m_objSecondary->getPosVec() = pos;
 
     // NOT playing sound here but in the copy ctor! Reason: copy ctor is invoked anyway when we store the explosion in the container!
     //m_sndHandle = m_pge.getAudio().play3dSound(*explRefData.m_pSndExplosion, pos);
@@ -169,18 +170,18 @@ proofps_dd::Explosion::Explosion(
     m_fScalingSecondary = explRefData.m_pRefObj->getScaling().getX();
 
     m_objPrimary = m_pge.getPure().getObject3DManager().createCloned(*explRefData.m_pRefObj);
-    m_objPrimary->Show();
-    m_objPrimary->getPosVec() = pos;
-
     m_objSecondary = m_pge.getPure().getObject3DManager().createCloned(*explRefData.m_pRefObj);
-    m_objSecondary->Hide();
-    m_objSecondary->getPosVec() = pos;
-
     if (!m_objPrimary || !m_objSecondary)
     {
         CConsole::getConsoleInstance("Explosion").EOLn("Explosion ctor (client): Failed to create a cloned object!");
         throw std::runtime_error("Explosion ctor (client): Failed to create a cloned object!");
     }
+
+    m_objPrimary->Show();
+    m_objPrimary->getPosVec() = pos;
+    
+    m_objSecondary->Hide();
+    m_objSecondary->getPosVec() = pos;
 
     // NOT playing sound here but in the copy ctor! Reason: copy ctor is invoked anyway when we store the explosion in the container!
     //m_sndHandle = m_pge.getAudio().play3dSound(*explRefData.m_pSndExplosion, pos);

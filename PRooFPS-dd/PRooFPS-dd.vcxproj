@@ -215,6 +215,7 @@
     <ClInclude Include="Maps.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SharedWithTest.h" />
+    <ClInclude Include="Smoke.h" />
     <ClInclude Include="Sounds.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Strafe.h" />
@@ -254,6 +255,7 @@
     <ClCompile Include="Maps.cpp" />
     <ClCompile Include="PRooFPS-dd.cpp" />
     <ClCompile Include="SharedWithTest.cpp" />
+    <ClCompile Include="Smoke.cpp" />
     <ClCompile Include="Sounds.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

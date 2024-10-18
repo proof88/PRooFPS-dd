@@ -21,6 +21,7 @@
 #include "Physics.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
+#include "Smoke.h"
 #include "Sounds.h"
 
 namespace proofps_dd
@@ -120,6 +121,8 @@ namespace proofps_dd
         void clearWeaponPickupInducedAutoSwitchRequest();
         void scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn);
 
+        const PgeObjectPool<Smoke>& getSmokePool() const;
+
     protected:
 
         void deleteWeaponHandlingAll(const bool& bDeallocBullets);
@@ -148,6 +151,7 @@ namespace proofps_dd
         void clientUpdateExplosions(
             proofps_dd::GameMode& gameMode,
             const unsigned int& nPhysicsRate);
+        void updateSmokes(proofps_dd::GameMode& gameMode, const unsigned int& nPhysicsRate);
         
         bool handleBulletUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -187,10 +191,13 @@ namespace proofps_dd
         SoLoud::handle m_sndWpnReloadEndHandle;
 
         std::list<Explosion> m_explosions;
+        PgeObjectPool<Smoke> m_smokes;
         bool m_bWpnAutoReloadRequest = false;
         bool m_bWpnAutoSwitchToBestLoadedRequest = false;
         bool m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
         Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
+
+        void emitParticles(PooledBullet& bullet);
 
     }; // class WeaponHandling
 

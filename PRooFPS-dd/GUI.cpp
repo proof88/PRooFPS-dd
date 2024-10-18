@@ -35,7 +35,8 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     proofps_dd::Config& config,
     proofps_dd::Maps& maps,
     proofps_dd::Networking& networking,
-    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+    const PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
     // Note that the following should not be touched here as they are not fully constructed when we are here:
@@ -47,6 +48,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     m_pMaps = &maps;
     m_pNetworking = &networking;
     m_pMapPlayers = &mapPlayers;
+    m_pSmokes = &smokes;
     return m_guiInstance;
 }
 
@@ -484,6 +486,7 @@ proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
+const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
 
 proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
 
@@ -2519,6 +2522,12 @@ void proofps_dd::GUI::drawGameServerConfig()
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("BulletPool: ") + std::to_string(m_pPge->getBullets().size()) + " / " + std::to_string(m_pPge->getBullets().capacity()) + " elems (" +
         std::to_string(m_pPge->getBullets().capacityBytes()) + " Bytes)");
+    fThisRowY += m_fFontSizePxHudGeneral;
+    assert(m_pSmokes);
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("SmokePool: ") + std::to_string(m_pSmokes->size()) + " / " + std::to_string(m_pSmokes->capacity()) + " elems (" +
+        std::to_string(m_pSmokes->capacityBytes()) + " Bytes)");
 }
 
 void proofps_dd::GUI::drawGameInfoPages()

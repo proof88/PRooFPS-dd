@@ -200,7 +200,7 @@ bullet_distance_max = 0
 
 # Type of particles emitted by the bullet.
 # Can be "none" or "smoke".
-bullet_particle = none
+bullet_particle = smoke
 
 #####################################
 #                                   #
