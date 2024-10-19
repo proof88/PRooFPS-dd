@@ -26,6 +26,38 @@ static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 2
 
 static constexpr float fGameInfoPagesStartX = 20.f;
 
+// browseToUrl() code copied from Dear ImGui web demo: https://github.com/pthom/imgui/blob/DemoCodeDocking/imgui_demo.cpp
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#elif defined(_WIN32)
+// windows.h is included thru PCH using winproof88.h
+//#include <windows.h>
+#include <Shellapi.h>
+#elif defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+static void browseToUrl(const char* url)
+{
+    assert(strncmp(url, "http", strlen("http")) == 0);
+#if defined(__EMSCRIPTEN__)
+    char js_command[1024];
+    snprintf(js_command, 1024, "window.open(\"%s\");", url);
+    emscripten_run_script(js_command);
+#elif defined(_WIN32)
+    ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+#elif TARGET_OS_IPHONE
+    // Nothing on iOS
+#elif TARGET_OS_OSX
+    char cmd[1024];
+    snprintf(cmd, 1024, "open %s", url);
+    system(cmd);
+#elif defined(__linux__)
+    char cmd[1024];
+    snprintf(cmd, 1024, "xdg-open %s", url);
+    system(cmd);
+#endif
+}
+
 
 // ############################### PUBLIC ################################
 
@@ -1595,10 +1627,65 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::TextUnformatted("[  S E T T I N G S  ]");
+    ImGui::TextUnformatted("[  A B O U T  ]");
 
     ImGui::Separator();
     ImGui::Indent();
+
+    const std::string sVersion = proofps_dd::GAME_NAME + std::string(" v") + proofps_dd::GAME_VERSION;
+    const std::string sBuild = std::string("Built on ") + __DATE__ + " @ " + __TIME__;
+    ImGui::TextUnformatted(sVersion.c_str());
+    ImGui::TextUnformatted(sBuild.c_str());
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Made by West Whiskhyll Entertainment");
+    if (ImGui::TextHyperLink("facebook.com/whiskhyll", true))
+    {
+        browseToUrl("https://www.facebook.com/whiskhyll");
+    }
+    if (ImGui::TextHyperLink("License: GNU GPL-3.0", true))
+    {
+        browseToUrl("https://github.com/proof88/PRooFPS-dd/blob/main/LICENSE");
+    }
+
+    ImGui::TextUnformatted("");
+    ImGui::TextWrapped(("Using PR00F's Game Engine v" + std::string(PGE::getVersionString())).c_str());
+    if (ImGui::TextHyperLink("github.com/proof88/PGE", true))
+    {
+        browseToUrl("https://github.com/proof88/PGE");
+    }
+    if (ImGui::TextHyperLink("Licensed under GNU LGPL-3.0 License", true))
+    {
+        browseToUrl("https://github.com/proof88/PGE/blob/master/LICENSE");
+    }
+
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\"");
+    if (ImGui::TextHyperLink("by Kevin MacLeod (incompetech.com)", true))
+    {
+        browseToUrl("https://incompetech.com/music/royalty-free/music.html");
+    }
+    if (ImGui::TextHyperLink("Licensed under Creative Commons : By Attribution 4.0 License", true))
+    {
+        browseToUrl("http://creativecommons.org/licenses/by/4.0/");
+    }
+
+    if (ImGui::TextHyperLink("Smoke Texture: https://opengameart.org/node/7758", true))
+    {
+        browseToUrl("https://opengameart.org/node/7758");
+    }
+    if (ImGui::TextHyperLink("Licensed under Creative Commons : CC0 1.0 Universal License", true))
+    {
+        browseToUrl("https://creativecommons.org/publicdomain/zero/1.0/");
+    }
+
+    if (ImGui::TextHyperLink("Jump pad Arrow Texture: https://www.flaticon.com/free-icon/up-arrow_5181212?term=arrow&related_id=5181212", true))
+    {
+        browseToUrl("https://www.flaticon.com/free-icon/up-arrow_5181212?term=arrow&related_id=5181212");
+    }
+    if (ImGui::TextHyperLink("Licensed under Flaticon License", true))
+    {
+        browseToUrl("https://www.flaticon.com/legal#nav-flaticon-agreement");
+    }
 
     ImGui::Separator();
 

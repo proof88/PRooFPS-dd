@@ -50,6 +50,10 @@
 #ifndef WINPROOF88_ALLOW_VIRTUALKEYCODES
 #define WINPROOF88_ALLOW_VIRTUALKEYCODES
 #endif
+// needed for browseToUrl() in GUI.cpp
+#ifndef WINPROOF88_ALLOW_SHOWWINDOW
+#define WINPROOF88_ALLOW_SHOWWINDOW
+#endif
 #include "winproof88.h"
 
 // Own headers
