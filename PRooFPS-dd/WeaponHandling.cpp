@@ -1597,12 +1597,10 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
     if (bullet.getParticleType() == Bullet::ParticleType::Smoke)
     {
         // generate smoke, note this should be in bullet.update() on the long run
-        const long long nMillisecsElapsedSinceLastParticleEmitted =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - bullet.getTimeLastParticleEmitted()).count();
-        if (nMillisecsElapsedSinceLastParticleEmitted >= 30)
+        bullet.getParticleEmittedCntr()++;
+        if (bullet.getParticleEmittedCntr() >= 10)
         {
-            bullet.updateTimeLastParticleEmitted();
+            bullet.getParticleEmittedCntr() = 0;
             m_smokes.create(
                 bullet.getPut(),
                 (bullet.getObject3D().getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
