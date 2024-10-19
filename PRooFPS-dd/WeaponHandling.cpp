@@ -69,7 +69,7 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
     return "WeaponHandling";
 }
 
-bool proofps_dd::WeaponHandling::initializeWeaponHandling()
+bool proofps_dd::WeaponHandling::initializeWeaponHandling(PGEcfgProfiles& cfgProfiles)
 {
     // Which key should switch to which weapon
     WeaponManager::getKeypressToWeaponMap() = {
@@ -84,7 +84,13 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling()
 
     if (m_smokes.capacity() == 0)
     {
-        m_smokes.reserve("smokes", 100, m_pge.getPure());
+        // now this calculation is less "scientific" than the bullet pool capacity calculation.
+        // We could use the bazooka firing rate and smoke rate config to determine pool size, however
+        // on the long run smoke will be used also for other effects as well. Anyway, now I'm
+        // calculating with 1 player firing 1 rocket / second, that results in 30 smokes max at any moment
+        // with max smoke rate config. To be prepared for some other future effects using smoke, I use 40
+        // instead of 30 per player.
+        m_smokes.reserve("smokes", cfgProfiles.getVars()[Player::szCVarPlayersMax].getAsUInt() * 40, m_pge.getPure());
     }
 
     return true;
@@ -1598,7 +1604,7 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
     {
         // generate smoke, note this should be in bullet.update() on the long run
         bullet.getParticleEmittedCntr()++;
-        if (bullet.getParticleEmittedCntr() >= 10)
+        if (bullet.getParticleEmittedCntr() >= 2)
         {
             bullet.getParticleEmittedCntr() = 0;
             m_smokes.create(

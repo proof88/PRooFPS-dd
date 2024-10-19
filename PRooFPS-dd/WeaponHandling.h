@@ -63,7 +63,7 @@ namespace proofps_dd
         WeaponHandling(WeaponHandling&&) = delete;
         WeaponHandling&& operator=(WeaponHandling&&) = delete;
 
-        bool initializeWeaponHandling();
+        bool initializeWeaponHandling(PGEcfgProfiles& cfgProfiles);
         float getDamageAndImpactForceAtDistance(
             const Player& player,
             const Explosion& xpl,

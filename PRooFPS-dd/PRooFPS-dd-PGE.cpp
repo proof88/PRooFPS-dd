@@ -614,7 +614,7 @@ bool proofps_dd::PRooFPSddPGE::hasValidConnection() const
 
 bool proofps_dd::PRooFPSddPGE::connect()
 {
-    if (!initializeWeaponHandling())
+    if (!initializeWeaponHandling(getConfigProfiles()))
     {
         getConsole().EOLnOO("ERROR: initializeWeaponHandling() failed!");
         return false;
