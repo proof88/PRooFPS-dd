@@ -44,6 +44,7 @@ namespace proofps_dd
             CreateGame,
             JoinGame,
             Settings,
+            About,
             Exiting     /* User requested closing the app */
         };
 
@@ -161,6 +162,7 @@ namespace proofps_dd
         static void drawJoinGameMenu(const float& fRemainingSpaceY);
         static void showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId);
         static void drawSettingsMenu(const float& fRemainingSpaceY);
+        static void drawAboutMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
 
         /* In-Game GUI elements */

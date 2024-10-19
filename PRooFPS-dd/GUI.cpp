@@ -563,43 +563,45 @@ float proofps_dd::GUI::calcContentStartY(const float& fContentHeight, const floa
 
 void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
 {
+    struct MenuButton
+    {
+        const char* zstr;
+        MenuState menuState;
+    };
+    constexpr auto menuButtons = PFL::std_array_of<MenuButton>(
+        MenuButton{ "C R E A T E  G A M E", MenuState::CreateGame },
+        MenuButton{ "J O I N  G A M E", MenuState::JoinGame },
+        MenuButton{ "S E T T I N G S", MenuState::Settings },
+        MenuButton{ "A B O U T", MenuState::About },
+        MenuButton{ "E X I T", MenuState::Exiting });
+
     constexpr float fBtnWidth = 150.f;
     constexpr float fBtnHeight = 20.f;
     constexpr float fBtnSpacingY = 30.f;
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 4 * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + fDefaultFontSizePixels * 2 /* 2 lines for versions texts under buttons */;
+    constexpr float fContentHeight = menuButtons.size() * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + fDefaultFontSizePixels * 2 /* 2 lines for versions texts under buttons */;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
-    // in case of buttons, remove size argument (ImVec2) to auto-resize
-
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x/2 - fBtnWidth/2, fContentStartY));
-    if (ImGui::Button("C R E A T E  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
+    // trying to generalize previously hardcoded way of buttons draw
+    for (size_t i = 0; i < menuButtons.size(); i++)
     {
-        m_currentMenu = MenuState::CreateGame;
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + (fBtnSpacingY * i)));
+        // in case of buttons, remove size argument (ImVec2) to auto-resize
+        if (ImGui::Button(menuButtons[i].zstr, ImVec2(fBtnWidth, fBtnHeight)))
+        {
+            m_currentMenu = menuButtons[i].menuState;
+        }
     }
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY));
-    if (ImGui::Button("J O I N  G A M E", ImVec2(fBtnWidth, fBtnHeight)))
+    // not nice but need to add extra logic here for exiting
+    if (m_currentMenu == MenuState::Exiting)
     {
-        m_currentMenu = MenuState::JoinGame;
-    }
-
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY*2));
-    if (ImGui::Button("S E T T I N G S", ImVec2(fBtnWidth, fBtnHeight)))
-    {
-        m_currentMenu = MenuState::Settings;
-    }
-
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2 - fBtnWidth / 2, fContentStartY + fBtnSpacingY*3));
-    if (ImGui::Button("E X I T", ImVec2(fBtnWidth, fBtnHeight)))
-    {
-        m_currentMenu = MenuState::Exiting;
         m_pPge->getPure().getWindow().Close();
     }
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
     ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sVersion));
-    ImGui::SetCursorPosY(fContentStartY + fBtnSpacingY*4);
+    ImGui::SetCursorPosY(fContentStartY + (fBtnSpacingY * menuButtons.size()));
     ImGui::TextUnformatted(sVersion.c_str());
 
     const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
@@ -1586,6 +1588,28 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 } // drawSettingsMenu
 
+void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
+{
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 450.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
+    ImGui::TextUnformatted("[  S E T T I N G S  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    ImGui::Separator();
+
+    if (ImGui::Button("< BACK"))
+    {
+        m_currentMenu = MenuState::Main;
+    }
+
+    ImGui::Unindent();
+} // drawAboutMenu()
+
 void proofps_dd::GUI::drawWindowForMainMenu()
 {
     m_pPge->getPure().getWindow().SetCursorVisible(true);
@@ -1615,6 +1639,9 @@ void proofps_dd::GUI::drawWindowForMainMenu()
             break;
         case MenuState::Settings:
             drawSettingsMenu(fMenuWndHeight);
+            break;
+        case MenuState::About:
+            drawAboutMenu(fMenuWndHeight);
             break;
         case MenuState::Main:
             drawMainMenu(fMenuWndHeight);
