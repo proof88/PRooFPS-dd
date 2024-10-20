@@ -1293,54 +1293,119 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 } // drawJoinGameMenu
 
-void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId /* must be unique! */)
+void proofps_dd::GUI::drawTabWeaponSettings()
 {
-    // it is very important: sPopupId must be unique because otherwise we won't exactly know for which setting we
-    // are opening popup for, and clicking on Cancel button will most probably flip the wrong CVAR!
-
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(sPopupId.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    ImGui::BeginGroup();
     {
-        ImGui::TextUnformatted("The game will restart now to apply the new configuration.");
+        PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpNewWeapon = m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnAutoSwitchWhenPickedUpNewWeapon; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
+        ImGui::TextUnformatted("Pickup-Induced Auto-Switch to NEW Weapon:");
+        ImGui::Indent();
 
-        if (ImGui::Button("OK", ImVec2(120, 0)))
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Always Auto-Switch to New##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways))
         {
-            getConsole().OLn("Initiating game restart to apply new settings ...");
-            if (!m_pPge->getConfigProfiles().writeConfiguration())
-            {
-                getConsole().EOLn("ERROR: failed to save current config profile!");
-            }
-            m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game with engine reinit
-            m_currentMenu = MenuState::Exiting;
-            m_pPge->getPure().getWindow().Close();
-            ImGui::CloseCurrentPopup();
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways);
         }
-
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        if (ImGui::RadioButton("Auto-Switch to New if Better than Current##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter))
         {
-            // flip the config that we proactively flipped earlier in checkbox handler
-            cvar.Set( !cvar.getAsBool() );
-            ImGui::CloseCurrentPopup();
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter);
         }
-
-        ImGui::EndPopup();
+        if (ImGui::RadioButton("Auto-Switch to New if Current is Empty##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty))
+        {
+            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty);
+        }
+        ImGui::Unindent();
     }
-}
+    ImGui::EndGroup();
 
-void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
+    PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag =
+        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag];
+    bool bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag = cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag, cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
+    ImGui::TextUnformatted("Pickup-Induced Auto-Switch to ANY, if Current is Empty:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag", &bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag))
+    {
+        cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.Set(bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
+    }
+
+    PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag =
+        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag];
+    bool bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag = cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.getAsBool();
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag, cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
+    ImGui::TextUnformatted("Pickup-/Switch-Induced Auto-Reload:");
+    ImGui::SameLine();
+    if (ImGui::Checkbox("##cbWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag", &bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag))
+    {
+        cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.Set(bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
+    }
+
+    ImGui::BeginGroup();
+    {
+        PGEcfgVariable& cvarClWpnEmptyMagNonemptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnEmptyMagNonemptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnEmptyMagNonemptyUnmagBehavior, cvarClWpnEmptyMagNonemptyUnmagBehavior);
+        ImGui::TextUnformatted("If Weapon is Empty after Firing, BUT HAS Spare Ammo, then:");
+        ImGui::Indent();
+
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Auto-Reload Current Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload);
+        }
+        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded);
+        }
+        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable);
+        }
+        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop))
+        {
+            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop);
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+
+    ImGui::BeginGroup();
+    {
+        PGEcfgVariable& cvarClWpnEmptyMagEmptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior];
+        ImGui::AlignTextToFramePadding();
+        static std::string sHintClWpnEmptyMagEmptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClWpnEmptyMagEmptyUnmagBehavior, cvarClWpnEmptyMagEmptyUnmagBehavior);
+        ImGui::TextUnformatted("If Weapon is Empty after Firing, AND has NO Spare Ammo, then:");
+        ImGui::Indent();
+
+        // dont forget there is also 3-param version of RadioButton
+        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded);
+        }
+        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable);
+        }
+        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop))
+        {
+            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop);
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+} // drawTabWeaponSettings()
+
+void proofps_dd::GUI::drawTabMiscSettings()
 {
-    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 450.f;
-    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
-
-    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::TextUnformatted("[  S E T T I N G S  ]");
-
-    ImGui::Separator();
-    ImGui::Indent();
-
     PGEcfgVariable& cvarSfxEnabled = m_pPge->getConfigProfiles().getVars()[pge_audio::PgeAudio::CVAR_SFX_ENABLED];
     bool bSfxEnabled = cvarSfxEnabled.getAsBool();
     ImGui::AlignTextToFramePadding();
@@ -1494,114 +1559,70 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     {
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
+} // drawTabMiscSettings()
 
-    ImGui::BeginGroup();
+void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId /* must be unique! */)
+{
+    // it is very important: sPopupId must be unique because otherwise we won't exactly know for which setting we
+    // are opening popup for, and clicking on Cancel button will most probably flip the wrong CVAR!
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(sPopupId.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpNewWeapon = m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpNewWeapon];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintClWpnAutoSwitchWhenPickedUpNewWeapon; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
-        ImGui::TextUnformatted("Pickup-Induced Auto-Switch to NEW Weapon:");
-        ImGui::Indent();
+        ImGui::TextUnformatted("The game will restart now to apply the new configuration.");
 
-        // dont forget there is also 3-param version of RadioButton
-        if (ImGui::RadioButton("Always Auto-Switch to New##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways))
+        if (ImGui::Button("OK", ImVec2(120, 0)))
         {
-            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchAlways);
+            getConsole().OLn("Initiating game restart to apply new settings ...");
+            if (!m_pPge->getConfigProfiles().writeConfiguration())
+            {
+                getConsole().EOLn("ERROR: failed to save current config profile!");
+            }
+            m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game with engine reinit
+            m_currentMenu = MenuState::Exiting;
+            m_pPge->getPure().getWindow().Close();
+            ImGui::CloseCurrentPopup();
         }
-        if (ImGui::RadioButton("Auto-Switch to New if Better than Current##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter))
+
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
         {
-            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfBetter);
+            // flip the config that we proactively flipped earlier in checkbox handler
+            cvar.Set( !cvar.getAsBool() );
+            ImGui::CloseCurrentPopup();
         }
-        if (ImGui::RadioButton("Auto-Switch to New if Current is Empty##PickupNewWpn", cvarClWpnAutoSwitchWhenPickedUpNewWeapon.getAsString() == szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty))
-        {
-            cvarClWpnAutoSwitchWhenPickedUpNewWeapon.Set(szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty);
-        }
-        ImGui::Unindent();
+
+        ImGui::EndPopup();
     }
-    ImGui::EndGroup();
+}
 
-    PGEcfgVariable& cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag =
-        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag];
-    bool bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag = cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.getAsBool();
-    ImGui::AlignTextToFramePadding();
-    static std::string sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag; // static so it is built up by addHintToItemByCVar() only once
-    addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag, cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
-    ImGui::TextUnformatted("Pickup-Induced Auto-Switch to ANY, if Current is Empty:");
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##cbWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag", &bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag))
+void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
+{
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 300.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
+    ImGui::TextUnformatted("[  S E T T I N G S  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    if (ImGui::BeginTabBar("SettingsTabBar", ImGuiTabBarFlags_None | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
     {
-        cvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag.Set(bWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag);
+        if (ImGui::BeginTabItem("Weapon Handling"))
+        {
+            drawTabWeaponSettings();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Miscellaneous"))
+        {
+            drawTabMiscSettings();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
-
-    PGEcfgVariable& cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag =
-        m_pPge->getConfigProfiles().getVars()[szCvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag];
-    bool bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag = cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.getAsBool();
-    ImGui::AlignTextToFramePadding();
-    static std::string sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag; // static so it is built up by addHintToItemByCVar() only once
-    addHintToItemByCVar(sHintClWpnAutoReloadWhenSwitchedToEmptyMagNonemptyUnmag, cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
-    ImGui::TextUnformatted("Pickup-/Switch-Induced Auto-Reload:");
-    ImGui::SameLine();
-    if (ImGui::Checkbox("##cbWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag", &bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag))
-    {
-        cvarClWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag.Set(bWpnAutoReloadWhenSwitchedToOrPickedUpAmmoEmptyMagNonemptyUnmag);
-    }
-
-    ImGui::BeginGroup();
-    {
-        PGEcfgVariable& cvarClWpnEmptyMagNonemptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagNonemptyUnmagBehavior];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintClWpnEmptyMagNonemptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintClWpnEmptyMagNonemptyUnmagBehavior, cvarClWpnEmptyMagNonemptyUnmagBehavior);
-        ImGui::TextUnformatted("If Weapon is Empty after Firing, BUT HAS Spare Ammo, then:");
-        ImGui::Indent();
-
-        // dont forget there is also 3-param version of RadioButton
-        if (ImGui::RadioButton("Auto-Reload Current Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload))
-        {
-            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoReload);
-        }
-        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded))
-        {
-            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestLoaded);
-        }
-        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable))
-        {
-            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueAutoSwitchToBestReloadable);
-        }
-        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagNonempty", cvarClWpnEmptyMagNonemptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop))
-        {
-            cvarClWpnEmptyMagNonemptyUnmagBehavior.Set(szCvarClWpnEmptyMagNonemptyUnmagBehaviorValueNoop);
-        }
-        ImGui::Unindent();
-    }
-    ImGui::EndGroup();
-
-    ImGui::BeginGroup();
-    {
-        PGEcfgVariable& cvarClWpnEmptyMagEmptyUnmagBehavior = m_pPge->getConfigProfiles().getVars()[szCvarClWpnEmptyMagEmptyUnmagBehavior];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintClWpnEmptyMagEmptyUnmagBehavior; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintClWpnEmptyMagEmptyUnmagBehavior, cvarClWpnEmptyMagEmptyUnmagBehavior);
-        ImGui::TextUnformatted("If Weapon is Empty after Firing, AND has NO Spare Ammo, then:");
-        ImGui::Indent();
-
-        // dont forget there is also 3-param version of RadioButton
-        if (ImGui::RadioButton("Auto-Switch to Next Best Non-Empty Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded))
-        {
-            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestLoaded);
-        }
-        if (ImGui::RadioButton("Auto-Switch to Next Best Reloadable Weapon##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable))
-        {
-            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueAutoSwitchToBestReloadable);
-        }
-        if (ImGui::RadioButton("Do Nothing##WpnEmptyMagEmpty", cvarClWpnEmptyMagEmptyUnmagBehavior.getAsString() == szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop))
-        {
-            cvarClWpnEmptyMagEmptyUnmagBehavior.Set(szCvarClWpnEmptyMagEmptyUnmagBehaviorValueNoop);
-        }
-        ImGui::Unindent();
-    }
-    ImGui::EndGroup();
 
     ImGui::Separator();
 
@@ -1623,7 +1644,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 350.f;
+    constexpr float fContentHeight = 300.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
