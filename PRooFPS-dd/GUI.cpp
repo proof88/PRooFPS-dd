@@ -1559,6 +1559,20 @@ void proofps_dd::GUI::drawTabMiscSettings()
     {
         cvarGuiMinimapTransparent.Set(bGuiMinimapTransparent);
     }
+
+    PGEcfgVariable& cvarGfxSmokeAmount = m_pPge->getConfigProfiles().getVars()[Smoke::szCVarGfxSmokeAmount];
+    ImGui::TextUnformatted("Smoke Amount:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    int nSmokeEnumAsInt = static_cast<int>(Smoke::enumFromSmokeAmountString(cvarGfxSmokeAmount.getAsString().c_str()));
+    if (ImGui::SliderInt(
+        "##sliderSmokeAmount", &nSmokeEnumAsInt, 0, Smoke::validSmokeAmountStringValues.size() - 1, Smoke::validSmokeAmountStringValues[nSmokeEnumAsInt], ImGuiSliderFlags_NoInput))
+    {
+        assert(nSmokeEnumAsInt >= 0);
+        assert(nSmokeEnumAsInt < static_cast<int>(Smoke::validSmokeAmountStringValues.size()));
+        cvarGfxSmokeAmount.Set(Smoke::validSmokeAmountStringValues[nSmokeEnumAsInt]);
+    }
+    ImGui::PopItemWidth();
 } // drawTabMiscSettings()
 
 void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId /* must be unique! */)

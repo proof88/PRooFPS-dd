@@ -308,6 +308,29 @@ void proofps_dd::Config::validate()
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
     m_bCamRolling = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_ROLLING].getAsBool();
 
+    auto& cvarGfxSmokeAmount = m_pge.getConfigProfiles().getVars()[Smoke::szCVarGfxSmokeAmount];
+    if (!cvarGfxSmokeAmount.getAsString().empty())
+    {
+        if (Smoke::isValidSmokeAmountString(cvarGfxSmokeAmount.getAsString()))
+        {
+            m_eSmokeAmount = Smoke::enumFromSmokeAmountString(cvarGfxSmokeAmount.getAsString().c_str());
+            getConsole().OLn("Smoke Amount from config: %s", cvarGfxSmokeAmount.getAsString().c_str());
+        }
+        else
+        {
+            m_eSmokeAmount = Smoke::SmokeAmount::Normal;
+            getConsole().EOLn("ERROR: Invalid Smoke Amount in config: %s, forcing default: %s",
+                cvarGfxSmokeAmount.getAsString().c_str(), "normal");
+            cvarGfxSmokeAmount.Set("normal");
+        }
+    }
+    else
+    {
+        cvarGfxSmokeAmount.Set("normal");
+        m_eSmokeAmount = Smoke::SmokeAmount::Normal;
+        getConsole().OLn("Missing Smoke Amount in config, forcing default: %s", "normal");
+    }
+
     // obviously for clients, m_nPlayerRespawnDelaySecs will be overrid when receiving MsgServerInfoFromServer, see: clientHandleServerInfoFromServer()
     if (!m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].getAsString().empty())
     {

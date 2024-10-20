@@ -32,6 +32,7 @@
 #include <sstream>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>    // as_const(), swap(), etc.
 #include <vector>
 

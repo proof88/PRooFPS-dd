@@ -18,6 +18,32 @@
 // ############################### PUBLIC ################################
 
 
+proofps_dd::Smoke::SmokeAmount proofps_dd::Smoke::enumFromSmokeAmountString(const char* zstring)
+{
+    const std::string_view sSmoke(zstring);
+    if (sSmoke == "none")
+    {
+        return Smoke::SmokeAmount::None;
+    }
+    else if (sSmoke == "moderate")
+    {
+        return Smoke::SmokeAmount::Moderate;
+    }
+    else if (sSmoke == "normal")
+    {
+        return Smoke::SmokeAmount::Normal;
+    }
+    return Smoke::SmokeAmount::Extreme;
+}
+
+bool proofps_dd::Smoke::isValidSmokeAmountString(const std::string& str)
+{
+    return std::find(
+        validSmokeAmountStringValues.begin(),
+        validSmokeAmountStringValues.end(),
+        str) != validSmokeAmountStringValues.end();
+}
+
 const char* proofps_dd::Smoke::getLoggerModuleName()
 {
     return "Smoke";

@@ -20,6 +20,7 @@
 #include "GameMode.h"
 #include "Maps.h"
 #include "PRooFPS-dd-packet.h"
+#include "Smoke.h"
 
 namespace proofps_dd
 {
@@ -153,6 +154,8 @@ namespace proofps_dd
         bool m_bCamFollowsXHair = true;
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
+
+        Smoke::SmokeAmount m_eSmokeAmount = Smoke::SmokeAmount::Normal;
 
         unsigned int m_nPlayerRespawnDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
         unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly

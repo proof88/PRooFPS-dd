@@ -20,6 +20,30 @@ namespace proofps_dd
     {
 
     public:
+        enum class SmokeAmount
+        {
+            None = 0,
+            Moderate,
+            Normal,
+            Extreme
+        };
+
+        static constexpr auto validSmokeAmountStringValues = PFL::std_array_of<const char*>(
+            "none",
+            "moderate",
+            "normal",
+            "extreme"
+        );
+
+        static_assert(
+            (static_cast<int>(SmokeAmount::Extreme) + 1) == validSmokeAmountStringValues.size(),
+            "SmokeAmount enum labels count should match validSmokeAmountStringValues");
+
+        static constexpr char* szCVarGfxSmokeAmount = "gfx_smoke_amount";
+
+        static SmokeAmount enumFromSmokeAmountString(const char* zstring);
+        static bool isValidSmokeAmountString(const std::string& str);
+
         static const char* getLoggerModuleName();          /**< Returns the logger module name of this class. */
 
         static void destroyReferenceObject();
