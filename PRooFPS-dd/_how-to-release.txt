@@ -9,6 +9,8 @@
 
  - update game version number in Consts.h (GAME_VERSION);
 
+ - make sure any recently added licensed stuff is mentioned in the About menu;
+
  - delete all previous reg test dumps ("RegTestDump*.txt") from the main PRooFPS-dd directory;
 
  - run auto tests as explained in _how-to-auto-test.txt;

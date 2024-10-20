@@ -636,7 +636,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     ImGui::SetCursorPosY(fContentStartY + (fBtnSpacingY * menuButtons.size()));
     ImGui::TextUnformatted(sVersion.c_str());
 
-    const std::string sLatestAlpVersion = std::string("(Latest ALP was v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
+    const std::string sLatestAlpVersion = std::string("(Latest ALP is v") + proofps_dd::GAME_VERSION_LATEST_ALP + ")";
     ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sLatestAlpVersion));
     ImGui::TextDisabled("%s", sLatestAlpVersion.c_str());
 }
@@ -1623,7 +1623,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 450.f;
+    constexpr float fContentHeight = 350.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -1633,14 +1633,27 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     ImGui::Indent();
 
     const std::string sVersion = proofps_dd::GAME_NAME + std::string(" v") + proofps_dd::GAME_VERSION;
-    const std::string sBuild = std::string("Built on ") + __DATE__ + " @ " + __TIME__;
     ImGui::TextUnformatted(sVersion.c_str());
-    ImGui::TextUnformatted(sBuild.c_str());
-    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("A 2.5d multiplayer platform shooter game.");
     ImGui::TextUnformatted("Made by West Whiskhyll Entertainment");
-    if (ImGui::TextHyperLink("facebook.com/whiskhyll", true))
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("[follow on facebook]", true))
     {
         browseToUrl("https://www.facebook.com/whiskhyll");
+    }
+
+    // Expecting NDEBUG to be reliable: https://man7.org/linux/man-pages/man3/assert.3.html
+#ifdef NDEBUG
+    const std::string sBuildType = "Release";
+#else
+    const std::string sBuildType = "Debug";
+#endif   
+    const std::string sBuild = sBuildType + " build (" + __DATE__ + " @ " + __TIME__ + ")";
+    ImGui::TextUnformatted(sBuild.c_str());
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("[check history]", true))
+    {
+        browseToUrl("https://github.com/proof88/PRooFPS-dd/blob/main/HISTORY.md");
     }
     if (ImGui::TextHyperLink("License: GNU GPL-3.0", true))
     {
@@ -1648,37 +1661,45 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     }
 
     ImGui::TextUnformatted("");
-    ImGui::TextWrapped(("Using PR00F's Game Engine v" + std::string(PGE::getVersionString())).c_str());
-    if (ImGui::TextHyperLink("github.com/proof88/PGE", true))
+    ImGui::TextUnformatted("Using PR00F's Game Engine");
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("[visit github]", true))
     {
         browseToUrl("https://github.com/proof88/PGE");
     }
+    ImGui::TextUnformatted(PGE::getVersionString());
     if (ImGui::TextHyperLink("Licensed under GNU LGPL-3.0 License", true))
     {
         browseToUrl("https://github.com/proof88/PGE/blob/master/LICENSE");
     }
 
     ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\"");
-    if (ImGui::TextHyperLink("by Kevin MacLeod (incompetech.com)", true))
+    ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\" by Kevin MacLeod");
+    if (ImGui::TextHyperLink("[visit incompetech.com for more royalty-free music]", true))
     {
         browseToUrl("https://incompetech.com/music/royalty-free/music.html");
     }
-    if (ImGui::TextHyperLink("Licensed under Creative Commons : By Attribution 4.0 License", true))
+    if (ImGui::TextHyperLink("Licensed under Creative Commons: By Attribution 4.0 License", true))
     {
         browseToUrl("http://creativecommons.org/licenses/by/4.0/");
     }
 
-    if (ImGui::TextHyperLink("Smoke Texture: https://opengameart.org/node/7758", true))
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Smoke Texture:");
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("OpenGameArt.org", true))
     {
         browseToUrl("https://opengameart.org/node/7758");
     }
-    if (ImGui::TextHyperLink("Licensed under Creative Commons : CC0 1.0 Universal License", true))
+    if (ImGui::TextHyperLink("Licensed under Creative Commons: CC0 1.0 Universal License", true))
     {
         browseToUrl("https://creativecommons.org/publicdomain/zero/1.0/");
     }
 
-    if (ImGui::TextHyperLink("Jump pad Arrow Texture: https://www.flaticon.com/free-icon/up-arrow_5181212?term=arrow&related_id=5181212", true))
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Jump pad Arrow Texture:");
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("Flaticon.com", true))
     {
         browseToUrl("https://www.flaticon.com/free-icon/up-arrow_5181212?term=arrow&related_id=5181212");
     }
