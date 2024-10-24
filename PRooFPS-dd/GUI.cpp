@@ -2628,7 +2628,8 @@ void proofps_dd::GUI::drawGameServerConfig()
     assert(m_pConfig);
     assert(m_pNetworking);
 
-    float fThisRowY = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
+    const float fStartRowY = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
+    float fThisRowY = fStartRowY;
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Server Config");
 
     static constexpr float fIndentX = 20.f;
@@ -2687,15 +2688,19 @@ void proofps_dd::GUI::drawGameServerConfig()
         fThisRowY = drawClientConnectionDebugInfo(fThisRowY);
     }
 
+    fThisRowY = fStartRowY;
+    const float fGameInfoPagesCol2StartX = ImGui::GetWindowSize().x * 0.5f;
+    drawTextHighlighted(fGameInfoPagesCol2StartX, fThisRowY, "Resource Usage");
+
     fThisRowY += 2 * m_fFontSizePxHudGeneral;
     drawTextHighlighted(
-        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
         std::string("BulletPool: ") + std::to_string(m_pPge->getBullets().size()) + " / " + std::to_string(m_pPge->getBullets().capacity()) + " elems (" +
         std::to_string(m_pPge->getBullets().capacityBytes()) + " Bytes)");
     fThisRowY += m_fFontSizePxHudGeneral;
     assert(m_pSmokes);
     drawTextHighlighted(
-        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
         std::string("SmokePool: ") + std::to_string(m_pSmokes->size()) + " / " + std::to_string(m_pSmokes->capacity()) + " elems (" +
         std::to_string(m_pSmokes->capacityBytes()) + " Bytes)");
 }
