@@ -106,6 +106,8 @@ namespace proofps_dd
         const bool& getCameraTilting() const;
         const bool& getCameraRolling() const;
 
+        const Smoke::SmokeConfigAmount& getSmokeConfigAmount() const;
+
         const int& getFallDamageMultiplier() const;
 
         const unsigned int& getPlayerRespawnDelaySeconds() const;
@@ -155,7 +157,7 @@ namespace proofps_dd
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
 
-        Smoke::SmokeAmount m_eSmokeAmount = Smoke::SmokeAmount::Normal;
+        Smoke::SmokeConfigAmount m_eSmokeAmount = Smoke::SmokeConfigAmount::Normal;
 
         unsigned int m_nPlayerRespawnDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
         unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly

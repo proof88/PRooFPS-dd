@@ -18,30 +18,39 @@
 // ############################### PUBLIC ################################
 
 
-proofps_dd::Smoke::SmokeAmount proofps_dd::Smoke::enumFromSmokeAmountString(const char* zstring)
+proofps_dd::Smoke::SmokeConfigAmount proofps_dd::Smoke::enumFromSmokeAmountString(const char* zstring)
 {
     const std::string_view sSmoke(zstring);
     if (sSmoke == "none")
     {
-        return Smoke::SmokeAmount::None;
+        return Smoke::SmokeConfigAmount::None;
     }
     else if (sSmoke == "moderate")
     {
-        return Smoke::SmokeAmount::Moderate;
+        return Smoke::SmokeConfigAmount::Moderate;
     }
     else if (sSmoke == "normal")
     {
-        return Smoke::SmokeAmount::Normal;
+        return Smoke::SmokeConfigAmount::Normal;
     }
-    return Smoke::SmokeAmount::Extreme;
+    return Smoke::SmokeConfigAmount::Extreme;
 }
 
 bool proofps_dd::Smoke::isValidSmokeAmountString(const std::string& str)
 {
     return std::find(
-        validSmokeAmountStringValues.begin(),
-        validSmokeAmountStringValues.end(),
-        str) != validSmokeAmountStringValues.end();
+        validSmokeConfigAmountStringValues.begin(),
+        validSmokeConfigAmountStringValues.end(),
+        str) != validSmokeConfigAmountStringValues.end();
+}
+
+/**
+* Config::validate() invokes this (config load/change), so we always know about the config here.
+* Cannot use Config in Smoke, hence I need this dirty behavior.
+*/
+void proofps_dd::Smoke::updateSmokeConfigAmount(const SmokeConfigAmount& eSmokeConfigAmount)
+{
+    m_eSmokeConfigAmount = eSmokeConfigAmount;
 }
 
 const char* proofps_dd::Smoke::getLoggerModuleName()
@@ -84,9 +93,16 @@ void proofps_dd::Smoke::init(
     bool bGoingLeft)
 {
     assert(m_obj);
-    m_obj->getPosVec() = put.getPosVec();
+    // probably looks more interesting if positions are a bit displaced randomly from the requested position ...
+    m_obj->getPosVec().Set(
+        put.getPosVec().getX() + ((PFL::random(0, 10) - 5) / 50.f),
+        put.getPosVec().getY() + ((PFL::random(0, 10) - 5) / 50.f),
+        put.getPosVec().getZ()
+    );
     m_put = put;
-    m_fScaling = 1.f;
+    m_put.getPosVec() = m_obj->getPosVec();
+    // even initial scaling is randomized a bit for less easily visible repeating smoke pattern
+    m_fScaling = 1.f + ((PFL::random(0, 10) - 5) / 10.f);
     m_bGoingLeft = bGoingLeft;
 }
 
@@ -108,7 +124,11 @@ void proofps_dd::Smoke::update(const unsigned int& nFactor)
         return;
     }
 
-    m_fScaling += 2.f / static_cast<TPureFloat>(nFactor);
+    assert(
+        static_cast<int>(m_eSmokeConfigAmount) < static_cast<int>(smokeEmitOperValues.size())
+    );
+    const float& fScalingSpeed = smokeEmitOperValues[static_cast<int>(m_eSmokeConfigAmount)].m_fScalingSpeed;
+    m_fScaling += fScalingSpeed / static_cast<TPureFloat>(nFactor);
 
     constexpr float fTargetScaling = 3.f;
     if (m_fScaling >= fTargetScaling)
@@ -118,13 +138,16 @@ void proofps_dd::Smoke::update(const unsigned int& nFactor)
     else
     {
         m_obj->SetScaling(PureVector(m_fScaling, m_fScaling, m_obj->getScaling().getZ()));
-        m_put.Move(0.1f / nFactor);
-        m_put.Elevate(0.5f / nFactor);
+        m_put.Move(0.1f / nFactor); // should be relative to bullet speed, but for know this constliteral is ok
+        m_put.Elevate(0.5f / nFactor); // this should be also relative to something but for now it is ok
         m_obj->getPosVec() = m_put.getPosVec();
         m_obj->getAngleVec().SetZ(
             m_obj->getAngleVec().getZ() + ((m_bGoingLeft ? 1 : -1) * (60.f / nFactor))
         );
 
+        // TODO: now transparency is linear 1 to 0 per scaling, however in the future I could imagine 1 more config value, which
+        // could control from what fAnimationProgress we should start fading the smoke away, so for example it could start
+        // fading away only when fAnimationProgress has reached 0.3f, so that recently emitted smokes "saturate" a bit more.
         const float fAnimationProgress = m_fScaling / fTargetScaling;
         const float fTargetTransparency = 1 - fAnimationProgress;
         m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(fTargetTransparency, fTargetTransparency, fTargetTransparency, 1.f);
@@ -169,3 +192,4 @@ void proofps_dd::Smoke::build3dObject()
 
 
 PureObject3D* proofps_dd::Smoke::m_pSmokeRefObject = nullptr;
+proofps_dd::Smoke::SmokeConfigAmount proofps_dd::Smoke::m_eSmokeConfigAmount = Smoke::SmokeConfigAmount::Normal;

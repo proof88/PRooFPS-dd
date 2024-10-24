@@ -318,7 +318,7 @@ void proofps_dd::Config::validate()
         }
         else
         {
-            m_eSmokeAmount = Smoke::SmokeAmount::Normal;
+            m_eSmokeAmount = Smoke::SmokeConfigAmount::Normal;
             getConsole().EOLn("ERROR: Invalid Smoke Amount in config: %s, forcing default: %s",
                 cvarGfxSmokeAmount.getAsString().c_str(), "normal");
             cvarGfxSmokeAmount.Set("normal");
@@ -327,9 +327,10 @@ void proofps_dd::Config::validate()
     else
     {
         cvarGfxSmokeAmount.Set("normal");
-        m_eSmokeAmount = Smoke::SmokeAmount::Normal;
+        m_eSmokeAmount = Smoke::SmokeConfigAmount::Normal;
         getConsole().OLn("Missing Smoke Amount in config, forcing default: %s", "normal");
     }
+    Smoke::updateSmokeConfigAmount(m_eSmokeAmount);
 
     // obviously for clients, m_nPlayerRespawnDelaySecs will be overrid when receiving MsgServerInfoFromServer, see: clientHandleServerInfoFromServer()
     if (!m_pge.getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs].getAsString().empty())
@@ -426,6 +427,11 @@ const bool& proofps_dd::Config::getCameraTilting() const
 const bool& proofps_dd::Config::getCameraRolling() const
 {
     return m_bCamRolling;
+}
+
+const proofps_dd::Smoke::SmokeConfigAmount& proofps_dd::Config::getSmokeConfigAmount() const
+{
+    return m_eSmokeAmount;
 }
 
 const int& proofps_dd::Config::getFallDamageMultiplier() const

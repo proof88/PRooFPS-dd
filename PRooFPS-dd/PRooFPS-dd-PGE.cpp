@@ -85,6 +85,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     proofps_dd::Sounds(),
     proofps_dd::WeaponHandling(
         *this,
+        Config::getConfigInstance(*this, m_maps),
         m_durations,
         m_gui,
         m_mapPlayers,

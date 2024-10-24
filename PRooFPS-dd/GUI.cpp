@@ -1566,11 +1566,11 @@ void proofps_dd::GUI::drawTabMiscSettings()
     ImGui::PushItemWidth(100);
     int nSmokeEnumAsInt = static_cast<int>(Smoke::enumFromSmokeAmountString(cvarGfxSmokeAmount.getAsString().c_str()));
     if (ImGui::SliderInt(
-        "##sliderSmokeAmount", &nSmokeEnumAsInt, 0, Smoke::validSmokeAmountStringValues.size() - 1, Smoke::validSmokeAmountStringValues[nSmokeEnumAsInt], ImGuiSliderFlags_NoInput))
+        "##sliderSmokeAmount", &nSmokeEnumAsInt, 0, Smoke::validSmokeConfigAmountStringValues.size() - 1, Smoke::validSmokeConfigAmountStringValues[nSmokeEnumAsInt], ImGuiSliderFlags_NoInput))
     {
         assert(nSmokeEnumAsInt >= 0);
-        assert(nSmokeEnumAsInt < static_cast<int>(Smoke::validSmokeAmountStringValues.size()));
-        cvarGfxSmokeAmount.Set(Smoke::validSmokeAmountStringValues[nSmokeEnumAsInt]);
+        assert(nSmokeEnumAsInt < static_cast<int>(Smoke::validSmokeConfigAmountStringValues.size()));
+        cvarGfxSmokeAmount.Set(Smoke::validSmokeConfigAmountStringValues[nSmokeEnumAsInt]);
     }
     ImGui::PopItemWidth();
 } // drawTabMiscSettings()

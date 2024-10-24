@@ -13,6 +13,7 @@
 
 #include "PGE.h"
 
+#include "Config.h"
 #include "Durations.h"
 #include "Explosion.h"
 #include "GameMode.h"
@@ -52,6 +53,7 @@ namespace proofps_dd
 
         WeaponHandling(
             PGE& pge,
+            proofps_dd::Config& config,
             proofps_dd::Durations& durations,
             proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
@@ -182,6 +184,7 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
         PGE& m_pge;
+        proofps_dd::Config& m_config;
         proofps_dd::Durations& m_durations;
         proofps_dd::GUI& m_gui;
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;

@@ -192,6 +192,7 @@
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureIRenderer.h" />
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureRendererHWfixedPipe.h" />
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\Render\PureRendererSWincremental.h" />
+    <ClInclude Include="..\..\PGE\PGE\Weapons\WeaponManager.h" />
     <ClInclude Include="CameraHandling.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Consts.h" />

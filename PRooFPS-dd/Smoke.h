@@ -20,7 +20,7 @@ namespace proofps_dd
     {
 
     public:
-        enum class SmokeAmount
+        enum class SmokeConfigAmount
         {
             None = 0,
             Moderate,
@@ -28,7 +28,7 @@ namespace proofps_dd
             Extreme
         };
 
-        static constexpr auto validSmokeAmountStringValues = PFL::std_array_of<const char*>(
+        static constexpr auto validSmokeConfigAmountStringValues = PFL::std_array_of<const char*>(
             "none",
             "moderate",
             "normal",
@@ -36,13 +36,39 @@ namespace proofps_dd
         );
 
         static_assert(
-            (static_cast<int>(SmokeAmount::Extreme) + 1) == validSmokeAmountStringValues.size(),
-            "SmokeAmount enum labels count should match validSmokeAmountStringValues");
+            (static_cast<int>(SmokeConfigAmount::Extreme) + 1) == validSmokeConfigAmountStringValues.size(),
+            "SmokeConfigAmount enum labels count should match validSmokeConfigAmountStringValues");
+
+        struct SmokeEmitOperValues
+        {
+            float m_fScalingSpeed;
+            int m_nEmitInEveryNPhysicsIteration;
+        };
+
+        /**
+        * Based on user configuration SmokeConfigAmount, this table shows operational values used for smoke generation.
+        * Due to current design, the max number of smokes at a time per bullet cannot be explicitly set, however with these
+        * values, it can be tuned:
+        *  - higher scaling speed leads to less smoke objects at a time,
+        *  - higher EmitInEveryNPhysicsIteration leads to less smoke objects at a time.
+        * The resulting max smoke objects per bullet with 60 Hz physics rate is mentioned near each setting.
+        */
+        static constexpr auto smokeEmitOperValues = PFL::std_array_of<SmokeEmitOperValues>(
+            SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 6 }, /* SmokeConfigAmount::None, max smoke/bullet: 0, in this case these are just dummies */
+            SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 6 }, /* SmokeConfigAmount::Moderate, max smoke/bullet: 10, */
+            SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 3 }, /* SmokeConfigAmount::Normal, max smoke/bullet: 20, */
+            SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 2 }  /* SmokeConfigAmount::Extreme, max smoke/bullet: 30, */
+        );
+
+        static_assert(
+            (static_cast<int>(SmokeConfigAmount::Extreme) + 1) == smokeEmitOperValues.size(),
+            "SmokeConfigAmount enum labels count should match smokeEmitOperValues");
 
         static constexpr char* szCVarGfxSmokeAmount = "gfx_smoke_amount";
 
-        static SmokeAmount enumFromSmokeAmountString(const char* zstring);
+        static SmokeConfigAmount enumFromSmokeAmountString(const char* zstring);
         static bool isValidSmokeAmountString(const std::string& str);
+        static void updateSmokeConfigAmount(const SmokeConfigAmount& eSmokeConfigAmount);
 
         static const char* getLoggerModuleName();          /**< Returns the logger module name of this class. */
 
@@ -79,6 +105,7 @@ namespace proofps_dd
     private:
 
         static PureObject3D* m_pSmokeRefObject;
+        static SmokeConfigAmount m_eSmokeConfigAmount; /**< Updated by Config when smoke config changes. Smoke does not access Config, hence we need this. */
 
         PR00FsUltimateRenderingEngine& m_gfx;
 

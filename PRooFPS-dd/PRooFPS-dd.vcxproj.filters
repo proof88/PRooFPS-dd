@@ -61,6 +61,9 @@
     <Filter Include="Header Files\PGE\PURE\GUI">
       <UniqueIdentifier>{5c439989-2d55-4562-924f-45f35f5edfe5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PGE\Weapons">
+      <UniqueIdentifier>{a629d7f9-0f54-4a44-bcff-ba9ff633719a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -350,6 +353,9 @@
     </ClInclude>
     <ClInclude Include="Smoke.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\Weapons\WeaponManager.h">
+      <Filter>Header Files\PGE\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

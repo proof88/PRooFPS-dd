@@ -29,6 +29,7 @@ static constexpr float SndMeleeWpnBulletHitDistMax = 14.f;
 
 proofps_dd::WeaponHandling::WeaponHandling(
     PGE& pge,
+    proofps_dd::Config& config,
     proofps_dd::Durations& durations,
     proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
@@ -43,6 +44,7 @@ proofps_dd::WeaponHandling::WeaponHandling(
         m_sounds),
     proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds),
     m_pge(pge),
+    m_config(config),
     m_durations(durations),
     m_gui(gui),
     m_mapPlayers(mapPlayers),
@@ -50,7 +52,7 @@ proofps_dd::WeaponHandling::WeaponHandling(
     m_sounds(sounds)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
-    // pge, durations, mapPlayers, sounds
+    // pge, config, durations, mapPlayers, sounds
     // But they can be used in other functions.
 
     // Since this class is used to build up the WeaponHandling class which is derived from PGE class, PGE is not yet initialized
@@ -1600,13 +1602,14 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
 
 void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 {
-    if (bullet.getParticleType() == Bullet::ParticleType::Smoke)
+    if ((bullet.getParticleType() == Bullet::ParticleType::Smoke) && (m_config.getSmokeConfigAmount() != Smoke::SmokeConfigAmount::None))
     {
         // generate smoke, note this should be in bullet.update() on the long run
-        bullet.getParticleEmittedCntr()++;
-        if (bullet.getParticleEmittedCntr() >= 2)
+        bullet.getParticleEmitPerNthPhysicsIterationCntr()++;
+        assert(static_cast<int>(m_config.getSmokeConfigAmount()) < static_cast<int>(Smoke::smokeEmitOperValues.size()));
+        if (bullet.getParticleEmitPerNthPhysicsIterationCntr() >= Smoke::smokeEmitOperValues[static_cast<int>(m_config.getSmokeConfigAmount())].m_nEmitInEveryNPhysicsIteration)
         {
-            bullet.getParticleEmittedCntr() = 0;
+            bullet.getParticleEmitPerNthPhysicsIterationCntr() = 0;
             m_smokes.create(
                 bullet.getPut(),
                 (bullet.getObject3D().getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
