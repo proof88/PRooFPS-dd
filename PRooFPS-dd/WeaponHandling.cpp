@@ -86,13 +86,26 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling(PGEcfgProfiles& cfgPro
 
     if (m_smokes.capacity() == 0)
     {
+        /* 60 is the default min physics rate, dividing it by Extreme config's m_nEmitInEveryNPhysicsIteration should give 30 */
+        static_assert(2 == Smoke::smokeEmitOperValues[static_cast<int>(Smoke::SmokeConfigAmount::Extreme)].m_nEmitInEveryNPhysicsIteration);
+        
         // now this calculation is less "scientific" than the bullet pool capacity calculation.
-        // We could use the bazooka firing rate and smoke rate config to determine pool size, however
+        // We could use the bazooka firing rate and smoke amount config to determine pool size, however
         // on the long run smoke will be used also for other effects as well. Anyway, now I'm
         // calculating with 1 player firing 1 rocket / second, that results in 30 smokes max at any moment
-        // with max smoke rate config. To be prepared for some other future effects using smoke, I use 40
+        // with max smoke amount config. To be prepared for some other future effects using smoke, I use 40
         // instead of 30 per player.
-        m_smokes.reserve("smokes", cfgProfiles.getVars()[Player::szCVarPlayersMax].getAsUInt() * 40, m_pge.getPure());
+        // Note that if ALL players are shooting rockets at the same time and ALL rockets travel far, then it can happen that
+        // additionally launched rockets may not emit smoke, however I think this situation can happen rarely.
+        // For now I keep pool reserve size calculation this way.
+        
+        //m_smokes.reserve("smokes", 10, m_pge.getPure());
+        m_smokes.reserve(
+            "smokes",
+            cfgProfiles.getVars()[Player::szCVarPlayersMax].getAsUInt() *
+                (10 + 60 / Smoke::smokeEmitOperValues[static_cast<int>(Smoke::SmokeConfigAmount::Extreme)].m_nEmitInEveryNPhysicsIteration),
+            m_pge.getPure()
+        );
     }
 
     return true;
