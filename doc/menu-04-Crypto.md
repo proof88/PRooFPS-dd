@@ -20,6 +20,7 @@ TODO:
  - Add to When Buy section: token unlocks (e.g. TIA Oct 31) and halving dates (e.g. BTC) should be also considered! Add link where to check these!
  - Chart Analysis: OBV (On-Balance Volume) as some call as Relative Volume; Ichimoku
  - https://www.youtube.com/watch?v=oVl2Ag5W2S0&ab_channel=BenjaminCowen
+ - BTC dominance, BTC vs alts ratio, when is the altseason starting, etc: https://www.youtube.com/watch?v=jV0rKelRG9k
  - https://x.com/CryptoRugMunch/status/1848812359730794624
  
 [TOC]
