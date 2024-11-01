@@ -17,6 +17,7 @@ TODO:
  - https://www.coinglass.com/pro/futures/LiquidationHeatMapNew
  - https://www.coinglass.com/pro/futures/LiquidationMap
  - https://www.coinglass.com/pro/futures/LiquidationCountHeatMap
+ - Add btc-monthly-returns.png
  - Add to When Buy section: token unlocks (e.g. TIA Oct 31) and halving dates (e.g. BTC) should be also considered! Add link where to check these!
  - Chart Analysis: OBV (On-Balance Volume) as some call as Relative Volume; Ichimoku
  - https://www.youtube.com/watch?v=oVl2Ag5W2S0&ab_channel=BenjaminCowen
