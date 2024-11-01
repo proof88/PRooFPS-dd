@@ -28,6 +28,9 @@
 #include "MapsTest.h"
 #include "PlayerTest.h"
 
+// performance tests (benchmarks)
+#include "EventListerPerfTest.h"
+
 // regression smoke tests
 #include "RegTestBasicServerClient2Players.h"
 #include "RegTestMapChangeServerClient3Players.h"
@@ -57,7 +60,13 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     getConsole().Initialize(CON_TITLE, true);
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
     getConsole().SetErrorsAlwaysOn(false);
-    getConsole().OLn(CON_TITLE);
+    // Expecting NDEBUG to be reliable: https://man7.org/linux/man-pages/man3/assert.3.html
+#ifdef NDEBUG
+    const std::string sBuildType = "Release Build";
+#else
+    const std::string sBuildType = "Debug Build";
+#endif 
+    getConsole().OLn((std::string(CON_TITLE) + ", " + sBuildType).c_str());
     getConsole().L();
     getConsole().OLn("");
 
@@ -69,86 +78,90 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     PGEcfgProfiles cfgProfiles; // TODO: even the engine should be constructed here and passed to test, but now this approach is enough ...
     cfgProfiles.reinitialize("");
 
-    std::vector<std::unique_ptr<UnitTest>> tests;
+    std::vector<std::unique_ptr<UnitTest>> unitTests;
+    std::vector<std::unique_ptr<Benchmark>> perfTests;
     
     // unit tests
-    //tests.push_back(std::unique_ptr<UnitTest>(new EventListerTest()));
-    //tests.push_back(std::unique_ptr<UnitTest>(new GameModeTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
-    //tests.push_back(std::unique_ptr<UnitTest>(new MapcycleTest()));
-    //tests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
+    unitTests.push_back(std::unique_ptr<UnitTest>(new EventListerTest()));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new GameModeTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new MapItemTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new MapsTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new MapcycleTest()));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new PlayerTest(cfgProfiles)));
+
+    // performance tests (benchmarks)
+    perfTests.push_back(std::unique_ptr<Benchmark>(new EventListerPerfTest()));
     
     // regression tests
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
-    tests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
-    constexpr bool bAreWeTestingReleaseBuild = false;
-    tests.push_back(std::unique_ptr<UnitTest>(
-        new RegTestMapChangeServerClient3Players(60, 60, 60, 3 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
-    ));
-
-    std::vector<std::unique_ptr<UnitTest>>::size_type nSucceededTests = 0;
-    std::vector<std::unique_ptr<UnitTest>>::size_type nTotalSubTests = 0;
-    std::vector<std::unique_ptr<UnitTest>>::size_type nTotalPassedSubTests = 0;
-    for (std::vector<std::unique_ptr<UnitTest>>::size_type i = 0; i < tests.size(); ++i)
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 60, 60)));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(60, 20, 60)));
+    //unitTests.push_back(std::unique_ptr<UnitTest>(new RegTestBasicServerClient2Players(20, 20, 60)));
+    //constexpr bool bAreWeTestingReleaseBuild = false;
+    //unitTests.push_back(std::unique_ptr<UnitTest>(
+    //    new RegTestMapChangeServerClient3Players(60, 60, 60, 3 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
+    //));
+    
+    size_t nSucceededTests = 0;
+    size_t nTotalSubTests = 0;
+    size_t nTotalPassedSubTests = 0;
+    for (size_t i = 0; i < unitTests.size(); ++i)
     {
-        getConsole().OLn("Running test %d / %d ... ", i+1, tests.size());
-        tests[i]->run();
+        getConsole().OLn("Running test %d / %d ... ", i+1, unitTests.size());
+        unitTests[i]->run();
     }
 
     // summarizing
     getConsole().OLn("");
-    for (std::vector<std::unique_ptr<UnitTest>>::size_type i = 0; i < tests.size(); ++i)
+    for (size_t i = 0; i < unitTests.size(); ++i)
     {
-        if ( tests[i]->isPassed() )
+        if ( unitTests[i]->isPassed() )
         {
             ++nSucceededTests;
             getConsole().SOn();
-            if ( tests[i]->getName().empty() )
+            if ( unitTests[i]->getName().empty() )
             {
-                getConsole().OLn("Test passed: %s(%d)!", tests[i]->getFile().c_str(), tests[i]->getSubTestCount());
+                getConsole().OLn("Test passed: %s(%d)!", unitTests[i]->getFile().c_str(), unitTests[i]->getSubTestCount());
             }
-            else if ( tests[i]->getFile().empty() )
+            else if ( unitTests[i]->getFile().empty() )
             {
-                getConsole().OLn("Test passed: %s(%d)!", tests[i]->getName().c_str(), tests[i]->getSubTestCount());
+                getConsole().OLn("Test passed: %s(%d)!", unitTests[i]->getName().c_str(), unitTests[i]->getSubTestCount());
             }
             else
             {
-                getConsole().OLn("Test passed: %s(%d) in %s!", tests[i]->getName().c_str(), tests[i]->getSubTestCount(), tests[i]->getFile().c_str());
+                getConsole().OLn("Test passed: %s(%d) in %s!", unitTests[i]->getName().c_str(), unitTests[i]->getSubTestCount(), unitTests[i]->getFile().c_str());
             }
             getConsole().SOff();
         }
         else
         {
             getConsole().EOn();
-            if ( tests[i]->getName().empty() )
+            if ( unitTests[i]->getName().empty() )
             {
-                getConsole().OLn("Test failed: %s", tests[i]->getFile().c_str());
+                getConsole().OLn("Test failed: %s", unitTests[i]->getFile().c_str());
             }
-            else if ( tests[i]->getFile().empty() )
+            else if ( unitTests[i]->getFile().empty() )
             {
-                getConsole().OLn("Test failed: %s", tests[i]->getName().c_str());
+                getConsole().OLn("Test failed: %s", unitTests[i]->getName().c_str());
             }
             else
             {
-                getConsole().OLn("Test failed: %s in %s", tests[i]->getName().c_str(), tests[i]->getFile().c_str());
+                getConsole().OLn("Test failed: %s in %s", unitTests[i]->getName().c_str(), unitTests[i]->getFile().c_str());
             }
             getConsole().Indent();
-            for (std::vector<std::string>::size_type j = 0; j < tests[i]->getMessages().size(); ++j)
+            for (size_t j = 0; j < unitTests[i]->getErrorMessages().size(); ++j)
             {
-                getConsole().OLn("%s", tests[i]->getMessages()[j].c_str());
+                getConsole().OLn("%s", unitTests[i]->getErrorMessages()[j].c_str());
             }
             getConsole().Outdent();
             getConsole().EOff();
         }
-        nTotalSubTests += tests[i]->getSubTestCount();
-        nTotalPassedSubTests += tests[i]->getPassedSubTestCount();
+        nTotalSubTests += unitTests[i]->getSubTestCount();
+        nTotalPassedSubTests += unitTests[i]->getPassedSubTestCount();
     }
 
     getConsole().OLn("");
     getConsole().OLn("========================================================");
-    if ( nSucceededTests == tests.size() )
+    if ( nSucceededTests == unitTests.size() )
     {
         getConsole().SOn();
     }
@@ -156,7 +169,84 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     {
         getConsole().EOn();
     }
-    getConsole().OLn("Passed tests: %d / %d (SubTests: %d / %d)", nSucceededTests, tests.size(), nTotalPassedSubTests, nTotalSubTests);
+    getConsole().OLn("Passed Unit Tests: %d / %d (SubTests: %d / %d)", nSucceededTests, unitTests.size(), nTotalPassedSubTests, nTotalSubTests);
+    getConsole().NOn();
+    getConsole().OLn("========================================================");
+
+    nSucceededTests = 0;
+    nTotalSubTests = 0;
+    nTotalPassedSubTests = 0;
+    for (size_t i = 0; i < perfTests.size(); ++i)
+    {
+        getConsole().OLn("Running performance test %d / %d ... ", i + 1, perfTests.size());
+        perfTests[i]->run();
+    }
+
+    // summarizing
+    getConsole().OLn("");
+    for (size_t i = 0; i < perfTests.size(); ++i)
+    {
+        for (const auto& infoMsg : perfTests[i]->getInfoMessages())
+        {
+            getConsole().OLn("%s", infoMsg.c_str());
+        }
+
+        if (perfTests[i]->isPassed())
+        {
+            ++nSucceededTests;
+            getConsole().SOn();
+            if (perfTests[i]->getName().empty())
+            {
+                getConsole().OLn("Test passed: %s(%d)!", perfTests[i]->getFile().c_str(), perfTests[i]->getSubTestCount());
+            }
+            else if (perfTests[i]->getFile().empty())
+            {
+                getConsole().OLn("Test passed: %s(%d)!", perfTests[i]->getName().c_str(), perfTests[i]->getSubTestCount());
+            }
+            else
+            {
+                getConsole().OLn("Test passed: %s(%d) in %s!", perfTests[i]->getName().c_str(), perfTests[i]->getSubTestCount(), perfTests[i]->getFile().c_str());
+            }
+            getConsole().SOff();
+        }
+        else
+        {
+            getConsole().EOn();
+            if (perfTests[i]->getName().empty())
+            {
+                getConsole().OLn("Test failed: %s", perfTests[i]->getFile().c_str());
+            }
+            else if (perfTests[i]->getFile().empty())
+            {
+                getConsole().OLn("Test failed: %s", perfTests[i]->getName().c_str());
+            }
+            else
+            {
+                getConsole().OLn("Test failed: %s in %s", perfTests[i]->getName().c_str(), perfTests[i]->getFile().c_str());
+            }
+            getConsole().Indent();
+            for (size_t j = 0; j < perfTests[i]->getErrorMessages().size(); ++j)
+            {
+                getConsole().OLn("%s", perfTests[i]->getErrorMessages()[j].c_str());
+            }
+            getConsole().Outdent();
+            getConsole().EOff();
+        }
+        nTotalSubTests += perfTests[i]->getSubTestCount();
+        nTotalPassedSubTests += perfTests[i]->getPassedSubTestCount();
+    }
+
+    getConsole().OLn("");
+    getConsole().OLn("========================================================");
+    if (nSucceededTests == perfTests.size())
+    {
+        getConsole().SOn();
+    }
+    else
+    {
+        getConsole().EOn();
+    }
+    getConsole().OLn("Passed Performance Tests: %d / %d (SubTests: %d / %d)", nSucceededTests, perfTests.size(), nTotalPassedSubTests, nTotalSubTests);
     getConsole().NOn();
     getConsole().OLn("========================================================");
     

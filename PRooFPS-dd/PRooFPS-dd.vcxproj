@@ -76,7 +76,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>../$(ProjectName)/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../$(ProjectName)/;../../455-355-7357-88/455-355-7357-88/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,7 +101,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>../$(ProjectName)/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../$(ProjectName)/;../../455-355-7357-88/455-355-7357-88/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -124,7 +124,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>../$(ProjectName)/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../$(ProjectName)/;../../455-355-7357-88/455-355-7357-88/;../../PFL/PFL/;../../Console/CConsole/src/;../../PGE/PGE/;../../PGE/PGE/Pure/include/external/GUI/imgui-1.88/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -221,6 +221,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Strafe.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tests\EventListerPerfTest.h" />
     <ClInclude Include="Tests\EventListerTest.h" />
     <ClInclude Include="Tests\GameModeTest.h" />
     <ClInclude Include="Tests\InputSim.h" />

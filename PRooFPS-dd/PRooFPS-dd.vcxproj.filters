@@ -357,6 +357,9 @@
     <ClInclude Include="..\..\PGE\PGE\Weapons\WeaponManager.h">
       <Filter>Header Files\PGE\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\EventListerPerfTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

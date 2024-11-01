@@ -617,5 +617,5 @@ For example, in case of Bitcoin, you can find this info [under the chart in the 
 No, even if they try to make you believe, you are not.  
 In 2024 we are already late to trade anonymously in the crypto market due to the regulations and security measures they introduced in recent years to fight against money laundering.  
 The path of your money between the crypto- and the real world is pretty much trackable and in case of an investigation they will trace it from start to finish.  
-Furthermore, [Arkham Intel](https://platform.arkhamintelligence.com/) is actually matches wallet adresses with names!  
+Furthermore, [Arkham Intel](https://platform.arkhamintelligence.com/) is actually matching wallet adresses with names!  
 So it is better to play nicely and do not scam people. Also, do not try to hide it from your local tax authority.
