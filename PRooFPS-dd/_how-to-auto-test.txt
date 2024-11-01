@@ -9,8 +9,8 @@
 
 Currently there are 2 kinds of automated tests:
 
- - unit tests
-   - these are compiled as per compiler settings stored in "DebugTest_PRooFPS-dd" configuration;
+ - unit- and performance tests
+   - these are compiled as per compiler settings stored in "DebugTest_PRooFPS-dd" and "ReleaseTest_PRooFPS-dd" configurations;
 
  - regression tests:
    - these are starting up PRooFPS-dd.exe in the main PRooFPS-dd directory, and simulating user input,
@@ -24,4 +24,12 @@ All kinds of automated tests can be easily run with the steps below:
 
  - in Tests/PRooFPS-dd-Tests.cpp, check that all tests are uncommented;
 
- - change configuration to "DebugTest_PRooFPS-dd", build and run it, and make sure all tests pass.
+ - change configuration to either "DebugTest_PRooFPS-dd" or "ReleaseTest_PRooFPS-dd", build and run it, and make sure all tests pass.
+
+Note: difference between configurations "DebugTest_PRooFPS-dd" and "ReleaseTest_PRooFPS-dd" have effect on the build type of the tests.
+Unit- and performance tests are recommended to be built and run with both "DebugTest_PRooFPS-dd" and "ReleaseTest_PRooFPS-dd" configurations.
+
+Therefore, if you want to run regression test on Release version of PRooFPS-dd, you need to build a release version of PRooFPS-dd first
+and then copy it in the main PRooFPS-dd directory as already explained above!
+
+

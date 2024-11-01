@@ -82,7 +82,7 @@ private:
     {
         constexpr size_t nMaxEventCount = 1000u;  // let this be big so events can accumulate before update() has to remove due to timeout
         constexpr unsigned int nMaxEventTimeSecs = 1u;
-        constexpr long long nTestDurationTotalSecs = 10u;
+        constexpr long long nTestDurationTotalSecs = 5u;
         static_assert(
             nMaxEventTimeSecs < nTestDurationTotalSecs,
             "Max event time should be far less than test duration, otherwise update() won't really do meaningful cleanup job!");
