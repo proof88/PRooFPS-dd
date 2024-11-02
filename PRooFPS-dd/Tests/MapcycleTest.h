@@ -10,7 +10,7 @@
     ###################################################################################
 */
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 
 #include "Mapcycle.h"
 #include "PRooFPS-dd-packet.h"

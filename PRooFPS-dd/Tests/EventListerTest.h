@@ -12,7 +12,7 @@
 
 #include <thread>
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 
 #include "EventLister.h"
 

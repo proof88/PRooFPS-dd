@@ -179,6 +179,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\Benchmarks.h" />
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\ScopeBenchmarker.h" />
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\UnitTest.h" />
     <ClInclude Include="..\..\PFL\PFL\winproof88.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\PgeAudio.h" />
     <ClInclude Include="..\..\PGE\PGE\Audio\soloud-RELEASE_20200207\include\soloud.h" />

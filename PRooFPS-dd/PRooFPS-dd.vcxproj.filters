@@ -64,6 +64,9 @@
     <Filter Include="Header Files\PGE\Weapons">
       <UniqueIdentifier>{a629d7f9-0f54-4a44-bcff-ba9ff633719a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\455-355-7357-88">
+      <UniqueIdentifier>{596420ef-13e0-4187-80e8-840415cd119f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -359,6 +362,15 @@
     </ClInclude>
     <ClInclude Include="Tests\EventListerPerfTest.h">
       <Filter>Header Files\Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\Benchmarks.h">
+      <Filter>Header Files\455-355-7357-88</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\ScopeBenchmarker.h">
+      <Filter>Header Files\455-355-7357-88</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\UnitTest.h">
+      <Filter>Header Files\455-355-7357-88</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

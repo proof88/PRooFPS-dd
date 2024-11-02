@@ -12,7 +12,7 @@
 
 #include <set>
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 
 class MapTestsCommon :
     public UnitTest

@@ -19,7 +19,7 @@
 #endif
 #include "winproof88.h"
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 #include "Consts.h"
 #include "GameMode.h"
 #include "SharedWithTest.h"

@@ -13,7 +13,7 @@
 #include <thread>
 
 #include "Benchmarks.h"
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 
 #include "EventLister.h"
 

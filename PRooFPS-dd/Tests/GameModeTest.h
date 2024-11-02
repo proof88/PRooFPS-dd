@@ -13,7 +13,7 @@
 #include <list>
 #include <thread>
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 
 #include "PGE.h" // for Bullet and PgeCfgProfiles
 #include "Network/Stubs/PgeNetworkStub.h"

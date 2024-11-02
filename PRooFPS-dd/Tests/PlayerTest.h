@@ -16,7 +16,7 @@
 #include <set>
 #include <string>
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 

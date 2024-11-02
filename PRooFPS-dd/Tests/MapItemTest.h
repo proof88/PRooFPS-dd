@@ -10,7 +10,7 @@
     ###################################################################################
 */
 
-#include "UnitTests/UnitTest.h"
+#include "UnitTest.h"
 #include "MapItem.h"
 
 class MapItemTest :
