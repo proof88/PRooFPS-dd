@@ -42,50 +42,50 @@ public:
     MapcycleTest(const MapcycleTest&) = delete;
     MapcycleTest& operator=(const MapcycleTest&) = delete;
     MapcycleTest(MapcycleTest&&) = delete;
-    MapcycleTest&& operator=(MapcycleTest&&) = delete;
+    MapcycleTest& operator=(MapcycleTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Mapcycle::getLoggerModuleName(), true);
 
-        AddSubTest("test_is_valid_map_filename", (PFNUNITSUBTEST)&MapcycleTest::test_is_valid_map_filename);
+        addSubTest("test_is_valid_map_filename", (PFNUNITSUBTEST)&MapcycleTest::test_is_valid_map_filename);
 
-        AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapcycleTest::test_initially_empty);
+        addSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapcycleTest::test_initially_empty);
 
-        AddSubTest("test_available_maps_get", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_get);
-        AddSubTest("test_available_maps_refresh", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_refresh);
-        AddSubTest("test_available_maps_add_single_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_add_single_elem);
-        AddSubTest("test_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_add_multi_elem);
-        AddSubTest("test_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_by_name);
-        AddSubTest("test_available_maps_remove_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_by_index);
-        AddSubTest("test_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_multi_elem);
+        addSubTest("test_available_maps_get", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_get);
+        addSubTest("test_available_maps_refresh", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_refresh);
+        addSubTest("test_available_maps_add_single_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_add_single_elem);
+        addSubTest("test_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_add_multi_elem);
+        addSubTest("test_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_by_name);
+        addSubTest("test_available_maps_remove_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_by_index);
+        addSubTest("test_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_available_maps_remove_multi_elem);
 
-        AddSubTest("test_mapcycle_reload", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_reload);
-        AddSubTest("test_mapcycle_save_to_file", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_save_to_file);
-        AddSubTest("test_mapcycle_next", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_next);
-        AddSubTest("test_mapcycle_rewind_to_first", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_rewind_to_first);
-        AddSubTest("test_mapcycle_forward_to_last", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_forward_to_last);
-        AddSubTest("test_mapcycle_add_single_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_single_elem);
-        AddSubTest("test_mapcycle_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_multi_elem);
-        AddSubTest("test_mapcycle_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_by_name);
-        AddSubTest("test_mapcycle_remove_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_by_index);
-        AddSubTest("test_mapcycle_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_multi_elem);
-        AddSubTest("test_mapcycle_clear", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_clear);
-        AddSubTest("test_mapcycle_remove_non_existing", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_non_existing);
+        addSubTest("test_mapcycle_reload", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_reload);
+        addSubTest("test_mapcycle_save_to_file", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_save_to_file);
+        addSubTest("test_mapcycle_next", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_next);
+        addSubTest("test_mapcycle_rewind_to_first", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_rewind_to_first);
+        addSubTest("test_mapcycle_forward_to_last", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_forward_to_last);
+        addSubTest("test_mapcycle_add_single_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_single_elem);
+        addSubTest("test_mapcycle_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_multi_elem);
+        addSubTest("test_mapcycle_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_by_name);
+        addSubTest("test_mapcycle_remove_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_by_index);
+        addSubTest("test_mapcycle_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_multi_elem);
+        addSubTest("test_mapcycle_clear", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_clear);
+        addSubTest("test_mapcycle_remove_non_existing", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_non_existing);
 
-        AddSubTest("test_mapcycle_available_maps_synchronize", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_available_maps_synchronize);
-        AddSubTest("test_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_by_name);
-        AddSubTest("test_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_multi_elem);
-        AddSubTest("test_mapcycle_add_available_maps_remove_all", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_all);
-        AddSubTest("test_mapcycle_remove_available_maps_add_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_by_name);
-        AddSubTest("test_mapcycle_remove_available_maps_add_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_by_index);
-        AddSubTest("test_mapcycle_remove_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_multi_elem);
-        AddSubTest("test_mapcycle_remove_available_maps_add_all", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_all);
+        addSubTest("test_mapcycle_available_maps_synchronize", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_available_maps_synchronize);
+        addSubTest("test_mapcycle_add_available_maps_remove_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_by_name);
+        addSubTest("test_mapcycle_add_available_maps_remove_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_multi_elem);
+        addSubTest("test_mapcycle_add_available_maps_remove_all", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_add_available_maps_remove_all);
+        addSubTest("test_mapcycle_remove_available_maps_add_by_name", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_by_name);
+        addSubTest("test_mapcycle_remove_available_maps_add_by_index", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_by_index);
+        addSubTest("test_mapcycle_remove_available_maps_add_multi_elem", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_multi_elem);
+        addSubTest("test_mapcycle_remove_available_maps_add_all", (PFNUNITSUBTEST)&MapcycleTest::test_mapcycle_remove_available_maps_add_all);
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Mapcycle::getLoggerModuleName(), false);
     }

@@ -13,7 +13,6 @@
 #include <thread>
 
 #include "Benchmarks.h"
-#include "UnitTest.h"
 
 #include "EventLister.h"
 
@@ -30,7 +29,7 @@ public:
     EventListerPerfTest(const EventListerPerfTest&) = delete;
     EventListerPerfTest& operator=(const EventListerPerfTest&) = delete;
     EventListerPerfTest(EventListerPerfTest&&) = delete;
-    EventListerPerfTest&& operator=(EventListerPerfTest&&) = delete;
+    EventListerPerfTest& operator=(EventListerPerfTest&&) = delete;
 
 protected:
 

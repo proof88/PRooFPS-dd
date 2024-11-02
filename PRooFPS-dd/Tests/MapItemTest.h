@@ -11,6 +11,7 @@
 */
 
 #include "UnitTest.h"
+
 #include "MapItem.h"
 
 class MapItemTest :
@@ -27,11 +28,11 @@ public:
     MapItemTest(const MapItemTest&) = delete;
     MapItemTest& operator=(const MapItemTest&) = delete;
     MapItemTest(MapItemTest&&) = delete;
-    MapItemTest&& operator=(MapItemTest&&) = delete;
+    MapItemTest& operator=(MapItemTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
@@ -41,12 +42,12 @@ protected:
         engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        AddSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
-        AddSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
-        AddSubTest("test_get_item_respawn_time_secs", (PFNUNITSUBTEST)&MapItemTest::test_get_item_respawn_time_secs);
-        AddSubTest("test_take", (PFNUNITSUBTEST)&MapItemTest::test_take);
-        AddSubTest("test_untake", (PFNUNITSUBTEST)&MapItemTest::test_untake);
-        AddSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
+        addSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
+        addSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
+        addSubTest("test_get_item_respawn_time_secs", (PFNUNITSUBTEST)&MapItemTest::test_get_item_respawn_time_secs);
+        addSubTest("test_take", (PFNUNITSUBTEST)&MapItemTest::test_take);
+        addSubTest("test_untake", (PFNUNITSUBTEST)&MapItemTest::test_untake);
+        addSubTest("test_update", (PFNUNITSUBTEST)&MapItemTest::test_update);
     }
 
     virtual bool setUp() override
@@ -54,12 +55,12 @@ protected:
         return assertTrue(engine && engine->isInitialized());
     }
 
-    virtual void TearDown() override
+    virtual void tearDown() override
     {
         proofps_dd::MapItem::resetGlobalData();
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         if (engine)
         {

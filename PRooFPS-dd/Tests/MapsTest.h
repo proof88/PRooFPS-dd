@@ -10,10 +10,7 @@
     ###################################################################################
 */
 
-#include "UnitTest.h"
-
 #include "Maps.h"
-
 #include "MapTestsCommon.h"
 
 class TestableMaps :
@@ -47,11 +44,11 @@ public:
     MapsTest(const MapsTest&) = delete;
     MapsTest& operator=(const MapsTest&) = delete;
     MapsTest(MapsTest&&) = delete;
-    MapsTest&& operator=(MapsTest&&) = delete;
+    MapsTest& operator=(MapsTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
@@ -68,21 +65,21 @@ protected:
             assertLequals(0, nProgress);
         };
 
-        AddSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
-        AddSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
-        AddSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
-        AddSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
-        AddSubTest("test_map_load_bad_jumppad_count", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_count);
-        AddSubTest("test_map_load_bad_jumppad_force_value", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_force_value);
-        AddSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
-        AddSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
-        AddSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
-        AddSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
-        AddSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
-        AddSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
-        AddSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
-        AddSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
-        AddSubTest("test_map_handle_map_item_update_from_server", (PFNUNITSUBTEST)&MapsTest::test_map_handle_map_item_update_from_server);
+        addSubTest("test_initially_empty", (PFNUNITSUBTEST) &MapsTest::test_initially_empty);
+        addSubTest("test_map_load_bad_filename", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_filename);
+        addSubTest("test_map_load_bad_assignment", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_assignment);
+        addSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
+        addSubTest("test_map_load_bad_jumppad_count", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_count);
+        addSubTest("test_map_load_bad_jumppad_force_value", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_force_value);
+        addSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
+        addSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
+        addSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
+        addSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
+        addSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        addSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
+        addSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
+        addSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
+        addSubTest("test_map_handle_map_item_update_from_server", (PFNUNITSUBTEST)&MapsTest::test_map_handle_map_item_update_from_server);
     }
 
     virtual bool setUp() override
@@ -90,11 +87,11 @@ protected:
         return assertTrue(engine && engine->isInitialized());
     }
 
-    virtual void TearDown() override
+    virtual void tearDown() override
     {
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         if ( engine )
         {

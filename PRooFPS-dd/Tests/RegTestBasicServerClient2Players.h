@@ -19,6 +19,7 @@
 #include "winproof88.h"
 
 #include "UnitTest.h"
+
 #include "Consts.h"
 #include "GameMode.h"
 #include "SharedWithTest.h"
@@ -79,7 +80,7 @@ public:
     RegTestBasicServerClient2Players(const RegTestBasicServerClient2Players&) = delete;
     RegTestBasicServerClient2Players& operator=(const RegTestBasicServerClient2Players&) = delete;
     RegTestBasicServerClient2Players(RegTestBasicServerClient2Players&&) = delete;
-    RegTestBasicServerClient2Players&& operator=(RegTestBasicServerClient2Players&&) = delete;
+    RegTestBasicServerClient2Players& operator=(RegTestBasicServerClient2Players&&) = delete;
 
 protected:
 
@@ -113,7 +114,7 @@ protected:
         return true;
     } // setUp()
 
-    virtual void TearDown() override
+    virtual void tearDown() override
     {
         // We primarily try to do graceful shutdown here.
         // UnitTest::run() will invoke TearDown() no matter what setUp() or testMethod() returned, this means that

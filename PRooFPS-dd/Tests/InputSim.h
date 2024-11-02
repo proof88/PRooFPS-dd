@@ -9,8 +9,6 @@
     ###################################################################################
 */
 
-#include <chrono>
-
 #include "winproof88.h"
 
 namespace input_sim_test

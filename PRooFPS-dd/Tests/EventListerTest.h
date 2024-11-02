@@ -29,23 +29,23 @@ public:
     EventListerTest(const EventListerTest&) = delete;
     EventListerTest& operator=(const EventListerTest&) = delete;
     EventListerTest(EventListerTest&&) = delete;
-    EventListerTest&& operator=(EventListerTest&&) = delete;
+    EventListerTest& operator=(EventListerTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), true);
 
-        AddSubTest("test_initial_values", (PFNUNITSUBTEST)&EventListerTest::test_initial_values);
-        AddSubTest("test_show_hide", (PFNUNITSUBTEST)&EventListerTest::test_show_hide);
-        AddSubTest("test_add_event", (PFNUNITSUBTEST)&EventListerTest::test_add_event);
-        AddSubTest("test_clear", (PFNUNITSUBTEST)&EventListerTest::test_clear);
-        AddSubTest("test_update", (PFNUNITSUBTEST)&EventListerTest::test_update);
+        addSubTest("test_initial_values", (PFNUNITSUBTEST)&EventListerTest::test_initial_values);
+        addSubTest("test_show_hide", (PFNUNITSUBTEST)&EventListerTest::test_show_hide);
+        addSubTest("test_add_event", (PFNUNITSUBTEST)&EventListerTest::test_add_event);
+        addSubTest("test_clear", (PFNUNITSUBTEST)&EventListerTest::test_clear);
+        addSubTest("test_update", (PFNUNITSUBTEST)&EventListerTest::test_update);
 
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), false);
     }

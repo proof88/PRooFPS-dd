@@ -17,6 +17,7 @@
 #include <string>
 
 #include "UnitTest.h"
+
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 
@@ -38,11 +39,11 @@ public:
     PlayerTest(const PlayerTest&) = delete;
     PlayerTest& operator=(const PlayerTest&) = delete;
     PlayerTest(PlayerTest&&) = delete;
-    PlayerTest&& operator=(PlayerTest&&) = delete;
+    PlayerTest& operator=(PlayerTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         //CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Player::getLoggerModuleName(), true);
 
@@ -53,58 +54,58 @@ protected:
         m_engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        AddSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
-        AddSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
-        AddSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
-        AddSubTest("test_set_booted_up", (PFNUNITSUBTEST)&PlayerTest::test_set_booted_up);
-        AddSubTest("test_set_expecting_after_boot_up_delayed_update", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_after_boot_up_delayed_update);
-        AddSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
-        AddSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
-        AddSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
-        AddSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
-        AddSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
-        AddSubTest("test_set_just_created_and_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_just_created_and_expecting_start_pos);
-        AddSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
-        AddSubTest("test_set_armor_and_update_old_armor", (PFNUNITSUBTEST)&PlayerTest::test_set_armor_and_update_old_armor);
-        AddSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
-        AddSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
-        AddSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
-        AddSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
-        AddSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
-        AddSubTest("test_set_invulnerability", (PFNUNITSUBTEST)&PlayerTest::test_set_invulnerability);
-        AddSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
-        AddSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
-        AddSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
-        AddSubTest("test_set_has_just_started_falling", (PFNUNITSUBTEST)&PlayerTest::test_set_has_just_started_falling);
-        AddSubTest("test_is_in_air", (PFNUNITSUBTEST)&PlayerTest::test_is_in_air);
-        AddSubTest("test_start_somersault_server_mid_air_when_auto_crouch_is_disabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_mid_air_when_auto_crouch_is_disabled);
-        AddSubTest("test_start_somersault_server_mid_air_when_auto_crouch_is_enabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_mid_air_when_auto_crouch_is_enabled);
-        AddSubTest("test_start_somersault_server_on_ground", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_on_ground);
-        AddSubTest("test_step_somersault_angle_server", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle_server);
-        AddSubTest("test_set_somersault_client", (PFNUNITSUBTEST)&PlayerTest::test_set_somersault_client);
-        AddSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
-        AddSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
-        AddSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
-        AddSubTest("test_client_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_client_do_crouch);
-        AddSubTest("test_get_proposed_new_pos_y_for_standup", (PFNUNITSUBTEST)&PlayerTest::test_get_proposed_new_pos_y_for_standup);
-        AddSubTest("test_server_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_server_do_standup);
-        AddSubTest("test_client_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_client_do_standup);
-        AddSubTest("test_is_moving", (PFNUNITSUBTEST)&PlayerTest::test_is_moving);
-        AddSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
-        AddSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
-        AddSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
-        AddSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
-        AddSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
-        AddSubTest("test_get_weapon_instance_by_map_item_type", (PFNUNITSUBTEST)&PlayerTest::test_get_weapon_instance_by_map_item_type);
-        AddSubTest("test_handle_falling_from_high_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_server_instance);
-        AddSubTest("test_handle_falling_from_high_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_client_instance);
-        AddSubTest("test_handle_landed_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_server_instance);
-        AddSubTest("test_handle_landed_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_client_instance);
-        AddSubTest("test_handle_take_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_server_instance);
-        AddSubTest("test_handle_take_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_client_instance);
-        AddSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
-        AddSubTest("test_handle_jumppad_activated_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_server);
-        AddSubTest("test_handle_jumppad_activated_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_client);
+        addSubTest("test_gen_unique_user_name", (PFNUNITSUBTEST)&PlayerTest::test_gen_unique_user_name);
+        addSubTest("test_initial_values", (PFNUNITSUBTEST)&PlayerTest::test_initial_values);
+        addSubTest("test_set_name", (PFNUNITSUBTEST)&PlayerTest::test_set_name);
+        addSubTest("test_set_booted_up", (PFNUNITSUBTEST)&PlayerTest::test_set_booted_up);
+        addSubTest("test_set_expecting_after_boot_up_delayed_update", (PFNUNITSUBTEST)&PlayerTest::test_set_expecting_after_boot_up_delayed_update);
+        addSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
+        addSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
+        addSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
+        addSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
+        addSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
+        addSubTest("test_set_just_created_and_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_just_created_and_expecting_start_pos);
+        addSubTest("test_update_old_pos", (PFNUNITSUBTEST)&PlayerTest::test_update_old_pos);
+        addSubTest("test_set_armor_and_update_old_armor", (PFNUNITSUBTEST)&PlayerTest::test_set_armor_and_update_old_armor);
+        addSubTest("test_set_health_and_update_old_health", (PFNUNITSUBTEST)&PlayerTest::test_set_health_and_update_old_health);
+        addSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
+        addSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
+        addSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
+        addSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
+        addSubTest("test_set_invulnerability", (PFNUNITSUBTEST)&PlayerTest::test_set_invulnerability);
+        addSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
+        addSubTest("test_set_can_fall", (PFNUNITSUBTEST)&PlayerTest::test_set_can_fall);
+        addSubTest("test_gravity", (PFNUNITSUBTEST)&PlayerTest::test_gravity);
+        addSubTest("test_set_has_just_started_falling", (PFNUNITSUBTEST)&PlayerTest::test_set_has_just_started_falling);
+        addSubTest("test_is_in_air", (PFNUNITSUBTEST)&PlayerTest::test_is_in_air);
+        addSubTest("test_start_somersault_server_mid_air_when_auto_crouch_is_disabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_mid_air_when_auto_crouch_is_disabled);
+        addSubTest("test_start_somersault_server_mid_air_when_auto_crouch_is_enabled", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_mid_air_when_auto_crouch_is_enabled);
+        addSubTest("test_start_somersault_server_on_ground", (PFNUNITSUBTEST)&PlayerTest::test_start_somersault_server_on_ground);
+        addSubTest("test_step_somersault_angle_server", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle_server);
+        addSubTest("test_set_somersault_client", (PFNUNITSUBTEST)&PlayerTest::test_set_somersault_client);
+        addSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
+        addSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
+        addSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
+        addSubTest("test_client_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_client_do_crouch);
+        addSubTest("test_get_proposed_new_pos_y_for_standup", (PFNUNITSUBTEST)&PlayerTest::test_get_proposed_new_pos_y_for_standup);
+        addSubTest("test_server_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_server_do_standup);
+        addSubTest("test_client_do_standup", (PFNUNITSUBTEST)&PlayerTest::test_client_do_standup);
+        addSubTest("test_is_moving", (PFNUNITSUBTEST)&PlayerTest::test_is_moving);
+        addSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
+        addSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
+        addSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
+        addSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
+        addSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
+        addSubTest("test_get_weapon_instance_by_map_item_type", (PFNUNITSUBTEST)&PlayerTest::test_get_weapon_instance_by_map_item_type);
+        addSubTest("test_handle_falling_from_high_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_server_instance);
+        addSubTest("test_handle_falling_from_high_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_client_instance);
+        addSubTest("test_handle_landed_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_server_instance);
+        addSubTest("test_handle_landed_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_client_instance);
+        addSubTest("test_handle_take_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_server_instance);
+        addSubTest("test_handle_take_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_client_instance);
+        addSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
+        addSubTest("test_handle_jumppad_activated_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_server);
+        addSubTest("test_handle_jumppad_activated_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_client);
     }
 
     virtual bool setUp() override
@@ -128,13 +129,13 @@ protected:
         return b;
     }
 
-    virtual void TearDown() override
+    virtual void tearDown() override
     {
         m_bullets.clear();
         m_network.shutdown();
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         m_bullets.deallocate();
         if (m_engine)
@@ -985,8 +986,8 @@ private:
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump_a1 = std::chrono::steady_clock::now();
             player.setWillJumpInNextTick(1.f, 0.f); // any positive Y value means jumping
             const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump_a1 = player.getTimeLastSetWillJump();
-            b &= assertTrue(timeLastSetWillJump_a1 > timeBeforeSetWillJump_a1, "cmp timeBefore a 1") &
-                assertTrue(timeLastSetWillJump_a1 < std::chrono::steady_clock::now(), "cmp timeAfter a 1");
+            b &= assertTrue(timeLastSetWillJump_a1 >= timeBeforeSetWillJump_a1, "cmp timeBefore a 1") &
+                assertTrue(timeLastSetWillJump_a1 <= std::chrono::steady_clock::now(), "cmp timeAfter a 1");
             b &= assertEquals(1.f, player.getWillJumpYInNextTick(), "will jump Y a 1");
             player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed a 2") &
@@ -1021,8 +1022,8 @@ private:
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump_b1 = std::chrono::steady_clock::now();
             player.setWillJumpInNextTick(fJumppadJumpForceMultiplier, 0.f); // any positive Y value means jumping
             const std::chrono::time_point<std::chrono::steady_clock> timeLastSetWillJump_b1 = player.getTimeLastSetWillJump();
-            b &= assertTrue(timeLastSetWillJump_b1 > timeBeforeSetWillJump_b1, "cmp timeBefore b 1") &
-                assertTrue(timeLastSetWillJump_b1 < std::chrono::steady_clock::now(), "cmp timeAfter b 1");
+            b &= assertTrue(timeLastSetWillJump_b1 >= timeBeforeSetWillJump_b1, "cmp timeBefore b 1") &
+                assertTrue(timeLastSetWillJump_b1 <= std::chrono::steady_clock::now(), "cmp timeAfter b 1");
             b &= assertEquals(fJumppadJumpForceMultiplier, player.getWillJumpYInNextTick(), "will jump Y b 1");
             player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed b 2") &

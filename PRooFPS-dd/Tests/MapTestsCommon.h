@@ -27,7 +27,7 @@ public:
     MapTestsCommon(const MapTestsCommon&) = delete;
     MapTestsCommon& operator=(const MapTestsCommon&) = delete;
     MapTestsCommon(MapTestsCommon&&) = delete;
-    MapTestsCommon&& operator=(MapTestsCommon&&) = delete;
+    MapTestsCommon& operator=(MapTestsCommon&&) = delete;
 
 protected:
 

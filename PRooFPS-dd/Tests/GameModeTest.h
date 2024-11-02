@@ -44,11 +44,11 @@ public:
     GameModeTest(const GameModeTest&) = delete;
     GameModeTest& operator=(const GameModeTest&) = delete;
     GameModeTest(GameModeTest&&) = delete;
-    GameModeTest&& operator=(GameModeTest&&) = delete;
+    GameModeTest& operator=(GameModeTest&&) = delete;
 
 protected:
 
-    virtual void Initialize() override
+    virtual void initialize() override
     {
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), true);
 
@@ -59,27 +59,27 @@ protected:
         m_engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        AddSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
-        AddSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
-        AddSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
-        AddSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
-        AddSubTest("test_deathmatch_time_limit_client_update_time_remaining_secs", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_client_update_time_remaining_secs);
-        AddSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
-        AddSubTest("test_deathmatch_fetch_config", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_fetch_config);
-        AddSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
-        AddSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
-        AddSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
-        AddSubTest("test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won);
-        AddSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
-        AddSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
-        AddSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
-        AddSubTest("test_deathmatch_restart", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart);
-        AddSubTest("test_deathmatch_restart_without_removing_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart_without_removing_players);
-        AddSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
-        AddSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
-        AddSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
-        AddSubTest("test_deathmatch_winning_cond_time_and_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit);
-        AddSubTest("test_deathmatch_receive_and_update_winning_conditions_client", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_receive_and_update_winning_conditions_client);
+        addSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
+        addSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
+        addSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
+        addSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
+        addSubTest("test_deathmatch_time_limit_client_update_time_remaining_secs", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_client_update_time_remaining_secs);
+        addSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
+        addSubTest("test_deathmatch_fetch_config", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_fetch_config);
+        addSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
+        addSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
+        addSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
+        addSubTest("test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won);
+        addSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
+        addSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
+        addSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
+        addSubTest("test_deathmatch_restart", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart);
+        addSubTest("test_deathmatch_restart_without_removing_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart_without_removing_players);
+        addSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
+        addSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
+        addSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
+        addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit);
+        addSubTest("test_deathmatch_receive_and_update_winning_conditions_client", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_receive_and_update_winning_conditions_client);
         
     }
 
@@ -98,7 +98,7 @@ protected:
         return b;
     }
 
-    virtual void TearDown() override
+    virtual void tearDown() override
     {
         if (gm)
         {
@@ -109,7 +109,7 @@ protected:
         m_network.shutdown();
     }
 
-    virtual void Finalize() override
+    virtual void finalize() override
     {
         if (m_engine)
         {
@@ -199,7 +199,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -230,7 +230,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -318,7 +318,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -384,7 +384,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -418,7 +418,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -456,7 +456,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -531,7 +531,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -606,7 +606,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -765,7 +765,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -876,7 +876,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -941,7 +941,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -1010,7 +1010,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
@@ -1120,7 +1120,7 @@ private:
         {
             if (i == 2)
             {
-                TearDown();
+                tearDown();
                 bTestingAsServer = true;
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
