@@ -9,13 +9,13 @@ Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version
 Running test 1 / 1 ...
 
   <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
-    bm evtLst addEvent copy Iterations: 1, Durations: Min/Max/Avg: 5886/5886/5886 ms, Total: 5886 ms
+    bm evtLst addEvent copy Iterations: 1, Durations: Min/Max/Avg: 4179/4179/4179 ms, Total: 4179 ms
 
   Higher iteration count is better (identical for both benchmarkers).
   Lower duration values for bmInside is better.
   <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
-    bmInside evtLst update Iterations: 8056, Durations: Min/Max/Avg: 1000/51500/1305.56 ns, Total: 10517600 ns
-    bmOutside evtLst update Iterations: 8056, Durations: Min/Max/Avg: 527/32313/617.727 us, Total: 4976410 us
+    bmInside evtLst update Iterations: 11715, Durations: Min/Max/Avg: 1100/247400/1431.17 ns, Total: 16766200 ns
+    bmOutside evtLst update Iterations: 11715, Durations: Min/Max/Avg: 372/3684/423.208 us, Total: 4957883 us
 
 
 Release:
@@ -24,13 +24,13 @@ Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version
 Running test 1 / 1 ...
 
   <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
-    bm evtLst addEvent copy Iterations: 1, Durations: Min/Max/Avg: 297/297/297 ms, Total: 297 ms
+    bm evtLst addEvent copy Iterations: 1, Durations: Min/Max/Avg: 205/205/205 ms, Total: 205 ms
 
   Higher iteration count is better (identical for both benchmarkers).
   Lower duration values for bmInside is better.
   <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
-    bmInside evtLst update Iterations: 172712, Durations: Min/Max/Avg: 100/380500/136.984 ns, Total: 23658800 ns
-    bmOutside evtLst update Iterations: 172712, Durations: Min/Max/Avg: 21/5082/28.3712 us, Total: 4900043 us
+    bmInside evtLst update Iterations: 257586, Durations: Min/Max/Avg: 100/117100/130.329 ns, Total: 33570800 ns
+    bmOutside evtLst update Iterations: 257586, Durations: Min/Max/Avg: 16/33835/18.9021 us, Total: 4868920 us
 
 
 

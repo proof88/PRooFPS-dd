@@ -31,7 +31,8 @@ namespace proofps_dd
         struct TimeStringPair
         {
             std::chrono::time_point<std::chrono::steady_clock> m_timestamp;
-            std::string m_str;
+            std::string m_str; // constructing and destructing this when TimeStringPair is temporal object, too expensive!
+                               // consider switching to a more lightweight string, like something implemented in Dear ImGui!
 
             TimeStringPair() :
                 m_timestamp{},
