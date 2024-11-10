@@ -74,7 +74,7 @@ private:
         {
             const auto& elem = eventsQ.underlying_array()[fifoIndex];
             //CConsole::getConsoleInstance().EOLn("  check: %s == %s", vecExpectedStrings[i].c_str(), elem.second.c_str());
-            b &= (vecExpectedStrings[i] == elem.second);
+            b &= (vecExpectedStrings[i] == elem.m_str);
             fifoIndex = eventsQ.next_index(fifoIndex);
         }
         //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector end");

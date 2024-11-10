@@ -2040,9 +2040,9 @@ void proofps_dd::GUI::updateDeathKillEvents()
     {
         const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(elem.second, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.m_str, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            elem.second);
+            elem.m_str);
 
         i = eventsQ.prev_index(i);
     }
@@ -2072,9 +2072,9 @@ void proofps_dd::GUI::updateItemPickupEvents()
     {
         const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(elem.second, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.m_str, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            elem.second);
+            elem.m_str);
         
         i = eventsQ.prev_index(i);
     }
@@ -2130,7 +2130,7 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
         int nHpChange = 0;
         try
         {
-            nHpChange = static_cast<int>(std::stol(elem.second));
+            nHpChange = static_cast<int>(std::stol(elem.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2145,7 +2145,7 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nHpChange >= 0) ? ("+" + elem.second + "%") : (elem.second + "%"));
+            (nHpChange >= 0) ? ("+" + elem.m_str + "%") : (elem.m_str + "%"));
 
         ImGui::PopStyleColor();
 
@@ -2215,7 +2215,7 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         int nApChange = 0;
         try
         {
-            nApChange = static_cast<int>(std::stol(elem.second));
+            nApChange = static_cast<int>(std::stol(elem.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2230,7 +2230,7 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nApChange >= 0) ? ("+" + elem.second + "%") : (elem.second + "%"));
+            (nApChange >= 0) ? ("+" + elem.m_str + "%") : (elem.m_str + "%"));
 
         ImGui::PopStyleColor();
 
@@ -2301,7 +2301,7 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
         int nAmmoChange = 0;
         try
         {
-            nAmmoChange = static_cast<int>(std::stol(elem.second));
+            nAmmoChange = static_cast<int>(std::stol(elem.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2317,7 +2317,7 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nAmmoChange >= 0) ? ("+" + elem.second) : (elem.second));
+            (nAmmoChange >= 0) ? ("+" + elem.m_str) : (elem.m_str));
 
         ImGui::PopStyleColor();
 

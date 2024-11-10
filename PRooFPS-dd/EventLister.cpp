@@ -109,7 +109,7 @@ void proofps_dd::EventLister::update()
     while (!m_qEvents.empty())
     {
         const auto& elem = m_qEvents.front();
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - elem.first).count() >= m_nEventTimeLimitSecs)
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - elem.m_timestamp).count() >= m_nEventTimeLimitSecs)
         {
             m_qEvents.pop_front();
         }
@@ -131,10 +131,16 @@ void proofps_dd::EventLister::update()
 //        { std::chrono::steady_clock::now(), sEvent} );
 //}
 
-void proofps_dd::EventLister::addEvent(const std::string& sEvent)
+//void proofps_dd::EventLister::addEvent(const std::string& sEvent)
+//{
+//    m_qEvents.push_back_forced(
+//        { std::chrono::steady_clock::now(), sEvent });
+//}
+
+void proofps_dd::EventLister::addEvent(std::string&& sEvent)
 {
     m_qEvents.push_back_forced(
-        { std::chrono::steady_clock::now(), sEvent });
+        { std::move(std::chrono::steady_clock::now()), std::move(sEvent) });
 }
 
 void proofps_dd::EventLister::clear()

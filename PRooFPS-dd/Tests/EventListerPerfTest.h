@@ -55,7 +55,7 @@ private:
     bool test_benchmark_add_event()
     {
         constexpr size_t nMaxEventCount = 5u;
-        constexpr unsigned int nMaxEventTimeSecs = 1000u; // make sure timeout does not interfere
+        constexpr unsigned int nMaxEventTimeSecs = 1000u; // make sure timeout does not interfere (it would not anyway since we are not calling update())
         proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         constexpr auto textArray = PFL::std_array_of<const char*>(
@@ -65,7 +65,7 @@ private:
         );
 
         {
-            ScopeBenchmarker<std::chrono::milliseconds> scopeBm("bm evtLst addEvent");
+            ScopeBenchmarker<std::chrono::milliseconds> scopeBm("bm evtLst addEvent copy");
             for (int i = 0; i < 1000000; i++)
             {
                 events.addEvent(textArray[PFL::random(0, textArray.size()-1)]);

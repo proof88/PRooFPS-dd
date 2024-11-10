@@ -27,7 +27,38 @@ namespace proofps_dd
     {
     public:
 
-        typedef std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string> TimeStringPair;
+        //typedef std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string> TimeStringPair;
+        struct TimeStringPair
+        {
+            std::chrono::time_point<std::chrono::steady_clock> m_timestamp;
+            std::string m_str;
+
+            TimeStringPair() :
+                m_timestamp{},
+                m_str{}
+            {}
+
+            TimeStringPair(
+                const std::chrono::time_point<std::chrono::steady_clock>& ts,
+                const std::string& str) :
+                m_timestamp(ts),
+                m_str(str)
+            {}
+
+            TimeStringPair(
+                std::chrono::time_point<std::chrono::steady_clock>&& ts,
+                std::string&& str) :
+                m_timestamp(std::move(ts)),
+                m_str(std::move(str))
+            {}
+
+            ~TimeStringPair() = default;
+
+            TimeStringPair(const TimeStringPair&) = default;
+            TimeStringPair& operator=(const TimeStringPair&) = default;
+            TimeStringPair(TimeStringPair&&) = default;
+            TimeStringPair& operator=(TimeStringPair&&) = default;
+        };
 
         enum class Orientation
         {
@@ -58,7 +89,8 @@ namespace proofps_dd
 
         virtual void draw() {};
 
-        void addEvent(const std::string& sEvent);
+        //void addEvent(const std::string& sEvent);
+        void addEvent(std::string&& sEvent);
         void clear();
 
         //const std::deque<TimeStringPair>& getEvents() const;
