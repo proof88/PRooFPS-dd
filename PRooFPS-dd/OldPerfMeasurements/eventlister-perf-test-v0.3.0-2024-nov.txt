@@ -1,0 +1,38 @@
+v0.4.0, EventLister using std::deque, before being replaced by PFL::FixFIFO.
+
+Time units are milliseconds.
+
+
+Debug:
+Running Performance Tests ...
+Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version: 1.0
+Running test 1 / 1 ...
+
+  <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
+    bm Iterations: 1, Min/Max/Avg Duration: 6603/6603/6603.000000, Total Duration: 6603
+
+  Higher iteration count is better (identical for both benchmarkers).
+  Lower duration values for bmInside is better.
+  <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
+    bmInside Iterations: 2743, Min/Max/Avg Duration: 0/2/1.003646, Total Duration: 2753
+    bmOutside Iterations: 2743, Min/Max/Avg Duration: 0/3/1.083850, Total Duration: 2973
+
+
+
+Release:
+Running Performance Tests ...
+Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version: 1.0
+Running test 1 / 1 ...
+
+  <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
+    bm Iterations: 1, Min/Max/Avg Duration: 288/288/288.000000, Total Duration: 288
+
+  Higher iteration count is better (identical for both benchmarkers).
+  Lower duration values for bmInside is better.
+  <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
+    bmInside Iterations: 64970, Min/Max/Avg Duration: 0/10/0.000569, Total Duration: 37
+    bmOutside Iterations: 64970, Min/Max/Avg Duration: 0/10/0.000662, Total Duration: 43
+
+
+
+

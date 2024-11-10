@@ -372,6 +372,12 @@
     <ClInclude Include="..\..\455-355-7357-88\455-355-7357-88\UnitTest.h">
       <Filter>Header Files\455-355-7357-88</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\PFL\PFL\FixFIFO.h">
+      <Filter>Header Files\PFL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PFL\PFL\PFL.h">
+      <Filter>Header Files\PFL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

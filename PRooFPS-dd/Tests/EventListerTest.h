@@ -66,14 +66,16 @@ private:
             return false;
         }
 
-        //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector start");
         bool b = true;
-        int iVec = 0;
-        for (auto it = events.getEvents().rbegin(); b && (it != events.getEvents().rend()); ++it)
+        //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector start");
+        auto& eventsQ = events.getEvents();
+        size_t fifoIndex = eventsQ.begin_index();
+        for (size_t i = 0; i < vecExpectedStrings.size(); i++)
         {
-            //CConsole::getConsoleInstance().EOLn("  check: %s == %s", vecExpectedStrings[iVec].c_str(), it->second.c_str());
-            b &= (vecExpectedStrings[iVec] == it->second);
-            iVec++;
+            const auto& elem = eventsQ.underlying_array()[fifoIndex];
+            //CConsole::getConsoleInstance().EOLn("  check: %s == %s", vecExpectedStrings[i].c_str(), elem.second.c_str());
+            b &= (vecExpectedStrings[i] == elem.second);
+            fifoIndex = eventsQ.next_index(fifoIndex);
         }
         //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector end");
         //CConsole::getConsoleInstance().EOLn("");
@@ -119,9 +121,9 @@ private:
         proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         const std::vector<std::string> vecExpectedStrings =
-        { {"event 3"},
+        { {"event 1"},
           {"event 2"},
-          {"event 1"} };
+          {"event 3"} };
 
         events.addEvent("event 1");
         events.addEvent("event 2");
@@ -133,9 +135,9 @@ private:
         events.addEvent("event 4");
 
         const std::vector<std::string> vecExpectedStrings2 =
-        { {"event 4"},
+        { {"event 2"},
           {"event 3"},
-          {"event 2"} };
+          {"event 4"} };
 
         b &= assertTrue(does_event_lister_has_same_elems_as_vector(events, vecExpectedStrings2), "case 2");
 
@@ -159,13 +161,13 @@ private:
         proofps_dd::EventLister events(nMaxEventTimeSecs, nMaxEventCount);
 
         const std::vector<std::string> vecExpectedStrings1 =
-        { {"event 3"},
+        { {"event 1"},
           {"event 2"},
-          {"event 1"} };
+          {"event 3"} };
 
         const std::vector<std::string> vecExpectedStrings2 =
-        { {"event 3"},
-          {"event 2"} };
+        { {"event 2"},
+          {"event 3"} };
 
         const std::vector<std::string> vecExpectedStrings3 =
         { {"event 3"} };

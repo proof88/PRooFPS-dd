@@ -2025,12 +2025,26 @@ void proofps_dd::GUI::updateDeathKillEvents()
     // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneral); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
-    for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
+    
+    //for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
+    //{
+    //    drawTextHighlighted(
+    //        getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+    //        ImGui::GetCursorPos().y,
+    //        it->second);
+    //}
+    
+    auto& eventsQ = m_pEventsDeathKill->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
     {
+        const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.second, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            it->second);
+            elem.second);
+
+        i = eventsQ.prev_index(i);
     }
 }
 
@@ -2043,12 +2057,26 @@ void proofps_dd::GUI::updateItemPickupEvents()
     // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneral + 3) + 20);
-    for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
+    
+    //for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
+    //{
+    //    drawTextHighlighted(
+    //        getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+    //        ImGui::GetCursorPos().y,
+    //        it->second);
+    //}
+
+    auto& eventsQ = m_pEventsItemPickup->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
     {
+        const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.second, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            it->second);
+            elem.second);
+        
+        i = eventsQ.prev_index(i);
     }
 }
 
@@ -2059,16 +2087,50 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
     m_pEventsPlayerHpChange->update();
 
     // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-    for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
+    // 
+    //for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
+    //{
+    //    ImGui::SameLine();
+    //
+    //    // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+    //    // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+    //    int nHpChange = 0;
+    //    try
+    //    {
+    //        nHpChange = static_cast<int>(std::stol(it->second));
+    //    }
+    //    catch (const std::exception&) {}
+    //
+    //    /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+    //    ImGui::PushStyleColor(
+    //        ImGuiCol_Text,
+    //        (nHpChange > 0) ?
+    //        ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+    //        ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+    //    );
+    //        
+    //    drawTextHighlighted(
+    //        ImGui::GetCursorPos().x,
+    //        ImGui::GetCursorPos().y,
+    //        (nHpChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
+    //    
+    //    ImGui::PopStyleColor();
+    //}
+
+    auto& eventsQ = m_pEventsPlayerHpChange->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
     {
         ImGui::SameLine();
+
+        const auto& elem = eventsQ.underlying_array()[i];
 
         // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
         // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
         int nHpChange = 0;
         try
         {
-            nHpChange = static_cast<int>(std::stol(it->second));
+            nHpChange = static_cast<int>(std::stol(elem.second));
         }
         catch (const std::exception&) {}
 
@@ -2079,15 +2141,56 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
             ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
             ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
         );
-            
+
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nHpChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
-        
+            (nHpChange >= 0) ? ("+" + elem.second + "%") : (elem.second + "%"));
+
         ImGui::PopStyleColor();
+
+        i = eventsQ.prev_index(i);
     }
 }
+
+//void proofps_dd::GUI::updatePlayerApChangeEvents()
+//{
+//    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
+//
+//    assert(m_pEventsPlayerApChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+//
+//    m_pEventsPlayerApChange->update();
+//
+//    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
+//    for (auto it = m_pEventsPlayerApChange->getEvents().rbegin(); it != m_pEventsPlayerApChange->getEvents().rend(); ++it)
+//    {
+//        ImGui::SameLine();
+//        
+//        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+//        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+//        int nApChange = 0;
+//        try
+//        {
+//            nApChange = static_cast<int>(std::stol(it->second));
+//        }
+//        catch (const std::exception&) {}
+//
+//        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+//        ImGui::PushStyleColor(
+//            ImGuiCol_Text,
+//            (nApChange > 0) ?
+//            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+//            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+//        );
+//
+//        drawTextHighlighted(
+//            ImGui::GetCursorPos().x,
+//            ImGui::GetCursorPos().y,
+//            (nApChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
+//        
+//        ImGui::PopStyleColor();
+//    }
+//}
 
 void proofps_dd::GUI::updatePlayerApChangeEvents()
 {
@@ -2098,16 +2201,21 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
     m_pEventsPlayerApChange->update();
 
     // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-    for (auto it = m_pEventsPlayerApChange->getEvents().rbegin(); it != m_pEventsPlayerApChange->getEvents().rend(); ++it)
+
+    auto& eventsQ = m_pEventsPlayerApChange->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
     {
         ImGui::SameLine();
-        
+
+        const auto& elem = eventsQ.underlying_array()[i];
+
         // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
         // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
         int nApChange = 0;
         try
         {
-            nApChange = static_cast<int>(std::stol(it->second));
+            nApChange = static_cast<int>(std::stol(elem.second));
         }
         catch (const std::exception&) {}
 
@@ -2122,11 +2230,53 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nApChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
-        
+            (nApChange >= 0) ? ("+" + elem.second + "%") : (elem.second + "%"));
+
         ImGui::PopStyleColor();
+
+        i = eventsQ.prev_index(i);
     }
 }
+
+//void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
+//{
+//    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
+//
+//    assert(m_pEventsPlayerAmmoChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+//
+//    m_pEventsPlayerAmmoChange->update();
+//
+//    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
+//    for (auto it = m_pEventsPlayerAmmoChange->getEvents().rbegin(); it != m_pEventsPlayerAmmoChange->getEvents().rend(); ++it)
+//    {
+//        ImGui::SameLine();
+//
+//        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
+//        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
+//        int nAmmoChange = 0;
+//        try
+//        {
+//            nAmmoChange = static_cast<int>(std::stol(it->second));
+//        }
+//        catch (const std::exception&) {}
+//
+//        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
+//        // note that we put only positive changes into this event list, but anyway I leave the code handle non-positive as well
+//        ImGui::PushStyleColor(
+//            ImGuiCol_Text,
+//            (nAmmoChange > 0) ?
+//            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
+//            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+//        );
+//
+//        drawTextHighlighted(
+//            ImGui::GetCursorPos().x,
+//            ImGui::GetCursorPos().y,
+//            (nAmmoChange >= 0) ? ("+" + it->second) : (it->second));
+//
+//        ImGui::PopStyleColor();
+//    }
+//}
 
 void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
 {
@@ -2137,16 +2287,21 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
     m_pEventsPlayerAmmoChange->update();
 
     // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-    for (auto it = m_pEventsPlayerAmmoChange->getEvents().rbegin(); it != m_pEventsPlayerAmmoChange->getEvents().rend(); ++it)
+
+    auto& eventsQ = m_pEventsPlayerAmmoChange->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
     {
         ImGui::SameLine();
+
+        const auto& elem = eventsQ.underlying_array()[i];
 
         // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
         // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
         int nAmmoChange = 0;
         try
         {
-            nAmmoChange = static_cast<int>(std::stol(it->second));
+            nAmmoChange = static_cast<int>(std::stol(elem.second));
         }
         catch (const std::exception&) {}
 
@@ -2162,9 +2317,11 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nAmmoChange >= 0) ? ("+" + it->second) : (it->second));
+            (nAmmoChange >= 0) ? ("+" + elem.second) : (elem.second));
 
         ImGui::PopStyleColor();
+
+        i = eventsQ.prev_index(i);
     }
 }
 

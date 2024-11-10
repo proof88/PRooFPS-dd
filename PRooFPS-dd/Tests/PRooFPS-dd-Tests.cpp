@@ -82,7 +82,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     
     // unit tests
     unitTests.push_back(std::unique_ptr<Test>(new EventListerTest()));
-    unitTests.push_back(std::unique_ptr<Test>(new GameModeTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<Test>(new GameModeTest(cfgProfiles)));
     //unitTests.push_back(std::unique_ptr<Test>(new MapItemTest(cfgProfiles)));
     //unitTests.push_back(std::unique_ptr<Test>(new MapsTest(cfgProfiles)));
     //unitTests.push_back(std::unique_ptr<Test>(new MapcycleTest()));

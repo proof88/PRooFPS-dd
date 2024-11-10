@@ -11,6 +11,7 @@
 
 #include <deque>
 
+#include "FixFIFO.h"
 #include "CConsole.h"
 
 #include "Consts.h"
@@ -25,6 +26,8 @@ namespace proofps_dd
     class EventLister
     {
     public:
+
+        typedef std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string> TimeStringPair;
 
         enum class Orientation
         {
@@ -58,21 +61,23 @@ namespace proofps_dd
         void addEvent(const std::string& sEvent);
         void clear();
 
-        const std::deque<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>>& getEvents() const;
+        //const std::deque<TimeStringPair>& getEvents() const;
+        const pfl::FixFIFO<TimeStringPair>& getEvents() const;
 
     protected:
 
         EventLister(const EventLister&) = delete;
         EventLister& operator=(const EventLister&) = delete;
         EventLister(EventLister&&) = delete;
-        EventLister&& operator=(EventLister&&) = delete;
+        EventLister& operator=(EventLister&&) = delete;
 
     private:
 
         bool m_bVisible = false;
-        std::deque<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>> m_qEvents;
+        //std::deque<TimeStringPair> m_qEvents;
+        pfl::FixFIFO<TimeStringPair> m_qEvents;
         unsigned int m_nEventTimeLimitSecs;
-        size_t m_nEventCountLimit;
+        //size_t m_nEventCountLimit;
         Orientation m_eOrientation;
 
         // ---------------------------------------------------------------------------

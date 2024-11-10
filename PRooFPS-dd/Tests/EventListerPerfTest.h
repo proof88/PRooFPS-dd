@@ -65,7 +65,7 @@ private:
         );
 
         {
-            ScopeBenchmarker scopeBm("bm");
+            ScopeBenchmarker<std::chrono::milliseconds> scopeBm("bm evtLst addEvent");
             for (int i = 0; i < 1000000; i++)
             {
                 events.addEvent(textArray[PFL::random(0, textArray.size()-1)]);
@@ -101,17 +101,17 @@ private:
 
         {
             long long nTestDurationCurrentSecs = 0;
-            std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+            const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
             while (nTestDurationCurrentSecs < nTestDurationTotalSecs)
             {
-                ScopeBenchmarker scopeBmOut("bmOutside");
+                ScopeBenchmarker<std::chrono::microseconds> scopeBmOut("bmOutside evtLst update");
                 // we need to keep adding elements because update() removes expired elems
                 for (int i = 0; i < 100; i++)
                 {
                     events.addEvent(textArray[PFL::random(0, textArray.size() - 1)]);
                 }
                 {
-                    ScopeBenchmarker scopeBmIn("bmInside"); // we also measure purely here
+                    ScopeBenchmarker<std::chrono::nanoseconds> scopeBmIn("bmInside evtLst update"); // we also measure purely here
                     events.update();
                 }
                 nTestDurationCurrentSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeStart).count();

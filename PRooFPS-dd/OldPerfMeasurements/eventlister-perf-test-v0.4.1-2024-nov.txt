@@ -1,0 +1,37 @@
+v0.4.1, EventLister using PFL::FixFIFO.
+
+Time units are printed next to the values, notice different benchmarker might use different unit!
+
+
+Debug:
+Running Performance Tests ...
+Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version: 1.0
+Running test 1 / 1 ...
+
+  <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
+    bm evtLst addEvent Iterations: 1, Durations: Min/Max/Avg: 6392/6392/6392 ms, Total: 6392 ms
+
+  Higher iteration count is better (identical for both benchmarkers).
+  Lower duration values for bmInside is better.
+  <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
+    bmInside evtLst update Iterations: 7758, Durations: Min/Max/Avg: 1100/47500/1297.94 ns, Total: 10069400 ns
+    bmOutside evtLst update Iterations: 7758, Durations: Min/Max/Avg: 493/1854/641.144 us, Total: 4973999 us
+
+
+Release:
+Running Performance Tests ...
+Powered by: 455-355-7357-88 (ASS-ESS-TEST-88) Test Framework by PR00F88, version: 1.0
+Running test 1 / 1 ...
+
+  <EventListerPerfTest.h::test_benchmark_add_event> Scope Benchmarkers:
+    bm evtLst addEvent Iterations: 1, Durations: Min/Max/Avg: 370/370/370 ms, Total: 370 ms
+
+  Higher iteration count is better (identical for both benchmarkers).
+  Lower duration values for bmInside is better.
+  <EventListerPerfTest.h::test_benchmark_update> Scope Benchmarkers:
+    bmInside evtLst update Iterations: 141330, Durations: Min/Max/Avg: 100/66300/127.311 ns, Total: 17992900 ns
+    bmOutside evtLst update Iterations: 141330, Durations: Min/Max/Avg: 29/1627/34.9175 us, Total: 4934892 us
+
+
+
+
