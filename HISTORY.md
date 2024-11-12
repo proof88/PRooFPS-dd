@@ -30,12 +30,14 @@ A compressed build for Windows is available for [download here](https://drive.go
 This version introduces an essential **performance optimization**, by implementing a **generalized Object Pool**.  
 This pool can be used to manage objects that are frequently created/deleted during gameplay, e.g. bullets.  
 The aim of this optimization is to reduce the time required to create or delete such object.  
+For bullets, when tested with a modified machine gun with 25 bullets/second firing rate, it resulted in 35x speed gain for creating bullet at the moment of shooting, but also in updating existing bullets there was a 2x speed gain noticed.
 
 In this version, not only bullets but also a new kind of object is also managed by object pool: **smoke**!  
 Smoke is emitted in air by fired rockets.  
 Smoke amount can be configured in settings.
 
 This version brings another **optimization**, related to the **EventLister memory handling** which now keeps entries in preallocated FIFO array instead of std::deque, even though std::deque is also very efficient.  
+Added also benchmark test for this. It shows ~50% speedup in both debug and release builds for the addEvent() function of EventLister.  
 EventLister class is used for: listing recently picked up items, listing recent player kills, listing recent AP/HP and ammo changes.
 
 ## v0.3.0 Private Beta (Sep 29, 2024)
