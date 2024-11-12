@@ -40,6 +40,8 @@ This version brings another **optimization**, related to the **EventLister memor
 Added also benchmark test for this. It shows ~50% speedup in both debug and release builds for the addEvent() function of EventLister.  
 EventLister class is used for: listing recently picked up items, listing recent player kills, listing recent AP/HP and ammo changes.
 
+I also added an **About** menu into the main menu where some credits are made.
+
 ## v0.3.0 Private Beta (Sep 29, 2024)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1-ak_jENCH8j6LGdAwNrJPfRwKzSCSWe3/view?usp=drive_link).
