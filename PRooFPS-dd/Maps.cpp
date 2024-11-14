@@ -1220,6 +1220,10 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                             // do not terminate, but will render slow
                             getConsole().EOLn("%s setVertexTransferMode(%u) failed for a block!", __func__, vtransmode);
                         }
+                        if (!PureVertexTransfer::isVideoMemoryUsed(vtransmode))
+                        {
+                            getConsole().EOLn("%s WARNING selectVertexTransferMode(): %u NOT using VRAM!", __func__, vtransmode);
+                        }
                         getConsole().EOLn("%s selectVertexTransferMode(): %u", __func__, vtransmode);
                     }
                     pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
