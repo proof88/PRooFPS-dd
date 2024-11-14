@@ -246,7 +246,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
             }
             else
             {
-                lineHandleAssignment(sVar, sValue);
+                bParseError = !lineHandleAssignment(sVar, sValue);
             }
         }
         else if ( !bParseError )
@@ -858,18 +858,46 @@ bool proofps_dd::Maps::lineIsValueAssignment(const std::string& sLine, std::stri
     return true;
 }
 
-void proofps_dd::Maps::lineHandleAssignment(std::string& sVar, std::string& sValue)
+bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::string& sValue)
 {
+    assert(sVar.length());  // lineIsValueAssignment() takes care of this
+
     if ( sVar.length() == 1 )
     {
         // dont store these variables, they just for block texture assignment
-        m_Block2Texture[sVar[0]] = sValue;
-        getConsole().OLn("Block %s has texture %s", sVar.c_str(), sValue.c_str());
-        return;
+
+        const size_t iSpace = sValue.find(' ');
+        if (iSpace == std::string::npos)
+        {
+            // sValue is already trimmed, so absence of space char means no UV-coords are specified, we use default values
+            m_Block2Texture[sVar[0]].m_sTexFilename = sValue;
+        }
+        else
+        {
+            // space char indicates presence of UV-coords in this line after tex filename
+            m_Block2Texture[sVar[0]].m_sTexFilename = sValue.substr(0, iSpace);
+
+            std::stringstream sstr(sValue.substr(iSpace));
+            sstr >> m_Block2Texture[sVar[0]].m_fU0;
+            sstr >> m_Block2Texture[sVar[0]].m_fV0;
+            sstr >> m_Block2Texture[sVar[0]].m_fU1;
+            sstr >> m_Block2Texture[sVar[0]].m_fV1;
+            if (sstr.fail() || sstr.bad())
+            {
+                getConsole().EOLn("%s ERROR: failed to parse UV-coords in variable: %s = %s", __func__, sVar.c_str(), sValue.c_str());
+                return false;
+            }
+        }
+        
+        getConsole().OLn("%s Block %s has texture %s", __func__, sVar.c_str(), sValue.c_str());
+        return true;
     }
+
     // only vars with length > 1 are to be stored as actual variables
-    getConsole().OLn("Var \"%s\" = \"%s\"", sVar.c_str(), sValue.c_str());
+    getConsole().OLn("%s Var \"%s\" = \"%s\"", __func__, sVar.c_str(), sValue.c_str());
     m_vars[sVar] = sValue.c_str();
+
+    return true;
 }
 
 /**
@@ -1116,7 +1144,17 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     const auto it = m_mapReferenceBlockObject3Ds.find(c);
                     if (it == m_mapReferenceBlockObject3Ds.end())
                     {
-                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth);
+                        m_mapReferenceBlockObject3Ds[c] = m_gfx.getObject3DManager().createBox(
+                            proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth, proofps_dd::Maps::fMapBlockSizeWidth,
+                            PURE_VMOD_DYNAMIC /* based on createBox() API doc, argument bForceUseClientMemory is considered only if modifying habit is dynamic */,
+                            PURE_VREF_DIRECT,
+                            true /* force-use client memory because we override UV coords first, and then upload geometry to server memory */);
+                        if (!m_mapReferenceBlockObject3Ds[c])
+                        {
+                            getConsole().EOLn("%s createBox() failed!", __func__);
+                            return false;
+                        }
+
                         m_mapReferenceBlockObject3Ds[c]->Hide();
                         PureTexture* tex = PGENULL;
                         if (m_Block2Texture.find(c) == m_Block2Texture.end())
@@ -1127,9 +1165,37 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                         }
                         else
                         {
-                            const std::string sTexName = proofps_dd::GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c];
+                            const std::string sTexName = proofps_dd::GAME_TEXTURES_DIR + m_sRawName + "\\" + m_Block2Texture[c].m_sTexFilename;
                             tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
-                            if (!tex)
+                            if (tex)
+                            {
+                                assert(m_mapReferenceBlockObject3Ds[c]->getCount() == 1);  // box always has exactly 1 subobj
+                                PureObject3D* const pSubObj = dynamic_cast<PureObject3D*>(m_mapReferenceBlockObject3Ds[c]->getAttachedAt(0));
+                                if (!pSubObj)
+                                {
+                                    getConsole().EOLn("%s pSubObj cast failure!", __func__);
+                                    return false;
+                                }
+
+                                assert(pSubObj->getMaterial().getTexcoordsCount() == 24); // TODO: error if not because otherwise memory will be corrupted!
+                                // overriding UV-coords does not take much time since we do this only for unique boxes, 90+% will be a clone anyway
+                                for (TPureUInt iTexcoord = 0; iTexcoord < pSubObj->getMaterial().getTexcoordsCount(); iTexcoord += 4)
+                                {
+                                    // left bottom vertex
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord].u = m_Block2Texture[c].m_fU0;
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord].v = m_Block2Texture[c].m_fV0;
+                                    // right bottom vertex
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].u = m_Block2Texture[c].m_fU1;
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].v = m_Block2Texture[c].m_fV0;
+                                    // right top vertex
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].u = m_Block2Texture[c].m_fU1;
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].v = m_Block2Texture[c].m_fV1;
+                                    // left top vertex
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].u = m_Block2Texture[c].m_fU0;
+                                    pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].v = m_Block2Texture[c].m_fV1;
+                                }
+                            }
+                            else
                             {
                                 getConsole().EOLn("%s Could not load texture %s!", __func__, sTexName.c_str());
                                 tex = m_texRed;
@@ -1142,6 +1208,19 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                             getConsole().EOLn("%s Not assigning any texture for block %s!", __func__, sc.c_str());
                         }
                         m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
+                        
+                        // finally upload with new UV-coords to server memory
+                        const TPURE_VERTEX_TRANSFER_MODE vtransmode = PureVertexTransfer::selectVertexTransferMode(
+                            PURE_VMOD_STATIC,
+                            PURE_VREF_DIRECT /* in the future we may change this to indexed probably */,
+                            false /* no force-use client mem */
+                        );
+                        if (!m_mapReferenceBlockObject3Ds[c]->setVertexTransferMode(vtransmode))
+                        {
+                            // do not terminate, but will render slow
+                            getConsole().EOLn("%s setVertexTransferMode(%u) failed for a block!", __func__, vtransmode);
+                        }
+                        getConsole().EOLn("%s selectVertexTransferMode(): %u", __func__, vtransmode);
                     }
                     pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
                 }

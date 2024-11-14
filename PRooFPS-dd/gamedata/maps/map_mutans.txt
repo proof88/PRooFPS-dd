@@ -22,9 +22,10 @@
 # v1.0 - Fixed missing textures
 #      - Updated weapon spawn tiles
 #
+# v1.1 - Merged "bg-mutans-*.bmp" images into a single "bg-mutans.bmp" and
+#        mapping it to multiple blocks (w, x, y, z) using custom texture UV-coordinates.
 
 Name = Mutans
-Gravity = 2.0
 
 B = fg-chat-top.bmp
 D = fg-chat-bottom.bmp
@@ -46,10 +47,10 @@ o = bg-sponzor-top.bmp
 r = bg-sponzor-bottom.bmp
 v = bg-uprage.bmp
 u = bg-war.bmp
-w = bg-mutans-tl.bmp
-x = bg-mutans-tr.bmp
-y = bg-mutans-bl.bmp
-z = bg-mutans-br.bmp
+w = bg-mutans.bmp 0.0 0.5 0.5 1.0
+x = bg-mutans.bmp 0.5 0.5 1.0 1.0
+y = bg-mutans.bmp 0.0 0.0 0.5 0.5
+z = bg-mutans.bmp 0.5 0.0 1.0 0.5
 
 c                                            cccccccc
 c                      cccccccc              cccwxccc   cccccccc

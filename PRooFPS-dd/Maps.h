@@ -104,6 +104,13 @@ namespace proofps_dd
         static constexpr float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
         static constexpr float GAME_DECOR_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f;  // decors are close to the wall surfaces
 
+        struct BlockTexture
+        {
+            std::string m_sTexFilename;
+            float m_fU0{0.f}, m_fV0{0.f};  /* vertex 1 UV (bottom left) */
+            float m_fU1{1.f}, m_fV1{1.f};  /* vertex 3 UV (top right) */
+        };
+
         const std::set<char> foregroundBlocks = {
             'B', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'Q', 'T',
             /* the special foreground stuff (e.g. jump pads) are treated as foreground blocks, see special handling in lineHandleLayout(): */
@@ -144,7 +151,7 @@ namespace proofps_dd
         std::map<std::string, PGEcfgVariable> m_vars;
         std::string m_sRawName;
         std::string m_sFileName;
-        std::map<char, std::string> m_Block2Texture;
+        std::map<char, BlockTexture> m_Block2Texture;
         std::set<PureVector> m_spawnpoints;
         PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;
         PureVector m_blockPosMin, m_blockPosMax;
@@ -164,7 +171,7 @@ namespace proofps_dd
         static bool lineShouldBeIgnored(const std::string& sLine);
         static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
-        void lineHandleAssignment(std::string& sVar, std::string& sValue);
+        bool lineHandleAssignment(const std::string& sVar, const std::string& sValue);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
 
     }; // class Maps

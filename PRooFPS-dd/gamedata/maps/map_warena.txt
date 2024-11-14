@@ -9,8 +9,6 @@
 # Name of the map is that will be displayed in map select submenu.
 Name = WARena
 
-Gravity = 2.0
-
 # Preview Image is not needed to be explicitly defined here, as
 # image file with same name is to be used implicitly as preview.
 
@@ -36,10 +34,53 @@ D = dirt2light.bmp
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks in this map:
 # ac
-# Remaining chars to be used as background blocks in this map: emnoprsuvwxyz
+# Remaining chars to be used as background blocks in this map: emnopruvwxyz
 
 a = brick1.bmp
 c = dirt2.bmp
+
+# Note that you can also change the texture coordinates for a block.
+# Texture coordinates define how a texture is mapped onto a surface.
+# In this case, the surface is a face of a block.
+# Each block consists of 6 faces.
+# You define texture mapping for 1 face, and the same mapping will be used for all the 6 faces of the block.
+# Normally texture UV coordinates fall in the range of [0, 1].
+# Values bigger than 1 will cause the same texture to be repeated across the face, for example changing
+# all U texture coordinates from 1 to 2 will cause the texture to appear horizontally repeated, and
+# similar effect applies to V but vertically.
+#
+# If you want to specify the texture coordinates for a face, then you have to define 4 values:
+# - 2 floating point values for the UV texture coordinates of the bottom left vertex of each 6 faces of the block,
+# - 2 floating point values for the UV texture coordinates of the top right vertex of each 6 faces of the block.
+#
+# Example:
+# e = texture.bmp 0 0 1 1
+#
+# In above example, block 'e' will be assigned with texture.bmp, and the texture coordinates are:
+# - for bottom left vertex: (U=0, V=0),
+# - for top right vertex: (U=1, V=1).
+#
+# Illustration:
+#
+# UV(0,1)   UV(1,1)
+#     --------
+#     |      |
+#     | face |
+#     |      |
+#     --------
+# UV(0,0)   UV(1,0)
+#
+# From above definition, the other 2 vertices will be automatically assigned the following texture coordinates:
+# - for bottom right vertex: (U=1, V=0), because it takes top right's U and bottom left's V coordinates,
+# - for top left vertex: (U=0, V=1), because it takes bottom left's U and top right's V coordinates.
+#
+# If texture coordinates are not specified, it has the same effect as explicitly defining them as:
+# 0 0 1 1
+#
+# Note that with this technique, you can utilise a single texture atlas holding
+# all textures for a single map, effectively increasing rendering speed on slower hardware.
+# For example, if you have a 256x256 pixel size image, you can store 16 different 64x64 pixel size images in it,
+# and use 0, 0.25, 0.5, 0.75 and 1 for U and V coordinates for different blocks to select the proper image.
 
 # Pickupable items:
 # '2' char represents pistol.
