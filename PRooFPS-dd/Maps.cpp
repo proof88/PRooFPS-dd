@@ -908,6 +908,7 @@ bool proofps_dd::Maps::lineHandleDecalAssignment(const std::string& sValue)
         -py * proofps_dd::Maps::fMapBlockSizeHeight + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
         GAME_DECAL_POS_Z);
     pDecalObj->getMaterial().setTexture(tex);
+    pDecalObj->getMaterial(false).setDecalOffset(true);
     //pDecalObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
     //pDecalObj->getMaterial(false).getTextureEnvColor().SetAlpha(200u);
     m_decals.push_back(pDecalObj);
