@@ -18,9 +18,15 @@ Name = Warhouse
 # In this case the directory is: gamedata/textures/map_warhouse/
 #
 # A quick note on supported image file formats: as of v0.4.2 only BMP file format is supported for textures.
+# Please stick to NxN square size bitmaps where N is power of 2 (e.g. 64x64, 128x128, 256x256, etc.) and
+# always try to use small sizes. Typically in this game using a 512x512 texture is overkill.
+#
 # For detailed info on supported formats and compatibility issues, please check the API doc/comment for
 # PureImageManager::createFromFile(), somewhere around here:
 # https://github.com/proof88/PGE/blob/master/PGE/PURE/source/Material/PureImageManager.cpp#L365
+#
+# Keep in mind that transparency/blending is NOT supported for map elements, therefore no use of 32-bit BMP
+# files with alpha channel is recommended for block/decal textures.
 
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
@@ -94,8 +100,11 @@ y = paperboxes.bmp
 #
 # Note that with this technique, you can utilise a single texture atlas holding
 # all textures for a single map, effectively increasing rendering speed on slower hardware.
-# For example, if you have a 256x256 pixel size image, you can store 16 different 64x64 pixel size images in it,
-# and use 0, 0.25, 0.5, 0.75 and 1 for U and V coordinates for different blocks to select the proper image.
+# For example, if you have a 256x256 pixel size image, you can store 4 different 128x128 pixel size images in it,
+# and use 0, 0.5 and 1 for U and V coordinates for different blocks to select the proper image.
+# Sometimes you would have to use slightly altered values to avoid sampling from nearby sub-textures close to
+# edges of polygons, example: 0.02 instead of 0, 0.48 and 0.52 instead of 0.5, and 0.98 instead of 1.0.
+# There is example for this in map_test_good.
 
 # The technique described above still has the disadvantage of using different unique characters for different blocks.
 # It is okay if you are really using a single texture as texture atlas, but inefficient use of multiple characters if your

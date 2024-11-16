@@ -1233,6 +1233,9 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                             tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
                             if (tex)
                             {
+                                //tex->setTextureWrappingMode(
+                                //    TPURE_TEX_WRAPPING::PURE_TW_CLAMP_TO_EDGE, TPURE_TEX_WRAPPING::PURE_TW_CLAMP_TO_EDGE);
+
                                 assert(m_mapReferenceBlockObject3Ds[c]->getCount() == 1);  // box always has exactly 1 subobj
                                 PureObject3D* const pSubObj = dynamic_cast<PureObject3D*>(m_mapReferenceBlockObject3Ds[c]->getAttachedAt(0));
                                 if (!pSubObj)

@@ -18,9 +18,15 @@ Name = Test Map
 # In this case the directory is: gamedata/textures/map_test_good/
 #
 # A quick note on supported image file formats: as of v0.4.2 only BMP file format is supported for textures.
+# Please stick to NxN square size bitmaps where N is power of 2 (e.g. 64x64, 128x128, 256x256, etc.) and
+# always try to use small sizes. Typically in this game using a 512x512 texture is overkill.
+#
 # For detailed info on supported formats and compatibility issues, please check the API doc/comment for
 # PureImageManager::createFromFile(), somewhere around here:
 # https://github.com/proof88/PGE/blob/master/PGE/PURE/source/Material/PureImageManager.cpp#L365
+#
+# Keep in mind that transparency/blending is NOT supported for map elements, therefore no use of 32-bit BMP
+# files with alpha channel is recommended for block/decal textures.
 
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
@@ -29,8 +35,13 @@ Name = Test Map
 # BDFGHIJ
 # Remaining chars to be used as foreground blocks in this map: KLQT
 
-#B = floor.bmp # intentionally commented to test if B blocks really get red texture assigned 
-D = conc02light.bmp
+#B = floor.bmp # intentionally commented to test if B blocks really get red texture assigned
+
+# Notice when using texture-atlas.bmp I also specify texture UV-coordinates below.
+# This syntax is explained in details in below comments.
+# For now, the interesting thing is that I don't use exactly 0.0, 0.5, 1.0 values, but slightly
+# smaller or larger. This is to avoid sampling from another sub-texture that would look ugly.
+D = texture-atlas.bmp 0.52 0.02 0.98 0.48
 F = floor.bmp
 G = floor.bmp
 H = floor.bmp
@@ -43,11 +54,11 @@ J = crate.bmp
 # acnorempu
 # Remaining chars to be used as background blocks in this map: uvwxyz
 
-a = brick1.bmp
-c = brick2.bmp
-n = aztec01.bmp
-o = brick1.bmp
-r = brick1.bmp
+c = texture-atlas.bmp 0.02 0.02 0.48 0.48
+a = texture-atlas.bmp 0.52 0.52 0.98 0.98
+n = texture-atlas.bmp 0.02 0.52 0.48 0.98
+o = texture-atlas.bmp 0.52 0.52 0.98 0.98
+r = texture-atlas.bmp 0.52 0.52 0.98 0.98
 
 # Note that you can also change the texture coordinates for a block.
 # Texture coordinates define how a texture is mapped onto a surface.
@@ -94,8 +105,10 @@ r = brick1.bmp
 #
 # Note that with this technique, you can utilise a single texture atlas holding
 # all textures for a single map, effectively increasing rendering speed on slower hardware.
-# For example, if you have a 256x256 pixel size image, you can store 16 different 64x64 pixel size images in it,
-# and use 0, 0.25, 0.5, 0.75 and 1 for U and V coordinates for different blocks to select the proper image.
+# For example, if you have a 256x256 pixel size image, you can store 4 different 128x128 pixel size images in it,
+# and use 0, 0.5 and 1 for U and V coordinates for different blocks to select the proper image.
+# Sometimes you would have to use slightly altered values like I did above with texture-atlas.bmp, to avoid
+# sampling from nearby sub-texture close to edges of polygons.
 
 e = proba128x128x24.bmp 0.0 0.0 0.5 0.5
 m = proba128x128x24.bmp 0.5 0.0 1.0 0.5
