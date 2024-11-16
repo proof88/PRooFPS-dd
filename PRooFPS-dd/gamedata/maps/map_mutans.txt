@@ -47,6 +47,10 @@ o = bg-sponzor-top.bmp
 r = bg-sponzor-bottom.bmp
 v = bg-uprage.bmp
 u = bg-war.bmp
+
+# From v0.4.2 different parts of the same texture can be used on different blocks by specifying texture coordinates.
+# However, for decal/poster purpose, the "decal assignment" could be also used which does not allocate any block char.
+# See example for it in map_test_good.
 w = bg-mutans.bmp 0.0 0.5 0.5 1.0
 x = bg-mutans.bmp 0.5 0.5 1.0 1.0
 y = bg-mutans.bmp 0.0 0.0 0.5 0.5
