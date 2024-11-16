@@ -9,9 +9,6 @@
 # Name of the map is that will be displayed in map select submenu.
 Name = WARena
 
-# Preview Image is not needed to be explicitly defined here, as
-# image file with same name is to be used implicitly as preview.
-
 # Textures for each map block/element
 # Not defining texture for a specific block does not cause error,
 # but the block will be automatically assigned a dummy red texture.
@@ -19,6 +16,11 @@ Name = WARena
 # within gamedata/textures directory. The specific directory name should be
 # the same as the map file name without the extension part.
 # In this case the directory is: gamedata/textures/map_warena/
+#
+# A quick note on supported image file formats: as of v0.4.2 only BMP file format is supported for textures.
+# For detailed info on supported formats and compatibility issues, please check the API doc/comment for
+# PureImageManager::createFromFile(), somewhere around here:
+# https://github.com/proof88/PGE/blob/master/PGE/PURE/source/Material/PureImageManager.cpp#L365
 
 # Foreground blocks are at the same depth as the players,
 # meaning they can be used as either floor or wall, since
@@ -41,17 +43,17 @@ c = dirt2.bmp
 
 # Note that you can also change the texture coordinates for a block.
 # Texture coordinates define how a texture is mapped onto a surface.
-# In this case, the surface is a face of a block.
+# In this case, the surface is a face of a block i.e. a side of a box.
 # Each block consists of 6 faces.
 # You define texture mapping for 1 face, and the same mapping will be used for all the 6 faces of the block.
 # Normally texture UV coordinates fall in the range of [0, 1].
 # Values bigger than 1 will cause the same texture to be repeated across the face, for example changing
 # all U texture coordinates from 1 to 2 will cause the texture to appear horizontally repeated, and
-# similar effect applies to V but vertically.
+# similar effect can be done vertically if you change value of V similarly.
 #
 # If you want to specify the texture coordinates for a face, then you have to define 4 values:
-# - 2 floating point values for the UV texture coordinates of the bottom left vertex of each 6 faces of the block,
-# - 2 floating point values for the UV texture coordinates of the top right vertex of each 6 faces of the block.
+# - 2 floating point values for the UV texture coordinates of the bottom left vertex of each face of the block,
+# - 2 floating point values for the UV texture coordinates of the top right vertex of each face of the block.
 #
 # Example:
 # e = texture.bmp 0 0 1 1
@@ -81,6 +83,31 @@ c = dirt2.bmp
 # all textures for a single map, effectively increasing rendering speed on slower hardware.
 # For example, if you have a 256x256 pixel size image, you can store 16 different 64x64 pixel size images in it,
 # and use 0, 0.25, 0.5, 0.75 and 1 for U and V coordinates for different blocks to select the proper image.
+
+# The technique described above still has the disadvantage of using different unique characters for different blocks.
+# It is okay if you are really using a single texture as texture atlas, but inefficient use of multiple characters if your
+# purpose is just to display a bigger image like a decal/poster on a wall.
+# For decal/poster purpose, I rather recommend using the "decal assignment".
+#
+# Decal assignment does not allocate any block chars.
+# Decal is NOT a block, just a "plane" object having only 4 vertices, placed over the camera-facing faces of blocks.
+# Role of decals is simply visual, and do not participate in game physics.
+# Size and position of a decal is defined within the decal assignment, and you don't have to specify UV-coordinates.
+# Unlike block assignments, decal assignments are anonymous as decals stay unnamed, and you cannot refer them in the map layout.
+# They are not visible in the map layout definition. You define their position and size here within the assignment.
+#
+# Syntax of decal assignment:
+#   decal = filename px py w h
+# where arguments are:
+#   filename  - texture filename, should be located in the same directory as block textures for this map.
+#   px and py - horizontal (column) and vertical (row) position represented as block position, where the center of this decal should be placed at.
+#               Can be negative as well if for any reason someone wants to place the decal "outside" of the map.
+#   w and h   - width and height of the decal represented as block size.
+#               1 means exactly 1 block size, 2 means 2 blocks size, 1.5 means 1.5 block size.
+#               Both parameters must be positive values.
+#
+# Example where we position the center of a decal to block position (row=2.5, col=3), and set decal size to (1x1):
+#   decal = proba128x128x24.bmp 2.5 3 1 1
 
 # Pickupable items:
 # '2' char represents pistol.

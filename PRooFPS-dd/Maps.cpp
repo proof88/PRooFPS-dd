@@ -391,6 +391,11 @@ void proofps_dd::Maps::unload()
         delete itemPair.second;
     }
     m_items.clear();
+    for (auto& pDecalObj : m_decals)
+    {
+        delete pDecalObj; // will remove from object3dmanager too
+    }
+    m_decals.clear();
     for (auto& pDecorObj : m_decorations)
     {
         delete pDecorObj; // will remove from object3dmanager too
@@ -686,6 +691,11 @@ const TPURE_XY& proofps_dd::Maps::getJumppadForceFactors(const size_t& index) co
     return m_fJumppadForceFactors[index];
 }
 
+const std::vector<PureObject3D*>& proofps_dd::Maps::getDecals() const
+{
+    return m_decals;
+}
+
 const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const
 {
     return m_jumppads;
@@ -858,6 +868,53 @@ bool proofps_dd::Maps::lineIsValueAssignment(const std::string& sLine, std::stri
     return true;
 }
 
+bool proofps_dd::Maps::lineHandleDecalAssignment(const std::string& sValue)
+{
+    std::stringstream sstr(sValue);
+    
+    std::string sFilename;
+    sstr >> sFilename;
+    if (sstr.fail() || sstr.bad())
+    {
+        getConsole().EOLn("%s ERROR: failed to read filename from: %s!", __func__, sValue.c_str());
+        return false;
+    }
+
+    float px{}, py{};
+    sstr >> px;
+    sstr >> py;
+    float sx{}, sy{};
+    sstr >> sx;
+    sstr >> sy;
+    if (sstr.fail() || sstr.bad())
+    {
+        getConsole().EOLn("%s ERROR: failed to read pos or size from: %s!", __func__, sValue.c_str());
+        return false;
+    }
+    if ((sx <= 0.f) || (sy <= 0.f))
+    {
+        getConsole().EOLn("%s ERROR: size values must be positive in: %s!", __func__, sValue.c_str());
+        return false;
+    }
+
+    const std::string sTexName = proofps_dd::GAME_TEXTURES_DIR + m_sRawName + "\\" + sFilename;
+    PureTexture* const tex = m_gfx.getTextureManager().createFromFile(sTexName.c_str());
+
+    PureObject3D* const pDecalObj = m_gfx.getObject3DManager().createPlane(
+        sx * proofps_dd::Maps::fMapBlockSizeWidth,
+        sy * proofps_dd::Maps::fMapBlockSizeHeight);
+    pDecalObj->getPosVec().Set(
+        px * proofps_dd::Maps::fMapBlockSizeWidth + proofps_dd::Maps::fMapBlockSizeWidth / 2.f,
+        -py * proofps_dd::Maps::fMapBlockSizeHeight + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
+        GAME_DECAL_POS_Z);
+    pDecalObj->getMaterial().setTexture(tex);
+    //pDecalObj->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+    //pDecalObj->getMaterial(false).getTextureEnvColor().SetAlpha(200u);
+    m_decals.push_back(pDecalObj);
+
+    return true;
+}
+
 bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::string& sValue)
 {
     assert(sVar.length());  // lineIsValueAssignment() takes care of this
@@ -891,6 +948,12 @@ bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::
         
         getConsole().OLn("%s Block %s has texture %s", __func__, sVar.c_str(), sValue.c_str());
         return true;
+    }
+
+    if (sVar == "decal")
+    {
+        // not to be an actual variable, we call it "decal assignment", treated as anonymous var, just to define decals
+        return lineHandleDecalAssignment(sValue);
     }
 
     // only vars with length > 1 are to be stored as actual variables
@@ -1177,7 +1240,12 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                                     return false;
                                 }
 
-                                assert(pSubObj->getMaterial().getTexcoordsCount() == 24); // TODO: error if not because otherwise memory will be corrupted!
+                                if (pSubObj->getMaterial().getTexcoordsCount() != 24)
+                                {
+                                    getConsole().EOLn("%s pSubObj unexpected texcoords count: %u!", __func__, pSubObj->getMaterial().getTexcoordsCount());
+                                    return false;
+                                }
+
                                 // overriding UV-coords does not take much time since we do this only for unique boxes, 90+% will be a clone anyway
                                 for (TPureUInt iTexcoord = 0; iTexcoord < pSubObj->getMaterial().getTexcoordsCount(); iTexcoord += 4)
                                 {

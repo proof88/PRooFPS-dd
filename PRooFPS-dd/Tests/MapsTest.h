@@ -135,6 +135,7 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 1") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
             assertEquals(0u, maps.getItems().size(), "item count 1") &
+            assertTrue(maps.getDecals().empty(), "decal count 1") &
             assertTrue(maps.getJumppads().empty(), "jumppad count 1") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
             assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 1") &
@@ -167,6 +168,7 @@ private:
             assertNull(maps.getForegroundBlocks(), "foreground blocks 2") &
             assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
             assertEquals(0u, maps.getItems().size(), "item count 2") &
+            assertTrue(maps.getDecals().empty(), "decal count 2") &
             assertTrue(maps.getJumppads().empty(), "jumppad count 2") &
             assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
             assertFalse(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 2") &
@@ -220,6 +222,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
+
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
@@ -260,6 +265,9 @@ private:
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
 
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
@@ -302,6 +310,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
+
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
@@ -343,6 +354,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
 
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
+
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
@@ -383,6 +397,9 @@ private:
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
 
         // jump pads
         b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
@@ -428,11 +445,10 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count");
         
         // variables
-        b &= assertEquals(5u, maps.getVars().size(), "getVars");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2a");
-            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 2b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
@@ -514,6 +530,9 @@ private:
             }
         }
 
+        // decals
+        b &= assertEquals(2u, maps.getDecals().size(), "decal count");
+
         // jump pads
         b &= assertEquals(3u, maps.getJumppads().size(), "jumppad count");
         b &= assertEquals(3u, maps.getJumppadValidVarsCount(), "jumppad vars count");
@@ -570,17 +589,19 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 1");
 
         // variables
-        b &= assertEquals(5u, maps.getVars().size(), "getVars 1");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars 1");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1a");
-            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 1b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
 
         // items
         b &= assertEquals(8u, maps.getItems().size(), "item count 1");
         b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+
+        // decals
+        b &= assertEquals(2u, maps.getDecals().size(), "decal count 1");
 
         // jump pads
         b &= assertEquals(3u, maps.getJumppads().size(), "jumppad count 1");
@@ -624,6 +645,9 @@ private:
         b &= assertEquals(0u, maps.getItems().size(), "item count 2");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
 
+        // decals
+        b &= assertEquals(0u, maps.getDecals().size(), "decal count 2");
+
         // jump pads
         b &= assertEquals(0u, maps.getJumppads().size(), "jumppad count 2");
         b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count 2");
@@ -662,17 +686,19 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 3");
 
         // variables
-        b &= assertEquals(5u, maps.getVars().size(), "getVars 3");
+        b &= assertEquals(4u, maps.getVars().size(), "getVars 3");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3a");
-            b &= assertEquals(2.f, maps.getVars().at("Gravity").getAsFloat(), "getVars 3b");
         }
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         // items
         b &= assertEquals(8u, maps.getItems().size(), "item count 3");
         b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+
+        // decals
+        b &= assertEquals(2u, maps.getDecals().size(), "decal count 3");
 
         // jump pads
         b &= assertEquals(3u, maps.getJumppads().size(), "jumppad count 3");

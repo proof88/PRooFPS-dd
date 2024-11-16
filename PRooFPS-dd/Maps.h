@@ -82,6 +82,7 @@ namespace proofps_dd
         int getBlockCount() const;
         int getForegroundBlockCount() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
+        const std::vector<PureObject3D*>& getDecals() const;
         const std::vector<PureObject3D*>& getJumppads() const;
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         size_t getJumppadValidVarsCount();
@@ -102,7 +103,8 @@ namespace proofps_dd
 
         static constexpr float GAME_PLAYERS_POS_Z = -1.2f;
         static constexpr float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
-        static constexpr float GAME_DECOR_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f;  // decors are close to the wall surfaces
+        static constexpr float GAME_DECAL_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f; // TODO: update once polyoffset is implemented
+        static constexpr float GAME_DECOR_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f;  // decors are close to the wall surfaces TODO: rename because this is just for jumppads only
 
         struct BlockTexture
         {
@@ -149,7 +151,7 @@ namespace proofps_dd
         int m_foregroundBlocks_h;
 
         std::map<std::string, PGEcfgVariable> m_vars;
-        std::string m_sRawName;
+        std::string m_sRawName;     /**< Raw map name, basically filename without extension. */
         std::string m_sFileName;
         std::map<char, BlockTexture> m_Block2Texture;
         std::set<PureVector> m_spawnpoints;
@@ -158,8 +160,9 @@ namespace proofps_dd
         PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
         unsigned int m_width, m_height;
         std::map<MapItem::MapItemId, MapItem*> m_items;
-        std::vector<PureObject3D*> m_decorations; // for now this is only for the up sign of jumppads
-        std::vector<PureObject3D*> m_jumppads;
+        std::vector<PureObject3D*> m_decals;      // these are the decal planes introduced in v0.4.2
+        std::vector<PureObject3D*> m_decorations; // TODO: for now this is only for the up sign of jumppads, should rename, these are up signs
+        std::vector<PureObject3D*> m_jumppads;    // TODO: should rename this too because these are blocks
         size_t m_nValidJumppadVarsCount;
         std::vector<TPURE_XY> m_fJumppadForceFactors;
 
@@ -171,6 +174,7 @@ namespace proofps_dd
         static bool lineShouldBeIgnored(const std::string& sLine);
         static bool lineIsValueAssignment(const std::string& sLine, std::string& sVar, std::string& sValue, bool& bParseError);
 
+        bool lineHandleDecalAssignment(const std::string& sValue);
         bool lineHandleAssignment(const std::string& sVar, const std::string& sValue);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
 
