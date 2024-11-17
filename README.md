@@ -30,7 +30,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.4.1 Private Beta is here](https://drive.google.com/file/d/15FFxkeoAWKrQNeouH-Bqo9yLLXW7ki32/view?usp=drive_link).  
+The latest available download version [v0.4.2 Private Beta is here](https://drive.google.com/file/d/1J2gwseaGRFgDWa9ZrErKDOC2Z8TNP_og/view?usp=drive_link).  
 The latest ALP (Approofed für Lan Party) version is [v0.2.1 Private Beta](https://drive.google.com/file/d/17b1RFXXoP8qCyIGxTNDUV2xEEtLSQLa1/view?usp=sharing).  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
