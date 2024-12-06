@@ -13,12 +13,12 @@
 #include "Consts.h"
 
 
-static constexpr float SndPlayerLandedDistMin = 4.f;
+static constexpr float SndPlayerLandedDistMin = 6.f;
 static constexpr float SndPlayerLandedDistMax = 8.f;
 static constexpr float SndPlayerHighFallYellDistMin = 9.f;
 static constexpr float SndPlayerHighFallYellDistMax = 22.f;
-static constexpr float SndPlayerWalkDistMin = 4.f;
-static constexpr float SndPlayerWalkDistMax = 8.f;
+static constexpr float SndPlayerFootstepDistMin = SndPlayerLandedDistMin;
+static constexpr float SndPlayerFootstepDistMax = SndPlayerLandedDistMax;
 
 static constexpr int TimeBetween2FootstepsMillisecs = 0;  // minimum desired time, if we want longer time than actual length of footstep sound
 static constexpr int TimeBefore1stFootstepCanBePlayedMillisecs = 100;  // when player starts running, don't immediately play 1st footstep but delay it by this
@@ -186,7 +186,7 @@ proofps_dd::Player::Player(
 
         for (auto& ptr : m_sndPlayerFootstep)
         {
-            ptr->set3dMinMaxDistance(SndPlayerWalkDistMin, SndPlayerWalkDistMax);
+            ptr->set3dMinMaxDistance(SndPlayerFootstepDistMin, SndPlayerFootstepDistMax);
             ptr->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
         }
     }
