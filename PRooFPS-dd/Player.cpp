@@ -20,7 +20,8 @@ static constexpr float SndPlayerHighFallYellDistMax = 22.f;
 static constexpr float SndPlayerWalkDistMin = 4.f;
 static constexpr float SndPlayerWalkDistMax = 8.f;
 
-static constexpr int TimeBetween2FootstepsMillisecs = 0;
+static constexpr int TimeBetween2FootstepsMillisecs = 0;  // minimum desired time, if we want longer time than actual length of footstep sound
+static constexpr int TimeBefore1stFootstepCanBePlayedMillisecs = 100;  // when player starts running, don't immediately play 1st footstep but delay it by this
 
 
 // ############################### PUBLIC ################################
@@ -1628,6 +1629,15 @@ void proofps_dd::Player::handleActuallyRunningOnGround()
 {
     // both server and client execute this function, so be careful with conditions here 
 
+    const auto nTimeElapsedSinceHasStartedRunningOnGroundMillisecs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - getActuallyRunningOnGround().getLastTimeNewValueChanged()).count();
+
+    if (nTimeElapsedSinceHasStartedRunningOnGroundMillisecs <= TimeBefore1stFootstepCanBePlayedMillisecs)
+    {
+        // this amount of time must elapse after starting running, before the 1st footstep can be played
+        return;
+    }
+
     const auto nTimeElapsedSinceLastSndWalkPlayStartedMillisecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeLastSndPlayerFootstepPlayed).count();
 
@@ -1648,12 +1658,6 @@ void proofps_dd::Player::handleActuallyRunningOnGround()
     //getConsole().EOLn("Player::%s() playing sound", __func__);
 
     m_handleSndPlayerFootstep = m_audio.play3dSound(*m_sndPlayerFootstep[iSndWalk], getPos().getNew());
-    m_timeLastSndPlayerFootstepPlayed = std::chrono::steady_clock::now();
-}
-
-void proofps_dd::Player::handleActuallyNotRunningOnGround()
-{
-    // this is how we achieve that walk sound is not played immediately when player starts actually strafing
     m_timeLastSndPlayerFootstepPlayed = std::chrono::steady_clock::now();
 }
 

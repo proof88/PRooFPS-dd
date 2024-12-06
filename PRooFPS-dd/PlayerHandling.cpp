@@ -868,15 +868,14 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         );
     }
 
+    // server has already set this in physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
+    player.getActuallyRunningOnGround() = msg.m_bActuallyRunningOnGround;
+    
     // we are not supposed to keep sending this value if it is unchanged, still the footstep sound is kept repeating, why?
     // because if there is true strafing, player position is being updated continuously ... hence we also fall into this function, hehe.
-    if (msg.m_bActuallyRunningOnGround)
+    if (player.getActuallyRunningOnGround())
     {
         player.handleActuallyRunningOnGround();
-    }
-    else
-    {
-        player.handleActuallyNotRunningOnGround();
     }
 
     player.getFrags() = msg.m_nFrags;
