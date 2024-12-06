@@ -870,6 +870,11 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     // server has already set this in physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
     player.getActuallyRunningOnGround() = msg.m_bActuallyRunningOnGround;
+    // note that I still don't know if this is the right way to trigger this sound playing ... this is one way, but the other way can be seen in
+    // handleFallingFromHigh(), invoked by handlePlayerEventFromServer(). However, those sounds there are triggered non-continuously, while
+    // running sound is repeating, and implicitly tied together with posxy change which is sent anyway here in this msg, so for running sound, I think
+    // this is the proper location. For non-repeating, less frequent sounds that are not implicitly tied to anything in this message, can be handled
+    // in handlePlayerEventFromServer().
     
     // we are not supposed to keep sending this value if it is unchanged, still the footstep sound is kept repeating, why?
     // because if there is true strafing, player position is being updated continuously ... hence we also fall into this function, hehe.
@@ -1059,6 +1064,8 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
     const bool bCurrentClient = isMyConnection(connHandleServerSide);
     
     auto& player = it->second;
+
+    // I made a comment in handleUserUpdateFromServer() about why the running footstep sound is handled there, and not here in this message.
 
     // PlayerEventId
     switch (msg.m_iPlayerEventId)
