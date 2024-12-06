@@ -253,6 +253,9 @@ namespace proofps_dd
 
         float& getStrafeSpeed();
 
+        const PgeOldNewValue<bool>& getActuallyRunningOnGround() const;
+        PgeOldNewValue<bool>& getActuallyRunningOnGround();
+
         bool isMoving() const;
 
         bool& getAttack();
@@ -272,6 +275,8 @@ namespace proofps_dd
 
         void handleFallingFromHigh(int iServerScream);
         void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
+        void handleActuallyRunningOnGround();
+        void handleActuallyNotRunningOnGround();
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(
             const proofps_dd::MapItemType& eMapItemType,
@@ -294,6 +299,7 @@ namespace proofps_dd
             OvWpnAngle,
             OvWpnMomentaryAccuracy,
             OvCrouchInput,
+            OvActuallyRunningOnGround,
             OvInvulnerability
         };
 
@@ -311,6 +317,9 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndPlayerLandSmallFall;
         static SoLoud::Wav* m_sndPlayerLandBigFall;
         static SoLoud::Wav* m_sndPlayerDamage;
+        static SoLoud::Wav* m_sndPlayerFootstep[4];
+        static int m_nMaxSndPlayerFootstepDurationMillisecs;    // in this we just store the longest length
+        static int m_nMinTimeBetweenPlayerWalkSoundsMillisecs;  // in this is the final chosen minimum break between 2 footsteps
 
         pge_network::PgeNetworkConnectionHandle m_connHandleServerSide;   /**< Used by both server and clients to identify the connection.
                                                                            Clients don't use it for direct communication.
@@ -349,6 +358,7 @@ namespace proofps_dd
                     Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvCrouchInput, PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
         };
 
@@ -409,6 +419,8 @@ namespace proofps_dd
         SoLoud::handle m_handleSndPlayerLandSmallFall = 0;
         SoLoud::handle m_handleSndPlayerLandBigFall = 0;
         SoLoud::handle m_handleSndPlayerDamage = 0;
+        SoLoud::handle m_handleSndPlayerFootstep = 0;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastSndPlayerFootstepPlayed;
 
         /** True when player is crouching currently, regardless of current input (OvCrouchInput).
             This should be replicated to all clients and should affect the visuals of the player.
@@ -447,7 +459,8 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastStrafe;
 
         /* Server is changing this in every physics tick to target strafe speed to have a smoother strafe start feeling, and to have a workaround
-           for situations when player would not be able to fall into a 1-block-wide hole, this way they can when they try strafing from non-strafe status. */
+           for situations when player would not be able to fall into a 1-block-wide hole, this way they can when they try strafing from non-strafe status.
+           This is used only for the input-based strafing! Therefore, step sound also depends on this. */
         float m_strafeSpeed = 0.f;
 
         bool m_bAttack = false;       // continuous op

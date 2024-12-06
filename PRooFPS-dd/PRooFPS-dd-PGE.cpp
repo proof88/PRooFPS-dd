@@ -1290,6 +1290,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getObject3D()->getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().getZ(),
                     it.second.getWeaponManager().getCurrentWeapon()->getMomentaryAccuracy(it.second.isMoving(), it.second.isRunning(), it.second.getCrouchStateCurrent()),
+                    it.second.getActuallyRunningOnGround(),
                     false /* TODO: why are we not sending out the current crouch state??? */,
                     it.second.getSomersaultAngle(),
                     it.second.getArmor(),

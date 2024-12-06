@@ -270,7 +270,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     0.f /* player angle Y */, 0.f /* player angle Z */,
                     0.f /* weapon angle Z */,
                     0.f /* weapon momentary accuracy */,
-                    false /* bCrouch */, 0.f /* fSomersaultAngle */,
+                    false /* bActuallyRunningOnGround*/, false /* bCrouch */, 0.f /* fSomersaultAngle */,
                     0 /* AP */, 100 /* HP */,
                     false /* bRespawn */,
                     0 /* nFrags */, 0 /* nDeaths */,
@@ -335,7 +335,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             0.f /* player angle Y */, 0.f /* player angle Z */,
             0.f /* weapon angle Z */,
             0.f /* weapon momentary accuracy */,
-            false /* fSomersaultAngle */, 0.f /* fSomersaultAngle*/,
+            false /* bActuallyRunningOnGround*/, false /* bCrouch */, 0.f /* fSomersaultAngle*/,
             0 /* AP */, 100 /* HP */,
             false /* bRespawn */,
             0 /* nFrags */, 0 /* nDeaths */,
@@ -726,6 +726,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 playerConst.getAngleZ(),
                 player.getWeaponAngle().getNew().getZ(),
                 playerConst.getWeaponMomentaryAccuracy(),
+                player.getActuallyRunningOnGround(),
                 player.getCrouchStateCurrent(),
                 player.getSomersaultAngle(),
                 playerConst.getArmor().getNew(),
@@ -865,6 +866,17 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         m_gui.getXHair()->setRelativeScaling(
             PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
         );
+    }
+
+    // we are not supposed to keep sending this value if it is unchanged, still the footstep sound is kept repeating, why?
+    // because if there is true strafing, player position is being updated continuously ... hence we also fall into this function, hehe.
+    if (msg.m_bActuallyRunningOnGround)
+    {
+        player.handleActuallyRunningOnGround();
+    }
+    else
+    {
+        player.handleActuallyNotRunningOnGround();
     }
 
     player.getFrags() = msg.m_nFrags;

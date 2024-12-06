@@ -371,6 +371,8 @@ private:
             assertEquals(0.f, player.getGravity(), "gravity") &
             assertFalse(player.getCrouchInput().isDirty(), "old crouch") &
             assertFalse(player.getCrouchInput(), "crouch") &
+            assertFalse(player.getActuallyRunningOnGround().isDirty(), "old actuallyRunningOnGround")&
+            assertFalse(player.getActuallyRunningOnGround(), "actuallyRunningOnGround")&
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
             assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */) != 0;
     }
@@ -585,6 +587,15 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty H 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty H 3");
+
+        player.getActuallyRunningOnGround().set(true);
+        b &= assertTrue(player.isDirty(), "dirty I 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty I 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty I 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty I 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty I 3");
 
         return b;
     }

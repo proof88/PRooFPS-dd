@@ -733,8 +733,21 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
             if (player.getWillSomersaultInNextTick())
             {
                 // only here can we really trigger on-ground somersaulting
-                player.startSomersaultServer(false);
+                player.startSomersaultServer(false); 
             }
+
+            if (!player.isInAir() && (player.getStrafeSpeed() != 0.f) && player.isRunning() && !player.getCrouchStateCurrent())
+            {
+                player.getActuallyRunningOnGround().set(true);
+            }
+            else
+            {
+                player.getActuallyRunningOnGround().set(false);
+            }
+        }
+        else
+        {
+            player.getActuallyRunningOnGround().set(false);
         }
     } // end for player
 }

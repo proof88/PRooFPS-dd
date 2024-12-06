@@ -17,6 +17,10 @@ static constexpr float SndPlayerLandedDistMin = 4.f;
 static constexpr float SndPlayerLandedDistMax = 8.f;
 static constexpr float SndPlayerHighFallYellDistMin = 9.f;
 static constexpr float SndPlayerHighFallYellDistMax = 22.f;
+static constexpr float SndPlayerWalkDistMin = 4.f;
+static constexpr float SndPlayerWalkDistMax = 8.f;
+
+static constexpr int TimeBetween2FootstepsMillisecs = 0;
 
 
 // ############################### PUBLIC ################################
@@ -108,6 +112,10 @@ proofps_dd::Player::Player(
         m_sndPlayerLandSmallFall = new SoLoud::Wav();
         m_sndPlayerLandBigFall = new SoLoud::Wav();
         m_sndPlayerDamage = new SoLoud::Wav();
+        for (auto& ptr : m_sndPlayerFootstep)
+        {
+            ptr = new SoLoud::Wav();
+        }
     }
 
     // note that due to config can be changed in settings, we need to check if sound is actually loaded and try load again if it was
@@ -129,6 +137,24 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
         m_audio.loadSound(*m_sndPlayerLandBigFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_bigfall.wav");
         m_audio.loadSound(*m_sndPlayerDamage, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_damage.wav");
+
+        size_t i = 0;
+        for (auto& ptr : m_sndPlayerFootstep)
+        {
+            i++;
+            m_audio.loadSound(*ptr, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/pl_step" + std::to_string(i) + ".wav");
+            const int nThisSndDurationMillisecs = static_cast<int>(PFL::roundf( static_cast<float>(ptr->getLength() * 1000) ));
+            if (nThisSndDurationMillisecs > m_nMaxSndPlayerFootstepDurationMillisecs)
+            {
+                m_nMaxSndPlayerFootstepDurationMillisecs = nThisSndDurationMillisecs;
+            }
+        }
+        m_nMinTimeBetweenPlayerWalkSoundsMillisecs = std::max(
+            m_nMaxSndPlayerFootstepDurationMillisecs,
+            TimeBetween2FootstepsMillisecs
+        );
+        getConsole().EOLn("Player::%s() m_nMaxSndPlayerFootstepDurationMillisecs: %d", __func__, m_nMaxSndPlayerFootstepDurationMillisecs);
+        getConsole().EOLn("Player::%s() m_nMinTimeBetweenPlayerWalkSoundsMillisecs: %d", __func__, m_nMinTimeBetweenPlayerWalkSoundsMillisecs);
 
         // these are played only for self and should be stopped automatically when played again to avoid multiple instances to be played in parallel,
         // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.
@@ -156,6 +182,12 @@ proofps_dd::Player::Player(
 
         m_sndPlayerDamage->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_sndPlayerDamage->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        for (auto& ptr : m_sndPlayerFootstep)
+        {
+            ptr->set3dMinMaxDistance(SndPlayerWalkDistMin, SndPlayerWalkDistMax);
+            ptr->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+        }
     }
 }
 
@@ -1231,15 +1263,30 @@ float& proofps_dd::Player::getStrafeSpeed()
     return m_strafeSpeed;
 }
 
+const PgeOldNewValue<bool>& proofps_dd::Player::getActuallyRunningOnGround() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvActuallyRunningOnGround));
+}
+
+PgeOldNewValue<bool>& proofps_dd::Player::getActuallyRunningOnGround()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvActuallyRunningOnGround));
+}
+
 /**
 * Tells if the player is stationary or not.
 * This function was created to be used in any phase of a frame.
 * There are some situations when checking (getPos().getOld() == getPos().getNew()) won't work, for
 * example, if we are checking that condition before the next physics tick in the current frame.
 * It might use previous frame's data, so it should be used only if the truth of the returned value being
-* false/late by 1 frame is not a problem.
+* false for or late by 1 frame is not a problem.
+* 
+* Can be used only on server instance, as client returns false info due to lack of some data.
 * 
 * @return True if player is considered to be moving based on previous or current frame data, false otherwise.
+*         True also if player cannot strafe due to being blocked but based on the input it tries to strafe.
 */
 bool proofps_dd::Player::isMoving() const
 {
@@ -1577,6 +1624,39 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
     m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 
+void proofps_dd::Player::handleActuallyRunningOnGround()
+{
+    // both server and client execute this function, so be careful with conditions here 
+
+    const auto nTimeElapsedSinceLastSndWalkPlayStartedMillisecs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeLastSndPlayerFootstepPlayed).count();
+
+    // remember, isValidVoiceHandle() might return false even if the sound is still being played, as explained in handleFallingFromHigh()
+    if ((nTimeElapsedSinceLastSndWalkPlayStartedMillisecs <= m_nMinTimeBetweenPlayerWalkSoundsMillisecs) ||
+        (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerFootstep)))
+    {
+        return;
+    }
+
+    static constexpr size_t sndPlayerFootstepCount = sizeof(m_sndPlayerFootstep) / sizeof(m_sndPlayerFootstep[0]);
+    static_assert(sndPlayerFootstepCount > 0, "There must be at least 1 footstep sound.");
+    const size_t iSndWalk = static_cast<size_t>(PFL::random(0, sndPlayerFootstepCount-1));
+    assert(m_sndPlayerFootstep[iSndWalk]);  // otherwise new operator would had thrown already in ctor
+
+    m_audio.stopSoundInstance(m_handleSndPlayerFootstep); // just make 1000% sure we dont play it multiple times in parallel for the same player
+    
+    //getConsole().EOLn("Player::%s() playing sound", __func__);
+
+    m_handleSndPlayerFootstep = m_audio.play3dSound(*m_sndPlayerFootstep[iSndWalk], getPos().getNew());
+    m_timeLastSndPlayerFootstepPlayed = std::chrono::steady_clock::now();
+}
+
+void proofps_dd::Player::handleActuallyNotRunningOnGround()
+{
+    // this is how we achieve that walk sound is not played immediately when player starts actually strafing
+    m_timeLastSndPlayerFootstepPlayed = std::chrono::steady_clock::now();
+}
+
 void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType)
 {
     // both server and client execute this function, so be careful with conditions here
@@ -1704,6 +1784,9 @@ SoLoud::Wav* proofps_dd::Player::m_sndFallYell_2 = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerDamage = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerFootstep[4] = { nullptr };
+int proofps_dd::Player::m_nMaxSndPlayerFootstepDurationMillisecs = 0;
+int proofps_dd::Player::m_nMinTimeBetweenPlayerWalkSoundsMillisecs = 0;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);
