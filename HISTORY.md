@@ -29,7 +29,7 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1T5d9ksZYaB6SNq0FGmOuKkerI0h_QFiY/view?usp=drive_link).
 
-This version finally introduces footstep sounds during running.
+This version finally introduces **footstep sounds** during running.
 
 The following bugs have been also fixed:
  - a connecting client terminated if it received a MapItemUpdate message before actually loading the map;
