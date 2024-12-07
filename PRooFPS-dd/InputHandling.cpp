@@ -659,7 +659,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         {
             //getConsole().EOLn("InputHandling::%s(): scheduled auto-switch to picked up for next time!", __func__);
             wpnHandling.scheduleWeaponPickupInducedAutoSwitchRequest(pWeaponPickupInducedAutoSwitchWasRequested);
-            pWeaponPickupInducedAutoSwitchWasRequested = false;
+            pWeaponPickupInducedAutoSwitchWasRequested = nullptr;
         }
     }
 

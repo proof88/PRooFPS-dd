@@ -198,6 +198,15 @@ namespace proofps_dd
         bool m_bWpnAutoReloadRequest = false;
         bool m_bWpnAutoSwitchToBestLoadedRequest = false;
         bool m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = false;
+        
+        // TODO: should be weak ptr, as we dont want ownership of Weapon instance but want to detect when it is deleted.
+        // It can be deleted only when the Player instance owning the parent WeaponManager instance is deleted.
+        // So we could think, a regular ptr is enough.
+        // But this thinking caused a bug: since auto switch handling is being done in keyboard handling, which is running only if window is active,
+        // auto weapon switch does not happen with an inactive window. If the window is inactive, but Player picks up a weapon unintentionally e.g.
+        // respawning after being killed, this ptr will be set, and later when map change happens, all Player and Weapon instances are deleted and recreated,
+        // this pointer will be invalid! When window becomes active again, this ptr will be tried to be used to switch to this Weapon instance which
+        // has been already deleted! Result: undefined behavior, sooner or later crash.
         Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
 
         void emitParticles(PooledBullet& bullet);

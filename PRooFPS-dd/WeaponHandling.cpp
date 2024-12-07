@@ -485,6 +485,12 @@ const PgeObjectPool<proofps_dd::Smoke>& proofps_dd::WeaponHandling::getSmokePool
 
 void proofps_dd::WeaponHandling::deleteWeaponHandlingAll(const bool& bDeallocBullets)
 {
+    // as explained at m_pWpnAutoSwitchWhenPickedUp, we need to clear these stuff!
+    clearWeaponAutoReloadRequest();
+    clearWeaponAutoSwitchToBestLoadedRequest();
+    clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
+    clearWeaponPickupInducedAutoSwitchRequest();
+
     m_explosions.clear();
     Explosion::destroyReferenceExplosions();
     Explosion::resetGlobalExplosionId();
