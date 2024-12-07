@@ -1100,6 +1100,12 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         return false;
     }
 
+    if (!m_maps.loaded())
+    {
+        // do not deal with these if client has not yet loaded the map
+        return true;
+    }
+
     if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
     {
         if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes)

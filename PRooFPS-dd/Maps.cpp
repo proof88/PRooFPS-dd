@@ -763,6 +763,12 @@ bool proofps_dd::Maps::handleMapItemUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
     const proofps_dd::MsgMapItemUpdateFromServer& msg)
 {
+    if (!loaded())
+    {
+        // we not yet loaded any map, but already received update from server, which is normal because server already registered us as connected client
+        return true;
+    }
+
     const auto it = getItems().find(msg.m_mapItemId);
     if (it == getItems().end())
     {
