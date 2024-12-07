@@ -1,0 +1,59 @@
+v0.4.3
+
+Do not forget to change recoil of machinegun to 1.0 so the bullets wont hit closer blocks too early!
+
+Debug 1 player: T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+
+FramesElapsedSinceLastDurationsReset: 804
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 18730.6836 usecs
+   - FullOnPacketReceivedDuration: 17.8246 usecs
+     - HandleUserCmdMoveDuration: 0.551 usecs
+   - FullOnGameRunningDuration: 4390.6196 usecs
+     - GravityCollisionDuration: 359.9901 usecs
+     - ActiveWindowStuffDuration: 1807.1517 usecs
+     - UpdateWeaponDuration: 24.1493 usecs
+     - UpdateBulletsDuration: 867.4751 usecs
+     - UpdateRespawnTimersDuration: 0.3607 usecs
+     - PickupAndRespawnItemsDuration: 251.3644 usecs
+     - UpdateGameModeDuration: 0.0373 usecs
+     - CameraMovementDuration: 7.3433 usecs
+     - SendUserUpdatesDuration: 4.7425 usecs
+
+
+Release 1 player: T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+
+FramesElapsedSinceLastDurationsReset: 894
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16795.1738 usecs
+   - FullOnPacketReceivedDuration: 4.4485 usecs
+     - HandleUserCmdMoveDuration: 0.0872 usecs
+   - FullOnGameRunningDuration: 481.7819 usecs
+     - GravityCollisionDuration: 26.6667 usecs
+     - ActiveWindowStuffDuration: 201.5548 usecs
+     - UpdateWeaponDuration: 5.9855 usecs
+     - UpdateBulletsDuration: 82.5861 usecs
+     - UpdateRespawnTimersDuration: 0.0101 usecs
+     - PickupAndRespawnItemsDuration: 18.33 usecs
+     - UpdateGameModeDuration: 0.0101 usecs
+     - CameraMovementDuration: 1.877 usecs
+     - SendUserUpdatesDuration: 0.5515 usecs
+
+
+Release 2 player: T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+
+FramesElapsedSinceLastDurationsReset: 776
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16832.0488 usecs
+   - FullOnPacketReceivedDuration: 4.0606 usecs
+     - HandleUserCmdMoveDuration: 0.1276 usecs
+   - FullOnGameRunningDuration: 588.6456 usecs
+     - GravityCollisionDuration: 32.3789 usecs
+     - ActiveWindowStuffDuration: 244.9446 usecs
+     - UpdateWeaponDuration: 7.9459 usecs
+     - UpdateBulletsDuration: 117.6546 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 30.3621 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 2.1353 usecs
+     - SendUserUpdatesDuration: 4.1263 usecs
