@@ -22,10 +22,19 @@
 # v1.0 - Fixed missing textures
 #      - Updated weapon spawn tiles
 #
-# v1.1 - Merged "bg-mutans-*.bmp" images into a single "bg-mutans.bmp" and
-#        mapping it to multiple blocks (w, x, y, z) using custom texture UV-coordinates.
+# v2.0 - Update for Mikulas-LAN
+#      - added new type of weapon and armor spawns
+#      - added jumppads
+#      - added initial usage of decal feature
+#
+# TODO:
+#      - move all posters to decals
+#      - add objects for freed up map elements
+#      - fine-tune jumppad power
+#
 
 Name = Mutans
+Gravity = 2.0
 
 B = fg-chat-top.bmp
 D = fg-chat-bottom.bmp
@@ -38,6 +47,7 @@ K = fg-news-left.bmp
 L = fg-news-middle.bmp
 Q = fg-menu.bmp
 T = fg-news-fill.bmp
+^ = fg-jumppad.bmp
 
 a = bg-dark.bmp
 c = bg-light.bmp
@@ -48,42 +58,50 @@ r = bg-sponzor-bottom.bmp
 v = bg-uprage.bmp
 u = bg-war.bmp
 
-# From v0.4.2 different parts of the same texture can be used on different blocks by specifying texture coordinates.
-# However, for decal/poster purpose, the "decal assignment" could be also used which does not allocate any block char.
-# See example for it in map_test_good.
-w = bg-mutans.bmp 0.0 0.5 0.5 1.0
-x = bg-mutans.bmp 0.5 0.5 1.0 1.0
-y = bg-mutans.bmp 0.0 0.0 0.5 0.5
-z = bg-mutans.bmp 0.5 0.0 1.0 0.5
+jumppad_0 = 1.4
+jumppad_1 = 1.4
+jumppad_2 = 1.4
+jumppad_3 = 1.7
+jumppad_4 = 1.7
 
+decal = bg-mutans.bmp 15.5 3.5 2 2
+decal = bg-mutans.bmp 26.5 2.5 2 2
+decal = bg-mutans.bmp 37.5 4.5 2 2
+decal = bg-mutans.bmp 48.5 1.5 2 2
+decal = bg-mutans.bmp 59.5 2.5 2 2
+decal = bg-mutans.bmp 70.5 3.5 2 2
+decal = bg-mutans.bmp 15.5 14.5 2 2
+decal = bg-mutans.bmp 70.5 14.5 2 2
+
+#12345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 c                                            cccccccc
-c                      cccccccc              cccwxccc   cccccccc
-c   c   c   cccccccc   cccwxccc              cccyzccc   cccwxccc   cccccccc   c   c   c
-c c   c   c cccwxccc   cccyzccc   cccccccc   cccScccc   cccyzccc   cccwxccc c   c   c c
-c   c   c   cccyzccc   cccScccc   cccwxccc   cc2ccccc   cccScccc   cccyzccc   c   c   c
-c c   c   c cccScccc   cc2ccccc   cccyzccc   aaLHLLaa   cc2ccccc   cccScccc c   c   c c
-c   c   c   cc2ccccc   aaLHLLaa   cccScccc   aaaaaaaa   aaLHLLaa   cc2ccccc   c   c   c
-a a   a   a aaLHLLaa   aaaaaaaa   cc2ccccc   aaaaaaaa   aaaaaaaa   aaLHLLaa a   a   a a
+c                      cccccccc              cccccccc   cccccccc
+c   c   c   cccccccc   cccccccc              cccccccc   cccccccc   cccccccc   c   c   c
+c c   c   c cccccccc   cccccccc   cccccccc   cccScccc   cccccccc   cccccccc c   c   c c
+c   c   c   cccccccc   cccScccc   cccccccc   cc2cc,cc   cccScccc   cccccccc   c   c   c
+c c   c   c cccScccc   cc3cc,cc   cccccccc   aaLHLLaa   cc3cc,cc   cccScccc c   c   c c
+c   c   c   cc2cc,cc   aaLHLLaa   cccScccc   aaaaaaaa   aaLHLLaa   cc2cc,cc   c   c   c
+a a   a   a aaLHLLaa   aaaaaaaa   cc2cc,cc   aaaaaaaa   aaaaaaaa   aaLHLLaa a   a   a a
 a   a   a   aaaaaaaa   aaaaaaaa   aaLHLLaa   aaaaaaaa   aaaaaaaa   aaaaaaaa   a   a   a
 a a   a   a aaaaaaaa   aaaaoaaa 4 aaaaaaaa   aaaaaaaa 4 aaaoaaaa   aaaaaaaa a   a   a a
 a   a   a   aaaaaaaaa aaaaaraaa B aaaaaaaa   aaaaaaaa I aaaraaaaa aaaaaaaaa   a   a   a
 a a   a   a +aaaaaaFLLLaaaaaaaa D aaaaaaaa   aaaaaaaa J aaaaaaaQLLLaaaaaaa+ a   a   a a
 a   a   a   aKLLLLLLLLLLLLLLLLa   aaaaaaaa   aaaaaaaa   aKLLLLLLLLLLLLLLLLa   a   a   a
-c c   c  Tc ccccccccccccccccccc   aaaaaaaa 4 aaaaaaaa   ccccccccccccccccccc c   c   c c
-c   c   cT Tcccwxcccccccccccecc   aaaoaaaa F aaaaoaaa   ceccccccccccccwxccc   c   c   c
-c c   c  T Tcccyzcccccccccccccc   aaaraaaaa aaaaaraaa   ccccccccccccccyzccc c   c   c c
-c   c   cT TcccSccccccccccccncc   aaaaaaaGLLLaaaaaaaa   cnccccccccccccScccc   c   c   c
-c c   c  T Tcc2cccccccccccccccc   aKLLLLLLLLLLLLLLLLa   ccccccccccccc2ccccc c   c   c c
+c c   c  Tc ccccccccccccccccccc   aaaaaaaa 5 aaaaaaaa   ccccccccccccccccccc c   c   c c
+c   c   cT Tccccccccccccccccecc   aaaoaaaa F aaaaoaaa   ceccccccccccccccccc   c   c   c
+c c   c  T Tccccccccccccccccccc   aaaraaaaa aaaaaraaa   ccccccccccccccccccc c   c   c c
+c   c   cT TcccSccccccccccccncc   aaaaaaaGLL^aaaaaaaa   cnccccccccccccScccc   c   c   c
+c c   c  T Tcc2cc,ccccccccccccc   aKLLLLLLLLLLLLLLLLa   ccccccccccccc2cc,cc c   c   c c
 a   a   aT TaaLHLLaaaaaaaaaavaa + aaaaaaaa   aaaaaaaa + avaaaaaaaaaaaLHLLaa   a   a   a
 a a   a  T Taaaaaaaaaaaaaaaaaaa I aaaaaaea   anaaaaaa B aaaaaaaaaaaaaaaaaaa a   a   a a
 a   a   aT Taaaaaaaaaaaaaaaauaa J aaaaaaaa   aaaaaaaa D auaaaaaaaaaaaaaaaaa   a   a   a
 a a   a  T TaaaaaaaaQaaGLLLaaaaa aaaaaaana   aeaaaaaaa aaaaaaaFaaGLLLaaaaaa a   a   a a
-a   a   aT T+aaaaFLLLLa+4+aaaaaaaaaaaaaaaa   aaaaaaaaaaaaaaQLLLLaa+4+aaaaa+   a   a   a
-a a   a  T TKLLLLLLLLLLLLLLLLLLLLLLLLLLLLa 4 aKLLLLLLLLLLLLLLLLLLLLLLLLLLLL a   a   a a
-a   a   aT  a+4+aaaaaaaaaaaaaaaaaaaaaaaaaa I aaaaaaaaaaaaaaaaaaaaaaaaaa+4+a  Ta   a   a
+a   a   aT T+aaaaFLLLLa+4+aaaaaaaaaaaa,aaa   aaa,aaaaaaaaaaQLLLLaa+4+aaaaa+   a   a   a
+a a   a  T TKLLLLLLLLLLLLLL^LLLLLLLLLLLLLa 4 aKLLLLLLLLLLLLLLLLLLLLLL^LLLLL a   a   a a
+a   a   aT  a+5+aaaaaaaaaaaaaaaaaaaaaaaaaa I aaaaaaaaaaaaaaaaaaaaaaaaaa+5+a  Ta   a   a
 a a   a  TKLLLLLLLaaaaaaaaaaaaaaaaaaaaaava J auaaaaaaaaaaaaaaaaaaaaaaKLLLLLLLL  a   a a
 a   a   a   aaaaaaaKLLLaaaaaaaaaaaaFaaaaaaa aaaaaaaFaaaaaaaaaaaaKLLLaaaaaaa   a   a   a
-a a   a 3 a a+4+aaaaaaaaFLLLaaaaaaGLLa+aGLLLLLLa+aGLLaaaaaaFLLLaaaaaaaa+4+a a 3 a   a a
+a a   a 3 a a+4+aaaaaaaaFLLLaaaaaaGLLa+aGL^L^LLa+aGLLaaaaaaFLLLaaaaaaaa+4+a a 3 a   a a
 a   a   a   KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL   a   a   a
 a a   a   a TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT a   a   a a
 a   a   a   TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT   a   a   a
