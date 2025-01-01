@@ -178,9 +178,9 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             continue;
         }
 
-        const long long timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+        const auto timeDiffSeconds = std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
-        if (static_cast<unsigned long long>(timeDiffSeconds) >= config.getPlayerRespawnDelaySeconds())
+        if (timeDiffSeconds >= static_cast<std::chrono::seconds::rep>(config.getPlayerRespawnDelaySeconds()))
         {
             serverRespawnPlayer(player, false, config);
         }
@@ -673,7 +673,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
         auto& player = playerPair.second;
         const auto& playerConst = player;
 
-        static constexpr long long nAfterBootUpDelayedUpdateSeconds = 3;
+        static constexpr std::chrono::seconds::rep nAfterBootUpDelayedUpdateSeconds = 3;
         if (playerConst.isExpectingAfterBootUpDelayedUpdate() &&
             (playerConst.getTimeBootedUp().time_since_epoch().count() != 0) &&
             ((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - playerConst.getTimeBootedUp()).count()) >= nAfterBootUpDelayedUpdateSeconds))

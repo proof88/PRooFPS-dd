@@ -36,13 +36,13 @@ namespace proofps_dd
             Exit
         };
 
-        static constexpr unsigned int m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
-        static constexpr unsigned int m_nKeyPressOnceJumpMinumumWaitMilliseconds = 50;
-        static constexpr unsigned int m_nKeyPressSomersaultMaximumWaitMilliseconds = 300;
-        static constexpr unsigned int m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
-        static constexpr unsigned int m_nPlayerAngleYSendIntervalMilliseconds = 100;
-        static constexpr unsigned int m_nWeaponAngleZBigChangeSendIntervalMilliseconds = 100;
-        static constexpr unsigned int m_nWeaponAngleZSmallChangeSendIntervalMilliseconds = 200;
+        static constexpr std::chrono::milliseconds::rep m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
+        static constexpr std::chrono::milliseconds::rep m_nKeyPressOnceJumpMinumumWaitMilliseconds = 50;
+        static constexpr std::chrono::milliseconds::rep m_nKeyPressSomersaultMaximumWaitMilliseconds = 300;
+        static constexpr std::chrono::milliseconds::rep m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
+        static constexpr std::chrono::milliseconds::rep m_nPlayerAngleYSendIntervalMilliseconds = 100;
+        static constexpr std::chrono::milliseconds::rep m_nWeaponAngleZBigChangeSendIntervalMilliseconds = 100;
+        static constexpr std::chrono::milliseconds::rep m_nWeaponAngleZSmallChangeSendIntervalMilliseconds = 200;
         static constexpr float m_fWeaponAngleZBigChangeThreshold = 30.f;
 
         static const char* getLoggerModuleName();

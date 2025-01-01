@@ -322,10 +322,10 @@ void proofps_dd::Physics::serverGravity(
                 {
                     player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
                     //const auto nMillisecsJumpDuration =
-                    //    static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count());
+                    //    std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
                     //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
                     //    player.getGravity(),
-                    //    static_cast<int>(nMillisecsJumpDuration));
+                    //    nMillisecsJumpDuration);
                 }
                 else
                 {

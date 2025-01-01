@@ -448,8 +448,8 @@ void proofps_dd::XHair::updateHighlight()
     }
     else
     {
-        constexpr float fXHairPostMoveTimeoutMillisecs = 1000;
-        if ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeXHairLastMoved)).count() >= fXHairPostMoveTimeoutMillisecs)
+        constexpr std::chrono::milliseconds::rep nXHairPostMoveTimeoutMillisecs = 1000;
+        if ((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeXHairLastMoved)).count() >= nXHairPostMoveTimeoutMillisecs)
         {
             bCanShowHighlightPerXHairMovement = false;
             for (int i = 0; i < 4; i++)

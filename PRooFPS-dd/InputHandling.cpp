@@ -23,10 +23,6 @@ static constexpr float SndWpnDryFireDistMax = 14.f;
 // ############################### PUBLIC ################################
 
 
-const unsigned int proofps_dd::InputHandling::m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds;
-const unsigned int proofps_dd::InputHandling::m_nKeyPressOnceJumpMinumumWaitMilliseconds;
-const unsigned int proofps_dd::InputHandling::m_nWeaponActionMinimumWaitMillisecondsAfterSwitch;
-
 proofps_dd::InputHandling::InputHandling(
     PGE& pge,
     proofps_dd::Durations& durations,
@@ -158,11 +154,11 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     if (pktUserCmdMove.m_bSendSwitchToRunning)
     {
         const auto nMillisecsSinceLastToggleRunning =
-            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleRun()).count());
+            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleRun()).count();
         if (nMillisecsSinceLastToggleRunning < m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
         {
             // should NOT had received this from client this early
-            getConsole().OLn("InputHandling::%s(): player %s sent run toggle request too early, ignoring (actual: %u, req: %u)!",
+            getConsole().OLn("InputHandling::%s(): player %s sent run toggle request too early, ignoring (actual: %d, req: %d)!",
                 __func__, sClientUserName.c_str(), nMillisecsSinceLastToggleRunning, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds);
             // Dont terminate for now, just log. Reason explained below at handling jumping.
             //assert(false);  // in debug mode, terminate the game
@@ -181,7 +177,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     }
 
     const auto nMillisecsSinceLastStrafe =
-        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastActualStrafe()).count());
+        std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastActualStrafe()).count();
     const auto prevStrafeState = player.getStrafe();
     // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
     player.setStrafe(pktUserCmdMove.m_strafe);
@@ -207,10 +203,10 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     //else
     //{
     //    const auto nMillisecsStrafing =
-    //        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - timeStrafeStarted).count());
+    //        std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - timeStrafeStarted).count();
     //    const float fStrafeDistance = player.getPos().getNew().getX() - fPlayerPosXStarted;
     //
-    //    getConsole().EOLn("Strafe duration: %u msecs, dist.: %f", nMillisecsStrafing, fStrafeDistance);
+    //    getConsole().EOLn("Strafe duration: %d msecs, dist.: %f", nMillisecsStrafing, fStrafeDistance);
     //}
 
     // crouching is also continuous op
@@ -235,7 +231,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         if (!player.canFall())
         {
             const auto nMillisecsSinceLastJump =
-                static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count());
+                std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
             if (player.isJumping())
             {
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
@@ -251,7 +247,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
                 {
                     // should NOT had received this from client this early (actually could, see explanation below)
-                    getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %u, req: %u)!",
+                    getConsole().EOLn("InputHandling::%s(): player %s sent jump request too early, ignoring (actual: %d, req: %d)!",
                         __func__, sClientUserName.c_str(), nMillisecsSinceLastJump, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
                     // For now, dont terminate. Reason: since client does the rate limit on its side, it can happen that the required time elapsed
                     // at client-side but did not elapse at server-side. Imagine client sends a packet to server, the ping is a bit high. Client
@@ -458,9 +454,9 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     if (pktUserCmdMove.m_bShootAction)
     {
         const auto nSecsSinceLastWeaponSwitch =
-            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
                 timeStart - player.getWeaponManager().getTimeLastWeaponSwitch()
-            ).count());
+            ).count();
         if (nSecsSinceLastWeaponSwitch < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
         {
             //getConsole().EOLn("InputHandling::%s(): ignoring too early mouse action!", __func__);
@@ -859,9 +855,9 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
 
     bool bShootActionBeingSent = false;
     const auto nSecsSinceLastWeaponSwitchMillisecs =
-        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-        ).count());
+        ).count();
     if (bFireButtonPressed)
     {
         // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
@@ -934,7 +930,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
     {
         const auto nSecsSinceInitialXHairPosForTestingApplied =
-            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeInitialXHairPosForTestingApplied).count());
+            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeInitialXHairPosForTestingApplied).count();
         // if we immediately apply cursor pos, it might be changed to center a few moments later at startup so we need to wait a bit
         if (nSecsSinceInitialXHairPosForTestingApplied >= 2)
         {
@@ -982,7 +978,7 @@ void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveTo
 {
     static std::chrono::time_point<std::chrono::steady_clock> timeLastMsgUserCmdFromClientSent;
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
-        static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count());
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
 
     Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
     if (player.isSomersaulting())

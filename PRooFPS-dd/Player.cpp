@@ -20,8 +20,8 @@ static constexpr float SndPlayerHighFallYellDistMax = 22.f;
 static constexpr float SndPlayerFootstepDistMin = SndPlayerLandedDistMin;
 static constexpr float SndPlayerFootstepDistMax = SndPlayerLandedDistMax;
 
-static constexpr int TimeBetween2FootstepsMillisecs = 0;  // minimum desired time, if we want longer time than actual length of footstep sound
-static constexpr int TimeBefore1stFootstepCanBePlayedMillisecs = 100;  // when player starts running, don't immediately play 1st footstep but delay it by this
+static constexpr std::chrono::milliseconds::rep TimeBetween2FootstepsMillisecs = 0;  // minimum desired time, if we want longer time than actual length of footstep sound
+static constexpr std::chrono::milliseconds::rep TimeBefore1stFootstepCanBePlayedMillisecs = 100;  // when player starts running, don't immediately play 1st footstep but delay it by this
 
 
 // ############################### PUBLIC ################################
@@ -386,7 +386,7 @@ void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bo
         constexpr auto nBlinkPeriodMillisecs = 100;
         const auto nInvulTimeElapsedMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedInvulnerability).count();
         // only server instance is allowed to decide about ENDING invulnerability, client will be notified over network msg
-        const bool bEndInvul = bServer && (static_cast<unsigned int>(nInvulTimeElapsedMillisecs) >= config.getPlayerRespawnInvulnerabilityDelaySeconds() * 1000);
+        const bool bEndInvul = bServer && (nInvulTimeElapsedMillisecs >= static_cast<long long>(config.getPlayerRespawnInvulnerabilityDelaySeconds()) * 1000);
         const bool bShowPlayer = bEndInvul || ((nInvulTimeElapsedMillisecs / nBlinkPeriodMillisecs) % 2) == 0;
         setVisibilityState(bShowPlayer);
         if (bEndInvul)
@@ -1789,8 +1789,8 @@ SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerDamage = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerFootstep[4] = { nullptr };
-int proofps_dd::Player::m_nMaxSndPlayerFootstepDurationMillisecs = 0;
-int proofps_dd::Player::m_nMinTimeBetweenPlayerWalkSoundsMillisecs = 0;
+std::chrono::milliseconds::rep proofps_dd::Player::m_nMaxSndPlayerFootstepDurationMillisecs = 0;
+std::chrono::milliseconds::rep proofps_dd::Player::m_nMinTimeBetweenPlayerWalkSoundsMillisecs = 0;
 
 void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj = m_gfx.getObject3DManager().createPlane(proofps_dd::Player::fObjWidth, proofps_dd::Player::fObjHeightStanding);

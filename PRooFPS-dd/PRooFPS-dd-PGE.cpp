@@ -356,7 +356,8 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
             // we also need to wait for m_mapPlayers to become empty, it is important for server otherwise it will fail in handleUserConnected();
             // it might take a while to bring down all clients one-by-one and let m_mapPlayers be empty, so we also need to check that here!
             if (m_mapPlayers.empty() &&
-                (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count() >= m_config.getReconnectDelaySeconds()))
+                (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeConnectionStateChangeInitiated).count()
+                    >= static_cast<std::chrono::seconds::rep>(m_config.getReconnectDelaySeconds())))
             {
                 if (connect())
                 {
@@ -1010,7 +1011,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
         if (mapItem.isTaken())
         {
             const auto nSecsSinceTake = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - mapItem.getTimeTaken()).count();
-            if (nSecsSinceTake < MapItem::getItemRespawnTimeSecs(mapItem))
+            if (nSecsSinceTake < static_cast<std::chrono::seconds::rep>(MapItem::getItemRespawnTimeSecs(mapItem)))
             {
                 continue;
             }

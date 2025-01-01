@@ -17,19 +17,19 @@ namespace proofps_dd
     struct Durations
     {
         unsigned int m_nFramesElapsedSinceLastDurationsReset;
-        long long m_nGravityCollisionDurationUSecs;
-        long long m_nActiveWindowStuffDurationUSecs;
-        long long m_nUpdateWeaponsDurationUSecs;
-        long long m_nUpdateBulletsDurationUSecs;
-        long long m_nUpdateRespawnTimersDurationUSecs;
-        long long m_nPickupAndRespawnItemsDurationUSecs;
-        long long m_nUpdateGameModeDurationUSecs;
-        long long m_nCameraMovementDurationUSecs;
-        long long m_nSendUserUpdatesDurationUSecs;
-        long long m_nFullOnGameRunningDurationUSecs;
-        long long m_nHandleUserCmdMoveDurationUSecs;
-        long long m_nFullOnPacketReceivedDurationUSecs;
-        long long m_nFullRoundtripDurationUSecs;
+        std::chrono::microseconds::rep m_nGravityCollisionDurationUSecs;
+        std::chrono::microseconds::rep m_nActiveWindowStuffDurationUSecs;
+        std::chrono::microseconds::rep m_nUpdateWeaponsDurationUSecs;
+        std::chrono::microseconds::rep m_nUpdateBulletsDurationUSecs;
+        std::chrono::microseconds::rep m_nUpdateRespawnTimersDurationUSecs;
+        std::chrono::microseconds::rep m_nPickupAndRespawnItemsDurationUSecs;
+        std::chrono::microseconds::rep m_nUpdateGameModeDurationUSecs;
+        std::chrono::microseconds::rep m_nCameraMovementDurationUSecs;
+        std::chrono::microseconds::rep m_nSendUserUpdatesDurationUSecs;
+        std::chrono::microseconds::rep m_nFullOnGameRunningDurationUSecs;
+        std::chrono::microseconds::rep m_nHandleUserCmdMoveDurationUSecs;
+        std::chrono::microseconds::rep m_nFullOnPacketReceivedDurationUSecs;
+        std::chrono::microseconds::rep m_nFullRoundtripDurationUSecs;
         std::chrono::time_point<std::chrono::steady_clock> m_timeFullRoundtripStart;
 
         Durations()

@@ -1284,7 +1284,7 @@ private:
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
         b &= assertTrue(gm->isGameWon(), "game won");
         b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning");
-        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+        b &= assertLequals(static_cast<std::chrono::seconds::rep>(dm->getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
         b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
@@ -1438,7 +1438,7 @@ private:
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - dm->getResetTime());
         b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertTrue(dm->serverCheckAndUpdateWinningConditions(m_network), "winning due to time");
-        b &= assertLequals(dm->getTimeLimitSecs(), durationSecs.count(), "time limit elapsed");
+        b &= assertLequals(static_cast<std::chrono::seconds::rep>(dm->getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
         b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");

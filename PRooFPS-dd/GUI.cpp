@@ -1883,8 +1883,8 @@ void proofps_dd::GUI::drawRespawnTimer()
     // client doesn't control respawn, countdown is just an estimation, the recorded die time is when client received
     // the death notification from server, so it is just ROUGHLY exact, but good enough! Server controls the respawn.
     // Client knows the server's configured respawn delay, so we have everything for showing a ROUGH countdown.
-    const auto timeDiffMillisecs = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - m_timePlayerDied).count());
+    const auto timeDiffMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - m_timePlayerDied).count();
     
     const float fRespawnProgress = std::min(1.f, timeDiffMillisecs / (static_cast<float>(m_pConfig->getPlayerRespawnDelaySeconds() * 1000)));
     //const int timeRemainingUntilRespawnSecs =

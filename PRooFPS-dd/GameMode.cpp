@@ -279,7 +279,7 @@ unsigned int proofps_dd::DeathMatchMode::getTimeRemainingMillisecs() const
 
     const auto nMillisecondsElapsedSinceReset = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - getResetTime()).count();
-    const long long nTimeLimitMilliseconds = getTimeLimitSecs() * 1000;
+    const std::chrono::milliseconds::rep nTimeLimitMilliseconds = getTimeLimitSecs() * 1000;
 
     if (nTimeLimitMilliseconds <= nMillisecondsElapsedSinceReset)
     {
