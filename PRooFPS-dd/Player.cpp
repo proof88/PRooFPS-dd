@@ -154,8 +154,8 @@ proofps_dd::Player::Player(
             m_nMaxSndPlayerFootstepDurationMillisecs,
             TimeBetween2FootstepsMillisecs
         );
-        getConsole().EOLn("Player::%s() m_nMaxSndPlayerFootstepDurationMillisecs: %d", __func__, m_nMaxSndPlayerFootstepDurationMillisecs);
-        getConsole().EOLn("Player::%s() m_nMinTimeBetweenPlayerWalkSoundsMillisecs: %d", __func__, m_nMinTimeBetweenPlayerWalkSoundsMillisecs);
+        getConsole().OLn("Player::%s() m_nMaxSndPlayerFootstepDurationMillisecs: %d", __func__, m_nMaxSndPlayerFootstepDurationMillisecs);
+        getConsole().OLn("Player::%s() m_nMinTimeBetweenPlayerWalkSoundsMillisecs: %d", __func__, m_nMinTimeBetweenPlayerWalkSoundsMillisecs);
 
         // these are played only for self and should be stopped automatically when played again to avoid multiple instances to be played in parallel,
         // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.

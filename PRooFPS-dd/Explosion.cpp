@@ -66,7 +66,7 @@ bool proofps_dd::Explosion::updateReferenceExplosions(PGE& pge, const std::strin
 
     m_explosionRefObjects.insert({ refId, {pReferenceObjExplosion, pWav} });
 
-    CConsole::getConsoleInstance("Explosion").EOLn("A new reference object is created from %s!", sFilenameOnly.c_str());
+    CConsole::getConsoleInstance("Explosion").OLn("A new reference object is created from %s!", sFilenameOnly.c_str());
 
     return true;
 }

@@ -190,7 +190,7 @@ void proofps_dd::GUI::initialize()
     }
     else
     {
-        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneral: %f", __func__, m_fFontSizePxHudGeneral);
+        getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneral: %f", __func__, m_fFontSizePxHudGeneral);
     }
 
     ImGui::GetIO().Fonts->AddFontDefault();

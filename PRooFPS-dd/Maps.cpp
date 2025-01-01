@@ -1302,7 +1302,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                         {
                             getConsole().EOLn("%s WARNING selectVertexTransferMode(): %u NOT using VRAM!", __func__, vtransmode);
                         }
-                        getConsole().EOLn("%s selectVertexTransferMode(): %u", __func__, vtransmode);
+                        getConsole().OLn("%s selectVertexTransferMode(): %u", __func__, vtransmode);
                     }
                     pNewBlockObj = m_gfx.getObject3DManager().createCloned(*(m_mapReferenceBlockObject3Ds[c]));
                 }

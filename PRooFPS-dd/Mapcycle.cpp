@@ -430,7 +430,7 @@ void proofps_dd::Mapcycle::availableMapsRefresh()
         //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, fileEntry.path().filename().string().c_str());
         if (!isValidMapFilename(fileEntry.path().filename().string()))
         {
-            getConsole().EOLn("PRooFPSddPGE::%s(): skip filename: %s!", __func__, fileEntry.path().string().c_str());
+            getConsole().OLn("PRooFPSddPGE::%s(): skip filename: %s!", __func__, fileEntry.path().string().c_str());
             continue;
         }
 

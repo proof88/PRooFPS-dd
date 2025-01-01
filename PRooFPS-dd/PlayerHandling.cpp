@@ -578,7 +578,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         playerIt->second.setTimeBootedUp();
 
         // from our point of view, player has now fully booted up so NOW we are arming the respawn invulnerability
-        getConsole().EOLn("PlayerHandling::%s(): Player BOOTED UP, arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
+        getConsole().OLn("PlayerHandling::%s(): Player BOOTED UP, arming 1st-spawn invulnerability for connHandleServerSide: %u!", __func__, connHandleServerSide);
         playerIt->second.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     }
     else
@@ -606,7 +606,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         }
 
         playerIt->second.setTimeBootedUp();
-        getConsole().EOLn("PlayerHandling::%s(): Player BOOTED UP, accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
+        getConsole().OLn("PlayerHandling::%s(): Player BOOTED UP, accepting new name from server for connHandleServerSide: %u (%s), old name: %s, new name: %s!",
             __func__, connHandleServerSide, msg.m_bCurrentClient ? "me" : "not me", playerIt->second.getName().c_str(), msg.m_szUserName);
 
         playerIt->second.setName(msg.m_szUserName);
@@ -709,7 +709,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 return;
             }
             m_pge.getNetwork().getServer().send(newPktServerInfo, playerPair.first);
-            getConsole().EOLn("PlayerHandling::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
+            getConsole().OLn("PlayerHandling::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
         } // isExpectingAfterBootUpDelayedUpdate()
 
         if (bSendUserUpdates && player.isNetDirty())
