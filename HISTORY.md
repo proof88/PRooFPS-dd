@@ -25,6 +25,21 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.5.0 Private Beta (TODO, 2025)
+
+A compressed build for Windows is available for TODO.
+
+!!! WIP !!!
+
+This version brings the following new features:
+ - respawn countdown can be speeden up by mouse clicks.
+
+This version brings the following bug fixes:
+ - crash due to integer overflow when system uptime exceeded 49.71 days.
+
+This version brings the following behavior changes:
+ - auto-crouching for mid-air somersault is now enabled by default in the server settings. The reason is because the jump-crouch-jump key-combo is too difficult to be pressed on notebook keyboards.
+
 ## v0.4.3 Private Beta (Dec 07, 2024, Latest ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1T5d9ksZYaB6SNq0FGmOuKkerI0h_QFiY/view?usp=drive_link).
