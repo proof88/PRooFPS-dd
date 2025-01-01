@@ -80,6 +80,7 @@ namespace proofps_dd
         bool serverHandleUserCmdMoveFromClient(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserCmdFromClient& msg,
+            proofps_dd::GameMode& gameMode,
             proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way */);
 
     private:

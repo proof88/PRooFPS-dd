@@ -71,6 +71,7 @@ protected:
         addSubTest("test_do_damage", (PFNUNITSUBTEST)&PlayerTest::test_do_damage);
         addSubTest("test_die_server", (PFNUNITSUBTEST)&PlayerTest::test_die_server);
         addSubTest("test_die_client", (PFNUNITSUBTEST)&PlayerTest::test_die_client);
+        addSubTest("test_move_time_died_earlier", (PFNUNITSUBTEST)&PlayerTest::test_move_time_died_earlier);
         addSubTest("test_respawn", (PFNUNITSUBTEST)&PlayerTest::test_respawn);
         addSubTest("test_set_invulnerability", (PFNUNITSUBTEST)&PlayerTest::test_set_invulnerability);
         addSubTest("test_jump", (PFNUNITSUBTEST)&PlayerTest::test_jump);
@@ -899,6 +900,41 @@ private:
             assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 2") &
             assertEquals(0, playerConst.getDeaths(), "deaths 2") /* client doesn't change it, will receive update from server */ &
             assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 2");
+
+        return b;
+    }
+
+    bool test_move_time_died_earlier()
+    {
+        constexpr std::chrono::milliseconds::rep timeMoveMillisecs = 250;
+        
+        bool bServer = true;
+        bool b = true;
+        for (int i = 1; b && (i <= 2); i++)
+        {
+            const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+            proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+            if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+            {
+                return false;
+            };
+
+            player.moveTimeDiedEarlier(timeMoveMillisecs);
+            b &= assertEquals(
+                0,
+                player.getTimeDied().time_since_epoch().count(),
+                (std::string("time died 1 ") + (bServer ? "server" : "client")).c_str()); // unchanged
+
+            player.die(true /* me */, bServer);
+            const auto playerDieTimestampBeforeMove = player.getTimeDied();
+            player.moveTimeDiedEarlier(timeMoveMillisecs);
+            b &= assertEquals(
+                (playerDieTimestampBeforeMove - std::chrono::milliseconds(timeMoveMillisecs)).time_since_epoch().count(),
+                player.getTimeDied().time_since_epoch().count(),
+                (std::string("time died 2 ") + (bServer ? "server" : "client")).c_str());
+
+            bServer = !bServer;
+        }
 
         return b;
     }

@@ -491,6 +491,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = serverHandleUserCmdMoveFromClient(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt),
+                *m_gameMode,
                 *this);
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:

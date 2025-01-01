@@ -19,6 +19,8 @@
 static constexpr float SndWpnDryFireDistMin = 6.f;
 static constexpr float SndWpnDryFireDistMax = 14.f;
 
+static constexpr std::chrono::milliseconds::rep nPlayerRespawnCountdownFastForwardByClickingMillisecs = 250;
+
 
 // ############################### PUBLIC ################################
 
@@ -101,6 +103,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserCmdFromClient& pktUserCmdMove,
+    proofps_dd::GameMode& gameMode,
     proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way */)
 {
     //const int nRandom = PFL::random(0, 100);
@@ -112,6 +115,12 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         getConsole().EOLn("InputHandling::%s(): client received, CANNOT HAPPEN!", __func__);
         assert(false);
         return false;
+    }
+
+    if (gameMode.isGameWon())
+    {
+        // no input shall be accepted from any client when game is already finished
+        return true;
     }
 
     const auto it = m_mapPlayers.find(connHandleServerSide);
@@ -140,7 +149,11 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     {
         if (pktUserCmdMove.m_bShootAction)
         {
-            //getConsole().OLn("InputHandling::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
+            //getConsole().EOLn("InputHandling::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
+
+            // this is for server's player timer respawn logic, independent of GUI respawn countdown, which is handled in clientMouseWhenConnectedToServer()
+            player.moveTimeDiedEarlier(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+
             return true;
         }
 
@@ -874,18 +887,25 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
                 proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
                 bShootActionBeingSent = true;
 
-                // this is very bad, but I decided to play weapon dry fire here, because:
-                // - client does not get response from server for dry fire;
-                // - client also has enough data to decide if fire will be dry or not.
-                // Ideally, the pullTrigger() executed on server side should generate transparent traffic towards client which
-                // would trigger the dry fire sound, but such mechanism does not exist currently.
-                // Downside of this approach is that this can be heard only by current player and not by other players around.
-                Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-                if (wpn && (wpn->getState() == Weapon::WPN_READY) && (wpn->getMagBulletCount() == 0))
+                if (std::as_const(player).getHealth() > 0)
                 {
-                    const auto sndWpnDryFireHandle = m_pge.getAudio().play3dSound(wpn->getDryFiringSound(), player.getPos().getNew());
-                    m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnDryFireHandle, SndWpnDryFireDistMin, SndWpnDryFireDistMax);
-                    m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnDryFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                    // this is very bad, but I decided to play weapon dry fire here, because:
+                    // - client does not get response from server for dry fire;
+                    // - client also has enough data to decide if fire will be dry or not.
+                    // Ideally, the pullTrigger() executed on server side should generate transparent traffic towards client which
+                    // would trigger the dry fire sound, but such mechanism does not exist currently.
+                    // Downside of this approach is that this can be heard only by current player and not by other players around.
+                    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+                    if (wpn && (wpn->getState() == Weapon::WPN_READY) && (wpn->getMagBulletCount() == 0))
+                    {
+                        const auto sndWpnDryFireHandle = m_pge.getAudio().play3dSound(wpn->getDryFiringSound(), player.getPos().getNew());
+                        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnDryFireHandle, SndWpnDryFireDistMin, SndWpnDryFireDistMax);
+                        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnDryFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                    }
+                }
+                else
+                {
+                    m_gui.fastForwardRespawnTimer(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
                 }
             }
         }

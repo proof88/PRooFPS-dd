@@ -104,6 +104,8 @@ namespace proofps_dd
         void showRespawnTimer(
             const Player* const pKillerPlayer);
         void hideRespawnTimer();
+        void fastForwardRespawnTimer(
+            std::chrono::milliseconds::rep byMillisecs);
 
         void setGameModeInstance(proofps_dd::GameMode& gm);
 

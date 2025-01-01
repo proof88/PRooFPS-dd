@@ -502,6 +502,22 @@ void proofps_dd::GUI::hideRespawnTimer()
     m_sRespawnTimerExtraText2.clear();
 }
 
+void proofps_dd::GUI::fastForwardRespawnTimer(std::chrono::milliseconds::rep byMillisecs)
+{
+    if (!m_bShowRespawnTimer)
+    {
+        return;
+    }
+
+    if ( (std::chrono::duration_cast<std::chrono::milliseconds>(m_timePlayerDied.time_since_epoch())).count() < byMillisecs)
+    {
+        // shall not happen but who knows ...
+        return;
+    }
+
+    m_timePlayerDied -= std::chrono::milliseconds(byMillisecs);
+}
+
 void proofps_dd::GUI::setGameModeInstance(proofps_dd::GameMode& gm)
 {
     m_pGameMode = &gm;
@@ -1865,14 +1881,20 @@ void proofps_dd::GUI::drawRespawnTimer()
     }
 
     static constexpr char* szRespawnWaitText = "... Waiting to Respawn ...";
-    // if we make this static, it will be wrong upon changing screen resolution so now just let it be like this
-    const float fTextPosX = getDearImGui2DposXforWindowCenteredText(szRespawnWaitText);
+    static constexpr char* szRespawnWaitText2 = "CLICK to speed it up!";
+    
+    // if we make pos variables static, they will be wrong upon changing screen resolution!
 
     assert(m_pPge);
     drawTextShadowed(
-        fTextPosX,
-        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral,
+        getDearImGui2DposXforWindowCenteredText(szRespawnWaitText),
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral * 2,
         szRespawnWaitText);
+
+    drawTextShadowed(
+        getDearImGui2DposXforWindowCenteredText(szRespawnWaitText2),
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral,
+        szRespawnWaitText2);
 
     assert(m_pConfig);
     if (m_pConfig->getPlayerRespawnDelaySeconds() == 0)

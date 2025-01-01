@@ -598,6 +598,18 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeDied;
 }
 
+void proofps_dd::Player::moveTimeDiedEarlier(std::chrono::milliseconds::rep byMillisecs)
+{
+    assert(byMillisecs > 0);
+
+    if ((std::chrono::duration_cast<std::chrono::milliseconds>(m_timeDied.time_since_epoch())).count() < byMillisecs)
+    {
+        return;
+    }
+
+    m_timeDied -= std::chrono::milliseconds(byMillisecs);
+}
+
 PgeOldNewValue<int>& proofps_dd::Player::getDeaths()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class

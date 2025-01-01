@@ -169,6 +169,7 @@ namespace proofps_dd
         PureVector& getImpactForce();
         void die(bool bMe, bool bServer);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeDied() const;
+        void moveTimeDiedEarlier(std::chrono::milliseconds::rep byMillisecs);
         PgeOldNewValue<int>& getDeaths();
         const PgeOldNewValue<int>& getDeaths() const;
 
