@@ -180,6 +180,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
     const Explosion& xpl = m_explosions.back();
 
+    bool bShotHitTargetStatUpdated = false; // make sure we increase it only once for the shooter, no matter how many players are hit!
+    const auto itShooter = m_mapPlayers.find(xpl.getOwner());
+
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
     {
@@ -216,11 +219,25 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
             player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+
+            if (itShooter != m_mapPlayers.end())
+            {
+                if (!bShotHitTargetStatUpdated)
+                {
+                    bShotHitTargetStatUpdated = true;
+                    ++itShooter->second.getShotsHitTarget();
+                    assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                    itShooter->second.getFiringAccuracy() =
+                        (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                        0.f :
+                        (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                }
+            }
+
             if (playerConst.getHealth() == 0)
             {
-                const auto itKiller = m_mapPlayers.find(xpl.getOwner());
                 pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                if (itKiller == m_mapPlayers.end())
+                if (itShooter == m_mapPlayers.end())
                 {
                     // if killer got disconnected before the kill, we can say the killer is the player itself, since
                     // we still want to display the death notification without the killer's name, but we won't decrease
@@ -231,17 +248,18 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 }
                 else
                 {
-                    nKillerConnHandleServerSide = itKiller->first;
+                    nKillerConnHandleServerSide = itShooter->first;
 
                     // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
                     // in that case frags should be decremented!
                     if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
                     {
-                        itKiller->second.getFrags()--;
+                        --itShooter->second.getFrags();
+                        ++itShooter->second.getSuicides();
                     }
                     else
                     {
-                        itKiller->second.getFrags()++;
+                        ++itShooter->second.getFrags();
                     }
                     //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
@@ -815,11 +833,22 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     {
                         // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
                         player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
+
+                        const auto itShooter = m_mapPlayers.find(bullet.getOwner());
+                        if (itShooter != m_mapPlayers.end())
+                        {
+                            ++itShooter->second.getShotsHitTarget();
+                            assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                            itShooter->second.getFiringAccuracy() =
+                                (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                                0.f :
+                                (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                        } // otherwise shooter got disconnected before hitting the player
+
                         if (playerConst.getHealth() == 0)
                         {
-                            const auto itKiller = m_mapPlayers.find(bullet.getOwner());
                             pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                            if (itKiller == m_mapPlayers.end())
+                            if (itShooter == m_mapPlayers.end())
                             {
                                 // if killer got disconnected before the kill, we can say the killer is the player itself, since
                                 // we still want to display the death notification without the killer's name, but we won't decrease
@@ -830,11 +859,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             }
                             else
                             {
-                                nKillerConnHandleServerSide = itKiller->first;
-                                itKiller->second.getFrags()++;
+                                nKillerConnHandleServerSide = itShooter->first;
+                                itShooter->second.getFrags()++;
                                 bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                                //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                                //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
                             }
                             // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
                             handlePlayerDied(player, xhair, nKillerConnHandleServerSide, gameMode);

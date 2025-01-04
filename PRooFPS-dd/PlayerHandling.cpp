@@ -153,6 +153,10 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
     {
         player.getFrags() = 0;
         player.getDeaths() = 0;
+        player.getSuicides() = 0;
+        player.getFiringAccuracy() = 0.f;
+        player.getShotsFiredCount() = 0;
+        player.getShotsHitTarget() = 0;
     }
 }
 
@@ -274,6 +278,9 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     0 /* AP */, 100 /* HP */,
                     false /* bRespawn */,
                     0 /* nFrags */, 0 /* nDeaths */,
+                    0 /* nSuicides */,
+                    0.f /* fFiringAccuracy */,
+                    0 /* nShotsFiredCount */,
                     false /* bInvulnerability */))
                 {
                     // server injects this msg to self so resources for player will be allocated upon processing these
@@ -339,6 +346,9 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             0 /* AP */, 100 /* HP */,
             false /* bRespawn */,
             0 /* nFrags */, 0 /* nDeaths */,
+            0 /* nSuicides */,
+            0.f /* fFiringAccuracy */,
+            0 /* nShotsFiredCount */,
             true /* invulnerable by default */))
         {
             getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
@@ -734,6 +744,9 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 player.getRespawnFlag(),
                 playerConst.getFrags(),
                 playerConst.getDeaths(),
+                playerConst.getSuicides(),
+                playerConst.getFiringAccuracy(),
+                playerConst.getShotsFiredCount(),
                 playerConst.getInvulnerability()))
             {
                 player.clearNetDirty();
@@ -885,6 +898,9 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     player.getFrags() = msg.m_nFrags;
     player.getDeaths() = msg.m_nDeaths;
+    player.getSuicides() = msg.m_nSuicides;
+    player.getFiringAccuracy() = msg.m_fFiringAccuracy;
+    player.getShotsFiredCount() = msg.m_nShotsFired;
 
     //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());

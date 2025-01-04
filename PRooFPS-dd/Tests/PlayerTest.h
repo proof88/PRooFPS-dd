@@ -322,8 +322,15 @@ private:
             assertEquals(100, playerConst.getHealth(), "health") &
             assertFalse(player.getDeaths().isDirty(), "old deaths") &
             assertEquals(0, player.getDeaths(), "deaths") &
+            assertFalse(player.getSuicides().isDirty(), "old suicides") &
+            assertEquals(0u, player.getSuicides(), "suicides") &
             assertFalse(player.getFrags().isDirty(), "old frags") &
             assertEquals(0, player.getFrags(), "frags") &
+            assertFalse(player.getFiringAccuracy().isDirty(), "old firing acc") &
+            assertEquals(0.f, player.getFiringAccuracy(), "firing acc") &
+            assertFalse(player.getShotsFiredCount().isDirty(), "old shots fired") &
+            assertEquals(0u, player.getShotsFiredCount(), "shots fired") &
+            assertEquals(0u, player.getShotsHitTarget(), "shots hit target") &
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
             assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
@@ -534,6 +541,33 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty C 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty C 3");
+
+        player.getSuicides().set(5);
+        b &= assertTrue(player.isDirty(), "dirty J 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty J 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty J 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty J 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty J 3");
+
+        player.getFiringAccuracy().set(5);
+        b &= assertTrue(player.isDirty(), "dirty Y 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty Y 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty Y 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty Y 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty Y 3");
+
+        player.getShotsFiredCount().set(5);
+        b &= assertTrue(player.isDirty(), "dirty Z 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty Z 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty Z 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty Z 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty Z 3");
 
         player.getAngleY().set(5.f);
         b &= assertTrue(player.isDirty(), "dirty D 1");
@@ -2030,6 +2064,7 @@ private:
 
         player.getAttack() = true;
         b &= assertFalse(player.attack(), "player cannot attack without wpn");
+        b &= assertEquals(0u, player.getShotsFiredCount(), "shots fired 1");
         
         if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, true))
         {
@@ -2040,10 +2075,12 @@ private:
         player.getAttack() = false; /* dbl check if first false was really because of state and not because of missing wpn */
         b &= assertFalse(player.attack(), "player cannot attack due to not having attack state");
         b &= assertEquals(nOriginalBulletCount, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "no change in bullet count 1");
+        b &= assertEquals(0u, player.getShotsFiredCount(), "shots fired 2");
 
         player.getAttack() = true;
         b &= assertTrue(player.attack(), "player should fire wpn");
         b &= assertGreater(nOriginalBulletCount, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "bullet count changed 1");
+        b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 3");
 
         // wait for wpn to go back to ready state
         player.getWeaponManager().getCurrentWeapon()->releaseTrigger();
@@ -2063,10 +2100,12 @@ private:
         player.setHealth(0);
         b &= assertFalse(player.attack(), "dead player cannot attack");
         b &= assertEquals(nNewBulletCountAfterAttack, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "no change in bullet count 2");
+        b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 4");
 
         player.setHealth(100);
         player.getWeaponManager().getCurrentWeapon()->SetMagBulletCount(0);
         b &= assertFalse(player.attack(), "should return wpn->pullTrigger() which is false in this case");
+        b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 5");
 
         return b;
     }

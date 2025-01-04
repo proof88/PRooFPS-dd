@@ -173,6 +173,18 @@ namespace proofps_dd
         PgeOldNewValue<int>& getDeaths();
         const PgeOldNewValue<int>& getDeaths() const;
 
+        PgeOldNewValue<unsigned int>& getSuicides();
+        const PgeOldNewValue<unsigned int>& getSuicides() const;
+
+        PgeOldNewValue<float>& getFiringAccuracy();
+        const PgeOldNewValue<float>& getFiringAccuracy() const;
+
+        PgeOldNewValue<unsigned int>& getShotsFiredCount();
+        const PgeOldNewValue<unsigned int>& getShotsFiredCount() const;
+
+        unsigned int& getShotsHitTarget();
+        const unsigned int& getShotsHitTarget() const;
+
         bool& getRespawnFlag();
         void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
 
@@ -293,6 +305,9 @@ namespace proofps_dd
             OvHealth,
             OvFrags,
             OvDeaths,
+            OvSuicides,
+            OvFiringAccuracy,
+            OvShotsFired,
             OvPos,
             OvAngleY,
             OvAngleZ,
@@ -341,6 +356,7 @@ namespace proofps_dd
         std::map<OldNewValueName,
             std::variant<
             PgeOldNewValue<int>,
+            PgeOldNewValue<unsigned int>,
             PgeOldNewValue<bool>,
             PgeOldNewValue<TPureFloat>,
             PgeOldNewValue<PureVector>
@@ -349,6 +365,9 @@ namespace proofps_dd
                 {OldNewValueName::OvHealth,               PgeOldNewValue<int>(100)},
                 {OldNewValueName::OvFrags,                PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvDeaths,               PgeOldNewValue<int>(0)},
+                {OldNewValueName::OvSuicides,             PgeOldNewValue<unsigned int>(0)},
+                {OldNewValueName::OvFiringAccuracy,       PgeOldNewValue<float>(0.f)},
+                {OldNewValueName::OvShotsFired,           PgeOldNewValue<unsigned int>(0)},
                 {OldNewValueName::OvPos,                  PgeOldNewValue<PureVector>()},
                 {OldNewValueName::OvAngleY,               PgeOldNewValue<TPureFloat>(0.f)},
                 {OldNewValueName::OvAngleZ,               PgeOldNewValue<TPureFloat>(0.f)},
@@ -367,6 +386,8 @@ namespace proofps_dd
         bool m_bRespawn = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedInvulnerability;
         unsigned int m_nInvulnerabilityDurationSecs = 0;
+
+        unsigned int m_nShotsHitTarget = 0; // together with OvShotsFired, they make value of OvFiringAccuracy
         
         PureVector m_vecImpactForce;
 

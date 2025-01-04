@@ -622,6 +622,52 @@ const PgeOldNewValue<int>& proofps_dd::Player::getDeaths() const
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvDeaths));
 }
 
+PgeOldNewValue<unsigned int>& proofps_dd::Player::getSuicides()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<unsigned int>>(m_vecOldNewValues.at(OldNewValueName::OvSuicides));
+}
+
+const PgeOldNewValue<unsigned int>& proofps_dd::Player::getSuicides() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<unsigned int>>(m_vecOldNewValues.at(OldNewValueName::OvSuicides));
+}
+
+PgeOldNewValue<float>& proofps_dd::Player::getFiringAccuracy()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvFiringAccuracy));
+}
+
+const PgeOldNewValue<float>& proofps_dd::Player::getFiringAccuracy() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvFiringAccuracy));
+}
+
+PgeOldNewValue<unsigned int>& proofps_dd::Player::getShotsFiredCount()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<unsigned int>>(m_vecOldNewValues.at(OldNewValueName::OvShotsFired));
+}
+
+const PgeOldNewValue<unsigned int>& proofps_dd::Player::getShotsFiredCount() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<unsigned int>>(m_vecOldNewValues.at(OldNewValueName::OvShotsFired));
+}
+
+unsigned int& proofps_dd::Player::getShotsHitTarget()
+{
+    return m_nShotsHitTarget;
+}
+
+const unsigned int& proofps_dd::Player::getShotsHitTarget() const
+{
+    return m_nShotsHitTarget;
+}
+
 bool& proofps_dd::Player::getRespawnFlag()
 {
     return m_bRespawn;
@@ -1331,10 +1377,22 @@ bool proofps_dd::Player::attack()
        the physics tick will come later. Thus, we need to use previous tick's data to understand if we
        are moving or not. */
 
-    return wpn->pullTrigger(
+    const bool bRet = wpn->pullTrigger(
         isMoving() && m_cfgProfiles.getVars()[szCVarSvMovingAffectsAim].getAsBool(),
         isRunning(),
-        getCrouchStateCurrent());
+        getCrouchStateCurrent()
+    );
+
+    if (bRet)
+    {
+        ++getShotsFiredCount();
+        getFiringAccuracy() =
+            (getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+            0.f :
+            (getShotsHitTarget() / static_cast<float>(getShotsFiredCount()));
+    }
+
+    return bRet;
 }
 
 const PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy() const

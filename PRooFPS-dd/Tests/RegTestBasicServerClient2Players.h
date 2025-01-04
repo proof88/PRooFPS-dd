@@ -320,6 +320,7 @@ private:
     const unsigned int m_nSvDmPlayerRespawnDelaySecs = 3;
 
     int nPlayerHealth;
+    int nPlayerArmor;
 
     const unsigned int m_nTickRate;
     const unsigned int m_nClUpdateRate;
@@ -352,6 +353,7 @@ private:
         evaluateFragTable.clear();
         evaluateWpnData.clear();
         nPlayerHealth = 0;
+        nPlayerArmor = 0;
 
         const std::streamsize nBuffSize = 1024;
         char szLine[nBuffSize];
@@ -475,6 +477,12 @@ private:
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 f >> ftRow.m_nDeaths;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nSuicides;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_fFiringAcc;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nShotsFired;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 evaluateFragTable.push_back(ftRow);
             }
         }
@@ -504,8 +512,9 @@ private:
 
         // read player info
         {
-            f.getline(szLine, nBuffSize);  // Player Info: Health
+            f.getline(szLine, nBuffSize);  // Player Info: Health, Armor
             f >> nPlayerHealth;
+            f >> nPlayerArmor;
         }
 
         static constexpr ExpectedPktStatsRanges expectedPktStatsServerClUpdateRate60
@@ -573,13 +582,21 @@ private:
             return bRet;
         }
 
+        // client is Player 2
         bRet &= assertEquals("Player2", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
             assertEquals(1, evaluateFragTable[0].m_nFrags, "fragtable row 1 frags") &
-            assertEquals(0, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths");
+            assertEquals(0, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths") &
+            assertEquals(0u, evaluateFragTable[0].m_nSuicides, "fragtable row 1 suicides") &
+            assertEquals(83.f, evaluateFragTable[0].m_fFiringAcc, "fragtable row 1 firing acc") &  /* last shot misses because Player 1 is already dead */
+            assertEquals(6u, evaluateFragTable[0].m_nShotsFired, "fragtable row 1 shots fired");
 
+        // server is Player 1
         bRet &= assertEquals("Player1", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
             assertEquals(0, evaluateFragTable[1].m_nFrags, "fragtable row 2 frags") &
-            assertEquals(1, evaluateFragTable[1].m_nDeaths, "fragtable row 2 deaths");
+            assertEquals(1, evaluateFragTable[1].m_nDeaths, "fragtable row 2 deaths") &
+            assertEquals(0u, evaluateFragTable[1].m_nSuicides, "fragtable row 2 suicides") &
+            assertEquals(100.f, evaluateFragTable[1].m_fFiringAcc, "fragtable row 2 firing acc") &
+            assertEquals(2u, evaluateFragTable[1].m_nShotsFired, "fragtable row 2 shots fired");
 
         return bRet;
     }
@@ -627,6 +644,7 @@ private:
             assertEquals(0u, evaluateWpnData[1].nUnmagBulletCount, "server wpn 1 unmag bullet count");
 
         bRet &= assertEquals(100, nPlayerHealth, "server player health");
+        bRet &= assertEquals(0, nPlayerArmor, "server player armor");  // no armor pickup happened
 
         return bRet;
     }
@@ -696,6 +714,7 @@ private:
 
         // after being shot twice by pistol
         bRet &= assertEquals(20, nPlayerHealth, "client player health");
+        bRet &= assertEquals(0, nPlayerArmor, "client player armor");  // no armor pickup happened
 
         return bRet;
     }

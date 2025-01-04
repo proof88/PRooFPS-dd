@@ -1300,6 +1300,9 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     false /* bRespawn */,
                     it.second.getFrags(),
                     it.second.getDeaths(),
+                    it.second.getSuicides(),
+                    it.second.getFiringAccuracy(),
+                    it.second.getShotsFiredCount(),
                     it.second.getInvulnerability()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);

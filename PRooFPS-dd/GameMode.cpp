@@ -73,6 +73,9 @@ void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwor
     {
         player.m_nFrags = 0;
         player.m_nDeaths = 0;
+        player.m_nSuicides = 0;
+        player.m_fFiringAcc = 0.f;
+        player.m_nShotsFired = 0;
     }
 
     if (network.isServer())
@@ -336,7 +339,7 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
 
     if (bRet)
     {
-        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getFrags(), player.getDeaths(), player.getServerSideConnectionHandle() });
+        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getServerSideConnectionHandle(), player.getFrags(), player.getDeaths() });
 
         if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
         {
@@ -367,6 +370,11 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
         // this player doesn't even exist in the frag table
         return false;
     }
+
+    // quickly update some stats (even if no change because it shall be fast enough) which do not contribute to ordering
+    itFound->m_nSuicides = player.getSuicides();
+    itFound->m_fFiringAcc = player.getFiringAccuracy();
+    itFound->m_nShotsFired = player.getShotsFiredCount();
 
     if ((player.getFrags() == itFound->m_nFrags) && (player.getDeaths() == itFound->m_nDeaths))
     {

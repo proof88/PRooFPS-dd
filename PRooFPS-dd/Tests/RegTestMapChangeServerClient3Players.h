@@ -288,6 +288,12 @@ private:
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 f >> ftRow.m_nDeaths;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nSuicides;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_fFiringAcc;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_nShotsFired;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 evaluateFragTable.push_back(ftRow);
             }
         }

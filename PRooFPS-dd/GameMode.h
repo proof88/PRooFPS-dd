@@ -32,9 +32,12 @@ namespace proofps_dd
     struct FragTableRow
     {
         std::string m_sName;
-        int m_nFrags;    // frags allowed to be negative due to player doing suicides decreases fragcount
-        int m_nDeaths;   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
-        pge_network::PgeNetworkConnectionHandle m_connHandle;
+        pge_network::PgeNetworkConnectionHandle m_connHandle{};
+        int m_nFrags{ 0 };    // frags allowed to be negative due to player doing suicides decreases fragcount
+        int m_nDeaths{ 0 };   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
+        unsigned int m_nSuicides{ 0 };
+        float m_fFiringAcc{ 0.f };
+        unsigned int m_nShotsFired{ 0 };
     };
 
     class Player;

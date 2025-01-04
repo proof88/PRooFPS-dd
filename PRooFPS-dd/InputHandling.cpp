@@ -1215,12 +1215,16 @@ void proofps_dd::InputHandling::regTestDumpToFile(
         return;
     }
 
-    fRegTestDump << "Frag Table: Player Name, Frags, Deaths" << std::endl;
+    fRegTestDump << "Frag Table: Player Name, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired" << std::endl;
     for (const auto& fragTableRow : pDeathMatchMode->getFragTable())
     {
         fRegTestDump << "  " << fragTableRow.m_sName << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nFrags << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nDeaths << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nSuicides << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) <<
+            std::to_string(std::lroundf(fragTableRow.m_fFiringAcc * 100)) << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nShotsFired << std::endl;
     }
 
     // add an extra empty line, so the regression test can easily detect end of frag table
@@ -1240,9 +1244,10 @@ void proofps_dd::InputHandling::regTestDumpToFile(
     // add an extra empty line, so the regression test can easily detect end of weapon list
     fRegTestDump << std::endl;
 
-    fRegTestDump << "Player Info: Health" << std::endl;
+    fRegTestDump << "Player Info: Health, Armor" << std::endl;
     const auto& playerConst = player;
     fRegTestDump << "  " << playerConst.getHealth().getNew() << std::endl;
+    fRegTestDump << "  " << playerConst.getArmor().getNew() << std::endl;
 
     fRegTestDump.flush();
     fRegTestDump.close();

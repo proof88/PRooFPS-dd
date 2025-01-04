@@ -363,7 +363,8 @@ void proofps_dd::Physics::serverGravity(
             // In the future physics need to handle fall damage too, but that could also just set health to 0.
             // Note that we also need to consider who will know that upon dieing by falling down, splash die sound is needed to be played.
             // Because that would be also sent to clients so they can also play the sound. Maybe set death reason, I dont know.
-            player.getFrags()--; // suicide
+            --player.getFrags(); // suicide
+            ++player.getSuicides();
             handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
 
             //if (player.isFalling())

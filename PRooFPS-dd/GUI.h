@@ -52,6 +52,7 @@ namespace proofps_dd
         {
             None,
             FragTable,
+            AllPlayersDebugDataServer,
             ServerConfig,
             COUNT
         };
@@ -188,6 +189,7 @@ namespace proofps_dd
             const float& fColsTotalWidthAfterPlayerNameCol);
         static void drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY);
         static void drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY);
+        static void drawAllPlayersDebugDataServer();
         static void drawGameObjectives();
         static float drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();

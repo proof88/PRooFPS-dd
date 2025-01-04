@@ -616,6 +616,9 @@ namespace proofps_dd
             bool bRespawn,
             int nFrags,
             int nDeaths,
+            unsigned int nSuicides,
+            float fFiringAccuracy,
+            unsigned int nShotsFired,
             bool bInvulnerability)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
@@ -650,6 +653,9 @@ namespace proofps_dd
             msgUserCmdUpdate.m_bRespawn = bRespawn;
             msgUserCmdUpdate.m_nFrags = nFrags;
             msgUserCmdUpdate.m_nDeaths = nDeaths;
+            msgUserCmdUpdate.m_nSuicides = nSuicides;
+            msgUserCmdUpdate.m_fFiringAccuracy = fFiringAccuracy;
+            msgUserCmdUpdate.m_nShotsFired = nShotsFired;
             msgUserCmdUpdate.m_bInvulnerability = bInvulnerability;
 
             return true;
@@ -670,6 +676,9 @@ namespace proofps_dd
         bool m_bRespawn;
         int m_nFrags;
         int m_nDeaths;
+        unsigned int m_nSuicides;
+        float m_fFiringAccuracy;
+        unsigned int m_nShotsFired;
         bool m_bInvulnerability;
     };  // struct MsgUserUpdateFromServer
     static_assert(std::is_trivial_v<MsgUserUpdateFromServer>);
