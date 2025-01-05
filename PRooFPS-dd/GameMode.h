@@ -81,6 +81,8 @@ namespace proofps_dd
 
         static GameMode* createGameMode(GameModeType gm);
 
+        static const char* getRank(const FragTableRow& row);
+
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;

@@ -2402,6 +2402,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
     // I'm still keeping them as separate function, and still displaying ping column in the server version. But code is so much redundant, should be refactored!
     static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
         "Player Name",
+        "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",
         "Suicides",
@@ -2420,7 +2421,8 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
         ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
         ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
         ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
+        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[7]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
     );
 
     assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
@@ -2535,7 +2537,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
 
                 // nColumnCount is to limit the column count for the server, in which case we don't query network dbg data
                 const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
-                    6 : static_cast<int>(vecHeaderLabels.size());
+                    7 : static_cast<int>(vecHeaderLabels.size());
                 for (int iCol = 0; iCol < nColumnCount; iCol++)
                 {
                     ImGui::TableSetColumnIndex(iCol);
@@ -2549,24 +2551,29 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
                             3);
                         break;
                     case 1:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            GameMode::getRank(player)
+                            /*"Cl0wN"*/);
                         break;
                     case 2:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
                         break;
                     case 3:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
                         break;
                     case 4:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
+                        break;
+                    case 5:
                         ImGuiTextTableCurrentCellRightAdjusted(
                             (player.m_nShotsFired > 0) ?
                                 std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
                                 "-");
                         break;
-                    case 5:
+                    case 6:
                         ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
                         break;
-                    case 6:
+                    case 7:
                         ImGuiTextTableCurrentCellRightAdjusted(
                             std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
                         break;
@@ -2594,6 +2601,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
     // I'm still keeping them as separate function, and still displaying ping column in the server version. But code is so much redundant, should be refactored!
     static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
         "Player Name",
+        "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",
         "Suicides",
@@ -2610,7 +2618,8 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
         ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
         ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
         ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
+        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
+        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
     );
 
     assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
@@ -2693,21 +2702,26 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
                             3);
                         break;
                     case 1:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(
+                            GameMode::getRank(player)
+                            /*"Cl0wN"*/);
                         break;
                     case 2:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
                         break;
                     case 3:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
                         break;
                     case 4:
+                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
+                        break;
+                    case 5:
                         ImGuiTextTableCurrentCellRightAdjusted(
                             (player.m_nShotsFired > 0) ?
                             std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
                             "-");
                         break;
-                    case 5:
+                    case 6:
                         ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
                         break;
                     default:
@@ -3238,7 +3252,7 @@ void proofps_dd::GUI::ImGuiTextTableCurrentCellShortenedFit(const std::string& t
     }
     
     const auto fAvailWidthInCell = ImGui::GetContentRegionAvail().x;
-    const int nFirstNCharsFitInCell = static_cast<int>((std::floor(std::min(1.f, fAvailWidthInCell / fFullTextRequiredWidth) * text.length())));
+    const int nFirstNCharsFitInCell = static_cast<int>(std::floor(std::min(1.f, fAvailWidthInCell / fFullTextRequiredWidth) * text.length()));
     if (nFirstNCharsFitInCell <= 0)
     {
         // can happen if column width is too small

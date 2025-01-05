@@ -38,6 +38,51 @@ proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeT
     return new proofps_dd::DeathMatchMode();
 }
 
+const char* proofps_dd::GameMode::getRank(const FragTableRow& row)
+{
+    static constexpr char* const szRankGoat = "G0aT";
+    static constexpr char* const szRankGosu = "G0sU";
+    static constexpr char* const szRankPro = "Pr0";
+    static constexpr char* const szRankNoob = "N00b";
+    static constexpr char* const szRankLow = "L0w";
+    static constexpr char* const szRankClown = "Cl0wN";
+
+    if (row.m_nFrags < 0)
+    {
+        return szRankClown;
+    }
+
+    if (row.m_nDeaths <= 0)
+    {
+        // cannot be negative but let's cover that case too together with zero divison
+        return szRankGoat; // unsure but whoever not died yet, should be considered as a goat, regardless of the frags
+    }
+
+    const float fRatio = row.m_nFrags / static_cast<float>(row.m_nDeaths);
+    if (fRatio >= 2.0f /* e.g. 30/15 */)
+    {
+        return szRankGoat;
+    }
+    else if (fRatio >= 1.5f /* e.g. 30/20 */)
+    {
+        return szRankGosu;
+    }
+    else if (fRatio >= 1.2f /* e.g. 30/25 */)
+    {
+        return szRankPro;
+    }
+    else if (fRatio >= 0.83f /* e.g. 25/30 */)
+    {
+        return szRankNoob;
+    }
+    else if (fRatio >= 0.5f /* e.g. 15/30 */)
+    {
+        return szRankLow;
+    }
+
+    return szRankClown;
+}
+
 CConsole& proofps_dd::GameMode::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());

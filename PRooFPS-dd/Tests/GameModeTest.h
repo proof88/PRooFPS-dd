@@ -62,6 +62,7 @@ protected:
         addSubTest("test_factory_creates_deathmatch_only", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch_only);
         addSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
         addSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
+        addSubTest("test_get_rank", (PFNUNITSUBTEST)&GameModeTest::test_get_rank);
         addSubTest("test_deathmatch_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_get_set_and_remaining_time_get);
         addSubTest("test_deathmatch_time_limit_client_update_time_remaining_secs", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_time_limit_client_update_time_remaining_secs);
         addSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
@@ -305,6 +306,49 @@ private:
             b &= assertFragTableEquals(expectedPlayers, dm->getFragTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
         }
+
+        return b;
+    }
+
+    bool test_get_rank()
+    {
+        proofps_dd::FragTableRow row{};
+
+        bool b = assertEquals(std::string("G0aT"), proofps_dd::GameMode::getRank(row), "1");
+
+        row.m_nFrags = 30;
+        b &= assertEquals(std::string("G0aT"), proofps_dd::GameMode::getRank(row), "2");
+
+        row.m_nFrags = -1;
+        b &= assertEquals(std::string("Cl0wN"), proofps_dd::GameMode::getRank(row), "3");
+
+        row.m_nDeaths = 15;
+        b &= assertEquals(std::string("Cl0wN"), proofps_dd::GameMode::getRank(row), "4");
+
+        row.m_nFrags = 30;
+        b &= assertEquals(std::string("G0aT"), proofps_dd::GameMode::getRank(row), "5");
+
+        row.m_nDeaths = 19;
+        b &= assertEquals(std::string("G0sU"), proofps_dd::GameMode::getRank(row), "6");
+
+        row.m_nDeaths = 20;
+        b &= assertEquals(std::string("G0sU"), proofps_dd::GameMode::getRank(row), "7");
+
+        row.m_nDeaths = 25;
+        b &= assertEquals(std::string("Pr0"), proofps_dd::GameMode::getRank(row), "8");
+
+        row.m_nDeaths = 26;
+        b &= assertEquals(std::string("N00b"), proofps_dd::GameMode::getRank(row), "9");
+
+        row.m_nFrags = 25;
+        row.m_nDeaths = 30;
+        b &= assertEquals(std::string("N00b"), proofps_dd::GameMode::getRank(row), "10");
+
+        row.m_nFrags = 15;
+        b &= assertEquals(std::string("L0w"), proofps_dd::GameMode::getRank(row), "11");
+
+        row.m_nDeaths = 31;
+        b &= assertEquals(std::string("Cl0wN"), proofps_dd::GameMode::getRank(row), "12");
 
         return b;
     }
