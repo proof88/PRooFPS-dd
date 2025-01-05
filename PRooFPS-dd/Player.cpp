@@ -1383,8 +1383,9 @@ bool proofps_dd::Player::attack()
         getCrouchStateCurrent()
     );
 
-    if (bRet)
+    if (bRet && (wpn->getType() != Weapon::Type::Melee))
     {
+        // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
         ++getShotsFiredCount();
         getFiringAccuracy() =
             (getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */

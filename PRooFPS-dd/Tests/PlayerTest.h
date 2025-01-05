@@ -2068,7 +2068,7 @@ private:
         
         if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[1], false, true))
         {
-            return false;
+            return assertFalse(true, "setCurrentWeapon() failed! 1");
         }
         const TPureUInt nOriginalBulletCount = player.getWeaponManager().getCurrentWeapon()->getMagBulletCount();
 
@@ -2078,7 +2078,7 @@ private:
         b &= assertEquals(0u, player.getShotsFiredCount(), "shots fired 2");
 
         player.getAttack() = true;
-        b &= assertTrue(player.attack(), "player should fire wpn");
+        b &= assertTrue(player.attack(), "player should fire wpn 1");
         b &= assertGreater(nOriginalBulletCount, player.getWeaponManager().getCurrentWeapon()->getMagBulletCount(), "bullet count changed 1");
         b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 3");
 
@@ -2106,6 +2106,14 @@ private:
         player.getWeaponManager().getCurrentWeapon()->SetMagBulletCount(0);
         b &= assertFalse(player.attack(), "should return wpn->pullTrigger() which is false in this case");
         b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 5");
+
+        // melee weapon shall not increase "shots fired" counter
+        if (!player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[0], false, true))
+        {
+            return assertFalse(true, "setCurrentWeapon() failed! 2");
+        }
+        b &= assertTrue(player.attack(), "player should fire wpn 2");
+        b &= assertEquals(1u, player.getShotsFiredCount(), "shots fired 6");
 
         return b;
     }

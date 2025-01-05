@@ -225,6 +225,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 if (!bShotHitTargetStatUpdated)
                 {
                     bShotHitTargetStatUpdated = true;
+                    // unlike in serverUpdateBullets(), here we dont check for weapon type because we believe any explosive weapon is non-melee type!
                     ++itShooter->second.getShotsHitTarget();
                     assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
                     itShooter->second.getFiringAccuracy() =
@@ -837,12 +838,18 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         const auto itShooter = m_mapPlayers.find(bullet.getOwner());
                         if (itShooter != m_mapPlayers.end())
                         {
-                            ++itShooter->second.getShotsHitTarget();
-                            assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
-                            itShooter->second.getFiringAccuracy() =
-                                (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
-                                0.f :
-                                (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                            // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
+                            const Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
+                            if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee))
+                            {
+                                ++itShooter->second.getShotsHitTarget();
+                                assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                                itShooter->second.getFiringAccuracy() =
+                                    (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                                    0.f :
+                                    (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                            }
                         } // otherwise shooter got disconnected before hitting the player
 
                         if (playerConst.getHealth() == 0)
