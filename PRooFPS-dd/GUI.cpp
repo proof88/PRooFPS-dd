@@ -694,22 +694,8 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
     return fInputBoxPosX;
 }
 
-void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
+void proofps_dd::GUI::drawCreateGameServerMapSelection()
 {
-    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 340.f;
-    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
-
-    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::TextUnformatted("[  C R E A T E  G A M E  ]");
-
-    ImGui::Separator();
-    ImGui::Indent();
-
-    drawPlayerNameInputBox();
-
-    ImGui::Separator();  // in newer Dear ImGUI there is another separator that can contain a text too!
-
     ImGui::TextUnformatted("[ Map Configuration ]");
 
     ImGui::Indent();
@@ -878,7 +864,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
         ImGui::SameLine();
         ImGui::PushItemWidth(150);
-        static int iSelectMapStart = -1;       
+        static int iSelectMapStart = -1;
         if (iSelectMapStart == -1)
         {
             // initialize current item of comboForceMapStart to what is already set in the CVAR
@@ -897,7 +883,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
                 }
             }
         }
-        
+
         if (ImGui::Combo( /* this is the items_separated_by_zeros version where we don't specify item count */
             "##comboForceMapStart",
             &iSelectMapStart,
@@ -910,7 +896,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             else if (iSelectMapStart <= static_cast<int>(m_pMaps->getMapcycle().availableMapsNoChangingGet().size()))
             {
                 /* first empty item as index 0 is NOT in availableMapsNoChangingGet(), that is why index can be == size() */
-                cvarSvMap.Set(m_pMaps->getMapcycle().availableMapsNoChangingGetElem(iSelectMapStart-1));
+                cvarSvMap.Set(m_pMaps->getMapcycle().availableMapsNoChangingGetElem(iSelectMapStart - 1));
             }
             else
             {
@@ -918,8 +904,35 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             }
         }
         ImGui::PopItemWidth();
-        
+
     } // end Map Config
+    ImGui::Unindent();
+} // drawCreateGameServerMapSelection()
+
+void proofps_dd::GUI::drawTabCreateGameServerSettings()
+{
+    ImGui::TextUnformatted("[ Game Mode ]");
+    ImGui::Indent();
+    {
+        ImGui::BeginGroup();
+        {
+            PGEcfgVariable& cvarSvGamemode = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGamemode];
+            ImGui::AlignTextToFramePadding();
+            //static std::string sHintClWpnAutoSwitchWhenPickedUpNewWeapon; // static so it is built up by addHintToItemByCVar() only once
+            //addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
+
+            // dont forget there is also 3-param version of RadioButton
+            if (ImGui::RadioButton("DeathMatch (FFA)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
+            {
+                cvarSvGamemode.Set(static_cast<int>(GameModeType::DeathMatch));
+            }
+            if (ImGui::RadioButton("Team DeathMatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
+            {
+                cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
+            }
+        }
+        ImGui::EndGroup();
+    }
     ImGui::Unindent();
 
     ImGui::Separator();
@@ -960,209 +973,240 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 
     ImGui::Separator();
+    
+    drawCreateGameServerMapSelection();
+} // drawTabCreateGameServerSettings()
 
-    ImGui::TextUnformatted("[ Miscellaneous ]");
-    ImGui::Indent();
+void proofps_dd::GUI::drawTabCreateGameServerTweaks()
+{
+    PGEcfgVariable& cvarTickrate = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
+    bool bTR60Hz = cvarTickrate.getAsUInt() == 60u;
+
+    ImGui::BeginGroup();
     {
-        PGEcfgVariable& cvarTickrate = m_pPge->getConfigProfiles().getVars()[CVAR_TICKRATE];
-        bool bTR60Hz = cvarTickrate.getAsUInt() == 60u;
-
-        ImGui::BeginGroup();
-        {
-            ImGui::AlignTextToFramePadding();
-            static std::string sHintTickrate; // static so it is built up by addHintToItemByCVar() only once
-            addHintToItemByCVar(sHintTickrate, cvarTickrate);
-            ImGui::TextUnformatted("Tickrate:");
-            
-            ImGui::SameLine();
-            if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
-            {
-                cvarTickrate.Set(60u);
-                bTR60Hz = false;
-                m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
-            }
-
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
-            {
-                cvarTickrate.Set(20u);
-                bTR60Hz = false;
-                m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
-            }
-        }
-        ImGui::EndGroup();
-
-        ImGui::BeginGroup();
-        {
-            PGEcfgVariable& cvarClientUpdateRate = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE];
-            const bool bClUR60Hz = cvarClientUpdateRate.getAsUInt() == 60u;
-
-            ImGui::AlignTextToFramePadding();
-            static std::string sHintClientUpdateRate; // static so it is built up by addHintToItemByCVar() only once
-            addHintToItemByCVar(sHintClientUpdateRate, cvarClientUpdateRate);
-            ImGui::TextUnformatted("Client Updates:");
-
-            ImGui::SameLine();
-            // this is configuration logic here forced on the GUI, I dont know how I could avoid this special disabling/enabling behavior here,
-            // but it is NOT mandatory since validate() forces all values to be correct, causing proper display of the radiobuttons too, just
-            // I want to disable the invalid option too!
-            if (!bTR60Hz)
-            {
-                ImGui::BeginDisabled(true);
-            }
-            if (ImGui::RadioButton("High (60 Hz)##clupdaterate", bClUR60Hz))
-            {
-                cvarClientUpdateRate.Set(60u);
-                m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
-            }
-            if (!bTR60Hz)
-            {
-                ImGui::EndDisabled();
-            }
-
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Low (20 Hz)##clupdaterate", !bClUR60Hz))
-            {
-                cvarClientUpdateRate.Set(20u);
-                m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
-            }
-        }
-        ImGui::EndGroup();
-
-        PGEcfgVariable& cvarSvFallDamageMultiplier = m_pPge->getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER];
         ImGui::AlignTextToFramePadding();
-        static std::string sHintSvFallDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvFallDamageMultiplier, cvarSvFallDamageMultiplier);
-        ImGui::TextUnformatted("Fall Damage Multiplier:");
-        ImGui::SameLine();
-        int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
-        ImGui::PushItemWidth(70);
-        if (ImGui::SliderInt(
-            "##sliderSvallDamageMultiplier",
-            &nSvFallDamageMultiplier,
-            0, 10, "%d",
-            ImGuiSliderFlags_AlwaysClamp))
-        {
-            cvarSvFallDamageMultiplier.Set(nSvFallDamageMultiplier);
-        }
-        ImGui::PopItemWidth();
+        static std::string sHintTickrate; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintTickrate, cvarTickrate);
+        ImGui::TextUnformatted("Tickrate:");
 
-        PGEcfgVariable& cvarSvMovingAffectsAim = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim];
+        ImGui::SameLine();
+        if (ImGui::RadioButton("High (60 Hz)##tickrate", bTR60Hz))
+        {
+            cvarTickrate.Set(60u);
+            bTR60Hz = false;
+            m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
+        }
+
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Low (20 Hz)##tickrate", !bTR60Hz))
+        {
+            cvarTickrate.Set(20u);
+            bTR60Hz = false;
+            m_pConfig->validate(); // easy way to force other depending CVARs also to have valid value, like CVAR_CL_UPDATERATE in this case
+        }
+    }
+    ImGui::EndGroup();
+
+    ImGui::BeginGroup();
+    {
+        PGEcfgVariable& cvarClientUpdateRate = m_pPge->getConfigProfiles().getVars()[CVAR_CL_UPDATERATE];
+        const bool bClUR60Hz = cvarClientUpdateRate.getAsUInt() == 60u;
+
         ImGui::AlignTextToFramePadding();
-        static std::string sHintSvMovingAffectsAim; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvMovingAffectsAim, cvarSvMovingAffectsAim);
-        ImGui::TextUnformatted("Player Movement Affects Aim Accuracy:");
+        static std::string sHintClientUpdateRate; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintClientUpdateRate, cvarClientUpdateRate);
+        ImGui::TextUnformatted("Client Updates:");
+
         ImGui::SameLine();
-        bool bSvMovingAffectsAim = cvarSvMovingAffectsAim.getAsBool();
-        if (ImGui::Checkbox("##cbMovingAffectsAim", &bSvMovingAffectsAim))
+        // this is configuration logic here forced on the GUI, I dont know how I could avoid this special disabling/enabling behavior here,
+        // but it is NOT mandatory since validate() forces all values to be correct, causing proper display of the radiobuttons too, just
+        // I want to disable the invalid option too!
+        if (!bTR60Hz)
         {
-            cvarSvMovingAffectsAim.Set(bSvMovingAffectsAim);
+            ImGui::BeginDisabled(true);
+        }
+        if (ImGui::RadioButton("High (60 Hz)##clupdaterate", bClUR60Hz))
+        {
+            cvarClientUpdateRate.Set(60u);
+            m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
+        }
+        if (!bTR60Hz)
+        {
+            ImGui::EndDisabled();
         }
 
-        ImGui::BeginGroup();
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Low (20 Hz)##clupdaterate", !bClUR60Hz))
         {
-            PGEcfgVariable& cvarSvAllowStrafeMidAir = m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR];
-
-            ImGui::AlignTextToFramePadding();
-            static std::string sHintMidAirStrafe; // static so it is built up by addHintToItemByCVar() only once
-            addHintToItemByCVar(sHintMidAirStrafe, cvarSvAllowStrafeMidAir);
-            ImGui::TextUnformatted("Mid-Air Strafe:");
-
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Full##midairstrafe",
-                cvarSvAllowStrafeMidAir.getAsBool() &&
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
-            {
-                cvarSvAllowStrafeMidAir.Set(true);
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(true);
-            }
-
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Moderate##midairstrafe",
-                cvarSvAllowStrafeMidAir.getAsBool() &&
-                !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
-            {
-                cvarSvAllowStrafeMidAir.Set(true);
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
-            }
-
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Off##midairstrafe", !cvarSvAllowStrafeMidAir.getAsBool()))
-            {
-                cvarSvAllowStrafeMidAir.Set(false);
-                m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
-            }
+            cvarClientUpdateRate.Set(20u);
+            m_pConfig->validate(); // easy way to allow or disallow this change to take effect based on dependee CVARs, like CVAR_TICKRATE in this case
         }
-        ImGui::EndGroup();
+    }
+    ImGui::EndGroup();
 
-        PGEcfgVariable& cvarSvSomersaultMidAirAutoCrouch = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirAutoCrouch];
+    PGEcfgVariable& cvarSvFallDamageMultiplier = m_pPge->getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvFallDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvFallDamageMultiplier, cvarSvFallDamageMultiplier);
+    ImGui::TextUnformatted("Fall Damage Multiplier:");
+    ImGui::SameLine();
+    int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
+    ImGui::PushItemWidth(70);
+    if (ImGui::SliderInt(
+        "##sliderSvallDamageMultiplier",
+        &nSvFallDamageMultiplier,
+        0, 10, "%d",
+        ImGuiSliderFlags_AlwaysClamp))
+    {
+        cvarSvFallDamageMultiplier.Set(nSvFallDamageMultiplier);
+    }
+    ImGui::PopItemWidth();
+
+    PGEcfgVariable& cvarSvMovingAffectsAim = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvMovingAffectsAim];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvMovingAffectsAim; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvMovingAffectsAim, cvarSvMovingAffectsAim);
+    ImGui::TextUnformatted("Player Movement Affects Aim Accuracy:");
+    ImGui::SameLine();
+    bool bSvMovingAffectsAim = cvarSvMovingAffectsAim.getAsBool();
+    if (ImGui::Checkbox("##cbMovingAffectsAim", &bSvMovingAffectsAim))
+    {
+        cvarSvMovingAffectsAim.Set(bSvMovingAffectsAim);
+    }
+
+    ImGui::BeginGroup();
+    {
+        PGEcfgVariable& cvarSvAllowStrafeMidAir = m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR];
+
         ImGui::AlignTextToFramePadding();
-        static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
-        ImGui::TextUnformatted("Mid-Air Somersault Auto-Crouch:");
+        static std::string sHintMidAirStrafe; // static so it is built up by addHintToItemByCVar() only once
+        addHintToItemByCVar(sHintMidAirStrafe, cvarSvAllowStrafeMidAir);
+        ImGui::TextUnformatted("Mid-Air Strafe:");
+
         ImGui::SameLine();
-        bool bSvSomersaultMidAirAutoCrouch = cvarSvSomersaultMidAirAutoCrouch.getAsBool();
-        if (ImGui::Checkbox("##cbSomersaultMidAirAutoCrouch", &bSvSomersaultMidAirAutoCrouch))
+        if (ImGui::RadioButton("Full##midairstrafe",
+            cvarSvAllowStrafeMidAir.getAsBool() &&
+            m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
         {
-            cvarSvSomersaultMidAirAutoCrouch.Set(bSvSomersaultMidAirAutoCrouch);
+            cvarSvAllowStrafeMidAir.Set(true);
+            m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(true);
         }
 
-        PGEcfgVariable& cvarSvSomersaultMidAirJumpForceMultiplier = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintSvSomersaultMidAirJumpForceMultiplier; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvSomersaultMidAirJumpForceMultiplier, cvarSvSomersaultMidAirJumpForceMultiplier);
-        ImGui::TextUnformatted("Mid-Air Somersault Jump Force Multiplier:");
         ImGui::SameLine();
-        float fSvSomersaultMidAirJumpForceMultiplier = cvarSvSomersaultMidAirJumpForceMultiplier.getAsFloat();
-        ImGui::PushItemWidth(70);
-        if (ImGui::SliderFloat(
-            "##sliderSomersaultMidAirJumpForceMultiplier",
-            &fSvSomersaultMidAirJumpForceMultiplier,
-            1.0f, 2.0f, "%.1f",
-            ImGuiSliderFlags_AlwaysClamp))
+        if (ImGui::RadioButton("Moderate##midairstrafe",
+            cvarSvAllowStrafeMidAir.getAsBool() &&
+            !m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool()))
         {
-            cvarSvSomersaultMidAirJumpForceMultiplier.Set(fSvSomersaultMidAirJumpForceMultiplier);
+            cvarSvAllowStrafeMidAir.Set(true);
+            m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
         }
-        ImGui::PopItemWidth();
 
-        PGEcfgVariable& cvarSvDmPlayerRespawnDelaySecs = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintSvDmRespawnDelaySecs; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvDmRespawnDelaySecs, cvarSvDmPlayerRespawnDelaySecs);
-        ImGui::TextUnformatted("Player Respawn Delay:");
         ImGui::SameLine();
-        int nSvDmPlayerRespawnDelaySecs = cvarSvDmPlayerRespawnDelaySecs.getAsInt();
-        ImGui::PushItemWidth(70);
-        if (ImGui::SliderInt(
-            "##sliderSvDmPlayerRespawnDelaySecs",
-            &nSvDmPlayerRespawnDelaySecs,
-            0, 5, "%d",
-            ImGuiSliderFlags_AlwaysClamp))
+        if (ImGui::RadioButton("Off##midairstrafe", !cvarSvAllowStrafeMidAir.getAsBool()))
         {
-            cvarSvDmPlayerRespawnDelaySecs.Set(nSvDmPlayerRespawnDelaySecs);
+            cvarSvAllowStrafeMidAir.Set(false);
+            m_pPge->getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].Set(false);
         }
-        ImGui::PopItemWidth();
+    }
+    ImGui::EndGroup();
 
-        PGEcfgVariable& cvarSvDmPlayerRespawnInvulnerabilityDelaySecs = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvDmRespawnInvulnerabilityDelaySecs];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintSvDmRespawnInvulnerabilityDelaySecs; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvDmRespawnInvulnerabilityDelaySecs, cvarSvDmPlayerRespawnInvulnerabilityDelaySecs);
-        ImGui::TextUnformatted("Player Respawn Invulnerability Delay:");
-        ImGui::SameLine();
-        int nSvDmPlayerRespawnInvulnerabilityDelaySecs = cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.getAsInt();
-        ImGui::PushItemWidth(70);
-        if (ImGui::SliderInt(
-            "##sliderSvDmPlayerRespawnInvulnerabilityDelaySecs",
-            &nSvDmPlayerRespawnInvulnerabilityDelaySecs,
-            0, 3, "%d",
-            ImGuiSliderFlags_AlwaysClamp))
+    PGEcfgVariable& cvarSvSomersaultMidAirAutoCrouch = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirAutoCrouch];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvSomersaultMidAirAutoCrouch; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvSomersaultMidAirAutoCrouch, cvarSvSomersaultMidAirAutoCrouch);
+    ImGui::TextUnformatted("Mid-Air Somersault Auto-Crouch:");
+    ImGui::SameLine();
+    bool bSvSomersaultMidAirAutoCrouch = cvarSvSomersaultMidAirAutoCrouch.getAsBool();
+    if (ImGui::Checkbox("##cbSomersaultMidAirAutoCrouch", &bSvSomersaultMidAirAutoCrouch))
+    {
+        cvarSvSomersaultMidAirAutoCrouch.Set(bSvSomersaultMidAirAutoCrouch);
+    }
+
+    PGEcfgVariable& cvarSvSomersaultMidAirJumpForceMultiplier = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvSomersaultMidAirJumpForceMultiplier];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvSomersaultMidAirJumpForceMultiplier; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvSomersaultMidAirJumpForceMultiplier, cvarSvSomersaultMidAirJumpForceMultiplier);
+    ImGui::TextUnformatted("Mid-Air Somersault Jump Force Multiplier:");
+    ImGui::SameLine();
+    float fSvSomersaultMidAirJumpForceMultiplier = cvarSvSomersaultMidAirJumpForceMultiplier.getAsFloat();
+    ImGui::PushItemWidth(70);
+    if (ImGui::SliderFloat(
+        "##sliderSomersaultMidAirJumpForceMultiplier",
+        &fSvSomersaultMidAirJumpForceMultiplier,
+        1.0f, 2.0f, "%.1f",
+        ImGuiSliderFlags_AlwaysClamp))
+    {
+        cvarSvSomersaultMidAirJumpForceMultiplier.Set(fSvSomersaultMidAirJumpForceMultiplier);
+    }
+    ImGui::PopItemWidth();
+
+    PGEcfgVariable& cvarSvDmPlayerRespawnDelaySecs = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvDmRespawnDelaySecs];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvDmRespawnDelaySecs; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvDmRespawnDelaySecs, cvarSvDmPlayerRespawnDelaySecs);
+    ImGui::TextUnformatted("Player Respawn Delay:");
+    ImGui::SameLine();
+    int nSvDmPlayerRespawnDelaySecs = cvarSvDmPlayerRespawnDelaySecs.getAsInt();
+    ImGui::PushItemWidth(70);
+    if (ImGui::SliderInt(
+        "##sliderSvDmPlayerRespawnDelaySecs",
+        &nSvDmPlayerRespawnDelaySecs,
+        0, 5, "%d",
+        ImGuiSliderFlags_AlwaysClamp))
+    {
+        cvarSvDmPlayerRespawnDelaySecs.Set(nSvDmPlayerRespawnDelaySecs);
+    }
+    ImGui::PopItemWidth();
+
+    PGEcfgVariable& cvarSvDmPlayerRespawnInvulnerabilityDelaySecs = m_pPge->getConfigProfiles().getVars()[Player::szCVarSvDmRespawnInvulnerabilityDelaySecs];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvDmRespawnInvulnerabilityDelaySecs; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvDmRespawnInvulnerabilityDelaySecs, cvarSvDmPlayerRespawnInvulnerabilityDelaySecs);
+    ImGui::TextUnformatted("Player Respawn Invulnerability Delay:");
+    ImGui::SameLine();
+    int nSvDmPlayerRespawnInvulnerabilityDelaySecs = cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.getAsInt();
+    ImGui::PushItemWidth(70);
+    if (ImGui::SliderInt(
+        "##sliderSvDmPlayerRespawnInvulnerabilityDelaySecs",
+        &nSvDmPlayerRespawnInvulnerabilityDelaySecs,
+        0, 3, "%d",
+        ImGuiSliderFlags_AlwaysClamp))
+    {
+        cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.Set(nSvDmPlayerRespawnInvulnerabilityDelaySecs);
+    }
+    ImGui::PopItemWidth();
+} // drawTabCreateGameServerTweaks()
+
+void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
+{
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 300.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
+    ImGui::TextUnformatted("[  C R E A T E  G A M E  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    drawPlayerNameInputBox();
+
+    ImGui::Separator();  // in newer Dear ImGUI there is another separator that can contain a text too!
+
+    if (ImGui::BeginTabBar("CreateServerTabBar", ImGuiTabBarFlags_None | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
+    {
+        if (ImGui::BeginTabItem("Server Settings"))
         {
-            cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.Set(nSvDmPlayerRespawnInvulnerabilityDelaySecs);
+            drawTabCreateGameServerSettings();
+            ImGui::EndTabItem();
         }
-        ImGui::PopItemWidth();
-
-    } // end Misc
-    ImGui::Unindent();
+        if (ImGui::BeginTabItem("Tweaks"))
+        {
+            drawTabCreateGameServerTweaks();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }   
 
     ImGui::Separator();
 

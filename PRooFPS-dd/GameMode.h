@@ -26,6 +26,7 @@ namespace proofps_dd
     {
         DeathMatch,
         TeamDeathMatch,
+        Max,
         TeamRoundGame
     };
 
@@ -62,6 +63,7 @@ namespace proofps_dd
 
         static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
         static constexpr char* szCvarSvDmTimeLimit = "sv_dm_timelimit_secs";
+        static constexpr char* szCvarSvGamemode = "sv_gamemode";
 
         static constexpr int nSvDmFragLimitDef = 10;
         static constexpr int nSvDmFragLimitMin = 0;

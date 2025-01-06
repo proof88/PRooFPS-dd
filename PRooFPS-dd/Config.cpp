@@ -185,6 +185,27 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Fraglimit in config, forcing to: %d", m_nFragLimit);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsInt() >= static_cast<int>(GameModeType::DeathMatch)) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsInt() < static_cast<int>(GameModeType::Max)))
+        {
+            getConsole().OLn("GameMode from config: %d", m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsInt());
+        }
+        else
+        {
+            getConsole().EOLn("ERROR: Invalid GameMode in config: %s, forcing to: %d",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsString().c_str(),
+                static_cast<int>(GameModeType::DeathMatch));
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].Set(static_cast<int>(GameModeType::DeathMatch));
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].Set(static_cast<int>(GameModeType::DeathMatch));
+        getConsole().OLn("Missing GameMode in config, forcing to: %d", static_cast<int>(GameModeType::DeathMatch));
+    }
+
     if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsString().empty())
     {
         if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt() >= GameMode::nSvDmTimeLimitSecsMin) &&

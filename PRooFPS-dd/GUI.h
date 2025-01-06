@@ -161,6 +161,9 @@ namespace proofps_dd
         static float calcContentStartY(const float& fContentHeight, const float& fRemainingSpaceY);
         static void drawMainMenu(const float& fRemainingSpaceY);
         static float drawPlayerNameInputBox();
+        static void drawCreateGameServerMapSelection();
+        static void drawTabCreateGameServerSettings();
+        static void drawTabCreateGameServerTweaks();
         static void drawCreateGameMenu(const float& fRemainingSpaceY);
         static void drawJoinGameMenu(const float& fRemainingSpaceY);
         static void drawTabWeaponSettings();
