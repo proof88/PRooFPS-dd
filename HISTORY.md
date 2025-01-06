@@ -33,6 +33,7 @@ A compressed build for Windows is available for TODO.
 
 This version brings the following new features:
  - respawn countdown can be speeden up by mouse clicks.
+ - frag table has new columns: player ranking based on K/D ratio, aim accuracy, etc.
 
 This version brings the following bug fixes:
  - crash due to integer overflow when system uptime exceeded 49.71 days.
