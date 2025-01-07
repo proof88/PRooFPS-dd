@@ -922,11 +922,11 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             //addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
 
             // dont forget there is also 3-param version of RadioButton
-            if (ImGui::RadioButton("DeathMatch (FFA)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
+            if (ImGui::RadioButton("Deathmatch (Free for All)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::DeathMatch));
             }
-            if (ImGui::RadioButton("Team DeathMatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
+            if (ImGui::RadioButton("Team Deathmatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
             }
@@ -955,7 +955,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
         }
         ImGui::PopItemWidth();
 
-        PGEcfgVariable& cvarSvDmTimeLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit];
+        PGEcfgVariable& cvarSvDmTimeLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit];
         ImGui::AlignTextToFramePadding();
         static std::string sHintSvDmTimeLimit; // static so it is built up by addHintToItemByCVar() only once
         addHintToItemByCVar(sHintSvDmTimeLimit, cvarSvDmTimeLimit);
@@ -965,7 +965,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
         ImGui::PushItemWidth(100);
         if (ImGui::InputInt("seconds##inputSvDmTimeLimit", &nCvarSvDmTimeLimit, 1, 60))
         {
-            nCvarSvDmTimeLimit = std::max(GameMode::nSvDmTimeLimitSecsMin, std::min(GameMode::nSvDmTimeLimitSecsMax, nCvarSvDmTimeLimit));
+            nCvarSvDmTimeLimit = std::max(GameMode::nSvGmTimeLimitSecsMin, std::min(GameMode::nSvGmTimeLimitSecsMax, nCvarSvDmTimeLimit));
             cvarSvDmTimeLimit.Set(nCvarSvDmTimeLimit);
         }
         ImGui::PopItemWidth();

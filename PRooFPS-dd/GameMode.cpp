@@ -92,6 +92,12 @@ proofps_dd::GameMode::~GameMode()
 {
 }
 
+void proofps_dd::GameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& /*network*/)
+{
+    // assuming config is correct, because Config instance invokes us after its own validation is done
+    setTimeLimitSecs(cfgProfiles.getVars()[GameMode::szCvarSvGmTimeLimit].getAsUInt());
+}
+
 proofps_dd::GameModeType proofps_dd::GameMode::getGameModeType() const
 {
     return m_gameModeType;
@@ -100,6 +106,49 @@ proofps_dd::GameModeType proofps_dd::GameMode::getGameModeType() const
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getResetTime() const
 {
     return m_timeReset;
+}
+
+unsigned int proofps_dd::GameMode::getTimeLimitSecs() const
+{
+    return m_nTimeLimitSecs;
+}
+
+void proofps_dd::GameMode::setTimeLimitSecs(unsigned int secs)
+{
+    m_nTimeLimitSecs = secs;
+}
+
+unsigned int proofps_dd::GameMode::getTimeRemainingMillisecs() const
+{
+    if (m_bWon || (getResetTime().time_since_epoch().count() == 0) || (getTimeLimitSecs() == 0))
+    {
+        return 0;
+    }
+
+    const auto nMillisecondsElapsedSinceReset = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - getResetTime()).count();
+    const std::chrono::milliseconds::rep nTimeLimitMilliseconds = getTimeLimitSecs() * 1000;
+
+    if (nTimeLimitMilliseconds <= nMillisecondsElapsedSinceReset)
+    {
+        return 0;
+    }
+
+    return static_cast<unsigned int>(nTimeLimitMilliseconds - nMillisecondsElapsedSinceReset);
+}
+
+void proofps_dd::GameMode::clientUpdateTimeRemainingMillisecs(const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network)
+{
+    assert(!network.isServer());
+
+    const unsigned int nRemSecs = static_cast<unsigned int>(std::floor(nRemMillisecs / 1000));
+    if (nRemSecs > m_nTimeLimitSecs)
+    {
+        // should not happen, but should log as error
+        getConsole().EOLn("GameMode::%s(): SHOULD NOT HAPPEN: nRemSecs > m_nTimeLimitSecs: %u > %u!", __func__, nRemSecs, m_nTimeLimitSecs);
+    }
+
+    m_timeReset = std::chrono::steady_clock::now() - std::chrono::seconds(m_nTimeLimitSecs - std::min(nRemSecs, m_nTimeLimitSecs));
 }
 
 void proofps_dd::GameMode::restart(pge_network::PgeINetwork& network)
@@ -248,11 +297,11 @@ proofps_dd::DeathMatchMode::~DeathMatchMode()
 {
 }
 
-void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& /*network*/)
+void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network)
 {
+    GameMode::fetchConfig(cfgProfiles, network);
     // assuming config is correct, because Config instance invokes us after its own validation is done
     setFragLimit( cfgProfiles.getVars()[GameMode::szCvarSvDmFragLimit].getAsUInt() );
-    setTimeLimitSecs( cfgProfiles.getVars()[GameMode::szCvarSvDmTimeLimit].getAsUInt() );
 }
 
 bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
@@ -306,49 +355,6 @@ void proofps_dd::DeathMatchMode::clientReceiveAndUpdateWinningConditions(pge_net
     {
         restartWithoutRemovingPlayers(network);
     }
-}
-
-unsigned int proofps_dd::DeathMatchMode::getTimeLimitSecs() const
-{
-    return m_nTimeLimitSecs;
-}
-
-void proofps_dd::DeathMatchMode::setTimeLimitSecs(unsigned int secs)
-{
-    m_nTimeLimitSecs = secs;
-}
-
-unsigned int proofps_dd::DeathMatchMode::getTimeRemainingMillisecs() const
-{
-    if (m_bWon || (getResetTime().time_since_epoch().count() == 0) || (getTimeLimitSecs() == 0))
-    {
-        return 0;
-    }
-
-    const auto nMillisecondsElapsedSinceReset = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - getResetTime()).count();
-    const std::chrono::milliseconds::rep nTimeLimitMilliseconds = getTimeLimitSecs() * 1000;
-
-    if (nTimeLimitMilliseconds <= nMillisecondsElapsedSinceReset)
-    {
-        return 0;
-    }
-
-    return static_cast<unsigned int>(nTimeLimitMilliseconds - nMillisecondsElapsedSinceReset);
-}
-
-void proofps_dd::DeathMatchMode::clientUpdateTimeRemainingMillisecs(const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network)
-{
-    assert(!network.isServer());
-
-    const unsigned int nRemSecs = static_cast<unsigned int>(std::floor(nRemMillisecs / 1000));
-    if (nRemSecs > m_nTimeLimitSecs)
-    {
-        // should not happen, but should log as error
-        getConsole().EOLn("GameMode::%s(): SHOULD NOT HAPPEN: nRemSecs > m_nTimeLimitSecs: %u > %u!", __func__, nRemSecs, m_nTimeLimitSecs);
-    }
-
-    m_timeReset = std::chrono::steady_clock::now() - std::chrono::seconds(m_nTimeLimitSecs - std::min(nRemSecs, m_nTimeLimitSecs));
 }
 
 unsigned int proofps_dd::DeathMatchMode::getFragLimit() const

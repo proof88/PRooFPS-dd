@@ -206,27 +206,27 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing GameMode in config, forcing to: %d", static_cast<int>(GameModeType::DeathMatch));
     }
 
-    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsString().empty())
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsString().empty())
     {
-        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt() >= GameMode::nSvDmTimeLimitSecsMin) &&
-            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt() <= GameMode::nSvDmTimeLimitSecsMax))
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsInt() >= GameMode::nSvGmTimeLimitSecsMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsInt() <= GameMode::nSvGmTimeLimitSecsMax))
         {
-            m_nTimeLimitSecs = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsInt();
+            m_nTimeLimitSecs = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsInt();
             getConsole().OLn("Timelimit from config: %d seconds", m_nTimeLimitSecs);
         }
         else
         {
-            m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+            m_nTimeLimitSecs = GameMode::nSvGmTimeLimitSecsDef;
             getConsole().EOLn("ERROR: Invalid Timelimit in config: %s, forcing to: %d seconds",
-                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].getAsString().c_str(),
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsString().c_str(),
                 m_nTimeLimitSecs);
-            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].Set(GameMode::nSvDmTimeLimitSecsDef);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].Set(GameMode::nSvGmTimeLimitSecsDef);
         }
     }
     else
     {
-        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvDmTimeLimit].Set(GameMode::nSvDmTimeLimitSecsDef);
-        m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].Set(GameMode::nSvGmTimeLimitSecsDef);
+        m_nTimeLimitSecs = GameMode::nSvGmTimeLimitSecsDef;
         getConsole().OLn("Missing Timelimit in config, forcing to: %d seconds", m_nTimeLimitSecs);
     }
 

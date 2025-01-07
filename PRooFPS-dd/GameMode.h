@@ -61,9 +61,18 @@ namespace proofps_dd
     {
     public:
 
-        static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
-        static constexpr char* szCvarSvDmTimeLimit = "sv_dm_timelimit_secs";
         static constexpr char* szCvarSvGamemode = "sv_gamemode";
+        
+        static constexpr char* szCvarSvGmTimeLimit = "sv_gm_timelimit_secs";
+        
+        static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
+
+        static constexpr int nSvGmTimeLimitSecsDef = 0;
+        static constexpr int nSvGmTimeLimitSecsMin = 0;
+        static constexpr int nSvGmTimeLimitSecsMax = 60 * 60 * 24;
+        static_assert(nSvGmTimeLimitSecsMin < nSvGmTimeLimitSecsMax, "Min timelimit should be smaller than max timelimit.");
+        static_assert(nSvGmTimeLimitSecsMin <= nSvGmTimeLimitSecsDef, "Min timelimit should not be greater than default timelimit.");
+        static_assert(nSvGmTimeLimitSecsDef <= nSvGmTimeLimitSecsMax, "Max timelimit should not be smaller than default timelimit.");
 
         static constexpr int nSvDmFragLimitDef = 10;
         static constexpr int nSvDmFragLimitMin = 0;
@@ -71,13 +80,6 @@ namespace proofps_dd
         static_assert(nSvDmFragLimitMin < nSvDmFragLimitMax,  "Min fraglimit should be smaller than max fraglimit.");
         static_assert(nSvDmFragLimitMin <= nSvDmFragLimitDef, "Min fraglimit should not be greater than default fraglimit.");
         static_assert(nSvDmFragLimitDef <= nSvDmFragLimitMax, "Max fraglimit should not be smaller than default fraglimit.");
-
-        static constexpr int nSvDmTimeLimitSecsDef = 0;
-        static constexpr int nSvDmTimeLimitSecsMin = 0;
-        static constexpr int nSvDmTimeLimitSecsMax = 60 * 60 * 24;
-        static_assert(nSvDmTimeLimitSecsMin < nSvDmTimeLimitSecsMax,  "Min timelimit should be smaller than max timelimit.");
-        static_assert(nSvDmTimeLimitSecsMin <= nSvDmTimeLimitSecsDef, "Min timelimit should not be greater than default timelimit.");
-        static_assert(nSvDmTimeLimitSecsDef <= nSvDmTimeLimitSecsMax, "Max timelimit should not be smaller than default timelimit.");
 
         static const char* getLoggerModuleName();
 
@@ -93,6 +95,8 @@ namespace proofps_dd
 
         /**
         * Fetches configuration from the given PGEcfgProfiles instance.
+        * Derived class shall extend this function by overriding and calling this parent implementation from the specialized implementation.
+        * 
         * For now it does not do validation, as all validations are currently implemented in the Config class.
         * TODO: on the long run, validation should be also done, by proper planning and implementing an IConfigHandler interface, as
         * described in the comment above.
@@ -100,11 +104,41 @@ namespace proofps_dd
         * @param cfgProfiles The current user config profile from where we can fetch value of GameMode-specific CVARs.
         * @param network     PGE network instance to be used to know if we are server or client.
         */
-        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) = 0;
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network);
 
         GameModeType getGameModeType() const;
 
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
+
+        /**
+        * @return Configured time limit previously set by setTimeLimitSecs().
+        *         0 means no time limit.
+        */
+        unsigned int getTimeLimitSecs() const;
+
+        /**
+        * Set the time limit for the game.
+        * If time limit expires, the winner is the player with most frags, even if frag limit is not set or not reached.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
+        *
+        * @param secs The time limit in seconds. If 0, there is no time limit.
+        */
+        void setTimeLimitSecs(unsigned int secs);
+
+        /**
+        * @return Milliseconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
+        *         0 if there is no time limit set, or if the game was not yet reset, or if the time limit has been already reached, or the game has been won for any reason.
+        */
+        unsigned int getTimeRemainingMillisecs() const;
+
+        /**
+        * Updates the remaining time on client side, based on the remaining time received from server.
+        * Basically it corrects the game restart time on client side so client will have the roughly same game restart time as the server.
+        *
+        * @param nRemMillisecs Remaining time in milliseconds, from server.
+        * @param network       PGE network instance to be used to know if we are server or client.
+        */
+        void clientUpdateTimeRemainingMillisecs(const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
         /**
         * Similar to restartWithoutRemovingPlayers() but it also removes all players from this GameMode instance.
@@ -218,10 +252,10 @@ namespace proofps_dd
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
     protected:
+        // derived class can set these based on their winning conditions and actions
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<FragTableRow> m_players;
         bool m_bWon{ false };
-        std::chrono::time_point<std::chrono::steady_clock> m_timeReset; // can be private again once all time-related functions in DeathMatchMode are moved to this class
 
         GameMode(GameModeType gm);
 
@@ -236,6 +270,9 @@ namespace proofps_dd
     private:
 
         GameModeType m_gameModeType;
+
+        std::chrono::time_point<std::chrono::steady_clock> m_timeReset; // can be private again once all time-related functions in DeathMatchMode are moved to this class
+        unsigned int m_nTimeLimitSecs{};
 
         // ---------------------------------------------------------------------------
 
@@ -262,36 +299,6 @@ namespace proofps_dd
 
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
         virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) override;
-
-        /**
-        * @return Configured time limit previously set by setTimeLimitSecs(). 0 means no time limit.
-        */
-        unsigned int getTimeLimitSecs() const;
-        
-        /**
-        * Set the time limit for the game.
-        * If time limit expires, the winner is the player with most frags, even if frag limit is not set or not reached.
-        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
-        *
-        * @param secs The time limit in seconds. If 0, there is no time limit.
-        */
-        void setTimeLimitSecs(unsigned int secs);
-
-        /**
-        * @return Milliseconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
-        *         0 if there is no time limit set, or if the game was not yet reset, or if the time limit has been already reached, or the game has been won for any reason.
-        */
-        unsigned int getTimeRemainingMillisecs() const;
-
-        /**
-        * Updates the remaining time on client side, based on the remaining time received from server.
-        * Basically it corrects the game restart time on client side so client will have the roughly same game restart time as the server.
-        * TODO: time related functions should really be in GameMode class, I dont see use of putting it in DeathMatch and it complicates things.
-        *
-        * @param nRemMillisecs Remaining time in milliseconds, from server.
-        * @param network       PGE network instance to be used to know if we are server or client.
-        */
-        void clientUpdateTimeRemainingMillisecs(const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
         /**
         * @return Configured frag limit previously set by setFragLimit(). 0 means no frag limit.
@@ -322,7 +329,6 @@ namespace proofps_dd
         
         // ---------------------------------------------------------------------------
 
-        unsigned int m_nTimeLimitSecs{};
         unsigned int m_nFragLimit{};
 
     }; // class DeathMatchMode

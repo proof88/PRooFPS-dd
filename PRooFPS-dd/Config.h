@@ -145,7 +145,7 @@ namespace proofps_dd
         unsigned int m_nClientUpdateRate = GAME_CL_UPDATERATE_DEF;
 
         int m_nFragLimit = GameMode::nSvDmFragLimitDef;
-        int m_nTimeLimitSecs = GameMode::nSvDmTimeLimitSecsDef;
+        int m_nTimeLimitSecs = GameMode::nSvGmTimeLimitSecsDef;
 
         unsigned int m_nSecondsReconnectDelay = GAME_NETWORK_RECONNECT_SECONDS;
 
