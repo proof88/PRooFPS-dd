@@ -30,7 +30,7 @@ namespace proofps_dd
         TeamRoundGame
     };
 
-    struct FragTableRow
+    struct PlayersTableRow
     {
         std::string m_sName;
         pge_network::PgeNetworkConnectionHandle m_connHandle{};
@@ -85,7 +85,7 @@ namespace proofps_dd
 
         static GameMode* createGameMode(GameModeType gm);
 
-        static const char* getRank(const FragTableRow& row);
+        static const char* getRank(const PlayersTableRow& row);
 
         // ---------------------------------------------------------------------------
 
@@ -150,7 +150,7 @@ namespace proofps_dd
         virtual void restart(pge_network::PgeINetwork& network);
 
         /**
-        * Resets winning time and winning condition, also zeros out relevant members of FragTableRow for all players.
+        * Resets winning time and winning condition, also zeros out relevant members of PlayersTableRow for all players.
         * It is recommended to first invoke updatePlayer() for all players with zeroed values and then call this.
         * 
         * Used by both server and clients: clients invoke it upon receiving MsgGameSessionStateFromServer.
@@ -195,9 +195,9 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getWinTime() const;
 
         /**
-        * @return List of frag table entries, which is basically a list of added players with some statistics.
+        * @return Player table, which is basically the frag table in specific game modes, but here at this abstract level it has a more general name.
         */
-        const std::list<FragTableRow>& getFragTable() const;
+        const std::list<PlayersTableRow>& getPlayersTable() const;
         
         /**
         * Adds the specified player.
@@ -254,7 +254,7 @@ namespace proofps_dd
     protected:
         // derived class can set these based on their winning conditions and actions
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
-        std::list<FragTableRow> m_players;
+        std::list<PlayersTableRow> m_players;
         bool m_bWon{ false };
 
         GameMode(GameModeType gm);

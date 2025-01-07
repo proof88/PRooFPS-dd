@@ -209,7 +209,7 @@ protected:
 
 private:
 
-    std::vector<proofps_dd::FragTableRow> evaluateFragTable;
+    std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
     const unsigned int m_nTickRate;
     const unsigned int m_nClUpdateRate;
@@ -262,7 +262,7 @@ private:
             
             while (!f.eof())
             {
-                proofps_dd::FragTableRow ftRow;
+                proofps_dd::PlayersTableRow ftRow;
                 f >> ftRow.m_sName;
                 if (ftRow.m_sName.empty() || (ftRow.m_sName.find("Weapons") != std::string::npos))
                 {

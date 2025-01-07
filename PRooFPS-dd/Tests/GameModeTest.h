@@ -167,8 +167,8 @@ private:
     // ---------------------------------------------------------------------------
 
     bool assertFragTableEquals(
-        const std::vector<proofps_dd::FragTableRow>& expectedPlayers,
-        const std::list<proofps_dd::FragTableRow>& fragTable,
+        const std::vector<proofps_dd::PlayersTableRow>& expectedPlayers,
+        const std::list<proofps_dd::PlayersTableRow>& fragTable,
         const std::string& sLogText = "")
     {
         bool b = assertEquals(expectedPlayers.size(), fragTable.size(), ("size " + sLogText).c_str());
@@ -202,7 +202,7 @@ private:
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
-        b &= assertTrue(gm->getFragTable().empty(), "playerdata");
+        b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
 
         return b;
     }
@@ -219,7 +219,7 @@ private:
     //    b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
     //    b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
     //    b &= assertFalse(gm->isGameWon(), "game not won");
-    //    b &= assertTrue(gm->getFragTable().empty(), "playerdata");
+    //    b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
     //
     //    return b;
     //}
@@ -337,14 +337,14 @@ private:
             b &= assertFalse(gm->renamePlayer("adam", "Peter"), (std::string("rename 7 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertTrue(gm->renamePlayer("Adam", "Peter"), (std::string("rename 8 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
                 { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 2, 0},
                 { "Apple", player2.getServerSideConnectionHandle(), 1, 0 },
                 { "Joe", player3.getServerSideConnectionHandle(), 0, 0 },
                 { "Banana", player4.getServerSideConnectionHandle(), 0, 0 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getFragTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
         }
 
@@ -353,7 +353,7 @@ private:
 
     bool test_get_rank()
     {
-        proofps_dd::FragTableRow row{};
+        proofps_dd::PlayersTableRow row{};
 
         bool b = assertEquals(std::string("G0aT"), proofps_dd::GameMode::getRank(row), "1");
 
@@ -594,14 +594,14 @@ private:
             b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
                 { "Adam", player1.getServerSideConnectionHandle(), 0, 0 },
                 { "Apple", player2.getServerSideConnectionHandle(), 0, 0 },
                 { "Joe", player3.getServerSideConnectionHandle(), 0, 0 },
                 { "Banana", player4.getServerSideConnectionHandle(), 0, 0 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getFragTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
         }
 
         return b;
@@ -669,14 +669,14 @@ private:
             b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
                 { "Adam", player1.getServerSideConnectionHandle(), 10, 0 },
                 { "Banana", player4.getServerSideConnectionHandle(), 8, 0 },
                 { "Joe", player3.getServerSideConnectionHandle(), 8, 2 },
                 { "Apple", player2.getServerSideConnectionHandle(), 5, 2 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getFragTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
         }
 
         return b;
@@ -749,14 +749,14 @@ private:
             player3.getDeaths() = 0;
             b &= assertFalse(gm->addPlayer(player3, m_network), (std::string("add player 3 again, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
                 { "Adam", player1.getServerSideConnectionHandle(), 10, 0 },
                 { "Banana", player4.getServerSideConnectionHandle(), 8, 0 },
                 { "Joe", player3.getServerSideConnectionHandle(), 8, 2 },
                 { "Apple", player2.getServerSideConnectionHandle(), 5, 2 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getFragTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
         }
 
         return b;
@@ -897,32 +897,32 @@ private:
             playerJoe.getFrags()++;
             b &= assertTrue(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             // since Joe got same number of frags _later_ than Apple, Joe must stay behind Apple
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers1 = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1 = {
                 { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
                 { "Apple", playerApple.getServerSideConnectionHandle(), 5, 2 },
                 { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 2 }
             };
-            b &= assertFragTableEquals(expectedPlayers1, gm->getFragTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             playerApple.getDeaths()++;
             b &= assertTrue(gm->updatePlayer(playerApple, m_network), (std::string("update player Apple 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             // since Apple now has more deaths than Joe, it must goe behind Joe
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
                 { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
                 { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 2 },
                 { "Apple", playerApple.getServerSideConnectionHandle(), 5, 3 }
             };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getFragTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             playerJoe.getDeaths()++;
             b &= assertTrue(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             // since Joe got same number of frags _earlier_ than Apple, and got same number for deaths _later_ than Apple, it must stay in front of Apple
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers3 = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
                 { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
                 { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 3 },
                 { "Apple", playerApple.getServerSideConnectionHandle(), 5, 3 }
             };
-            b &= assertFragTableEquals(expectedPlayers3, gm->getFragTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers3, gm->getPlayersTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             playerAdam.getFrags()++;
             b &= assertTrue(gm->updatePlayer(playerAdam, m_network), (std::string("update player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
@@ -994,8 +994,8 @@ private:
                 b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
             }
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers1;
-            b &= assertFragTableEquals(expectedPlayers1, gm->getFragTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
+            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             b &= assertTrue(gm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
@@ -1007,10 +1007,10 @@ private:
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
             b &= assertFalse(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
                 { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 }
             };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getFragTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
         }
 
@@ -1052,8 +1052,8 @@ private:
 
             b &= assertFalse(gm->removePlayer(playerAdam), (std::string("removep player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers1;
-            b &= assertFragTableEquals(expectedPlayers1, gm->getFragTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
+            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             b &= assertTrue(gm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
@@ -1065,13 +1065,13 @@ private:
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
             b &= assertFalse(gm->removePlayer(playerJoe), (std::string("remove player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            const std::vector<proofps_dd::FragTableRow> expectedPlayers2 = {
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
                 { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 }
             };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getFragTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             b &= assertTrue(gm->removePlayer(playerAdam), (std::string("remove player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFragTableEquals(expectedPlayers1, gm->getFragTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
             if (bTestingAsServer)
             {
@@ -1189,7 +1189,7 @@ private:
                     b &= assertFalse(true, "tx msg count");
                 }
             }
-            b &= assertTrue(gm->getFragTable().empty(), (std::string("players empty fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrue(gm->getPlayersTable().empty(), (std::string("players empty fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
         }
 
@@ -1305,9 +1305,9 @@ private:
                     b &= assertFalse(true, "tx msg count");
                 }
             }
-            b &= assertEquals(2u, gm->getFragTable().size(), (std::string("players still there fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEquals(2u, gm->getPlayersTable().size(), (std::string("players still there fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            for (const auto& player : gm->getFragTable())
+            for (const auto& player : gm->getPlayersTable())
             {
                 b &= assertEquals(0, player.m_nFrags, (std::string("players frags 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
                 b &= assertEquals(0, player.m_nDeaths, (std::string("players deaths 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());

@@ -2412,7 +2412,7 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
     // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
     // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
     // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
-    for (const auto& player : m_pGameMode->getFragTable())
+    for (const auto& player : m_pGameMode->getPlayersTable())
     {
         const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
         if (fPlayerNameReqWidthPixels > fPlayerNameColReqWidthPixels)
@@ -2570,7 +2570,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getFragTable())
+            for (const auto& player : m_pGameMode->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
@@ -2724,7 +2724,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getFragTable())
+            for (const auto& player : m_pGameMode->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
@@ -2891,7 +2891,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getFragTable())
+            for (const auto& player : m_pGameMode->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))

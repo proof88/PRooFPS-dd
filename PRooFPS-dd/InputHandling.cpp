@@ -1216,7 +1216,7 @@ void proofps_dd::InputHandling::regTestDumpToFile(
     }
 
     fRegTestDump << "Frag Table: Player Name, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired" << std::endl;
-    for (const auto& fragTableRow : pDeathMatchMode->getFragTable())
+    for (const auto& fragTableRow : pDeathMatchMode->getPlayersTable())
     {
         fRegTestDump << "  " << fragTableRow.m_sName << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nFrags << std::endl;

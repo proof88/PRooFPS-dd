@@ -38,7 +38,7 @@ proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeT
     return new proofps_dd::DeathMatchMode();
 }
 
-const char* proofps_dd::GameMode::getRank(const FragTableRow& row)
+const char* proofps_dd::GameMode::getRank(const PlayersTableRow& row)
 {
     static constexpr char* const szRankGoat = "G0aT";
     static constexpr char* const szRankGosu = "G0sU";
@@ -189,7 +189,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::
     return m_timeWin;
 }
 
-const std::list<proofps_dd::FragTableRow>& proofps_dd::GameMode::getFragTable() const
+const std::list<proofps_dd::PlayersTableRow>& proofps_dd::GameMode::getPlayersTable() const
 {
     return m_players;
 }
@@ -201,7 +201,7 @@ bool proofps_dd::GameMode::renamePlayer(const std::string& sOldName, const std::
         return false;
     }
 
-    FragTableRow* pPlayerToRename = nullptr;
+    PlayersTableRow* pPlayerToRename = nullptr;
     
     // loop over the all players and check for name collision, at the same time save ptr to target player
     for (auto& player : m_players)
@@ -390,7 +390,7 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
 
     if (bRet)
     {
-        m_players.insert(it, proofps_dd::FragTableRow{ player.getName(), player.getServerSideConnectionHandle(), player.getFrags(), player.getDeaths() });
+        m_players.insert(it, proofps_dd::PlayersTableRow{ player.getName(), player.getServerSideConnectionHandle(), player.getFrags(), player.getDeaths() });
 
         if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
         {
@@ -458,7 +458,7 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
 
     if (itFound != it)
     {
-        // move 'itFound' before 'it' (proofps_dd::FragTableRow is not copied, only internal pointers are updated)
+        // move 'itFound' before 'it' (proofps_dd::PlayersTableRow is not copied, only internal pointers are updated)
         m_players.splice(it, m_players, itFound);
     }
     itFound->m_nFrags = player.getFrags();
