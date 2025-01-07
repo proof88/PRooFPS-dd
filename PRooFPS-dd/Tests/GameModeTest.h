@@ -22,6 +22,45 @@
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 
+/**
+* This class is for tests where we test pure GameMode functionality: we don't need DeathMatchMode for that.
+*/
+class SpecialGameMode : public proofps_dd::GameMode
+{
+public:
+
+    SpecialGameMode() :
+        proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
+    {
+
+    }
+
+    SpecialGameMode(const SpecialGameMode&) = delete;
+    SpecialGameMode& operator=(const SpecialGameMode&) = delete;
+    SpecialGameMode(SpecialGameMode&&) = delete;
+    SpecialGameMode&& operator=(SpecialGameMode&&) = delete;
+
+    virtual bool addPlayer(
+        const proofps_dd::Player&,
+        pge_network::PgeINetwork&) override
+    {
+        return true; 
+    }
+
+    virtual bool updatePlayer(
+        const proofps_dd::Player&,
+        pge_network::PgeINetwork&) override
+    {
+        return true;
+    }
+
+    virtual bool removePlayer(const proofps_dd::Player&) override
+    {
+        return true;
+    }
+
+}; // class SpecialGameMode
+
 
 class GameModeTest :
     public UnitTest
@@ -32,7 +71,7 @@ public:
         UnitTest(__FILE__),
         gm(nullptr),
         dm(nullptr),
-        //tdm(nullptr),
+        tdm(nullptr),
         m_audio(cfgProfiles),
         m_cfgProfiles(cfgProfiles),
         m_itemPickupEvents(8 /* time limit secs */, 5 /* event count limit */),
@@ -61,7 +100,7 @@ protected:
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         addSubTest("test_factory_creates_deathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch);
-        //addSubTest("test_factory_creates_teamdeathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_teamdeathmatch);
+        addSubTest("test_factory_creates_teamdeathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_teamdeathmatch);
         addSubTest("test_factory_does_not_create_non_deathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_does_not_create_non_deathmatch);
         addSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
         addSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
@@ -109,7 +148,7 @@ protected:
             delete gm;
             gm = nullptr;
             dm = nullptr;
-            //tdm = nullptr;
+            tdm = nullptr;
         }
         m_network.shutdown();
     }
@@ -139,23 +178,23 @@ protected:
         return b;
     }
 
-    //bool testInitTeamDeathmatch()
-    //{
-    //    gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch);
-    //    bool b = assertNotNull(gm, "gm null");
-    //    if (b)
-    //    {
-    //        tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(gm);
-    //        b &= assertNotNull(tdm, "tdm null");
-    //    }
-    //    return b;
-    //}
+    bool testInitTeamDeathmatch()
+    {
+        gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch);
+        bool b = assertNotNull(gm, "gm null");
+        if (b)
+        {
+            tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(gm);
+            b &= assertNotNull(tdm, "tdm null");
+        }
+        return b;
+    }
 
 private:
 
     proofps_dd::GameMode* gm;
     proofps_dd::DeathMatchMode* dm;
-    //proofps_dd::TeamDeathMatchMode* tdm;
+    proofps_dd::TeamDeathMatchMode* tdm;
     pge_audio::PgeAudio m_audio;
     PGEcfgProfiles& m_cfgProfiles;
     PgeObjectPool<PooledBullet> m_bullets;
@@ -198,7 +237,6 @@ private:
         }
 
         bool b = assertTrue(proofps_dd::GameModeType::DeathMatch == gm->getGameModeType(), "gmtype");
-        b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch), "tdm null");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
@@ -207,22 +245,21 @@ private:
         return b;
     }
 
-    //bool test_factory_creates_teamdeathmatch()
-    //{
-    //    if (!testInitTeamDeathmatch())
-    //    {
-    //        return assertFalse(true, "testInitTeamDeathmatch fail");
-    //    }
-    //
-    //    bool b = assertTrue(proofps_dd::GameModeType::TeamDeathMatch == gm->getGameModeType(), "gmtype");
-    //    b &= assertNull(proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch), "tdm null");
-    //    b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
-    //    b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
-    //    b &= assertFalse(gm->isGameWon(), "game not won");
-    //    b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-    //
-    //    return b;
-    //}
+    bool test_factory_creates_teamdeathmatch()
+    {
+        if (!testInitTeamDeathmatch())
+        {
+            return assertFalse(true, "testInitTeamDeathmatch fail");
+        }
+    
+        bool b = assertTrue(proofps_dd::GameModeType::TeamDeathMatch == gm->getGameModeType(), "gmtype");
+        b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
+        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
+        b &= assertFalse(gm->isGameWon(), "game not won");
+        b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
+    
+        return b;
+    }
 
     bool test_factory_does_not_create_non_deathmatch()
     {
@@ -1347,13 +1384,10 @@ private:
             return assertFalse(true, "network reinit as server");
         }
 
-        if (!testInitDeathmatch())
-        {
-            return assertFalse(true, "testInitDeathmatch fail");
-        }
+        SpecialGameMode sgm;
 
-        gm->setTimeLimitSecs(2);
-        gm->restart(m_network);
+        sgm.setTimeLimitSecs(2);
+        sgm.restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
         bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
         try
@@ -1369,16 +1403,16 @@ private:
 
         std::set<unsigned int> setRemainingSecs = {0, 1};
         int iSleep = 0;
-        while ((iSleep++ < 5) && !gm->serverCheckAndUpdateWinningConditions(m_network))
+        while ((iSleep++ < 5) && !sgm.serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            setRemainingSecs.erase( static_cast<unsigned int>(std::floor(gm->getTimeRemainingMillisecs() / 1000.f)) );
+            setRemainingSecs.erase( static_cast<unsigned int>(std::floor(sgm.getTimeRemainingMillisecs() / 1000.f)) );
         }
-        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - gm->getResetTime());
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-        b &= assertTrue(gm->isGameWon(), "game won");
-        b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning");
-        b &= assertLequals(static_cast<std::chrono::seconds::rep>(gm->getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
+        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - sgm.getResetTime());
+        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(sgm.isGameWon(), "game won");
+        b &= assertTrue(sgm.serverCheckAndUpdateWinningConditions(m_network), "winning");
+        b &= assertLequals(static_cast<std::chrono::seconds::rep>(sgm.getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
         b &= assertTrue(setRemainingSecs.empty(), "no remaining");
 
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
@@ -1597,24 +1631,20 @@ private:
 
     bool test_deathmatch_receive_and_update_winning_conditions_client()
     {
-        // client-only test
-        if (!testInitDeathmatch())
-        {
-            return assertFalse(true, "testInitDeathmatch fail");
-        }
+        SpecialGameMode sgm;
 
-        bool b = assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
-        b &= assertFalse(gm->isGameWon(), "winning state 1");
+        bool b = assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 1");
+        b &= assertFalse(sgm.isGameWon(), "winning state 1");
 
-        gm->clientReceiveAndUpdateWinningConditions(m_network, true);
+        sgm.clientReceiveAndUpdateWinningConditions(m_network, true);
 
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
-        b &= assertTrue(gm->isGameWon(), "winning state 2");
+        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time 2");
+        b &= assertTrue(sgm.isGameWon(), "winning state 2");
 
-        gm->clientReceiveAndUpdateWinningConditions(m_network, false);
+        sgm.clientReceiveAndUpdateWinningConditions(m_network, false);
 
-        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
-        b &= assertFalse(gm->isGameWon(), "winning state 3");
+        b &= assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 3");
+        b &= assertFalse(sgm.isGameWon(), "winning state 3");
 
         return b;
     }

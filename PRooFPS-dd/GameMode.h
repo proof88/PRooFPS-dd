@@ -161,7 +161,10 @@ namespace proofps_dd
 
         /**
         * Evaluates conditions to see if game is won or not.
-        * Since conditions depend on game mode, the actual implementation must be in the specific derived game mode class.
+        * 
+        * Derived class shall extend this function by overriding and calling this parent implementation from the specialized implementation.
+        * This parent implementation takes care of checking elapsed time against time limit.
+        * 
         * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         * 
         * This function is for server instance only.
@@ -170,7 +173,7 @@ namespace proofps_dd
         * @param  network PGE network instance to be used to send out MsgGameSessionStateFromServer if needed.
         * @return True if game is won, false otherwise.
         */
-        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) = 0;
+        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network);
 
         /**
         * Handles server's update about current game session goal, e.g. game is won.
@@ -180,7 +183,7 @@ namespace proofps_dd
         *
         * @param  bGameSessionWon True if the current game session goal has been just reached, false otherwise.
         */
-        virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) = 0;
+        void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon);
 
         /**
         * Returns the current game session win state i.e. game goal is reached or not.
@@ -256,6 +259,7 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<PlayersTableRow> m_players;
         bool m_bWon{ false };
+        GameModeType m_gameModeType;
 
         GameMode(GameModeType gm);
 
@@ -266,10 +270,9 @@ namespace proofps_dd
 
         bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
         bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network);
+        void handleEventGameWon(pge_network::PgeINetwork& network);
 
     private:
-
-        GameModeType m_gameModeType;
 
         std::chrono::time_point<std::chrono::steady_clock> m_timeReset; // can be private again once all time-related functions in DeathMatchMode are moved to this class
         unsigned int m_nTimeLimitSecs{};
@@ -298,7 +301,6 @@ namespace proofps_dd
         virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) override;
 
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
-        virtual void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon) override;
 
         /**
         * @return Configured frag limit previously set by setFragLimit(). 0 means no frag limit.
@@ -307,11 +309,51 @@ namespace proofps_dd
 
         /**
         * Set the frag limit for the game.
-        * If the frag limit is reached, the winner is the player with most frags, even if time limit is not yet reached or there is no time limit set.
+        * If the frag limit is reached, the winner is with the most frags, even if time limit is not yet reached or there is no time limit set.
         * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
+        * 
         * @param limit The frag limit. If 0, there is no frag limit.
         */
         void setFragLimit(unsigned int limit);
+
+        virtual bool addPlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
+        virtual bool updatePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
+        virtual bool removePlayer(const Player& player) override;
+
+    protected:
+        unsigned int m_nFragLimit{};
+
+    private:
+
+        static int comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths);
+        
+        // ---------------------------------------------------------------------------
+
+    }; // class DeathMatchMode
+
+    /**
+    * In Team DeathMatch game mode, players are grouped into teams. Teammates work together to
+    * shoot as many players in the enemy team as they can. The team with most total frags is the winner when
+    * either the frag limit or time limit is reached.
+    * Note: it is also valid to not to have either frag limit or time limit set, but in such case the game never ends.
+    */
+    class TeamDeathMatchMode : public DeathMatchMode
+    {
+    public:
+
+        TeamDeathMatchMode();
+        virtual ~TeamDeathMatchMode();
+
+        TeamDeathMatchMode(const TeamDeathMatchMode&) = delete;
+        TeamDeathMatchMode& operator=(const TeamDeathMatchMode&) = delete;
+        TeamDeathMatchMode(TeamDeathMatchMode&&) = delete;
+        TeamDeathMatchMode&& operator=(TeamDeathMatchMode&&) = delete;
+
+        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
         virtual bool addPlayer(
             const Player& player,
@@ -326,11 +368,9 @@ namespace proofps_dd
     private:
 
         static int comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths);
-        
+
         // ---------------------------------------------------------------------------
 
-        unsigned int m_nFragLimit{};
-
-    }; // class DeathMatchMode
+    }; // class TeamDeathMatchMode
 
 } // namespace proofps_dd
