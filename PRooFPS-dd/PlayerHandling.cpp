@@ -1100,6 +1100,9 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
         assert(bCurrentClient);
         player.handleJumppadActivated();
         break;
+    case PlayerEventId::TeamIdChanged:
+        player.handleTeamIdChanged(static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
         assert(false);  // crash in debug

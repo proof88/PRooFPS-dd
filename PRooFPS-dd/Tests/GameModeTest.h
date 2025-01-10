@@ -99,31 +99,32 @@ protected:
         m_engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
-        addSubTest("test_factory_creates_deathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_deathmatch);
-        addSubTest("test_factory_creates_teamdeathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_creates_teamdeathmatch);
-        addSubTest("test_factory_does_not_create_non_deathmatch", (PFNUNITSUBTEST)&GameModeTest::test_factory_does_not_create_non_deathmatch);
-        addSubTest("test_restart_updates_times", (PFNUNITSUBTEST)&GameModeTest::test_restart_updates_times);
-        addSubTest("test_rename_player", (PFNUNITSUBTEST)&GameModeTest::test_rename_player);
-        addSubTest("test_get_rank", (PFNUNITSUBTEST)&GameModeTest::test_get_rank);
-        addSubTest("test_time_limit_get_set_and_remaining_time_get", (PFNUNITSUBTEST)&GameModeTest::test_time_limit_get_set_and_remaining_time_get);
-        addSubTest("test_time_limit_client_update_time_remaining_secs", (PFNUNITSUBTEST)&GameModeTest::test_time_limit_client_update_time_remaining_secs);
-        addSubTest("test_deathmatch_frag_limit_get_set", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_frag_limit_get_set);
-        addSubTest("test_deathmatch_fetch_config", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_fetch_config);
-        addSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order);
-        addSubTest("test_deathmatch_add_player_random_values", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_random_values);
-        addSubTest("test_deathmatch_add_player_already_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_already_existing_fails);
-        addSubTest("test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won);
-        addSubTest("test_deathmatch_update_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player);
-        addSubTest("test_deathmatch_update_player_non_existing_fails", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_update_player_non_existing_fails);
-        addSubTest("test_deathmatch_remove_player", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_remove_player);
-        addSubTest("test_deathmatch_restart", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart);
-        addSubTest("test_deathmatch_restart_without_removing_players", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_restart_without_removing_players);
-        addSubTest("test_deathmatch_winning_cond_defaults_to_false", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_defaults_to_false);
-        addSubTest("test_deathmatch_winning_cond_time_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_limit);
-        addSubTest("test_deathmatch_winning_cond_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_frag_limit);
-        addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit);
-        addSubTest("test_deathmatch_receive_and_update_winning_conditions_client", (PFNUNITSUBTEST)&GameModeTest::test_deathmatch_receive_and_update_winning_conditions_client);
-        
+        addSubTest("test_get_gamemodetype_name", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_get_gamemodetype_name));
+        addSubTest("test_gamemodetype_prefix_increment_operator", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_gamemodetype_prefix_increment_operator));
+        addSubTest("test_factory_creates_deathmatch", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_factory_creates_deathmatch));
+        addSubTest("test_factory_creates_teamdeathmatch", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_factory_creates_teamdeathmatch));
+        addSubTest("test_factory_does_not_create_non_deathmatch", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_factory_does_not_create_non_deathmatch));
+        addSubTest("test_restart_updates_times", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_restart_updates_times));
+        addSubTest("test_rename_player", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_rename_player));
+        addSubTest("test_get_rank", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_get_rank));
+        addSubTest("test_time_limit_get_set_and_remaining_time_get", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_time_limit_get_set_and_remaining_time_get));
+        addSubTest("test_time_limit_client_update_time_remaining_secs", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_time_limit_client_update_time_remaining_secs));
+        addSubTest("test_winning_cond_time_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_winning_cond_time_limit));
+        addSubTest("test_receive_and_update_winning_conditions_client", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_receive_and_update_winning_conditions_client));
+        addSubTest("test_deathmatch_frag_limit_get_set", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_frag_limit_get_set));
+        addSubTest("test_deathmatch_fetch_config", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_fetch_config));
+        addSubTest("test_deathmatch_add_player_zero_values_maintains_adding_order", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_add_player_zero_values_maintains_adding_order));
+        addSubTest("test_deathmatch_add_player_random_values", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_add_player_random_values));
+        addSubTest("test_deathmatch_add_player_already_existing_fails", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_add_player_already_existing_fails));
+        addSubTest("test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won));
+        addSubTest("test_deathmatch_update_player", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_update_player));
+        addSubTest("test_deathmatch_update_player_non_existing_fails", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_update_player_non_existing_fails));
+        addSubTest("test_deathmatch_remove_player", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_remove_player));
+        addSubTest("test_deathmatch_restart", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_restart));
+        addSubTest("test_deathmatch_restart_without_removing_players", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_restart_without_removing_players));
+        addSubTest("test_deathmatch_winning_cond_defaults_to_false", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_defaults_to_false));
+        addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
+        addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
     }
 
     virtual bool setUp() override
@@ -166,26 +167,28 @@ protected:
         CConsole::getConsoleInstance().SetLoggingState(proofps_dd::GameMode::getLoggerModuleName(), false);
     }
 
-    bool testInitDeathmatch()
+    bool testInitGamemode(const proofps_dd::GameModeType& gamemode)
     {
-        gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
-        bool b = assertNotNull(gm, "gm null");
+        gm = proofps_dd::GameMode::createGameMode(gamemode);
+        bool b = assertNotNull(gm, (std::string("gm null, ") + std::string(proofps_dd::GameMode::getGameModeTypeName(gamemode))).c_str());
         if (b)
         {
-            dm = dynamic_cast<proofps_dd::DeathMatchMode*>(gm);
-            b &= assertNotNull(dm, "dm null");
-        }
-        return b;
-    }
-
-    bool testInitTeamDeathmatch()
-    {
-        gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::TeamDeathMatch);
-        bool b = assertNotNull(gm, "gm null");
-        if (b)
-        {
-            tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(gm);
-            b &= assertNotNull(tdm, "tdm null");
+            switch (gamemode)
+            {
+            case proofps_dd::GameModeType::DeathMatch:
+                dm = dynamic_cast<proofps_dd::DeathMatchMode*>(gm);
+                b &= assertNotNull(dm, (std::string("dm null, ") + std::string(proofps_dd::GameMode::getGameModeTypeName(gamemode))).c_str());
+                break;
+            case proofps_dd::GameModeType::TeamDeathMatch:
+                // since TDM is derived from DM, we can easily cast TDM to DM, and keep using dm in unit tests even when gamemode is TDM!
+                dm = dynamic_cast<proofps_dd::DeathMatchMode*>(gm);
+                b &= assertNotNull(dm, (std::string("dm null, ") + std::string(proofps_dd::GameMode::getGameModeTypeName(gamemode))).c_str());
+                tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(gm);
+                b &= assertNotNull(tdm, (std::string("tdm null, ") + std::string(proofps_dd::GameMode::getGameModeTypeName(gamemode))).c_str());
+                break;
+            default:
+                b = assertFalse(true, "invalid gamemode!");
+            }
         }
         return b;
     }
@@ -229,14 +232,94 @@ private:
         return b;
     }
 
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    bool assertFragTableEqualsEz(
+        const std::vector<proofps_dd::PlayersTableRow>& expectedPlayers,
+        const std::list<proofps_dd::PlayersTableRow>& fragTable,
+        const proofps_dd::GameModeType& gamemode,
+        const bool& bTestingAsServer,
+        const std::string& sLogText)
+    {
+        return assertFragTableEquals(
+            expectedPlayers,
+            fragTable,
+            sLogText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode));
+    }
+
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    bool assertTrueEz(bool statement, const proofps_dd::GameModeType& gamemode, const bool& bTestingAsServer, const std::string& strText)
+    {
+        return assertTrue(
+            statement,
+            (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
+    }
+
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    bool assertFalseEz(bool statement, const proofps_dd::GameModeType& gamemode, const bool& bTestingAsServer, const std::string& strText)
+    {
+        return assertFalse(
+            statement,
+            (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
+    }
+
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    template <class T, class S>
+    bool assertEqualsEz(const T& expected, const S& checked, const proofps_dd::GameModeType& gamemode, const bool& bTestingAsServer, const std::string& strText)
+    {
+        return assertEquals(
+            expected,
+            checked,
+            (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
+    }
+
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    template <class T, class S>
+    bool assertLequalsEz(const T& checked, const S& comparedTo, const proofps_dd::GameModeType& gamemode, const bool& bTestingAsServer, const std::string& strText)
+    {
+        return assertLequals(
+            checked,
+            comparedTo,
+            (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
+    }
+
+    // convenience function for easily forming failure strings in variadic-gamemode tests
+    template <class T, class S>
+    bool assertLessEz(const T& checked, const S& comparedTo, const proofps_dd::GameModeType& gamemode, const bool& bTestingAsServer, const std::string& strText)
+    {
+        return assertLess(
+            checked,
+            comparedTo,
+            (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
+    }
+
+    bool test_get_gamemodetype_name()
+    {
+        return (assertEquals("Deathmatch / Free for All", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::DeathMatch), "dm") &
+            assertEquals("Team Deathmatch", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamDeathMatch), "tdm") &
+            assertEquals("Team Round Game", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamRoundGame), "trg") &
+            assertEquals("", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::Max), "max")) != 0;
+    }
+
+    bool test_gamemodetype_prefix_increment_operator()
+    {
+        proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::DeathMatch;
+        bool b = true;
+        b &= assertTrue(proofps_dd::GameModeType::TeamDeathMatch == ++gamemode, "1");
+        b &= assertTrue(proofps_dd::GameModeType::Max == ++gamemode, "2");
+        b &= assertTrue(proofps_dd::GameModeType::DeathMatch == ++gamemode, "3");
+
+        return b;
+    }
+
     bool test_factory_creates_deathmatch()
     {
-        if (!testInitDeathmatch())
+        if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
         {
-            return assertFalse(true, "testInitDeathmatch fail");
+            return assertFalse(true, "testInitGamemode fail");
         }
 
         bool b = assertTrue(proofps_dd::GameModeType::DeathMatch == gm->getGameModeType(), "gmtype");
+        b &= assertEquals(std::string("Deathmatch / Free for All"), gm->getGameModeTypeName(), "gmtype name");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
@@ -247,12 +330,13 @@ private:
 
     bool test_factory_creates_teamdeathmatch()
     {
-        if (!testInitTeamDeathmatch())
+        if (!testInitGamemode(proofps_dd::GameModeType::TeamDeathMatch))
         {
             return assertFalse(true, "testInitTeamDeathmatch fail");
         }
     
         bool b = assertTrue(proofps_dd::GameModeType::TeamDeathMatch == gm->getGameModeType(), "gmtype");
+        b &= assertEquals(std::string("Team Deathmatch"), gm->getGameModeTypeName(), "gmtype name");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
@@ -287,9 +371,9 @@ private:
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             }
 
             gm->restart(m_network);
@@ -318,9 +402,9 @@ private:
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             }
 
             dm->setFragLimit(11);
@@ -375,10 +459,10 @@ private:
             b &= assertTrue(gm->renamePlayer("Adam", "Peter"), (std::string("rename 8 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 2, 0},
-                { "Apple", player2.getServerSideConnectionHandle(), 1, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0, 0 }
+                { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 2, 0},
+                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 1, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 }
             };
 
             b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
@@ -449,9 +533,9 @@ private:
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             }
 
             b &= (assertEquals(0u, gm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
@@ -470,9 +554,9 @@ private:
     bool test_time_limit_client_update_time_remaining_secs()
     {
         // client-only test
-        if (!testInitDeathmatch())
+        if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
         {
-            return assertFalse(true, "testInitDeathmatch fail");
+            return assertFalse(true, "testInitGamemode fail");
         }
 
         constexpr unsigned int nTimeLimitSecs = 13u;
@@ -497,7 +581,82 @@ private:
         return b;
     }
 
-    bool test_deathmatch_frag_limit_get_set()
+    bool test_winning_cond_time_limit()
+    {
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as server");
+        }
+
+        SpecialGameMode sgm;
+
+        sgm.setTimeLimitSecs(2);
+        sgm.restart(m_network);
+        // restart triggers MsgGameSessionStateFromServer out no matter current state
+        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
+        std::set<unsigned int> setRemainingSecs = { 0, 1 };
+        int iSleep = 0;
+        while ((iSleep++ < 5) && !sgm.serverCheckAndUpdateWinningConditions(m_network))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            setRemainingSecs.erase(static_cast<unsigned int>(std::floor(sgm.getTimeRemainingMillisecs() / 1000.f)));
+        }
+        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - sgm.getResetTime());
+        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time");
+        b &= assertTrue(sgm.isGameWon(), "game won");
+        b &= assertTrue(sgm.serverCheckAndUpdateWinningConditions(m_network), "winning");
+        b &= assertLequals(static_cast<std::chrono::seconds::rep>(sgm.getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
+        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
+
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "tx msg count");
+        }
+
+        return b;
+    }
+
+    bool test_receive_and_update_winning_conditions_client()
+    {
+        SpecialGameMode sgm;
+
+        bool b = assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 1");
+        b &= assertFalse(sgm.isGameWon(), "winning state 1");
+
+        sgm.clientReceiveAndUpdateWinningConditions(m_network, true);
+
+        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time 2");
+        b &= assertTrue(sgm.isGameWon(), "winning state 2");
+
+        sgm.clientReceiveAndUpdateWinningConditions(m_network, false);
+
+        b &= assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 3");
+        b &= assertFalse(sgm.isGameWon(), "winning state 3");
+
+        return b;
+    }
+
+    bool test_deathmatch_frag_limit_get_set(const proofps_dd::GameModeType& gamemode)
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -511,24 +670,36 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
-            b &= assertEquals(0u, dm->getFragLimit(), (std::string("default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEqualsEz(0u, dm->getFragLimit(), gamemode, bTestingAsServer, "default fail");
             dm->setFragLimit(25u);
-            b &= assertEquals(25u, dm->getFragLimit(), (std::string("new fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEqualsEz(25u, dm->getFragLimit(), gamemode, bTestingAsServer, "new fail");
         }
 
         return b;
     }
 
-    bool test_deathmatch_fetch_config()
+    bool test_deathmatch_frag_limit_get_set()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_frag_limit_get_set(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_fetch_config(const proofps_dd::GameModeType& gamemode)
     {
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmFragLimit].Set(25);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(13);
@@ -545,31 +716,43 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
-            b &= (assertEquals(0u, dm->getFragLimit(), (std::string("default frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(0u, gm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()));
+            b &= assertEqualsEz(0u, dm->getFragLimit(), gamemode, bTestingAsServer, "default frag limit fail") &
+                assertEqualsEz(0u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "default time limit fail");
 
             gm->fetchConfig(m_cfgProfiles, m_network);
             gm->restart(m_network);  // restart() is needed to have correct value for remaining time
 
-            b &= assertEquals(25u, dm->getFragLimit(), (std::string("new frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(13u, gm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+            b &= assertEqualsEz(25u, dm->getFragLimit(), gamemode, bTestingAsServer, "new frag limit fail") &
+                assertEqualsEz(13u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "new time limit fail") &
                 /* 11000 millisecs so there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here) */
-                assertLequals(11000u, gm->getTimeRemainingMillisecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                assertLequalsEz(11000u, gm->getTimeRemainingMillisecs(), gamemode, bTestingAsServer, "new remaining fail");
         }
 
         return b;
     }
 
-    bool test_deathmatch_add_player_zero_values_maintains_adding_order()
+    bool test_deathmatch_fetch_config()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_fetch_config(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_add_player_zero_values_maintains_adding_order(const proofps_dd::GameModeType& gamemode)
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -583,13 +766,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             dm->setFragLimit(11);
@@ -626,19 +809,106 @@ private:
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
 
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
+            b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 fail");
+            b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 0, 0 },
-                { "Apple", player2.getServerSideConnectionHandle(), 0, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0, 0 }
+                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
+                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
+        }
+
+        return b;
+    }
+
+    bool test_deathmatch_add_player_zero_values_maintains_adding_order()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_add_player_zero_values_maintains_adding_order(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_add_player_random_values(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            dm->setFragLimit(11);
+
+            proofps_dd::Player player1(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setName("Adam");
+            player1.getFrags() = 10;
+            player1.getDeaths() = 0;
+
+            proofps_dd::Player player2(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setName("Apple");
+            player2.getFrags() = 5;
+            player2.getDeaths() = 2;
+
+            proofps_dd::Player player3(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            player3.setName("Joe");
+            player3.getFrags() = 8;
+            player3.getDeaths() = 2;
+
+            proofps_dd::Player player4(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            player4.setName("Banana");
+            player4.getFrags() = 8;
+            player4.getDeaths() = 0;
+
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
+            b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 fail");
+            b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
+
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
+                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
+            };
+
+            b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
         }
 
         return b;
@@ -646,6 +916,18 @@ private:
 
     bool test_deathmatch_add_player_random_values()
     {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_add_player_random_values(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_add_player_already_existing_fails(const proofps_dd::GameModeType& gamemode)
+    {
         bool bTestingAsServer = false;
         bool b = true;
 
@@ -658,13 +940,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             dm->setFragLimit(11);
@@ -701,19 +983,24 @@ private:
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
 
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2");
+            b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3");
+            b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4");
+
+            player3.setName("Joe");
+            player3.getFrags() = 12;
+            player3.getDeaths() = 0;
+            b &= assertFalseEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 again");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 5, 2 }
+                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
         }
 
         return b;
@@ -721,96 +1008,28 @@ private:
 
     bool test_deathmatch_add_player_already_existing_fails()
     {
-        bool bTestingAsServer = false;
         bool b = true;
-
-        for (auto i = 1; i <= 2; i++)
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
-            if (i == 2)
-            {
-                tearDown();
-                bTestingAsServer = true;
-                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
-                if (!m_network.initialize())
-                {
-                    return assertFalse(true, "network reinit as server");
-                }
-            }
-
-            if (!testInitDeathmatch())
-            {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            }
-
-            dm->setFragLimit(11);
-
-            proofps_dd::Player player1(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
-            player1.setName("Adam");
-            player1.getFrags() = 10;
-            player1.getDeaths() = 0;
-
-            proofps_dd::Player player2(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
-            player2.setName("Apple");
-            player2.getFrags() = 5;
-            player2.getDeaths() = 2;
-
-            proofps_dd::Player player3(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
-            player3.setName("Joe");
-            player3.getFrags() = 8;
-            player3.getDeaths() = 2;
-
-            proofps_dd::Player player4(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
-            player4.setName("Banana");
-            player4.getFrags() = 8;
-            player4.getDeaths() = 0;
-
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-
-            player3.setName("Joe");
-            player3.getFrags() = 12;
-            player3.getDeaths() = 0;
-            b &= assertFalse(gm->addPlayer(player3, m_network), (std::string("add player 3 again, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-
-            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 5, 2 }
-            };
-
-            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertTrue(
+                test_deathmatch_add_player_already_existing_fails(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
         }
-
         return b;
     }
 
-    bool test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won()
+    bool test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won(const proofps_dd::GameModeType& gamemode)
     {
         // server-only test
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
         if (!m_network.initialize())
         {
-            return assertFalse(true, "network reinit as server");
+            return assertFalseEz(true, gamemode, true, "network reinit as server");
         }
 
-        if (!testInitDeathmatch())
+        if (!testInitGamemode(gamemode))
         {
-            return assertFalse(true, "testInitDeathmatch fail");
+            return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
         }
 
         bool b = true;
@@ -833,52 +1052,69 @@ private:
         player2.getFrags() = 5;
         player2.getDeaths() = 2;
 
-        b &= assertTrue(gm->addPlayer(player1, m_network), "add player 1 fail");
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 fail");
 
         // initially there is no sent out packets because game is NOT yet won
-        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEqualsEz(0u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count");
 
         // adding same player fails so still no sent out packets
-        b &= assertFalse(gm->addPlayer(player1, m_network), "add player 1 again fail 1");
-        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 again fail 1");
+        b &= assertEqualsEz(0u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count");
 
         // game is now won, expecting 1 sent pkts to the virtually connected client (ServerStub has 1 virtual always-connected client)
         player1.getFrags()++;
-        b &= assertTrue(gm->updatePlayer(player1, m_network), "update player 1 fail");
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail");
+        b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true /*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count");
         }
 
         // adding same player fails so number of sent pkts should not change
-        b &= assertFalse(gm->addPlayer(player1, m_network), "add player 1 again fail 2");
-        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 again fail 2");
+        b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count");
 
         // now adding new player should trigger sending out MsgGameSessionStateFromServer to the player since game state is already won
-        b &= assertTrue(gm->addPlayer(player2, m_network), "add player 2 fail");
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true /*server*/, "add player 2 fail");
+        b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true /*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count");
         }
 
         return b;
     }
 
-    bool test_deathmatch_update_player()
+    bool test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_add_player_sends_winning_state_only_when_game_is_already_won(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+            
+            // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
+            tearDown();
+        }
+        return b;
+    }
+
+    bool test_deathmatch_update_player(const proofps_dd::GameModeType& gamemode)
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -892,13 +1128,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             dm->setFragLimit(11);
@@ -927,62 +1163,140 @@ private:
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
 
-            b &= assertTrue(gm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(playerApple, m_network), (std::string("add player Apple fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(playerJoe, m_network), (std::string("add player Joe fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
+            b &= assertTrueEz(gm->addPlayer(playerApple, m_network), gamemode, bTestingAsServer, "add player Apple fail");
+            b &= assertTrueEz(gm->addPlayer(playerJoe, m_network), gamemode, bTestingAsServer, "add player Joe fail");
 
             playerJoe.getFrags()++;
-            b &= assertTrue(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 1 fail");
             // since Joe got same number of frags _later_ than Apple, Joe must stay behind Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 5, 2 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 2 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
             };
-            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
 
             playerApple.getDeaths()++;
-            b &= assertTrue(gm->updatePlayer(playerApple, m_network), (std::string("update player Apple 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->updatePlayer(playerApple, m_network), gamemode, bTestingAsServer, "update player Apple 1 fail");
             // since Apple now has more deaths than Joe, it must goe behind Joe
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 2 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 }
             };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
             playerJoe.getDeaths()++;
-            b &= assertTrue(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 2 fail");
             // since Joe got same number of frags _earlier_ than Apple, and got same number for deaths _later_ than Apple, it must stay in front of Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 5, 3 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 }
             };
-            b &= assertFragTableEquals(expectedPlayers3, gm->getPlayersTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 3 fail");
 
             playerAdam.getFrags()++;
-            b &= assertTrue(gm->updatePlayer(playerAdam, m_network), (std::string("update player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->updatePlayer(playerAdam, m_network), gamemode, bTestingAsServer, "update player Adam 1 fail");
 
             if (bTestingAsServer)
             {
                 // game won, win time is already updated by updatePlayer() even before explicit call to serverCheckAndUpdateWinningConditions();
                 // this is known only by server, client needs to be informed by server
-                b &= assertTrue(gm->isGameWon(), "game won");
-                b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), (std::string("win time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning server");
-                b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won");
+                b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time fail");
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning server");
+                b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
+
+        }
+
+        return b;
+    }
+
+    bool test_deathmatch_update_player()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_update_player(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_update_player_non_existing_fails(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            dm->setFragLimit(10);
+
+            proofps_dd::Player playerAdam(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            playerAdam.setName("Adam");
+            playerAdam.getFrags() = 10;
+            playerAdam.getDeaths() = 0;
+
+            b &= assertFalse(dm->updatePlayer(playerAdam, m_network), "update player Adam 1 fail");
+
+            if (bTestingAsServer)
+            {
+                b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game not won");
+                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning");
+                b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+            }
+
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
+            b &= assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
+
+            b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
+
+            proofps_dd::Player playerJoe(
+                m_audio, m_cfgProfiles, m_bullets,
+                m_itemPickupEvents, m_ammoChangeEvents,
+                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            playerJoe.setName("Joe");
+            playerJoe.getFrags() = 4;
+            playerJoe.getDeaths() = 2;
+            b &= assertFalseEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 1 fail");
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 }
+            };
+            b &= assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
         }
 
@@ -991,6 +1305,18 @@ private:
 
     bool test_deathmatch_update_player_non_existing_fails()
     {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_update_player_non_existing_fails(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_remove_player(const proofps_dd::GameModeType& gamemode)
+    {
         bool bTestingAsServer = false;
         bool b = true;
 
@@ -1003,13 +1329,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             dm->setFragLimit(10);
@@ -1022,19 +1348,12 @@ private:
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
 
-            b &= assertFalse(dm->updatePlayer(playerAdam, m_network), (std::string("update player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-
-            if (bTestingAsServer)
-            {
-                b &= assertFalse(gm->isGameWon(), "game not won");
-                b &= assertFalse(gm->serverCheckAndUpdateWinningConditions(m_network), "winning");
-                b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
-            }
+            b &= assertFalseEz(gm->removePlayer(playerAdam), gamemode, bTestingAsServer, "removep player Adam 1 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
-            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
 
-            b &= assertTrue(gm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1043,11 +1362,22 @@ private:
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
-            b &= assertFalse(gm->updatePlayer(playerJoe, m_network), (std::string("update player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalseEz(gm->removePlayer(playerJoe), gamemode, bTestingAsServer, "remove player Joe 1 fail");
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 }
             };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
+
+            b &= assertTrueEz(gm->removePlayer(playerAdam), gamemode, bTestingAsServer, "remove player Adam 1 fail");
+            b &= assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 3 fail");
+
+            if (bTestingAsServer)
+            {
+                // even though winner player is removed, winning condition stays true, win time is still valid, an explicit reset() would be needed to clear them!
+                b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won");
+                b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning");
+            }
 
         }
 
@@ -1056,74 +1386,17 @@ private:
 
     bool test_deathmatch_remove_player()
     {
-        bool bTestingAsServer = false;
         bool b = true;
-
-        for (auto i = 1; i <= 2; i++)
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
-            if (i == 2)
-            {
-                tearDown();
-                bTestingAsServer = true;
-                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
-                if (!m_network.initialize())
-                {
-                    return assertFalse(true, "network reinit as server");
-                }
-            }
-
-            if (!testInitDeathmatch())
-            {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            }
-
-            dm->setFragLimit(10);
-
-            proofps_dd::Player playerAdam(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
-            playerAdam.setName("Adam");
-            playerAdam.getFrags() = 10;
-            playerAdam.getDeaths() = 0;
-
-            b &= assertFalse(gm->removePlayer(playerAdam), (std::string("removep player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-
-            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
-            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 1 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
-
-            b &= assertTrue(gm->addPlayer(playerAdam, m_network), (std::string("add player Adam fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-
-            proofps_dd::Player playerJoe(
-                m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
-                *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
-            playerJoe.setName("Joe");
-            playerJoe.getFrags() = 4;
-            playerJoe.getDeaths() = 2;
-            b &= assertFalse(gm->removePlayer(playerJoe), (std::string("remove player Joe 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 10, 0 }
-            };
-            b &= assertFragTableEquals(expectedPlayers2, gm->getPlayersTable(), std::string("table 2 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
-
-            b &= assertTrue(gm->removePlayer(playerAdam), (std::string("remove player Adam 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFragTableEquals(expectedPlayers1, gm->getPlayersTable(), std::string("table 3 fail, testing as ") + (bTestingAsServer ? "server" : "client"));
-
-            if (bTestingAsServer)
-            {
-                // even though winner player is removed, winning condition stays true, win time is still valid, an explicit reset() would be needed to clear them!
-                b &= assertTrue(gm->isGameWon(), "game won");
-                b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning");
-            }
-
+            b &= assertTrue(
+                test_deathmatch_remove_player(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
         }
-
         return b;
     }
 
-    bool test_deathmatch_restart()
+    bool test_deathmatch_restart(const proofps_dd::GameModeType& gamemode)
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -1137,13 +1410,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             gm->setTimeLimitSecs(25u);
@@ -1165,75 +1438,90 @@ private:
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
 
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
 
             if (bTestingAsServer)
             {
-                b &= assertTrue(gm->isGameWon(), "game won 1");
-                b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning 1");
-                b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
+                b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
+                b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
 
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
             if (bTestingAsServer)
             {
                 // in case of server instance, addPlayer() sends MsgGameSessionStateFromServer to newly added player when isGameWon() is true 
-                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
 
             gm->restart(m_network);
 
-            b &= assertEquals(25u, gm->getTimeLimitSecs(), (std::string("time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertEquals(15u, dm->getFragLimit(), (std::string("frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEqualsEz(25u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "time limit fail");
+            b &= assertEqualsEz(15u, dm->getFragLimit(), gamemode, bTestingAsServer, "frag limit fail");
             if (bTestingAsServer)
             {
-                b &= assertFalse(gm->isGameWon(), "game won 2");
-                b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
-                b &= assertFalse(gm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
+                b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
+                b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+                b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
+                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEqualsEz(3u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
-            b &= assertTrue(gm->getPlayersTable().empty(), (std::string("players empty fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->getPlayersTable().empty(), gamemode, bTestingAsServer, "players empty fail");
 
         }
 
         return b;
     }
 
-    bool test_deathmatch_restart_without_removing_players()
+    bool test_deathmatch_restart()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_restart(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_restart_without_removing_players(const proofps_dd::GameModeType& gamemode)
     {
         bool bTestingAsServer = false;
         bool b = true;
@@ -1247,13 +1535,13 @@ private:
                 m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
                 if (!m_network.initialize())
                 {
-                    return assertFalse(true, "network reinit as server");
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
                 }
             }
 
-            if (!testInitDeathmatch())
+            if (!testInitGamemode(gamemode))
             {
-                return assertFalse(true, (std::string("testInitDeathmatch fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
             gm->setTimeLimitSecs(25u);
@@ -1281,182 +1569,158 @@ private:
             player2.getFiringAccuracy() = 0.5f;
             player2.getShotsFiredCount() = 10;
 
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
 
             if (bTestingAsServer)
             {
-                b &= assertTrue(gm->isGameWon(), "game won 1");
-                b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning 1");
-                b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
+                b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
+                b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
 
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
             if (bTestingAsServer)
             {
                 // in case of server instance, addPlayer() sends MsgGameSessionStateFromServer to newly added player when isGameWon() is true 
-                b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
 
             gm->restartWithoutRemovingPlayers(m_network);
 
-            b &= assertEquals(25u, gm->getTimeLimitSecs(), (std::string("time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertEquals(15u, dm->getFragLimit(), (std::string("frag limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEqualsEz(25u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "time limit fail");
+            b &= assertEqualsEz(15u, dm->getFragLimit(), gamemode, bTestingAsServer, "frag limit fail");
             if (bTestingAsServer)
             {
-                b &= assertFalse(gm->isGameWon(), "game won 2");
-                b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time");
-                b &= assertLess(0, gm->getResetTime().time_since_epoch().count(), "reset time");
-                b &= assertFalse(gm->serverCheckAndUpdateWinningConditions(m_network), "winning 2");
+                b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
+                b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
+                b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
+                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+                b &= assertEqualsEz(3u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 try
                 {
-                    b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
-                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+                    b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                        gamemode, bTestingAsServer, ""
                     );
                 }
                 catch (...)
                 {
-                    b &= assertFalse(true, "tx msg count");
+                    b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
-            b &= assertEquals(2u, gm->getPlayersTable().size(), (std::string("players still there fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertEqualsEz(2u, gm->getPlayersTable().size(), gamemode, bTestingAsServer, "players still there fail");
 
             for (const auto& player : gm->getPlayersTable())
             {
-                b &= assertEquals(0, player.m_nFrags, (std::string("players frags 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertEquals(0, player.m_nDeaths, (std::string("players deaths 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertEquals(0u, player.m_nSuicides, (std::string("players suicides 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertEquals(0, player.m_fFiringAcc, (std::string("players firing acc 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-                b &= assertEquals(0u, player.m_nShotsFired, (std::string("players shots fired 0 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                b &= assertEqualsEz(0, player.m_nFrags, gamemode, bTestingAsServer, "players frags 0 fail");
+                b &= assertEqualsEz(0, player.m_nDeaths, gamemode, bTestingAsServer, "players deaths 0 fail");
+                b &= assertEqualsEz(0u, player.m_nSuicides, gamemode, bTestingAsServer, "players suicides 0 fail");
+                b &= assertEqualsEz(0, player.m_fFiringAcc, gamemode, bTestingAsServer, "players firing acc 0 fail");
+                b &= assertEqualsEz(0u, player.m_nShotsFired, gamemode, bTestingAsServer, "players shots fired 0 fail");
             }
 
         }
 
         return b;
+    }
+
+    bool test_deathmatch_restart_without_removing_players()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_restart_without_removing_players(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+        }
+        return b;
+    }
+
+    bool test_deathmatch_winning_cond_defaults_to_false(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
+        }
+        
+        return assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "");
     }
 
     bool test_deathmatch_winning_cond_defaults_to_false()
     {
-        // server-only test
-        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
-        if (!m_network.initialize())
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
-            return assertFalse(true, "network reinit as server");
-        }
+            b &= assertTrue(
+                test_deathmatch_winning_cond_defaults_to_false(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
-        if (!testInitDeathmatch())
-        {
-            return assertFalse(true, "testInitDeathmatch fail");
+            // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
+            tearDown();
         }
-        
-        return assertFalse(gm->serverCheckAndUpdateWinningConditions(m_network));
-    }
-
-    bool test_deathmatch_winning_cond_time_limit()
-    {
-        // server-only test
-        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
-        if (!m_network.initialize())
-        {
-            return assertFalse(true, "network reinit as server");
-        }
-
-        SpecialGameMode sgm;
-
-        sgm.setTimeLimitSecs(2);
-        sgm.restart(m_network);
-        // restart triggers MsgGameSessionStateFromServer out no matter current state
-        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
-        try
-        {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
-            );
-        }
-        catch (...)
-        {
-            b &= assertFalse(true, "tx msg count");
-        }
-
-        std::set<unsigned int> setRemainingSecs = {0, 1};
-        int iSleep = 0;
-        while ((iSleep++ < 5) && !sgm.serverCheckAndUpdateWinningConditions(m_network))
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            setRemainingSecs.erase( static_cast<unsigned int>(std::floor(sgm.getTimeRemainingMillisecs() / 1000.f)) );
-        }
-        const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - sgm.getResetTime());
-        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time");
-        b &= assertTrue(sgm.isGameWon(), "game won");
-        b &= assertTrue(sgm.serverCheckAndUpdateWinningConditions(m_network), "winning");
-        b &= assertLequals(static_cast<std::chrono::seconds::rep>(sgm.getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
-        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
-
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
-        try
-        {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
-            );
-        }
-        catch (...)
-        {
-            b &= assertFalse(true, "tx msg count");
-        }
-
         return b;
     }
 
-    bool test_deathmatch_winning_cond_frag_limit()
+    bool test_deathmatch_winning_cond_frag_limit(const proofps_dd::GameModeType& gamemode)
     {
         // server-only test
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
         if (!m_network.initialize())
         {
-            return assertFalse(true, "network reinit as server");
+            return assertFalseEz(true, gamemode, true, "network reinit as server");
         }
 
-        if (!testInitDeathmatch())
+        if (!testInitGamemode(gamemode))
         {
-            return assertFalse(true, "testInitDeathmatch fail");
+            return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
         }
 
         dm->setFragLimit(5);
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
-        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        bool b = assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
         proofps_dd::Player player1(
@@ -1475,48 +1739,64 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
 
-        b &= assertTrue(gm->addPlayer(player1, m_network), "add player 1");
-        b &= assertTrue(gm->addPlayer(player2, m_network), "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
 
         unsigned int i = 0;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
-            b &= assertTrue(gm->updatePlayer(player1, m_network), "update player");
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
         }
 
-        b &= assertTrue(gm->isGameWon(), "game won 2");
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time");
-        b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning");
-        b &= assertEquals(dm->getFragLimit(), i, "frags collected");
+        b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
+        b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
+        b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning");
+        b &= assertEqualsEz(dm->getFragLimit(), i, gamemode, true/*server*/, "frags collected");
 
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
         return b;
     }
 
-    bool test_deathmatch_winning_cond_time_and_frag_limit()
+    bool test_deathmatch_winning_cond_frag_limit()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_winning_cond_frag_limit(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+            // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
+            tearDown();
+        }
+        return b;
+    }
+
+    bool test_deathmatch_winning_cond_time_and_frag_limit(const proofps_dd::GameModeType& gamemode)
     {
         // server-only test
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
         if (!m_network.initialize())
         {
-            return assertFalse(true, "network reinit as server");
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
         }
 
-        if (!testInitDeathmatch())
+        if (!testInitGamemode(gamemode))
         {
-            return assertFalse(true, "testInitDeathmatch fail");
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
         }
 
         proofps_dd::Player player1(
@@ -1539,20 +1819,21 @@ private:
         gm->setTimeLimitSecs(2);
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
-        bool b = assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        bool b = assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
-        b &= assertTrue(gm->addPlayer(player1, m_network), "add player 1");
-        b &= assertTrue(gm->addPlayer(player2, m_network), "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
 
         // time limit elapse also means winning even if frag limit not reached
         std::set<unsigned int> setRemainingSecs = { 0, 1 };
@@ -1562,90 +1843,88 @@ private:
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             setRemainingSecs.erase(static_cast<unsigned int>(std::floor(gm->getTimeRemainingMillisecs() / 1000.f)));
         }
-        b &= assertTrue(gm->isGameWon(), "game won 1");
+        b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 1");
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - gm->getResetTime());
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 1");
-        b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning due to time");
-        b &= assertLequals(static_cast<std::chrono::seconds::rep>(gm->getTimeLimitSecs()), durationSecs.count(), "time limit elapsed");
-        b &= assertTrue(setRemainingSecs.empty(), "no remaining");
+        b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 1");
+        b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning due to time");
+        b &= assertLequalsEz(static_cast<std::chrono::seconds::rep>(gm->getTimeLimitSecs()), durationSecs.count(), gamemode, true/*server*/, "time limit elapsed");
+        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true/*server*/, "no remaining");
 
-        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
         // frag limit reach also means winning even if time limit not reached
         gm->setTimeLimitSecs(100);
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
-        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEqualsEz(3u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
-        b &= assertFalse(gm->isGameWon(), "game won 2");
-        b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time 2");
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
+        b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 2");
 
-        b &= assertTrue(gm->addPlayer(player1, m_network), "add player 1");
-        b &= assertTrue(gm->addPlayer(player2, m_network), "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
 
         unsigned int i = 0;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
-            b &= assertTrue(gm->updatePlayer(player1, m_network), "update player");
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
         }
-        b &= assertTrue(gm->isGameWon(), "game won 3");
-        b &= assertLess(0, gm->getWinTime().time_since_epoch().count(), "win time 3");
-        b &= assertTrue(gm->serverCheckAndUpdateWinningConditions(m_network), "winning due to frags");
-        b &= assertEquals(dm->getFragLimit(), i, "frags collected");
+        b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 3");
+        b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 3");
+        b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning due to frags");
+        b &= assertEqualsEz(dm->getFragLimit(), i, gamemode, true/*server*/, "frags collected");
 
-        b &= assertEquals(4u, m_network.getServer().getTxPacketCount(), "tx pkt count");
+        b &= assertEqualsEz(4u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
-            b &= assertEquals(4u, m_network.getServer().getTxMsgCount().at(
-                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id))
+            b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, ""
             );
         }
         catch (...)
         {
-            b &= assertFalse(true, "tx msg count");
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
         return b;
     }
 
-    bool test_deathmatch_receive_and_update_winning_conditions_client()
+    bool test_deathmatch_winning_cond_time_and_frag_limit()
     {
-        SpecialGameMode sgm;
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_deathmatch_winning_cond_time_and_frag_limit(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
-        bool b = assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 1");
-        b &= assertFalse(sgm.isGameWon(), "winning state 1");
-
-        sgm.clientReceiveAndUpdateWinningConditions(m_network, true);
-
-        b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time 2");
-        b &= assertTrue(sgm.isGameWon(), "winning state 2");
-
-        sgm.clientReceiveAndUpdateWinningConditions(m_network, false);
-
-        b &= assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 3");
-        b &= assertFalse(sgm.isGameWon(), "winning state 3");
-
+            // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
+            tearDown();
+        }
         return b;
     }
 

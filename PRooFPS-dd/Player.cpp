@@ -1425,6 +1425,16 @@ const PgeOldNewValue<int>& proofps_dd::Player::getFrags() const
     return std::get<PgeOldNewValue<int>>(m_vecOldNewValues.at(OldNewValueName::OvFrags));
 }
 
+PgeOldNewValue<unsigned int>& proofps_dd::Player::getTeamId()
+{
+    return m_iTeamId;
+}
+
+const PgeOldNewValue<unsigned int>& proofps_dd::Player::getTeamId() const
+{
+    return m_iTeamId;
+}
+
 bool proofps_dd::Player::canTakeItem(const MapItem& item) const
 {
     switch (item.getType())
@@ -1827,6 +1837,31 @@ void proofps_dd::Player::handleJumppadActivated()
             PlayerEventId::JumppadActivated);
         m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
     }
+}
+
+void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
+{
+    // both server and client execute this function, so be careful with conditions here
+
+    getTeamId() = iTeamId;
+
+    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    {
+        // TODO: add xy joined team n to a new eventlister!
+    }
+
+    if (!m_network.isServer())
+    {
+        return;
+    }
+
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::TeamIdChanged,
+        static_cast<int>(iTeamId));
+    m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
 }
 
 

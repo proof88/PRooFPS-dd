@@ -107,6 +107,7 @@ protected:
         addSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
         addSubTest("test_handle_jumppad_activated_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_server);
         addSubTest("test_handle_jumppad_activated_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_client);
+        addSubTest("test_handle_team_id_changed", (PFNUNITSUBTEST)&PlayerTest::test_handle_team_id_changed);
     }
 
     virtual bool setUp() override
@@ -332,6 +333,8 @@ private:
             assertEquals(0u, player.getShotsFiredCount(), "shots fired") &
             assertEquals(0u, player.getShotsHitTarget(), "shots hit target") &
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
+            assertFalse(player.getTeamId().isDirty(), "old team id") &
+            assertEquals(0u, player.getTeamId(), "team id") &
             assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
             assertTrue(player.isFalling(), "is falling") &
@@ -2602,6 +2605,51 @@ private:
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
         playerClient.handleJumppadActivated();
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        return b;
+    }
+
+    bool test_handle_team_id_changed()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+
+        bool b = true;
+        // (I cannot check sound now, need stubs for that)
+        playerServer.handleTeamIdChanged(1);
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        // (I cannot check sound now, need stubs for that)
+        playerClient.handleTeamIdChanged(1);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
+
+        // same actions as above, no protective flag is in place that needs to be cleared first
+        playerClient.handleTeamIdChanged(1);
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
 
         return b;
     }

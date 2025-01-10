@@ -34,7 +34,8 @@ namespace proofps_dd
         FallingFromHigh = 0,
         Landed,
         ItemTake,
-        JumppadActivated
+        JumppadActivated,
+        TeamIdChanged
     };
 
     class Player
@@ -280,6 +281,9 @@ namespace proofps_dd
         PgeOldNewValue<int>& getFrags();
         const PgeOldNewValue<int>& getFrags() const;
 
+        PgeOldNewValue<unsigned int>& getTeamId();
+        const PgeOldNewValue<unsigned int>& getTeamId() const;
+
         bool canTakeItem(const MapItem& item) const;
         void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable);
 
@@ -296,6 +300,7 @@ namespace proofps_dd
             const bool& bJustBecameAvailable,
             const int& nAmmoIncrease);
         void handleJumppadActivated();
+        void handleTeamIdChanged(const unsigned int& iTeamId);
 
     private:
 
@@ -380,6 +385,10 @@ namespace proofps_dd
                 {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
         };
+
+        // Intentionally not part of m_vecOldNewValues, does not contribute to isDirty() or isNetDirty() or MsgUserUpdateFromServer either.
+        // Handled in MsgPlayerEventFromServer;
+        PgeOldNewValue<unsigned int> m_iTeamId{0};
 
         bool m_bNetDirty = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;

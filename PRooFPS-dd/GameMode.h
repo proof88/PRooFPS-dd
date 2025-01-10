@@ -26,14 +26,18 @@ namespace proofps_dd
     {
         DeathMatch,
         TeamDeathMatch,
-        Max,
-        TeamRoundGame
+        Max,            /* last value prefix increment operator allows reaching */
+        TeamRoundGame   /* no support yet */
     };
+
+    /** Prefix increment, useful in iterating over different game modes in unit test. */
+    GameModeType& operator++(GameModeType& gm);
 
     struct PlayersTableRow
     {
         std::string m_sName;
         pge_network::PgeNetworkConnectionHandle m_connHandle{};
+        unsigned int m_iTeamId{ 0 };  // 0 means no team selected
         int m_nFrags{ 0 };    // frags allowed to be negative due to player doing suicides decreases fragcount
         int m_nDeaths{ 0 };   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
         unsigned int m_nSuicides{ 0 };
@@ -85,6 +89,8 @@ namespace proofps_dd
 
         static GameMode* createGameMode(GameModeType gm);
 
+        static const char* getGameModeTypeName(GameModeType gm);
+
         static const char* getRank(const PlayersTableRow& row);
 
         // ---------------------------------------------------------------------------
@@ -107,6 +113,7 @@ namespace proofps_dd
         virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network);
 
         GameModeType getGameModeType() const;
+        const char* getGameModeTypeName() const;
 
         const std::chrono::time_point<std::chrono::steady_clock>& getResetTime() const;
 
@@ -355,19 +362,9 @@ namespace proofps_dd
 
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
-        virtual bool addPlayer(
-            const Player& player,
-            pge_network::PgeINetwork& network) override;
-        virtual bool updatePlayer(
-            const Player& player,
-            pge_network::PgeINetwork& network) override;
-        virtual bool removePlayer(const Player& player) override;
-
     protected:
 
     private:
-
-        static int comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths);
 
         // ---------------------------------------------------------------------------
 
