@@ -169,8 +169,8 @@ namespace proofps_dd
         /**
         * Evaluates conditions to see if game is won or not.
         * 
+        * This class checks elapsed game session time against time limit, if any set.
         * Derived class shall extend this function by overriding and calling this parent implementation from the specialized implementation.
-        * This parent implementation takes care of checking elapsed time against time limit.
         * 
         * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         * 
@@ -211,8 +211,9 @@ namespace proofps_dd
         
         /**
         * Adds the specified player.
-        * In case of server instance, it automatically evaluates winning condition, and in case of winning it also updates winning time and
-        * sends out MsgGameSessionStateFromServer to all clients.
+        * In case of server instance, if the added player is a client, it SHALL immediately send game win condition to this client
+        * using serverSendGameSessionStateToClient().
+        * In case of server instance, it SHALL automatically evaluate winning condition using serverCheckAndUpdateWinningConditions() after adding the player.
         * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
         * 
         * Fails if a player with same name is already added.
@@ -225,8 +226,7 @@ namespace proofps_dd
 
         /**
         * Updates data for the specified player.
-        * In case of server instance, it automatically evaluates winning condition, and in case of winning it also updates winning time and
-        * sends out MsgGameSessionStateFromServer to all clients.
+        * In case of server instance, it SHALL automatically evaluate winning condition using serverCheckAndUpdateWinningConditions() after updating the player.
         * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
         * 
         * Fails if player with same cannot be found.
@@ -292,6 +292,8 @@ namespace proofps_dd
     * In DeathMatch a.k.a. FFA (Free For All) game mode, everyone is shooting everyone, and the winner is
     * whoever has the most frags when either the frag limit or time limit is reached.
     * Note: it is also valid to not to have either frag limit or time limit set, but in such case the game never ends.
+    * 
+    * Although we have player teamId, we don't use it in this game mode at all.
     */
     class DeathMatchMode : public GameMode
     {
@@ -307,6 +309,9 @@ namespace proofps_dd
 
         virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) override;
 
+        /**
+        * Extending parent class implementation by checking player frags against frag limit, if any is set.
+        */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
         /**
@@ -347,6 +352,9 @@ namespace proofps_dd
     * shoot as many players in the enemy team as they can. The team with most total frags is the winner when
     * either the frag limit or time limit is reached.
     * Note: it is also valid to not to have either frag limit or time limit set, but in such case the game never ends.
+    * 
+    * Player teamId is used to know which player belongs to which team, so team total frags can be calculated.
+    * This also means serverCheckAndUpdateWinningConditions() has different implementation than DeathMatchMode has.
     */
     class TeamDeathMatchMode : public DeathMatchMode
     {
@@ -360,6 +368,9 @@ namespace proofps_dd
         TeamDeathMatchMode(TeamDeathMatchMode&&) = delete;
         TeamDeathMatchMode&& operator=(TeamDeathMatchMode&&) = delete;
 
+        /**
+        * Altering parent class implementation by checking team total frags (instead of individual player frags) against frag limit, if any is set.
+        */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
     protected:

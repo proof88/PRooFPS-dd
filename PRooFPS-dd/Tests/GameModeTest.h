@@ -41,10 +41,15 @@ public:
     SpecialGameMode&& operator=(SpecialGameMode&&) = delete;
 
     virtual bool addPlayer(
-        const proofps_dd::Player&,
+        const proofps_dd::Player& player,
         pge_network::PgeINetwork&) override
     {
-        return true; 
+        // this is just a very dumb implementation to have minimal add behavior for test_rename_player()
+        m_players.push_back(
+            proofps_dd::PlayersTableRow{
+                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.getFrags(), player.getDeaths() });
+
+        return true;
     }
 
     virtual bool updatePlayer(
@@ -125,6 +130,7 @@ protected:
         addSubTest("test_deathmatch_winning_cond_defaults_to_false", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_defaults_to_false));
         addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
         addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
+        addSubTest("test_team_deathmatch_does_not_count_frags_with_zero_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id));
     }
 
     virtual bool setUp() override
@@ -222,9 +228,15 @@ private:
             while ((itFragTable != fragTable.end()) && (itExpectedPlayers != expectedPlayers.end()))
             {
                 i++;
-                b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Names in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Name in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_connHandle, itFragTable->m_connHandle, ("ConnHandle in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_iTeamId, itFragTable->m_iTeamId, ("Team in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nFrags, itFragTable->m_nFrags, ("Frags in row " + std::to_string(i) + " " + sLogText).c_str());
-                b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Death in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Deaths in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nSuicides, itFragTable->m_nSuicides, ("Suicides in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_nShotsFired, itFragTable->m_nShotsFired, ("Shots fired in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_fFiringAcc, itFragTable->m_fFiringAcc, ("Firing acc in row " + std::to_string(i) + " " + sLogText).c_str());
+                
                 itFragTable++;
                 itExpectedPlayers++;
             }
@@ -332,7 +344,7 @@ private:
     {
         if (!testInitGamemode(proofps_dd::GameModeType::TeamDeathMatch))
         {
-            return assertFalse(true, "testInitTeamDeathmatch fail");
+            return assertFalse(true, "testInitGamemode fail");
         }
     
         bool b = assertTrue(proofps_dd::GameModeType::TeamDeathMatch == gm->getGameModeType(), "gmtype");
@@ -371,14 +383,11 @@ private:
                 }
             }
 
-            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
-            {
-                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            }
+            SpecialGameMode sgm;
 
-            gm->restart(m_network);
-            b &= (assertLess(0, gm->getResetTime().time_since_epoch().count(), (std::string("reset time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(0, gm->getWinTime().time_since_epoch().count(), (std::string("win time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
+            sgm.restart(m_network);
+            b &= (assertLess(0, sgm.getResetTime().time_since_epoch().count(), (std::string("reset time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+                assertEquals(0, sgm.getWinTime().time_since_epoch().count(), (std::string("win time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
         }
 
         return b;
@@ -402,15 +411,10 @@ private:
                 }
             }
 
-            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
-            {
-                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            }
+            SpecialGameMode sgm;
 
-            dm->setFragLimit(11);
-
-            b &= assertFalse(gm->renamePlayer("alma", "gg"), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("alma", "gg"), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -444,20 +448,22 @@ private:
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
 
-            b &= assertTrue(gm->addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            // because SpecialGameMode::addPlayer() is DUMB, do not modify the order of adding players in this test!
+            b &= assertTrue(sgm.addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrue(sgm.addPlayer(player2, m_network), (std::string("add player 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrue(sgm.addPlayer(player3, m_network), (std::string("add player 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrue(sgm.addPlayer(player4, m_network), (std::string("add player 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
-            b &= assertFalse(gm->renamePlayer("", ""), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("Adam", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("", "Adam"), (std::string("rename 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("gg", "kkk"), (std::string("rename 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("Adam", "Joe"), (std::string("rename 5 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("Joe", "Adam"), (std::string("rename 6 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertFalse(gm->renamePlayer("adam", "Peter"), (std::string("rename 7 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            b &= assertTrue(gm->renamePlayer("Adam", "Peter"), (std::string("rename 8 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("", ""), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("Adam", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("", "Adam"), (std::string("rename 3 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("gg", "kkk"), (std::string("rename 4 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("Adam", "Joe"), (std::string("rename 5 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("Joe", "Adam"), (std::string("rename 6 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertFalse(sgm.renamePlayer("adam", "Peter"), (std::string("rename 7 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+            b &= assertTrue(sgm.renamePlayer("Adam", "Peter"), (std::string("rename 8 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
 
+            // because SpecialGameMode::addPlayer() is DUMB, do not modify the order of adding players in this test!
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
                 { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 2, 0},
                 { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 1, 0 },
@@ -465,7 +471,7 @@ private:
                 { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 }
             };
 
-            b &= assertFragTableEquals(expectedPlayers, gm->getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
+            b &= assertFragTableEquals(expectedPlayers, sgm.getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
 
         }
 
@@ -533,19 +539,16 @@ private:
                 }
             }
 
-            if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
-            {
-                return assertFalse(true, (std::string("testInitGamemode fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
-            }
+            SpecialGameMode sgm;
 
-            b &= (assertEquals(0u, gm->getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
-                assertEquals(0u, gm->getTimeRemainingMillisecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
+            b &= (assertEquals(0u, sgm.getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+                assertEquals(0u, sgm.getTimeRemainingMillisecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
 
-            gm->setTimeLimitSecs(25u);
-            gm->restart(m_network);  // restart() is needed to have correct value for remaining time
-            b &= assertEquals(25u, gm->getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
+            sgm.setTimeLimitSecs(25u);
+            sgm.restart(m_network);  // restart() is needed to have correct value for remaining time
+            b &= assertEquals(25u, sgm.getTimeLimitSecs(), (std::string("new time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 /* 23000 millisecs so there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here) */
-                assertLequals(23000u, gm->getTimeRemainingMillisecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
+                assertLequals(23000u, sgm.getTimeRemainingMillisecs(), (std::string("new remaining fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
         }
 
         return b;
@@ -554,29 +557,26 @@ private:
     bool test_time_limit_client_update_time_remaining_secs()
     {
         // client-only test
-        if (!testInitGamemode(proofps_dd::GameModeType::DeathMatch))
-        {
-            return assertFalse(true, "testInitGamemode fail");
-        }
+        SpecialGameMode sgm;
 
         constexpr unsigned int nTimeLimitSecs = 13u;
         constexpr unsigned int nTimeRemainingServerSideMillisecs = 4000u;
 
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nTimeLimitSecs);
-        gm->fetchConfig(m_cfgProfiles, m_network);
-        gm->clientUpdateTimeRemainingMillisecs(nTimeRemainingServerSideMillisecs, m_network);
+        sgm.fetchConfig(m_cfgProfiles, m_network);
+        sgm.clientUpdateTimeRemainingMillisecs(nTimeRemainingServerSideMillisecs, m_network);
 
         bool b = true;
 
         // positive case
-        b &= assertEquals(nTimeLimitSecs, gm->getTimeLimitSecs(), "time limit") &
-            assertLequals(gm->getTimeRemainingMillisecs(), nTimeRemainingServerSideMillisecs, "remaining 1 a") &
-            assertNotEquals(0u, gm->getTimeRemainingMillisecs(), "remaining 1 b");
+        b &= assertEquals(nTimeLimitSecs, sgm.getTimeLimitSecs(), "time limit") &
+            assertLequals(sgm.getTimeRemainingMillisecs(), nTimeRemainingServerSideMillisecs, "remaining 1 a") &
+            assertNotEquals(0u, sgm.getTimeRemainingMillisecs(), "remaining 1 b");
 
         // negative case: remaining time as seconds is bigger than time limit as seconds
-        gm->clientUpdateTimeRemainingMillisecs((nTimeLimitSecs + 1u) * 1000, m_network);
+        sgm.clientUpdateTimeRemainingMillisecs((nTimeLimitSecs + 1u) * 1000, m_network);
         // (nTimeLimitSecs-2) so that there is a 2 seconds time window for evaluating the condition (in case scheduler or anything would cause too much delay here)
-        b &= assertLequals((nTimeLimitSecs-2) * 1000, gm->getTimeRemainingMillisecs(), "remaining 2");
+        b &= assertLequals((nTimeLimitSecs-2) * 1000, sgm.getTimeRemainingMillisecs(), "remaining 2");
 
         return b;
     }
@@ -680,6 +680,8 @@ private:
             }
 
             b &= assertEqualsEz(0u, dm->getFragLimit(), gamemode, bTestingAsServer, "default fail");
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(25u);
             b &= assertEqualsEz(25u, dm->getFragLimit(), gamemode, bTestingAsServer, "new fail");
         }
@@ -775,6 +777,8 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(11);
 
             proofps_dd::Player player1(
@@ -784,6 +788,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 0;
             player1.getDeaths() = 0;
+            player1.getTeamId() = 1;
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -792,6 +797,7 @@ private:
             player2.setName("Apple");
             player2.getFrags() = 0;
             player2.getDeaths() = 0;
+            player2.getTeamId() = 2;
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -800,6 +806,7 @@ private:
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
+            player3.getTeamId() = 1;
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -808,6 +815,7 @@ private:
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
+            player4.getTeamId() = 2;
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
@@ -815,10 +823,10 @@ private:
             b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
-                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 },
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -862,6 +870,8 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(11);
 
             proofps_dd::Player player1(
@@ -871,6 +881,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
+            player1.getTeamId() = 1;
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -879,6 +890,7 @@ private:
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
+            player2.getTeamId() = 2;
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -887,6 +899,7 @@ private:
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
+            player3.getTeamId() = 1;
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -895,6 +908,7 @@ private:
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
+            player4.getTeamId() = 2;
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
@@ -902,10 +916,10 @@ private:
             b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -949,6 +963,8 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(11);
 
             proofps_dd::Player player1(
@@ -958,6 +974,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
+            player1.getTeamId() = 1;
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -966,6 +983,7 @@ private:
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
+            player2.getTeamId() = 2;
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -974,6 +992,7 @@ private:
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
+            player3.getTeamId() = 1;
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -982,6 +1001,7 @@ private:
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
+            player4.getTeamId() = 2;
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2");
@@ -994,10 +1014,10 @@ private:
             b &= assertFalseEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 again");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -1034,6 +1054,8 @@ private:
 
         bool b = true;
 
+        // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+        // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
         dm->setFragLimit(11);
 
         proofps_dd::Player player1(
@@ -1043,6 +1065,7 @@ private:
         player1.setName("Adam");
         player1.getFrags() = 10;
         player1.getDeaths() = 0;
+        player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1051,6 +1074,7 @@ private:
         player2.setName("Apple");
         player2.getFrags() = 5;
         player2.getDeaths() = 2;
+        player1.getTeamId() = 2; // required non-zero teamId for TDM test, otherwise TDM does not count frags
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 fail");
 
@@ -1069,7 +1093,7 @@ private:
         {
             b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true /*server*/, ""
+                gamemode, true /*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1088,7 +1112,7 @@ private:
         {
             b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true /*server*/, ""
+                gamemode, true /*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1137,7 +1161,25 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
-            dm->setFragLimit(11);
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
+            
+            // Basically TDM::updatePlayer() does not alter DM::updatePlayer() behavior wrt the ordering when frag count decreases or death count increases,
+            // even though players can be in different teams, it does not matter. We just dont care. We just care about frag limit being reached or not.
+            // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
+            // no further logic is needed in GUI, just separate them by team ID!
+            if (gamemode == proofps_dd::GameModeType::DeathMatch)
+            {
+                dm->setFragLimit(11);
+            }
+            else if (gamemode == proofps_dd::GameModeType::TeamDeathMatch)
+            {
+                dm->setFragLimit(16);
+            }
+            else
+            {
+                return assertTrue(false, "unhandled gamemode");
+            }
 
             proofps_dd::Player playerAdam(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1146,6 +1188,7 @@ private:
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
+            playerAdam.getTeamId() = 1;
 
             proofps_dd::Player playerApple(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1154,6 +1197,7 @@ private:
             playerApple.setName("Apple");
             playerApple.getFrags() = 5;
             playerApple.getDeaths() = 2;
+            playerApple.getTeamId() = 2;
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1162,6 +1206,7 @@ private:
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
+            playerJoe.getTeamId() = 1;
 
             b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
             b &= assertTrueEz(gm->addPlayer(playerApple, m_network), gamemode, bTestingAsServer, "add player Apple fail");
@@ -1171,9 +1216,9 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 1 fail");
             // since Joe got same number of frags _later_ than Apple, Joe must stay behind Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 2 }
             };
             assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
 
@@ -1181,9 +1226,9 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerApple, m_network), gamemode, bTestingAsServer, "update player Apple 1 fail");
             // since Apple now has more deaths than Joe, it must goe behind Joe
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 2 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 2 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 3 }
             };
             assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
@@ -1191,12 +1236,13 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 2 fail");
             // since Joe got same number of frags _earlier_ than Apple, and got same number for deaths _later_ than Apple, it must stay in front of Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 0 /* iTeamId*/, 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 3 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 3 }
             };
             assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 3 fail");
 
+            // reaching frag limit (frag limit is set differently for DM and TDM)
             playerAdam.getFrags()++;
             b &= assertTrueEz(gm->updatePlayer(playerAdam, m_network), gamemode, bTestingAsServer, "update player Adam 1 fail");
 
@@ -1212,7 +1258,7 @@ private:
                 {
                     b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1261,6 +1307,8 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(10);
 
             proofps_dd::Player playerAdam(
@@ -1338,6 +1386,8 @@ private:
                 return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
             }
 
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(10);
 
             proofps_dd::Player playerAdam(
@@ -1345,14 +1395,16 @@ private:
                 m_itemPickupEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
-            playerAdam.getFrags() = 10;
+            playerAdam.getFrags() = dm->getFragLimit();
             playerAdam.getDeaths() = 0;
+            playerAdam.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
 
             b &= assertFalseEz(gm->removePlayer(playerAdam), gamemode, bTestingAsServer, "removep player Adam 1 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
             b &= assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
 
+            // here game state becomes won
             b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
 
             proofps_dd::Player playerJoe(
@@ -1362,9 +1414,10 @@ private:
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
+            playerJoe.getTeamId() = 2; // required non-zero teamId for TDM test, otherwise TDM does not count frags
             b &= assertFalseEz(gm->removePlayer(playerJoe), gamemode, bTestingAsServer, "remove player Joe 1 fail");
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 }
             };
             b &= assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
@@ -1420,6 +1473,8 @@ private:
             }
 
             gm->setTimeLimitSecs(25u);
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(15u);
 
             proofps_dd::Player player1(
@@ -1450,7 +1505,7 @@ private:
                 {
                     b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1468,7 +1523,7 @@ private:
                 {
                     b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1494,7 +1549,7 @@ private:
                 {
                     b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1545,6 +1600,8 @@ private:
             }
 
             gm->setTimeLimitSecs(25u);
+            // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+            // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
             dm->setFragLimit(15u);
 
             proofps_dd::Player player1(
@@ -1552,6 +1609,7 @@ private:
                 m_itemPickupEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
+            player1.getTeamId() = 1;
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
             player1.getSuicides() = 0;
@@ -1563,6 +1621,7 @@ private:
                 m_itemPickupEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
+            player2.getTeamId() = 2;
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
             player2.getSuicides() = 1;
@@ -1581,7 +1640,7 @@ private:
                 {
                     b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1599,7 +1658,7 @@ private:
                 {
                     b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1625,7 +1684,7 @@ private:
                 {
                     b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                        gamemode, bTestingAsServer, ""
+                        gamemode, bTestingAsServer, "tx msg count"
                     );
                 }
                 catch (...)
@@ -1633,16 +1692,13 @@ private:
                     b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count");
                 }
             }
-            b &= assertEqualsEz(2u, gm->getPlayersTable().size(), gamemode, bTestingAsServer, "players still there fail");
 
-            for (const auto& player : gm->getPlayersTable())
-            {
-                b &= assertEqualsEz(0, player.m_nFrags, gamemode, bTestingAsServer, "players frags 0 fail");
-                b &= assertEqualsEz(0, player.m_nDeaths, gamemode, bTestingAsServer, "players deaths 0 fail");
-                b &= assertEqualsEz(0u, player.m_nSuicides, gamemode, bTestingAsServer, "players suicides 0 fail");
-                b &= assertEqualsEz(0, player.m_fFiringAcc, gamemode, bTestingAsServer, "players firing acc 0 fail");
-                b &= assertEqualsEz(0u, player.m_nShotsFired, gamemode, bTestingAsServer, "players shots fired 0 fail");
-            }
+            const std::vector<proofps_dd::PlayersTableRow> expectedPlayersStillThereWithResetStats = {
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 /* and rest are zeroed too */},
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 /* and rest are zeroed too */}
+            };
+
+            b &= assertFragTableEqualsEz(expectedPlayersStillThereWithResetStats, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
 
         }
 
@@ -1707,7 +1763,26 @@ private:
             return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
         }
 
-        dm->setFragLimit(5);
+        // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+        // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
+
+        // Basically TDM and DM classes' behavior is very similar, even though players can be in different teams, it does not matter. We just dont care.
+        // We just care about frag limit being reached or not, that is why serverCheckAndUpdateWinningConditions() can be overridden.
+        // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
+        // no further logic is needed in GUI, just separate them by team ID!
+        if (gamemode == proofps_dd::GameModeType::DeathMatch)
+        {
+            dm->setFragLimit(5);
+        }
+        else if (gamemode == proofps_dd::GameModeType::TeamDeathMatch)
+        {
+            dm->setFragLimit(7);
+        }
+        else
+        {
+            return assertTrue(false, "unhandled gamemode");
+        }
+
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
         bool b = assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
@@ -1715,7 +1790,7 @@ private:
         {
             b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1730,6 +1805,7 @@ private:
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
+        player1.getTeamId() = 1;
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1738,6 +1814,7 @@ private:
         player2.setName("Adam");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
+        player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -1752,14 +1829,15 @@ private:
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
         b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning");
-        b &= assertEqualsEz(dm->getFragLimit(), i, gamemode, true/*server*/, "frags collected");
+        // in both DM and TDM same amount of frags needed to be collected by player 1, since frag limit is different!
+        b &= assertEqualsEz(5u, i, gamemode, true/*server*/, "frags collected");
 
         b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
             b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1806,6 +1884,7 @@ private:
         player1.setName("Adam");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
+        player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1814,9 +1893,31 @@ private:
         player2.setName("Apple");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
+        player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
 
-        dm->setFragLimit(5);
+        // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+        // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
+
+        // Basically TDM and DM classes' behavior is very similar, even though players can be in different teams, it does not matter. We just dont care.
+        // We just care about frag limit being reached or not, that is why serverCheckAndUpdateWinningConditions() can be overridden.
+        // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
+        // no further logic is needed in GUI, just separate them by team ID!
+
+        if (gamemode == proofps_dd::GameModeType::DeathMatch)
+        {
+            dm->setFragLimit(5);
+        }
+        else if (gamemode == proofps_dd::GameModeType::TeamDeathMatch)
+        {
+            dm->setFragLimit(7);
+        }
+        else
+        {
+            return assertTrue(false, "unhandled gamemode");
+        }
+
         gm->setTimeLimitSecs(2);
+
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
         bool b = assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
@@ -1824,7 +1925,7 @@ private:
         {
             b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1855,7 +1956,7 @@ private:
         {
             b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1872,7 +1973,7 @@ private:
         {
             b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1895,14 +1996,15 @@ private:
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 3");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 3");
         b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning due to frags");
-        b &= assertEqualsEz(dm->getFragLimit(), i, gamemode, true/*server*/, "frags collected");
+        // in both DM and TDM same amount of frags needed to be collected by player 1, since frag limit is different!
+        b &= assertEqualsEz(5u, i, gamemode, true/*server*/, "frags collected");
 
         b &= assertEqualsEz(4u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
         try
         {
             b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                gamemode, true/*server*/, ""
+                gamemode, true/*server*/, "tx msg count"
             );
         }
         catch (...)
@@ -1925,6 +2027,92 @@ private:
             // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
             tearDown();
         }
+        return b;
+    }
+
+    bool test_team_deathmatch_does_not_count_frags_with_zero_team_id()
+    {
+        constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamDeathMatch;
+        // since earlier tests like test_deathmatch_winning_cond_frag_limit() test TDM class also, here we are keeping this test very small.
+
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
+        }
+
+        // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+        // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
+
+        // Basically TDM and DM classes' behavior is very similar, even though players can be in different teams, it does not matter. We just dont care.
+        // We just care about frag limit being reached or not, that is why serverCheckAndUpdateWinningConditions() can be overridden.
+        // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
+        // no further logic is needed in GUI, just separate them by team ID!
+        dm->setFragLimit(7);
+
+        proofps_dd::Player player1(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Apple");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+        player1.getTeamId() = 1;
+
+        proofps_dd::Player player2(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setName("Adam");
+        player2.getFrags() = 2;
+        player2.getDeaths() = 0;
+        player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+
+        proofps_dd::Player player3(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setName("Joe");
+        player3.getFrags() = dm->getFragLimit();  // game would be already won if this player had a valid teamId!
+        player3.getDeaths() = 0;
+        player3.getTeamId() = 0; // intentionally zero, meaning no team selected!
+
+        bool b = true;
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, true/*server*/, "add player 3");
+
+        unsigned int i = 0;
+        while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
+        {
+            player1.getFrags()++;
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
+        }
+
+        b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
+        b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
+        b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning");
+        b &= assertEqualsEz(5u, i, gamemode, true/*server*/, "frags collected");
+
+        b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
+        try
+        {
+            b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
+                gamemode, true/*server*/, "tx msg count"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
+        }
+
         return b;
     }
 

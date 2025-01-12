@@ -600,11 +600,21 @@ bool proofps_dd::TeamDeathMatchMode::serverCheckAndUpdateWinningConditions(pge_n
 
     if (getFragLimit() > 0)
     {
-        // assume m_players is sorted, since add/updatePlayer() use insertion sort
-        if ((m_players.size() > 0) && (m_players.begin()->m_nFrags >= static_cast<int>(getFragLimit())))
+        for (unsigned int iTeam = 1; iTeam <= 2; iTeam++)
         {
-            handleEventGameWon(network);
-            return true;
+            int nTeamTotalFrags = 0;
+            for (const auto& player : m_players)
+            {
+                if (player.m_iTeamId == iTeam)
+                {
+                    nTeamTotalFrags += player.m_nFrags;
+                }
+            }
+            if ((m_players.size() > 0) && (nTeamTotalFrags >= static_cast<int>(getFragLimit())))
+            {
+                handleEventGameWon(network);
+                return true;
+            }
         }
     }
 

@@ -386,8 +386,12 @@ namespace proofps_dd
                 {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
         };
 
-        // Intentionally not part of m_vecOldNewValues, does not contribute to isDirty() or isNetDirty() or MsgUserUpdateFromServer either.
-        // Handled in MsgPlayerEventFromServer;
+        /** Which team this player belongs to.
+            Not all game modes use this member. Check the API documentation of the GameMode-derived classes to know more.
+            0 means no team selected.
+            Intentionally not part of m_vecOldNewValues, does not contribute to isDirty() or isNetDirty() or MsgUserUpdateFromServer either.
+            Handled in MsgPlayerEventFromServer.
+        */
         PgeOldNewValue<unsigned int> m_iTeamId{0};
 
         bool m_bNetDirty = false;
