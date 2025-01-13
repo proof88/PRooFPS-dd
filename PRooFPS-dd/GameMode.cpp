@@ -405,10 +405,10 @@ bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_netwo
         return true;
     }
 
-    if (getFragLimit() > 0)
+    if ((getFragLimit() > 0) && !m_players.empty())
     {
         // assume m_players is sorted, since add/updatePlayer() use insertion sort
-        if ((m_players.size() > 0) && (m_players.begin()->m_nFrags >= static_cast<int>(getFragLimit())))
+        if (m_players.begin()->m_nFrags >= static_cast<int>(getFragLimit()))
         {
             handleEventGameWon(network);
             return true;
@@ -454,7 +454,7 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
         m_players.insert(
             it,
             proofps_dd::PlayersTableRow{
-                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.getFrags(), player.getDeaths() });
+                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.getFrags(), player.getDeaths()  /* rest are default 0 */});
 
         if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
         {
@@ -486,7 +486,8 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
         return false;
     }
 
-    // quickly update some stats (even if no change because it shall be fast enough) which do not contribute to ordering
+    // quickly update some data (even if no change because it shall be fast enough) which do not contribute to ordering
+    itFound->m_iTeamId = player.getTeamId();
     itFound->m_nSuicides = player.getSuicides();
     itFound->m_fFiringAcc = player.getFiringAccuracy();
     itFound->m_nShotsFired = player.getShotsFiredCount();
@@ -598,7 +599,7 @@ bool proofps_dd::TeamDeathMatchMode::serverCheckAndUpdateWinningConditions(pge_n
         return true;
     }
 
-    if (getFragLimit() > 0)
+    if ((getFragLimit() > 0) && !m_players.empty())
     {
         for (unsigned int iTeam = 1; iTeam <= 2; iTeam++)
         {
@@ -610,7 +611,7 @@ bool proofps_dd::TeamDeathMatchMode::serverCheckAndUpdateWinningConditions(pge_n
                     nTeamTotalFrags += player.m_nFrags;
                 }
             }
-            if ((m_players.size() > 0) && (nTeamTotalFrags >= static_cast<int>(getFragLimit())))
+            if (nTeamTotalFrags >= static_cast<int>(getFragLimit()))
             {
                 handleEventGameWon(network);
                 return true;
@@ -619,6 +620,26 @@ bool proofps_dd::TeamDeathMatchMode::serverCheckAndUpdateWinningConditions(pge_n
     }
 
     return false;
+}
+
+bool proofps_dd::TeamDeathMatchMode::addPlayer(const Player& player, pge_network::PgeINetwork& network)
+{
+    if (player.getTeamId() > 2)
+    {
+        return false;
+    }
+
+    return DeathMatchMode::addPlayer(player, network);
+}
+
+bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_network::PgeINetwork& network)
+{
+    if (player.getTeamId() > 2)
+    {
+        return false;
+    }
+
+    return DeathMatchMode::updatePlayer(player, network);
 }
 
 

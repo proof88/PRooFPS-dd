@@ -131,6 +131,7 @@ protected:
         addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
         addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
         addSubTest("test_team_deathmatch_does_not_count_frags_with_zero_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id));
+        addSubTest("test_team_deathmatch_does_not_allow_any_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_allow_any_team_id));
     }
 
     virtual bool setUp() override
@@ -2112,6 +2113,67 @@ private:
         {
             b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
+
+        return b;
+    }
+
+    bool test_team_deathmatch_does_not_allow_any_team_id()
+    {
+        constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamDeathMatch;
+        // since earlier tests like test_deathmatch_winning_cond_frag_limit() test TDM class also, here we are keeping this test very small.
+
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true, "testInitGamemode fail");
+        }
+
+        // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
+        // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
+
+        // Basically TDM and DM classes' behavior is very similar, even though players can be in different teams, it does not matter. We just dont care.
+        // We just care about frag limit being reached or not, that is why serverCheckAndUpdateWinningConditions() can be overridden.
+        // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
+        // no further logic is needed in GUI, just separate them by team ID!
+        dm->setFragLimit(7);
+
+        proofps_dd::Player player1(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Apple");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+        player1.getTeamId() = 3;
+
+        bool b = true;
+        b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1;
+        assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, true /*server*/, "table 1 fail");
+
+        player1.getTeamId() = 2;
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 2");
+        const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
+                { "Apple", player1.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 }
+        };
+        assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, true /*server*/, "table 2 fail");
+
+        player1.getTeamId() = 3;
+        b &= assertFalseEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 1");
+        assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, true /*server*/, "table 3 fail");
+
+        player1.getTeamId() = 1;
+        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 2");
+        const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
+                { "Apple", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 }
+        };
+        assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, true /*server*/, "table 4 fail");
 
         return b;
     }

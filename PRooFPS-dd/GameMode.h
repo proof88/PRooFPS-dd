@@ -172,6 +172,7 @@ namespace proofps_dd
         * This class checks elapsed game session time against time limit, if any set.
         * Derived class shall extend this function by overriding and calling this parent implementation from the specialized implementation.
         * 
+        * A game shall not be won without any players, so at least 1 player needs to be present to win any game.
         * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
         * 
         * This function is for server instance only.
@@ -372,6 +373,20 @@ namespace proofps_dd
         * Altering parent class implementation by checking team total frags (instead of individual player frags) against frag limit, if any is set.
         */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+
+        /**
+        * Extending parent class implementation by rejecting player if team id is not in [0-2] range.
+        */
+        virtual bool addPlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
+
+        /**
+        * Extending parent class implementation by rejecting player if team id is not in [0-2] range.
+        */
+        virtual bool updatePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
 
     protected:
 
