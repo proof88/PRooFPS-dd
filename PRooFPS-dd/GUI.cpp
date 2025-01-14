@@ -102,7 +102,7 @@ void proofps_dd::GUI::initialize()
     assert(m_pMaps);
     assert(m_pMapPlayers);
 
-    resetMenuState(false);
+    resetMenuStates(false);
 
     // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
     // this is needed because it is not trivial when to show/hide the xhair for the server.
@@ -329,23 +329,25 @@ void proofps_dd::GUI::shutdown()
     // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
 }
 
-const proofps_dd::GUI::MenuState& proofps_dd::GUI::getMenuState() const
+const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
 {
-    return m_currentMenu;
+    return m_currentMenuInMainMenu;
 }
 
-void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
+void proofps_dd::GUI::resetMenuStates(bool bExitingFromGameSession)
 {
+    m_currentMenuInInGameMenu = InGameMenuState::None;
+
     if (bExitingFromGameSession)
     {
         showBgWithLogo();
         if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
         {
-            m_currentMenu = MenuState::Main;
+            m_currentMenuInMainMenu = MainMenuState::Main;
         }
         else
         {
-            m_currentMenu = MenuState::Exiting;
+            m_currentMenuInMainMenu = MainMenuState::Exiting;
             m_pPge->getPure().getWindow().Close();
         }
     }
@@ -353,12 +355,12 @@ void proofps_dd::GUI::resetMenuState(bool bExitingFromGameSession)
     {
         if (m_pPge->getConfigProfiles().getVars()[CVAR_GUI_MAINMENU].getAsBool())
         {
-            m_currentMenu = MenuState::Main;
+            m_currentMenuInMainMenu = MainMenuState::Main;
             showBgWithLogo();
         }
         else
         {
-            m_currentMenu = MenuState::None;
+            m_currentMenuInMainMenu = MainMenuState::None;
             hideBgWithLogo();
         }
     }
@@ -545,7 +547,7 @@ proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
 const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
 
-proofps_dd::GUI::MenuState proofps_dd::GUI::m_currentMenu = proofps_dd::GUI::MenuState::Main;
+proofps_dd::GUI::MainMenuState proofps_dd::GUI::m_currentMenuInMainMenu = proofps_dd::GUI::MainMenuState::Main;
 
 bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
@@ -553,6 +555,8 @@ std::string proofps_dd::GUI::m_sRespawnTimerExtraText;
 std::string proofps_dd::GUI::m_sRespawnTimerExtraText2;
 
 bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
+
+proofps_dd::GUI::InGameMenuState proofps_dd::GUI::m_currentMenuInInGameMenu = proofps_dd::GUI::InGameMenuState::None;
 
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
@@ -623,14 +627,14 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     struct MenuButton
     {
         const char* zstr;
-        MenuState menuState;
+        MainMenuState menuState;
     };
     constexpr auto menuButtons = PFL::std_array_of<MenuButton>(
-        MenuButton{ "C R E A T E  G A M E", MenuState::CreateGame },
-        MenuButton{ "J O I N  G A M E", MenuState::JoinGame },
-        MenuButton{ "S E T T I N G S", MenuState::Settings },
-        MenuButton{ "A B O U T", MenuState::About },
-        MenuButton{ "E X I T", MenuState::Exiting });
+        MenuButton{ "C R E A T E  G A M E", MainMenuState::CreateGame },
+        MenuButton{ "J O I N  G A M E", MainMenuState::JoinGame },
+        MenuButton{ "S E T T I N G S", MainMenuState::Settings },
+        MenuButton{ "A B O U T", MainMenuState::About },
+        MenuButton{ "E X I T", MainMenuState::Exiting });
 
     constexpr float fBtnWidth = 150.f;
     constexpr float fBtnHeight = 20.f;
@@ -646,12 +650,12 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
         // in case of buttons, remove size argument (ImVec2) to auto-resize
         if (ImGui::Button(menuButtons[i].zstr, ImVec2(fBtnWidth, fBtnHeight)))
         {
-            m_currentMenu = menuButtons[i].menuState;
+            m_currentMenuInMainMenu = menuButtons[i].menuState;
         }
     }
 
     // not nice but need to add extra logic here for exiting
-    if (m_currentMenu == MenuState::Exiting)
+    if (m_currentMenuInMainMenu == MainMenuState::Exiting)
     {
         m_pPge->getPure().getWindow().Close();
     }
@@ -1221,7 +1225,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
         {
             getConsole().EOLn("ERROR: failed to save mapcycle!");
         }
-        m_currentMenu = MenuState::Main;
+        m_currentMenuInMainMenu = MainMenuState::Main;
     }
     ImGui::SameLine();
     
@@ -1252,7 +1256,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from client to server mode!");
             }
-            m_currentMenu = MenuState::None;
+            m_currentMenuInMainMenu = MainMenuState::None;
             m_pPge->getPure().getWindow().SetCursorVisible(false);
         }
     }
@@ -1336,7 +1340,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
         {
             getConsole().EOLn("ERROR: failed to save current config profile!");
         }
-        m_currentMenu = MenuState::Main;
+        m_currentMenuInMainMenu = MainMenuState::Main;
     }
     ImGui::SameLine();
     
@@ -1354,7 +1358,7 @@ void proofps_dd::GUI::drawJoinGameMenu(const float& fRemainingSpaceY)
             {
                 getConsole().EOLn("ERROR: failed to reinitialize networking subsystem: switch from server to client mode!");
             }
-            m_currentMenu = MenuState::None;
+            m_currentMenuInMainMenu = MainMenuState::None;
             m_pPge->getPure().getWindow().SetCursorVisible(false);
         }
     }
@@ -1662,7 +1666,7 @@ void proofps_dd::GUI::showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, c
                 getConsole().EOLn("ERROR: failed to save current config profile!");
             }
             m_pPge->setCookie(1); // this will force loop in WinMain() to restart the game with engine reinit
-            m_currentMenu = MenuState::Exiting;
+            m_currentMenuInMainMenu = MainMenuState::Exiting;
             m_pPge->getPure().getWindow().Close();
             ImGui::CloseCurrentPopup();
         }
@@ -1718,7 +1722,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
         {
             getConsole().EOLn("ERROR: failed to save current config profile!");
         }
-        m_currentMenu = MenuState::Main;
+        m_currentMenuInMainMenu = MainMenuState::Main;
     }
 
     ImGui::Unindent();
@@ -1816,7 +1820,7 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 
     if (ImGui::Button("< BACK"))
     {
-        m_currentMenu = MenuState::Main;
+        m_currentMenuInMainMenu = MainMenuState::Main;
     }
 
     ImGui::Unindent();
@@ -1841,30 +1845,35 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     ImGui::Begin("WndMainMenu", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
     {
-        switch (m_currentMenu)
+        switch (m_currentMenuInMainMenu)
         {
-        case MenuState::CreateGame:
+        case MainMenuState::CreateGame:
             drawCreateGameMenu(fMenuWndHeight);
             break;
-        case MenuState::JoinGame:
+        case MainMenuState::JoinGame:
             drawJoinGameMenu(fMenuWndHeight);
             break;
-        case MenuState::Settings:
+        case MainMenuState::Settings:
             drawSettingsMenu(fMenuWndHeight);
             break;
-        case MenuState::About:
+        case MainMenuState::About:
             drawAboutMenu(fMenuWndHeight);
             break;
-        case MenuState::Main:
+        case MainMenuState::Main:
             drawMainMenu(fMenuWndHeight);
             break;
         default:
-            /* MenuState::None or MenuState::Exiting */
+            /* MainMenuState::None or MainMenuState::Exiting */
             break;
         }
 
     }
     ImGui::End();
+}
+
+void proofps_dd::GUI::drawInGameMenu()
+{
+    // since drawDearImGuiCb() calls us when (m_currentMenuInMainMenu == MainMenuState::None), a viewport-sized windows is already created
 }
 
 /**
@@ -1876,7 +1885,7 @@ void proofps_dd::GUI::drawWindowForMainMenu()
  */
 void proofps_dd::GUI::drawDearImGuiCb()
 {
-    if (m_currentMenu == MenuState::None)
+    if (m_currentMenuInMainMenu == MainMenuState::None)
     {
         // we are in-game
 
@@ -1887,36 +1896,37 @@ void proofps_dd::GUI::drawDearImGuiCb()
         // this window should cover the full window client area, otherwise getDearImGui2DposXFromPure2DposX() and other functions might not function properly!
         ImGui::Begin("WndInGame", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollWithMouse);
-
-        // initialize() created these fonts before configuring this as PURE GUI callback function
-        assert(m_pImFontFragTable);
-        assert(m_pImFontHudGeneral);
-        ImGui::PushFont(m_pImFontHudGeneral);
-
-        drawRespawnTimer();
-        updateXHair();
-        updateDeathKillEvents();
-        updateItemPickupEvents();
-
-        assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
-        m_pMinimap->draw();
-
-        assert(m_pMapPlayers);
-        const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
-        if (it != m_pMapPlayers->end())
         {
-            drawCurrentPlayerInfo(it->second);
+            // initialize() created these fonts before configuring this as PURE GUI callback function
+            assert(m_pImFontFragTable);
+            assert(m_pImFontHudGeneral);
+            ImGui::PushFont(m_pImFontHudGeneral);
+
+            drawRespawnTimer();
+            updateXHair();
+            updateDeathKillEvents();
+            updateItemPickupEvents();
+
+            assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
+            m_pMinimap->draw();
+
+            assert(m_pMapPlayers);
+            const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
+            if (it != m_pMapPlayers->end())
+            {
+                drawCurrentPlayerInfo(it->second);
+            }
+
+            ImGui::PopFont();
+
+            drawGameInfoPages();
+            drawInGameMenu();
         }
-
-        ImGui::PopFont();
-
-        drawGameInfoPages();
-
         ImGui::End();
 
         return;
     }
-    else if (m_currentMenu == MenuState::Exiting)
+    else if (m_currentMenuInMainMenu == MainMenuState::Exiting)
     {
         return;
     }

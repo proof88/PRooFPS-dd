@@ -86,7 +86,7 @@ void proofps_dd::Minimap::draw()
 
     if ((m_maps.width() * m_maps.height()) == 0)
     {
-        // map not yet loaded but GUI is already rendering the MenuState::None path, i.e. we are NOT in main menu
+        // map not yet loaded but GUI is already rendering the MainMenuState::None path, i.e. we are NOT in main menu
         return;
     }
 
@@ -217,7 +217,7 @@ ImVec2 proofps_dd::Minimap::getMinimapSizeInPixels() const
 {
     if (m_maps.width() * m_maps.height() == 0)
     {
-        // map not yet loaded but GUI is already rendering the MenuState::None path, i.e. we are NOT in main menu
+        // map not yet loaded but GUI is already rendering the MainMenuState::None path, i.e. we are NOT in main menu
         return ImVec2();
     }
 

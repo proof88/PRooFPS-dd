@@ -297,16 +297,17 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     m_durations.m_nFramesElapsedSinceLastDurationsReset++;
 
     // onGameRunning() is invoked by PGE in every frame no matter if we are in main menu or a game session.
-    // If we are in main menu, then basically GUI::drawMainMenuCb() is operating, since PURE is calling it back in every frame.
+    // PURE calls drawDearImGuiCb() in every frame.
+    // If we are in main menu, then basically GUI::drawWindowForMainMenu() is operating, since drawDearImGuiCb() is calling it back in every frame.
     // In that case, there is not much to do here in onGameRunning().
-    // We expect the GUI to set MenuState::None as soon as the user wants to enter a game (either by creating or joining).
+    // We expect the GUI to set MainMenuState::None as soon as the user wants to enter a game (either by creating or joining).
 
     // if we want to handle Create or Join event initiated from Main menu here, we should maintain a prevMenuState also, then
     // the condition would look like this:
-    // if ((m_gui.getMenuState() == proofps_dd::GUI::MenuState::None) && (m_gui.getPrevMenuState() != proofps_dd::GUI::MenuState::None))
+    // if ((m_gui.getMainMenuState() == proofps_dd::GUI::MainMenuState::None) && (m_gui.getPrevMenuState() != proofps_dd::GUI::MainMenuState::None))
     // This way we could decouple this logic from GUI code.
 
-    if (m_gui.getMenuState() == proofps_dd::GUI::MenuState::None)
+    if (m_gui.getMainMenuState() == proofps_dd::GUI::MainMenuState::None)
     {
         // having valid connection means that server accepted the connection and we have initialized our player;
         // otherwise m_mapPlayers[connHandle] is dangerous as it implicitly creates entry ...
@@ -393,7 +394,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
         {
             m_sounds.m_sndMenuMusicHandle = getAudio().playSound(m_sounds.m_sndMenuMusic);
         }
-    }// m_gui.getMenuState()
+    }// m_gui.getMainMenuState()
 
     updateFramesPerSecond(window);
 
@@ -708,7 +709,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
 
     if (bExitFromGameSession)
     {
-        m_gui.resetMenuState(bExitFromGameSession);
+        m_gui.resetMenuStates(bExitFromGameSession);
     }
 }
 

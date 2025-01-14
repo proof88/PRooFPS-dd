@@ -37,7 +37,7 @@ namespace proofps_dd
     {
     public:
 
-        enum class MenuState
+        enum class MainMenuState
         {
             None,       /* Menu is not displayed (we are in-game) */
             Main,
@@ -48,6 +48,13 @@ namespace proofps_dd
             Exiting     /* User requested closing the app */
         };
 
+        enum class InGameMenuState
+        {
+            None,
+            TeamSelect
+        };
+
+        /** As of v0.5, values are looped by pressing TAB in-game. */
         enum class GameInfoPage
         {
             None,
@@ -77,8 +84,19 @@ namespace proofps_dd
 
         /* Main Menu Handling */
 
-        const MenuState& getMenuState() const;
-        void resetMenuState(bool bExitingFromGameSession);
+        const MainMenuState& getMainMenuState() const;
+
+        /**
+        * Primarily for main menu control, but shall reset any other menu as well.
+        * Typical use cases:
+        *  - bExitingFromGameSession is false: init at startup,
+        *  - bExitingFromGameSession is true : disconnecting from current game session.
+        * 
+        * Behavior depends on CVAR_GUI_MAINMENU as well:
+        *  - if true : MainMenuState::Main will be selected.
+        *  - if false: MainMenuState::None or MainMenuState::Exiting will be selected, depending on bExitingFromGameSession.
+        */
+        void resetMenuStates(bool bExitingFromGameSession);
 
         /* Misc */
 
@@ -123,7 +141,7 @@ namespace proofps_dd
 
         /* Main Menu Handling */
 
-        static MenuState m_currentMenu;
+        static MainMenuState m_currentMenuInMainMenu;
 
         /* In-Game GUI elements */
 
@@ -132,6 +150,10 @@ namespace proofps_dd
         static std::string m_sRespawnTimerExtraText;
         static std::string m_sRespawnTimerExtraText2;
         static bool m_bShowHealthAndArmor;
+
+        /* In-Game Menu Handling */
+
+        static InGameMenuState m_currentMenuInInGameMenu;
 
         /* Misc */
 
@@ -197,6 +219,10 @@ namespace proofps_dd
         static float drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();
         static void drawGameInfoPages();
+
+        /* In-Game Menu Handling */
+
+        static void drawInGameMenu();
 
         /* Misc */
 
