@@ -86,6 +86,11 @@ namespace proofps_dd
 
         const MainMenuState& getMainMenuState() const;
 
+        /* In-Game Menu Handling */
+
+        const InGameMenuState& getInGameMenuState() const;
+        void showHideInGameTeamSelectMenu();
+
         /**
         * Primarily for main menu control, but shall reset any other menu as well.
         * Typical use cases:
@@ -222,6 +227,7 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
+        static void drawInGameTeamSelectMenu();
         static void drawInGameMenu();
 
         /* Misc */

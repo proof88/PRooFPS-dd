@@ -64,6 +64,11 @@ public:
         return true;
     }
 
+    virtual bool isTeamBasedGame() const override
+    {
+        return false;
+    }
+
 }; // class SpecialGameMode
 
 
@@ -105,6 +110,7 @@ protected:
         m_engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
         addSubTest("test_get_gamemodetype_name", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_get_gamemodetype_name));
+        addSubTest("test_get_gamemodetype_from_config", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_get_gamemodetype_from_config));
         addSubTest("test_gamemodetype_prefix_increment_operator", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_gamemodetype_prefix_increment_operator));
         addSubTest("test_factory_creates_deathmatch", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_factory_creates_deathmatch));
         addSubTest("test_factory_creates_teamdeathmatch", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_factory_creates_teamdeathmatch));
@@ -313,6 +319,29 @@ private:
             assertEquals("", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::Max), "max")) != 0;
     }
 
+    bool test_get_gamemodetype_from_config()
+    {
+        bool b = true;
+
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGamemode].Set(
+            static_cast<int>(proofps_dd::GameModeType::DeathMatch));
+        b &= assertTrue(proofps_dd::GameModeType::DeathMatch == proofps_dd::GameMode::getGameModeTypeFromConfig(m_cfgProfiles), "dm");
+        
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGamemode].Set(
+            static_cast<int>(proofps_dd::GameModeType::TeamDeathMatch));
+        b &= assertTrue(proofps_dd::GameModeType::TeamDeathMatch == proofps_dd::GameMode::getGameModeTypeFromConfig(m_cfgProfiles), "tdm");
+
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGamemode].Set(
+            static_cast<int>(proofps_dd::GameModeType::TeamRoundGame));
+        b &= assertTrue(proofps_dd::GameModeType::TeamRoundGame == proofps_dd::GameMode::getGameModeTypeFromConfig(m_cfgProfiles), "trg");
+
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGamemode].Set(
+            static_cast<int>(proofps_dd::GameModeType::Max));
+        b &= assertTrue(proofps_dd::GameModeType::DeathMatch == proofps_dd::GameMode::getGameModeTypeFromConfig(m_cfgProfiles), "max");
+
+        return b;
+    }
+
     bool test_gamemodetype_prefix_increment_operator()
     {
         proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::DeathMatch;
@@ -337,6 +366,7 @@ private:
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
+        b &= assertFalse(gm->isTeamBasedGame(), "team based");
 
         return b;
     }
@@ -354,6 +384,7 @@ private:
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
+        b &= assertTrue(gm->isTeamBasedGame(), "team based");
     
         return b;
     }

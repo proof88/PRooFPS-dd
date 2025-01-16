@@ -590,7 +590,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         m_durations.reset();
     }
 
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')))
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('.')))
     {
         if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())
         {
@@ -603,6 +603,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             }
             m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
         }
+    }
+
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')) && gameMode.isTeamBasedGame())
+    {
+        m_gui.showHideInGameTeamSelectMenu();
     }
 
     // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
@@ -858,6 +863,12 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     // we should always read the wheel data as often as possible, because this way we can avoid
     // the amount of wheel rotation accumulating too much
     const short int nMouseWheelChange = m_pge.getInput().getMouse().getWheel();
+
+    if (m_gui.getInGameMenuState() != GUI::InGameMenuState::None)
+    {
+        // in-game menu mouse is handled by Dear ImGui and GUI::drawInGameMenu()
+        return false;
+    }
 
     if (gameMode.isGameWon())
     {

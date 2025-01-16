@@ -81,6 +81,22 @@ const char* proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType g
     }
 }
 
+proofps_dd::GameModeType proofps_dd::GameMode::getGameModeTypeFromConfig(PGEcfgProfiles& cfgProfiles)
+{
+    switch (cfgProfiles.getVars()[GameMode::szCvarSvGamemode].getAsInt())
+    {
+    case static_cast<int>(GameModeType::DeathMatch):
+        return GameModeType::DeathMatch;
+    case static_cast<int>(GameModeType::TeamDeathMatch):
+        return GameModeType::TeamDeathMatch;
+    case static_cast<int>(GameModeType::TeamRoundGame):
+        return GameModeType::TeamRoundGame;
+    default:
+        // invalid value should default back to DM
+        return GameModeType::DeathMatch;
+    }
+}
+
 const char* proofps_dd::GameMode::getRank(const PlayersTableRow& row)
 {
     static constexpr char* const szRankGoat = "G0aT";
@@ -554,6 +570,11 @@ bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
     return true;
 }
 
+bool proofps_dd::DeathMatchMode::isTeamBasedGame() const
+{
+    return false;
+}
+
 int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
 {
     if (p1frags == p2frags)
@@ -640,6 +661,11 @@ bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_netw
     }
 
     return DeathMatchMode::updatePlayer(player, network);
+}
+
+bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
+{
+    return true;
 }
 
 

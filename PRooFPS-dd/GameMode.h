@@ -91,6 +91,8 @@ namespace proofps_dd
 
         static const char* getGameModeTypeName(GameModeType gm);
 
+        static GameModeType getGameModeTypeFromConfig(PGEcfgProfiles& cfgProfiles);
+
         static const char* getRank(const PlayersTableRow& row);
 
         // ---------------------------------------------------------------------------
@@ -260,6 +262,11 @@ namespace proofps_dd
         */
         bool renamePlayer(const std::string& sOldName, const std::string& sNewName);
 
+        /**
+        * Derived class shall return false if it is non-team-based game, otherwise true.
+        */
+        virtual bool isTeamBasedGame() const = 0;
+
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
     protected:
@@ -337,6 +344,8 @@ namespace proofps_dd
             pge_network::PgeINetwork& network) override;
         virtual bool removePlayer(const Player& player) override;
 
+        virtual bool isTeamBasedGame() const override;
+
     protected:
         unsigned int m_nFragLimit{};
 
@@ -387,6 +396,8 @@ namespace proofps_dd
         virtual bool updatePlayer(
             const Player& player,
             pge_network::PgeINetwork& network) override;
+
+        virtual bool isTeamBasedGame() const override;
 
     protected:
 

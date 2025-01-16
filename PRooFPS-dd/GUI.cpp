@@ -334,6 +334,23 @@ const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
     return m_currentMenuInMainMenu;
 }
 
+const proofps_dd::GUI::InGameMenuState& proofps_dd::GUI::getInGameMenuState() const
+{
+    return m_currentMenuInInGameMenu;
+}
+
+void proofps_dd::GUI::showHideInGameTeamSelectMenu()
+{
+    if (m_currentMenuInInGameMenu == InGameMenuState::None)
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::TeamSelect;
+    }
+    else
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::None;
+    }
+}
+
 void proofps_dd::GUI::resetMenuStates(bool bExitingFromGameSession)
 {
     m_currentMenuInInGameMenu = InGameMenuState::None;
@@ -1871,9 +1888,42 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     ImGui::End();
 }
 
+void proofps_dd::GUI::drawInGameTeamSelectMenu()
+{
+    m_pPge->getPure().getWindow().SetCursorVisible(true);
+
+    constexpr float fMenuWndWidth = 500.f;
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 300.f;
+
+    const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
+    const float fContentStartY = calcContentStartY(fContentHeight, main_viewport->WorkSize.y);
+    
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fContentStartY), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fContentHeight), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin("WndInGameTeamSelectMenu", nullptr,
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+    {
+
+    }
+    ImGui::End();
+}
+
 void proofps_dd::GUI::drawInGameMenu()
 {
-    // since drawDearImGuiCb() calls us when (m_currentMenuInMainMenu == MainMenuState::None), a viewport-sized windows is already created
+    // since drawDearImGuiCb() calls us when (m_currentMenuInMainMenu == MainMenuState::None), and a viewport-sized invisible window is already created
+
+    switch (m_currentMenuInInGameMenu)
+    {
+    case InGameMenuState::TeamSelect:
+        drawInGameTeamSelectMenu();
+        break;
+    default:
+        /* case InGameMenuState::None */
+        m_pPge->getPure().getWindow().SetCursorVisible(false);
+        break;
+    }
 }
 
 /**

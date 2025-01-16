@@ -79,7 +79,6 @@ namespace proofps_dd
         proofps_dd::Config& m_config;
         proofps_dd::GUI& m_gui;
         proofps_dd::GameMode* m_gameMode;
-        proofps_dd::DeathMatchMode* m_deathMatchMode;
         
         /** Whenever we initiate a network connection or disconnection, we save the timestamp here.
             This is needed because then in the main game loop we can check the amount of time elapsed

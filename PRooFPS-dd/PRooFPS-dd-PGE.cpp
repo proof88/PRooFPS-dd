@@ -94,7 +94,6 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     m_config(Config::getConfigInstance(*this, m_maps)),
     m_gui(GUI::getGuiInstance(*this, m_config, m_maps, *this, m_mapPlayers, this->getSmokePool())),
     m_gameMode(nullptr),
-    m_deathMatchMode(nullptr),
     m_maps(getAudio(), getConfigProfiles(), getPure()),
     m_fps(GAME_MAXFPS_DEF),
     m_fps_counter(0),
@@ -172,17 +171,11 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     cameraInitForGameStart();
 
-    m_gameMode = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
+    // create GameMode here based on config
+    m_gameMode = proofps_dd::GameMode::createGameMode(GameMode::getGameModeTypeFromConfig(getConfigProfiles()));
     if (!m_gameMode)
     {
         getConsole().EOLnOO("ERROR: createGameMode() failed!");
-        return false;
-    }
-
-    m_deathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_gameMode);
-    if (!m_deathMatchMode)
-    {
-        getConsole().EOLnOO("ERROR: m_deathMatchMode null!");
         return false;
     }
 

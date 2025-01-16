@@ -24,6 +24,7 @@ TODO:
  - BTC dominance, BTC vs alts ratio, when is the altseason starting, etc: https://www.youtube.com/watch?v=jV0rKelRG9k
  - https://x.com/CryptoRugMunch/status/1848812359730794624
  - Yen vs USD, interest rate cut, in connection with ETH price, from 45:41: https://youtu.be/FOy5Me2ZkiI?si=yYJfsfhZ1FPw9EFN&t=2741
+ - Preparing for the last pump before recession, Jan 2025, from 4:06 to 33:31 (hungarian): https://www.youtube.com/live/4aZctf2Z5qM?si=kR8vnsKhh1k0aRWF&t=246
  
 [TOC]
 
