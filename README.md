@@ -66,7 +66,7 @@ From the main menu, you can either start a new server or join to an existing one
 
  - **TAB:** show frag table, server config, client live network data;
  - **M:** select team (only in team-based game modes);
- - **.:** switch to next map based on mapcycle.txt (server only);
+ - **. (dot):** switch to next map based on mapcycle.txt (server only);
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
