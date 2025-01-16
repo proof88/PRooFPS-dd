@@ -52,9 +52,9 @@ From the main menu, you can either start a new server or join to an existing one
  - **SPACE:** jump;
  - **LCTRL:** crouch/duck.
 
-On-the-ground somersault: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).
+**On-the-ground somersault**: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).
 
-In-air salto/somersault: jump-crouch-jump or jump-jump combo, depending on server configuration of CVAR `sv_somersault_mid_air_auto_crouch`.
+**In-air salto/somersault**: jump-jump or jump-crouch-jump combo, depending on server configuration of CVAR `sv_somersault_mid_air_auto_crouch`.
 
 **Weapons**
 
@@ -65,7 +65,8 @@ In-air salto/somersault: jump-crouch-jump or jump-jump combo, depending on serve
 **Misc**
 
  - **TAB:** show frag table, server config, client live network data;
- - **M:** switch to next map based on mapcycle.txt (server only);
+ - **M:** select team (only in team-based game modes);
+ - **.:** switch to next map based on mapcycle.txt (server only);
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
