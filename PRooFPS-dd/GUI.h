@@ -89,6 +89,7 @@ namespace proofps_dd
         /* In-Game Menu Handling */
 
         const InGameMenuState& getInGameMenuState() const;
+        void hideInGameMenu();
         void showHideInGameTeamSelectMenu();
 
         /**

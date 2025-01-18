@@ -961,6 +961,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 
         // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
         m_gui.showGameObjectives();
+        m_gui.hideInGameMenu();
         m_gui.getXHair()->hide();
         m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)

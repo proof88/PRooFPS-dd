@@ -339,6 +339,11 @@ const proofps_dd::GUI::InGameMenuState& proofps_dd::GUI::getInGameMenuState() co
     return m_currentMenuInInGameMenu;
 }
 
+void proofps_dd::GUI::hideInGameMenu()
+{
+    m_currentMenuInInGameMenu = InGameMenuState::None;
+}
+
 void proofps_dd::GUI::showHideInGameTeamSelectMenu()
 {
     if (m_currentMenuInInGameMenu == InGameMenuState::None)

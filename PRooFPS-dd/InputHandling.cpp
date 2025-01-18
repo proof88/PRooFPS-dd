@@ -515,12 +515,18 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_ESCAPE))
     {
+        m_gui.hideInGameMenu();
         return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
     }
 
     if (gameMode.isGameWon())
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+    }
+
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')) && gameMode.isTeamBasedGame())
+    {
+        m_gui.showHideInGameTeamSelectMenu();
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_TAB))
@@ -603,11 +609,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             }
             m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
         }
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('m')) && gameMode.isTeamBasedGame())
-    {
-        m_gui.showHideInGameTeamSelectMenu();
     }
 
     // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
