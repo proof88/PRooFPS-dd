@@ -332,30 +332,17 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             return false;
         }
 
-        // send server config now, for example remaining game time on client side will start from server's remaining time
+        // Send server config now, for example remaining game time on client side will start from server's remaining time
         // upon receiving this message, and also it is crucial that BEFORE client receives any player info, it recreates GameMode instance if needed, so
         // that any player info can be added to the proper GameMode instance at client-side.
-        pge_network::PgePacket newPktServerInfo;
-        if (!proofps_dd::MsgServerInfoFromServer::initPkt(
-            newPktServerInfo,
-            cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
-            config.getTickRate(),
-            config.getPhysicsRate(),
-            config.getClientUpdateRate(),
-            gameMode->getGameModeType(),
-            pDeathMatchMode->getFragLimit(),
-            pDeathMatchMode->getTimeLimitSecs(),
-            pDeathMatchMode->getTimeRemainingMillisecs(),
-            config.getFallDamageMultiplier(),
-            config.getPlayerRespawnDelaySeconds(),
-            config.getPlayerRespawnInvulnerabilityDelaySeconds()))
+        // This message will be received by client late enough to make the timeRemainingSecs annoying delayed, so we send updated message a bit later
+        // as well in serverSendUserUpdates().
+        if (!config.serverSendServerInfo(connHandleServerSide))
         {
-            getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            getConsole().EOLn("PlayerHandling::%s(): serverSendServerInfo() FAILED at line %d!", __func__, __LINE__);
             assert(false);
             return false;
         }
-        // this message will be received by client late enough to make the timeRemainingSecs annoying delayed, so we send updated message a bit later as well in serverSendUserUpdates()
-        m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
 
         pge_network::PgePacket newPktSetup;
         if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, msg.m_szIpAddress, m_maps.getFilename()))
@@ -675,7 +662,7 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
 }
 
 void proofps_dd::PlayerHandling::serverSendUserUpdates(
-    PGEcfgProfiles& cfgProfiles,
+    PGEcfgProfiles& /*cfgProfiles*/,
     proofps_dd::Config& config,
     proofps_dd::Durations& durations)
 {
@@ -702,35 +689,12 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
         {
             player.setExpectingAfterBootUpDelayedUpdate(false);
 
-            // In the future we need something better than GameMode not having some funcs like getFragLimit()
-            const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
-            if (!pDeathMatchMode)
+            if (!config.serverSendServerInfo(playerPair.first))
             {
-                getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
+                getConsole().EOLn("PlayerHandling::%s(): serverSendServerInfo() FAILED at line %d!", __func__, __LINE__);
                 assert(false);
                 return;
             }
-
-            pge_network::PgePacket newPktServerInfo;
-            if (!proofps_dd::MsgServerInfoFromServer::initPkt(
-                newPktServerInfo,
-                cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
-                config.getTickRate(),
-                config.getPhysicsRate(),
-                config.getClientUpdateRate(),
-                GameMode::getGameMode().lock()->getGameModeType(),
-                pDeathMatchMode->getFragLimit(),
-                pDeathMatchMode->getTimeLimitSecs(),
-                pDeathMatchMode->getTimeRemainingMillisecs(),
-                config.getFallDamageMultiplier(),
-                config.getPlayerRespawnDelaySeconds(),
-                config.getPlayerRespawnInvulnerabilityDelaySeconds()))
-            {
-                getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                return;
-            }
-            m_pge.getNetwork().getServer().send(newPktServerInfo, playerPair.first);
             getConsole().OLn("PlayerHandling::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
         } // isExpectingAfterBootUpDelayedUpdate()
 

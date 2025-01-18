@@ -508,7 +508,6 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
     }
 
-    // in the future GameMode will be also recreated here based on iGameModeType, now we just cast the already existing one
     const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
     if (!pDeathMatchMode)
     {
@@ -542,6 +541,41 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     return true;
 }
 
+bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionHandle connHandleServerSide)
+{
+    assert(m_pge.getNetwork().isServer());
+
+    const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+    if (!pDeathMatchMode)
+    {
+        getConsole().EOLn("ERROR: pDeathMatchMode null!");
+        return false;
+    }
+
+    pge_network::PgePacket newPktServerInfo;
+    if (!proofps_dd::MsgServerInfoFromServer::initPkt(
+        newPktServerInfo,
+        m_pge.getConfigProfiles().getVars()[CVAR_FPS_MAX].getAsUInt(),
+        getTickRate(),
+        getPhysicsRate(),
+        getClientUpdateRate(),
+        GameMode::getGameMode().lock()->getGameModeType(),
+        pDeathMatchMode->getFragLimit(),
+        pDeathMatchMode->getTimeLimitSecs(),
+        pDeathMatchMode->getTimeRemainingMillisecs(),
+        getFallDamageMultiplier(),
+        getPlayerRespawnDelaySeconds(),
+        getPlayerRespawnInvulnerabilityDelaySeconds()))
+    {
+        getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return false;
+    }
+
+    m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
+    return true;
+}
+
 void proofps_dd::Config::serverSaveServerInfo(
     const unsigned int& nMaxFps,
     const unsigned int& nTickrate,
@@ -554,6 +588,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     const unsigned int& nRespawnTimeSecs,
     const unsigned int& nRespawnInvulnerabilityTimeSecs)
 {
+    assert(m_pge.getNetwork().isServer());
+
     m_serverInfo.m_nMaxFps = nMaxFps;
     m_serverInfo.m_nTickrate = nTickrate;
     m_serverInfo.m_nPhysicsRateMin = nPhysicsRateMin;
