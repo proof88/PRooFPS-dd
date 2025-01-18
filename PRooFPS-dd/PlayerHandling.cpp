@@ -322,9 +322,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         getConsole().OLn("PlayerHandling::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, connHandleServerSide, msg.m_szIpAddress);
 
-        std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
         // In the future we need something better than GameMode not having some funcs like getFragLimit()
-        const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+        const DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
         if (!pDeathMatchMode)
         {
             getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
@@ -473,7 +472,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
 {
     // TODO: make sure received user name is properly null-terminated! someone else could had sent that, e.g. malicious client or server
 
-    std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
+    GameMode* gameMode = GameMode::getGameMode();
 
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
@@ -546,7 +545,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         }
 
         // In the future we need something better than GameMode not having some funcs like getFragLimit()
-        const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+        const DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
         if (!pDeathMatchMode)
         {
             getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);

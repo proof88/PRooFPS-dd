@@ -171,7 +171,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     cameraInitForGameStart();
 
     // create GameMode right away here, based on config, will be recreated later anyway if config is changed.
-    if (proofps_dd::GameMode::createGameMode(GameMode::getGameModeTypeFromConfig(getConfigProfiles())).expired())
+    if (!proofps_dd::GameMode::createGameMode(GameMode::getGameModeTypeFromConfig(getConfigProfiles())))
     {
         getConsole().EOLnOO("ERROR: createGameMode() failed!");
         return false;
@@ -314,7 +314,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
                 serverSetAllowStrafeMidAir(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR].getAsBool());
                 serverSetAllowStrafeMidAirFull(getConfigProfiles().getVars()[CVAR_SV_ALLOW_STRAFE_MID_AIR_FULL].getAsBool());
                 serverSetFallDamageMultiplier(m_config.getFallDamageMultiplier());
-                serverUpdateWeapons(*GameMode::getGameMode().lock());
+                serverUpdateWeapons(*GameMode::getGameMode());
             }
 
             // 1 TICK START
@@ -398,7 +398,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
 */
 bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pkt)
 {
-    assert(GameMode::getGameMode().lock());
+    assert(GameMode::getGameMode());
 
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
     bool bRet;
@@ -418,7 +418,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         bRet = handleUserDisconnected(
             pge_network::PgePacket::getServerSideConnectionHandle(pkt),
             pge_network::PgePacket::getMessageAsUserDisconnected(pkt),
-            *GameMode::getGameMode().lock());
+            *GameMode::getGameMode());
         break;
     case pge_network::MsgApp::id:
     {
@@ -479,7 +479,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = serverHandleUserCmdMoveFromClient(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt),
-                *GameMode::getGameMode().lock(),
+                *GameMode::getGameMode(),
                 *this);
             break;
         case proofps_dd::MsgUserUpdateFromServer::id:
@@ -489,7 +489,7 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
                 *m_gui.getXHair(),
                 m_config,
-                *GameMode::getGameMode().lock());
+                *GameMode::getGameMode());
             break;
         case proofps_dd::MsgBulletUpdateFromServer::id:
             bRet = handleBulletUpdateFromServer(
@@ -721,9 +721,9 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
     * if it is really required.
     */
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
-    assert(GameMode::getGameMode().lock());
+    assert(GameMode::getGameMode());
     assert(m_gui.getXHair());
-    const bool bWin = GameMode::getGameMode().lock()->serverCheckAndUpdateWinningConditions(getNetwork());
+    const bool bWin = GameMode::getGameMode()->serverCheckAndUpdateWinningConditions(getNetwork());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
         // @PHYSICS-RATE START
@@ -731,19 +731,19 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         if (!bWin)
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-            serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *GameMode::getGameMode().lock());
-            serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *GameMode::getGameMode().lock());
+            serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *GameMode::getGameMode());
+            serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *GameMode::getGameMode());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
-        serverUpdateBullets(*GameMode::getGameMode().lock(), *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
-        serverUpdateExplosions(*GameMode::getGameMode().lock(), m_config.getPhysicsRate());
-        updateSmokes(*GameMode::getGameMode().lock(), m_config.getPhysicsRate());
+        serverUpdateBullets(*GameMode::getGameMode(), *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
+        serverUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
+        updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
         updatePlayersOldValues();
 
         // @PHYSICS-RATE END
     }  // for iPhyIter
-    serverUpdateRespawnTimers(m_config, *GameMode::getGameMode().lock(), m_durations);
+    serverUpdateRespawnTimers(m_config, *GameMode::getGameMode(), m_durations);
     serverSendUserUpdates(getConfigProfiles(), m_config, m_durations);
 
     // @TICK-RATE END
@@ -763,8 +763,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
         clientUpdateBullets(m_config.getPhysicsRate());
-        clientUpdateExplosions(*GameMode::getGameMode().lock(), m_config.getPhysicsRate());
-        updateSmokes(*GameMode::getGameMode().lock(), m_config.getPhysicsRate());
+        clientUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
+        updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
     }
 }
 
@@ -780,7 +780,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     if (window.isActive())
     {
         if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
-            *GameMode::getGameMode().lock(), player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate(), *this
+            *GameMode::getGameMode(), player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate(), *this
         ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -827,7 +827,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
         m_config.getCameraTilting(),
         m_config.getCameraRolling());
     
-    updatePlayersVisuals(m_config, *GameMode::getGameMode().lock()); // maybe we should do this per-tick instead of per-frame in the future
+    updatePlayersVisuals(m_config, *GameMode::getGameMode()); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
     m_maps.update(m_fps);
     m_maps.updateVisibilitiesForRenderer();
@@ -941,18 +941,18 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
 
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
-    GameMode::getGameMode().lock()->restartWithoutRemovingPlayers(getNetwork());
+    GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
 }
 
 void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    if (GameMode::getGameMode().lock()->isGameWon())
+    if (GameMode::getGameMode()->isGameWon())
     {
         if (getNetwork().isServer())
         {
-            const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode().lock()->getWinTime()).count();
+            const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode()->getWinTime()).count();
             if (nSecsSinceWin >= 15)
             {
                 serverRestartGame();
@@ -975,7 +975,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 
 void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 {
-    if (GameMode::getGameMode().lock()->isGameWon())
+    if (GameMode::getGameMode()->isGameWon())
     {
         return;
     }
@@ -1093,7 +1093,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
         return false;
     }
 
-    GameMode::getGameMode().lock()->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
+    GameMode::getGameMode()->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
 
     if (!msg.m_bGameSessionEnd)
     {

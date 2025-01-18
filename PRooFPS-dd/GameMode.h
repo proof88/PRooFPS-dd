@@ -92,13 +92,13 @@ namespace proofps_dd
         * Similar to singleton design pattern, there is always maximum one instance.
         * However, if there is an already existing instance, it automatically gets destroyed before the new one is created.
         */
-        static std::weak_ptr<proofps_dd::GameMode> createGameMode(GameModeType gm);
+        static GameMode* createGameMode(GameModeType gm);
 
         /**
         * @return The last created GameMode instance created by createGameMode().
         *         nullptr if no instance created yet.
         */
-        static std::weak_ptr<proofps_dd::GameMode> getGameMode();
+        static GameMode* getGameMode();
 
         static const char* getGameModeTypeName(GameModeType gm);
 
@@ -300,7 +300,7 @@ namespace proofps_dd
 
     private:
 
-        static std::shared_ptr<GameMode> m_gamemode; // the last created gamemode is stored here, basically singleton
+        static std::unique_ptr<GameMode> m_gamemode; // the last created gamemode is stored here, basically singleton
 
         std::chrono::time_point<std::chrono::steady_clock> m_timeReset; // can be private again once all time-related functions in DeathMatchMode are moved to this class
         unsigned int m_nTimeLimitSecs{};

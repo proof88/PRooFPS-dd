@@ -53,29 +53,29 @@ const char* proofps_dd::GameMode::getLoggerModuleName()
     return "GameMode";
 }
 
-std::weak_ptr<proofps_dd::GameMode> proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType gm)
+proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType gm)
 {
     // unlike with traditional singleton, here we always destroy the already existing instance, due to
-    // smart ptr reference count is decreased!
+    // reassigning the unique_ptr to the new instance!
 
     switch (gm)
     {
     case proofps_dd::GameModeType::DeathMatch:
-        m_gamemode = std::make_shared<proofps_dd::DeathMatchMode>();
+        m_gamemode = std::make_unique<proofps_dd::DeathMatchMode>();
         break;
     case proofps_dd::GameModeType::TeamDeathMatch:
-        m_gamemode = std::make_shared<proofps_dd::TeamDeathMatchMode>();
+        m_gamemode = std::make_unique<proofps_dd::TeamDeathMatchMode>();
         break;
     default:
         m_gamemode = nullptr;
     }
 
-    return m_gamemode;
+    return m_gamemode.get();
 }
 
-std::weak_ptr<proofps_dd::GameMode> proofps_dd::GameMode::getGameMode()
+proofps_dd::GameMode* proofps_dd::GameMode::getGameMode()
 {
-    return m_gamemode;
+    return m_gamemode.get();
 }
 
 const char* proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType gm)
@@ -400,7 +400,7 @@ void proofps_dd::GameMode::handleEventGameWon(pge_network::PgeINetwork& network)
 // ############################### PRIVATE ###############################
 
 
-std::shared_ptr<proofps_dd::GameMode> proofps_dd::GameMode::m_gamemode{};
+std::unique_ptr<proofps_dd::GameMode> proofps_dd::GameMode::m_gamemode{};
 
 
 /*

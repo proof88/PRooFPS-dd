@@ -481,7 +481,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         return false;
     }
 
-    std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
+    GameMode* gameMode = GameMode::getGameMode();
     assert(gameMode);
 
     m_bServerInfoReceived = true;
@@ -503,12 +503,12 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().OLn(
             "Config::%s(): creating new GameMode due to mismatch with server: %d != %d !",
             __func__, gameMode->getGameModeType(), m_serverInfo.m_iGameModeType);
-        gameMode = GameMode::createGameMode(m_serverInfo.m_iGameModeType).lock();
+        gameMode = GameMode::createGameMode(m_serverInfo.m_iGameModeType);
 
         getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
     }
 
-    const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+    DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
     if (!pDeathMatchMode)
     {
         getConsole().EOLn("ERROR: pDeathMatchMode null!");
@@ -545,7 +545,7 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
 {
     assert(m_pge.getNetwork().isServer());
 
-    const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+    const DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
     if (!pDeathMatchMode)
     {
         getConsole().EOLn("ERROR: pDeathMatchMode null!");
@@ -559,7 +559,7 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         getTickRate(),
         getPhysicsRate(),
         getClientUpdateRate(),
-        GameMode::getGameMode().lock()->getGameModeType(),
+        GameMode::getGameMode()->getGameModeType(),
         pDeathMatchMode->getFragLimit(),
         pDeathMatchMode->getTimeLimitSecs(),
         pDeathMatchMode->getTimeRemainingMillisecs(),
