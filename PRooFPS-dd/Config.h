@@ -115,8 +115,7 @@ namespace proofps_dd
 
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const MsgServerInfoFromServer& msgServerInfo,
-            proofps_dd::GameMode& gameMode);
+            const MsgServerInfoFromServer& msgServerInfo);
         void serverSaveServerInfo(
             const unsigned int& nMaxFps,
             const unsigned int& nTickrate,

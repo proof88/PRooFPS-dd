@@ -131,8 +131,6 @@ namespace proofps_dd
         void fastForwardRespawnTimer(
             std::chrono::milliseconds::rep byMillisecs);
 
-        void setGameModeInstance(proofps_dd::GameMode& gm);
-
     protected:
 
     private:
@@ -178,7 +176,6 @@ namespace proofps_dd
         static float m_fFontSizePxHudGeneral;
 
         static GameInfoPage m_gameInfoPageCurrent;
-        static GameMode* m_pGameMode;
 
         // ---------------------------------------------------------------------------
 

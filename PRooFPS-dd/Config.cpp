@@ -472,8 +472,7 @@ const unsigned int& proofps_dd::Config::getPlayerRespawnInvulnerabilityDelaySeco
 
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
-    const proofps_dd::MsgServerInfoFromServer& msgServerInfo,
-    proofps_dd::GameMode& gameMode)
+    const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -481,6 +480,9 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         assert(false);
         return false;
     }
+
+    std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
+    assert(gameMode);
 
     m_bServerInfoReceived = true;
     m_serverInfo = msgServerInfo;
@@ -490,18 +492,34 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 
     // client GameMode instance is updated now with relevant server config
 
-    // in the future GameMode will be also recreated here based on iGameModeType, now we just cast the already existing one
-    DeathMatchMode* const deathMatchMode = dynamic_cast<DeathMatchMode*>(&gameMode);
-    if (!deathMatchMode)
+    if (gameMode->getGameModeType() != m_serverInfo.m_iGameModeType)
     {
-        getConsole().EOLn("ERROR: deathMatchMode null!");
+        // No problem if we lose time here due to explicit logging, because in case of gamemode mismatch, it will happen only once.
+        // So the next time we receive this msg from server, we wont have mismatch thus not logging before invoking
+        // clientUpdateTimeRemainingMillisecs() below with updated time.
+        const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
+        getConsole().SetLoggingState(getLoggerModuleName(), true);
+
+        getConsole().OLn(
+            "Config::%s(): creating new GameMode due to mismatch with server: %d != %d !",
+            __func__, gameMode->getGameModeType(), m_serverInfo.m_iGameModeType);
+        gameMode = GameMode::createGameMode(m_serverInfo.m_iGameModeType).lock();
+
+        getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
+    }
+
+    // in the future GameMode will be also recreated here based on iGameModeType, now we just cast the already existing one
+    const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+    if (!pDeathMatchMode)
+    {
+        getConsole().EOLn("ERROR: pDeathMatchMode null!");
         return false;
     }
-    deathMatchMode->setFragLimit(m_serverInfo.m_nFragLimit);
-    deathMatchMode->setTimeLimitSecs(m_serverInfo.m_nTimeLimitSecs);
-    deathMatchMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
+    pDeathMatchMode->setFragLimit(m_serverInfo.m_nFragLimit);
+    pDeathMatchMode->setTimeLimitSecs(m_serverInfo.m_nTimeLimitSecs);
+    pDeathMatchMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
 
-    // keep logging here, after clientUpdateTimeRemainingSecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
+    // keep logging here, after clientUpdateTimeRemainingMillisecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 

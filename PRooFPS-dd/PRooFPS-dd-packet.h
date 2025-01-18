@@ -69,12 +69,23 @@ namespace proofps_dd
 
     // server -> clients
     // sent to any connecting client, or in the future even before connecting e.g. when listing servers.
-    // Client initialization/player bringup should NOT depend on this, this is just for informational purpose so that
+    // Client initialization/player bringup SHALL NOT depend on this, this is just for informational purpose so that
     // server config can be seen on client-side as well. Some values might be used to alter client's behavior, e.g.
     // nRespawnTimeSecs is actually needed by client for proper visualization of the respawn time countdown.
     // 
+    // Also, since this message teaches the client about the actual game mode, client shall receive it soon after
+    // connecting so depending on game mode client might do additional setup, such as asking user to select team.
+    // 
+    // As stated above, "client initialization/player bringup SHALL NOT depend on this", so it does not interfere with
+    // the MsgUserConnected / MsgUserSetupFromServer / MsgUserNameChangeAndBootupDone trio.
+    // Before v0.5 this was sent out after MsgUserNameChangeAndBootupDone.
+    // But from v0.5 I'm sending this msg to connecting client right in server handling MsgUserConnected, before sending
+    // out any player setup stuff to client. This way, client can reconfigure GameMode instance before receiving any
+    // player info that needs to be added to the GameMode instance.
+    // 
     // nTimeRemainingSecs is used by client to start its own countdown on its side from server's nTimeRemainingSecs.
     // Thus this message needs to be sent out at least once to new client AFTER client bringup is done.
+    // This is still valid in v0.5, this msg is also sent out one more time to client after player bringup (bootup) is done.
     // It won't be exactly the same countdown as on server's side, this is just for ROUGH informational purpose so that
     // client can also show remaining time without any proper synchronization with server.
     struct MsgServerInfoFromServer

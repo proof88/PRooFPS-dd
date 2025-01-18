@@ -502,8 +502,8 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY
 void proofps_dd::GUI::showRespawnTimer(
     const Player* const pKillerPlayer)
 {
-    assert(m_pGameMode);
-    if (m_pGameMode->isGameWon())
+    assert(!GameMode::getGameMode().expired());
+    if (GameMode::getGameMode().lock()->isGameWon())
     {
         return;
     }
@@ -546,10 +546,6 @@ void proofps_dd::GUI::fastForwardRespawnTimer(std::chrono::milliseconds::rep byM
     m_timePlayerDied -= std::chrono::milliseconds(byMillisecs);
 }
 
-void proofps_dd::GUI::setGameModeInstance(proofps_dd::GameMode& gm)
-{
-    m_pGameMode = &gm;
-}
 
 // ############################## PROTECTED ##############################
 
@@ -591,7 +587,6 @@ ImFont* proofps_dd::GUI::m_pImFontHudGeneral = nullptr;
 float proofps_dd::GUI::m_fFontSizePxHudGeneral = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
-proofps_dd::GameMode* proofps_dd::GUI::m_pGameMode = nullptr;
 
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
@@ -946,10 +941,12 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             if (ImGui::RadioButton("Deathmatch (Free for All)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::DeathMatch));
+                GameMode::createGameMode(GameModeType::DeathMatch);
             }
             if (ImGui::RadioButton("Team Deathmatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
+                GameMode::createGameMode(GameModeType::TeamDeathMatch);
             }
         }
         ImGui::EndGroup();
@@ -1250,8 +1247,8 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     {
         m_pConfig->validate();
 
-        assert(m_pGameMode);
-        m_pGameMode->fetchConfig(m_pPge->getConfigProfiles(), m_pPge->getNetwork());
+        assert(!GameMode::getGameMode().expired());
+        GameMode::getGameMode().lock()->fetchConfig(m_pPge->getConfigProfiles(), m_pPge->getNetwork());
 
         if (m_pMaps->serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {            
@@ -2467,12 +2464,12 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
     const float& fTableColIndentPixels,
     const float& fColsTotalWidthAfterPlayerNameCol)
 {
-    assert(m_pGameMode);
+    assert(!GameMode::getGameMode().expired());
 
     // calculating the max required width for player names, I do this to limit the space for column 0 if I can, to make sure table is not too wide.
     // Unlike with other columns having their width determined by their header text, here we allow Player Name column to be flexible, by calculating
     // a good enough width based on player names, but obviously we maximize it so table will fit into 90% width of viewport width.
-    for (const auto& player : m_pGameMode->getPlayersTable())
+    for (const auto& player : GameMode::getGameMode().lock()->getPlayersTable())
     {
         const float fPlayerNameReqWidthPixels = ImGui::CalcTextSize(player.m_sName.c_str()).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
         if (fPlayerNameReqWidthPixels > fPlayerNameColReqWidthPixels)
@@ -2498,7 +2495,7 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
 void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && m_pNetworking->isServer());
-    assert(m_pGameMode);
+    assert(!GameMode::getGameMode().expired());
     assert(m_pPge);
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
@@ -2630,7 +2627,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getPlayersTable())
+            for (const auto& player : GameMode::getGameMode().lock()->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
@@ -2697,7 +2694,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
 void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && !m_pNetworking->isServer());
-    assert(m_pGameMode);
+    assert(!GameMode::getGameMode().expired());
     assert(m_pPge);
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
@@ -2784,7 +2781,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getPlayersTable())
+            for (const auto& player : GameMode::getGameMode().lock()->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
@@ -2845,7 +2842,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
 
     assert(m_pMinimap);
     assert(m_pNetworking && m_pNetworking->isServer());
-    assert(m_pGameMode);
+    assert(!GameMode::getGameMode().expired());
     assert(m_pPge);
 
     const std::string sTableCaption = "Players Debug Data";
@@ -2951,7 +2948,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
         ImGui::TableHeadersRow();
         for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
         {
-            for (const auto& player : m_pGameMode->getPlayersTable())
+            for (const auto& player : GameMode::getGameMode().lock()->getPlayersTable())
             {
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
@@ -3027,11 +3024,16 @@ void proofps_dd::GUI::drawGameObjectives()
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
     assert(m_pNetworking);
-    assert(m_pGameMode);
+    assert(!GameMode::getGameMode().expired());
     assert(m_pPge);
     assert(m_pMinimap);
 
-    proofps_dd::DeathMatchMode* pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(m_pGameMode);
+    // TODO: BADDESIGN!
+    // GameMode should do these drawings.
+    // However, I cannot include GUI.h now in GameMode.
+    // As also explained in PRooFPSddPGE::clientHandleGameSessionStateFromServer().
+
+    std::shared_ptr<proofps_dd::DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
     if (!pDeathMatchMode)
     {
         getConsole().EOLn("ERROR: pDeathMatchMode null!");
@@ -3039,13 +3041,13 @@ void proofps_dd::GUI::drawGameObjectives()
     }
 
     std::string sTableHeaderText;
-    if (m_pGameMode->isGameWon())
+    if (GameMode::getGameMode().lock()->isGameWon())
     {
         sTableHeaderText = "Game Ended! Waiting for restart ...";
     }
     else
     {
-        sTableHeaderText = "DeathMatch";
+        sTableHeaderText = GameMode::getGameMode().lock()->getGameModeTypeName();
         if (pDeathMatchMode->getFragLimit() > 0)
         {
             sTableHeaderText += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());

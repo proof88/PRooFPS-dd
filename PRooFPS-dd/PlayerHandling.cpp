@@ -221,8 +221,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const pge_network::MsgUserConnectedServerSelf& msg,
     PGEcfgProfiles& cfgProfiles,
-    proofps_dd::Config& /*config*/,
-    proofps_dd::GameMode& /*gameMode*/,
+    proofps_dd::Config& config,
     std::function<void(int)>& cbDisplayMapLoadingProgressUpdate)
 {
     if (!m_pge.getNetwork().isServer())
@@ -322,6 +321,41 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
         // server is processing another user's birth
         getConsole().OLn("PlayerHandling::%s(): new remote user (connHandleServerSide: %u) connected (from %s) and I'm server",
             __func__, connHandleServerSide, msg.m_szIpAddress);
+
+        std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
+        // In the future we need something better than GameMode not having some funcs like getFragLimit()
+        const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
+        if (!pDeathMatchMode)
+        {
+            getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+
+        // send server config now, for example remaining game time on client side will start from server's remaining time
+        // upon receiving this message, and also it is crucial that BEFORE client receives any player info, it recreates GameMode instance if needed, so
+        // that any player info can be added to the proper GameMode instance at client-side.
+        pge_network::PgePacket newPktServerInfo;
+        if (!proofps_dd::MsgServerInfoFromServer::initPkt(
+            newPktServerInfo,
+            cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
+            config.getTickRate(),
+            config.getPhysicsRate(),
+            config.getClientUpdateRate(),
+            gameMode->getGameModeType(),
+            pDeathMatchMode->getFragLimit(),
+            pDeathMatchMode->getTimeLimitSecs(),
+            pDeathMatchMode->getTimeRemainingMillisecs(),
+            config.getFallDamageMultiplier(),
+            config.getPlayerRespawnDelaySeconds(),
+            config.getPlayerRespawnInvulnerabilityDelaySeconds()))
+        {
+            getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+            return false;
+        }
+        // this message will be received by client late enough to make the timeRemainingSecs annoying delayed, so we send updated message a bit later as well in serverSendUserUpdates()
+        m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
 
         pge_network::PgePacket newPktSetup;
         if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, msg.m_szIpAddress, m_maps.getFilename()))
@@ -448,10 +482,11 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserNameChangeAndBootupDone& msg,
     proofps_dd::Config& config,
-    proofps_dd::GameMode& gameMode,
     PGEcfgProfiles& cfgProfiles)
 {
     // TODO: make sure received user name is properly null-terminated! someone else could had sent that, e.g. malicious client or server
+
+    std::shared_ptr<GameMode> gameMode = GameMode::getGameMode().lock();
 
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
@@ -497,7 +532,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         //    assert(false);
         //    return false;
         //}
-        if (!gameMode.addPlayer(playerIt->second, m_pge.getNetwork()))
+        if (!gameMode->addPlayer(playerIt->second, m_pge.getNetwork()))
         {
             getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, szNewUserName, connHandleServerSide);
             assert(false);
@@ -524,7 +559,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         }
 
         // In the future we need something better than GameMode not having some funcs like getFragLimit()
-        const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
+        const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
         if (!pDeathMatchMode)
         {
             getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
@@ -541,7 +576,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.getTickRate(),
                 config.getPhysicsRate(),
                 config.getClientUpdateRate(),
-                gameMode.getGameModeType(),
+                gameMode->getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
                 config.getFallDamageMultiplier(),
@@ -551,7 +586,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 
             // as last step, restart the game mode now, this is important to be last step, for example remaining game time starts to count down now!
-            gameMode.restartWithoutRemovingPlayers(m_pge.getNetwork());
+            gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork());
 
             // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
             //m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
@@ -560,29 +595,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         }
         else
         {
-            // this is the moment when client player has fully booted up, send server config now, for example remaining game time on client side will start from server's remaining time
-            // upon receiving this message
-            pge_network::PgePacket newPktServerInfo;
-            if (!proofps_dd::MsgServerInfoFromServer::initPkt(
-                newPktServerInfo,
-                cfgProfiles.getVars()[CVAR_FPS_MAX].getAsUInt(),
-                config.getTickRate(),
-                config.getPhysicsRate(),
-                config.getClientUpdateRate(),
-                gameMode.getGameModeType(),
-                pDeathMatchMode->getFragLimit(),
-                pDeathMatchMode->getTimeLimitSecs(),
-                pDeathMatchMode->getTimeRemainingMillisecs(),
-                config.getFallDamageMultiplier(),
-                config.getPlayerRespawnDelaySeconds(),
-                config.getPlayerRespawnInvulnerabilityDelaySeconds()))
-            {
-                getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-                return false;
-            }
-            // this message will be received by client late enough to make the timeRemainingSecs annoying delayed, so we send updated message a bit later as well in serverSendUserUpdates()
-            m_pge.getNetwork().getServer().send(newPktServerInfo, connHandleServerSide);
+            // this is the moment when client player has fully booted up
         }
 
         playerIt->second.setTimeBootedUp();
@@ -605,10 +618,10 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         // TEMPORAL WORKAROUND DUE TO: https://github.com/proof88/PRooFPS-dd/issues/268
         // we have the same WA in handleUserSetupFromServer().
         const auto itPlayerInGamemode = std::find_if(
-            gameMode.getPlayersTable().begin(),
-            gameMode.getPlayersTable().end(),
+            gameMode->getPlayersTable().begin(),
+            gameMode->getPlayersTable().end(),
             [&msg](const proofps_dd::PlayersTableRow& row) { return row.m_sName == msg.m_szUserName; });
-        if (itPlayerInGamemode != gameMode.getPlayersTable().end())
+        if (itPlayerInGamemode != gameMode->getPlayersTable().end())
         {
             getConsole().EOLn("PlayerHandling::%s(): WA: connHandleServerSide: %u is already present in GameMode, allowed temporarily due to issue #268 (received: %s; set: %s)!",
                 __func__, connHandleServerSide, msg.m_szUserName, playerIt->second.getName().c_str());
@@ -628,7 +641,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         //    assert(false);
         //    return false;
         //}
-        if (!gameMode.addPlayer(playerIt->second, m_pge.getNetwork()))
+        if (!gameMode->addPlayer(playerIt->second, m_pge.getNetwork()))
         {
             getConsole().EOLn("PlayerHandling::%s(): failed to insert player %s (%u) into GameMode!", __func__, msg.m_szUserName, connHandleServerSide);
             assert(false);
@@ -664,8 +677,7 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
 void proofps_dd::PlayerHandling::serverSendUserUpdates(
     PGEcfgProfiles& cfgProfiles,
     proofps_dd::Config& config,
-    proofps_dd::Durations& durations,
-    proofps_dd::GameMode& gameMode)
+    proofps_dd::Durations& durations)
 {
     if (!m_pge.getNetwork().isServer())
     {
@@ -691,7 +703,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
             player.setExpectingAfterBootUpDelayedUpdate(false);
 
             // In the future we need something better than GameMode not having some funcs like getFragLimit()
-            const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
+            const std::shared_ptr<DeathMatchMode> pDeathMatchMode = std::dynamic_pointer_cast<proofps_dd::DeathMatchMode>(GameMode::getGameMode().lock());
             if (!pDeathMatchMode)
             {
                 getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
@@ -706,7 +718,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 config.getTickRate(),
                 config.getPhysicsRate(),
                 config.getClientUpdateRate(),
-                gameMode.getGameModeType(),
+                GameMode::getGameMode().lock()->getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
                 pDeathMatchMode->getTimeLimitSecs(),
                 pDeathMatchMode->getTimeRemainingMillisecs(),

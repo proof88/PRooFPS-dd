@@ -79,7 +79,6 @@ namespace proofps_dd
             const pge_network::MsgUserConnectedServerSelf& msg,
             PGEcfgProfiles& cfgProfiles,
             proofps_dd::Config& config,
-            proofps_dd::GameMode& gameMode,
             std::function<void(int)>& cbDisplayMapLoadingProgressUpdate);
         bool handleUserDisconnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -89,14 +88,12 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserNameChangeAndBootupDone& msg,
             proofps_dd::Config& config,
-            proofps_dd::GameMode& gameMode,
             PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
         void serverSendUserUpdates(
             PGEcfgProfiles& cfgProfiles,
             proofps_dd::Config& config,
-            proofps_dd::Durations& durations,
-            proofps_dd::GameMode& gameMode);
+            proofps_dd::Durations& durations);
         bool handleUserUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserUpdateFromServer& msg,
