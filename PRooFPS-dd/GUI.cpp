@@ -1906,33 +1906,45 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     constexpr char* const szWindowTitle = "Team Selection";
 
     constexpr float fWindowWidthDesired = 300.f;
+    // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
+    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
-    const float fWindowWidth = std::max(fWindowWidthDesired, fWindowWidthMinPixels);
+    const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
     
     const float fButtonWidthMinPixels = ImGui::CalcTextSize("JOIN TEAM X").x + 2 * ImGui::GetStyle().FramePadding.x;
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
-    const float fContentHeight = m_fFontSizePxHudGeneralScaled * 3 /* rows of text */ + 2 * fBtnHeight + 4 * ImGui::GetStyle().ItemSpacing.y;
+    constexpr int nTextRows = 4;
+    constexpr int nButtonRows = 3;
+    const float fContentHeight =
+        m_fFontSizePxHudGeneralScaled * nTextRows +
+        nButtonRows * fBtnHeight +
+        (nTextRows + nButtonRows - 1) * ImGui::GetStyle().ItemSpacing.y;
     const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
 
-    const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
-    const float fContentStartY = calcContentStartY(fContentHeight, main_viewport->WorkSize.y);
-    
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fWindowWidth / 2, fContentStartY), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_FirstUseEver);
 
     // for now we decide in-game menu transparency based on minimap transparency setting
-    const float fAlpha =
+    const float fPopupBgAlpha =
         m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent].getAsBool() ? 0.8f : 1.f;
     ImGuiStyle& style = ImGui::GetStyle();
-    const auto prevWindowBgColor = style.Colors[ImGuiCol_WindowBg];
-    style.Colors[ImGuiCol_WindowBg] = ImVec4(prevWindowBgColor.x, prevWindowBgColor.y, prevWindowBgColor.z, fAlpha);
+    const auto prevPopupBgColor = style.Colors[ImGuiCol_PopupBg];
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(prevPopupBgColor.x, prevPopupBgColor.y, prevPopupBgColor.z, fPopupBgAlpha);
 
-    // TODO: should be modal window instead because now I can click and activate the background transparent window and then this loses mouse!!!
-    ImGui::Begin("WndInGameTeamSelectMenu", nullptr,
-        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+    // we always open the popup here, that is why we are in this function afterall!
+    // We would not need this if we were using the regular BeginWindow() stuff, but we want to use this popup/modal window functionality of
+    // Dear ImGui so GUI input is restricted to this window, and auto-dim of background is also applied which is nice!
+    // Also, OpenPopup() / EndPopup() / CloseCurrentPopup() are explicitly invoked so Dear ImGui can maintain its internal window hierarchy properly.
+    constexpr char* const szTeamSelectWindowMenuName = "##WndInGameTeamSelectMenu";
+    if (!ImGui::IsPopupOpen(szTeamSelectWindowMenuName))
+    {
+        ImGui::OpenPopup(szTeamSelectWindowMenuName);
+    }
+     
+    if (ImGui::BeginPopupModal(szTeamSelectWindowMenuName, NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
     {
         drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
 
@@ -1961,23 +1973,36 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                     "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
             }
 
-            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
             // in case of buttons, remove size argument (ImVec2) to auto-resize
             if (ImGui::Button("JOIN TEAM 1", ImVec2(fBtnWidth, fBtnHeight)))
             {
                 // TODO: send team selection to server!
+                ImGui::CloseCurrentPopup();
+                showHideInGameTeamSelectMenu();
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
             if (ImGui::Button("JOIN TEAM 2", ImVec2(fBtnWidth, fBtnHeight)))
             {
                 // TODO: send team selection to server!
+                ImGui::CloseCurrentPopup();
+                showHideInGameTeamSelectMenu();
+            }
+
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+            if (ImGui::Button("VIEW TEAMS", ImVec2(fBtnWidth, fBtnHeight)))
+            {
+                // TODO: open fragtable!
+                ImGui::CloseCurrentPopup();
+                showHideInGameTeamSelectMenu();
             }
         }
-    }
-    ImGui::End();
 
-    style.Colors[ImGuiCol_WindowBg] = prevWindowBgColor;
+        ImGui::EndPopup();
+    }
+
+    style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
 }
 
 /**
