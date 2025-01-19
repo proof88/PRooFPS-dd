@@ -182,20 +182,21 @@ void proofps_dd::GUI::initialize()
     // Anyway, for I will just use height for scaling the default font size.
     // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
     // And under display resolution I actually mean window client size.
-    m_fFontSizePxHudGeneral = fDefaultFontSizePixels * fScalingFactor;
-    if (m_fFontSizePxHudGeneral <= 0.f)
+    m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels * fScalingFactor;
+    if (m_fFontSizePxHudGeneralScaled <= 0.f)
     {
-        m_fFontSizePxHudGeneral = fDefaultFontSizePixels;
-        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneral was non-positive, reset to: %f", __func__, m_fFontSizePxHudGeneral);
+        m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneralScaled was non-positive, reset to: %f", __func__, m_fFontSizePxHudGeneralScaled);
     }
     else
     {
-        getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneral: %f", __func__, m_fFontSizePxHudGeneral);
+        getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneralScaled: %f", __func__, m_fFontSizePxHudGeneralScaled);
     }
 
     ImGui::GetIO().Fonts->AddFontDefault();
-    m_pImFontFragTable = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
-    // TODO: by the time we get here, m_fFontSizePxHudGeneral should be set according to display resolution!!!
+    m_pImFontFragTableNonScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
+    
+    // By the time we get here, m_fFontSizePxHudGeneralScaled is set according to display resolution.
     // This also means that upon windowed/fullscreen mode change, we should reinit GUI, but this is already happening.
     /*
     * Currently there is no proper font scaling in Dear ImGui, i.e. different size font needs to be built as different font.
@@ -204,9 +205,9 @@ void proofps_dd::GUI::initialize()
     *  - https://github.com/ocornut/imgui/pull/3471
     *  - https://github.com/ocornut/imgui/issues/6967
     */
-    m_pImFontHudGeneral = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneral);
-    assert(m_pImFontFragTable);
-    assert(m_pImFontHudGeneral);
+    m_pImFontHudGeneralScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneralScaled);
+    assert(m_pImFontFragTableNonScaled);
+    assert(m_pImFontHudGeneralScaled);
     assert(ImGui::GetIO().Fonts->Build());
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
@@ -268,7 +269,7 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
 
-    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(m_fFontSizePxHudGeneral)));
+    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(m_fFontSizePxHudGeneralScaled)));
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 } // initialize()
 
@@ -587,9 +588,9 @@ PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
 
-ImFont* proofps_dd::GUI::m_pImFontFragTable = nullptr;
-ImFont* proofps_dd::GUI::m_pImFontHudGeneral = nullptr;
-float proofps_dd::GUI::m_fFontSizePxHudGeneral = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
+ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
+ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
+float proofps_dd::GUI::m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 
@@ -1890,36 +1891,110 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     ImGui::End();
 }
 
-void proofps_dd::GUI::drawInGameTeamSelectMenu()
+/**
+* @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
+*                        For example, when we have just connected to the server and it not yet sent all player bringup messages to us.
+*/
+void proofps_dd::GUI::drawInGameTeamSelectMenu(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
+    assert(GameMode::getGameMode()->isTeamBasedGame());
+    assert(m_pPge);
+
     m_pPge->getPure().getWindow().SetCursorVisible(true);
 
-    constexpr float fMenuWndWidth = 500.f;
-    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 300.f;
+    constexpr char* const szWindowTitle = "Team Selection";
+
+    constexpr float fWindowWidthDesired = 300.f;
+    const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
+    const float fWindowWidth = std::max(fWindowWidthDesired, fWindowWidthMinPixels);
+    
+    const float fButtonWidthMinPixels = ImGui::CalcTextSize("JOIN TEAM X").x + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
+    const float fBtnWidth = fButtonWidthMinPixels + 30.f;
+    const float fBtnHeight = fButtonHeightMinPixels + 10.f;
+
+    const float fContentHeight = m_fFontSizePxHudGeneralScaled * 3 /* rows of text */ + 2 * fBtnHeight + 4 * ImGui::GetStyle().ItemSpacing.y;
+    const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
 
     const ImGuiViewport* const main_viewport = ImGui::GetMainViewport();
     const float fContentStartY = calcContentStartY(fContentHeight, main_viewport->WorkSize.y);
     
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fContentStartY), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fContentHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fWindowWidth / 2, fContentStartY), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_FirstUseEver);
 
+    // for now we decide in-game menu transparency based on minimap transparency setting
+    const float fAlpha =
+        m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent].getAsBool() ? 0.8f : 1.f;
+    ImGuiStyle& style = ImGui::GetStyle();
+    const auto prevWindowBgColor = style.Colors[ImGuiCol_WindowBg];
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(prevWindowBgColor.x, prevWindowBgColor.y, prevWindowBgColor.z, fAlpha);
+
+    // TODO: should be modal window instead because now I can click and activate the background transparent window and then this loses mouse!!!
     ImGui::Begin("WndInGameTeamSelectMenu", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
     {
+        drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
 
+        if (itCurrentPlayer == m_pMapPlayers->end())
+        {
+            drawText(
+                ImGui::GetCursorPosX(),
+                ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                "Waiting for player data ...");
+        }
+        else
+        {
+            Player& currentPlayer = itCurrentPlayer->second;
+            if (currentPlayer.getTeamId() == 0u)
+            {
+                drawText(
+                    ImGui::GetCursorPosX(),
+                    ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                    "You are not in any team.");
+            }
+            else
+            {
+                drawText(
+                    ImGui::GetCursorPosX(),
+                    ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                    "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+            }
+
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+            // in case of buttons, remove size argument (ImVec2) to auto-resize
+            if (ImGui::Button("JOIN TEAM 1", ImVec2(fBtnWidth, fBtnHeight)))
+            {
+                // TODO: send team selection to server!
+            }
+
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+            if (ImGui::Button("JOIN TEAM 2", ImVec2(fBtnWidth, fBtnHeight)))
+            {
+                // TODO: send team selection to server!
+            }
+        }
     }
     ImGui::End();
+
+    style.Colors[ImGuiCol_WindowBg] = prevWindowBgColor;
 }
 
-void proofps_dd::GUI::drawInGameMenu()
+/**
+* @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
+*                        For example, when we have just connected to the server and it not yet sent all player bringup messages to us.
+*/
+void proofps_dd::GUI::drawInGameMenu(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
     // since drawDearImGuiCb() calls us when (m_currentMenuInMainMenu == MainMenuState::None), and a viewport-sized invisible window is already created
 
     switch (m_currentMenuInInGameMenu)
     {
     case InGameMenuState::TeamSelect:
-        drawInGameTeamSelectMenu();
+        ImGui::PushFont(m_pImFontHudGeneralScaled);
+        drawInGameTeamSelectMenu(itCurrentPlayer);
+        ImGui::PopFont();
         break;
     default:
         /* case InGameMenuState::None */
@@ -1950,9 +2025,9 @@ void proofps_dd::GUI::drawDearImGuiCb()
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollWithMouse);
         {
             // initialize() created these fonts before configuring this as PURE GUI callback function
-            assert(m_pImFontFragTable);
-            assert(m_pImFontHudGeneral);
-            ImGui::PushFont(m_pImFontHudGeneral);
+            assert(m_pImFontFragTableNonScaled);
+            assert(m_pImFontHudGeneralScaled);
+            ImGui::PushFont(m_pImFontHudGeneralScaled);
 
             drawRespawnTimer();
             updateXHair();
@@ -1972,7 +2047,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
             ImGui::PopFont();
 
             drawGameInfoPages();
-            drawInGameMenu();
+            drawInGameMenu(it);
         }
         ImGui::End();
 
@@ -2003,12 +2078,12 @@ void proofps_dd::GUI::drawRespawnTimer()
     assert(m_pPge);
     drawTextShadowed(
         getDearImGui2DposXforWindowCenteredText(szRespawnWaitText),
-        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral * 2,
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled * 2,
         szRespawnWaitText);
 
     drawTextShadowed(
         getDearImGui2DposXforWindowCenteredText(szRespawnWaitText2),
-        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneral,
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled,
         szRespawnWaitText2);
 
     assert(m_pConfig);
@@ -2093,7 +2168,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
 
     // we start at the bottom of the screen, in reverse order from bottom to top
-    const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - m_fFontSizePxHudGeneral - 10 /* spacing from viewport bottom edge */;
+    const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - m_fFontSizePxHudGeneralScaled - 10 /* spacing from viewport bottom edge */;
     if (m_pNetworking->isServer())
     {
         drawTextHighlighted(
@@ -2161,7 +2236,7 @@ void proofps_dd::GUI::updateDeathKillEvents()
 
     // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
-    ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneral); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
+    ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneralScaled); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
     
     //for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
     //{
@@ -2193,7 +2268,7 @@ void proofps_dd::GUI::updateItemPickupEvents()
 
     // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
-    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneral + 3) + 20);
+    ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneralScaled + 3) + 20);
     
     //for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
     //{
@@ -3082,39 +3157,39 @@ float proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Live Network Data");
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneral;
+    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
 
     static constexpr float fIndentX = 20.f;
 
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
 
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     std::stringstream ssQuality;
     ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
         "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, ssQuality.str());
 
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
         " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
 
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
         "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
 
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
 
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
@@ -3137,55 +3212,55 @@ void proofps_dd::GUI::drawGameServerConfig()
 
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * m_fFontSizePxHudGeneral;
+        fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
         drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
     }
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneral;
+    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
 
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Max Framerate: ") + std::to_string(m_pConfig->getServerInfo().m_nMaxFps) + " FPS");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Tickrate: ") + std::to_string(m_pConfig->getServerInfo().m_nTickrate) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Min Physics Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nPhysicsRateMin) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Client Update Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nClientUpdateRate) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Fall Damage Multiplier: ") + std::to_string(m_pConfig->getServerInfo().m_nFallDamageMultiplier) + "x");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnTimeSecs) + " s");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * m_fFontSizePxHudGeneral;
+        fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
         fThisRowY = drawClientConnectionDebugInfo(fThisRowY);
     }
 
@@ -3193,12 +3268,12 @@ void proofps_dd::GUI::drawGameServerConfig()
     const float fGameInfoPagesCol2StartX = ImGui::GetWindowSize().x * 0.5f;
     drawTextHighlighted(fGameInfoPagesCol2StartX, fThisRowY, "Resource Usage");
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneral;
+    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
     drawTextHighlighted(
         fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
         std::string("BulletPool: ") + std::to_string(m_pPge->getBullets().size()) + " / " + std::to_string(m_pPge->getBullets().capacity()) + " elems (" +
         std::to_string(m_pPge->getBullets().capacityBytes()) + " Bytes)");
-    fThisRowY += m_fFontSizePxHudGeneral;
+    fThisRowY += m_fFontSizePxHudGeneralScaled;
     assert(m_pSmokes);
     drawTextHighlighted(
         fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
@@ -3211,17 +3286,17 @@ void proofps_dd::GUI::drawGameInfoPages()
     switch (m_gameInfoPageCurrent)
     {
     case proofps_dd::GUI::GameInfoPage::FragTable:
-        ImGui::PushFont(m_pImFontFragTable);
+        ImGui::PushFont(m_pImFontFragTableNonScaled);
         drawGameObjectives();
         ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::AllPlayersDebugDataServer:
-        ImGui::PushFont(m_pImFontHudGeneral);
+        ImGui::PushFont(m_pImFontFragTableNonScaled);
         drawAllPlayersDebugDataServer();
         ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::ServerConfig:
-        ImGui::PushFont(m_pImFontHudGeneral);
+        ImGui::PushFont(m_pImFontHudGeneralScaled);
         drawGameServerConfig();
         ImGui::PopFont();
         break;

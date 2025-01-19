@@ -172,9 +172,9 @@ namespace proofps_dd
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
 
-        static ImFont* m_pImFontFragTable;
-        static ImFont* m_pImFontHudGeneral;
-        static float m_fFontSizePxHudGeneral;
+        static ImFont* m_pImFontFragTableNonScaled;
+        static ImFont* m_pImFontHudGeneralScaled;
+        static float m_fFontSizePxHudGeneralScaled;
 
         static GameInfoPage m_gameInfoPageCurrent;
 
@@ -225,8 +225,10 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
-        static void drawInGameTeamSelectMenu();
-        static void drawInGameMenu();
+        static void drawInGameTeamSelectMenu(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
+        static void drawInGameMenu(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
 
         /* Misc */
 
