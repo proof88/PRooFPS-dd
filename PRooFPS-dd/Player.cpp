@@ -1846,7 +1846,15 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
     // server invoked this func from PlayerHandling::serverHandleUserInGameMenuCmd(),
     // clients will invoke it from PlayerHandling::handlePlayerEventFromServer() which is sent by server at the end of this function!
 
-    getConsole().EOLn("Player::%s(%u): for player with connHandleServerSide: %u!", __func__, iTeamId, getServerSideConnectionHandle());
+    //getConsole().EOLn("Player::%s(%u): for player with connHandleServerSide: %u!", __func__, iTeamId, getServerSideConnectionHandle());
+    
+    if (iTeamId > 2)
+    {
+        // GameMode does not accept it so we dont either!
+        getConsole().EOLn("Player::%s(%u): is invalid team id for player with connHandleServerSide: %u!", __func__, iTeamId, getServerSideConnectionHandle());
+        return;
+    }
+    
     getTeamId() = iTeamId;
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))

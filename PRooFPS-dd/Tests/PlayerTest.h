@@ -2619,10 +2619,12 @@ private:
         bool b = true;
         // (I cannot check sound now, need stubs for that)
         playerServer.handleTeamIdChanged(1);
+        b &= assertEquals(1u, playerServer.getTeamId(), "get team id 1");
         b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         // (I cannot check sound now, need stubs for that)
         playerClient.handleTeamIdChanged(1);
+        b &= assertEquals(1u, playerClient.getTeamId(), "get team id 2");
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
         try
         {
@@ -2636,14 +2638,31 @@ private:
             b &= assertFalse(true, "no such tx msg found 1");
         }
 
-        // same actions as above, no protective flag is in place that needs to be cleared first
+        // same actions as above, msg is always sent out even when same team id is being set!
         playerClient.handleTeamIdChanged(1);
+        b &= assertEquals(1u, playerClient.getTeamId(), "get team id 3");
         b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
             b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
                 "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        // invalid team id
+        playerClient.handleTeamIdChanged(3);
+        b &= assertEquals(1u, playerClient.getTeamId(), "get team id 4");
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 4");
+        try
+        {
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 3"
             );
         }
         catch (...)
