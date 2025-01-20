@@ -1901,6 +1901,15 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     assert(GameMode::getGameMode()->isTeamBasedGame());
     assert(m_pPge);
 
+    pge_network::PgePacket pktUserInGameMenuCmd;
+    // it is easier to early return here in case of initPkt() failure so we do it here!
+    if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::TeamSelect)))
+    {
+        getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return;
+    }
+
     m_pPge->getPure().getWindow().SetCursorVisible(true);
 
     constexpr char* const szWindowTitle = "Team Selection";
@@ -1973,29 +1982,49 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                     "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
             }
 
+            bool bSendPkt = false;
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
             // in case of buttons, remove size argument (ImVec2) to auto-resize
             if (ImGui::Button("JOIN TEAM 1", ImVec2(fBtnWidth, fBtnHeight)))
             {
-                // TODO: send team selection to server!
-                ImGui::CloseCurrentPopup();
-                showHideInGameTeamSelectMenu();
+                proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 1u);
+                bSendPkt = true;
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
             if (ImGui::Button("JOIN TEAM 2", ImVec2(fBtnWidth, fBtnHeight)))
             {
-                // TODO: send team selection to server!
-                ImGui::CloseCurrentPopup();
-                showHideInGameTeamSelectMenu();
+                proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 2u);
+                bSendPkt = true;
+            }
+
+            bool bCloseThisPopup = false;
+            if (bSendPkt)
+            {
+                bCloseThisPopup = true;
+
+                // send pkt only if selected team is really different than what player already belongs to
+                if (currentPlayer.getTeamId() != proofps_dd::MsgUserInGameMenuCmd::getSelectedTeamId(pktUserInGameMenuCmd))
+                {
+                    // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
+                    // their common interface which always points to the initialized instance, which is either client or server.
+                    // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023 (and Jan 2025 :)).
+                    m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
+                }
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
             if (ImGui::Button("VIEW TEAMS", ImVec2(fBtnWidth, fBtnHeight)))
             {
-                // TODO: open fragtable!
+                bCloseThisPopup = true;
+                showGameObjectives(); // will start showing frag table in next frame
+            }
+
+            if (bCloseThisPopup)
+            {
                 ImGui::CloseCurrentPopup();
-                showHideInGameTeamSelectMenu();
+                showHideInGameTeamSelectMenu();  // since it is true now, will flip it to false
+                // remember: do not return, let the entire function finish as planned with EndPopup() and prev color reset stuff!
             }
         }
 

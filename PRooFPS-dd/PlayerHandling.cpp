@@ -1087,6 +1087,35 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
     return true;
 }
 
+bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserInGameMenuCmd& msg)
+{
+    //getConsole().EOLn("PlayerHandling::%s(): received event id: %d from player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
+
+    const auto it = m_mapPlayers.find(connHandleServerSide);
+    if (m_mapPlayers.end() == it)
+    {
+        getConsole().EOLn("PlayerHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        assert(false);  // shall fail in debug mode private testing because no corner cases then
+        return true;  // silent ignore this message in release mode: valid scenario, if server already deleted the player due to server shutdown, but this msg was still in queue!
+    }
+
+    auto& player = it->second;
+
+    // GUI::InGameMenuState
+    switch (msg.m_iInGameMenu)
+    {
+    case static_cast<int>(GUI::InGameMenuState::TeamSelect):
+        player.handleTeamIdChanged(static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        break;
+    default:
+        getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
+        assert(false);  // crash in debug
+        return false;
+    }
+
+    return true;
+}
+
 void proofps_dd::PlayerHandling::updatePlayersVisuals(
     const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode)

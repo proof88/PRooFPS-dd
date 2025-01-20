@@ -1843,6 +1843,10 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
 {
     // both server and client execute this function, so be careful with conditions here
 
+    // server invoked this func from PlayerHandling::serverHandleUserInGameMenuCmd(),
+    // clients will invoke it from PlayerHandling::handlePlayerEventFromServer() which is sent by server at the end of this function!
+
+    getConsole().EOLn("Player::%s(%u): for player with connHandleServerSide: %u!", __func__, iTeamId, getServerSideConnectionHandle());
     getTeamId() = iTeamId;
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
@@ -1855,13 +1859,14 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
         return;
     }
 
+    
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,
         getServerSideConnectionHandle(),
         PlayerEventId::TeamIdChanged,
         static_cast<int>(iTeamId));
-    m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 
 

@@ -127,8 +127,8 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     if (m_mapPlayers.end() == it)
     {
         getConsole().EOLn("InputHandling::%s(): failed to find user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        assert(false);  // in debug mode this terminates server
-        return true;    // in release mode, we dont terminate the server, just silently ignore
+        assert(false);  // in debug mode this terminates server: same reason as in PlayerHandling::serverHandleUserInGameMenuCmd()
+        return true;    // in release mode, we dont terminate the server, just silently ignore: same reason as in PlayerHandling::serverHandleUserInGameMenuCmd()
     }
 
     const std::string& sClientUserName = it->second.getName();

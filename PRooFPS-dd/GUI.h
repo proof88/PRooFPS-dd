@@ -119,9 +119,9 @@ namespace proofps_dd
         EventLister* getPlayerHpChangeEvents();
         EventLister* getPlayerApChangeEvents();
         EventLister* getPlayerAmmoChangeEvents();
-        void showGameObjectives();
-        void hideGameObjectives();
-        void showAndLoopGameInfoPages();
+        static void showGameObjectives();
+        static void hideGameObjectives();
+        static void showAndLoopGameInfoPages();
 
         void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
         void textPermanent(const std::string& s, int nPureX, int nPureY) const;

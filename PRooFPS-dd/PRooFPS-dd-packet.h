@@ -38,6 +38,7 @@ namespace proofps_dd
         CurrentWpnUpdateFromServer,
         DeathNotificationFromServer,
         PlayerEventFromServer,
+        UserInGameMenuCmd,
         LastMsgId
     };
 
@@ -61,7 +62,8 @@ namespace proofps_dd
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::WpnUpdateFromServer,         "MsgWpnUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::CurrentWpnUpdateFromServer,  "MsgCurrentWpnUpdateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::DeathNotificationFromServer, "MsgDeathNotificationFromServer" },
-        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::PlayerEventFromServer,       "MsgPlayerEventFromServer" }
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::PlayerEventFromServer,       "MsgPlayerEventFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserInGameMenuCmd,           "MsgUserInGameMenuCmd" }
     );
 
     // this way nobody will forget updating both the enum and the array
@@ -471,7 +473,8 @@ namespace proofps_dd
     static_assert(std::is_standard_layout_v<MsgUserNameChangeAndBootupDone>);
 
     // clients -> server + server self (inject)
-    // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer
+    // MsgUserCmdFromClient messages are sent from clients to server, so server will do sg and then update all the clients with MsgUserUpdateFromServer.
+    // Actually, server player also sends (injects) this to server, so server processes both server and client player inputs at the same place.
     struct MsgUserCmdFromClient
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::UserCmdFromClient;
@@ -1051,5 +1054,69 @@ namespace proofps_dd
     static_assert(std::is_trivial_v<MsgPlayerEventFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgPlayerEventFromServer>);
     static_assert(std::is_standard_layout_v<MsgPlayerEventFromServer>);
+
+    // clients -> server + server self (inject)
+    // MsgUserInGameMenuCmd messages are sent from clients to server, so server will do sg and then update all the clients in different ways.
+    // Actually, server player also sends (injects) this to server, so server processes both server and client player inputs at the same place.
+    // Typical example: player selects the team, this message is sent to server, for which server will emit MsgPlayerEventFromServer to all clients.
+    struct MsgUserInGameMenuCmd
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::UserInGameMenuCmd;
+
+        template<typename OptSimpleData1 = int, typename OptSimpleData2 = OptSimpleData1, typename OptSimpleData3 = OptSimpleData1>
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            const int& iInGameMenu,
+            const OptSimpleData1& optData1 = {},
+            const OptSimpleData2& optData2 = {},
+            const OptSimpleData3& optData3 = {})
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgUserInGameMenuCmd) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgUserInGameMenuCmd));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = reinterpret_cast<proofps_dd::MsgUserInGameMenuCmd&>(*pMsgAppData);
+            msgUserInGameMenuCmd.m_iInGameMenu = iInGameMenu;
+            msgUserInGameMenuCmd.m_optData1 = optData1;
+            msgUserInGameMenuCmd.m_optData2 = optData2;
+            msgUserInGameMenuCmd.m_optData3 = optData3;
+
+            return true;
+        }
+
+        static unsigned int getSelectedTeamId(const pge_network::PgePacket& pkt)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            const proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<const proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            return static_cast<unsigned int>(msgUserInGameMenuCmd.m_optData1.m_nValue);
+        }
+
+        static void setSelectedTeamId(pge_network::PgePacket& pkt, const unsigned int& iTeamId)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            msgUserInGameMenuCmd.m_optData1 = static_cast<int>(iTeamId);
+        }
+
+        // idea is similar to as how MsgPlayerEventFromServer works
+        int m_iInGameMenu; // see GUI::InGameMenuState
+
+        // meaning of these members is determined by m_iInGameMenu
+        MsgPlayerEventFromServer::UOptionalData m_optData1;
+        MsgPlayerEventFromServer::UOptionalData m_optData2;
+        MsgPlayerEventFromServer::UOptionalData m_optData3;
+    }; // MsgUserInGameMenuCmd
+    static_assert(std::is_trivial_v<MsgUserInGameMenuCmd>);
+    static_assert(std::is_trivially_copyable_v<MsgUserInGameMenuCmd>);
+    static_assert(std::is_standard_layout_v<MsgUserInGameMenuCmd>);
 
 } // namespace proofps_dd

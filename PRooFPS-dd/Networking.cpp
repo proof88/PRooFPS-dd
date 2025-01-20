@@ -105,6 +105,7 @@ void proofps_dd::Networking::allowListAppMessages()
     if (m_pge.getNetwork().isServer())
     {
         m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserCmdFromClient::id));
+        m_pge.getNetwork().getServer().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserInGameMenuCmd::id));
     }
     else
     {
@@ -123,6 +124,11 @@ void proofps_dd::Networking::allowListAppMessages()
         // MsgUserUpdateFromServer is received only by clients over network!
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgUserUpdateFromServer::id));
 
+        // MsgPlayerEventFromServer is also processed by server, but it injects this pkt into its own queue when needed.
+        // MsgPlayerEventFromServer MUST NOT be received by server over network!
+        // MsgPlayerEventFromServer is received only by clients over network!
+        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id));
+
         // following messages are received only by clients over network:
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgServerInfoFromServer::id));
@@ -131,7 +137,6 @@ void proofps_dd::Networking::allowListAppMessages()
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgWpnUpdateFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgCurrentWpnUpdateFromServer::id));
         m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgDeathNotificationFromServer::id));
-        m_pge.getNetwork().getClient().getAllowListedAppMessages().insert(static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id));
     }
 }
 

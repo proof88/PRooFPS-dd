@@ -106,6 +106,10 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgPlayerEventFromServer& msg
         );
+        bool serverHandleUserInGameMenuCmd(
+            pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+            const proofps_dd::MsgUserInGameMenuCmd& msg
+        );
         void updatePlayersVisuals(
             const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode);

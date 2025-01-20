@@ -530,6 +530,11 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt));
             break;
+        case proofps_dd::MsgUserInGameMenuCmd::id:
+            bRet = serverHandleUserInGameMenuCmd(
+                pge_network::PgePacket::getServerSideConnectionHandle(pkt),
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt));
+            break;
         default:
             bRet = false;
             getConsole().EOLn("CustomPGE::%s(): unknown msgId %u in MsgApp!", __func__, proofpsAppMsgId);
