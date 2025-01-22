@@ -2587,6 +2587,15 @@ void proofps_dd::GUI::drawTableCaption(
     drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
 }
 
+/**
+* Draws a row for the given player in the frag table.
+* 
+* Prerequisites:
+*  - we are after ImGui::BeginTable() but before ImGui::EndTable(),
+*  - columns are already set up using ImGui::TableSetupColumn(),
+*  - table header row is already drawn using ImGui::TableHeadersRow(),
+*  - this function is called within a loop where ImGui::TableNextRow() precedes this function.
+*/
 void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
     const proofps_dd::PlayersTableRow& player,
     const std::vector<const char*>& vecHeaderLabels,
@@ -2652,55 +2661,33 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
 } // drawFragTable_columnLoopForPlayer()
 
 /**
-* Draws a frag table where player stats such as frags are visible.
-* Players are fetched from GameMode::getPlayersTable().
+* Can be used in general to draw a players table with the specified geometry and content.
+* First column always contains player names, therefore it has dynamic width based on the length of all player names.
 * 
-* @param sTableCaption        This separate text will be rendered above the frag table.
-* @param fStartPosY           Vertical 2D-position in Dear ImGui coordinate system where sTableCaption will be placed.
-*                             The frag table is placed right below sTableCaption.
-* @param vecHeaderLabels      Column header labels.
-*                             Size of this vector tells the number of columns in the table.
-* @param iColNetworkDataStart Index of first column showing client network data (e.g. ping).
-*                             Used only by server instance, ignored by client instances.
-*                             Compared to client instances, the server instance shows additional column(s) in the frag table.
-*                             These extra columns are for showing client network data.
-*                             However, we don't show such for the server player itself, so the extra columns stay empty for the server player.                 
+* For some of the arguments, you can use calculatePlayersTableGeometry() for determining them before calling this function.
+*
+* @param vecHeaderLabels           Column header labels.
+*                                  Size of this vector tells the number of columns in the table.
+* @param fTableColIndentPixels     The indentation within cells, in pixels.
+* @param vecColumnWidthsPixels     For all columns, the required width in pixels.
+* @param fTableStartPosX           Horizontal position of the left edge of the table, in Dear ImGui coordinate system.
+* @param fTableWidthPixels         As the name says, the width of the table in pixels.
+* @param fPlayerNameColWidthPixels The width of the first column, in pixels.
+* @param fTableHeightPixels        As the name says, the height of the table in pixels.
+* @param iColNetworkDataStart      Index of first column showing client network data (e.g. ping).
+*                                  Used only by server instance, ignored by client instances.
+*                                  See real use-case example in drawFragTable(). 
 */
-void proofps_dd::GUI::drawFragTable(
-    const std::string& sTableCaption,
-    const float& fStartPosY,
+void proofps_dd::GUI::drawPlayersTable(
     const std::vector<const char*>& vecHeaderLabels,
+    const float& fTableColIndentPixels,
+    const std::vector<float>& vecColumnWidthsPixels,
+    const float& fTableStartPosX,
+    const float& fTableWidthPixels,
+    const float& fPlayerNameColWidthPixels,
+    const float& fTableHeightPixels,
     const int& iColNetworkDataStart /* server-side only */)
 {
-    assert(m_pNetworking);
-    assert(GameMode::getGameMode());
-    assert(m_pPge);
-
-    static constexpr float fTableColIndentPixels = 4.f;
-
-    std::vector<float> vecColumnWidthsPixels;
-    float fTableStartPosX;
-    float fTableWidthPixels;
-    float fPlayerNameColWidthPixels;
-    float fTableHeightPixels;
-    calculatePlayersTableGeometry(
-        vecHeaderLabels,
-        fTableColIndentPixels,
-        vecColumnWidthsPixels,
-        fTableStartPosX,
-        fTableWidthPixels,
-        fPlayerNameColWidthPixels,
-        fTableHeightPixels
-    );
-
-    drawTableCaption(
-        sTableCaption,
-        fStartPosY,
-        fTableStartPosX,
-        fTableWidthPixels);
-
-    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
-
     /*
     * Copied this from imgui.h:
     * // - The DEFAULT sizing policies are:
@@ -2726,7 +2713,6 @@ void proofps_dd::GUI::drawFragTable(
     * strict widths in pixels, so ImGui will find out the exact pixels. Also, with ImGuiTableColumnFlags_WidthFixed the widths were wrong for some
     * unknown reason, but I think this weighted config will be just fine.
     */
-
     constexpr ImGuiTableFlags tblFlags =
         ImGuiTableFlags_RowBg /* |
          ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
@@ -2779,6 +2765,7 @@ void proofps_dd::GUI::drawFragTable(
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
                 {
+                    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
                     // applies only to the current row, no need to reset
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
                 }
@@ -2792,6 +2779,66 @@ void proofps_dd::GUI::drawFragTable(
 
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PopStyleVar();
+} // drawPlayersTable()
+
+/**
+* Draws a frag table where player stats such as frags are visible.
+* Players are fetched from GameMode::getPlayersTable().
+* 
+* @param sTableCaption        This separate text will be rendered above the frag table.
+* @param fStartPosY           Vertical 2D-position in Dear ImGui coordinate system where sTableCaption will be placed.
+*                             The frag table is placed right below sTableCaption.
+* @param vecHeaderLabels      Column header labels.
+*                             Size of this vector tells the number of columns in the table.
+* @param iColNetworkDataStart Index of first column showing client network data (e.g. ping).
+*                             Used only by server instance, ignored by client instances.
+*                             Compared to client instances, the server instance shows additional column(s) in the frag table.
+*                             These extra columns are for showing client network data.
+*                             However, we don't show such for the server player itself, so the extra columns stay empty for the server player.                 
+*/
+void proofps_dd::GUI::drawFragTable(
+    const std::string& sTableCaption,
+    const float& fStartPosY,
+    const std::vector<const char*>& vecHeaderLabels,
+    const int& iColNetworkDataStart /* server-side only */)
+{
+    assert(m_pNetworking);
+    assert(GameMode::getGameMode());
+    assert(m_pPge);
+
+    static constexpr float fTableColIndentPixels = 4.f;
+
+    std::vector<float> vecColumnWidthsPixels;
+    float fTableStartPosX;
+    float fTableWidthPixels;
+    float fPlayerNameColWidthPixels;
+    float fTableHeightPixels;
+    calculatePlayersTableGeometry(
+        vecHeaderLabels,
+        fTableColIndentPixels,
+        vecColumnWidthsPixels,
+        fTableStartPosX,
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fTableHeightPixels
+    );
+
+    drawTableCaption(
+        sTableCaption,
+        fStartPosY,
+        fTableStartPosX,
+        fTableWidthPixels);
+
+    drawPlayersTable(
+        vecHeaderLabels,
+        fTableColIndentPixels,
+        vecColumnWidthsPixels,
+        fTableStartPosX,
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fTableHeightPixels,
+        iColNetworkDataStart
+    );
 } // drawFragTable()
 
 /**
@@ -2845,6 +2892,15 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
     drawFragTable(sTableCaption, fStartPosY, vecHeaderLabels, -1 /* iColNetworkDataStart ignored on client-side */);
 }  // drawGameObjectivesClient()
 
+/**
+* Draws a row for the given player in the players network debug data table.
+*
+* Prerequisites:
+*  - we are after ImGui::BeginTable() but before ImGui::EndTable(),
+*  - columns are already set up using ImGui::TableSetupColumn(),
+*  - table header row is already drawn using ImGui::TableHeadersRow(),
+*  - this function is called within a loop where ImGui::TableNextRow() precedes this function.
+*/
 void proofps_dd::GUI::drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
     const proofps_dd::PlayersTableRow& player,
     const std::vector<const char*>& vecHeaderLabels,

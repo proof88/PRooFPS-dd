@@ -233,6 +233,15 @@ namespace proofps_dd
             const float& fStartPosY,
             const float& fTableStartPosX,
             const float& fTableWidthPixels);
+        static void drawPlayersTable(
+            const std::vector<const char*>& vecHeaderLabels,
+            const float& fTableColIndentPixels,
+            const std::vector<float>& vecColumnWidthsPixels,
+            const float& fTableStartPosX,
+            const float& fTableWidthPixels,
+            const float& fPlayerNameColWidthPixels,
+            const float& fTableHeightPixels,
+            const int& iColNetworkDataStart);
         static void drawFragTable(
             const std::string& sTableCaption,
             const float& fStartPosY,
