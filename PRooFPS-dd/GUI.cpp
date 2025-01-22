@@ -2589,6 +2589,7 @@ void proofps_dd::GUI::drawTableCaption(
 
 /**
 * Draws a row for the given player in the frag table.
+* Signature must comply with CbColumnLoopForPlayerFunc.
 * 
 * Prerequisites:
 *  - we are after ImGui::BeginTable() but before ImGui::EndTable(),
@@ -2663,8 +2664,14 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
 /**
 * Can be used in general to draw a players table with the specified geometry and content.
 * First column always contains player names, therefore it has dynamic width based on the length of all player names.
+* Players are fetched using GameMode::getPlayersTable().
+* 
+* RFR: a more abstract table drawing function could be made with slight modification:
+* pass the rows also to this function (e.g. GameMode::getPlayersTable()) and then it could be used for anything else than players.
 * 
 * For some of the arguments, you can use calculatePlayersTableGeometry() for determining them before calling this function.
+* 
+* TODO: str_id in BeginTable() might needs to be unique for each call! Investigate!
 *
 * @param vecHeaderLabels           Column header labels.
 *                                  Size of this vector tells the number of columns in the table.
@@ -2676,7 +2683,10 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
 * @param fTableHeightPixels        As the name says, the height of the table in pixels.
 * @param iColNetworkDataStart      Index of first column showing client network data (e.g. ping).
 *                                  Used only by server instance, ignored by client instances.
-*                                  See real use-case example in drawFragTable(). 
+*                                  See real use-case example in drawFragTable().
+* @param cbColumnLoopForPlayerFunc Function that fills in the row cells with data for the current player.
+*                                  It is called back in loop by this function for each player (row).
+*                                  This player shall iterate and fill columns within the current row using ImGui::TableSetColumnIndex() or ImGui::TableNextColumn().
 */
 void proofps_dd::GUI::drawPlayersTable(
     const std::vector<const char*>& vecHeaderLabels,
@@ -2686,7 +2696,8 @@ void proofps_dd::GUI::drawPlayersTable(
     const float& fTableWidthPixels,
     const float& fPlayerNameColWidthPixels,
     const float& fTableHeightPixels,
-    const int& iColNetworkDataStart /* server-side only */)
+    const int& iColNetworkDataStart /* server-side only */,
+    CbColumnLoopForPlayerFunc cbColumnLoopForPlayerFunc)
 {
     /*
     * Copied this from imgui.h:
@@ -2724,7 +2735,10 @@ void proofps_dd::GUI::drawPlayersTable(
 
     ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
 
-    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
+    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it for
+    // stuff like frag table, etc.
+
+    // TODO: str_id in BeginTable() might needs to be unique for each call! Investigate!
     if (ImGui::BeginTable("tbl_frag", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
     {
         ImGui::TableSetupScrollFreeze(1, 1);
@@ -2770,7 +2784,7 @@ void proofps_dd::GUI::drawPlayersTable(
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
                 }
 
-                drawFragTable_columnLoopForPlayer(player, vecHeaderLabels, iColNetworkDataStart);
+                cbColumnLoopForPlayerFunc(player, vecHeaderLabels, iColNetworkDataStart);
             } // end for players
         } // end for iReplicateRowsForExperimenting
         ImGui::Unindent(fTableColIndentPixels);
@@ -2827,7 +2841,8 @@ void proofps_dd::GUI::drawFragTable(
         sTableCaption,
         fStartPosY,
         fTableStartPosX,
-        fTableWidthPixels);
+        fTableWidthPixels
+    );
 
     drawPlayersTable(
         vecHeaderLabels,
@@ -2837,7 +2852,8 @@ void proofps_dd::GUI::drawFragTable(
         fTableWidthPixels,
         fPlayerNameColWidthPixels,
         fTableHeightPixels,
-        iColNetworkDataStart
+        iColNetworkDataStart,
+        drawFragTable_columnLoopForPlayer
     );
 } // drawFragTable()
 
@@ -2894,6 +2910,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
 
 /**
 * Draws a row for the given player in the players network debug data table.
+* Signature must comply with CbColumnLoopForPlayerFunc.
 *
 * Prerequisites:
 *  - we are after ImGui::BeginTable() but before ImGui::EndTable(),
@@ -2965,27 +2982,29 @@ void proofps_dd::GUI::drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
 } // drawAllPlayersDebugDataTableServer_columnLoopForPlayer()
 
 /**
+* Main logic to be called for GameInfoPage::AllPlayersDebugDataServer is selected by user (by TAB key as of v0.5).
+* 
 * Draws a table with all players' network debug data.
 * Players are fetched from GameMode::getPlayersTable().
 * Server-side only.
-* 
-* @param sTableCaption        This separate text will be rendered above the frag table.
-* @param fStartPosY           Vertical 2D-position where sTableCaption will be placed.
-*                             The frag table is placed right below sTableCaption.
-* @param vecHeaderLabels      Column header labels.
-*                             Size of this vector tells the number of columns in the table.
-* @param iColNetworkDataStart Index of first column showing client network data (e.g. ping).
-*                             As we don't show network data for the server player itself, we skip filling any column with
-*                             column index equal to or greater than this index.
 */
-void proofps_dd::GUI::drawAllPlayersDebugDataTableServer(
-    const std::string& sTableCaption,
-    const float& fStartPosY,
-    const std::vector<const char*>& vecHeaderLabels,
-    const int& iColNetworkDataStart)
+void proofps_dd::GUI::drawAllPlayersDebugDataServer()
 {
+    assert(m_gameInfoPageCurrent == GameInfoPage::AllPlayersDebugDataServer);
+
     assert(m_pNetworking && m_pNetworking->isServer());
+    assert(m_pMinimap);
     assert(GameMode::getGameMode());
+
+    static const std::vector<const char*> vecHeaderLabels = {
+        "Player Name",
+        "Ping",
+        "Qlty NE/FE",
+        "Speed\nTx/Rx (Bps)",
+        "Pending\nRl/URl (Bps)",
+        "UnAck'd\n(Bps)",
+        "tIntQ\n(us)"
+    };
 
     static constexpr float fTableColIndentPixels = 4.f;
 
@@ -3005,107 +3024,30 @@ void proofps_dd::GUI::drawAllPlayersDebugDataTableServer(
     );
 
     drawTableCaption(
-        sTableCaption,
-        fStartPosY,
+        "Players Debug Data",
+        std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f /* Vertical 2D-position where sTableCaption will be placed */,
         fTableStartPosX,
-        fTableWidthPixels);
+        fTableWidthPixels
+    );
 
-    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
+    /**
+    * Index of first column showing client network data (e.g.ping).
+    * As we don't show network data for the server player itself, we skip filling any column with
+    * column index equal to or greater than this index.
+    */
+    static constexpr int iColNetworkDataStart = 1;
 
-    constexpr ImGuiTableFlags tblFlags =
-        ImGuiTableFlags_RowBg /* |
-         ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
-        ImGuiTableFlags_ScrollY |
-        ImGuiTableFlags_SizingStretchProp;
-
-    // not changing padding anymore since it requires border flags which I dont use now
-    //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
-
-    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
-
-    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
-    if (ImGui::BeginTable("tbl_players_dbg_data_server", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
-    {
-        ImGui::TableSetupScrollFreeze(1, 1);
-        ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
-        size_t iHdrCol = 0;
-        for (const auto& hdr : vecHeaderLabels)
-        {
-            // not changing padding anymore since it requires border flags which I dont use now
-            //if (iHdrCol < 5)
-            //{
-            //    // 1-line header texts should be roughly vertically centered
-            //    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 10.f /* vertical padding in pixels */));
-            //}
-            ImGui::TableSetupColumn(
-                hdr,
-                ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable,
-                /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
-                iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
-
-            // not changing padding anymore since it requires border flags which I dont use now
-            //if (iHdrCol < 5)
-            //{
-            //    ImGui::PopStyleVar();
-            //}
-
-            iHdrCol++;
-        }
-
-        // ImGui calculates multi-line header text height properly so we dont need to set custom row height.
-        // TODO: unfortunately, I cannot use my centering function for header cells the same way as I can for ordinary cells, even when I tried
-        // to emit header cells manually using TableHeader(). This is why all text in header cells are not adjusted.
-        // Only WA I can think about is if I simply dont use the header feature, instead I'm manually manipulating properties for row 0 in the loop.
-        ImGui::TableHeadersRow();
-        for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
-        {
-            for (const auto& player : GameMode::getGameMode()->getPlayersTable())
-            {
-                ImGui::TableNextRow();
-                if (m_pNetworking->isMyConnection(player.m_connHandle))
-                {
-                    // applies only to the current row, no need to reset
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
-                }
-
-                drawAllPlayersDebugDataTableServer_columnLoopForPlayer(player, vecHeaderLabels, iColNetworkDataStart);
-            } // end for players
-        } // end for iReplicateRowsForExperimenting
-        ImGui::Unindent(fTableColIndentPixels);
-        ImGui::EndTable();
-    } // end BeginTable
-
-    // not changing padding anymore since it requires border flags which I dont use now
-    //ImGui::PopStyleVar();
-}  // drawAllPlayersDebugDataTableServer()
-
-/**
-* Main logic to be called for GameInfoPage::AllPlayersDebugDataServer is selected by user (by TAB key as of v0.5).
-* 
-* Draws a table with all players' network debug data.
-* Players are fetched from GameMode::getPlayersTable().
-* Server-side only.
-*/
-void proofps_dd::GUI::drawAllPlayersDebugDataServer()
-{
-    assert(m_gameInfoPageCurrent == GameInfoPage::AllPlayersDebugDataServer);
-
-    assert(m_pMinimap);
-
-    const std::string sTableCaption = "Players Debug Data";
-    const float fStartPosY = std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f;
-
-    static const std::vector<const char*> vecHeaderLabels = {
-        "Player Name",
-        "Ping",
-        "Qlty NE/FE",
-        "Speed\nTx/Rx (Bps)",
-        "Pending\nRl/URl (Bps)",
-        "UnAck'd\n(Bps)",
-        "tIntQ\n(us)"
-    };
-
-    drawAllPlayersDebugDataTableServer(sTableCaption, fStartPosY, vecHeaderLabels, 1);
+    drawPlayersTable(
+        vecHeaderLabels,
+        fTableColIndentPixels,
+        vecColumnWidthsPixels,
+        fTableStartPosX,
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fTableHeightPixels,
+        iColNetworkDataStart,
+        drawAllPlayersDebugDataTableServer_columnLoopForPlayer
+    );
 
 }  // drawAllPlayersDebugDataServer()
 
