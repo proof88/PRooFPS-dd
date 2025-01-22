@@ -2292,14 +2292,6 @@ void proofps_dd::GUI::updateDeathKillEvents()
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneralScaled); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
     
-    //for (auto it = m_pEventsDeathKill->getEvents().rbegin(); it != m_pEventsDeathKill->getEvents().rend(); ++it)
-    //{
-    //    drawTextHighlighted(
-    //        getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
-    //        ImGui::GetCursorPos().y,
-    //        it->second);
-    //}
-    
     auto& eventsQ = m_pEventsDeathKill->getEvents();
     size_t i = eventsQ.rbegin_index();
     for (size_t n = 0; n < eventsQ.size(); n++)
@@ -2323,14 +2315,6 @@ void proofps_dd::GUI::updateItemPickupEvents()
     // TODO: move this draw logic to DrawableEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY( /* should be below m_pEventsDeathKill events */ m_pEventsDeathKill->getEventCountLimit() * (m_fFontSizePxHudGeneralScaled + 3) + 20);
-    
-    //for (auto it = m_pEventsItemPickup->getEvents().rbegin(); it != m_pEventsItemPickup->getEvents().rend(); ++it)
-    //{
-    //    drawTextHighlighted(
-    //        getDearImGui2DposXforRightAdjustedText(it->second, fRightPosXlimit),
-    //        ImGui::GetCursorPos().y,
-    //        it->second);
-    //}
 
     auto& eventsQ = m_pEventsItemPickup->getEvents();
     size_t i = eventsQ.rbegin_index();
@@ -2353,35 +2337,6 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
     m_pEventsPlayerHpChange->update();
 
     // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-    // 
-    //for (auto it = m_pEventsPlayerHpChange->getEvents().rbegin(); it != m_pEventsPlayerHpChange->getEvents().rend(); ++it)
-    //{
-    //    ImGui::SameLine();
-    //
-    //    // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
-    //    // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
-    //    int nHpChange = 0;
-    //    try
-    //    {
-    //        nHpChange = static_cast<int>(std::stol(it->second));
-    //    }
-    //    catch (const std::exception&) {}
-    //
-    //    /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
-    //    ImGui::PushStyleColor(
-    //        ImGuiCol_Text,
-    //        (nHpChange > 0) ?
-    //        ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
-    //        ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-    //    );
-    //        
-    //    drawTextHighlighted(
-    //        ImGui::GetCursorPos().x,
-    //        ImGui::GetCursorPos().y,
-    //        (nHpChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
-    //    
-    //    ImGui::PopStyleColor();
-    //}
 
     auto& eventsQ = m_pEventsPlayerHpChange->getEvents();
     size_t i = eventsQ.rbegin_index();
@@ -2418,45 +2373,6 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
         i = eventsQ.prev_index(i);
     }
 }
-
-//void proofps_dd::GUI::updatePlayerApChangeEvents()
-//{
-//    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
-//
-//    assert(m_pEventsPlayerApChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
-//
-//    m_pEventsPlayerApChange->update();
-//
-//    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-//    for (auto it = m_pEventsPlayerApChange->getEvents().rbegin(); it != m_pEventsPlayerApChange->getEvents().rend(); ++it)
-//    {
-//        ImGui::SameLine();
-//        
-//        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
-//        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
-//        int nApChange = 0;
-//        try
-//        {
-//            nApChange = static_cast<int>(std::stol(it->second));
-//        }
-//        catch (const std::exception&) {}
-//
-//        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
-//        ImGui::PushStyleColor(
-//            ImGuiCol_Text,
-//            (nApChange > 0) ?
-//            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
-//            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-//        );
-//
-//        drawTextHighlighted(
-//            ImGui::GetCursorPos().x,
-//            ImGui::GetCursorPos().y,
-//            (nApChange >= 0) ? ("+" + it->second + "%") : (it->second + "%"));
-//        
-//        ImGui::PopStyleColor();
-//    }
-//}
 
 void proofps_dd::GUI::updatePlayerApChangeEvents()
 {
@@ -2503,46 +2419,6 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         i = eventsQ.prev_index(i);
     }
 }
-
-//void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
-//{
-//    // TODO: very bad: this is basically redundant copy of updatePlayerHpChangeEvents()
-//
-//    assert(m_pEventsPlayerAmmoChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
-//
-//    m_pEventsPlayerAmmoChange->update();
-//
-//    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
-//    for (auto it = m_pEventsPlayerAmmoChange->getEvents().rbegin(); it != m_pEventsPlayerAmmoChange->getEvents().rend(); ++it)
-//    {
-//        ImGui::SameLine();
-//
-//        // We use stol() only for determining color of text, so in case of exception we just use default color, not a critical error.
-//        // In the future, NumericChangeEventLister won't need this because addItem() will accept numbers.
-//        int nAmmoChange = 0;
-//        try
-//        {
-//            nAmmoChange = static_cast<int>(std::stol(it->second));
-//        }
-//        catch (const std::exception&) {}
-//
-//        /* value of 0 will be red, but anyway we don't expect 0 to be in this container since it is about CHANGES */
-//        // note that we put only positive changes into this event list, but anyway I leave the code handle non-positive as well
-//        ImGui::PushStyleColor(
-//            ImGuiCol_Text,
-//            (nAmmoChange > 0) ?
-//            ImVec4(0.0f, 1.0f, 0.0f, 1.0f) :
-//            ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-//        );
-//
-//        drawTextHighlighted(
-//            ImGui::GetCursorPos().x,
-//            ImGui::GetCursorPos().y,
-//            (nAmmoChange >= 0) ? ("+" + it->second) : (it->second));
-//
-//        ImGui::PopStyleColor();
-//    }
-//}
 
 void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
 {
@@ -2624,53 +2500,206 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
         fPlayerNameColWidthPixels = fAvailWidthForPlayerNameColPixels;
         fTableWidthPixels = ImGui::GetWindowSize().x * 0.9f;
     }
-}
+} // calculatePlayerNameColWidthAndTableWidthPixels()
 
-void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY)
+/**
+* Can be used in general to calculate several properties of a table for showing player data.
+* After calling this function, the table can be drawn using the calculated outgoing parameters.
+* 
+* The width of the first column will be dynamically selected based on the length of all player names in GameMode::getPlayersTable().
+* This is because we always put player names in the first column of such table.
+* Still it can happen that we need to truncate a player name, so we always keep enough horizontal space for the other columns.
+* The width of the other columns is determined by the required width of the column labels, not by the player data in those columns.
+*
+* @param vecHeaderLabels           Column header labels.
+*                                  Size of this vector tells the number of columns in the table.
+* @param fTableColIndentPixels     The indentation within cells, in pixels.
+*                                  Requires the ImGuiTableColumnFlags_IndentEnable table flag.
+* @param vecColumnWidthsPixels     Out argument: for all columns, the calculated width in pixels will be placed here by the function.
+*                                  Shall be empty when passing in to the function.
+* @param fTableStartPosX           Out argument: horizontal position of the left edge of the table will be placed here by the function,
+*                                  in Dear ImGui coordinate system.
+* @param fTableWidthPixels         Out argument: as the name says, the width of the table in pixels will be placed here by the function.
+* @param fPlayerNameColWidthPixels Out argument: the final calculated width of the first column, in pixels, will be placed here by the function.
+* @param fTableHeightPixels        Out argument: as the name says, the height of the table in pixels will be placed here by the function.
+*/
+void proofps_dd::GUI::calculatePlayersTableGeometry(
+    const std::vector<const char*>& vecHeaderLabels,
+    const float& fTableColIndentPixels,
+    std::vector<float>& vecColumnWidthsPixels,
+    float& fTableStartPosX,
+    float& fTableWidthPixels,
+    float& fPlayerNameColWidthPixels,
+    float& fTableHeightPixels)
 {
-    assert(m_pNetworking && m_pNetworking->isServer());
-    assert(GameMode::getGameMode());
-    assert(m_pPge);
-    assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
+    assert(!vecHeaderLabels.empty());
+    assert(vecColumnWidthsPixels.empty());
 
-    // RFR: since we introduced drawAllPlayersDebugDataServer() in v0.5, drawGameObjectivesServer() and drawGameObjectivesClient() are 99% the same, however
-    // I'm still keeping them as separate function, and still displaying ping column in the server version. But code is so much redundant, should be refactored!
-    static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
-        "Player Name",
-        "Rank  ", /* add spaces so more width will be added to the col */
-        "Frags",
-        "Deaths",
-        "Suicides",
-        "Aim\nAccuracy",
-        "Shots\nFired",
-        "Ping"
-    );
-
-    static constexpr float fTableColIndentPixels = 4.f;
-    
-    // the reason why I'm not filling this in a loop is that I explicitly wanted to leave easy room of manual modifications for each elem
-    static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
-        0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
-        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[7]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
-    );
-
+    vecColumnWidthsPixels.reserve(vecHeaderLabels.size());
+    vecColumnWidthsPixels.push_back(0.f);  /* col 0 width will be calculated later as fPlayerNameColWidthPixels */
+    for (size_t i = 1; i < vecHeaderLabels.size(); i++)
+    {
+        vecColumnWidthsPixels.push_back(
+            ImGui::CalcTextSize(vecHeaderLabels[i]).x +
+            2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ +
+            fTableColIndentPixels);
+    }
     assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
 
-    static const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+    const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+
+    const float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
+
+    calculatePlayerNameColWidthAndTableWidthPixels(
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fPlayerNameColReqWidthPixels,
+        fTableColIndentPixels,
+        fColsTotalWidthAfterPlayerNameCol);
+
+    fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
+    fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
+} // calculatePlayersTableGeometry()
+
+/**
+* Can be used in general to print a caption above a table, before starting to draw the table.
+* 
+* @param sTableCaption        Text to be used as caption above the table.
+* @param fStartPosY           Vertical 2D-position in Dear ImGui coordinate system where the caption will be placed.
+* @param fTableStartPosX      Horizontal position of the left edge of the table, in Dear ImGui coordinate system.
+* @param fTableWidthPixels    As the name says.
+*                             Together with fTableStartPosX they are used to decide if the text will also placed horizontally
+*                             to fTableStartPosX, or more to the left in case of too long caption relative to screen size.
+*/
+void proofps_dd::GUI::drawTableCaption(
+    const std::string& sTableCaption,
+    const float& fStartPosY,
+    const float& fTableStartPosX,
+    const float& fTableWidthPixels)
+{
+    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
+    ImGui::SetCursorPos(
+        ImVec2(
+            (fTableWidthPixels < fTableCaptionWidthPixels) ?
+            std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) :
+            fTableStartPosX,
+            fStartPosY));
+    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
+}
+
+void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
+    const proofps_dd::PlayersTableRow& player,
+    const std::vector<const char*>& vecHeaderLabels,
+    const int& iColNetworkDataStart)
+{
+    assert(m_pNetworking);
+    assert(m_pPge);
+    assert(iColNetworkDataStart < static_cast<int>(vecHeaderLabels.size()));
+
+    // nColumnCount is to limit the column count for the server player, in which case we don't query network data (it would lead to error).
+    // We need this limit only for server instance, since client-side frag table does not even show any network data.
+    // Prerequisite for this logic to work is that first N columns are identical for both the client- and server-side frag tables.
+    const int nColumnCount =
+        m_pNetworking->isServer() ?
+        ((player.m_connHandle == pge_network::ServerConnHandle) ?
+            iColNetworkDataStart :
+            static_cast<int>(vecHeaderLabels.size())) :
+        static_cast<int>(vecHeaderLabels.size());
+
+    for (int iCol = 0; iCol < nColumnCount; iCol++)
+    {
+        ImGui::TableSetColumnIndex(iCol);
+        switch (iCol)
+        {
+        case 0:
+            ImGuiTextTableCurrentCellShortenedFit(
+                player.m_sName
+                /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
+                /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
+                3);
+            break;
+        case 1:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                GameMode::getRank(player)
+            /*"Cl0wN"*/);
+            break;
+        case 2:
+            ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
+            break;
+        case 3:
+            ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
+            break;
+        case 4:
+            ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
+            break;
+        case 5:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                (player.m_nShotsFired > 0) ?
+                std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
+                "-");
+            break;
+        case 6:
+            ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
+            break;
+        case 7:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
+            break;
+        default:
+            assert(false); // crash in debug
+        }
+    } // end for iCol
+} // drawFragTable_columnLoopForPlayer()
+
+/**
+* Draws a frag table where player stats such as frags are visible.
+* Players are fetched from GameMode::getPlayersTable().
+* 
+* @param sTableCaption        This separate text will be rendered above the frag table.
+* @param fStartPosY           Vertical 2D-position in Dear ImGui coordinate system where sTableCaption will be placed.
+*                             The frag table is placed right below sTableCaption.
+* @param vecHeaderLabels      Column header labels.
+*                             Size of this vector tells the number of columns in the table.
+* @param iColNetworkDataStart Index of first column showing client network data (e.g. ping).
+*                             Used only by server instance, ignored by client instances.
+*                             Compared to client instances, the server instance shows additional column(s) in the frag table.
+*                             These extra columns are for showing client network data.
+*                             However, we don't show such for the server player itself, so the extra columns stay empty for the server player.                 
+*/
+void proofps_dd::GUI::drawFragTable(
+    const std::string& sTableCaption,
+    const float& fStartPosY,
+    const std::vector<const char*>& vecHeaderLabels,
+    const int& iColNetworkDataStart /* server-side only */)
+{
+    assert(m_pNetworking);
+    assert(GameMode::getGameMode());
+    assert(m_pPge);
+
+    static constexpr float fTableColIndentPixels = 4.f;
+
+    std::vector<float> vecColumnWidthsPixels;
+    float fTableStartPosX;
+    float fTableWidthPixels;
+    float fPlayerNameColWidthPixels;
+    float fTableHeightPixels;
+    calculatePlayersTableGeometry(
+        vecHeaderLabels,
+        fTableColIndentPixels,
+        vecColumnWidthsPixels,
+        fTableStartPosX,
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fTableHeightPixels
+    );
+
+    drawTableCaption(
+        sTableCaption,
+        fStartPosY,
+        fTableStartPosX,
+        fTableWidthPixels);
 
     static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
-
-    constexpr ImGuiTableFlags tblFlags =
-        ImGuiTableFlags_RowBg /* |
-         ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
-        ImGuiTableFlags_ScrollY |
-        ImGuiTableFlags_SizingStretchProp;
 
     /*
     * Copied this from imgui.h:
@@ -2685,7 +2714,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
     * //    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
     * //      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
     * //      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
-    * 
+    *
     * Based on above info, my table defaults to ImGuiTableFlags_SizingStretchSame since I dont use either ScrollX for the table or ImGuiWindowFlags_AlwaysAutoResize window.
     * But I can still change it to ImGuiTableFlags_SizingFixedFit or ImGuiTableFlags_SizingStretchProp if I want to.
     * Thus columns default to ImGuiTableColumnFlags_WidthStretch but I can change it to ImGuiTableColumnFlags_WidthFixed, I can even mix them.
@@ -2698,35 +2727,19 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
     * unknown reason, but I think this weighted config will be just fine.
     */
 
-    float fTableWidthPixels;
-    float fPlayerNameColWidthPixels;
-    float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-    calculatePlayerNameColWidthAndTableWidthPixels(
-        fTableWidthPixels,
-        fPlayerNameColWidthPixels,
-        fPlayerNameColReqWidthPixels,
-        fTableColIndentPixels,
-        fColsTotalWidthAfterPlayerNameCol);
+    constexpr ImGuiTableFlags tblFlags =
+        ImGuiTableFlags_RowBg /* |
+         ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
+        ImGuiTableFlags_ScrollY |
+        ImGuiTableFlags_SizingStretchProp;
 
-    const float fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
-    
-    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
-    ImGui::SetCursorPos(
-        ImVec2(
-            (fTableWidthPixels < fTableCaptionWidthPixels) ?
-                std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) : 
-                fTableStartPosX, 
-            fStartPosY));
-    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
-
-    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
-    
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
-    
+
+    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
+
     // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
-    if (ImGui::BeginTable("tbl_frag_sv", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
+    if (ImGui::BeginTable("tbl_frag", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
     {
         ImGui::TableSetupScrollFreeze(1, 1);
         ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
@@ -2744,7 +2757,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
                 ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable,
                 /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
                 iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
-            
+
             // not changing padding anymore since it requires border flags which I dont use now
             //if (iHdrCol < 5)
             //{
@@ -2770,71 +2783,56 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
                 }
 
-                // nColumnCount is to limit the column count for the server, in which case we don't query network dbg data
-                const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
-                    7 : static_cast<int>(vecHeaderLabels.size());
-                for (int iCol = 0; iCol < nColumnCount; iCol++)
-                {
-                    ImGui::TableSetColumnIndex(iCol);
-                    switch (iCol)
-                    {
-                    case 0:
-                        ImGuiTextTableCurrentCellShortenedFit(
-                            player.m_sName
-                            /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
-                            /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
-                            3);
-                        break;
-                    case 1:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            GameMode::getRank(player)
-                            /*"Cl0wN"*/);
-                        break;
-                    case 2:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
-                        break;
-                    case 3:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
-                        break;
-                    case 4:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
-                        break;
-                    case 5:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            (player.m_nShotsFired > 0) ?
-                                std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
-                                "-");
-                        break;
-                    case 6:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
-                        break;
-                    case 7:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
-                        break;
-                    default:
-                        assert(false); // crash in debug
-                    }
-                } // end for iCol
+                drawFragTable_columnLoopForPlayer(player, vecHeaderLabels, iColNetworkDataStart);
             } // end for players
         } // end for iReplicateRowsForExperimenting
         ImGui::Unindent(fTableColIndentPixels);
         ImGui::EndTable();
     } // end BeginTable
+
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PopStyleVar();
+} // drawFragTable()
+
+/**
+* Server-only logic to be called for GameInfoPage::FragTable is selected by user (by TAB key as of v0.5).
+*
+* Draws frag table with caption showing optional game goal status (e.g. time left).
+* Players are fetched from GameMode::getPlayersTable().
+*/
+void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY)
+{
+    assert(m_pNetworking && m_pNetworking->isServer());
+    assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
+
+    // keep this in sync with drawGameObjectivesClient()
+    static const std::vector<const char*> vecHeaderLabels = {
+        "Player Name",
+        "Rank  ", /* add spaces so more width will be added to the col */
+        "Frags",
+        "Deaths",
+        "Suicides",
+        "Aim\nAccuracy",
+        "Shots\nFired",
+        "Ping"
+    };
+
+    drawFragTable(sTableCaption, fStartPosY, vecHeaderLabels, 7 /* iColNetworkDataStart */);
 }  // drawGameObjectivesServer()
 
+/**
+* Client-only logic to be called for GameInfoPage::FragTable is selected by user (by TAB key as of v0.5).
+*
+* Draws frag table with caption showing optional game goal status (e.g. time left).
+* Players are fetched from GameMode::getPlayersTable().
+*/
 void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && !m_pNetworking->isServer());
-    assert(GameMode::getGameMode());
-    assert(m_pPge);
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
-    // RFR: since we introduced drawAllPlayersDebugDataServer() in v0.5, drawGameObjectivesServer() and drawGameObjectivesClient() are 99% the same, however
-    // I'm still keeping them as separate function, and still displaying ping column in the server version. But code is so much redundant, should be refactored!
-    static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
+    // keep this in sync with drawGameObjectivesServer()
+    static const std::vector<const char*> vecHeaderLabels = {
         "Player Name",
         "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
@@ -2842,172 +2840,119 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
         "Suicides",
         "Aim\nAccuracy",
         "Shots\nFired"
-    );
+    };
 
-    static constexpr float fTableColIndentPixels = 4.f;
-
-    // the reason why I'm not filling this in a loop is that I explicitly wanted to leave easy room of manual modifications for each elem
-    static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
-        0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
-        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
-    );
-
-    assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
-
-    static const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
-
-    static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
-
-    constexpr ImGuiTableFlags tblFlags =
-        ImGuiTableFlags_RowBg |
-        ImGuiTableFlags_ScrollY |
-        ImGuiTableFlags_SizingStretchProp;
-
-    // related to table flags and sizing, see the big comment in drawGameObjectivesServer(), same rules apply here as well!
-
-    float fTableWidthPixels;
-    float fPlayerNameColWidthPixels;
-    float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-    calculatePlayerNameColWidthAndTableWidthPixels(
-        fTableWidthPixels,
-        fPlayerNameColWidthPixels,
-        fPlayerNameColReqWidthPixels,
-        fTableColIndentPixels,
-        fColsTotalWidthAfterPlayerNameCol);
-
-    const float fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
-
-    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
-    ImGui::SetCursorPos(
-        ImVec2(
-            (fTableWidthPixels < fTableCaptionWidthPixels) ?
-            std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) :
-            fTableStartPosX,
-            fStartPosY));
-    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
-
-    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
-
-    // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
-    if (ImGui::BeginTable("tbl_frag_cl", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
-    {
-        ImGui::TableSetupScrollFreeze(1, 1);
-        ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
-        size_t iHdrCol = 0;
-        for (const auto& hdr : vecHeaderLabels)
-        {
-            ImGui::TableSetupColumn(
-                hdr,
-                ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable,
-                /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
-                iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
-
-            iHdrCol++;
-        }
-
-        // ImGui calculates multi-line header text height properly so we dont need to set custom row height.
-        ImGui::TableHeadersRow();
-        for (int iReplicateRowsForExperimenting = 0; iReplicateRowsForExperimenting < 1; iReplicateRowsForExperimenting++)
-        {
-            for (const auto& player : GameMode::getGameMode()->getPlayersTable())
-            {
-                ImGui::TableNextRow();
-                if (m_pNetworking->isMyConnection(player.m_connHandle))
-                {
-                    // applies only to the current row, no need to reset
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
-                }
-
-                for (int iCol = 0; iCol < static_cast<int>(vecHeaderLabels.size()); iCol++)
-                {
-                    ImGui::TableSetColumnIndex(iCol);
-                    switch (iCol)
-                    {
-                    case 0:
-                        ImGuiTextTableCurrentCellShortenedFit(
-                            player.m_sName
-                            /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
-                            /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
-                            3);
-                        break;
-                    case 1:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            GameMode::getRank(player)
-                            /*"Cl0wN"*/);
-                        break;
-                    case 2:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
-                        break;
-                    case 3:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
-                        break;
-                    case 4:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
-                        break;
-                    case 5:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            (player.m_nShotsFired > 0) ?
-                            std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
-                            "-");
-                        break;
-                    case 6:
-                        ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
-                        break;
-                    default:
-                        assert(false); // crash in debug
-                    }
-                } // end for iCol
-            } // end for players
-        } // end for iReplicateRowsForExperimenting
-        ImGui::Unindent(fTableColIndentPixels);
-        ImGui::EndTable();
-    } // end BeginTable
+    drawFragTable(sTableCaption, fStartPosY, vecHeaderLabels, -1 /* iColNetworkDataStart ignored on client-side */);
 }  // drawGameObjectivesClient()
 
-void proofps_dd::GUI::drawAllPlayersDebugDataServer()
+void proofps_dd::GUI::drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
+    const proofps_dd::PlayersTableRow& player,
+    const std::vector<const char*>& vecHeaderLabels,
+    const int& iColNetworkDataStart)
 {
-    assert(m_gameInfoPageCurrent == GameInfoPage::AllPlayersDebugDataServer);
+    assert(m_pPge);
+    assert(iColNetworkDataStart < static_cast<int>(vecHeaderLabels.size()));
 
-    assert(m_pMinimap);
+    // nColumnCount is to limit the column count for the server, in which case we don't query network dbg data
+    const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
+        iColNetworkDataStart : static_cast<int>(vecHeaderLabels.size());
+    for (int iCol = 0; iCol < nColumnCount; iCol++)
+    {
+        ImGui::TableSetColumnIndex(iCol);
+        switch (iCol)
+        {
+        case 0:
+            ImGuiTextTableCurrentCellShortenedFit(
+                player.m_sName
+                /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
+                /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
+                3);
+            break;
+        case 1:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
+            break;
+        case 2:
+        {
+            std::stringstream ssQuality;
+            ssQuality << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getServer().getQualityLocal(player.m_connHandle, false) <<
+                "/" << m_pPge->getNetwork().getServer().getQualityRemote(player.m_connHandle, false);
+            ImGuiTextTableCurrentCellRightAdjusted(ssQuality.str().c_str() /*"0.90/-0.90"*/);
+        }
+        break;
+        case 3:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                (std::to_string(std::lround(m_pPge->getNetwork().getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
+                    std::to_string(std::lround(m_pPge->getNetwork().getServer().getRxByteRate(player.m_connHandle, false)))).c_str()
+            /*"999/9999"*/);
+            break;
+        case 4:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                (std::to_string(m_pPge->getNetwork().getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
+                    std::to_string(m_pPge->getNetwork().getServer().getPendingUnreliableBytes(player.m_connHandle, false))).c_str()
+            /*"999/9999"*/);
+            break;
+        case 5:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                std::to_string(m_pPge->getNetwork().getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)).c_str()
+            /*"999"*/);
+            break;
+        case 6:
+            ImGuiTextTableCurrentCellRightAdjusted(
+                std::to_string(m_pPge->getNetwork().getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)).c_str()
+            /*"9999"*/);
+            break;
+        default:
+            assert(false); // crash in debug
+        }
+    } // end for iCol
+} // drawAllPlayersDebugDataTableServer_columnLoopForPlayer()
+
+/**
+* Draws a table with all players' network debug data.
+* Players are fetched from GameMode::getPlayersTable().
+* Server-side only.
+* 
+* @param sTableCaption        This separate text will be rendered above the frag table.
+* @param fStartPosY           Vertical 2D-position where sTableCaption will be placed.
+*                             The frag table is placed right below sTableCaption.
+* @param vecHeaderLabels      Column header labels.
+*                             Size of this vector tells the number of columns in the table.
+* @param iColNetworkDataStart Index of first column showing client network data (e.g. ping).
+*                             As we don't show network data for the server player itself, we skip filling any column with
+*                             column index equal to or greater than this index.
+*/
+void proofps_dd::GUI::drawAllPlayersDebugDataTableServer(
+    const std::string& sTableCaption,
+    const float& fStartPosY,
+    const std::vector<const char*>& vecHeaderLabels,
+    const int& iColNetworkDataStart)
+{
     assert(m_pNetworking && m_pNetworking->isServer());
     assert(GameMode::getGameMode());
-    assert(m_pPge);
-
-    const std::string sTableCaption = "Players Debug Data";
-    const float fStartPosY = std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f;
-
-    static constexpr auto vecHeaderLabels = PFL::std_array_of<const char*>(
-        "Player Name",
-        "Ping",
-        "Qlty NE/FE",
-        "Speed\nTx/Rx (Bps)",
-        "Pending\nRl/URl (Bps)",
-        "UnAck'd\n(Bps)",
-        "tIntQ\n(us)"
-    );
 
     static constexpr float fTableColIndentPixels = 4.f;
 
-    // the reason why I'm not filling this in a loop is that I explicitly wanted to leave easy room of manual modifications for each elem
-    static const auto vecColumnWidthsPixels = PFL::std_array_of<float>(
-        0.f /* col 0 width will be calculated later as fPlayerNameColWidthPixels */,
-        ImGui::CalcTextSize(vecHeaderLabels[1]).x + 2 * ImGui::GetStyle().ItemSpacing.x /* style item spacing is used as table column padding */ + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[2]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[3]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[4]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[5]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels,
-        ImGui::CalcTextSize(vecHeaderLabels[6]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels
+    std::vector<float> vecColumnWidthsPixels;
+    float fTableStartPosX;
+    float fTableWidthPixels;
+    float fPlayerNameColWidthPixels;
+    float fTableHeightPixels;
+    calculatePlayersTableGeometry(
+        vecHeaderLabels,
+        fTableColIndentPixels,
+        vecColumnWidthsPixels,
+        fTableStartPosX,
+        fTableWidthPixels,
+        fPlayerNameColWidthPixels,
+        fTableHeightPixels
     );
 
-    assert(vecHeaderLabels.size() == vecColumnWidthsPixels.size());
-
-    static const float fColsTotalWidthAfterPlayerNameCol = std::accumulate(vecColumnWidthsPixels.begin(), vecColumnWidthsPixels.end(), 0.f);
+    drawTableCaption(
+        sTableCaption,
+        fStartPosY,
+        fTableStartPosX,
+        fTableWidthPixels);
 
     static const auto imClrTableRowHighlightedU32 = ImGui::GetColorU32(imClrTableRowHighlightedVec4);
 
@@ -3017,34 +2962,10 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
         ImGuiTableFlags_ScrollY |
         ImGuiTableFlags_SizingStretchProp;
 
-    // related to table flags and sizing, see the big comment in drawGameObjectivesServer(), same rules apply here as well!
-
-    float fTableWidthPixels;
-    float fPlayerNameColWidthPixels;
-    float fPlayerNameColReqWidthPixels = ImGui::CalcTextSize(vecHeaderLabels[0]).x + 2 * ImGui::GetStyle().ItemSpacing.x + fTableColIndentPixels;
-    calculatePlayerNameColWidthAndTableWidthPixels(
-        fTableWidthPixels,
-        fPlayerNameColWidthPixels,
-        fPlayerNameColReqWidthPixels,
-        fTableColIndentPixels,
-        fColsTotalWidthAfterPlayerNameCol);
-
-    const float fTableStartPosX = std::roundf((ImGui::GetWindowSize().x - fTableWidthPixels) / 2.f);
-
-    const float fTableCaptionWidthPixels = ImGui::CalcTextSize(sTableCaption.c_str()).x;
-    ImGui::SetCursorPos(
-        ImVec2(
-            (fTableWidthPixels < fTableCaptionWidthPixels) ?
-            std::roundf((ImGui::GetWindowSize().x - fTableCaptionWidthPixels) / 2.f) :
-            fTableStartPosX,
-            fStartPosY));
-    drawTextHighlighted(ImGui::GetCursorPosX(), fStartPosY, sTableCaption);
-
-    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
-    const float fTableHeightPixels = ImGui::GetWindowSize().y * 0.8f; // fixed height, but since we are not drawing frames, it will look as variable height
-
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
+
+    ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
 
     // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it here!
     if (ImGui::BeginTable("tbl_players_dbg_data_server", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
@@ -3091,68 +3012,54 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, imClrTableRowHighlightedU32);
                 }
 
-                // nColumnCount is to limit the column count for the server, in which case we don't query network dbg data
-                const int nColumnCount = (player.m_connHandle == pge_network::ServerConnHandle) ?
-                    1 : static_cast<int>(vecHeaderLabels.size());
-                for (int iCol = 0; iCol < nColumnCount; iCol++)
-                {
-                    ImGui::TableSetColumnIndex(iCol);
-                    switch (iCol)
-                    {
-                    case 0:
-                        ImGuiTextTableCurrentCellShortenedFit(
-                            player.m_sName
-                            /*"WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWWWWWWW0WWWW"*/
-                            /*"megszentsegtelenithetetlensegeskedeseitekert"*/,
-                            3);
-                        break;
-                    case 1:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
-                        break;
-                    case 2:
-                    {
-                        std::stringstream ssQuality;
-                        ssQuality << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getServer().getQualityLocal(player.m_connHandle, false) <<
-                            "/" << m_pPge->getNetwork().getServer().getQualityRemote(player.m_connHandle, false);
-                        ImGuiTextTableCurrentCellRightAdjusted(ssQuality.str().c_str() /*"0.90/-0.90"*/);
-                    }
-                    break;
-                    case 3:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            (std::to_string(std::lround(m_pPge->getNetwork().getServer().getTxByteRate(player.m_connHandle, false))) + "/" +
-                                std::to_string(std::lround(m_pPge->getNetwork().getServer().getRxByteRate(player.m_connHandle, false)))).c_str()
-                        /*"999/9999"*/);
-                        break;
-                    case 4:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            (std::to_string(m_pPge->getNetwork().getServer().getPendingReliableBytes(player.m_connHandle, false)) + "/" +
-                                std::to_string(m_pPge->getNetwork().getServer().getPendingUnreliableBytes(player.m_connHandle, false))).c_str()
-                        /*"999/9999"*/);
-                        break;
-                    case 5:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            std::to_string(m_pPge->getNetwork().getServer().getSentButUnAckedReliableBytes(player.m_connHandle, false)).c_str()
-                        /*"999"*/);
-                        break;
-                    case 6:
-                        ImGuiTextTableCurrentCellRightAdjusted(
-                            std::to_string(m_pPge->getNetwork().getServer().getInternalQueueTimeUSecs(player.m_connHandle, false)).c_str()
-                        /*"9999"*/);
-                        break;
-                    default:
-                        assert(false); // crash in debug
-                    }
-                } // end for iCol
+                drawAllPlayersDebugDataTableServer_columnLoopForPlayer(player, vecHeaderLabels, iColNetworkDataStart);
             } // end for players
         } // end for iReplicateRowsForExperimenting
         ImGui::Unindent(fTableColIndentPixels);
         ImGui::EndTable();
     } // end BeginTable
+
     // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PopStyleVar();
+}  // drawAllPlayersDebugDataTableServer()
+
+/**
+* Main logic to be called for GameInfoPage::AllPlayersDebugDataServer is selected by user (by TAB key as of v0.5).
+* 
+* Draws a table with all players' network debug data.
+* Players are fetched from GameMode::getPlayersTable().
+* Server-side only.
+*/
+void proofps_dd::GUI::drawAllPlayersDebugDataServer()
+{
+    assert(m_gameInfoPageCurrent == GameInfoPage::AllPlayersDebugDataServer);
+
+    assert(m_pMinimap);
+
+    const std::string sTableCaption = "Players Debug Data";
+    const float fStartPosY = std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f;
+
+    static const std::vector<const char*> vecHeaderLabels = {
+        "Player Name",
+        "Ping",
+        "Qlty NE/FE",
+        "Speed\nTx/Rx (Bps)",
+        "Pending\nRl/URl (Bps)",
+        "UnAck'd\n(Bps)",
+        "tIntQ\n(us)"
+    };
+
+    drawAllPlayersDebugDataTableServer(sTableCaption, fStartPosY, vecHeaderLabels, 1);
+
 }  // drawAllPlayersDebugDataServer()
 
+/**
+* Main logic to be called for GameInfoPage::FragTable is selected by user (by TAB key as of v0.5).
+*
+* Draws frag table with caption showing optional game goal status (e.g. time left).
+* Players are fetched from GameMode::getPlayersTable().
+* Server and client.
+*/
 void proofps_dd::GUI::drawGameObjectives()
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
@@ -3252,6 +3159,11 @@ float proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
     return fThisRowY;
 }
 
+/**
+* Main logic to be called for GameInfoPage::ServerConfig is selected by user (by TAB key as of v0.5).
+*
+* Shows server configuration relevant for both client and server.
+*/
 void proofps_dd::GUI::drawGameServerConfig()
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);

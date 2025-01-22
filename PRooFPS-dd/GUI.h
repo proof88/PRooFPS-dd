@@ -209,15 +209,50 @@ namespace proofps_dd
         static void updatePlayerHpChangeEvents();
         static void updatePlayerApChangeEvents();
         static void updatePlayerAmmoChangeEvents();
+        
         static void calculatePlayerNameColWidthAndTableWidthPixels(
             float& fTableWidthPixels,
             float& fPlayerNameColWidthPixels,
             float fPlayerNameColReqWidthPixels,
             const float& fTableColIndentPixels,
             const float& fColsTotalWidthAfterPlayerNameCol);
+        static void calculatePlayersTableGeometry(
+            const std::vector<const char*>& vecHeaderLabels,
+            const float& fTableColIndentPixels,
+            std::vector<float>& vecColumnWidthsPixels,
+            float& fTableStartPosX,
+            float& fTableWidthPixels,
+            float& fPlayerNameColWidthPixels,
+            float& fTableHeightPixels);
+        static void drawFragTable_columnLoopForPlayer(
+            const proofps_dd::PlayersTableRow& player,
+            const std::vector<const char*>& vecHeaderLabels,
+            const int& iColNetworkDataStart);
+        static void drawTableCaption(
+            const std::string& sTableCaption,
+            const float& fStartPosY,
+            const float& fTableStartPosX,
+            const float& fTableWidthPixels);
+        static void drawFragTable(
+            const std::string& sTableCaption,
+            const float& fStartPosY,
+            const std::vector<const char*>& vecHeaderLabels,
+            const int& iColNetworkDataStart);
+        
         static void drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY);
         static void drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY);
+        
+        static void drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
+            const proofps_dd::PlayersTableRow& player,
+            const std::vector<const char*>& vecHeaderLabels,
+            const int& iColNetworkDataStart);
+        static void drawAllPlayersDebugDataTableServer(
+            const std::string& sTableCaption,
+            const float& fStartPosY,
+            const std::vector<const char*>& vecHeaderLabels,
+            const int& iColNetworkDataStart);
         static void drawAllPlayersDebugDataServer();
+        
         static void drawGameObjectives();
         static float drawClientConnectionDebugInfo(float fThisRowY);
         static void drawGameServerConfig();
