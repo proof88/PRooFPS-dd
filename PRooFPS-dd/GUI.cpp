@@ -2684,6 +2684,11 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
 * @param iColNetworkDataStart      Index of first column showing client network data (e.g. ping).
 *                                  Used only by server instance, ignored by client instances.
 *                                  See real use-case example in drawFragTable().
+* 
+* @param cbIsPlayerValidForCurrentRowFunc Function that decides if current player belongs to this table/row, or not.
+*                                         For example, if you want to display players within a specific team only, you can
+*                                         pass such a function that checks player's team ID and returns true or false.
+* 
 * @param cbColumnLoopForPlayerFunc Function that fills in the row cells with data for the current player.
 *                                  It is called back in loop by this function for each player (row).
 *                                  This player shall iterate and fill columns within the current row using ImGui::TableSetColumnIndex() or ImGui::TableNextColumn().
@@ -2697,6 +2702,7 @@ void proofps_dd::GUI::drawPlayersTable(
     const float& fPlayerNameColWidthPixels,
     const float& fTableHeightPixels,
     const int& iColNetworkDataStart /* server-side only */,
+    CbIsPlayerValidForCurrentRowFunc cbIsPlayerValidForCurrentRowFunc,
     CbColumnLoopForPlayerFunc cbColumnLoopForPlayerFunc)
 {
     /*
@@ -2776,6 +2782,11 @@ void proofps_dd::GUI::drawPlayersTable(
         {
             for (const auto& player : GameMode::getGameMode()->getPlayersTable())
             {
+                if (!cbIsPlayerValidForCurrentRowFunc(player))
+                {
+                    continue;
+                }
+
                 ImGui::TableNextRow();
                 if (m_pNetworking->isMyConnection(player.m_connHandle))
                 {
@@ -2853,6 +2864,7 @@ void proofps_dd::GUI::drawFragTable(
         fPlayerNameColWidthPixels,
         fTableHeightPixels,
         iColNetworkDataStart,
+        [](const proofps_dd::PlayersTableRow& /*player*/) { return true; },
         drawFragTable_columnLoopForPlayer
     );
 } // drawFragTable()
@@ -3046,6 +3058,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
         fPlayerNameColWidthPixels,
         fTableHeightPixels,
         iColNetworkDataStart,
+        [](const proofps_dd::PlayersTableRow& /*player*/) { return true; },
         drawAllPlayersDebugDataTableServer_columnLoopForPlayer
     );
 

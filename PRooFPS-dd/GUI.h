@@ -234,6 +234,9 @@ namespace proofps_dd
             const float& fTableStartPosX,
             const float& fTableWidthPixels);
         
+        /**
+        * See explanation at GUI::drawPlayersTable().
+        */
         typedef std::function<
             void(
                 const proofps_dd::PlayersTableRow& player,
@@ -241,6 +244,14 @@ namespace proofps_dd
                 const int& iColNetworkDataStart
                 )> CbColumnLoopForPlayerFunc;
         
+        /**
+        * See explanation at GUI::drawPlayersTable().
+        */
+        typedef std::function<
+            bool(
+                const proofps_dd::PlayersTableRow& player
+                )> CbIsPlayerValidForCurrentRowFunc;
+
         static void drawPlayersTable(
             const std::vector<const char*>& vecHeaderLabels,
             const float& fTableColIndentPixels,
@@ -250,6 +261,7 @@ namespace proofps_dd
             const float& fPlayerNameColWidthPixels,
             const float& fTableHeightPixels,
             const int& iColNetworkDataStart,
+            CbIsPlayerValidForCurrentRowFunc cbIsPlayerValidForCurrentRowFunc,
             CbColumnLoopForPlayerFunc cbColumnLoopForPlayerFunc);
         static void drawFragTable(
             const std::string& sTableCaption,
