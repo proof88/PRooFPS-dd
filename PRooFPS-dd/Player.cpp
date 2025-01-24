@@ -1867,7 +1867,6 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
         return;
     }
 
-    
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,

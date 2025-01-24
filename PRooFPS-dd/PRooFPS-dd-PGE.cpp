@@ -1273,6 +1273,14 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
                 }
 
+                pge_network::PgePacket pktPlayerEvent;
+                proofps_dd::MsgPlayerEventFromServer::initPkt(
+                    pktPlayerEvent,
+                    it.second.getServerSideConnectionHandle(),
+                    PlayerEventId::TeamIdChanged,
+                    static_cast<int>(it.second.getTeamId()));
+                getNetwork().getServer().send(pktPlayerEvent, connHandleServerSide);
+
                 pge_network::PgePacket newPktUserUpdate;
                 if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
                     newPktUserUpdate,
