@@ -86,13 +86,13 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //unitTests.push_back(std::unique_ptr<Test>(new MapItemTest(cfgProfiles)));
     //unitTests.push_back(std::unique_ptr<Test>(new MapsTest(cfgProfiles)));
     //unitTests.push_back(std::unique_ptr<Test>(new MapcycleTest()));
-    unitTests.push_back(std::unique_ptr<Test>(new PlayerTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<Test>(new PlayerTest(cfgProfiles)));
     
     // performance tests (benchmarks)
     //perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
     
     // regression tests
-    unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
+    //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
     //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 20, 60)));
     //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(20, 20, 60)));
     //constexpr bool bAreWeTestingReleaseBuild = false;

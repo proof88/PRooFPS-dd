@@ -639,15 +639,7 @@ bool proofps_dd::TeamDeathMatchMode::serverCheckAndUpdateWinningConditions(pge_n
     {
         for (unsigned int iTeam = 1; iTeam <= 2; iTeam++)
         {
-            int nTeamTotalFrags = 0;
-            for (const auto& player : m_players)
-            {
-                if (player.m_iTeamId == iTeam)
-                {
-                    nTeamTotalFrags += player.m_nFrags;
-                }
-            }
-            if (nTeamTotalFrags >= static_cast<int>(getFragLimit()))
+            if (getTeamFrags(iTeam) >= static_cast<int>(getFragLimit()))
             {
                 handleEventGameWon(network);
                 return true;
@@ -681,6 +673,24 @@ bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_netw
 bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
 {
     return true;
+}
+
+int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const
+{
+    if (iTeamId == 0)
+    {
+        return 0;
+    }
+
+    int nTeamTotalFrags = 0;
+    for (const auto& player : m_players)
+    {
+        if (player.m_iTeamId == iTeamId)
+        {
+            nTeamTotalFrags += player.m_nFrags;
+        }
+    }
+    return nTeamTotalFrags;
 }
 
 

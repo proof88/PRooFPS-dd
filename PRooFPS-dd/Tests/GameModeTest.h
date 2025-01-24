@@ -2110,9 +2110,16 @@ private:
         player3.getTeamId() = 0; // intentionally zero, meaning no team selected!
 
         bool b = true;
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 1");  // team 0 always 0 summed frags
+        b &= assertEquals(0, tdm->getTeamFrags(1), "team 1 frags 1");
+        b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 1");
+        
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
         b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, true/*server*/, "add player 3");
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
+        b &= assertEquals(2, tdm->getTeamFrags(1), "team 1 frags 2");
+        b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 2");
 
         unsigned int i = 0;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
@@ -2120,6 +2127,10 @@ private:
             player1.getFrags()++;
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
         }
+
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
+        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 2");
+        b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 2");
 
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
@@ -2138,6 +2149,13 @@ private:
         {
             b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
+
+        player3.getTeamId() = 2;
+        player3.getFrags() = 4;
+        b &= assertTrueEz(gm->updatePlayer(player3, m_network), gamemode, true/*server*/, "update player 2");
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 3");  // team 0 always 0 summed frags
+        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 3");
+        b &= assertEquals(4, tdm->getTeamFrags(2), "team 2 frags 3");
 
         return b;
     }

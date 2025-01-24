@@ -2871,9 +2871,9 @@ void proofps_dd::GUI::drawFragTable(
     );
 
     const int nTablesCount =
-        GameMode::getGameMode()->getGameModeType() == GameModeType::DeathMatch ?
-        1 :
-        3;
+        GameMode::getGameMode()->isTeamBasedGame() ?
+        3 :
+        1;
 
     // in DM, everybody is in team 0, but in TDM, only players without team are in team 0, however
     // I want those no-team players to be listed in the last table.
@@ -2882,18 +2882,21 @@ void proofps_dd::GUI::drawFragTable(
         nTablesCount > 1 ?
         iTeam = 1 :
         iTeam = 0;
+
+    const proofps_dd::TeamDeathMatchMode* const tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(GameMode::getGameMode());
     for (int i = 0; i < nTablesCount; i++)
     {
 
         if (nTablesCount > 1)
         {
             assert(nTablesCount == 3); // serious check based on above logic, but might be changed in future for arbitrary number of teams
+            assert(tdm);
 
             static std::string sTableCaption; // hopefully fast enough with being static
             sTableCaption =
                 iTeam == 0 ?
                 "Unassigned Players" :
-                "Team " + std::to_string(iTeam);
+                "Team " + std::to_string(iTeam) + ": Total Frags: " + std::to_string(tdm->getTeamFrags(iTeam));
 
             drawTableCaption(
                 sTableCaption,

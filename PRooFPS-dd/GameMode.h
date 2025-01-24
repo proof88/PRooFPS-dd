@@ -412,6 +412,14 @@ namespace proofps_dd
 
         virtual bool isTeamBasedGame() const override;
 
+        /**
+        * @param iTeamId Team ID for which team we want to get the sum of frags.
+        * 
+        * @return Sum of player frags in the specified team.
+        *         Always 0 when iTeamId is 0.
+        */
+        int getTeamFrags(unsigned int iTeamId) const;
+
     protected:
 
     private:
