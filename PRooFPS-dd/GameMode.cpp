@@ -590,6 +590,11 @@ bool proofps_dd::DeathMatchMode::isTeamBasedGame() const
     return false;
 }
 
+bool proofps_dd::DeathMatchMode::isPlayerAllowedForGameplay(const Player& /*player*/) const
+{
+    return true;
+}
+
 int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
 {
     if (p1frags == p2frags)
@@ -673,6 +678,11 @@ bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_netw
 bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
 {
     return true;
+}
+
+bool proofps_dd::TeamDeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
+{
+    return player.getTeamId() != 0u;
 }
 
 int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const

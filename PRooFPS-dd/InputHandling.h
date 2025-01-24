@@ -126,7 +126,8 @@ namespace proofps_dd
         void clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
             pge_network::PgePacket& pkt,
             proofps_dd::Player& player,
-            PureObject3D& objXHair);
+            PureObject3D& objXHair,
+            proofps_dd::GameMode& gameMode);
 
         void clientMouseWheel(
             const short int& nMouseWheelChange,

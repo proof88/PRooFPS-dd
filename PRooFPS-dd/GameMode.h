@@ -278,6 +278,15 @@ namespace proofps_dd
         */
         virtual bool isTeamBasedGame() const = 0;
 
+        /**
+        * Checks if given player is allowed for gameplay.
+        * Primarily this is for server instance.
+        * For example, in a team-based game mode, server can freeze player actions when no team is assigned to the player.
+        * 
+        * @return True if player is ready for gameplay in the current game mode, false otherwise.
+        */
+        virtual bool isPlayerAllowedForGameplay(const Player& player) const = 0;
+
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
     protected:
@@ -359,6 +368,8 @@ namespace proofps_dd
 
         virtual bool isTeamBasedGame() const override;
 
+        virtual bool isPlayerAllowedForGameplay(const Player& player) const override;
+
     protected:
         unsigned int m_nFragLimit{};
 
@@ -411,6 +422,8 @@ namespace proofps_dd
             pge_network::PgeINetwork& network) override;
 
         virtual bool isTeamBasedGame() const override;
+
+        virtual bool isPlayerAllowedForGameplay(const Player& player) const override;
 
         /**
         * @param iTeamId Team ID for which team we want to get the sum of frags.

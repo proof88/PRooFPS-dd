@@ -70,6 +70,11 @@ public:
         return false;
     }
 
+    virtual bool isPlayerAllowedForGameplay(const proofps_dd::Player&) const override
+    {
+        return true;
+    }
+
 }; // class SpecialGameMode
 
 
@@ -137,8 +142,10 @@ protected:
         addSubTest("test_deathmatch_winning_cond_defaults_to_false", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_defaults_to_false));
         addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
         addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
+        addSubTest("test_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_is_player_allowed_for_gameplay));
         addSubTest("test_team_deathmatch_does_not_count_frags_with_zero_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id));
         addSubTest("test_team_deathmatch_does_not_allow_any_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_allow_any_team_id));
+        addSubTest("test_team_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_is_player_allowed_for_gameplay));
     }
 
     virtual bool setUp() override
@@ -2056,6 +2063,41 @@ private:
         return b;
     }
 
+    bool test_deathmatch_is_player_allowed_for_gameplay()
+    {
+        constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::DeathMatch;
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        proofps_dd::Player player1(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Apple");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+        player1.getTeamId() = 0;
+
+        bool b = true;
+
+        // DM mode just dont care about team id
+        b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 1");
+
+        player1.getTeamId() = 1;
+        b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 2");
+
+        return b;
+    }
+
     bool test_team_deathmatch_does_not_count_frags_with_zero_team_id()
     {
         constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamDeathMatch;
@@ -2217,6 +2259,43 @@ private:
                 { "Apple", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 }
         };
         assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, true /*server*/, "table 4 fail");
+
+        return b;
+    }
+
+    bool test_team_deathmatch_is_player_allowed_for_gameplay()
+    {
+        constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamDeathMatch;
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        proofps_dd::Player player1(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setName("Apple");
+        player1.getFrags() = 0;
+        player1.getDeaths() = 0;
+        player1.getTeamId() = 0;
+
+        bool b = true;
+
+        b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 1");
+
+        player1.getTeamId() = 1;
+        b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 2");
+
+        player1.getTeamId() = 2;
+        b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 3");
 
         return b;
     }

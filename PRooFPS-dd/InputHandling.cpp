@@ -90,7 +90,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
         clientMouseWhenConnectedToServer(gameMode, pkt, player, xhair.getObject3D());
-        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(pkt, player, xhair.getObject3D());
+        clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(pkt, player, xhair.getObject3D(), gameMode);
     }
     return playerAppActionReq;
 }
@@ -144,6 +144,12 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     auto& player = it->second;
     const auto& playerConst = player;
+
+    if (!gameMode.isPlayerAllowedForGameplay(playerConst))
+    {
+        // not error, valid state, maybe player not selected team yet
+        return true;
+    }
 
     if (playerConst.getHealth() == 0)
     {
@@ -871,6 +877,12 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
+    if (!gameMode.isPlayerAllowedForGameplay(player))
+    {
+        // not error, valid state, maybe player not selected team yet
+        return false;
+    }
+
     if (gameMode.isGameWon())
     {
         return false;
@@ -1006,8 +1018,16 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
 
 void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(
     pge_network::PgePacket& pkt,
-    proofps_dd::Player& player, PureObject3D& objXHair)
+    proofps_dd::Player& player,
+    PureObject3D& objXHair,
+    proofps_dd::GameMode& gameMode)
 {
+    if (!gameMode.isPlayerAllowedForGameplay(player))
+    {
+        // not error, valid state, maybe player not selected team yet
+        return;
+    }
+
     static std::chrono::time_point<std::chrono::steady_clock> timeLastMsgUserCmdFromClientSent;
     const auto nMillisecsSinceLastMsgUserCmdFromClientSent =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - timeLastMsgUserCmdFromClientSent).count();
