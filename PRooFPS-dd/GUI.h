@@ -264,13 +264,13 @@ namespace proofps_dd
             CbIsPlayerValidForCurrentRowFunc cbIsPlayerValidForCurrentRowFunc,
             CbColumnLoopForPlayerFunc cbColumnLoopForPlayerFunc);
         static void drawFragTable(
-            const std::string& sTableCaption,
+            const std::string& sCaption,
             const float& fStartPosY,
             const std::vector<const char*>& vecHeaderLabels,
             const int& iColNetworkDataStart);
         
-        static void drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY);
-        static void drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY);
+        static void drawGameObjectivesServer(const std::string& sCaption, const float& fStartPosY);
+        static void drawGameObjectivesClient(const std::string& sCaption, const float& fStartPosY);
         
         static void drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
             const proofps_dd::PlayersTableRow& player,

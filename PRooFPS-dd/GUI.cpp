@@ -2522,6 +2522,7 @@ void proofps_dd::GUI::calculatePlayerNameColWidthAndTableWidthPixels(
 * @param fTableWidthPixels         Out argument: as the name says, the width of the table in pixels will be placed here by the function.
 * @param fPlayerNameColWidthPixels Out argument: the final calculated width of the first column, in pixels, will be placed here by the function.
 * @param fTableHeightPixels        Out argument: as the name says, the height of the table in pixels will be placed here by the function.
+*                                  For now it is fixed 80% of window height.
 */
 void proofps_dd::GUI::calculatePlayersTableGeometry(
     const std::vector<const char*>& vecHeaderLabels,
@@ -2681,6 +2682,9 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
 * @param fTableWidthPixels         As the name says, the width of the table in pixels.
 * @param fPlayerNameColWidthPixels The width of the first column, in pixels.
 * @param fTableHeightPixels        As the name says, the height of the table in pixels.
+*                                  For now it is not used, height is automatically determined by Dear ImGui!
+*                                  I need this behavior so I dont need to calculate height by myself.
+*                                  This auto behavior is comfy so I can put multiple tables under each other without manually calculating their heights.
 * @param iColNetworkDataStart      Index of first column showing client network data (e.g. ping).
 *                                  Used only by server instance, ignored by client instances.
 *                                  See real use-case example in drawFragTable().
@@ -2700,7 +2704,7 @@ void proofps_dd::GUI::drawPlayersTable(
     const float& fTableStartPosX,
     const float& fTableWidthPixels,
     const float& fPlayerNameColWidthPixels,
-    const float& fTableHeightPixels,
+    const float& /*fTableHeightPixels*/,
     const int& iColNetworkDataStart /* server-side only */,
     CbIsPlayerValidForCurrentRowFunc cbIsPlayerValidForCurrentRowFunc,
     CbColumnLoopForPlayerFunc cbColumnLoopForPlayerFunc)
@@ -2731,12 +2735,21 @@ void proofps_dd::GUI::drawPlayersTable(
     * unknown reason, but I think this weighted config will be just fine.
     */
     constexpr ImGuiTableFlags tblFlags =
-        ImGuiTableFlags_RowBg /* |
-         ImGuiTableFlags_Borders used it as cell padding is NOT working without borders flag! Then I changed to ImGuiTableColumnFlags_IndentEnable instead of cell padding! */ |
-        ImGuiTableFlags_ScrollY |
+        ImGuiTableFlags_RowBg | 
+        /*ImGuiTableFlags_Borders | From v0.5 I could use it, explained in comment for ImGuiStyleVar_CellPadding. */
+        /*ImGuiTableFlags_ScrollY | turned this off in v0.5 so I can pass 0 for vertical size and ImGui does auto-resize vertically */
         ImGuiTableFlags_SizingStretchProp;
 
-    // not changing padding anymore since it requires border flags which I dont use now
+    // I wrote majority of this code before v0.5.
+    // At that time I could not use ImGuiTableFlags_Borders flag.
+    // Not changing cellpadding since it requires ImGuiTableFlags_Borders flags which I could not use before v0.5.
+    // Why I could not use the borders flag before v0.5?
+    // Because before v0.5 I used fixed height for the table, 80% of screen height.
+    // With the borders flag, this lead to borders being drawn in that size, even though table in reality was much less taller due to less players.
+    // However, from v0.5, I pass 0.f vertical size for the table, leading to auto-sizing vertically, so I could use the borders flag also, and
+    // because of that, the cellpadding too.
+    // However, I never tried re-enabling this cellpadding property, I'm still sticking to the Indent() with the ImGuiTableColumnFlags_IndentEnable flag.
+    // If something is working, dont touch it.
     //ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.f /* horizontal padding in pixels*/, 2.f /* vertical padding in pixels */));
 
     ImGui::SetCursorPos(ImVec2(fTableStartPosX, ImGui::GetCursorPosY()));
@@ -2745,14 +2758,15 @@ void proofps_dd::GUI::drawPlayersTable(
     // stuff like frag table, etc.
 
     // TODO: str_id in BeginTable() might needs to be unique for each call! Investigate!
-    if (ImGui::BeginTable("tbl_frag", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, fTableHeightPixels)))
+    // Note that ScrollY flag has effect on how the given vertical size is treated, read sizing comments in imgui_tables.cpp!
+    if (ImGui::BeginTable("tbl_frag", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, 0.f /*fTableHeightPixels*/)))
     {
-        ImGui::TableSetupScrollFreeze(1, 1);
+        //ImGui::TableSetupScrollFreeze(1, 1); // Before v0.5 ScrollY flag was enabled, now I don't use it, so I can pass 0.f vertical height for auto-sizing.
         ImGui::Indent(fTableColIndentPixels); // applies to all cell contents; set only once, unindent at the end; requires ImGuiTableColumnFlags_IndentEnable
         size_t iHdrCol = 0;
         for (const auto& hdr : vecHeaderLabels)
         {
-            // not changing padding anymore since it requires border flags which I dont use now
+            // Reason why this is commented, is explained already above.
             //if (iHdrCol < 5)
             //{
             //    // 1-line header texts should be roughly vertically centered
@@ -2764,7 +2778,6 @@ void proofps_dd::GUI::drawPlayersTable(
                 /* due to ImGuiTableFlags_SizingStretchProp, these are not strict pixels but weights */
                 iHdrCol == 0 ? fPlayerNameColWidthPixels : vecColumnWidthsPixels[iHdrCol]);
 
-            // not changing padding anymore since it requires border flags which I dont use now
             //if (iHdrCol < 5)
             //{
             //    ImGui::PopStyleVar();
@@ -2802,15 +2815,15 @@ void proofps_dd::GUI::drawPlayersTable(
         ImGui::EndTable();
     } // end BeginTable
 
-    // not changing padding anymore since it requires border flags which I dont use now
     //ImGui::PopStyleVar();
 } // drawPlayersTable()
 
 /**
-* Draws a frag table where player stats such as frags are visible.
+* Draws frag table(s) where player stats such as frags are visible.
+* Can be 1 or more tables depending on game mode type.
 * Players are fetched from GameMode::getPlayersTable().
 * 
-* @param sTableCaption        This separate text will be rendered above the frag table.
+* @param sCaption             This separate text will be rendered above the frag table(s).
 * @param fStartPosY           Vertical 2D-position in Dear ImGui coordinate system where sTableCaption will be placed.
 *                             The frag table is placed right below sTableCaption.
 * @param vecHeaderLabels      Column header labels.
@@ -2822,7 +2835,7 @@ void proofps_dd::GUI::drawPlayersTable(
 *                             However, we don't show such for the server player itself, so the extra columns stay empty for the server player.                 
 */
 void proofps_dd::GUI::drawFragTable(
-    const std::string& sTableCaption,
+    const std::string& sCaption,
     const float& fStartPosY,
     const std::vector<const char*>& vecHeaderLabels,
     const int& iColNetworkDataStart /* server-side only */)
@@ -2833,6 +2846,8 @@ void proofps_dd::GUI::drawFragTable(
 
     static constexpr float fTableColIndentPixels = 4.f;
 
+    /* since actually I dont use fTableHeightPixels, it is enough to calculate table geometry only once, as
+       these horizontal pos and size stuff will be valid for all tables I'm drawing here */
     std::vector<float> vecColumnWidthsPixels;
     float fTableStartPosX;
     float fTableWidthPixels;
@@ -2849,24 +2864,64 @@ void proofps_dd::GUI::drawFragTable(
     );
 
     drawTableCaption(
-        sTableCaption,
+        sCaption,
         fStartPosY,
         fTableStartPosX,
         fTableWidthPixels
     );
 
-    drawPlayersTable(
-        vecHeaderLabels,
-        fTableColIndentPixels,
-        vecColumnWidthsPixels,
-        fTableStartPosX,
-        fTableWidthPixels,
-        fPlayerNameColWidthPixels,
-        fTableHeightPixels,
-        iColNetworkDataStart,
-        [](const proofps_dd::PlayersTableRow& /*player*/) { return true; },
-        drawFragTable_columnLoopForPlayer
-    );
+    const int nTablesCount =
+        GameMode::getGameMode()->getGameModeType() == GameModeType::DeathMatch ?
+        1 :
+        3;
+
+    // in DM, everybody is in team 0, but in TDM, only players without team are in team 0, however
+    // I want those no-team players to be listed in the last table.
+    // Therefore, within the loop, for team-based gamemodes, team order shall be 1,2,0 instead of 0,1,2.
+    unsigned int iTeam =
+        nTablesCount > 1 ?
+        iTeam = 1 :
+        iTeam = 0;
+    for (int i = 0; i < nTablesCount; i++)
+    {
+
+        if (nTablesCount > 1)
+        {
+            assert(nTablesCount == 3); // serious check based on above logic, but might be changed in future for arbitrary number of teams
+
+            static std::string sTableCaption; // hopefully fast enough with being static
+            sTableCaption =
+                iTeam == 0 ?
+                "Unassigned Players" :
+                "Team " + std::to_string(iTeam);
+
+            drawTableCaption(
+                sTableCaption,
+                ImGui::GetCursorPosY(),
+                fTableStartPosX,
+                fTableWidthPixels
+            );
+        }
+
+        drawPlayersTable(
+            vecHeaderLabels,
+            fTableColIndentPixels,
+            vecColumnWidthsPixels,
+            fTableStartPosX,
+            fTableWidthPixels,
+            fPlayerNameColWidthPixels,
+            fTableHeightPixels,
+            iColNetworkDataStart,
+            [iTeam](const proofps_dd::PlayersTableRow& player) { return player.m_iTeamId == iTeam; },
+            drawFragTable_columnLoopForPlayer
+        );
+
+        // comment explains above, this is for team-based gamemodes:
+        if (++iTeam > 2)
+        {
+            iTeam = 0;
+        }
+    }
 } // drawFragTable()
 
 /**
@@ -2875,7 +2930,7 @@ void proofps_dd::GUI::drawFragTable(
 * Draws frag table with caption showing optional game goal status (e.g. time left).
 * Players are fetched from GameMode::getPlayersTable().
 */
-void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption, const float& fStartPosY)
+void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && m_pNetworking->isServer());
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
@@ -2892,7 +2947,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
         "Ping"
     };
 
-    drawFragTable(sTableCaption, fStartPosY, vecHeaderLabels, 7 /* iColNetworkDataStart */);
+    drawFragTable(sCaption, fStartPosY, vecHeaderLabels, 7 /* iColNetworkDataStart */);
 }  // drawGameObjectivesServer()
 
 /**
@@ -2901,7 +2956,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sTableCaption,
 * Draws frag table with caption showing optional game goal status (e.g. time left).
 * Players are fetched from GameMode::getPlayersTable().
 */
-void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption, const float& fStartPosY)
+void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sCaption, const float& fStartPosY)
 {
     assert(m_pNetworking && !m_pNetworking->isServer());
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
@@ -2917,7 +2972,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sTableCaption,
         "Shots\nFired"
     };
 
-    drawFragTable(sTableCaption, fStartPosY, vecHeaderLabels, -1 /* iColNetworkDataStart ignored on client-side */);
+    drawFragTable(sCaption, fStartPosY, vecHeaderLabels, -1 /* iColNetworkDataStart ignored on client-side */);
 }  // drawGameObjectivesClient()
 
 /**
