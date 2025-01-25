@@ -981,6 +981,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 
 void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
 {
+    assert(GameMode::getGameMode());
     if (GameMode::getGameMode()->isGameWon())
     {
         return;
@@ -1019,6 +1020,10 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                 auto& player = playerPair.second;
                 const auto& playerConst = player;
                 if ((playerConst.getHealth() <= 0) || (player.getRespawnFlag()))
+                {
+                    continue;
+                }
+                if (!GameMode::getGameMode()->isPlayerAllowedForGameplay(player))
                 {
                     continue;
                 }

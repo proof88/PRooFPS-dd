@@ -277,6 +277,11 @@ void proofps_dd::Physics::serverGravity(
             continue;
         }
 
+        if (!gameMode.isPlayerAllowedForGameplay(player))
+        {
+            continue;
+        }
+
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
@@ -394,6 +399,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
         if (player.getRespawnFlag())
         {
             // do not do anything until server clears this flag!
+            continue;
+        }
+
+        if (!gameMode.isPlayerAllowedForGameplay(player))
+        {
             continue;
         }
 

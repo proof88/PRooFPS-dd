@@ -194,6 +194,11 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
             continue;
         }
 
+        if (!gameMode.isPlayerAllowedForGameplay(player))
+        {
+            continue;
+        }
+
         PureVector vecImpactForce;
         int nDamageApCalculated = nDamageAp;
         const float fRadiusDamage = getDamageAndImpactForceAtDistance(
@@ -815,6 +820,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 }
 
                 if (player.getInvulnerability())
+                {
+                    continue;
+                }
+
+                if (!gameMode.isPlayerAllowedForGameplay(player))
                 {
                     continue;
                 }
