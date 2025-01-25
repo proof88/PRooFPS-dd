@@ -221,7 +221,9 @@ void proofps_dd::GameMode::clientUpdateTimeRemainingMillisecs(const unsigned int
     if (nRemSecs > m_nTimeLimitSecs)
     {
         // should not happen, but should log as error
-        getConsole().EOLn("GameMode::%s(): SHOULD NOT HAPPEN: nRemSecs > m_nTimeLimitSecs: %u > %u!", __func__, nRemSecs, m_nTimeLimitSecs);
+        getConsole().EOLn(
+            "GameMode::%s(): SHOULD NOT HAPPEN (expected error in unit test): nRemSecs > m_nTimeLimitSecs: %u > %u!",
+            __func__, nRemSecs, m_nTimeLimitSecs);
     }
 
     m_timeReset = std::chrono::steady_clock::now() - std::chrono::seconds(m_nTimeLimitSecs - std::min(nRemSecs, m_nTimeLimitSecs));
@@ -701,6 +703,19 @@ int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const
         }
     }
     return nTeamTotalFrags;
+}
+
+unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iTeamId) const
+{
+    unsigned int nTeamTotalPlayers = 0;
+    for (const auto& player : m_players)
+    {
+        if (player.m_iTeamId == iTeamId)
+        {
+            ++nTeamTotalPlayers;
+        }
+    }
+    return nTeamTotalPlayers;
 }
 
 

@@ -55,8 +55,8 @@ static CConsole& getConsole()
 
 int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE /*hPrevInstance*/, const _In_ LPSTR /*lpCmdLine*/, const _In_ int /*nCmdShow*/)
 {
-    constexpr const char* CON_TITLE = "Tests for PRooFPS-dd";
-    getConsole().Initialize(CON_TITLE, true);
+    const std::string sConTitle = std::string("Tests for ") + proofps_dd::GAME_NAME + " " + proofps_dd::GAME_VERSION;
+    getConsole().Initialize(sConTitle.c_str(), true);
     //getConsole().SetLoggingState("4LLM0DUL3S", true);
     getConsole().SetErrorsAlwaysOn(false);
 
@@ -67,7 +67,9 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
 #else
     const char* const szBuildType = "Debug";
 #endif 
-    getConsole().OLn("%s. Build Type: %s, Timestamp: %s @ %s", CON_TITLE, szBuildType, __DATE__, __TIME__);
+    getConsole().OLn("%s.", sConTitle.c_str());
+    getConsole().OLn("Tests Built in %s mode, on %s @ %s.", szBuildType, __DATE__, __TIME__);
+    getConsole().OLn("");
 
     // this cfgProfiles instance is needed to kept in memory during all unit tests below, because
     // some unit tests use the graphics engine, which is constructed only when the first relevant unit test
@@ -79,6 +81,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
 
     std::vector<std::unique_ptr<Test>> unitTests;
     std::vector<std::unique_ptr<Test>> perfTests;
+    std::vector<std::unique_ptr<Test>> regTests;
     
     // unit tests
     //unitTests.push_back(std::unique_ptr<Test>(new EventListerTest()));
@@ -92,16 +95,17 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
     
     // regression tests
-    unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
-    //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 20, 60)));
-    //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(20, 20, 60)));
+    //regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
+    //regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 20, 60)));
+    //regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(20, 20, 60)));
     //constexpr bool bAreWeTestingReleaseBuild = false;
-    //unitTests.push_back(std::unique_ptr<Test>(
+    //regTests.push_back(std::unique_ptr<Test>(
     //    new RegTestMapChangeServerClient3Players(60, 60, 60, 3 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
     //));
     
-    Test::runTests(unitTests, getConsole(), "Running Unit Tests ...");
-    Test::runTests(perfTests, getConsole(), "Running Performance Tests ...");
+    Test::runTests(unitTests, getConsole(), "Unit Tests");
+    Test::runTests(perfTests, getConsole(), "Performance Tests");
+    Test::runTests(regTests,  getConsole(), "Regression E2E Tests");
     
     system("pause");
 

@@ -2100,6 +2100,8 @@ private:
 
     bool test_team_deathmatch_does_not_count_frags_with_zero_team_id()
     {
+        // in this TDM test we also test getTeamFrags() and getTeamPlayersCount()
+
         constexpr proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamDeathMatch;
         // since earlier tests like test_deathmatch_winning_cond_frag_limit() test TDM class also, here we are keeping this test very small.
 
@@ -2155,6 +2157,9 @@ private:
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 1");  // team 0 always 0 summed frags
         b &= assertEquals(0, tdm->getTeamFrags(1), "team 1 frags 1");
         b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 1");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 1");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(1), "team 1 players count 1");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 1");
         
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -2162,6 +2167,9 @@ private:
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
         b &= assertEquals(2, tdm->getTeamFrags(1), "team 1 frags 2");
         b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 2");
+        b &= assertEquals(1u, tdm->getTeamPlayersCount(0), "team 0 players count 2");
+        b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 2");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 2");
 
         unsigned int i = 0;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
@@ -2170,9 +2178,12 @@ private:
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
         }
 
-        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
-        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 2");
-        b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 2");
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 3");  // team 0 always 0 summed frags
+        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 3");
+        b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 3");
+        b &= assertEquals(1u, tdm->getTeamPlayersCount(0), "team 0 players count 3");
+        b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 3");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 3");
 
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
@@ -2195,9 +2206,12 @@ private:
         player3.getTeamId() = 2;
         player3.getFrags() = 4;
         b &= assertTrueEz(gm->updatePlayer(player3, m_network), gamemode, true/*server*/, "update player 2");
-        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 3");  // team 0 always 0 summed frags
-        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 3");
-        b &= assertEquals(4, tdm->getTeamFrags(2), "team 2 frags 3");
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 4");  // team 0 always 0 summed frags
+        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 4");
+        b &= assertEquals(4, tdm->getTeamFrags(2), "team 2 frags 4");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 4");
+        b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 4");
+        b &= assertEquals(1u, tdm->getTeamPlayersCount(2), "team 2 players count 4");
 
         return b;
     }

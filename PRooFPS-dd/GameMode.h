@@ -433,6 +433,13 @@ namespace proofps_dd
         */
         int getTeamFrags(unsigned int iTeamId) const;
 
+        /**
+        * @param iTeamId Team ID for which team we want to get the count of players.
+        *
+        * @return Number of players in the specified team.
+        */
+        unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
+
     protected:
 
     private:

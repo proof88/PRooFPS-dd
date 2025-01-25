@@ -2853,7 +2853,7 @@ void proofps_dd::GUI::drawPlayersTable(
 
 /**
 * Draws frag table(s) where player stats such as frags are visible.
-* Can be 1 or more tables depending on game mode type.
+* Might draw 1 or more tables depending on game mode type.
 * Players are fetched from GameMode::getPlayersTable().
 * 
 * @param sCaption             This separate text will be rendered above the frag table(s).
@@ -2916,51 +2916,58 @@ void proofps_dd::GUI::drawFragTable(
         iTeam = 1 :
         iTeam = 0;
 
+    // might become null at this point, so check before using it!
     const proofps_dd::TeamDeathMatchMode* const tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(GameMode::getGameMode());
+
+    // we do not want to draw an empty table for unassigned players in team-based games (but it is ok to draw empty team tables tho)
+    const unsigned int nUnassignedPlayersCountInTeamBasedGame =
+        tdm ?
+        tdm->getTeamPlayersCount(0) :
+        0;
+    const bool bDrawUnassignedPlayersTableInTeamBasedGame = tdm && (nUnassignedPlayersCountInTeamBasedGame > 0u);
+
     for (int i = 0; i < nTablesCount; i++)
     {
 
-        if (nTablesCount > 1)
+        if (GameMode::getGameMode()->isTeamBasedGame())
         {
             assert(nTablesCount == 3); // serious check based on above logic, but might be changed in future for arbitrary number of teams
             assert(tdm);
 
             static std::string sTableCaption; // hopefully fast enough with being static
-            sTableCaption =
-                iTeam == 0 ?
-                "Unassigned Players" :
-                "Team " + std::to_string(iTeam) + ": Total Frags: " + std::to_string(tdm->getTeamFrags(iTeam));
 
-            drawTableCaption(
-                sTableCaption,
-                ImGui::GetCursorPosY(),
-                fTableStartPosX,
-                fTableWidthPixels
-            );
+            // this overcomplicated condition is just for the sake of aesthetics: see comment for bDrawUnassignedPlayersTableInTeamBasedGame
+            if ((iTeam != 0) || bDrawUnassignedPlayersTableInTeamBasedGame)
+            {
+                sTableCaption =
+                    iTeam == 0 ?
+                    (std::string("Unassigned Player(s): ") + std::to_string(nUnassignedPlayersCountInTeamBasedGame)) :
+                    ("Team " + std::to_string(iTeam) + ": " +
+                        std::to_string(tdm->getTeamPlayersCount(iTeam)) + " player(s) with total frag(s) : " + std::to_string(tdm->getTeamFrags(iTeam)));
+
+                drawTableCaption(
+                    sTableCaption,
+                    ImGui::GetCursorPosY(),
+                    fTableStartPosX,
+                    fTableWidthPixels
+                );
+            }
         }
 
-        drawPlayersTable(
-            vecHeaderLabels,
-            fTableColIndentPixels,
-            vecColumnWidthsPixels,
-            fTableStartPosX,
-            fTableWidthPixels,
-            fPlayerNameColWidthPixels,
-            fTableHeightPixels,
-            iColNetworkDataStart,
-            [iTeam](const proofps_dd::PlayersTableRow& player) { return player.m_iTeamId == iTeam; },
-            drawFragTable_columnLoopForPlayer
-        );
-
-        if ((nTablesCount > 1) && (iTeam == 0))
+        // this overcomplicated condition is just for the sake of aesthetics: see comment for bDrawUnassignedPlayersTableInTeamBasedGame
+        if (!GameMode::getGameMode()->isTeamBasedGame() || (iTeam != 0) || bDrawUnassignedPlayersTableInTeamBasedGame)
         {
-            static const std::string sTeamSelectNotice =
-                std::string("Players can use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to select team.";
-            drawTableCaption(
-                sTeamSelectNotice,
-                ImGui::GetCursorPosY(),
+            drawPlayersTable(
+                vecHeaderLabels,
+                fTableColIndentPixels,
+                vecColumnWidthsPixels,
                 fTableStartPosX,
-                fTableWidthPixels
+                fTableWidthPixels,
+                fPlayerNameColWidthPixels,
+                fTableHeightPixels,
+                iColNetworkDataStart,
+                [iTeam](const proofps_dd::PlayersTableRow& player) { return player.m_iTeamId == iTeam; },
+                drawFragTable_columnLoopForPlayer
             );
         }
 
@@ -2969,6 +2976,18 @@ void proofps_dd::GUI::drawFragTable(
         {
             iTeam = 0;
         }
+    }
+
+    if (GameMode::getGameMode()->isTeamBasedGame() && !GameMode::getGameMode()->isGameWon())
+    {
+        static const std::string sTeamSelectNotice =
+            std::string("Players can use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to select team.";
+        drawTableCaption(
+            sTeamSelectNotice,
+            ImGui::GetCursorPosY(),
+            fTableStartPosX,
+            fTableWidthPixels
+        );
     }
 } // drawFragTable()
 
@@ -3195,32 +3214,32 @@ void proofps_dd::GUI::drawGameObjectives()
         return;
     }
 
-    std::string sTableHeaderText;
+    std::string sCaption;
     if (GameMode::getGameMode()->isGameWon())
     {
-        sTableHeaderText = "Game Ended! Waiting for restart ...";
+        sCaption = "Game Ended! Waiting for restart ...";
     }
     else
     {
-        sTableHeaderText = GameMode::getGameMode()->getGameModeTypeName();
+        sCaption = GameMode::getGameMode()->getGameModeTypeName();
         if (pDeathMatchMode->getFragLimit() > 0)
         {
-            sTableHeaderText += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
+            sCaption += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
         }
         if (pDeathMatchMode->getTimeLimitSecs() > 0)
         {
-            sTableHeaderText += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
+            sCaption += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
                 " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
     }
 
     if (m_pNetworking->isServer())
     {
-        drawGameObjectivesServer(sTableHeaderText, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+        drawGameObjectivesServer(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
     }
     else
     {
-        drawGameObjectivesClient(sTableHeaderText, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+        drawGameObjectivesClient(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
     }
 } // drawGameObjectives()
 
