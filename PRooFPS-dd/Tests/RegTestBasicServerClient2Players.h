@@ -743,6 +743,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1" +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)) +
                 " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) + 
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty + 
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");
@@ -756,6 +757,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=Player2" +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)) +
                 " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) +
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty +
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");

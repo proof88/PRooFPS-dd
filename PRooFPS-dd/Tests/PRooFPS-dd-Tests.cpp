@@ -92,7 +92,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
     
     // regression tests
-    //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
+    unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60)));
     //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 20, 60)));
     //unitTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(20, 20, 60)));
     //constexpr bool bAreWeTestingReleaseBuild = false;

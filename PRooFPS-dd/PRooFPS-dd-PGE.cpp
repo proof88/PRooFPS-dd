@@ -1224,6 +1224,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         m_gui.getXHair()->showInCenter();
         m_gui.getMinimap()->show();
         m_gui.hideGameObjectives(); // just in case it would had stuck from a previous game session
+        m_gui.showMandatoryGameModeConfigMenu();
         
         getAudio().playSound(m_sounds.m_sndLetsgo);
     }

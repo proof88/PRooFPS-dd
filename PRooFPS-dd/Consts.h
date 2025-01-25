@@ -36,4 +36,6 @@ namespace proofps_dd
     static constexpr char* GAME_TEXTURES_DIR = "gamedata/textures/";
     static constexpr char* GAME_WEAPONS_DIR = "gamedata/weapons/";
 
+    static constexpr char GAME_INPUT_KEY_MENU_TEAMSELECTION = 'm';
+
 } // namespace proofps_dd

@@ -357,6 +357,20 @@ void proofps_dd::GUI::showHideInGameTeamSelectMenu()
     }
 }
 
+void proofps_dd::GUI::showInGameTeamSelectMenu()
+{
+    m_currentMenuInInGameMenu = InGameMenuState::TeamSelect;
+}
+
+void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
+{
+    assert(GameMode::getGameMode());
+    if (GameMode::getGameMode()->isTeamBasedGame())
+    {
+        showInGameTeamSelectMenu();
+    }
+}
+
 void proofps_dd::GUI::resetMenuStates(bool bExitingFromGameSession)
 {
     m_currentMenuInInGameMenu = InGameMenuState::None;
@@ -1925,7 +1939,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
-    constexpr int nTextRows = 4;
+    constexpr int nTextRows = 6;
     constexpr int nButtonRows = 3;
     const float fContentHeight =
         m_fFontSizePxHudGeneralScaled * nTextRows +
@@ -1983,16 +1997,23 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             }
 
             bool bSendPkt = false;
+
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
+            const char* const szTeam1BtnCaption =
+                (currentPlayer.getTeamId() == 1u) ?
+                "KEEP TEAM 1" : "JOIN TEAM 1";
             // in case of buttons, remove size argument (ImVec2) to auto-resize
-            if (ImGui::Button("JOIN TEAM 1", ImVec2(fBtnWidth, fBtnHeight)))
+            if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)))
             {
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 1u);
                 bSendPkt = true;
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
-            if (ImGui::Button("JOIN TEAM 2", ImVec2(fBtnWidth, fBtnHeight)))
+            const char* const szTeam2BtnCaption =
+                (currentPlayer.getTeamId() == 2u) ?
+                "KEEP TEAM 2" : "JOIN TEAM 2";
+            if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)))
             {
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 2u);
                 bSendPkt = true;
@@ -2011,6 +2032,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                     // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023 (and Jan 2025 :)).
                     m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
                 }
+                hideGameObjectives();
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
@@ -2019,6 +2041,13 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                 bCloseThisPopup = true;
                 showGameObjectives(); // will start showing frag table in next frame
             }
+
+            static const std::string sTeamSelectNotice =
+                std::string("Key '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' toggles this window.";
+            drawText(
+                ImGui::GetCursorPosX(),
+                ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                sTeamSelectNotice);
 
             if (bCloseThisPopup)
             {
@@ -2757,6 +2786,8 @@ void proofps_dd::GUI::drawPlayersTable(
     // not sure about the performance impact of table rendering but Dear ImGui's Table API is so flexible and sophisticated, I decided to use it for
     // stuff like frag table, etc.
 
+    ImGui::BeginDisabled_proof88();
+
     // TODO: str_id in BeginTable() might needs to be unique for each call! Investigate!
     // Note that ScrollY flag has effect on how the given vertical size is treated, read sizing comments in imgui_tables.cpp!
     if (ImGui::BeginTable("tbl_frag", static_cast<int>(vecHeaderLabels.size()), tblFlags, ImVec2(fTableWidthPixels, 0.f /*fTableHeightPixels*/)))
@@ -2814,6 +2845,8 @@ void proofps_dd::GUI::drawPlayersTable(
         ImGui::Unindent(fTableColIndentPixels);
         ImGui::EndTable();
     } // end BeginTable
+
+    ImGui::EndDisabled_proof88();
 
     //ImGui::PopStyleVar();
 } // drawPlayersTable()
@@ -2919,7 +2952,19 @@ void proofps_dd::GUI::drawFragTable(
             drawFragTable_columnLoopForPlayer
         );
 
-        // comment explains above, this is for team-based gamemodes:
+        if ((nTablesCount > 1) && (iTeam == 0))
+        {
+            static const std::string sTeamSelectNotice =
+                std::string("Players can use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to select team.";
+            drawTableCaption(
+                sTeamSelectNotice,
+                ImGui::GetCursorPosY(),
+                fTableStartPosX,
+                fTableWidthPixels
+            );
+        }
+
+        // comment explains above, this logic is for team-based gamemodes:
         if (++iTeam > 2)
         {
             iTeam = 0;

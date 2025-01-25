@@ -351,7 +351,9 @@ private:
                 "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName);
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch))
+            );
         }
         else
         {
@@ -360,7 +362,8 @@ private:
                 "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName)
+                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)))
             );
             m_vecHClientMainGameWindow.push_back(static_cast<HWND>(0)); // we set this later below
         }
