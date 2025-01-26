@@ -147,11 +147,13 @@ namespace proofps_dd
         const std::string& getName() const;
         void setName(const std::string& sName);
 
-        void updateAudioVisuals(const proofps_dd::Config& config, bool bServer);
+        void updateAudioVisuals(
+            const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay);
 
         void show();
         void hide();
         void setVisibilityState(bool state);
+        bool isVisible() const;
 
         WeaponManager& getWeaponManager();
         const WeaponManager& getWeaponManager() const;

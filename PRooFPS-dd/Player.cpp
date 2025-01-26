@@ -379,8 +379,19 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeStartedInvulnerability;
 }
 
-void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bool bServer)
+/**
+* Invoked in every frame.
+* 
+* @param bAllowedForGameplay Shall come from GameMode::isPlayerAllowedForGameplay().
+*/
+void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay)
 {
+    if (!bAllowedForGameplay)
+    {
+        hide();
+        return;
+    }
+
     if (getInvulnerability())
     {
         constexpr auto nBlinkPeriodMillisecs = 100;
@@ -421,6 +432,9 @@ void proofps_dd::Player::hide()
     setVisibilityState(false);
 }
 
+/**
+* Sets visibility state for BOTH the player object and the current weapon.
+*/
 void proofps_dd::Player::setVisibilityState(bool state)
 {
     getObject3D()->SetRenderingAllowed(state);
@@ -428,6 +442,20 @@ void proofps_dd::Player::setVisibilityState(bool state)
     {
         m_wpnMgr.getCurrentWeapon()->getObject3D().SetRenderingAllowed(state);
     }
+}
+
+/**
+* @return True if either the player object or the current weapon is visible.
+*         False if neither the player object nor the current weapon is visible.
+*/
+bool proofps_dd::Player::isVisible() const
+{
+    bool bVisible = getObject3D()->isRenderingAllowed();
+    if (m_wpnMgr.getCurrentWeapon())
+    {
+        bVisible = bVisible || m_wpnMgr.getCurrentWeapon()->getObject3D().isRenderingAllowed();
+    }
+    return bVisible;
 }
 
 WeaponManager& proofps_dd::Player::getWeaponManager()

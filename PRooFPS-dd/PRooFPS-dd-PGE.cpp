@@ -1104,6 +1104,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
         return false;
     }
 
+    assert(GameMode::getGameMode());
     GameMode::getGameMode()->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
 
     if (!msg.m_bGameSessionEnd)
@@ -1375,6 +1376,9 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         return false;
     }
     Player& insertedPlayer = insertRes.first->second;
+
+    // We dont hide player here:
+    // updatePlayersVisuals() is responsible for player visibility updates, thus also for hiding player not allowed for gameplay!
 
     if (getNetwork().isServer() && msg.m_bCurrentClient)
     {

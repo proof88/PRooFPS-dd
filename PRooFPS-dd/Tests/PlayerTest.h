@@ -62,6 +62,8 @@ protected:
         addSubTest("test_show", (PFNUNITSUBTEST)&PlayerTest::test_show);
         addSubTest("test_hide", (PFNUNITSUBTEST)&PlayerTest::test_hide);
         addSubTest("test_set_visibility_state", (PFNUNITSUBTEST)&PlayerTest::test_set_visibility_state);
+        addSubTest("test_is_visible_checks_weapon_too", (PFNUNITSUBTEST)&PlayerTest::test_is_visible_checks_weapon_too);
+        addSubTest("test_update_audio_visuals", (PFNUNITSUBTEST)&PlayerTest::test_update_audio_visuals);
         addSubTest("test_dirtiness_one_by_one", (PFNUNITSUBTEST)&PlayerTest::test_dirtiness_one_by_one);
         addSubTest("test_update_old_frags_and_deaths", (PFNUNITSUBTEST)&PlayerTest::test_update_old_frags_and_deaths);
         addSubTest("test_set_just_created_and_expecting_start_pos", (PFNUNITSUBTEST)&PlayerTest::test_set_just_created_and_expecting_start_pos);
@@ -445,7 +447,8 @@ private:
         b &= assertNotNull(player.getObject3D(), "object3d") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null") &
-            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible");
+            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible") &
+            assertTrue(player.isVisible(), "isVisible 1");
 
         return b;
     }
@@ -466,7 +469,8 @@ private:
         b &= assertNotNull(player.getObject3D(), "object3d") &
             assertFalse(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d not visible") &
             assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible");
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible") &
+            assertFalse(player.isVisible(), "isVisible 1");
 
         return b;
     }
@@ -487,16 +491,82 @@ private:
         b &= assertNotNull(player.getObject3D(), "object3d 1") &
             assertFalse(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d not visible 1") &
             assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null 1") &
-            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible 1");
+            assertFalse(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn not visible 1") &
+            assertFalse(player.isVisible(), "isVisible 1");
 
         player.setVisibilityState(true);
 
         b &= assertNotNull(player.getObject3D(), "object3d 2") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible 2") &
             assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null 2") &
-            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible 2");
+            assertTrue(player.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn visible 2") &
+            assertTrue(player.isVisible(), "isVisible 2");
 
         return b;
+    }
+
+    bool test_is_visible_checks_weapon_too()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        bool b = true;
+        b &= assertNotNull(player.getObject3D(), "object3d not null");
+        b &= assertNotNull(player.getWeaponManager().getCurrentWeapon(), "wpn not null");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertTrue(player.isVisible(), "isVisible 1");
+        
+        player.getObject3D()->Hide();
+        b &= assertTrue(player.isVisible(), "isVisible 2");
+
+        player.getObject3D()->Show();
+        player.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+        b &= assertTrue(player.isVisible(), "isVisible 3");
+
+        player.getObject3D()->Hide();
+        b &= assertFalse(player.isVisible(), "isVisible 4");
+        
+        return b;
+    }
+
+    bool test_update_audio_visuals()
+    {
+        // cannot run this test now because I cannot pass Config instance to updateAudioVisuals()
+        // 
+        //const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        //proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        //if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        //{
+        //    return false;
+        //};
+        //
+        //bool b = assertTrue(player.isVisible(), "isVisible 1");
+        //
+        //player.updateAudioVisuals(/* cannot instantiate Config */, true, true);
+        //b &= assertTrue(player.isVisible(), "isVisible 2");
+        //
+        //player.setHealth(0);
+        //player.updateAudioVisuals(/* cannot instantiate Config */, true, true);
+        //b &= assertFalse(player.isVisible(), "isVisible 3");
+        //
+        //player.setHealth(100);
+        //player.updateAudioVisuals(/* cannot instantiate Config */, true, true);
+        //b &= assertTrue(player.isVisible(), "isVisible 4");
+        //
+        //player.updateAudioVisuals(/* cannot instantiate Config */, true, false);
+        //b &= assertFalse(player.isVisible(), "isVisible 5");
+
+        return true;
     }
 
     bool test_dirtiness_one_by_one()

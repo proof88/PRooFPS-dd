@@ -1116,6 +1116,9 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(pge_network::PgeN
     return true;
 }
 
+/**
+* Invoked in every frame by all instances.
+*/
 void proofps_dd::PlayerHandling::updatePlayersVisuals(
     const proofps_dd::Config& config,
     proofps_dd::GameMode& gameMode)
@@ -1133,7 +1136,8 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
     {
         auto& player = playerPair.second;
 
-        player.updateAudioVisuals(config, m_pge.getNetwork().isServer());
+        player.updateAudioVisuals(
+            config, m_pge.getNetwork().isServer(), gameMode.isPlayerAllowedForGameplay(player));
         
         if (bXHairIdentifiesPlayers)
         {
