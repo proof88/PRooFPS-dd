@@ -2951,6 +2951,9 @@ void proofps_dd::GUI::drawFragTable(
                     fTableStartPosX,
                     fTableWidthPixels
                 );
+
+                // this will bring the table vertically closer to its caption, we dont need the item spacing gap here
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
             }
         }
 
@@ -3251,39 +3254,41 @@ float proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Client Live Network Data");
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
+    const float fRowSizeY = m_fFontSizePxHudGeneralScaled + 1.f /* drawTextHighlighted() generates 1 px taller bg rect */;
+
+    fThisRowY += 2 * fRowSizeY;
 
     static constexpr float fIndentX = 20.f;
 
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, "Ping: " + std::to_string(m_pPge->getNetwork().getClient().getPing(true)) + " ms");
 
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     std::stringstream ssQuality;
     ssQuality << "Quality: near: " << std::fixed << std::setprecision(2) << m_pPge->getNetwork().getClient().getQualityLocal(false) <<
         "; far: " << m_pPge->getNetwork().getClient().getQualityRemote(false);
     drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, ssQuality.str());
 
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Tx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getTxByteRate(false))) +
         " Bps; Rx Speed: " + std::to_string(std::lround(m_pPge->getNetwork().getClient().getRxByteRate(false))) + " Bps");
 
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "Pending Bytes: Reliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingReliableBytes(false)) +
         "; Unreliable: " + std::to_string(m_pPge->getNetwork().getClient().getPendingUnreliableBytes(false)));
 
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
         "UnAck'd Bytes: " + std::to_string(m_pPge->getNetwork().getClient().getSentButUnAckedReliableBytes(false)));
 
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX,
         fThisRowY,
@@ -3308,58 +3313,59 @@ void proofps_dd::GUI::drawGameServerConfig()
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Server Config");
 
     static constexpr float fIndentX = 20.f;
+    const float fRowSizeY = m_fFontSizePxHudGeneralScaled + 1.f /* drawTextHighlighted() generates 1 px taller bg rect */;
 
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
+        fThisRowY += 2 * fRowSizeY;
         drawTextHighlighted(fGameInfoPagesStartX + fIndentX, fThisRowY, std::string("Received: ") + (m_pConfig->isServerInfoReceived() ? "YES" : "NO"));
     }
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
+    fThisRowY += 2 * fRowSizeY;
 
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Max Framerate: ") + std::to_string(m_pConfig->getServerInfo().m_nMaxFps) + " FPS");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Tickrate: ") + std::to_string(m_pConfig->getServerInfo().m_nTickrate) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Min Physics Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nPhysicsRateMin) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Client Update Rate: ") + std::to_string(m_pConfig->getServerInfo().m_nClientUpdateRate) + " Hz");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nTimeLimitSecs) + " s");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Fall Damage Multiplier: ") + std::to_string(m_pConfig->getServerInfo().m_nFallDamageMultiplier) + "x");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnTimeSecs) + " s");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
     if (!m_pNetworking->isServer())
     {
-        fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
+        fThisRowY += 2 * fRowSizeY;
         fThisRowY = drawClientConnectionDebugInfo(fThisRowY);
     }
 
@@ -3367,12 +3373,12 @@ void proofps_dd::GUI::drawGameServerConfig()
     const float fGameInfoPagesCol2StartX = ImGui::GetWindowSize().x * 0.5f;
     drawTextHighlighted(fGameInfoPagesCol2StartX, fThisRowY, "Resource Usage");
 
-    fThisRowY += 2 * m_fFontSizePxHudGeneralScaled;
+    fThisRowY += 2 * fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
         std::string("BulletPool: ") + std::to_string(m_pPge->getBullets().size()) + " / " + std::to_string(m_pPge->getBullets().capacity()) + " elems (" +
         std::to_string(m_pPge->getBullets().capacityBytes()) + " Bytes)");
-    fThisRowY += m_fFontSizePxHudGeneralScaled;
+    fThisRowY += fRowSizeY;
     assert(m_pSmokes);
     drawTextHighlighted(
         fGameInfoPagesCol2StartX + fIndentX, fThisRowY,
@@ -3493,6 +3499,13 @@ void proofps_dd::GUI::drawTextShadowed(const float& fImGuiX, const float& fImGui
     drawText(fImGuiX, fImGuiY, text);
 }
 
+/**
+* Draws a text with a filled background rectangle behind it.
+* Background rectangle color is the current ImGui::GetStyle().Colors[ImGuiCol_TableHeaderBg].
+* 
+* Note: the drawn rectangle will be 1 px taller to the south, so if you manually position such texts close to each other vertically, it is
+* recommended to add 1 px height when calculating the Y pos of the next row where you reposition the ImGui cursor.
+*/
 void proofps_dd::GUI::drawTextHighlighted(const float& fImGuiX, const float& fImGuiY, const std::string& text)
 {
     // first we draw an invisible text so we can use its itemrect when drawing our bg rect
@@ -3505,10 +3518,19 @@ void proofps_dd::GUI::drawTextHighlighted(const float& fImGuiX, const float& fIm
     
     ImDrawList* const dl = ImGui::GetWindowDrawList();
     assert(dl);
-    dl->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), imClrTableHeaderBgU32);
+    dl->AddRectFilled(
+        ImGui::GetItemRectMin(),
+        // need to enable IM_VEC2_CLASS_EXTRA macro in imconfig.h for ImVec2 operator+() to work, but not doing that for now ...
+        ImVec2(
+            ImGui::GetItemRectMax().x,
+            ImGui::GetItemRectMax().y + 1 /* need to add 1 pixel for some reason, otherwise bottom of some chars might go under the background rect */),
+        imClrTableHeaderBgU32);
 
     ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
     ImGui::TextUnformatted(text.c_str());
+
+    // since we draw 1 px taller bg rect above, need to reposition current Y pos to 1 px lower now
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 1);
 }
 
 /**
