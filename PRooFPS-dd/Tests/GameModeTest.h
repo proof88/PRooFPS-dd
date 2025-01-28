@@ -19,6 +19,10 @@
 #include "PGE.h" // for Bullet and PgeCfgProfiles
 #include "Network/Stubs/PgeNetworkStub.h"
 
+// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
+#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+#include "imgui.h"
+
 #include "GameMode.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -143,6 +147,7 @@ protected:
         addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
         addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
         addSubTest("test_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_is_player_allowed_for_gameplay));
+        addSubTest("test_team_deathmatch_get_team_color", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_get_team_color));
         addSubTest("test_team_deathmatch_does_not_count_frags_with_zero_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id));
         addSubTest("test_team_deathmatch_does_not_allow_any_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_allow_any_team_id));
         addSubTest("test_team_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_is_player_allowed_for_gameplay));
@@ -2096,6 +2101,20 @@ private:
         b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 2");
 
         return b;
+    }
+
+    bool test_team_deathmatch_get_team_color()
+    {
+        const PureColor expectedPureColor0(255, 255, 255, 255);
+        const PureColor expectedPureColor1(127, 255, 255, 255);
+        const PureColor expectedPureColor2(255, 127, 127, 255);
+        const PureColor resultPureColor0 = proofps_dd::TeamDeathMatchMode::getTeamColor(0);
+        const PureColor resultPureColor1 = proofps_dd::TeamDeathMatchMode::getTeamColor(1);
+        const PureColor resultPureColor2 = proofps_dd::TeamDeathMatchMode::getTeamColor(2);
+
+        return (assertEquals(expectedPureColor0, resultPureColor0, "0") &
+            assertEquals(expectedPureColor1, resultPureColor1, "1") &
+            assertEquals(expectedPureColor2, resultPureColor2, "2")) != 0;
     }
 
     bool test_team_deathmatch_does_not_count_frags_with_zero_team_id()

@@ -94,6 +94,15 @@ CConsole& proofps_dd::GUI::getConsole()
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
+ImVec4 proofps_dd::GUI::getImVec4fromPureColor(const PureColor& pureColor)
+{
+    return ImVec4(
+        pureColor.getRedAsFloat(),
+        pureColor.getGreenAsFloat(), 
+        pureColor.getBlueAsFloat(), 
+        pureColor.getAlphaAsFloat());
+}
+
 void proofps_dd::GUI::initialize()
 {
     // these are cannot be null since they point to always-existing instances when getGuiInstance() is called, and GUI is part of their owner: class PRooFPSddPGE.
@@ -2618,6 +2627,27 @@ void proofps_dd::GUI::drawTableCaption(
 }
 
 /**
+* Same as drawTableCaptionColored() but with extra color argument for setting text foreground color.
+*/
+void proofps_dd::GUI::drawTableCaptionColored(
+    const std::string& sTableCaption,
+    const float& fStartPosY,
+    const float& fTableStartPosX,
+    const float& fTableWidthPixels,
+    const ImVec4& color)
+{
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+
+    drawTableCaption(
+        sTableCaption,
+        fStartPosY,
+        fTableStartPosX,
+        fTableWidthPixels);
+
+    ImGui::PopStyleColor();
+}
+
+/**
 * Draws a row for the given player in the frag table.
 * Signature must comply with CbColumnLoopForPlayerFunc.
 * 
@@ -2645,6 +2675,8 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
             iColNetworkDataStart :
             static_cast<int>(vecHeaderLabels.size())) :
         static_cast<int>(vecHeaderLabels.size());
+
+    ImGui::PushStyleColor(ImGuiCol_Text, getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(player.m_iTeamId)));
 
     for (int iCol = 0; iCol < nColumnCount; iCol++)
     {
@@ -2689,6 +2721,7 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
             assert(false); // crash in debug
         }
     } // end for iCol
+    ImGui::PopStyleColor();
 } // drawFragTable_columnLoopForPlayer()
 
 /**
@@ -2945,11 +2978,12 @@ void proofps_dd::GUI::drawFragTable(
                     ("Team " + std::to_string(iTeam) + ": " +
                         std::to_string(tdm->getTeamPlayersCount(iTeam)) + " player(s) with total frag(s) : " + std::to_string(tdm->getTeamFrags(iTeam)));
 
-                drawTableCaption(
+                drawTableCaptionColored(
                     sTableCaption,
                     ImGui::GetCursorPosY(),
                     fTableStartPosX,
-                    fTableWidthPixels
+                    fTableWidthPixels,
+                    getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeam))
                 );
 
                 // this will bring the table vertically closer to its caption, we dont need the item spacing gap here

@@ -626,6 +626,20 @@ int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1d
 // ############################### PUBLIC ################################
 
 
+static const PureColor vecTeamColors[] =
+{
+    PureColor(255, 255, 255, 255), /* team id 0 = unassigned */
+    PureColor(127, 255, 255, 255), /* team id 1 */
+    PureColor(255, 127, 127, 255)  /* team id 2 */
+};
+
+const PureColor& proofps_dd::TeamDeathMatchMode::getTeamColor(unsigned int iTeamId)
+{
+    assert(iTeamId < (sizeof(vecTeamColors) / sizeof(vecTeamColors[0])));
+
+    return vecTeamColors[iTeamId];
+}
+
 proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
 {
     m_gameModeType = proofps_dd::GameModeType::TeamDeathMatch;

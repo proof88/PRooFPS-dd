@@ -76,6 +76,8 @@ namespace proofps_dd
 
         static const char* getLoggerModuleName();
         static CConsole& getConsole();
+        
+        static ImVec4 getImVec4fromPureColor(const PureColor& pureColor);
 
         // ---------------------------------------------------------------------------
 
@@ -235,6 +237,13 @@ namespace proofps_dd
             const float& fStartPosY,
             const float& fTableStartPosX,
             const float& fTableWidthPixels);
+
+        static void drawTableCaptionColored(
+            const std::string& sTableCaption,
+            const float& fStartPosY,
+            const float& fTableStartPosX,
+            const float& fTableWidthPixels,
+            const ImVec4& color);
         
         /**
         * See explanation at GUI::drawPlayersTable().

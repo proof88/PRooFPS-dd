@@ -394,6 +394,8 @@ namespace proofps_dd
     {
     public:
 
+        static const PureColor& getTeamColor(unsigned int iTeamId);
+
         TeamDeathMatchMode();
         virtual ~TeamDeathMatchMode();
 
