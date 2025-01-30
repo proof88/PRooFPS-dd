@@ -119,8 +119,8 @@ namespace proofps_dd
             pge_audio::PgeAudio& audio,
             PGEcfgProfiles& cfgProfiles,
             PgeObjectPool<PooledBullet>& bullets,
-            EventLister& eventsItemPickup,
-            EventLister& eventsAmmoChange,
+            EventLister<>& eventsItemPickup,
+            EventLister<>& eventsAmmoChange,
             PR00FsUltimateRenderingEngine& gfx,
             pge_network::PgeINetwork& network,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
@@ -414,8 +414,8 @@ namespace proofps_dd
         pge_audio::PgeAudio& m_audio;
         PGEcfgProfiles& m_cfgProfiles;
         PgeObjectPool<PooledBullet>& m_bullets;
-        EventLister& m_eventsItemPickup;
-        EventLister& m_eventsAmmoChange;
+        EventLister<>& m_eventsItemPickup;
+        EventLister<>& m_eventsAmmoChange;
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeINetwork& m_network;
 

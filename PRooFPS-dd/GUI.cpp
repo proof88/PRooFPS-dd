@@ -121,9 +121,9 @@ void proofps_dd::GUI::initialize()
 
     m_pEventsDeathKill = new DeathKillEventLister();
     m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
-    m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
-    m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
-    m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, EventLister::Orientation::Horizontal);
+    m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -468,22 +468,22 @@ proofps_dd::DeathKillEventLister* proofps_dd::GUI::getDeathKillEvents()
     return m_pEventsDeathKill;
 }
 
-proofps_dd::EventLister* proofps_dd::GUI::getItemPickupEvents()
+proofps_dd::EventLister<>* proofps_dd::GUI::getItemPickupEvents()
 {
     return m_pEventsItemPickup;
 }
 
-proofps_dd::EventLister* proofps_dd::GUI::getPlayerHpChangeEvents()
+proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerHpChangeEvents()
 {
     return m_pEventsPlayerHpChange;
 }
 
-proofps_dd::EventLister* proofps_dd::GUI::getPlayerApChangeEvents()
+proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerApChangeEvents()
 {
     return m_pEventsPlayerApChange;
 }
 
-proofps_dd::EventLister* proofps_dd::GUI::getPlayerAmmoChangeEvents()
+proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerAmmoChangeEvents()
 {
     return m_pEventsPlayerAmmoChange;
 }
@@ -603,10 +603,10 @@ proofps_dd::GUI::InGameMenuState proofps_dd::GUI::m_currentMenuInInGameMenu = pr
 proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
-proofps_dd::EventLister* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
-proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
-proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
-proofps_dd::EventLister* proofps_dd::GUI::m_pEventsPlayerAmmoChange = nullptr;
+proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
+proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
+proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
+proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerAmmoChange = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -2340,9 +2340,9 @@ void proofps_dd::GUI::updateDeathKillEvents()
     {
         const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(elem.m_str, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.m_event.m_str, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            elem.m_str);
+            elem.m_event.m_str);
 
         i = eventsQ.prev_index(i);
     }
@@ -2364,9 +2364,9 @@ void proofps_dd::GUI::updateItemPickupEvents()
     {
         const auto& elem = eventsQ.underlying_array()[i];
         drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(elem.m_str, fRightPosXlimit),
+            getDearImGui2DposXforRightAdjustedText(elem.m_event.m_str, fRightPosXlimit),
             ImGui::GetCursorPos().y,
-            elem.m_str);
+            elem.m_event.m_str);
         
         i = eventsQ.prev_index(i);
     }
@@ -2393,7 +2393,7 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
         int nHpChange = 0;
         try
         {
-            nHpChange = static_cast<int>(std::stol(elem.m_str));
+            nHpChange = static_cast<int>(std::stol(elem.m_event.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2408,7 +2408,7 @@ void proofps_dd::GUI::updatePlayerHpChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nHpChange >= 0) ? ("+" + elem.m_str + "%") : (elem.m_str + "%"));
+            (nHpChange >= 0) ? ("+" + elem.m_event.m_str + "%") : (elem.m_event.m_str + "%"));
 
         ImGui::PopStyleColor();
 
@@ -2439,7 +2439,7 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         int nApChange = 0;
         try
         {
-            nApChange = static_cast<int>(std::stol(elem.m_str));
+            nApChange = static_cast<int>(std::stol(elem.m_event.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2454,7 +2454,7 @@ void proofps_dd::GUI::updatePlayerApChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nApChange >= 0) ? ("+" + elem.m_str + "%") : (elem.m_str + "%"));
+            (nApChange >= 0) ? ("+" + elem.m_event.m_str + "%") : (elem.m_event.m_str + "%"));
 
         ImGui::PopStyleColor();
 
@@ -2485,7 +2485,7 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
         int nAmmoChange = 0;
         try
         {
-            nAmmoChange = static_cast<int>(std::stol(elem.m_str));
+            nAmmoChange = static_cast<int>(std::stol(elem.m_event.m_str));
         }
         catch (const std::exception&) {}
 
@@ -2501,7 +2501,7 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
         drawTextHighlighted(
             ImGui::GetCursorPos().x,
             ImGui::GetCursorPos().y,
-            (nAmmoChange >= 0) ? ("+" + elem.m_str) : (elem.m_str));
+            (nAmmoChange >= 0) ? ("+" + elem.m_event.m_str) : (elem.m_event.m_str));
 
         ImGui::PopStyleColor();
 

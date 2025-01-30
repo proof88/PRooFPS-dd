@@ -91,7 +91,7 @@ public:
         tdm(nullptr),
         m_cfgProfiles(cfgProfiles),
         m_itemPickupEvents(8 /* time limit secs */, 5 /* event count limit */),
-        m_ammoChangeEvents(8 /* time limit secs */, 5 /* event count limit */, proofps_dd::EventLister::Orientation::Horizontal),
+        m_ammoChangeEvents(8 /* time limit secs */, 5 /* event count limit */, proofps_dd::Orientation::Horizontal),
         m_engine(nullptr),
         m_network(cfgProfiles)
     {
@@ -216,8 +216,8 @@ private:
     pge_audio::PgeAudio m_audio;
     PGEcfgProfiles& m_cfgProfiles;
     PgeObjectPool<PooledBullet> m_bullets;
-    proofps_dd::EventLister m_itemPickupEvents;
-    proofps_dd::EventLister m_ammoChangeEvents;
+    proofps_dd::EventLister<> m_itemPickupEvents;
+    proofps_dd::EventLister<> m_ammoChangeEvents;
     PR00FsUltimateRenderingEngine* m_engine;
     pge_network::PgeNetworkStub m_network;
 

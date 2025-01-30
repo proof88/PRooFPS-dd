@@ -35,7 +35,7 @@ protected:
 
     virtual void initialize() override
     {
-        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), true);
+        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister<>::getLoggerModuleName(), true);
 
         addSubTest("test_initial_values", (PFNUNITSUBTEST)&EventListerTest::test_initial_values);
         addSubTest("test_show_hide", (PFNUNITSUBTEST)&EventListerTest::test_show_hide);
@@ -47,7 +47,7 @@ protected:
 
     virtual void finalize() override
     {
-        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister::getLoggerModuleName(), false);
+        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::EventLister<>::getLoggerModuleName(), false);
     }
 
 private:
@@ -58,7 +58,7 @@ private:
     // ---------------------------------------------------------------------------
 
     bool does_event_lister_has_same_elems_as_vector(
-        const proofps_dd::EventLister& events,
+        const proofps_dd::EventLister<>& events,
         const std::vector<std::string>& vecExpectedStrings)
     {
         if (events.getEvents().size() != vecExpectedStrings.size())
@@ -74,7 +74,7 @@ private:
         {
             const auto& elem = eventsQ.underlying_array()[fifoIndex];
             //CConsole::getConsoleInstance().EOLn("  check: %s == %s", vecExpectedStrings[i].c_str(), elem.second.c_str());
-            b &= (vecExpectedStrings[i] == elem.m_str);
+            b &= (vecExpectedStrings[i] == elem.m_event.m_str);
             fifoIndex = eventsQ.next_index(fifoIndex);
         }
         //CConsole::getConsoleInstance().EOLn("does_event_lister_has_same_elems_as_vector end");
@@ -86,14 +86,14 @@ private:
     bool test_initial_values()
     {
         proofps_dd::EventLister eventsVertical(nMaxEventTimeSecs, nMaxEventCount);
-        proofps_dd::EventLister eventsHorizontal(nMaxEventTimeSecs, nMaxEventCount, proofps_dd::EventLister::Orientation::Horizontal);
+        proofps_dd::EventLister eventsHorizontal(nMaxEventTimeSecs, nMaxEventCount, proofps_dd::Orientation::Horizontal);
 
         bool b = (assertTrue(eventsVertical.getEvents().empty(), "empty") &
             assertFalse(eventsVertical.visible(), "visible") &
             assertEquals(nMaxEventTimeSecs, eventsVertical.getEventTimeLimitSecs(), "time limit") &
             assertEquals(nMaxEventCount, eventsVertical.getEventCountLimit(), "count limit") &
-            assertTrue(proofps_dd::EventLister::Orientation::Vertical == eventsVertical.getOrientation(), "orientation vertical") &
-            assertTrue(proofps_dd::EventLister::Orientation::Horizontal == eventsHorizontal.getOrientation(), "orientation horizontal")) != 0;
+            assertTrue(proofps_dd::Orientation::Vertical == eventsVertical.getOrientation(), "orientation vertical") &
+            assertTrue(proofps_dd::Orientation::Horizontal == eventsHorizontal.getOrientation(), "orientation horizontal")) != 0;
 
         return b;
     }

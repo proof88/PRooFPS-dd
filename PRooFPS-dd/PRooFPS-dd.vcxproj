@@ -286,9 +286,6 @@
   <ItemGroup>
     <ClCompile Include="CameraHandling.cpp" />
     <ClCompile Include="Config.cpp" />
-    <ClCompile Include="DeathKillEventLister.cpp" />
-    <ClCompile Include="DrawableEventLister.cpp" />
-    <ClCompile Include="EventLister.cpp" />
     <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />

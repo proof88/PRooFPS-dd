@@ -32,7 +32,7 @@ public:
         m_cfgProfiles(cfgProfiles),
         m_engine(nullptr),
         m_itemPickupEvents(8 /* time limit secs */, 5 /* event count limit */),
-        m_ammoChangeEvents(8 /* time limit secs */, 5 /* event count limit */, proofps_dd::EventLister::Orientation::Horizontal),
+        m_ammoChangeEvents(8 /* time limit secs */, 5 /* event count limit */, proofps_dd::Orientation::Horizontal),
         m_network(cfgProfiles)
     {}
 
@@ -165,8 +165,8 @@ private:
     PGEcfgProfiles& m_cfgProfiles;
     PR00FsUltimateRenderingEngine* m_engine;
     PgeObjectPool<PooledBullet> m_bullets;
-    proofps_dd::EventLister m_itemPickupEvents;
-    proofps_dd::EventLister m_ammoChangeEvents;
+    proofps_dd::EventLister<> m_itemPickupEvents;
+    proofps_dd::EventLister<> m_ammoChangeEvents;
     pge_network::PgeNetworkStub m_network;
 
     // ---------------------------------------------------------------------------

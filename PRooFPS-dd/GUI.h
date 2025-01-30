@@ -28,7 +28,7 @@
 
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
-#include "imgui.h"
+#include "imgui.h"  // ImFont, ImVec4
 
 namespace proofps_dd
 {
@@ -119,10 +119,10 @@ namespace proofps_dd
         XHair* getXHair();
         Minimap* getMinimap();
         DeathKillEventLister* getDeathKillEvents();
-        EventLister* getItemPickupEvents();
-        EventLister* getPlayerHpChangeEvents();
-        EventLister* getPlayerApChangeEvents();
-        EventLister* getPlayerAmmoChangeEvents();
+        EventLister<>* getItemPickupEvents();
+        EventLister<>* getPlayerHpChangeEvents();
+        EventLister<>* getPlayerApChangeEvents();
+        EventLister<>* getPlayerAmmoChangeEvents();
         static void showGameObjectives();
         static void hideGameObjectives();
         static void showAndLoopGameInfoPages();
@@ -168,10 +168,10 @@ namespace proofps_dd
         static XHair* m_pXHair;
         static Minimap* m_pMinimap;
         static DeathKillEventLister* m_pEventsDeathKill;
-        static EventLister* m_pEventsItemPickup;
-        static EventLister* m_pEventsPlayerHpChange;
-        static EventLister* m_pEventsPlayerApChange;
-        static EventLister* m_pEventsPlayerAmmoChange;
+        static EventLister<>* m_pEventsItemPickup;
+        static EventLister<>* m_pEventsPlayerHpChange;
+        static EventLister<>* m_pEventsPlayerApChange;
+        static EventLister<>* m_pEventsPlayerAmmoChange;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;

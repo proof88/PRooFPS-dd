@@ -11,23 +11,63 @@
 
 #include "EventLister.h"
 
+// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
+#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+#include "imgui.h"  // ImVec4
+
 namespace proofps_dd
 {
+
+    struct DrawableEvent : public Event
+    {
+        DrawableEvent() :
+            Event()
+        {}
+
+        DrawableEvent(const std::string& str) :
+            Event(str)
+        {}
+
+        DrawableEvent(std::string&& str) :
+            Event(str)
+        {}
+
+        virtual void draw() override
+        {
+            // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
+        };
+    };
 
     /**
     * A specified maximum number of events stored in FIFO container for a limited amount of time.
     * Typical event use cases: who killed who, items picked up by player, etc.
     */
-    class DrawableEventLister : public EventLister
+    template <class TEvent = DrawableEvent>
+    class DrawableEventLister : public EventLister<TEvent>
     {
     public:
+
+        struct DrawableTimeEventPair : public TimeEventPair
+        {
+            virtual void draw() override
+            {
+                // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
+            };
+        };
 
         DrawableEventLister(
             const unsigned int& nEventTimeLimitSecs,
             const size_t& nEventCountLimit,
-            const EventLister::Orientation& eOrientation = EventLister::Orientation::Vertical);
+            const Orientation& eOrientation = Orientation::Vertical) :
+            EventLister(nEventTimeLimitSecs, nEventCountLimit, eOrientation)
+        {
 
-        virtual void draw() override;
+        }
+
+        virtual void draw() override
+        {
+            // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
+        }
 
     protected:
 
