@@ -1161,7 +1161,8 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
                 m_gui.getXHair()->showIdText(
                     player.getName() +
                     " | (" + std::to_string(std::as_const(player).getHealth().getNew()) + 
-                    " / " + std::to_string(std::as_const(player).getArmor().getNew()) + ")"
+                    " / " + std::to_string(std::as_const(player).getArmor().getNew()) + ")",
+                    GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(player.getTeamId()))
                 );
                 //getConsole().EOLn("PlayerHandling::%s(): xhair hit player: %s!", __func__, player.getName().c_str());
             }

@@ -13,6 +13,10 @@
 
 #include "PGE.h"
 
+// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
+#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+#include "imgui.h" // for ImVec4
+
 #include "Consts.h"
 
 namespace proofps_dd
@@ -47,9 +51,12 @@ namespace proofps_dd
         void updateUnprojectedCoords(PureCamera& cam);
         const PureVector& getUnprojectedCoords() const;
 
-        void showIdText(const std::string& sText);
+        void showIdText(
+            const std::string& sText,
+            const ImVec4& color = {1.f, 1.f, 1.f, 1.f});
         void hideIdText();
         const std::string& getIdText() const;
+        const ImVec4& getColor() const;
 
         void startBlinking();
         void stopBlinking();
@@ -89,6 +96,7 @@ namespace proofps_dd
         PureObject3D* m_pObjDebugCube;
         PureObject3D* m_vHLightRects[4] = {};
         std::string m_sIdText;
+        ImVec4 m_clrIdText;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedBlinking;
         bool m_bVisible = false;
         bool m_bBlinking = false;

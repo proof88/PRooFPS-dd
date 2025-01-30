@@ -2231,18 +2231,22 @@ void proofps_dd::GUI::drawXHairHoverText()
         return;
     }
 
+    ImGui::PushStyleColor(ImGuiCol_Text, m_pXHair->getColor());
+
     drawTextShadowed(
         getDearImGui2DposXforCenteredText(
             m_pXHair->getIdText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
             getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
             m_pXHair->getIdText());
+
+    ImGui::PopStyleColor();
 }
 
 void proofps_dd::GUI::updateXHair()
 {
     assert(m_pXHair);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
 
-    // in the future this , but first drawTextShadowed need to be moved to separate class
+    // RFR: in the future this , but first drawTextShadowed need to be moved to separate class
     // so that both GUI and XHair classes can utilize it
     drawXHairHoverText();
 }

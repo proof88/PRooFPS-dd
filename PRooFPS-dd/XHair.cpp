@@ -218,9 +218,10 @@ const PureVector& proofps_dd::XHair::getUnprojectedCoords() const
     return m_vecUnprojected;
 }
 
-void proofps_dd::XHair::showIdText(const std::string& sText)
+void proofps_dd::XHair::showIdText(const std::string& sText, const ImVec4& color)
 {
     m_sIdText = sText;
+    m_clrIdText = color;
 }
 
 void proofps_dd::XHair::hideIdText()
@@ -231,6 +232,11 @@ void proofps_dd::XHair::hideIdText()
 const std::string& proofps_dd::XHair::getIdText() const
 {
     return m_sIdText;
+}
+
+const ImVec4& proofps_dd::XHair::getColor() const
+{
+    return m_clrIdText;
 }
 
 void proofps_dd::XHair::startBlinking()

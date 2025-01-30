@@ -19,10 +19,6 @@
 #include "PGE.h" // for Bullet and PgeCfgProfiles
 #include "Network/Stubs/PgeNetworkStub.h"
 
-// PGE has, but here in application we dont have imconfig.h thus we should not try including it!
-#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
-#include "imgui.h"
-
 #include "GameMode.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
