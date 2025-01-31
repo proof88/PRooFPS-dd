@@ -547,10 +547,15 @@ void proofps_dd::GUI::showRespawnTimer(
     m_sRespawnTimerExtraText2.clear();
     if (pKillerPlayer)
     {
+        m_colorRespawnTimerExtraText = GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(pKillerPlayer->getTeamId()) );
         m_sRespawnTimerExtraText = pKillerPlayer->getName() + " killed you having";
         m_sRespawnTimerExtraText2 =
             std::to_string(pKillerPlayer->getHealth().getNew()) + "% HP and " +
             std::to_string(pKillerPlayer->getArmor().getNew()) + "% AP remaining.";
+    }
+    else
+    {
+        m_colorRespawnTimerExtraText = {1.f, 1.f, 1.f, 1.f};
     }
 }
 
@@ -597,6 +602,7 @@ bool proofps_dd::GUI::m_bShowRespawnTimer = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
 std::string proofps_dd::GUI::m_sRespawnTimerExtraText;
 std::string proofps_dd::GUI::m_sRespawnTimerExtraText2;
+ImVec4 proofps_dd::GUI::m_colorRespawnTimerExtraText;
 
 bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
@@ -2210,17 +2216,21 @@ void proofps_dd::GUI::drawRespawnTimer()
 
     if (!m_sRespawnTimerExtraText.empty())
     {
+        ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
         drawTextShadowed(
             getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText),
             ImGui::GetCursorPosY(),
             m_sRespawnTimerExtraText);
+        ImGui::PopStyleColor();
     }
     if (!m_sRespawnTimerExtraText2.empty())
     {
+        ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
         drawTextShadowed(
             getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText2),
             ImGui::GetCursorPosY(),
             m_sRespawnTimerExtraText2);
+        ImGui::PopStyleColor();
     }
 }
 

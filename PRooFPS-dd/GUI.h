@@ -157,6 +157,7 @@ namespace proofps_dd
         static std::chrono::time_point<std::chrono::steady_clock> m_timePlayerDied;
         static std::string m_sRespawnTimerExtraText;
         static std::string m_sRespawnTimerExtraText2;
+        static ImVec4 m_colorRespawnTimerExtraText;
         static bool m_bShowHealthAndArmor;
 
         /* In-Game Menu Handling */
