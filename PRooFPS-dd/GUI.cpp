@@ -337,6 +337,8 @@ void proofps_dd::GUI::shutdown()
     }
 
     // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
+    m_pImFontFragTableNonScaled = nullptr;
+    m_pImFontHudGeneralScaled = nullptr;
 }
 
 const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
@@ -2334,15 +2336,77 @@ void proofps_dd::GUI::updateDeathKillEvents()
     const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
     ImGui::SetCursorPosY(50 + m_fFontSizePxHudGeneralScaled); /* FPS is somewhere above with legacy text rendering still, we dont exactly know where */
     
+    // TODO: 'eventsQ' cannot be const due to one-time update of elem.m_event.m_fTextWidthPixels below ...
     auto& eventsQ = m_pEventsDeathKill->getEvents();
     size_t i = eventsQ.rbegin_index();
     for (size_t n = 0; n < eventsQ.size(); n++)
     {
-        const auto& elem = eventsQ.underlying_array()[i];
-        drawTextHighlighted(
-            getDearImGui2DposXforRightAdjustedText(elem.m_event.m_str, fRightPosXlimit),
-            ImGui::GetCursorPos().y,
-            elem.m_event.m_str);
+        // TODO: 'elem' cannot be const due to one-time update of m_fTextWidthPixels below ...
+        auto& elem = eventsQ.underlying_array()[i];
+        if (elem.m_event.m_sKiller.empty())
+        {
+            // TODO: one-time m_fTextWidthPixels update should be in ctor of DeathKillEvent but when it is invoked the current font is different!
+            if (elem.m_event.m_fTextWidthPixels == 0.f)
+            {
+                elem.m_event.m_fTextWidthPixels = ImGui::CalcTextSize((elem.m_event.m_sKilled + elem.m_event.m_sAuxText).c_str()).x;
+            }
+
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrKilled
+            );
+            
+            drawTextHighlighted(
+                fRightPosXlimit - elem.m_event.m_fTextWidthPixels,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sKilled);
+
+            ImGui::SameLine(0.f, 0.f);
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sAuxText);
+            
+            ImGui::PopStyleColor();
+        }
+        else
+        {
+            // TODO: one-time m_fTextWidthPixels update should be in ctor of DeathKillEvent but when it is invoked the current font is different!
+            if (elem.m_event.m_fTextWidthPixels == 0.f)
+            {
+                elem.m_event.m_fTextWidthPixels = ImGui::CalcTextSize((elem.m_event.m_sKiller + elem.m_event.m_sAuxText + elem.m_event.m_sKilled).c_str()).x;
+            }
+
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrKiller
+            );
+            
+            drawTextHighlighted(
+                fRightPosXlimit - elem.m_event.m_fTextWidthPixels,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sKiller);
+
+            ImGui::SameLine(0.f, 0.f);
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sAuxText);
+
+            ImGui::PopStyleColor();
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrKilled
+            );
+
+            ImGui::SameLine(0.f, 0.f);
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sKilled);
+            
+            ImGui::PopStyleColor();
+        }
 
         i = eventsQ.prev_index(i);
     }
@@ -3489,11 +3553,27 @@ float proofps_dd::GUI::getDearImGui2DposYFromPure2DposY(const float& fPureY)
     return ImGui::GetWindowSize().y * 0.5f - fPureY;
 }
 
+/**
+* Returns a Dear ImGui X-coordinate where the cursor should be placed for printing the given text to make it appear centered.
+* 
+* @param text    The text to be centered.
+* @param fImGuiX Dear ImGui X-coordinate where the center of the text should be.
+* 
+* @return Dear ImGui X-coordinate of the left edge of the text, where the Dear ImGui cursor should be placed before printing the text, to make it appear centered.
+*/
 float proofps_dd::GUI::getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX)
 {
     return fImGuiX - ImGui::CalcTextSize(text.c_str()).x * 0.5f;
 }
 
+/**
+* Returns a Dear ImGui X-coordinate where the cursor should be placed for printing the given text to make it appear right-adjusted.
+*
+* @param text    The text to be right-adjusted.
+* @param fImGuiX Dear ImGui X-coordinate where the center of the text should be.
+*
+* @return Dear ImGui X-coordinate of the left edge of the text, where the Dear ImGui cursor should be placed before printing the text, to make it appear right-adjusted.
+*/
 float proofps_dd::GUI::getDearImGui2DposXforRightAdjustedText(const std::string& text, const float& fImGuiX)
 {
     return fImGuiX - ImGui::CalcTextSize(text.c_str()).x;

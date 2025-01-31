@@ -28,6 +28,10 @@ namespace proofps_dd
             m_str{}
         {}
 
+        Event(const char* sztr) :
+            m_str{ sztr }
+        {}
+
         Event(const std::string& str) :
             m_str{ str }
         {}
@@ -35,9 +39,6 @@ namespace proofps_dd
         Event(std::string&& str) :
             m_str(std::move(str))
         {}
-
-        // TODO: why is this here, DrawableEvent should introduce it!
-        virtual void draw() {};
     };
 
     // TODO: this should also go to Drawable stuff
@@ -50,6 +51,9 @@ namespace proofps_dd
     /**
     * A specified maximum number of events stored in FIFO container for a limited amount of time.
     * Typical event use cases: who killed who, items picked up by player, etc.
+    * 
+    * The TEvent template argument enables higher flexibility: some specialized event listers might
+    * require a more complex event object. For an example, see DeathKillEventLister.
     */
     template <class TEvent = Event>
     class EventLister
@@ -68,14 +72,14 @@ namespace proofps_dd
 
             TimeEventPair(
                 const std::chrono::time_point<std::chrono::steady_clock>& ts,
-                const std::string& str) :
+                const TEvent& str) :
                 m_timestamp(ts),
                 m_event(str)
             {}
 
             TimeEventPair(
                 std::chrono::time_point<std::chrono::steady_clock>&& ts,
-                std::string&& str) :
+                TEvent&& str) :
                 m_timestamp(std::move(ts)),
                 m_event(std::move(str))
             {}
@@ -86,9 +90,6 @@ namespace proofps_dd
             TimeEventPair& operator=(const TimeEventPair&) = default;
             TimeEventPair(TimeEventPair&&) = default;
             TimeEventPair& operator=(TimeEventPair&&) = default;
-
-            // TODO: why is this here, DrawableTimeEventPair should introduce it!
-            virtual void draw() {};
         };
 
         static const char* getLoggerModuleName()
@@ -109,7 +110,6 @@ namespace proofps_dd
             const Orientation& eOrientation = Orientation::Vertical) :
             m_qEvents(nEventCountLimit),
             m_nEventTimeLimitSecs(nEventTimeLimitSecs),
-            //m_nEventCountLimit(nEventCountLimit),
             m_eOrientation(eOrientation)
         {}
 
@@ -159,18 +159,21 @@ namespace proofps_dd
             }
         }
 
-        // TODO: why is this here, DrawableEventLister should introduce it!
-        virtual void draw() {};
-
-        void addEvent(std::string&& sEvent)
+        void addEvent(TEvent&& evt)
         {
             m_qEvents.push_back_forced(
-                { std::move(std::chrono::steady_clock::now()), std::move(sEvent) });
+                { std::move(std::chrono::steady_clock::now()), std::move(evt) });
         }
 
         void clear()
         {
             m_qEvents.clear();
+        }
+
+        // TODO: why we need this non-const version? Only 1 reason: see it in GUI::updateDeathKillEvents() !
+        pfl::FixFIFO<TimeEventPair>& getEvents()                                                           
+        {
+            return m_qEvents;
         }
 
         const pfl::FixFIFO<TimeEventPair>& getEvents() const
@@ -188,10 +191,8 @@ namespace proofps_dd
     private:
 
         bool m_bVisible = false;
-        //std::deque<TimeEventPair> m_qEvents;
         pfl::FixFIFO<TimeEventPair> m_qEvents;
         unsigned int m_nEventTimeLimitSecs;
-        //size_t m_nEventCountLimit;
         Orientation m_eOrientation;
 
         // ---------------------------------------------------------------------------

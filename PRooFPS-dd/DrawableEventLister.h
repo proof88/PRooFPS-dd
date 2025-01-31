@@ -11,6 +11,10 @@
 
 #include "EventLister.h"
 
+// ATTENTION!
+// BEFORE CONSIDERING DELETING THIS INTERMEDIATE CLASS, THINK ABOUT UNIT TESTS THAT MIGHT
+// BE MUCH HARDER IF draw() APPEARS IN EventLister CLASS WITH IMGUI IMPLEMENTATION!
+
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
 #include "imgui.h"  // ImVec4
@@ -32,7 +36,7 @@ namespace proofps_dd
             Event(str)
         {}
 
-        virtual void draw() override
+        virtual void draw()
         {
             // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
         };
@@ -49,7 +53,7 @@ namespace proofps_dd
 
         struct DrawableTimeEventPair : public TimeEventPair
         {
-            virtual void draw() override
+            virtual void draw()
             {
                 // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
             };
@@ -64,7 +68,7 @@ namespace proofps_dd
 
         }
 
-        virtual void draw() override
+        virtual void draw()
         {
             // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
         }

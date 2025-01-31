@@ -86,17 +86,23 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
         // server displays death notification on gui here, client displays in handleDeathNotificationFromServer() as we send the pkt out below
         assert(m_gui.getDeathKillEvents());
         std::string sKillerName;
+        unsigned int iKillerTeamId = 0;
         const Player* pPlayerKiller = nullptr;
         if (nKillerConnHandleServerSide != player.getServerSideConnectionHandle())
         {
             const auto itPlayerKiller = m_mapPlayers.find(nKillerConnHandleServerSide);
             if (m_mapPlayers.end() != itPlayerKiller)
             {
-                sKillerName = itPlayerKiller->second.getName();
                 pPlayerKiller = &(itPlayerKiller->second);
+                sKillerName = pPlayerKiller->getName();
+                iKillerTeamId = pPlayerKiller->getTeamId();
             }
         }
-        m_gui.getDeathKillEvents()->addDeathKillEvent(sKillerName, player.getName());
+        m_gui.getDeathKillEvents()->addDeathKillEvent(
+            sKillerName,
+            GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor( iKillerTeamId ) ),
+            player.getName(),
+            GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor( player.getTeamId() ) ));
 
         pge_network::PgePacket pktDeathNotificationFromServer;
         proofps_dd::MsgDeathNotificationFromServer::initPkt(
@@ -996,6 +1002,7 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     }
 
     std::string sKillerName;
+    unsigned int iKillerTeamId = 0;
     const auto itPlayerKiller = m_mapPlayers.find(msg.m_nKillerConnHandleServerSide);
     if (m_mapPlayers.end() == itPlayerKiller)
     {
@@ -1009,6 +1016,7 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
         if (msg.m_nKillerConnHandleServerSide != nDeadConnHandleServerSide)
         {
             sKillerName = itPlayerKiller->second.getName();
+            iKillerTeamId = itPlayerKiller->second.getTeamId();
         }
     }
 
@@ -1021,7 +1029,11 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
 
     // Server does death notification on GUI in HandlePlayerDied(), clients do here.
     assert(m_gui.getDeathKillEvents());
-    m_gui.getDeathKillEvents()->addDeathKillEvent(sKillerName, itPlayerDied->second.getName());
+    m_gui.getDeathKillEvents()->addDeathKillEvent(
+        sKillerName,
+        GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iKillerTeamId)),
+        itPlayerDied->second.getName(),
+        GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(itPlayerDied->second.getTeamId())));
 
     return true;
 }
