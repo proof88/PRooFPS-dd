@@ -2020,8 +2020,9 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             const char* const szTeam1BtnCaption =
                 (currentPlayer.getTeamId() == 1u) ?
                 "KEEP TEAM 1" : "JOIN TEAM 1";
-            // in case of buttons, remove size argument (ImVec2) to auto-resize
-            if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)))
+            // In case of buttons, remove size argument (ImVec2) to auto-resize.
+            if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
+                ImGui::IsKeyPressed(ImGuiKey_1))
             {
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 1u);
                 bSendPkt = true;
@@ -2033,7 +2034,8 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             const char* const szTeam2BtnCaption =
                 (currentPlayer.getTeamId() == 2u) ?
                 "KEEP TEAM 2" : "JOIN TEAM 2";
-            if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)))
+            if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
+                ImGui::IsKeyPressed(ImGuiKey_2))
             {
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 2u);
                 bSendPkt = true;

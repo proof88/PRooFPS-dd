@@ -71,7 +71,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     getConsole().OLn("Tests Built in %s mode, on %s @ %s.", szBuildType, __DATE__, __TIME__);
     getConsole().OLn("");
 
-    // this cfgProfiles instance is needed to kept in memory during all unit tests below, because
+    // this cfgProfiles instance is needed to be kept in memory during all unit tests below, because
     // some unit tests use the graphics engine, which is constructed only when the first relevant unit test
     // initializes it, and no construction happens in later relevant unit tests by calling createAndGet(), since
     // the engine instance is static ... so the engine instance will want to use the same cfgProfiles instance
