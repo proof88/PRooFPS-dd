@@ -91,6 +91,11 @@ namespace proofps_dd
         /**
         * Similar to singleton design pattern, there is always maximum one instance.
         * However, if there is an already existing instance, it automatically gets destroyed before the new one is created.
+        * This make sure we always get a fresh object built up from scratch, and we can forget about the previous one.
+        * This is exactly the mechanism we need for GameMode, from the application's perspective.
+        * 
+        * @return Raw pointer to the created GameMode instance.
+        *         Shall not be stored by anyone but always queried using getGameMode().
         */
         static GameMode* createGameMode(GameModeType gm);
 
@@ -329,7 +334,18 @@ namespace proofps_dd
     {
     public:
 
-        DeathMatchMode();
+        /**
+        * Used by GameMode::createGameMode(), this way we don't need to be friend with GameMode.
+        * The previous GameMode instance is destroyed automatically.
+        * See GameMode::createGameMode() for more details.
+        * 
+        * @return Raw pointer to the created DeathMatchMode instance.
+        *         Shall not be stored by anyone but always queried using GameMode::getGameMode().
+        */
+        static std::unique_ptr<DeathMatchMode> createGameMode();
+
+        // ---------------------------------------------------------------------------
+
         virtual ~DeathMatchMode();
 
         DeathMatchMode(const DeathMatchMode&) = delete;
@@ -373,6 +389,8 @@ namespace proofps_dd
     protected:
         unsigned int m_nFragLimit{};
 
+        DeathMatchMode();
+
     private:
 
         static int comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths);
@@ -396,7 +414,18 @@ namespace proofps_dd
 
         static const PureColor& getTeamColor(unsigned int iTeamId);
 
-        TeamDeathMatchMode();
+        /**
+        * Used by GameMode::createGameMode(), this way we don't need to be friend with GameMode.
+        * The previous GameMode instance is destroyed automatically.
+        * See GameMode::createGameMode() for more details.
+        * 
+        * @return Raw pointer to the created TeamDeathMatchMode instance.
+        *         Shall not be stored by anyone but always queried using GameMode::getGameMode().
+        */
+        static std::unique_ptr<TeamDeathMatchMode> createGameMode();
+
+        // ---------------------------------------------------------------------------
+
         virtual ~TeamDeathMatchMode();
 
         TeamDeathMatchMode(const TeamDeathMatchMode&) = delete;
@@ -443,6 +472,8 @@ namespace proofps_dd
         unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
 
     protected:
+
+        TeamDeathMatchMode();
 
     private:
 

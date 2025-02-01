@@ -61,10 +61,11 @@ proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeT
     switch (gm)
     {
     case proofps_dd::GameModeType::DeathMatch:
-        m_gamemode = std::make_unique<proofps_dd::DeathMatchMode>();
+        // here std::move() is not needed to compile, but just to make it clear: unique_ptr is moved here, obviously, since it cannot be copied :)
+        m_gamemode = std::move(proofps_dd::DeathMatchMode::createGameMode());
         break;
     case proofps_dd::GameModeType::TeamDeathMatch:
-        m_gamemode = std::make_unique<proofps_dd::TeamDeathMatchMode>();
+        m_gamemode = std::move(proofps_dd::TeamDeathMatchMode::createGameMode());
         break;
     default:
         m_gamemode = nullptr;
@@ -415,9 +416,10 @@ std::unique_ptr<proofps_dd::GameMode> proofps_dd::GameMode::m_gamemode{};
 // ############################### PUBLIC ################################
 
 
-proofps_dd::DeathMatchMode::DeathMatchMode() :
-    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
+std::unique_ptr<proofps_dd::DeathMatchMode> proofps_dd::DeathMatchMode::createGameMode()
 {
+    // instead of std::make_unique, because that cannot access protected DeathMatchMode() ctor
+    return std::unique_ptr<proofps_dd::DeathMatchMode>(new proofps_dd::DeathMatchMode());
 }
 
 proofps_dd::DeathMatchMode::~DeathMatchMode()
@@ -613,6 +615,12 @@ int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1d
 // ############################## PROTECTED ##############################
 
 
+proofps_dd::DeathMatchMode::DeathMatchMode() :
+    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
+{
+}
+
+
 // ############################### PRIVATE ###############################
 
 
@@ -640,9 +648,10 @@ const PureColor& proofps_dd::TeamDeathMatchMode::getTeamColor(unsigned int iTeam
     return vecTeamColors[iTeamId];
 }
 
-proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
+std::unique_ptr<proofps_dd::TeamDeathMatchMode> proofps_dd::TeamDeathMatchMode::createGameMode()
 {
-    m_gameModeType = proofps_dd::GameModeType::TeamDeathMatch;
+    // instead of std::make_unique, because that cannot access protected TeamDeathMatchMode() ctor
+    return std::unique_ptr<proofps_dd::TeamDeathMatchMode>(new proofps_dd::TeamDeathMatchMode());
 }
 
 proofps_dd::TeamDeathMatchMode::~TeamDeathMatchMode()
@@ -734,6 +743,12 @@ unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iT
 
 
 // ############################## PROTECTED ##############################
+
+
+proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
+{
+    m_gameModeType = proofps_dd::GameModeType::TeamDeathMatch;
+}
 
 
 // ############################### PRIVATE ###############################
