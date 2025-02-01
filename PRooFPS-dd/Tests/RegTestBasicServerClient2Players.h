@@ -43,14 +43,17 @@ public:
     RegTestBasicServerClient2Players(
         const unsigned int& nTickrate,
         const unsigned int& nClUpdateRate,
-        const unsigned int& nPhysicsRateMin) :
+        const unsigned int& nPhysicsRateMin,
+        const proofps_dd::GameModeType& eGameModeType) :
         UnitTest(std::string(__FILE__) +
             " tickrate: " + std::to_string(nTickrate) +
             ", cl_updaterate: " + std::to_string(nClUpdateRate) +
-            ", physics_rate_min: " + std::to_string(nPhysicsRateMin)),
+            ", physics_rate_min: " + std::to_string(nPhysicsRateMin) + 
+            ", gamemodetype: " + std::string(proofps_dd::GameMode::getGameModeTypeName(eGameModeType))),
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
+        m_eGameModeType(eGameModeType),
         hServerMainGameWindow(NULL),
         hClientMainGameWindow(NULL),
         cfgWpnPistol(false, false),
@@ -165,6 +168,12 @@ protected:
             input_sim_test::bringWindowToFront(hServerMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+            if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+            {
+                // server player selects team 1
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('1'), 100); // jump over the hole
+            }
+
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -184,6 +193,13 @@ protected:
         {
             input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+            {
+                // server player selects team 2
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100); // jump over the hole
+            }
+
             input_sim_test::keybdPressNoRelease(VK_LEFT);
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -307,6 +323,8 @@ private:
         PktStatRange nInjectPktPerSecond;
     };
 
+    int nTeamTotalFrags1 = 0;
+    int nTeamTotalFrags2 = 0;
     std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
     struct EvaluateWpn
@@ -325,6 +343,7 @@ private:
     const unsigned int m_nTickRate;
     const unsigned int m_nClUpdateRate;
     const unsigned int m_nPhysicsRateMin;
+    const proofps_dd::GameModeType m_eGameModeType;
     PROCESS_INFORMATION procInfoServer;
     PROCESS_INFORMATION procInfoClient;
     HWND hServerMainGameWindow;
@@ -460,7 +479,17 @@ private:
         // read frag table
         {
             // note that at this point, most probably "Frag" word is already eaten by a previous while loop but we are still in good line
-            f.getline(szLine, nBuffSize);  // [Frag ]Table: Player Name, Frags, Deaths
+            f.getline(szLine, nBuffSize);  // [Frag ]Table: for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]
+
+            // If this is team-based game, then Team Total Frags first:
+            if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+            {
+                f >> nTeamTotalFrags1;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> nTeamTotalFrags2;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+            }
+
             while (!f.eof())
             {
                 proofps_dd::PlayersTableRow ftRow;
@@ -472,6 +501,8 @@ private:
                     break;
                 }
 
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_iTeamId;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 f >> ftRow.m_nFrags;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
@@ -582,8 +613,20 @@ private:
             return bRet;
         }
 
+        if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+        {
+            bRet &= assertEquals(0, nTeamTotalFrags1, "team 1 frags") &
+                assertEquals(1, nTeamTotalFrags2, "team 2 frags");
+        }
+
+        const unsigned int iTeamPlayer1Expected =
+            proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType) ? 1 : 0;
+        const unsigned int iTeamPlayer2Expected =
+            proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType) ? 2 : 0;
+
         // client is Player 2
         bRet &= assertEquals("Player2", evaluateFragTable[0].m_sName, "fragtable row 1 name") &
+            assertEquals(iTeamPlayer2Expected, evaluateFragTable[0].m_iTeamId, "fragtable row 1 team") &
             assertEquals(1, evaluateFragTable[0].m_nFrags, "fragtable row 1 frags") &
             assertEquals(0, evaluateFragTable[0].m_nDeaths, "fragtable row 1 deaths") &
             assertEquals(0u, evaluateFragTable[0].m_nSuicides, "fragtable row 1 suicides") &
@@ -592,6 +635,7 @@ private:
 
         // server is Player 1
         bRet &= assertEquals("Player1", evaluateFragTable[1].m_sName, "fragtable row 2 name") &
+            assertEquals(iTeamPlayer1Expected, evaluateFragTable[1].m_iTeamId, "fragtable row 2 team") &
             assertEquals(0, evaluateFragTable[1].m_nFrags, "fragtable row 2 frags") &
             assertEquals(1, evaluateFragTable[1].m_nDeaths, "fragtable row 2 deaths") &
             assertEquals(0u, evaluateFragTable[1].m_nSuicides, "fragtable row 2 suicides") &
@@ -743,7 +787,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=Player1" +
-                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)) +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType)) +
                 " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) + 
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty + 
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");
@@ -757,7 +801,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=Player2" +
-                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)) +
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType)) +
                 " --" + proofps_dd::Player::szCVarSvDmRespawnDelaySecs + "=" + std::to_string(m_nSvDmPlayerRespawnDelaySecs) +
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeapon + "=" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpNewWeaponBehaviorValueAutoSwitchIfEmpty +
                 " --" + proofps_dd::szCvarClWpnAutoSwitchWhenPickedUpAnyAmmoEmptyMag + "=false");

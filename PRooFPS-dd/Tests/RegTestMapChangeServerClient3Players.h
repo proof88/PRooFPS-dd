@@ -36,17 +36,20 @@ public:
         const unsigned int& nTickrate,
         const unsigned int& nClUpdateRate,
         const unsigned int& nPhysicsRateMin,
+        const proofps_dd::GameModeType& eGameModeType,
         const unsigned int& nTestIterations,
         const bool& bAreWeTestingReleaseBuild,
         const unsigned int& nClients) :
         UnitTest(std::string(__FILE__) +
             " TiR: " + std::to_string(nTickrate) +
             ", UpR: " + std::to_string(nClUpdateRate) +
-            ", PhR: " + std::to_string(nPhysicsRateMin) + 
+            ", PhR: " + std::to_string(nPhysicsRateMin) +
+            ", gamemodetype: " + std::string(proofps_dd::GameMode::getGameModeTypeName(eGameModeType)) +
             ", iterations: " + std::to_string(nTestIterations)),
         m_nTickRate(nTickrate),
         m_nClUpdateRate(nClUpdateRate),
         m_nPhysicsRateMin(nPhysicsRateMin),
+        m_eGameModeType(eGameModeType),
         m_nTestIterations(nTestIterations),
         m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 8 : 11),
         m_nClients(nClients),
@@ -173,7 +176,7 @@ protected:
                 input_sim_test::bringWindowToFront(hServerMainGameWindow);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('.'), 100);
             }
 
             // wait for all instances change the map
@@ -209,11 +212,14 @@ protected:
 
 private:
 
+    int nTeamTotalFrags1 = 0;
+    int nTeamTotalFrags2 = 0;
     std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
     const unsigned int m_nTickRate;
     const unsigned int m_nClUpdateRate;
     const unsigned int m_nPhysicsRateMin;
+    const proofps_dd::GameModeType m_eGameModeType;
     const unsigned int m_nTestIterations;
     const unsigned int m_nSecondsWaitForInstancesToChangeMap;
     const unsigned int m_nClients;
@@ -246,6 +252,7 @@ private:
         const std::streamsize nBuffSize = 1024;
         char szLine[nBuffSize];
         unsigned int nErasedNameCounter = 0;
+        bool bFoundAssignedPlayer = false; // team
         bool bRet = true;
         // read frag table
         {
@@ -258,6 +265,15 @@ private:
                 {
                     break;
                 }
+            }
+
+            // If this is team-based game, then Team Total Frags first:
+            if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+            {
+                f >> nTeamTotalFrags1;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> nTeamTotalFrags2;
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
             }
             
             while (!f.eof())
@@ -284,6 +300,14 @@ private:
                 }
 
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
+                f >> ftRow.m_iTeamId;
+
+                if (ftRow.m_iTeamId != 0u)
+                {
+                    bFoundAssignedPlayer = true;
+                }
+
+                f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 f >> ftRow.m_nFrags;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
                 f >> ftRow.m_nDeaths;
@@ -302,7 +326,8 @@ private:
 
         bRet &= assertTrue(bRet, "an instance had an unexpected name in its frag table!") &
             assertEquals(m_nPlayerCounter, nErasedNameCounter, "Number of erased names vs number of generated names") &
-            assertTrue(setOfExpectedPlayerNames.empty(), "set is still not empty!");
+            assertTrue(setOfExpectedPlayerNames.empty(), "set is still not empty!") &
+            assertFalse(bFoundAssignedPlayer, "a player had assigned team!");
 
         // delete dump file only if test is successful, otherwise leave it in the filesystem for further debugging!
         // but last iteration dump files are never deleted because we might want to have a look at them anyway!
@@ -352,7 +377,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
-                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch))
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType))
             );
         }
         else
@@ -363,7 +388,7 @@ private:
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
-                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(proofps_dd::GameModeType::DeathMatch)))
+                " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType)))
             );
             m_vecHClientMainGameWindow.push_back(static_cast<HWND>(0)); // we set this later below
         }

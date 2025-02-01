@@ -1254,17 +1254,27 @@ void proofps_dd::InputHandling::regTestDumpToFile(
     // add an extra empty line, so the regression test can easily detect end of AppMsgId count list
     fRegTestDump << std::endl;
 
-    proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(&gameMode);
-    if (!pDeathMatchMode)
+    if (gameMode.isTeamBasedGame())
     {
-        getConsole().EOLnOO("ERROR: pDeathMatchMode null!");
-        return;
+        fRegTestDump << "Frag Table: Team Total Frags, then for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]" << std::endl;
+        const proofps_dd::TeamDeathMatchMode* const pTeamDeathMatchMode = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(&gameMode);
+        if (!pTeamDeathMatchMode)
+        {
+            getConsole().EOLnOO("ERROR: pTeamDeathMatchMode null!");
+            return;
+        }
+        fRegTestDump << pTeamDeathMatchMode->getTeamFrags(1) << std::endl;
+        fRegTestDump << pTeamDeathMatchMode->getTeamFrags(2) << std::endl;
     }
-
-    fRegTestDump << "Frag Table: Player Name, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired" << std::endl;
-    for (const auto& fragTableRow : pDeathMatchMode->getPlayersTable())
+    else
+    {
+        fRegTestDump << "Frag Table: for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]" << std::endl;
+    }
+    
+    for (const auto& fragTableRow : gameMode.getPlayersTable())
     {
         fRegTestDump << "  " << fragTableRow.m_sName << std::endl;
+        fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_iTeamId << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nFrags << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nDeaths << std::endl;
         fRegTestDump << "  " << std::right << std::setw(fragTableRow.m_sName.length()) << fragTableRow.m_nSuicides << std::endl;

@@ -79,6 +79,19 @@ proofps_dd::GameMode* proofps_dd::GameMode::getGameMode()
     return m_gamemode.get();
 }
 
+bool proofps_dd::GameMode::isTeamBasedGame(GameModeType gm)
+{
+    switch (gm)
+    {
+    case proofps_dd::GameModeType::TeamDeathMatch:
+        [[fallthrough]];
+    case proofps_dd::GameModeType::TeamRoundGame:
+        return true;
+    default:
+        return false;
+    }
+}
+
 const char* proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType gm)
 {
     switch (gm)

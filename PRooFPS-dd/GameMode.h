@@ -105,6 +105,8 @@ namespace proofps_dd
         */
         static GameMode* getGameMode();
 
+        static bool isTeamBasedGame(GameModeType gm);
+
         static const char* getGameModeTypeName(GameModeType gm);
 
         static GameModeType getGameModeTypeFromConfig(PGEcfgProfiles& cfgProfiles);
