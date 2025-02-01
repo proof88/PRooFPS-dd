@@ -2015,6 +2015,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
 
             bool bSendPkt = false;
 
+            ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(1) ));
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
             const char* const szTeam1BtnCaption =
                 (currentPlayer.getTeamId() == 1u) ?
@@ -2025,7 +2026,9 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 1u);
                 bSendPkt = true;
             }
+            ImGui::PopStyleColor();
 
+            ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(2)));
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
             const char* const szTeam2BtnCaption =
                 (currentPlayer.getTeamId() == 2u) ?
@@ -2035,6 +2038,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
                 proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 2u);
                 bSendPkt = true;
             }
+            ImGui::PopStyleColor();
 
             bool bCloseThisPopup = false;
             if (bSendPkt)
