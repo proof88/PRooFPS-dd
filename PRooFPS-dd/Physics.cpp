@@ -370,7 +370,7 @@ void proofps_dd::Physics::serverGravity(
             // Because that would be also sent to clients so they can also play the sound. Maybe set death reason, I dont know.
             --player.getFrags(); // suicide
             ++player.getSuicides();
-            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
+            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
 
             //if (player.isFalling())
             //{
@@ -451,8 +451,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
                     fBlockSizeYhalf,
-                    xhair,
-                    gameMode);
+                    xhair);
 
                 if (bCollided)
                 {
@@ -484,8 +483,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
                     fBlockSizeYhalf,
-                    xhair,
-                    gameMode);
+                    xhair);
             } // end for i
 
             if (!bCollided && player.isFalling() && (std::as_const(player).getHealth() > 0))
@@ -774,8 +772,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     const float& fPlayerPos1YPlusHalf,
     const float& fBlockSizeXhalf,
     const float& fBlockSizeYhalf,
-    XHair& xhair,
-    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */
+    XHair& xhair
     )
 {
     assert(obj);
@@ -823,7 +820,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
                 if (std::as_const(player).getHealth() == 0)
                 {
                     // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle(), gameMode);
+                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
                 }
             }
 

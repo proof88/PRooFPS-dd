@@ -101,8 +101,7 @@ namespace proofps_dd
             const float& fPlayerPos1YPlusHalf,
             const float& fBlockSizeXhalf,
             const float& fBlockSizeYhalf,
-            XHair& xhair,
-            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */);
+            XHair& xhair);
 
     private:
 

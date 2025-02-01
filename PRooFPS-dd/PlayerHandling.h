@@ -64,14 +64,16 @@ namespace proofps_dd
         void handlePlayerDied(
             Player& player,
             XHair& xhair,
-            const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide,
-            proofps_dd::GameMode& gameMode);
+            const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide);
         void handlePlayerRespawned(Player& player, XHair& xhair);
         void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);
         void serverUpdateRespawnTimers(
             const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode,
             proofps_dd::Durations& durations);
+        void handlePlayerTeamIdChanged(
+            Player& player,
+            const unsigned int& iTeamId);
         void updatePlayersOldValues();
         void writePlayerList();
         bool handleUserConnected(

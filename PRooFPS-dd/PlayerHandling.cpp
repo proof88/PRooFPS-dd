@@ -58,8 +58,7 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     XHair& xhair,
-    const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide,
-    proofps_dd::GameMode& /*gameMode*/)
+    const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide)
 {
     // here design is good because server and client share the same code
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
@@ -198,6 +197,18 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
 
     durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 } // serverUpdateRespawnTimers()
+
+void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(Player& player, const unsigned int& iTeamId)
+{
+    // both server and client comes here
+
+    assert(m_gui.getXHair());
+    if (m_pge.getNetwork().isServer() && (player.getTeamId() != 0u /* i.e. not the 1st team selection right after connecting to server */))
+    {
+        handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
+    }
+    player.handleTeamIdChanged(iTeamId);
+}
 
 void proofps_dd::PlayerHandling::updatePlayersOldValues()
 {
@@ -947,7 +958,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // only clients fall here, since server already set oldhealth to 0 at the beginning of this frame
             // because it had already set health to 0 in previous frame
             //getConsole().OLn("PlayerHandling::%s(): player %s has died!", __func__, player.getName().c_str());
-            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle() /* ignored by client anyway */, gameMode);
+            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle() /* ignored by client anyway */);
 
             // TODO: until v0.2.0.0 this was the only location where client could figure out if any player died, however
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
@@ -1088,7 +1099,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
         player.handleJumppadActivated();
         break;
     case PlayerEventId::TeamIdChanged:
-        player.handleTeamIdChanged(static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue));
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
@@ -1117,7 +1128,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(pge_network::PgeN
     switch (msg.m_iInGameMenu)
     {
     case static_cast<int>(GUI::InGameMenuState::TeamSelect):
-        player.handleTeamIdChanged(static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue));
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
