@@ -307,14 +307,31 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
     return m_timeCtor;
 }
 
+/**
+* @return The timestamp when this player has been marked as "booted up".
+*         See setTimeBootedUp() doc for more details.
+*/
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeBootedUp() const
 {
     return m_timeBootedUp;
 }
 
+/**
+* Based on PRooFPS v0.5 network protocol, this is set when MsgUserNameChangeAndBootupDone is processed.
+* This is processed by all network instances on their side, therefore expected to be valid in every network instance for every player.
+*/
 void proofps_dd::Player::setTimeBootedUp()
 {
     m_timeBootedUp = std::chrono::steady_clock::now();
+}
+
+/**
+* @return True if there is a valid timestamp set for bootup for this player, false otherwise.
+*         See setTimeBootedUp() doc for more details.
+*/
+bool proofps_dd::Player::hasBootedUp() const
+{
+    return m_timeBootedUp.time_since_epoch().count() != 0;
 }
 
 bool proofps_dd::Player::isExpectingAfterBootUpDelayedUpdate() const

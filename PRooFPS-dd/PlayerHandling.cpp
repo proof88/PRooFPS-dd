@@ -55,6 +55,17 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
 // ############################## PROTECTED ##############################
 
 
+bool proofps_dd::PlayerHandling::hasPlayerBootedUp(const pge_network::PgeNetworkConnectionHandle& connHandle) const
+{
+    const auto myPlayerIt = m_mapPlayers.find(connHandle);
+    if (m_mapPlayers.end() == myPlayerIt)
+    {
+        return false;
+    }
+
+    return myPlayerIt->second.hasBootedUp() /* means I have already received MY MsgUserNameChangeAndBootupDone */;
+}
+
 void proofps_dd::PlayerHandling::handlePlayerDied(
     Player& player,
     XHair& xhair,
@@ -453,6 +464,15 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
             __func__, playerIt->second.getName().c_str(), connHandleServerSide);
     }
 
+    // display disconnect event only if this is not due to server disconnect, that is displayed with different text anyway;
+    // using hasPlayerBootedUp(getMyServerSideConnectionHandle()) is for same reason as in handleUserNameChange().
+    if ((connHandleServerSide != pge_network::ServerConnHandle) && hasPlayerBootedUp(getMyServerSideConnectionHandle()))
+    {
+        m_gui.getServerEvents()->addDisconnectedEvent(
+            playerIt->second.getName(),
+            GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(playerIt->second.getTeamId()) ));
+    }
+
     gameMode.removePlayer(playerIt->second);
     m_mapPlayers.erase(playerIt);
 
@@ -581,7 +601,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.getClientUpdateRate(),
                 gameMode->getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
-                pDeathMatchMode->getTimeLimitSecs(),
+                gameMode->getTimeLimitSecs(),
                 config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds());
@@ -599,6 +619,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         else
         {
             // this is the moment when client player has fully booted up
+            m_gui.getServerEvents()->addConnectedEvent(playerIt->second.getName());
         }
 
         playerIt->second.setTimeBootedUp();
@@ -660,6 +681,21 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             //m_gui.textPermanent("Client, User name: " + playerIt->second.getName() + "; IP: " + playerIt->second.getIpAddress() +
             //    (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
             //    10, 30);
+        }
+        else
+        {
+            // To avoid flooding of events about other players when we have just recently connected to server, let's suppress these events.
+            // Due to the scheduling of player bringup messages (i.e. server sends out MsgUserSetupFromServer and MsgUserNameChangeAndBootupDone messages about other
+            // players to me right after I'm establishing connection to the server, but for MY relevant MsgUserNameChangeAndBootupDone to receive from server, first
+            // I need to process MY MsgUserSetupFromServer, for which I send MsgUserNameChangeAndBootupDone to the server, and server replies the same), I as new client
+            // will receive MY relevant MsgUserNameChangeAndBootupDone from the server AFTER the other MsgUserNameChangeAndBootupDone messages about the other clients.
+            // Therefore, my Player::getTimeBootedUp() will still not be set when I receive MsgUserNameChangeAndBootupDone messages about the other clients.
+            // We can utilize this info to suppress messages received from server about the other players when I have just connected to the server.
+
+            if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
+            {
+                m_gui.getServerEvents()->addConnectedEvent(playerIt->second.getName());
+            }
         }
     }
 

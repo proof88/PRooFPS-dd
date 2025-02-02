@@ -314,6 +314,7 @@ private:
             assertTrue(player.getName().empty(), "name") &
             assertLess(0, player.getTimeConstructed().time_since_epoch().count(), "time constructed") &
             assertEquals(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up") &
+            assertFalse(player.hasBootedUp(), "has booted up") &
             assertTrue(player.isExpectingAfterBootUpDelayedUpdate(), "expecting after bootup delayed update") &
             assertNotNull(player.getObject3D(), "object3d") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
@@ -412,7 +413,8 @@ private:
 
         bool b = true;
         b &= (assertLess(0, player.getTimeBootedUp().time_since_epoch().count(), "time booted up 1") &
-            assertLess(player.getTimeConstructed().time_since_epoch().count(), player.getTimeBootedUp().time_since_epoch().count(), "time booted up 2"));
+            assertLess(player.getTimeConstructed().time_since_epoch().count(), player.getTimeBootedUp().time_since_epoch().count(), "time booted up 2") &
+            assertTrue(player.hasBootedUp(), "has booted up"));
 
         return b;
     }

@@ -61,6 +61,8 @@ namespace proofps_dd
 
     protected:
 
+        bool hasPlayerBootedUp(const pge_network::PgeNetworkConnectionHandle& connHandle) const;
+
         void handlePlayerDied(
             Player& player,
             XHair& xhair,

@@ -138,6 +138,7 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeConstructed() const;
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeBootedUp() const;
         void setTimeBootedUp();
+        bool hasBootedUp() const;
 
         bool isExpectingAfterBootUpDelayedUpdate() const;
         void setExpectingAfterBootUpDelayedUpdate(bool b);

@@ -23,6 +23,7 @@
 #include "Minimap.h"
 #include "Networking.h"
 #include "Player.h"
+#include "ServerEventLister.h"
 #include "Smoke.h"
 #include "XHair.h"
 
@@ -123,6 +124,7 @@ namespace proofps_dd
         EventLister<>* getPlayerHpChangeEvents();
         EventLister<>* getPlayerApChangeEvents();
         EventLister<>* getPlayerAmmoChangeEvents();
+        ServerEventLister* getServerEvents();
         static void showGameObjectives();
         static void hideGameObjectives();
         static void showAndLoopGameInfoPages();
@@ -173,6 +175,7 @@ namespace proofps_dd
         static EventLister<>* m_pEventsPlayerHpChange;
         static EventLister<>* m_pEventsPlayerApChange;
         static EventLister<>* m_pEventsPlayerAmmoChange;
+        static ServerEventLister* m_pEventsServer;
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
@@ -214,6 +217,7 @@ namespace proofps_dd
         static void updatePlayerHpChangeEvents();
         static void updatePlayerApChangeEvents();
         static void updatePlayerAmmoChangeEvents();
+        static void updateServerEvents();
         
         static void calculatePlayerNameColWidthAndTableWidthPixels(
             float& fTableWidthPixels,

@@ -124,6 +124,7 @@ void proofps_dd::GUI::initialize()
     m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsServer = new ServerEventLister();
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -292,6 +293,12 @@ void proofps_dd::GUI::shutdown()
         delete m_pObjLoadingScreenLogoImg;
         m_pObjLoadingScreenBg = nullptr;
         m_pObjLoadingScreenLogoImg = nullptr;
+    }
+
+    if (m_pEventsServer)
+    {
+        delete m_pEventsServer;
+        m_pEventsServer = nullptr;
     }
 
     if (m_pEventsPlayerAmmoChange)
@@ -490,6 +497,11 @@ proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerAmmoChangeEvents()
     return m_pEventsPlayerAmmoChange;
 }
 
+proofps_dd::ServerEventLister* proofps_dd::GUI::getServerEvents()
+{
+    return m_pEventsServer;
+}
+
 void proofps_dd::GUI::showGameObjectives()
 {
     m_gameInfoPageCurrent = GameInfoPage::FragTable;
@@ -615,6 +627,7 @@ proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerAmmoChange = nullptr;
+proofps_dd::ServerEventLister* proofps_dd::GUI::m_pEventsServer = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
@@ -971,8 +984,6 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
         {
             PGEcfgVariable& cvarSvGamemode = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGamemode];
             ImGui::AlignTextToFramePadding();
-            //static std::string sHintClWpnAutoSwitchWhenPickedUpNewWeapon; // static so it is built up by addHintToItemByCVar() only once
-            //addHintToItemByCVar(sHintClWpnAutoSwitchWhenPickedUpNewWeapon, cvarClWpnAutoSwitchWhenPickedUpNewWeapon);
 
             // dont forget there is also 3-param version of RadioButton
             if (ImGui::RadioButton("Deathmatch (Free for All)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
@@ -2159,6 +2170,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
             updateXHair();
             updateDeathKillEvents();
             updateItemPickupEvents();
+            updateServerEvents();
 
             assert(m_pMinimap);  // initialize() created it before configuring this to be the callback for PURE
             m_pMinimap->draw();
@@ -2603,6 +2615,37 @@ void proofps_dd::GUI::updatePlayerAmmoChangeEvents()
             ImGui::GetCursorPos().y,
             (nAmmoChange >= 0) ? ("+" + elem.m_event.m_str) : (elem.m_event.m_str));
 
+        ImGui::PopStyleColor();
+
+        i = eventsQ.prev_index(i);
+    }
+}
+
+void proofps_dd::GUI::updateServerEvents()
+{
+    assert(m_pEventsServer);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsServer->update();
+
+    // TODO: move this draw logic to ServerEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
+    
+    assert(m_pMinimap);
+    ImGui::SetCursorPosY(std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+
+    auto& eventsQ = m_pEventsServer->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
+    {
+        const auto& elem = eventsQ.underlying_array()[i];
+
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            elem.m_event.m_clrPlayerName
+        );
+        drawTextHighlighted(
+            ImGui::GetCursorPos().x,
+            ImGui::GetCursorPos().y,
+            elem.m_event.m_sPlayerName + elem.m_event.m_sAuxText);
         ImGui::PopStyleColor();
 
         i = eventsQ.prev_index(i);
