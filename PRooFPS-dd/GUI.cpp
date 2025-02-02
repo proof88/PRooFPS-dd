@@ -985,6 +985,26 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
                 GameMode::createGameMode(GameModeType::TeamDeathMatch);
             }
+
+            if (!GameMode::getGameMode()->isTeamBasedGame())
+            {
+                ImGui::BeginDisabled(true);
+            }
+            PGEcfgVariable& cvarSvTdmFriendlyFire = m_pPge->getConfigProfiles().getVars()[TeamDeathMatchMode::szCvarSvTdmFriendlyFire];
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvTdmFriendlyFire; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvTdmFriendlyFire, cvarSvTdmFriendlyFire);
+            ImGui::TextUnformatted("Friendly Fire:");
+            ImGui::SameLine();
+            bool bSvTdmFriendlyFire = cvarSvTdmFriendlyFire.getAsBool();
+            if (ImGui::Checkbox("##cbTdmFriendlyFire", &bSvTdmFriendlyFire))
+            {
+                cvarSvTdmFriendlyFire.Set(bSvTdmFriendlyFire);
+            }
+            if (!GameMode::getGameMode()->isTeamBasedGame())
+            {
+                ImGui::EndDisabled();
+            }
         }
         ImGui::EndGroup();
     }

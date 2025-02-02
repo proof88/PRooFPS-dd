@@ -106,6 +106,8 @@ namespace proofps_dd
         const bool& getCameraTilting() const;
         const bool& getCameraRolling() const;
 
+        const bool& getFriendlyFire() const;
+
         const Smoke::SmokeConfigAmount& getSmokeConfigAmount() const;
 
         const int& getFallDamageMultiplier() const;
@@ -157,6 +159,8 @@ namespace proofps_dd
         bool m_bCamFollowsXHair = true;
         bool m_bCamTilting = true;
         bool m_bCamRolling = true;
+
+        bool m_bFriendlyFire = true;
 
         Smoke::SmokeConfigAmount m_eSmokeAmount = Smoke::SmokeConfigAmount::Normal;
 

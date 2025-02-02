@@ -403,7 +403,7 @@ namespace proofps_dd
 
     /**
     * In Team DeathMatch game mode, players are grouped into teams. Teammates work together to
-    * shoot as many players in the enemy team as they can. The team with most total frags is the winner when
+    * kill as many players in the enemy team as they can. The team with most total frags is the winner when
     * either the frag limit or time limit is reached.
     * Note: it is also valid to not to have either frag limit or time limit set, but in such case the game never ends.
     * 
@@ -413,6 +413,8 @@ namespace proofps_dd
     class TeamDeathMatchMode : public DeathMatchMode
     {
     public:
+
+        static constexpr char* szCvarSvTdmFriendlyFire = "sv_tdm_friendlyfire";
 
         static const PureColor& getTeamColor(unsigned int iTeamId);
 

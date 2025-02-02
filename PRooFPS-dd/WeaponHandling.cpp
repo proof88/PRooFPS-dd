@@ -222,6 +222,11 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 continue;
             }
 
+            if (!canBulletHitPerFriendlyFireConfig(playerConst, itShooter))
+            {
+                continue;
+            }
+
             player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
             //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
 
@@ -265,7 +270,14 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                     }
                     else
                     {
-                        ++itShooter->second.getFrags();
+                        if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
+                        {
+                            --itShooter->second.getFrags();
+                        }
+                        else
+                        {
+                            ++itShooter->second.getFrags();
+                        }
                     }
                     //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                     //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
@@ -756,6 +768,29 @@ void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const Bullet& bullet,
     play3dMeleeWeaponHitSound(bullet.getWeaponId(), bullet.getObject3D().getPosVec(), hitType);
 }
 
+bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
+    const Player& playerHit,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const
+{
+    if (itShooter == m_mapPlayers.end())
+    {
+        // shooter got disconnected in the meantime, in such case we allow depending on game mode and config
+        return !GameMode::getGameMode()->isTeamBasedGame() ||
+            (GameMode::getGameMode()->isTeamBasedGame() && m_config.getFriendlyFire());
+    }
+
+    const Player& playerShooter = itShooter->second;
+
+    return !GameMode::getGameMode()->isTeamBasedGame() ||
+        ((playerHit.getTeamId() != playerShooter.getTeamId()) || m_config.getFriendlyFire());
+}
+
+bool proofps_dd::WeaponHandling::shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(const Player& playerHit, const Player& playerShooter) const
+{
+    return GameMode::getGameMode()->isTeamBasedGame() &&
+        (playerHit.getTeamId() == playerShooter.getTeamId()) && m_config.getFriendlyFire();
+}
+
 void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -831,7 +866,9 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 
                 const auto& playerConst = player;
                 const auto playerScaledSizeVec = player.getObject3D()->getScaledSizeVec();
+                const auto itShooter = m_mapPlayers.find(bullet.getOwner());
                 if ((playerConst.getHealth() > 0) &&
+                    canBulletHitPerFriendlyFireConfig(playerConst, itShooter) &&
                     colliding2_NoZ(
                         player.getPos().getNew().getX(), player.getPos().getNew().getY(),
                         playerScaledSizeVec.getX(), playerScaledSizeVec.getY(),
@@ -845,7 +882,6 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
                         player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
 
-                        const auto itShooter = m_mapPlayers.find(bullet.getOwner());
                         if (itShooter != m_mapPlayers.end())
                         {
                             // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
@@ -877,7 +913,14 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             else
                             {
                                 nKillerConnHandleServerSide = itShooter->first;
-                                itShooter->second.getFrags()++;
+                                if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
+                                {
+                                    --itShooter->second.getFrags();
+                                }
+                                else
+                                {
+                                    ++itShooter->second.getFrags();
+                                }
                                 bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());

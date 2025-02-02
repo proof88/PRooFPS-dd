@@ -329,6 +329,8 @@ void proofps_dd::Config::validate()
     m_bCamTilting = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_TILTING].getAsBool();
     m_bCamRolling = m_pge.getConfigProfiles().getVars()[CVAR_GFX_CAM_ROLLING].getAsBool();
 
+    m_bFriendlyFire = m_pge.getConfigProfiles().getVars()[TeamDeathMatchMode::szCvarSvTdmFriendlyFire].getAsBool();
+
     auto& cvarGfxSmokeAmount = m_pge.getConfigProfiles().getVars()[Smoke::szCVarGfxSmokeAmount];
     if (!cvarGfxSmokeAmount.getAsString().empty())
     {
@@ -448,6 +450,11 @@ const bool& proofps_dd::Config::getCameraTilting() const
 const bool& proofps_dd::Config::getCameraRolling() const
 {
     return m_bCamRolling;
+}
+
+const bool& proofps_dd::Config::getFriendlyFire() const
+{
+    return m_bFriendlyFire;
 }
 
 const proofps_dd::Smoke::SmokeConfigAmount& proofps_dd::Config::getSmokeConfigAmount() const

@@ -127,6 +127,7 @@ namespace proofps_dd
 
     protected:
 
+
         void deleteWeaponHandlingAll(const bool& bDeallocBullets);
 
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
@@ -141,6 +142,12 @@ namespace proofps_dd
             const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
         void play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
         void play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        bool canBulletHitPerFriendlyFireConfig(
+            const Player& playerHit,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;
+        bool shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(
+            const Player& playerHit,
+            const Player& playerShooter) const;
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,
