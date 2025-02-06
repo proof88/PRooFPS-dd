@@ -1095,7 +1095,10 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     return true;
 }
 
-bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgPlayerEventFromServer& msg)
+bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
+    pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+    const proofps_dd::MsgPlayerEventFromServer& msg,
+    PureVector& vecCamShakeForce)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
@@ -1134,7 +1137,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(pge_network::PgeNet
         player.handleFallingFromHigh(msg.m_optData1.m_nValue);
         break;
     case PlayerEventId::Landed:
-        player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue);
+        player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue, vecCamShakeForce, bCurrentClient);
         break;
     case PlayerEventId::ItemTake:
         assert(bCurrentClient);

@@ -377,9 +377,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             if (!pTargetWpn->isAvailable())
             {
                 getConsole().EOLn("InputHandling::%s(): weapon not available: %s!", __func__, itTargetWpn->second.c_str());
-                assert(false);  // in debug mode, must abort because CLIENT should had not sent weapon switch request if they don't have this wpn!
-                return true;    // in release mode, dont terminate the server, just silently ignore!
-                // TODO: I might disconnect this client!
+                return true;    // just silently ignore, maybe it was a message sent from client earlier when that weapon was still available!
             }
 
             if (pTargetWpn != player.getWeaponManager().getCurrentWeapon())

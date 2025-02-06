@@ -2463,14 +2463,15 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        PureVector vecCamShakeForce;
 
         bool b = true;
         // (I cannot check sound now, need stubs for that)
-        playerServer.handleLanded(1.f, false, false);
+        playerServer.handleLanded(1.f, false, false, vecCamShakeForce, true);
         b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         // (I cannot check sound now, need stubs for that)
-        playerClient.handleLanded(1.f, false, false);
+        playerClient.handleLanded(1.f, false, false, vecCamShakeForce, true);
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
         try
         {
@@ -2485,7 +2486,7 @@ private:
         }
 
         // same actions as above, no protective flag is in place that needs to be cleared first
-        playerClient.handleLanded(1.f, false, false);
+        playerClient.handleLanded(1.f, false, false, vecCamShakeForce, true);
         b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
@@ -2516,9 +2517,10 @@ private:
 
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
+        PureVector vecCamShakeForce;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
-        playerClient.handleLanded(1.f, false, false);
+        playerClient.handleLanded(1.f, false, false, vecCamShakeForce, true);
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         return b;

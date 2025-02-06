@@ -528,7 +528,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgPlayerEventFromServer::id:
             bRet = handlePlayerEventFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt),
+                cameraGetShakeForce());
             break;
         case proofps_dd::MsgUserInGameMenuCmd::id:
             bRet = serverHandleUserInGameMenuCmd(
@@ -737,7 +738,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         {
             const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
             serverGravity(*m_gui.getXHair(), m_config.getPhysicsRate(), *GameMode::getGameMode());
-            serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *GameMode::getGameMode());
+            serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *GameMode::getGameMode(), cameraGetShakeForce());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
         serverUpdateBullets(*GameMode::getGameMode(), *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());

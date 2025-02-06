@@ -1694,7 +1694,12 @@ void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only i
     m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 
-void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied)
+void proofps_dd::Player::handleLanded(
+    const float& fFallHeight,
+    bool bDamageTaken,
+    bool bDied,
+    PureVector& vecCamShakeForce,
+    const bool& bMe)
 {
     // both server and client execute this function, so be careful with conditions here 
 
@@ -1722,6 +1727,11 @@ void proofps_dd::Player::handleLanded(const float& fFallHeight, bool bDamageTake
         //    __func__,
         //    playerPos.getX(), playerPos.getY(), playerPos.getZ(),
         //    m_gfx.getCamera().getPosVec().getX(), m_gfx.getCamera().getPosVec().getY(), m_gfx.getCamera().getPosVec().getZ());
+
+        if (bMe)
+        {
+            vecCamShakeForce.SetY(vecCamShakeForce.getY() + 4 * fFallHeight);
+        }
     }
     else
     {
@@ -1901,11 +1911,6 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
     }
     
     getTeamId() = iTeamId;
-
-    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
-    {
-        // TODO: add xy joined team n to a new eventlister!
-    }
 
     if (!m_network.isServer())
     {

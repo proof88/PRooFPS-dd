@@ -108,7 +108,8 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
         bool handlePlayerEventFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const proofps_dd::MsgPlayerEventFromServer& msg
+            const proofps_dd::MsgPlayerEventFromServer& msg,
+            PureVector& vecCamShakeForce
         );
         bool serverHandleUserInGameMenuCmd(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,

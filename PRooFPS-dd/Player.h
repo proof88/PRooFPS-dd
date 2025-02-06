@@ -294,7 +294,12 @@ namespace proofps_dd
         Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType);
 
         void handleFallingFromHigh(int iServerScream);
-        void handleLanded(const float& fFallHeight, bool bDamageTaken, bool bDied);
+        void handleLanded(
+            const float& fFallHeight,
+            bool bDamageTaken,
+            bool bDied,
+            PureVector& vecCamShakeForce,
+            const bool& bMe);
         void handleActuallyRunningOnGround();
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(

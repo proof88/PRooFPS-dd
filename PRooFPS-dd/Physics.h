@@ -88,7 +88,8 @@ namespace proofps_dd
         void serverPlayerCollisionWithWalls(
             const unsigned int& nPhysicsRate,
             XHair& xhair,
-            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */);
+            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
+            PureVector& vecCamShakeForce);
 
         bool serverPlayerCollisionWithWalls_LoopKernelVertical(
             Player& player,
@@ -101,7 +102,8 @@ namespace proofps_dd
             const float& fPlayerPos1YPlusHalf,
             const float& fBlockSizeXhalf,
             const float& fBlockSizeYhalf,
-            XHair& xhair);
+            XHair& xhair,
+            PureVector& vecCamShakeForce);
 
     private:
 

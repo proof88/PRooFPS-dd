@@ -386,7 +386,8 @@ void proofps_dd::Physics::serverGravity(
 void proofps_dd::Physics::serverPlayerCollisionWithWalls(
     const unsigned int& nPhysicsRate,
     XHair& xhair,
-    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */)
+    proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
+    PureVector& vecCamShakeForce)
 {
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
@@ -451,7 +452,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
                     fBlockSizeYhalf,
-                    xhair);
+                    xhair,
+                    vecCamShakeForce);
 
                 if (bCollided)
                 {
@@ -483,7 +485,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                     fPlayerPos1YPlusHalf,
                     fBlockSizeXhalf,
                     fBlockSizeYhalf,
-                    xhair);
+                    xhair,
+                    vecCamShakeForce);
             } // end for i
 
             if (!bCollided && player.isFalling() && (std::as_const(player).getHealth() > 0))
@@ -772,7 +775,8 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
     const float& fPlayerPos1YPlusHalf,
     const float& fBlockSizeXhalf,
     const float& fBlockSizeYhalf,
-    XHair& xhair
+    XHair& xhair,
+    PureVector& vecCamShakeForce
     )
 {
     assert(obj);
@@ -833,7 +837,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
         if (bOriginalFalling)
         {
             // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
-            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0);
+            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
         }
         player.setCanFall(false);
 
