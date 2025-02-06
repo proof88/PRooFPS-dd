@@ -2630,7 +2630,7 @@ void proofps_dd::GUI::updateServerEvents()
     // TODO: move this draw logic to ServerEventLister::draw(), after drawTextHighlighted() is moved to separate compilation unit!
     
     assert(m_pMinimap);
-    ImGui::SetCursorPosY(std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+    ImGui::SetCursorPosY(m_pMinimap->getMinimapSizeInPixels().y /* minimap size is limited anyway relative to screen so we are good this way */ + 20.f);
 
     auto& eventsQ = m_pEventsServer->getEvents();
     size_t i = eventsQ.rbegin_index();
@@ -2638,15 +2638,45 @@ void proofps_dd::GUI::updateServerEvents()
     {
         const auto& elem = eventsQ.underlying_array()[i];
 
-        ImGui::PushStyleColor(
-            ImGuiCol_Text,
-            elem.m_event.m_clrPlayerName
-        );
-        drawTextHighlighted(
-            ImGui::GetCursorPos().x,
-            ImGui::GetCursorPos().y,
-            elem.m_event.m_sPlayerName + elem.m_event.m_sAuxText);
-        ImGui::PopStyleColor();
+        switch (elem.m_event.m_eEventType)
+        {
+        case ServerEvent::EventType::Connected:
+            [[fallthrough]];
+        case ServerEvent::EventType::Disconnected:
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrPlayerName
+            );
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sPlayerName + elem.m_event.m_sAuxText);
+            ImGui::PopStyleColor();
+            break;
+
+        default: // TeamChanged
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrPlayerName
+            );
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sPlayerName);
+            ImGui::SameLine(0.f, 0.f);
+
+            ImGui::PopStyleColor();
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                elem.m_event.m_clrSecondary
+            );
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sAuxText);
+            ImGui::PopStyleColor();
+        }
+        
 
         i = eventsQ.prev_index(i);
     }

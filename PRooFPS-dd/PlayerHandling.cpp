@@ -218,6 +218,16 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(Player& player, const
     {
         handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
     }
+
+    if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
+    {
+        m_gui.getServerEvents()->addTeamChangedEvent(
+            player.getName(),
+            GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(player.getTeamId())),
+            iTeamId,
+            GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeamId)));
+    }
+
     player.handleTeamIdChanged(iTeamId);
 }
 

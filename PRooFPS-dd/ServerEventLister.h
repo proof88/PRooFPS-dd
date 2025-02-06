@@ -19,14 +19,17 @@ namespace proofps_dd
         enum class EventType
         {
             Connected,
-            Disconnected
+            Disconnected,
+            TeamChanged
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
         // consider switching to a more lightweight string, like something implemented in Dear ImGui!
 
+        EventType m_eEventType;
         std::string m_sPlayerName;
         ImVec4 m_clrPlayerName;
+        ImVec4 m_clrSecondary;
 
         std::string m_sAuxText;
 
@@ -37,6 +40,7 @@ namespace proofps_dd
             const std::string& sPlayerName,
             const ImVec4& clrPlayerName,
             const EventType& eventType) :
+            m_eEventType(eventType),
             m_sPlayerName(sPlayerName),
             m_clrPlayerName(clrPlayerName)
         {
@@ -52,9 +56,23 @@ namespace proofps_dd
         }
 
         ServerEvent(
+            const std::string& sPlayerName,
+            const ImVec4& clrPlayerName,
+            const unsigned int& iNewTeamId,
+            const ImVec4& clrNewTeam) :
+            m_eEventType(EventType::TeamChanged),
+            m_sPlayerName(sPlayerName),
+            m_clrPlayerName(clrPlayerName),
+            m_clrSecondary(clrNewTeam)
+        {
+            m_sAuxText = " joined Team " + std::to_string(iNewTeamId);
+        }
+
+        ServerEvent(
             std::string&& sPlayerName,
             ImVec4&& clrPlayerName,
             const EventType& eventType) :
+            m_eEventType(eventType),
             m_sPlayerName(std::move(sPlayerName)),
             m_clrPlayerName(std::move(clrPlayerName))
         {
@@ -67,6 +85,19 @@ namespace proofps_dd
                 m_sAuxText = " disconnected";
                 break;
             }
+        }
+
+        ServerEvent(
+            std::string&& sPlayerName,
+            ImVec4&& clrPlayerName,
+            const unsigned int& iNewTeamId,
+            ImVec4&& clrNewTeam) :
+            m_eEventType(EventType::TeamChanged),
+            m_sPlayerName(std::move(sPlayerName)),
+            m_clrPlayerName(std::move(clrPlayerName)),
+            m_clrSecondary(std::move(clrNewTeam))
+        {
+            m_sAuxText = " joined Team " + std::to_string(iNewTeamId);
         }
 
         void draw()
@@ -109,6 +140,15 @@ namespace proofps_dd
             const ImVec4& clrName)
         {
             addEvent(std::move(ServerEvent(sName, clrName, ServerEvent::EventType::Disconnected)));
+        }
+
+        void addTeamChangedEvent(
+            const std::string& sName,
+            const ImVec4& clrName,
+            const unsigned int& iNewTeamId,
+            const ImVec4& clrNewTeam)
+        {
+            addEvent(std::move(ServerEvent(sName, clrName, iNewTeamId, clrNewTeam)));
         }
 
     protected:
