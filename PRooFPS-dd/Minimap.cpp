@@ -10,6 +10,8 @@
 #include "stdafx.h"  // PCH
 #include "Minimap.h"
 
+#include "GameMode.h"
+
 
 // ############################### PUBLIC ################################
 
@@ -69,6 +71,17 @@ void proofps_dd::Minimap::hide()
 bool proofps_dd::Minimap::visible() const
 {
     return m_bVisible;
+}
+
+// TODO: RFR: NOT NICE!!! This function is copied temporarily from GUI class which we dont access from here!
+// Common GUI functions should be extracted into a shared common class, GUI class is overgrown now!
+static ImVec4 getImVec4fromPureColor(const PureColor& pureColor)
+{
+    return ImVec4(
+        pureColor.getRedAsFloat(),
+        pureColor.getGreenAsFloat(),
+        pureColor.getBlueAsFloat(),
+        pureColor.getAlphaAsFloat());
 }
 
 void proofps_dd::Minimap::draw()
@@ -173,7 +186,6 @@ void proofps_dd::Minimap::draw()
 
     // draw players rects
 
-    static const auto clrPlayerRectBgU32 = ImGui::GetColorU32(clrPlayerRectBgVec4);
     for (const auto& playerPair : m_mapPlayers)
     {
         const auto& player = playerPair.second;
@@ -189,6 +201,7 @@ void proofps_dd::Minimap::draw()
         fPlayerRectTopLeft2D.x = std::min(fPlayerRectTopLeft2D.x, nMinimapPosLeft + minimapSize.x - 1);
         fPlayerRectTopLeft2D.y = std::min(fPlayerRectTopLeft2D.y, nMinimapPosTop + minimapSize.y - 1);
 
+        const auto clrPlayerRectBgU32 = ImGui::GetColorU32(getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(player.getTeamId())));
         dl->AddRectFilled(
             fPlayerRectTopLeft2D,
             ImVec2(fPlayerRectTopLeft2D.x + 2, fPlayerRectTopLeft2D.y + 2),
