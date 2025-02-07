@@ -124,7 +124,7 @@ void proofps_dd::Minimap::draw()
 
     // draw minimap background rect
 
-    static const auto clrMinimapBgU32 = ImGui::GetColorU32(clrMinimapBgVec4);
+    const auto clrMinimapBgU32 = ImGui::GetColorU32(clrMinimapBgVec4);
     dl->AddRectFilled(
         ImVec2(nMinimapPosLeft, nMinimapPosTop),
         ImVec2(nMinimapPosLeft + minimapSize.x, nMinimapPosTop + minimapSize.y),
@@ -181,7 +181,7 @@ void proofps_dd::Minimap::draw()
         nMinimapPosLeft + getMinimapXfromWorldSpaceX(vecCamViewportBottomRightInWorldSpace.getX()),
         nMinimapPosTop + getMinimapYfromWorldSpaceY(vecCamViewportBottomRightInWorldSpace.getY()));
 
-    static const auto clrViewportRectBgU32 = ImGui::GetColorU32(clrViewportRectBgVec4);
+    const auto clrViewportRectBgU32 = ImGui::GetColorU32(clrViewportRectBgVec4);
     dl->AddRectFilled(fViewportRectTopLeft2D, fViewportRectBottomRight2D, clrViewportRectBgU32);
 
     // draw players rects
@@ -213,7 +213,7 @@ void proofps_dd::Minimap::draw()
     // Note: no need to set dl->Flags to 0 since I'm rounding return values in getMinimap...() functions, but I'm leaving here the commented code for some time ...
     //const auto flagsDrawListOriginal = dl->Flags;
     //dl->Flags = 0;  // in case anti-aliasing is set, we turn it off temporarily because border looks sharper and better without it
-    static const auto clrMinimapBorderU32 = ImGui::GetColorU32(clrMinimapBorderVec4);
+    const auto clrMinimapBorderU32 = ImGui::GetColorU32(clrMinimapBorderVec4);
     dl->AddRect(
         ImVec2(nMinimapPosLeft, nMinimapPosTop),
         ImVec2(nMinimapPosLeft + minimapSize.x + 1, nMinimapPosTop + minimapSize.y + 1),
