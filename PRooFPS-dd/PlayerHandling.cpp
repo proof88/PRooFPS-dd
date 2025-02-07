@@ -229,6 +229,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(Player& player, const
     }
 
     player.handleTeamIdChanged(iTeamId);
+    player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
 }
 
 void proofps_dd::PlayerHandling::updatePlayersOldValues()

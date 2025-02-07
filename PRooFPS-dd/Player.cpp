@@ -1910,7 +1910,7 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
         return;
     }
     
-    getTeamId() = iTeamId;
+    m_iTeamId = iTeamId;
 
     if (!m_network.isServer())
     {
