@@ -76,7 +76,8 @@ namespace proofps_dd
         void handlePlayerTeamIdChanged(
             Player& player,
             const unsigned int& iTeamId,
-            const proofps_dd::Config& config);
+            const proofps_dd::Config& config,
+            PGEcfgProfiles& cfgProfiles);
         void updatePlayersOldValues();
         void writePlayerList();
         bool handleUserConnected(
@@ -111,12 +112,14 @@ namespace proofps_dd
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgPlayerEventFromServer& msg,
             PureVector& vecCamShakeForce,
-            const proofps_dd::Config& config
+            const proofps_dd::Config& config,
+            PGEcfgProfiles& cfgProfiles
         );
         bool serverHandleUserInGameMenuCmd(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserInGameMenuCmd& msg,
-            const proofps_dd::Config& config
+            const proofps_dd::Config& config,
+            PGEcfgProfiles& cfgProfiles
         );
         void updatePlayersVisuals(
             const proofps_dd::Config& config,

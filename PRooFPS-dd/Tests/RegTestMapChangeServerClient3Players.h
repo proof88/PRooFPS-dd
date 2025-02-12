@@ -373,7 +373,7 @@ private:
         {
             procInfoServer = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --tickrate=" +
+                "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --sv_map_team_spawn_groups=false --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
@@ -384,7 +384,7 @@ private:
         {
             m_vecProcInfoClient.push_back( process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --tickrate=" +
+                "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --sv_map_team_spawn_groups=false --tickrate=" +
                 std::to_string(m_nTickRate) + " --cl_updaterate=" +
                 std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
                 std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +

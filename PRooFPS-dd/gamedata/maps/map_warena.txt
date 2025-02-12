@@ -162,6 +162,9 @@ c = dirt2.bmp
 # A background block might be implicitly created with the same rule as with pickupable items.
 # Since a player can spawn only in standing position, placing a spawnpoint in a low-height
 # tunnel where only crouching is possible, is considered as map design error.
+#
+# Note: when you are designing a map and testing it in the game, press 'T' as server player to randomly teleport
+# between spawnpoints. Switch between teams also to test spawn groups.
 
 ##################
 #                #
@@ -199,8 +202,13 @@ c = dirt2.bmp
 # If all spawn points are assigned to spawn group 1, hence no remaining spawn points left for spawn group 2, then
 # spawn group 1 is ignored and all players spawn randomly as if "Team Spawn Groups" server setting was disabled.
 # An error log will appear because this is considered as map design error.
+#
+# Note: when you are designing a map and testing it in the game, press 'T' as server player to randomly teleport
+# between spawnpoints. Switch between teams also to test spawn groups.
 spawngroup_1 = 5 6 7 8 9 10 17 18 19
 spawngroup_2 = 11 12 13 14 15 16 20 21 22
+# On this map, the 1st 5 spawn points are intentionally not assigned to any group, because they are in the middle
+# of the map and I want them to be excluded in team spawning.
 
 ###############
 #             #

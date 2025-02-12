@@ -11,7 +11,15 @@
 
  - Copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
 
- - Start a server instance and 2 client instances, then:
+ - Start a server instance with "Team Deathmatch" Game Mode, and 1 client instance, then test the following:
+   - Friendly fire working as per config?
+   - Team Spawn Groups working as per config?
+   - Check if Frag Table shows the 2 teams properly.
+
+ - Now disconnect the client and server instances, and invert the Friendly fire and Team Spawn Groups config, then
+   repeat the above test.
+
+ - Start a server instance with "Deathmatch" Game Mode, and 2 client instances, then:
    - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
    - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
    - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto.
@@ -21,7 +29,9 @@
      - mute the client instance, unmute the other client, check for same proper sounds;
      - mute both client instances, unmute server and check for same proper sounds.
 
- - Close 1 client instance, so only the server and 1 client instance are running, then test the following in both client and server instances:
+ - Close 1 client instance, so only the server and 1 client instance are running;
+ 
+ - Test the following weapon change-/switch-/pickup-related stuff in both client and server instances:
 
    - weapon becoming empty auto-behavior settings (needs to be tested separately on server and client instances!):
      - the idea is that we always make the pistol empty, and expect change to either mchgun or bazooka, because

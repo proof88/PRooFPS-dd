@@ -212,7 +212,8 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
 void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
     Player& player,
     const unsigned int& iTeamId,
-    const proofps_dd::Config& config)
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles)
 {
     // both server and client comes here
 
@@ -229,8 +230,12 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
         if (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */)
         {
             // even tho player is already on a random global spawn point selected in handleUserConnected(), now
-            // with proper team id respawn is needed to deal with team spawn groups
-            serverRespawnPlayer(player, false, config);
+            // with proper team id respawn is needed to deal with team spawn groups;
+            // but do this only if NOT regression test is running because it messes with positioning players to the leftmost/rightmost spawnpoints!
+            if (!cfgProfiles.getVars()["testing"].getAsBool())
+            {
+                serverRespawnPlayer(player, false, config);
+            }
         }
         else
         {
@@ -1117,7 +1122,8 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgPlayerEventFromServer& msg,
     PureVector& vecCamShakeForce,
-    const proofps_dd::Config& config)
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
@@ -1167,7 +1173,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         player.handleJumppadActivated();
         break;
     case PlayerEventId::TeamIdChanged:
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config);
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
@@ -1181,7 +1187,8 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
 bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserInGameMenuCmd& msg,
-    const proofps_dd::Config& config)
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %d from player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
 
@@ -1199,7 +1206,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     switch (msg.m_iInGameMenu)
     {
     case static_cast<int>(GUI::InGameMenuState::TeamSelect):
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config);
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
