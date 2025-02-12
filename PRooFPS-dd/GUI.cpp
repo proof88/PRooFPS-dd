@@ -1001,6 +1001,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             {
                 ImGui::BeginDisabled(true);
             }
+
             PGEcfgVariable& cvarSvTdmFriendlyFire = m_pPge->getConfigProfiles().getVars()[TeamDeathMatchMode::szCvarSvTdmFriendlyFire];
             ImGui::AlignTextToFramePadding();
             static std::string sHintSvTdmFriendlyFire; // static so it is built up by addHintToItemByCVar() only once
@@ -1012,6 +1013,19 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             {
                 cvarSvTdmFriendlyFire.Set(bSvTdmFriendlyFire);
             }
+
+            PGEcfgVariable& cvarSvMapTeamSpawnGroups = m_pPge->getConfigProfiles().getVars()[Maps::szCVarSvMapTeamSpawnGroups];
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvMapTeamSpawnGroups; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvMapTeamSpawnGroups, cvarSvMapTeamSpawnGroups);
+            ImGui::TextUnformatted("Team Spawn Groups:");
+            ImGui::SameLine();
+            bool bSvMapTeamSpawnGroups = cvarSvMapTeamSpawnGroups.getAsBool();
+            if (ImGui::Checkbox("##cbMapTeamSpawnGroups", &bSvMapTeamSpawnGroups))
+            {
+                cvarSvMapTeamSpawnGroups.Set(bSvMapTeamSpawnGroups);
+            }
+
             if (!GameMode::getGameMode()->isTeamBasedGame())
             {
                 ImGui::EndDisabled();
