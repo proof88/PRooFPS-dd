@@ -32,6 +32,7 @@ A compressed build for Windows is available for TODO.
 !!! WIP !!!
 
 This version brings the following new features:
+ - new game mode: team deathmatch.
  - respawn countdown can be speeden up by mouse clicks.
  - frag table has new columns: player ranking based on K/D ratio, aim accuracy, etc.
 
@@ -39,7 +40,7 @@ This version brings the following bug fixes:
  - crash due to integer overflow when system uptime exceeded 49.71 days.
 
 This version brings the following behavior changes:
- - auto-crouching for mid-air somersault is now enabled by default in the server settings. The reason is because the jump-crouch-jump key-combo is too difficult to be pressed on notebook keyboards.
+ - auto-crouching for mid-air somersault is now enabled by default in the server settings. The reason is because the jump-crouch-jump combo is too difficult to be pressed on notebook keyboards.
 
 ## v0.4.3 Private Beta (Dec 07, 2024, Latest ALP)
 
