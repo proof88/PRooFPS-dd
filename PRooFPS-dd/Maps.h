@@ -70,7 +70,7 @@ namespace proofps_dd
         unsigned int height() const;
         void updateVisibilitiesForRenderer();
         const std::string& getFilename() const;              /**< Retrieves the currently loaded map filename. */
-        const std::set<PureVector>& getSpawnpoints() const;  /**< Retrieves the set of spawnpoints of the currently loaded map. */
+        const std::vector<PureVector>& getSpawnpoints() const;  /**< Retrieves the set of spawnpoints of the currently loaded map. */
         const std::set<size_t>& getTeamSpawnpoints(
             const unsigned int& iTeamId) const;              /**< Retrieves the spawn group of the currently loaded map, for the specified team. */
         bool areTeamSpawnpointsDefined() const;
@@ -163,7 +163,7 @@ namespace proofps_dd
         std::string m_sRawName;     /**< Raw map name, basically filename without extension. */
         std::string m_sFileName;
         std::map<char, BlockTexture> m_Block2Texture;
-        std::set<PureVector> m_spawnpoints;
+        std::vector<PureVector> m_spawnpoints;  // before v0.5 it was std::set, but I want to have them in file parsing order!
         std::set<size_t> m_spawngroup_1;
         std::set<size_t> m_spawngroup_2;
         PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;

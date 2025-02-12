@@ -477,7 +477,7 @@ const std::string& proofps_dd::Maps::getFilename() const
 
     @return The set of spawnpoints of the currently loaded map.
 */
-const std::set<PureVector>& proofps_dd::Maps::getSpawnpoints() const
+const std::vector<PureVector>& proofps_dd::Maps::getSpawnpoints() const
 {
     return m_spawnpoints;
 }
@@ -580,10 +580,7 @@ const PureVector& proofps_dd::Maps::getRandomSpawnpoint(
     }
 
     //getConsole().EOLn("Maps::%s(): %d, count: %u", __func__, iElem, m_spawnpoints.size());
-    auto it = m_spawnpoints.begin();
-    std::advance(it, iElem);
-
-    return *it;
+    return m_spawnpoints[iElem];
 }
 
 
@@ -1229,7 +1226,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                         m_spawnpointRightMost = vecSpawnPointPos;
                     }
                 }
-                m_spawnpoints.insert(vecSpawnPointPos);
+                m_spawnpoints.push_back(vecSpawnPointPos);
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;

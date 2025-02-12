@@ -673,7 +673,7 @@ private:
         
         if ( b )
         {
-            std::set<PureVector> originalSpawnpoints = maps.getSpawnpoints();
+            std::set<PureVector> originalSpawnpoints(maps.getSpawnpoints().begin(), maps.getSpawnpoints().end());
             int i = 0;
             try {
                 while ( !originalSpawnpoints.empty() && (i < 50) )
@@ -817,7 +817,7 @@ private:
 
         if (b)
         {
-            std::set<PureVector> originalSpawnpoints = maps.getSpawnpoints();
+            std::set<PureVector> originalSpawnpoints(maps.getSpawnpoints().begin(), maps.getSpawnpoints().end());
             try {
                 int i = 0;
                 while (i < 20)
@@ -865,7 +865,7 @@ private:
 
         if (b)
         {
-            std::set<PureVector> originalSpawnpoints = maps.getSpawnpoints();
+            std::set<PureVector> originalSpawnpoints(maps.getSpawnpoints().begin(), maps.getSpawnpoints().end());
             try {
                 for (unsigned iTeamId = 1; iTeamId <= 2; iTeamId++)
                 {
@@ -877,7 +877,7 @@ private:
                 }
 
                 b &= assertEquals(1u, originalSpawnpoints.size(), "original size");
-                // if the PureVector ordering in the std::set is what we expect, the last spawn point is the unassigned one, which
+                // in this test map, the last spawn point is the unassigned one, which
                 // is the same spawn point that was never selected in the loops above thus the only 1 remained in originalSpawnpoints
                 b &= assertEquals(*(--maps.getSpawnpoints().end()), *originalSpawnpoints.begin(), "the only unassigned sp left");
             }
