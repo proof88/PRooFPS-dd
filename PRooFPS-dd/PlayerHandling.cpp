@@ -161,7 +161,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
 void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-    player.getPos() = m_maps.getRandomSpawnpoint();
+    player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
     player.setHealth(100);
     player.getRespawnFlag() = true;
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
@@ -209,27 +209,44 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 } // serverUpdateRespawnTimers()
 
-void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(Player& player, const unsigned int& iTeamId)
+void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
+    Player& player,
+    const unsigned int& iTeamId,
+    const proofps_dd::Config& config)
 {
     // both server and client comes here
 
     assert(m_gui.getXHair());
-    if (m_pge.getNetwork().isServer() && (player.getTeamId() != 0u /* i.e. not the 1st team selection right after connecting to server */))
+
+    const auto iPrevTeamId = player.getTeamId();
+
+    // need to trigger updating player teamId here because that is needed for serverRespawnPlayer() to work properly
+    player.handleTeamIdChanged(iTeamId);
+    player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
+
+    if (m_pge.getNetwork().isServer())
     {
-        handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
+        if (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */)
+        {
+            // even tho player is already on a random global spawn point selected in handleUserConnected(), now
+            // with proper team id respawn is needed to deal with team spawn groups
+            serverRespawnPlayer(player, false, config);
+        }
+        else
+        {
+            // any consecutive team changes shall kill the player
+            handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
+        }
     }
 
     if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
     {
         m_gui.getServerEvents()->addTeamChangedEvent(
             player.getName(),
-            GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(player.getTeamId())),
+            GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iPrevTeamId)),
             iTeamId,
             GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeamId)));
     }
-
-    player.handleTeamIdChanged(iTeamId);
-    player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
 }
 
 void proofps_dd::PlayerHandling::updatePlayersOldValues()
@@ -303,7 +320,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             {
                 const PureVector& vecStartPos = cfgProfiles.getVars()["testing"].getAsBool() ?
                     m_maps.getLeftMostSpawnpoint() :
-                    m_maps.getRandomSpawnpoint();
+                    m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), 0);
 
                 if (proofps_dd::MsgUserUpdateFromServer::initPkt(
                     newPktUserUpdate,
@@ -392,7 +409,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
 
         const PureVector& vecStartPos = cfgProfiles.getVars()["testing"].getAsBool() ?
             m_maps.getRightMostSpawnpoint() :
-            m_maps.getRandomSpawnpoint();
+            m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), 0);
 
         if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
             newPktUserUpdate,
@@ -1099,7 +1116,8 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
 bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgPlayerEventFromServer& msg,
-    PureVector& vecCamShakeForce)
+    PureVector& vecCamShakeForce,
+    const proofps_dd::Config& config)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
@@ -1149,7 +1167,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         player.handleJumppadActivated();
         break;
     case PlayerEventId::TeamIdChanged:
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
@@ -1160,7 +1178,10 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
     return true;
 }
 
-bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(pge_network::PgeNetworkConnectionHandle connHandleServerSide, const proofps_dd::MsgUserInGameMenuCmd& msg)
+bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
+    pge_network::PgeNetworkConnectionHandle connHandleServerSide,
+    const proofps_dd::MsgUserInGameMenuCmd& msg,
+    const proofps_dd::Config& config)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %d from player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
 
@@ -1178,7 +1199,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(pge_network::PgeN
     switch (msg.m_iInGameMenu)
     {
     case static_cast<int>(GUI::InGameMenuState::TeamSelect):
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue));
+        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);

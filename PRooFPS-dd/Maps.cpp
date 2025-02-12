@@ -298,6 +298,8 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         bParseError = true;
     }
 
+    bParseError |= !checkAndUpdateSpawnpoints();
+
     m_gfx.getTextureManager().setDefaultIsoFilteringMode(
         texFilterMinOriginal,
         texFilterMagOriginal);
@@ -413,6 +415,8 @@ void proofps_dd::Maps::unload()
     m_blocksVertexPosMax.SetZero();
     m_vars.clear();
     m_nValidJumppadVarsCount = 0;
+    m_spawngroup_1.clear();
+    m_spawngroup_2.clear();
     m_spawnpoints.clear();
 
     getConsole().OOOLn("Maps::unload() done!");
@@ -480,24 +484,108 @@ const std::set<PureVector>& proofps_dd::Maps::getSpawnpoints() const
 
 
 /**
+    Retrieves the spawn group of the currently loaded map, for the specified team.
+    A spawn group is a set of spawnpoints dedicated to a specific team.
+
+    @return The set of spawn group of the currently loaded map, for the specified team.
+*/
+const std::set<size_t>& proofps_dd::Maps::getTeamSpawnpoints(const unsigned int& iTeamId) const
+{
+    if (m_spawnpoints.empty())
+    {
+        throw std::runtime_error("No spawnpoints!");
+    }
+
+    if (iTeamId == 0 || iTeamId > 2)
+    {
+        throw std::runtime_error("Invalid Team Id!");
+    }
+
+    return (iTeamId == 1) ?
+        m_spawngroup_1 :
+        m_spawngroup_2;
+}
+
+
+/**
+    @return True if spawn points are defined for the teams, false otherwise.
+*/
+bool proofps_dd::Maps::areTeamSpawnpointsDefined() const
+{
+    return !m_spawngroup_1.empty() && !m_spawngroup_2.empty();
+}
+
+
+/**
+    Tells if all conditions meet for selecting a team spawnpoint from a spawn group:
+     - current game mode is team based,
+     - team id is non-zero,
+     - there are spawn groups defined for the current map,
+     - server config allows using team spawn groups.
+    
+    @param bTeamGame True if current GameMode is team-based game, false otherwise.
+    @param iTeamId   The team ID if we want to find a spawn point from a spawn group for the specified team.
+    
+    @return True if team spawnpoints / spawn groups can be used now, false otherwise.
+*/
+bool proofps_dd::Maps::canUseTeamSpawnpoints(const bool& bTeamGame, const unsigned int& iTeamId) const
+{
+    return areTeamSpawnpointsDefined() &&
+        m_cfgProfiles.getVars()[szCVarSvMapTeamSpawnGroups].getAsBool() &&
+        bTeamGame &&
+        (iTeamId > 0);
+}
+
+
+/**
     Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map.
     A spawnpoint is a 3D coordinate where the player can spawn at.
 
+    This function can be used also if we want to get a randomly selected spawnpoint from a spawn group.
+    In that case bTeamGame and iTeamId arguments need to be properly set.
+    If the current map does not define spawn groups, or the server setting "Team Spawn Groups" is disabled,
+    then these 2 arguments are ignored but still a randomly selected spawnpoint is returned.
+
+    @param bTeamGame True if current GameMode is team-based game, false otherwise.
+    @param iTeamId   The team ID if we want to find a spawn point from a spawn group for the specified team.
+                     Considered only if bTeamGame is true.
+                     Must be 1 or 2 to actually utilize spawn groups.
+                     If 0, bTeamGame is considered as false.
+
     @return A randomly selected spawnpoint on the current map.
 */
-const PureVector& proofps_dd::Maps::getRandomSpawnpoint() const
+const PureVector& proofps_dd::Maps::getRandomSpawnpoint(
+    const bool& bTeamGame,
+    const unsigned int& iTeamId) const
 {
     if ( m_spawnpoints.empty() )
     {
         throw std::runtime_error("No spawnpoints!");
     }
-    const int iElem = PFL::random(0, m_spawnpoints.size()-1);
+
+    int iElem;
+    if (canUseTeamSpawnpoints(bTeamGame, iTeamId))
+    {
+        // select a random spawnpoint from the team's spawn group
+        const auto& spawngroup = getTeamSpawnpoints(iTeamId);
+        iElem = PFL::random(0, spawngroup.size() - 1);
+        auto it = spawngroup.begin();
+        std::advance(it, iElem);
+        iElem = *it; // spawngroup contains m_spawnpoints indices so we have selected a random index to m_spawnpoints
+    }
+    else
+    {
+        // select a random spawnpoint from the global pool
+        iElem = PFL::random(0, m_spawnpoints.size() - 1);
+    }
+
     //getConsole().EOLn("Maps::%s(): %d, count: %u", __func__, iElem, m_spawnpoints.size());
     auto it = m_spawnpoints.begin();
     std::advance(it, iElem);
 
     return *it;
 }
+
 
 const PureVector& proofps_dd::Maps::getLeftMostSpawnpoint() const
 {
@@ -1337,3 +1425,122 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     y = y - proofps_dd::Maps::fMapBlockSizeHeight;
     return true;
 }  // lineHandleLayout()
+
+bool proofps_dd::Maps::parseTeamSpawnpointsFromString(
+    const std::string& sVarValue, std::set<size_t>& targetSet)
+{
+    try
+    {
+        std::stringstream sstr(sVarValue);
+        while (!sstr.eof() && !sstr.fail())
+        {
+            int iSp;
+            sstr >> iSp;
+            if ((iSp < 0) || (static_cast<size_t>(iSp) >= m_spawnpoints.size()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): index error: spawngroup definition contains invalid spawn point index: %d", __func__, iSp);
+                return false;
+            }
+            if (targetSet.find(iSp) != targetSet.end())
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): index error: spawngroup definition contains the same spawn point index multiple times: %d", __func__, iSp);
+                return false;
+            }
+
+            targetSet.insert(iSp);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        getConsole().EOLn(
+            "PRooFPSddPGE::%s(): index error: spawngroup definition contains something bad, exception: %s, definition: %s",
+            __func__,
+            e.what(),
+            sVarValue.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool proofps_dd::Maps::parseTeamSpawnpoints()
+{
+    assert(!m_spawnpoints.empty());  // to be called from checkAndUpdateSpawnpoints()
+
+    const auto itVarSp1 = m_vars.find("spawngroup_1");
+    if ((itVarSp1 == m_vars.end()) || itVarSp1->second.getAsString().empty())
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): spawngroup_1 not defined or empty, not considering any spawn groups!", __func__);
+        return true;
+    }
+
+    if (!parseTeamSpawnpointsFromString(itVarSp1->second.getAsString(), m_spawngroup_1))
+    {
+        return false;
+    }
+
+    const auto itVarSp2 = m_vars.find("spawngroup_2");
+    if ((itVarSp2 == m_vars.end()) || itVarSp2->second.getAsString().empty())
+    {
+        // need to fill this group automatically with the rest of spawn points
+        for (size_t iSp = 0; iSp < m_spawnpoints.size(); iSp++)
+        {
+            if (m_spawngroup_1.find(iSp) == m_spawngroup_1.end())
+            {
+                m_spawngroup_2.insert(iSp);
+            }
+        }
+    }
+    else
+    {
+        if (!parseTeamSpawnpointsFromString(itVarSp2->second.getAsString(), m_spawngroup_2))
+        {
+            return false;
+        }
+
+        // since both spawn groups are defined explicitly by map designer, need to do some further checks below
+
+        int nUnassignedSpCounter = 0;
+        std::string sUnassignedLog;
+        for (size_t iSp = 0; iSp < m_spawnpoints.size(); iSp++)
+        {
+            const auto itSpGroup_1 = m_spawngroup_1.find(iSp);
+            const auto itSpGroup_2 = m_spawngroup_2.find(iSp);
+            
+            // same spawn point being in both groups is definitely map error!
+            if ((itSpGroup_1 != m_spawngroup_1.end()) &&
+                (itSpGroup_2 != m_spawngroup_2.end()))
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): ERROR: spawn point index %d is present in both spawn groups!", __func__, iSp);
+                return false;
+            }
+            // check if there is any spawn point remained unassigned, if so make a warning log only (non-critical, probably intentional)!
+            else if ((itSpGroup_1 == m_spawngroup_1.end()) &&
+                (itSpGroup_2 == m_spawngroup_2.end()))
+            {
+                ++nUnassignedSpCounter;
+                sUnassignedLog += std::to_string(iSp) + " ";
+            }
+        }
+
+        if (nUnassignedSpCounter != 0)
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): WARNING: %d unassigned spawn point(s): %s!", __func__, nUnassignedSpCounter, sUnassignedLog.c_str());
+        }
+    }
+
+    getConsole().OLn("PRooFPSddPGE::%s(): spawngroup_1 has %u, spawngroup_2 has %u spawn points.", __func__, m_spawngroup_1.size(), m_spawngroup_2.size());
+
+    return true;
+} // parseTeamSpawnpoints()
+
+bool proofps_dd::Maps::checkAndUpdateSpawnpoints()
+{
+    if (m_spawnpoints.empty())
+    {
+        getConsole().EOLn("%s ERROR: no spawn points found in the map!", __func__);
+        return false;
+    }
+
+    return parseTeamSpawnpoints();
+}

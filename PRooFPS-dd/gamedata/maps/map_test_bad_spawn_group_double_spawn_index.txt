@@ -1,0 +1,82 @@
+Name = Test Map
+
+#######################
+#                     #
+#  BLOCK DEFINITIONS  #
+#                     #
+#######################
+
+# The following chars are used for defining foreground blocks in this map:
+# BDFGHIJ
+# Remaining chars to be used as foreground blocks in this map: KLQT
+
+#B = floor.bmp # intentionally commented to test if B blocks really get red texture assigned
+
+D = texture-atlas.bmp 0.52 0.02 0.98 0.48
+F = floor.bmp
+G = floor.bmp
+H = floor.bmp
+I = floor.bmp
+J = crate.bmp
+
+# The following chars are used for defining background blocks in this map:
+# acnorempu
+# Remaining chars to be used as background blocks in this map: uvwxyz
+
+c = texture-atlas.bmp 0.02 0.02 0.48 0.48
+a = texture-atlas.bmp 0.52 0.52 0.98 0.98
+n = texture-atlas.bmp 0.02 0.52 0.48 0.98
+o = texture-atlas.bmp 0.52 0.52 0.98 0.98
+r = texture-atlas.bmp 0.52 0.52 0.98 0.98
+
+e = proba128x128x24.bmp 0.0 0.0 0.5 0.5
+m = proba128x128x24.bmp 0.5 0.0 1.0 0.5
+p = proba128x128x24.bmp 0.5 0.5 1.0 1.0
+u = proba128x128x24.bmp 0.0 0.5 0.5 1.0
+
+#######################
+#                     #
+#  DECAL ASSIGNMENTS  #
+#                     #
+#######################
+
+decal = proba128x128x24-blackbg.bmp 1.5 5.5 2 2
+decal = proba128x128x24-blackbg.bmp 36 6 3 3
+
+##################
+#                #
+#  SPAWN GROUPS  #
+#                #
+##################
+
+spawngroup_1 = 0 1 1
+spawngroup_2 = 2
+
+###############
+#             #
+#  JUMP PADS  #
+#             #
+###############
+
+^ = floor.bmp
+
+jumppad_0 = 1
+jumppad_1 = 2 2.4
+jumppad_2 = 2.2 -3.3
+
+################
+#              #
+#  MAP LAYOUT  #
+#              #
+################
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+cccccccccccccccccccccccccccccc  cccccccc
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+ooooacno^ooooooooooooooooooooo  oooooooo
+nnnnnnnnnnn4nnnnnnnnnnnnnnnn^n  nnnnnnnn
+oSoooooooooJoooooSooupoooooooo  oooSoooo
+rrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr
+aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD

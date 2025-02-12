@@ -576,7 +576,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             // for testing purpose only, we can teleport server player to random spawn point
             // TODO: probably we should just call serverRespawnPlayer() but cannot access that from here :/
 
-            player.getPos() = m_maps.getRandomSpawnpoint();
+            player.getPos() = m_maps.getRandomSpawnpoint(false, 0);
             // no need to commit, otherwise server wont even inject userupdatemsg to itself!
             //player.getPos().commit();
             getConsole().EOLn(

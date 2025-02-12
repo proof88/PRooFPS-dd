@@ -29,6 +29,7 @@ namespace proofps_dd
     public:
 
         static constexpr char* szCVarSvMap = "sv_map";
+        static constexpr char* szCVarSvMapTeamSpawnGroups = "sv_map_team_spawn_groups";
 
         static constexpr float fMapBlockSizeWidth = 1.0f;
         static constexpr float fMapBlockSizeHeight = 1.0f;
@@ -70,7 +71,15 @@ namespace proofps_dd
         void updateVisibilitiesForRenderer();
         const std::string& getFilename() const;              /**< Retrieves the currently loaded map filename. */
         const std::set<PureVector>& getSpawnpoints() const;  /**< Retrieves the set of spawnpoints of the currently loaded map. */
-        const PureVector& getRandomSpawnpoint() const;       /**< Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map. */
+        const std::set<size_t>& getTeamSpawnpoints(
+            const unsigned int& iTeamId) const;              /**< Retrieves the spawn group of the currently loaded map, for the specified team. */
+        bool areTeamSpawnpointsDefined() const;
+        bool canUseTeamSpawnpoints(
+            const bool& bTeamGame,
+            const unsigned int& iTeamId) const;
+        const PureVector& getRandomSpawnpoint(
+            const bool& bTeamGame,
+            const unsigned int& iTeamId = 0) const;          /**< Retrieves a randomly selected spawnpoint from the set of spawnpoints of the currently loaded map. */
         const PureVector& getLeftMostSpawnpoint() const;
         const PureVector& getRightMostSpawnpoint() const;
         const PureVector& getBlockPosMin() const;
@@ -155,6 +164,8 @@ namespace proofps_dd
         std::string m_sFileName;
         std::map<char, BlockTexture> m_Block2Texture;
         std::set<PureVector> m_spawnpoints;
+        std::set<size_t> m_spawngroup_1;
+        std::set<size_t> m_spawngroup_2;
         PureVector m_blocksVertexPosMin, m_blocksVertexPosMax;
         PureVector m_blockPosMin, m_blockPosMax;
         PureVector m_spawnpointLeftMost, m_spawnpointRightMost;
@@ -177,6 +188,10 @@ namespace proofps_dd
         bool lineHandleDecalAssignment(const std::string& sValue);
         bool lineHandleAssignment(const std::string& sVar, const std::string& sValue);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
+        bool parseTeamSpawnpointsFromString(
+            const std::string& sVarValue, std::set<size_t>& targetSet);
+        bool parseTeamSpawnpoints();
+        bool checkAndUpdateSpawnpoints();
 
     }; // class Maps
 

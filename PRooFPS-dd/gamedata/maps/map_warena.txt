@@ -9,6 +9,12 @@
 # Name of the map is that will be displayed in map select submenu.
 Name = WARena
 
+#######################
+#                     #
+#  BLOCK DEFINITIONS  #
+#                     #
+#######################
+
 # Textures for each map block/element
 # Not defining texture for a specific block does not cause error,
 # but the block will be automatically assigned a dummy red texture.
@@ -97,7 +103,13 @@ c = dirt2.bmp
 # It is okay if you are really using a single texture as texture atlas, but inefficient use of multiple characters if your
 # purpose is just to display a bigger image like a decal/poster on a wall.
 # For decal/poster purpose, I rather recommend using the "decal assignment".
-#
+
+#######################
+#                     #
+#  DECAL ASSIGNMENTS  #
+#                     #
+#######################
+
 # Decal assignment does not allocate any block chars.
 # Decal is NOT a block, just a "plane" object having only 4 vertices, placed over the camera-facing faces of blocks.
 # Role of decals is simply visual, and do not participate in game physics.
@@ -118,6 +130,12 @@ c = dirt2.bmp
 # Example where we position the center of a decal to block position (row=2.5, col=3), and set decal size to (1x1):
 #   decal = proba128x128x24.bmp 2.5 3 1 1
 
+######################
+#                    #
+#  PICKUPABLE ITEMS  #
+#                    #
+######################
+
 # Pickupable items:
 # '2' char represents pistol.
 # '3' char represents machine gun.
@@ -131,6 +149,12 @@ c = dirt2.bmp
 # applied, otherwise NO background block will be created behind the item.
 # Currently there is no map item for knife because knife is always available for the player.
 
+##################
+#                #
+#  SPAWN POINTS  #
+#                #
+##################
+
 # 'S' char represents spawn/start point. Multiple 'S' chars can be placed on the map.
 # Number of spawn points might define the max allowed players on the map in the future but
 # now players don't collide, so it is not yet a hard limit.
@@ -138,6 +162,51 @@ c = dirt2.bmp
 # A background block might be implicitly created with the same rule as with pickupable items.
 # Since a player can spawn only in standing position, placing a spawnpoint in a low-height
 # tunnel where only crouching is possible, is considered as map design error.
+
+##################
+#                #
+#  SPAWN GROUPS  #
+#                #
+##################
+
+# Optionally, spawn points can be grouped to be exclusively available only for a specific team.
+# This way, players within a specific team will be spawned only on spawn points of a specific spawn group.
+# Useful if you want to restrict the spawn location for team members on the map.
+# This is relevant only in team-based game modes, such as Team Deathmatch.
+# Also, the "Team Spawn Groups" server setting needs to be enabled for this feature.
+#
+# Defining a spawn group is done using the following naming convention:
+# spawngroup_#
+# where # stands for the 1-based index of the specific team, e.g. spawngroup_1 is for team 1.
+# Currently only team 1 and team 2 are supported, thus only spawngroup_1 and spawngroup_2 can be defined.
+#
+# Then, after the '=' character, the specific spawn point indices can be listed for this specific group,
+# separated by space characters.
+# Spawn point indices are 0-based, and the indices increase in the order as they are placed in the
+# layout definition lines, left to right, top to bottom.
+#
+# Not all spawn points need to be placed in group. Spawn points not being in any group are excluded from
+# potential spawn locations when the "Team Spawn Groups" server setting is enabled AND there are spawn groups
+# defined for the map.
+# Spawn groups are only relevant if the "Team Spawn Groups" server setting is enabled AND spawn groups are
+# defined for the map.
+#
+# If a spawn group is defined for team 1, it is not necessary to define group for team 2: in that case, the
+# rest of the spawn points are implicitly assigned to spawn group 2 to be exclusive for team 2.
+# Therefore, defining spawn group 2 is recommended only if you want to exclude some of the spawn points from
+# the potential spawning locations for any team.
+#
+# If all spawn points are assigned to spawn group 1, hence no remaining spawn points left for spawn group 2, then
+# spawn group 1 is ignored and all players spawn randomly as if "Team Spawn Groups" server setting was disabled.
+# An error log will appear because this is considered as map design error.
+spawngroup_1 = 5 6 7 8 9 10 17 18 19
+spawngroup_2 = 11 12 13 14 15 16 20 21 22
+
+###############
+#             #
+#  JUMP PADS  #
+#             #
+###############
 
 # '^' char represents a jump pad that launches the player in the air vertically and/or horizontally.
 # Jump pads are foreground blocks like walls thus the player collides with them.
@@ -195,7 +264,19 @@ jumppad_2 = 2 6
 # Right base pad, launch to the middle
 jumppad_3 = 2 -6
 
+############
+#          #
+#  STAIRS  #
+#          #
+############
+
 # '\' and '/' chars are reserved for (not yet supported) stairs.
+
+################
+#              #
+#  MAP LAYOUT  #
+#              #
+################
 
 # If there is no '=' assignment char in a line and not it is not ignored line, it is treated as
 # layout line. 

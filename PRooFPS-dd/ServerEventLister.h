@@ -26,7 +26,7 @@ namespace proofps_dd
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
         // consider switching to a more lightweight string, like something implemented in Dear ImGui!
 
-        EventType m_eEventType;
+        EventType m_eEventType{};
         std::string m_sPlayerName;
         ImVec4 m_clrPlayerName;
         ImVec4 m_clrSecondary;

@@ -71,11 +71,21 @@ protected:
         addSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
         addSubTest("test_map_load_bad_jumppad_count", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_count);
         addSubTest("test_map_load_bad_jumppad_force_value", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_force_value);
+        addSubTest("test_bad_spawn_group_double_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_double_spawn_index);
+        addSubTest("test_bad_spawn_group_double_spawn_index_2", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_double_spawn_index_2);
+        addSubTest("test_bad_spawn_group_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_spawn_index);
+        addSubTest("test_bad_spawn_group_spawn_word_as_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_spawn_word_as_index);
         addSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         addSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         addSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
         addSubTest("test_map_server_decide_first_map_to_be_loaded", (PFNUNITSUBTEST)&MapsTest::test_map_server_decide_first_map_to_be_loaded);
-        addSubTest("test_map_get_random_spawnpoint", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint);
+        addSubTest("test_map_get_random_spawnpoint_no_teamgame", (PFNUNITSUBTEST) &MapsTest::test_map_get_random_spawnpoint_no_teamgame);
+        addSubTest("test_map_get_team_spawnpoints", (PFNUNITSUBTEST)&MapsTest::test_map_get_team_spawnpoints);
+        addSubTest("test_map_are_team_spawnpoints_defined", (PFNUNITSUBTEST)&MapsTest::test_map_are_team_spawnpoints_defined);
+        addSubTest("test_map_can_use_team_spawnpoints", (PFNUNITSUBTEST)&MapsTest::test_map_can_use_team_spawnpoints);
+        addSubTest("test_map_get_random_spawnpoint_teamgame", (PFNUNITSUBTEST)&MapsTest::test_map_get_random_spawnpoint_teamgame);
+        addSubTest("test_map_get_random_spawnpoint_teamgame_does_not_select_unassigned", (PFNUNITSUBTEST)&MapsTest::test_map_get_random_spawnpoint_teamgame_does_not_select_unassigned);
+        addSubTest("test_map_load_without_team_spawnpoints_good", (PFNUNITSUBTEST)&MapsTest::test_map_load_without_team_spawnpoints_good);
         addSubTest("test_map_get_leftmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_leftmost_spawnpoint);
         addSubTest("test_map_get_rightmost_spawnpoint", (PFNUNITSUBTEST)&MapsTest::test_map_get_rightmost_spawnpoint);
         addSubTest("test_map_update", (PFNUNITSUBTEST)&MapsTest::test_map_update);
@@ -89,6 +99,7 @@ protected:
 
     virtual void tearDown() override
     {
+        m_cfgProfiles.getVars().clear();
     }
 
     virtual void finalize() override
@@ -116,72 +127,93 @@ private:
 
     // ---------------------------------------------------------------------------
 
+    bool test_bad_load_results_in_default_values(proofps_dd::Maps& maps)
+    {
+        bool b = true;
+        b &= assertFalse(maps.loaded(), "loaded");
+        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
+        b &= assertTrue(maps.getFilename().empty(), "filename");
+
+        // block and map boundaries
+        b &= assertEquals(0u, maps.width(), "width");
+        b &= assertEquals(0u, maps.height(), "height");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
+        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
+        b &= assertNull(maps.getBlocks(), "blocks");
+        b &= assertEquals(0, maps.getBlockCount(), "block count");
+        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
+        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
+
+        // variables
+        b &= assertTrue(maps.getVars().empty(), "getVars");
+        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        // items
+        b &= assertEquals(0u, maps.getItems().size(), "item count");
+        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+
+        // spawn points
+        assertTrue(maps.getSpawnpoints().empty(), "spawn points");
+        try {
+            const PureVector sp = maps.getRandomSpawnpoint(false);
+            b = assertTrue(false, "ex 1"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        try {
+            b &= assertTrue(maps.getTeamSpawnpoints(1).empty(), "team 1 spawn points");
+            b = assertTrue(false, "ex 2"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        try {
+            b &= assertTrue(maps.getTeamSpawnpoints(2).empty(), "team 2 spawn points");
+            b = assertTrue(false, "ex 3"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        b &= assertFalse(maps.areTeamSpawnpointsDefined(), "are team spawn points defined");
+
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "can use team 1 spawn points");
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 2), "can use team 2 spawn points");
+
+        // decals
+        b &= assertTrue(maps.getDecals().empty(), "decal count");
+
+        // jump pads
+        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
+        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
+        try {
+            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
+            b &= false; // should not come here
+        }
+        catch (const std::exception&) { /* should throw, we are good here */ }
+
+        return b;
+    }
+
     bool test_initially_empty()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = (assertFalse(maps.isInitialized(), "inited 1") &
-            assertFalse(maps.loaded(), "loaded 1") &
-            assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 1") &
-            assertTrue(maps.getFilename().empty(), "filename 1") &
-            assertEquals(0u, maps.width(), "width 1") &
-            assertEquals(0u, maps.height(), "height 1") &
-            assertTrue(maps.getVars().empty(), "getVars 1") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 1") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 1") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 1") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 1") &
-            assertNull(maps.getBlocks(), "blocks 1") &
-            assertEquals(0, maps.getBlockCount(), "block count 1") &
-            assertNull(maps.getForegroundBlocks(), "foreground blocks 1") &
-            assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 1") &
-            assertEquals(0u, maps.getItems().size(), "item count 1") &
-            assertTrue(maps.getDecals().empty(), "decal count 1") &
-            assertTrue(maps.getJumppads().empty(), "jumppad count 1") &
-            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1") &
+            assertTrue(test_bad_load_results_in_default_values(maps), "def values 1") &
             assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 1") &
             assertNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
             assertTrue(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 1") &
             assertNull(maps.getMapcycle().availableMapsGetAsCharPtrArray(), "available maps charptrarray 1") &
             assertTrue(maps.getMapcycle().availableMapsNoChangingGet().empty(), "available maps no changing empty 1")) != 0;
-
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor 1");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
         
         b &= assertTrue(maps.initialize(), "init");
         b &= (assertTrue(maps.isInitialized(), "inited 2") &
-            assertFalse(maps.loaded(), "loaded 2") &
-            assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 2") &
-            assertTrue(maps.getFilename().empty(), "filename 2") &
-            assertEquals(0u, maps.width(), "width 2") &
-            assertEquals(0u, maps.height(), "height 2") &
-            assertTrue(maps.getVars().empty(), "getVars 2") &
-            assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 2") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 2") &
-            assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 2") &
-            assertNull(maps.getBlocks(), "blocks 2") &
-            assertEquals(0, maps.getBlockCount(), "block count 2") &
-            assertNull(maps.getForegroundBlocks(), "foreground blocks 2") &
-            assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2") &
-            assertEquals(0u, maps.getItems().size(), "item count 2") &
-            assertTrue(maps.getDecals().empty(), "decal count 2") &
-            assertTrue(maps.getJumppads().empty(), "jumppad count 2") &
-            assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2") &
+            assertTrue(test_bad_load_results_in_default_values(maps), "def values 2") &
             assertFalse(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 2") &
             assertNotNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
             assertFalse(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 2") &
             assertNotNull(maps.getMapcycle().availableMapsGetAsCharPtrArray(), "available maps charptrarray 2") &
             assertFalse(maps.getMapcycle().availableMapsNoChangingGet().empty(), "available maps no changing empty 2")) != 0;
-
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor 2");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
 
         b &= assertTrue(
             checkConstCharPtrArrayElemsPointingToContainerElems(maps.getMapcycle().mapcycleGet(), maps.getMapcycle().mapcycleGetAsCharPtrArray()),
@@ -198,41 +230,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
-        b &= assertTrue(maps.getFilename().empty(), "filename");
-
-        // block and map boundaries
-        b &= assertEquals(0u, maps.width(), "width");
-        b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
-        b &= assertNull(maps.getBlocks(), "blocks");
-        b &= assertEquals(0, maps.getBlockCount(), "block count");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
-
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
-
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
-
-        // decals
-        b &= assertTrue(maps.getDecals().empty(), "decal count");
-
-        // jump pads
-        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        b &= test_bad_load_results_in_default_values(maps);
 
         return b;
     }
@@ -242,41 +240,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
-        b &= assertTrue(maps.getFilename().empty(), "filename");
-
-        // block and map boundaries
-        b &= assertEquals(0u, maps.width(), "width");
-        b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
-        b &= assertNull(maps.getBlocks(), "blocks");
-        b &= assertEquals(0, maps.getBlockCount(), "block count");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
-
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
-
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
-
-        // decals
-        b &= assertTrue(maps.getDecals().empty(), "decal count");
-
-        // jump pads
-        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        b &= test_bad_load_results_in_default_values(maps);
 
         return b;
     }
@@ -286,41 +250,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
-        b &= assertTrue(maps.getFilename().empty(), "filename");
-
-        // block and map boundaries
-        b &= assertEquals(0u, maps.width(), "width");
-        b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
-        b &= assertNull(maps.getBlocks(), "blocks");
-        b &= assertEquals(0, maps.getBlockCount(), "block count");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
-
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
-
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
-
-        // decals
-        b &= assertTrue(maps.getDecals().empty(), "decal count");
-
-        // jump pads
-        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        b &= test_bad_load_results_in_default_values(maps);
 
         return b;
     }
@@ -330,41 +260,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
-        b &= assertTrue(maps.getFilename().empty(), "filename");
-
-        // block and map boundaries
-        b &= assertEquals(0u, maps.width(), "width");
-        b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
-        b &= assertNull(maps.getBlocks(), "blocks");
-        b &= assertEquals(0, maps.getBlockCount(), "block count");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
-
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
-
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
-
-        // decals
-        b &= assertTrue(maps.getDecals().empty(), "decal count");
-
-        // jump pads
-        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        b &= test_bad_load_results_in_default_values(maps);
 
         return b;
     }
@@ -374,41 +270,47 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= assertFalse(maps.loaded(), "loaded");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded");
-        b &= assertTrue(maps.getFilename().empty(), "filename");
+        b &= test_bad_load_results_in_default_values(maps);
 
-        // block and map boundaries
-        b &= assertEquals(0u, maps.width(), "width");
-        b &= assertEquals(0u, maps.height(), "height");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max");
-        b &= assertNull(maps.getBlocks(), "blocks");
-        b &= assertEquals(0, maps.getBlockCount(), "block count");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
+        return b;
+    }
 
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints");
+    bool test_bad_spawn_group_double_spawn_index()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_bad_load_results_in_default_values(maps);
 
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        return b;
+    }
 
-        // decals
-        b &= assertTrue(maps.getDecals().empty(), "decal count");
+    bool test_bad_spawn_group_double_spawn_index_2()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index_2.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_bad_load_results_in_default_values(maps);
 
-        // jump pads
-        b &= assertTrue(maps.getJumppads().empty(), "jumppad count");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        return b;
+    }
+
+    bool test_bad_spawn_group_spawn_index()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_bad_load_results_in_default_values(maps);
+
+        return b;
+    }
+
+    bool test_bad_spawn_group_spawn_word_as_index()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_word_as_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_bad_load_results_in_default_values(maps);
 
         return b;
     }
@@ -445,7 +347,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count");
         
         // variables
-        b &= assertEquals(4u, maps.getVars().size(), "getVars");
+        b &= assertEquals(5u, maps.getVars().size(), "getVars");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 2a");
@@ -549,7 +451,7 @@ private:
         // all visible block objects are just clones of reference objects
         for (int i = 0; i < maps.getBlockCount(); i++)
         {
-            assertNotNull((maps.getBlocks()[i])->getReferredObject(), (std::string("block ") + std::to_string(i) + " is NOT cloned object!").c_str());
+            b &= assertNotNull((maps.getBlocks()[i])->getReferredObject(), (std::string("block ") + std::to_string(i) + " is NOT cloned object!").c_str());
         }
 
         return b;
@@ -589,7 +491,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 1");
 
         // variables
-        b &= assertEquals(4u, maps.getVars().size(), "getVars 1");
+        b &= assertEquals(5u, maps.getVars().size(), "getVars 1");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 1");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 1a");
@@ -621,41 +523,7 @@ private:
 
         // ###################################### UNLOAD ######################################
         maps.unload();
-        b &= assertFalse(maps.loaded(), "loaded 2");
-        b &= assertEquals(0u, maps.width(), "width 2");
-        b &= assertEquals(0u, maps.height(), "height 2");
-        b &= assertTrue(maps.getFilename().empty(), "filename 2");
-        b &= assertTrue(maps.getNextMapToBeLoaded().empty(), "getNextMapToBeLoaded 2");
-
-        // block and map boundaries
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMin(), "objects Min 2");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlockPosMax(), "objects Max 2");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMin(), "vertex Min 2");
-        b &= assertEquals(PureVector(0, 0, 0), maps.getBlocksVertexPosMax(), "vertex Max 2");
-        b &= assertNull(maps.getBlocks(), "blocks 2");
-        b &= assertEquals(0, maps.getBlockCount(), "block count 2");
-        b &= assertNull(maps.getForegroundBlocks(), "foreground blocks 2");
-        b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count 2");
-
-        // variables
-        b &= assertTrue(maps.getVars().empty(), "getVars 2");
-        b &= assertEquals(0u, maps.getSpawnpoints().size(), "spawnpoints 2");
-
-        // items
-        b &= assertEquals(0u, maps.getItems().size(), "item count 2");
-        b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 2");
-
-        // decals
-        b &= assertEquals(0u, maps.getDecals().size(), "decal count 2");
-
-        // jump pads
-        b &= assertEquals(0u, maps.getJumppads().size(), "jumppad count 2");
-        b &= assertEquals(0u, maps.getJumppadValidVarsCount(), "jumppad vars count 2");
-        try {
-            b &= assertEquals(1.f, maps.getJumppadForceFactors(0).y, "jumppad force factor 2");
-            b &= false; // should not come here
-        }
-        catch (const std::exception&) { /* should throw, we are good here */ }
+        b &= assertTrue(test_bad_load_results_in_default_values(maps), "def values after unload");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
@@ -686,7 +554,7 @@ private:
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 3");
 
         // variables
-        b &= assertEquals(4u, maps.getVars().size(), "getVars 3");
+        b &= assertEquals(5u, maps.getVars().size(), "getVars 3");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints 3");
         try {
             b &= assertEquals("Test Map", maps.getVars().at("Name").getAsString(), "getVars 3a");
@@ -732,7 +600,7 @@ private:
 
         maps.shutdown();
 
-        b &= assertFalse(maps.loaded(), "loaded 2");
+        b &= assertTrue(test_bad_load_results_in_default_values(maps), "def values");
         b &= assertFalse(maps.isInitialized(), "initialized 2");
         b &= assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle 2");
         b &= assertNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2");
@@ -781,10 +649,24 @@ private:
         return b;
     }
 
-    bool test_map_get_random_spawnpoint()
+    bool test_map_get_random_spawnpoint_no_teamgame()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
-        bool b = assertTrue(maps.initialize(), "init");
+        bool b = true;
+
+        try {
+            const PureVector sp = maps.getRandomSpawnpoint(false);
+            b = assertTrue(false, "ex 1"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        b &= assertTrue(maps.initialize(), "init");
+        try {
+            const PureVector sp = maps.getRandomSpawnpoint(false);
+            b = assertTrue(false, "ex 2"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
@@ -796,7 +678,7 @@ private:
             try {
                 while ( !originalSpawnpoints.empty() && (i < 50) )
                 {
-                    const PureVector sp = maps.getRandomSpawnpoint();
+                    const PureVector sp = maps.getRandomSpawnpoint(false);
                     originalSpawnpoints.erase(sp);
                     i++;
                 }
@@ -804,6 +686,226 @@ private:
             }
             catch (const std::exception& e) { b = assertTrue(false, e.what()); }
         }
+
+        return b;
+    }
+
+    bool test_map_get_team_spawnpoints()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = true;
+
+        try {
+            b &= assertTrue(maps.getTeamSpawnpoints(0).empty(), "ex 1");
+            b = false; // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        b &= assertTrue(maps.initialize(), "init");
+        try {
+            b &= assertTrue(maps.getTeamSpawnpoints(0).empty(), "ex 2");
+            b = false; // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+        
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertFalse(maps.getSpawnpoints().empty(), "spawnpoints");
+
+        if (b)
+        {
+            try {
+                b &= assertTrue(maps.getTeamSpawnpoints(0).empty(), "ex 3");
+                b = false; // shall not reach this
+            }
+            catch (const std::exception& e) { b &= assertEquals(std::string("Invalid Team Id!"), e.what()); }
+
+            try {
+                b &= assertTrue(maps.getTeamSpawnpoints(3).empty(), "ex 4");
+                b = false; // shall not reach this
+            }
+            catch (const std::exception& e) { b &= assertEquals(std::string("Invalid Team Id!"), e.what()); }
+
+            try {
+                b &= assertEquals(1u, maps.getTeamSpawnpoints(1).size(), "group size 1");
+                b &= assertEquals(2u, maps.getTeamSpawnpoints(2).size(), "group size 2");
+                for (const auto& isp : maps.getTeamSpawnpoints(1))
+                {
+                    b &= assertLess(isp, maps.getSpawnpoints().size(), (std::string("group 1 index: ") + std::to_string(isp)).c_str());
+                }
+                for (const auto& isp : maps.getTeamSpawnpoints(2))
+                {
+                    b &= assertLess(isp, maps.getSpawnpoints().size(), (std::string("group 2 index: ") + std::to_string(isp)).c_str());
+                    b &= assertTrue(
+                        maps.getTeamSpawnpoints(1).find(isp) == maps.getTeamSpawnpoints(1).end(),
+                        (std::string("group 2 index found in group 1: ") + std::to_string(isp)).c_str());
+                }
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    bool test_map_are_team_spawnpoints_defined()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = true;
+        b &= assertFalse(maps.areTeamSpawnpointsDefined(), "1");
+        b &= assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.areTeamSpawnpointsDefined(), "2");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertTrue(maps.areTeamSpawnpointsDefined(), "3");
+
+        return b;
+    }
+
+    bool test_map_can_use_team_spawnpoints()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = true;
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "0");
+        
+        b &= assertTrue(maps.initialize(), "init") &
+            m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].getAsString().empty();
+
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "1");
+
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "2");
+
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 1), "3");
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 2), "4");
+
+        b &= assertFalse(maps.canUseTeamSpawnpoints(false, 1), "5");
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 0), "6");
+        
+        maps.unload();
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "7");
+
+        return b;
+    }
+
+    bool test_map_get_random_spawnpoint_teamgame()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = true;
+
+        try {
+            const PureVector sp = maps.getRandomSpawnpoint(true, 1);
+            b = assertTrue(false, "ex 1"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        b &= assertTrue(maps.initialize(), "init");
+        try {
+            const PureVector sp = maps.getRandomSpawnpoint(true, 1);
+            b = assertTrue(false, "ex 2"); // shall not reach this
+        }
+        catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
+
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 1), "can use 1");
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 2), "can use 2");
+
+        if (b)
+        {
+            std::set<PureVector> originalSpawnpoints = maps.getSpawnpoints();
+            try {
+                int i = 0;
+                while (i < 20)
+                {
+                    PureVector sp = maps.getRandomSpawnpoint(true, 1);
+                    originalSpawnpoints.erase(sp);
+                    i++;
+                }
+                b &= assertFalse(originalSpawnpoints.empty(), "original empty 1");
+
+                i = 0;
+                while (i < 20)
+                {
+                    PureVector sp = maps.getRandomSpawnpoint(true, 2);
+                    originalSpawnpoints.erase(sp);
+                    i++;
+                }
+                b &= assertTrue(originalSpawnpoints.empty(), "original empty 2");
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    bool test_map_get_random_spawnpoint_teamgame_does_not_select_unassigned()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("map_test_good_with_unassigned_sp.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals("map_test_good_with_unassigned_sp.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
+        b &= assertEquals("map_test_good_with_unassigned_sp.txt", maps.getFilename(), "filename");
+
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
+
+        b &= assertTrue(maps.areTeamSpawnpointsDefined(), "1");
+        b &= assertEquals(1u, maps.getTeamSpawnpoints(1).size(), "2");
+        b &= assertEquals(1u, maps.getTeamSpawnpoints(2).size(), "3");
+
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 1), "4");
+        b &= assertTrue(maps.canUseTeamSpawnpoints(true, 2), "5");
+
+        if (b)
+        {
+            std::set<PureVector> originalSpawnpoints = maps.getSpawnpoints();
+            try {
+                for (unsigned iTeamId = 1; iTeamId <= 2; iTeamId++)
+                {
+                    for (int i = 0; i < 50; i++)
+                    {
+                        PureVector sp = maps.getRandomSpawnpoint(true, iTeamId);
+                        originalSpawnpoints.erase(sp);
+                    }
+                }
+
+                b &= assertEquals(1u, originalSpawnpoints.size(), "original size");
+                // if the PureVector ordering in the std::set is what we expect, the last spawn point is the unassigned one, which
+                // is the same spawn point that was never selected in the loops above thus the only 1 remained in originalSpawnpoints
+                b &= assertEquals(*(--maps.getSpawnpoints().end()), *originalSpawnpoints.begin(), "the only unassigned sp left");
+            }
+            catch (const std::exception& e) { b = assertTrue(false, e.what()); }
+        }
+
+        return b;
+    }
+
+    bool test_map_load_without_team_spawnpoints_good()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertTrue(maps.load("map_test_good_no_spawn_group.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.loaded(), "loaded");
+        b &= assertEquals("map_test_good_no_spawn_group.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
+        b &= assertEquals("map_test_good_no_spawn_group.txt", maps.getFilename(), "filename");
+
+        b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
+        
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
+
+        b &= assertFalse(maps.areTeamSpawnpointsDefined(), "1");
+        b &= assertTrue(maps.getTeamSpawnpoints(1).empty(), "2");
+        b &= assertTrue(maps.getTeamSpawnpoints(2).empty(), "3");
+        
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "4");
+        b &= assertFalse(maps.canUseTeamSpawnpoints(true, 2), "5");
 
         return b;
     }
@@ -829,7 +931,7 @@ private:
                         spExpected = sp;
                     }
                 }
-                b = assertEquals(spExpected, spChecked, "vec");
+                b &= assertEquals(spExpected, spChecked, "vec");
             }
             catch (const std::exception& e) { b = assertTrue(false, e.what()); }
         }
@@ -858,7 +960,7 @@ private:
                         spExpected = sp;
                     }
                 }
-                b = assertEquals(spExpected, spChecked, "vec");
+                b &= assertEquals(spExpected, spChecked, "vec");
             }
             catch (const std::exception& e) { b = assertTrue(false, e.what()); }
         }

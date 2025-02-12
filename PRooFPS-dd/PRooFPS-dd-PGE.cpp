@@ -529,12 +529,14 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = handlePlayerEventFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt),
-                cameraGetShakeForce());
+                cameraGetShakeForce(),
+                m_config);
             break;
         case proofps_dd::MsgUserInGameMenuCmd::id:
             bRet = serverHandleUserInGameMenuCmd(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt),
+                m_config);
             break;
         default:
             bRet = false;
