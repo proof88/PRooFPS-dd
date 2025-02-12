@@ -52,7 +52,7 @@ protected:
     {
         //CConsole::getConsoleInstance().SetLoggingState(PureTexture::getLoggerModuleName(), true);
         //CConsole::getConsoleInstance().SetLoggingState(PureTextureManager::getLoggerModuleName(), true);
-        CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Maps::getLoggerModuleName(), true);
+        //CConsole::getConsoleInstance().SetLoggingState(proofps_dd::Maps::getLoggerModuleName(), true);
 
         PGEInputHandler& inputHandler = PGEInputHandler::createAndGet(m_cfgProfiles);
         
@@ -71,10 +71,11 @@ protected:
         addSubTest("test_map_load_bad_order", (PFNUNITSUBTEST) &MapsTest::test_map_load_bad_order);
         addSubTest("test_map_load_bad_jumppad_count", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_count);
         addSubTest("test_map_load_bad_jumppad_force_value", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_jumppad_force_value);
-        addSubTest("test_bad_spawn_group_double_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_double_spawn_index);
-        addSubTest("test_bad_spawn_group_double_spawn_index_2", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_double_spawn_index_2);
-        addSubTest("test_bad_spawn_group_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_spawn_index);
-        addSubTest("test_bad_spawn_group_spawn_word_as_index", (PFNUNITSUBTEST)&MapsTest::test_bad_spawn_group_spawn_word_as_index);
+        addSubTest("test_map_load_bad_spawn_group_contains_all_indices", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_contains_all_indices);
+        addSubTest("test_map_load_bad_spawn_group_double_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_double_spawn_index);
+        addSubTest("test_map_load_bad_spawn_group_double_spawn_index_2", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_double_spawn_index_2);
+        addSubTest("test_map_load_bad_spawn_group_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_spawn_index);
+        addSubTest("test_map_load_bad_spawn_group_spawn_word_as_index", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_spawn_word_as_index);
         addSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         addSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         addSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
@@ -275,7 +276,17 @@ private:
         return b;
     }
 
-    bool test_bad_spawn_group_double_spawn_index()
+    bool test_map_load_bad_spawn_group_contains_all_indices()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_contains_all_indices.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_bad_load_results_in_default_values(maps);
+
+        return b;
+    }
+
+    bool test_map_load_bad_spawn_group_double_spawn_index()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
@@ -285,7 +296,7 @@ private:
         return b;
     }
 
-    bool test_bad_spawn_group_double_spawn_index_2()
+    bool test_map_load_bad_spawn_group_double_spawn_index_2()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
@@ -295,7 +306,7 @@ private:
         return b;
     }
 
-    bool test_bad_spawn_group_spawn_index()
+    bool test_map_load_bad_spawn_group_spawn_index()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
@@ -305,7 +316,7 @@ private:
         return b;
     }
 
-    bool test_bad_spawn_group_spawn_word_as_index()
+    bool test_map_load_bad_spawn_group_spawn_word_as_index()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");

@@ -1476,6 +1476,12 @@ bool proofps_dd::Maps::parseTeamSpawnpoints()
         return false;
     }
 
+    if (m_spawngroup_1.size() == m_spawnpoints.size())
+    {
+        getConsole().OLn("PRooFPSddPGE::%s(): spawngroup_1 contains ALL spawn point indices, which is non-sense!", __func__);
+        return false;
+    }
+
     const auto itVarSp2 = m_vars.find("spawngroup_2");
     if ((itVarSp2 == m_vars.end()) || itVarSp2->second.getAsString().empty())
     {
