@@ -32,11 +32,12 @@ A compressed build for Windows is available for TODO.
 !!! WIP !!!
 
 This version brings the following new features:
- - new game mode: team deathmatch.
- - respawn countdown can be speeden up by mouse clicks.
+ - new game mode: team deathmatch;
+ - respawn countdown can be speeden up by mouse clicks: the more you click, the sooner you respawn;
  - frag table has new columns: player ranking based on K/D ratio, aim accuracy, etc.
 
 This version brings the following bug fixes:
+ - minimap transparency setting did not take effect until game restart;
  - crash due to integer overflow when system uptime exceeded 49.71 days.
 
 This version brings the following behavior changes:
