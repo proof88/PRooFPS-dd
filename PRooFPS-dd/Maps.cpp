@@ -31,7 +31,7 @@ proofps_dd::Maps::Maps(
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
     m_foregroundBlocks_h(0),
-    m_bvh(3,0),
+    m_bvh(4,0),
     m_width(0),
     m_height(0),
     m_nValidJumppadVarsCount(0)
@@ -357,6 +357,8 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         m_blockPosMax.getY() + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
         m_blockPosMax.getZ() + proofps_dd::Maps::fMapBlockSizeDepth / 2.f);
 
+    m_bvh.updateAndEnableAabbDebugRendering(m_gfx.getObject3DManager());
+    //m_bvh.updateAndEnableNodeDebugRendering(m_gfx.getObject3DManager()); // octree nodes
     getConsole().EOLn(
         "%s Built BVH: pos: [%f,%f,%f], size: %f, AABB pos: [%f,%f,%f], AABB size: [%f,%f,%f]",
         __func__,
