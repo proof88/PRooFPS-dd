@@ -17,6 +17,7 @@
 
 #include "CConsole.h"
 #include "PGE.h" // we use audio also from here so it is easier to just include everything
+#include "PURE/include/external/SpatialStructures/PureBoundingVolumeHierarchy.h"
 
 #include "Mapcycle.h"
 #include "MapItem.h"
@@ -90,6 +91,7 @@ namespace proofps_dd
         PureObject3D** getForegroundBlocks(); // TODO: not nice access
         int getBlockCount() const;
         int getForegroundBlockCount() const;
+        const PureBoundingVolumeHierarchy& getBVH() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
         const std::vector<PureObject3D*>& getDecals() const;
         const std::vector<PureObject3D*>& getJumppads() const;
@@ -156,8 +158,10 @@ namespace proofps_dd
         PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
         int m_blocks_h;
 
-        PureObject3D** m_foregroundBlocks;
+        PureObject3D** m_foregroundBlocks; // TODO: as BVH has been introduced, this might be removed in the future, BVH is also holding same objects!
         int m_foregroundBlocks_h;
+
+        PureBoundingVolumeHierarchy m_bvh;
 
         std::map<std::string, PGEcfgVariable> m_vars;
         std::string m_sRawName;     /**< Raw map name, basically filename without extension. */

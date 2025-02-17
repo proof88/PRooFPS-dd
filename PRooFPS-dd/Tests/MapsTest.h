@@ -128,7 +128,7 @@ private:
 
     // ---------------------------------------------------------------------------
 
-    bool test_bad_load_results_in_default_values(proofps_dd::Maps& maps)
+    bool test_map_has_default_values(proofps_dd::Maps& maps)
     {
         bool b = true;
         b &= assertFalse(maps.loaded(), "loaded");
@@ -146,6 +146,9 @@ private:
         b &= assertEquals(0, maps.getBlockCount(), "block count");
         b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
         b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
+        b &= assertEquals(PureOctree::NodeType::LeafEmpty, maps.getBVH().getNodeType(), "bvh empty");
+        b &= assertEquals(PureVector(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos");
+        b &= assertEquals(PureVector(), maps.getBVH().getAABB().getSizeVec(), "bvh aabb size");
 
         // variables
         b &= assertTrue(maps.getVars().empty(), "getVars");
@@ -200,7 +203,7 @@ private:
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = (assertFalse(maps.isInitialized(), "inited 1") &
-            assertTrue(test_bad_load_results_in_default_values(maps), "def values 1") &
+            assertTrue(test_map_has_default_values(maps), "def values 1") &
             assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 1") &
             assertNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1") &
             assertTrue(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 1") &
@@ -209,7 +212,7 @@ private:
         
         b &= assertTrue(maps.initialize(), "init");
         b &= (assertTrue(maps.isInitialized(), "inited 2") &
-            assertTrue(test_bad_load_results_in_default_values(maps), "def values 2") &
+            assertTrue(test_map_has_default_values(maps), "def values 2") &
             assertFalse(maps.getMapcycle().mapcycleGet().empty(), "mapcycle empty 2") &
             assertNotNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2") &
             assertFalse(maps.getMapcycle().availableMapsGet().empty(), "available maps empty 2") &
@@ -231,7 +234,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -241,7 +244,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -251,7 +254,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -261,7 +264,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -271,7 +274,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -281,7 +284,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_spawn_group_contains_all_indices.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -291,7 +294,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -301,7 +304,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index_2.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -311,7 +314,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -321,7 +324,7 @@ private:
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_word_as_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
-        b &= test_bad_load_results_in_default_values(maps);
+        b &= test_map_has_default_values(maps);
 
         return b;
     }
@@ -356,6 +359,9 @@ private:
         b &= assertLess(0, maps.getBlockCount(), "block count");
         b &= assertNotNull(maps.getForegroundBlocks(), "foreground blocks");
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count");
+        b &= assertEquals(PureOctree::NodeType::Parent, maps.getBVH().getNodeType(), "bvh not empty");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getSizeVec(), "bvh aabb size");
         
         // variables
         b &= assertEquals(5u, maps.getVars().size(), "getVars");
@@ -500,6 +506,9 @@ private:
         b &= assertLess(0, maps.getBlockCount(), "block count 1");
         b &= assertNotNull(maps.getForegroundBlocks(), "foreground blocks 1");
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 1");
+        b &= assertEquals(PureOctree::NodeType::Parent, maps.getBVH().getNodeType(), "bvh not empty");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getSizeVec(), "bvh aabb size");
 
         // variables
         b &= assertEquals(5u, maps.getVars().size(), "getVars 1");
@@ -534,7 +543,7 @@ private:
 
         // ###################################### UNLOAD ######################################
         maps.unload();
-        b &= assertTrue(test_bad_load_results_in_default_values(maps), "def values after unload");
+        b &= assertTrue(test_map_has_default_values(maps), "def values after unload");
 
         // ###################################### LOAD 2 ######################################
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
@@ -563,6 +572,9 @@ private:
         b &= assertLess(0, maps.getBlockCount(), "block count 3");
         b &= assertNotNull(maps.getForegroundBlocks(), "foreground blocks 3");
         b &= assertLess(0, maps.getForegroundBlockCount(), "foreground block count 3");
+        b &= assertEquals(PureOctree::NodeType::Parent, maps.getBVH().getNodeType(), "bvh not empty 3");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos 3");
+        b &= assertNotEquals(PureVector(), maps.getBVH().getAABB().getSizeVec(), "bvh aabb size 3");
 
         // variables
         b &= assertEquals(5u, maps.getVars().size(), "getVars 3");
@@ -611,7 +623,7 @@ private:
 
         maps.shutdown();
 
-        b &= assertTrue(test_bad_load_results_in_default_values(maps), "def values");
+        b &= assertTrue(test_map_has_default_values(maps), "def values");
         b &= assertFalse(maps.isInitialized(), "initialized 2");
         b &= assertTrue(maps.getMapcycle().mapcycleGet().empty(), "mapcycle 2");
         b &= assertNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 2");

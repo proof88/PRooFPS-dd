@@ -67,6 +67,9 @@
     <Filter Include="Header Files\455-355-7357-88">
       <UniqueIdentifier>{596420ef-13e0-4187-80e8-840415cd119f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PGE\PURE\SpatialStructures">
+      <UniqueIdentifier>{3f7219d9-5f46-49e3-b677-bd6e90c36951}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -380,6 +383,15 @@
     </ClInclude>
     <ClInclude Include="Config.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\PURE\include\external\SpatialStructures\PureAxisAlignedBoundingBox.h">
+      <Filter>Header Files\PGE\PURE\SpatialStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\PURE\include\external\SpatialStructures\PureBoundingVolumeHierarchy.h">
+      <Filter>Header Files\PGE\PURE\SpatialStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PGE\PGE\PURE\include\external\SpatialStructures\PureOctree.h">
+      <Filter>Header Files\PGE\PURE\SpatialStructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

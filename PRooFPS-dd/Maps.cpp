@@ -31,6 +31,7 @@ proofps_dd::Maps::Maps(
     m_blocks_h(0),
     m_foregroundBlocks(NULL),
     m_foregroundBlocks_h(0),
+    m_bvh(3,0),
     m_width(0),
     m_height(0),
     m_nValidJumppadVarsCount(0)
@@ -356,6 +357,20 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         m_blockPosMax.getY() + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
         m_blockPosMax.getZ() + proofps_dd::Maps::fMapBlockSizeDepth / 2.f);
 
+    getConsole().EOLn(
+        "%s Built BVH: pos: [%f,%f,%f], size: %f, AABB pos: [%f,%f,%f], AABB size: [%f,%f,%f]",
+        __func__,
+        m_bvh.getPos().getX(),
+        m_bvh.getPos().getY(),
+        m_bvh.getPos().getZ(),
+        m_bvh.getSize(),
+        m_bvh.getAABB().getPosVec().getX(),
+        m_bvh.getAABB().getPosVec().getY(),
+        m_bvh.getAABB().getPosVec().getZ(),
+        m_bvh.getAABB().getSizeVec().getX(),
+        m_bvh.getAABB().getSizeVec().getY(),
+        m_bvh.getAABB().getSizeVec().getZ());
+
     getConsole().SOLnOO("> Map loaded with width %u and height %u!", m_width, m_height);
     return true;
 }
@@ -363,6 +378,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
 void proofps_dd::Maps::unload()
 {
     getConsole().OLnOI("Maps::unload() ...");
+    m_bvh.reset();
     m_sServerMapFilenameToLoad.clear();
     m_sRawName.clear();
     m_sFileName.clear();
@@ -642,6 +658,11 @@ int proofps_dd::Maps::getBlockCount() const
 int proofps_dd::Maps::getForegroundBlockCount() const
 {
     return m_foregroundBlocks_h;
+}
+
+const PureBoundingVolumeHierarchy& proofps_dd::Maps::getBVH() const
+{
+    return m_bvh;
 }
 
 const std::map<proofps_dd::MapItem::MapItemId, proofps_dd::MapItem*>& proofps_dd::Maps::getItems() const
@@ -1081,7 +1102,32 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     {
         if (m_blocks == nullptr)
         {
-            // first line in non-dry run, now we can allocate memory for all blocks
+            // first line in non-dry run
+
+            // Octree root node size needs to be set before inserting any objects into it, also reposition it so
+            // the whole map spatially fits inside the root node!
+            if (!m_bvh.setPos(
+                PureVector(
+                    m_width * proofps_dd::Maps::fMapBlockSizeWidth / 2.f,
+                    m_height * proofps_dd::Maps::fMapBlockSizeHeight / -2.f /* minus because vertically elements start from 0 and going down towards negative Y */,
+                    0.f)))
+            {
+                getConsole().EOLn("%s Failed to set BVH pos!", __func__);
+                assert(false);
+                return false;
+            }
+
+            const float fBvhSize = std::max(
+                m_width * proofps_dd::Maps::fMapBlockSizeWidth,
+                m_height * proofps_dd::Maps::fMapBlockSizeHeight);
+            if (!m_bvh.setSize(fBvhSize))
+            {
+                getConsole().EOLn("%s Failed to set BVH size: %f!", __func__, fBvhSize);
+                assert(false);
+                return false;
+            }
+
+            // now we can allocate memory for all blocks
             // TODO: handle memory allocation errors
             m_blocks = (PureObject3D**)malloc(m_blocks_h * sizeof(PureObject3D*));
             m_blocks_h = 0; // we are incrementing it again during non-dry run
@@ -1418,6 +1464,25 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         }
 
         pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::Maps::fMapBlockSizeDepth);
+
+        if (bForeground)
+        {
+            // only here we can insert into BVH because block position has just been set
+            if (!m_bvh.insertObject(*pNewBlockObj))
+            {
+                getConsole().EOLn(
+                    "%s Failed to insert block into BVH at [x,y,z]: [%f,%f,%f], BVH is at: [%f,%f,%f], BVH size: %f !",
+                    __func__,
+                    pNewBlockObj->getPosVec().getX(),
+                    pNewBlockObj->getPosVec().getY(),
+                    pNewBlockObj->getPosVec().getZ(),
+                    m_bvh.getPos().getX(),
+                    m_bvh.getPos().getY(), 
+                    m_bvh.getPos().getZ(),
+                    m_bvh.getSize());
+                return false;
+            }
+        }
     }  // while
     y = y - proofps_dd::Maps::fMapBlockSizeHeight;
     return true;
