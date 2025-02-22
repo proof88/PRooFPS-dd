@@ -98,7 +98,7 @@ namespace proofps_dd
         const std::map<std::string, PGEcfgVariable>& getVars() const;
         size_t getJumppadValidVarsCount();
         const TPURE_XY& getJumppadForceFactors(const size_t& index) const;
-        void update(const float& fps);
+        void update(const float& fps, const PureObject3D& objCurrentPlayer);
 
         bool handleMapItemUpdateFromServer(
             pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
@@ -161,7 +161,7 @@ namespace proofps_dd
         PureObject3D** m_foregroundBlocks; // TODO: as BVH has been introduced, this might be removed in the future, BVH is also holding same objects!
         int m_foregroundBlocks_h;
 
-        PureBoundingVolumeHierarchy m_bvh;
+        PureBoundingVolumeHierarchyRoot m_bvh;
 
         std::map<std::string, PGEcfgVariable> m_vars;
         std::string m_sRawName;     /**< Raw map name, basically filename without extension. */

@@ -1007,7 +1007,12 @@ private:
                 vOriginalItemPosY.push_back(itemPair.second->getPos().getY());
             }
 
-            maps.update(60.f);
+            PureObject3D* const pDummyPlayerObject = engine->getObject3DManager().createBox(1.f, 1.f, 1.f);
+            if (!pDummyPlayerObject)
+            {
+                return assertFalse(true, "pDummyPlayerObject");
+            }
+            maps.update(60.f, *pDummyPlayerObject);
 
             int i = 0;
             for (const auto& itemPair : maps.getItems())

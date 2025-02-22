@@ -809,7 +809,7 @@ const std::vector<PureObject3D*>& proofps_dd::Maps::getJumppads() const
     return m_jumppads;
 }
 
-void proofps_dd::Maps::update(const float& fps)
+void proofps_dd::Maps::update(const float& fps, const PureObject3D& objCurrentPlayer)
 {
     // invoked by both server and client
 
@@ -865,6 +865,9 @@ void proofps_dd::Maps::update(const float& fps)
             static_cast<TPureUByte>(std::llroundl(fDecorAlpha))
         );
     }
+
+    auto pTightestPlayerFittingBvhNode = m_bvh.findTightestFittingNode(objCurrentPlayer);
+    m_bvh.markAabbDebugRendering(pTightestPlayerFittingBvhNode);
 }
 
 bool proofps_dd::Maps::handleMapItemUpdateFromServer(

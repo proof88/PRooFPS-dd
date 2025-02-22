@@ -839,7 +839,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     
     updatePlayersVisuals(m_config, *GameMode::getGameMode()); // maybe we should do this per-tick instead of per-frame in the future
     updateVisualsForGameMode();
-    m_maps.update(m_fps);
+    m_maps.update(m_fps, *player.getObject3D());
     m_maps.updateVisibilitiesForRenderer();
 }
 
