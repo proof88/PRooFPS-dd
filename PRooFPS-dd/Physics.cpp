@@ -33,7 +33,8 @@ proofps_dd::Physics::Physics(
     m_sounds(sounds),
     m_bAllowStrafeMidAir(true),
     m_bAllowStrafeMidAirFull(false),
-    m_nFallDamageMultiplier(0)
+    m_nFallDamageMultiplier(0),
+    m_bCollisionModeBvh(true)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, mapPlayers, maps, sounds
@@ -246,6 +247,11 @@ void proofps_dd::Physics::serverSetFallDamageMultiplier(int n)
     m_nFallDamageMultiplier = n;
 }
 
+void proofps_dd::Physics::serverSetCollisionModeBvh(bool state)
+{
+    m_bCollisionModeBvh = state;
+}
+
 void proofps_dd::Physics::serverGravity(
     XHair& xhair,
     const unsigned int& nPhysicsRate,
@@ -389,6 +395,128 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
     proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
     PureVector& vecCamShakeForce)
 {
+    if (m_bCollisionModeBvh)
+    {
+        serverPlayerCollisionWithWalls_bvh(nPhysicsRate, xhair, gameMode, vecCamShakeForce);
+    }
+    else
+    {
+        serverPlayerCollisionWithWalls_legacy(nPhysicsRate, xhair, gameMode, vecCamShakeForce);
+    }
+} // serverPlayerCollisionWithWalls()
+
+
+// ############################### PRIVATE ###############################
+
+
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
+    proofps_dd::Player& player,
+    const PureObject3D* obj,
+    const int& iJumppad /* -1 means no jumppad */,
+    const float& fPlayerHalfHeight,
+    const float& fPlayerOPos1XMinusHalf,
+    const float& fPlayerOPos1XPlusHalf,
+    const float& fPlayerPos1YMinusHalf,
+    const float& fPlayerPos1YPlusHalf,
+    const float& fBlockSizeXhalf,
+    const float& fBlockSizeYhalf,
+    XHair& xhair,
+    PureVector& vecCamShakeForce
+)
+{
+    assert(obj);
+
+    if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+    {
+        return false;
+    }
+
+    if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
+    {
+        return false;
+    }
+
+    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
+    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
+    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
+    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
+    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
+    player.getPos().set(
+        PureVector(
+            player.getPos().getNew().getX(),
+            obj->getPosVec().getY() + fAlignCloseToWall,
+            player.getPos().getNew().getZ()
+        ));
+
+    if (nAlignUnderOrAboveWall == 1)
+    {
+        // we fell from above
+        const bool bOriginalFalling = player.isFalling();
+        float fFallHeight = 0.f;
+        int nDamage = 0;
+
+        // handle fall damage
+        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
+        {
+            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+            static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
+            if (fFallHeight > fFallDamageFromHeight)
+            {
+                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
+                // player invulnerability does NOT affect physics damage so we always do damage here!
+                player.doDamage(nDamage, nDamage);
+                if (std::as_const(player).getHealth() == 0)
+                {
+                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
+                }
+            }
+
+            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
+            //    static_cast<int>(nFallDurationMillisecs),
+            //    fFallHeight,
+            //    nDamage);
+        }
+
+        if (bOriginalFalling)
+        {
+            // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
+            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
+        }
+        player.setCanFall(false);
+
+        // maybe not null everything out in the future but only decrement the components by
+        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
+        // at this moment. Currently we want to null out the strafe-jump-induced force.
+        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
+        // we can zero out jumpforce here completely!
+        player.getJumpForce().Set(0.f, 0.f, 0.f);
+        player.setGravity(0.f);
+
+        if (iJumppad >= 0)
+        {
+            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
+            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
+            player.handleJumppadActivated();
+        }
+    }
+    else
+    {
+        // we hit ceiling with our head during jumping
+        //getConsole().EOLn("start falling (hit ceiling)");
+        player.setCanFall(true);
+        player.stopJumping();
+        player.getHasJustStoppedJumpingInThisTick() = true;
+        player.setGravity(0.f);
+    }
+
+    return true;
+} // serverPlayerCollisionWithWalls_LoopKernelVertical()
+
+
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
+{
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = Player::fBaseSpeedCrouch / nPhysicsRate;
@@ -466,7 +594,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
             {
                 const PureObject3D* const pObj = m_maps.getForegroundBlocks()[i];
                 assert(pObj);  // we dont store nulls there
-                
+
                 const auto itJumppad = std::find(m_maps.getJumppads().begin(), m_maps.getJumppads().end(), pObj);
                 if (itJumppad != m_maps.getJumppads().end())
                 {
@@ -503,7 +631,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
 
         if (player.isSomersaulting())
         {
-            player.stepSomersaultAngleServer( GAME_PLAYER_SOMERSAULT_ROTATE_STEP );
+            player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
         }
 
         if (player.getWantToStandup() && !player.isSomersaulting())
@@ -569,11 +697,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
             const float GAME_STRAFE_PHYSICS_RATE_DIVIDER = PFL::lerp(5.f /* 20 Hz */, 10.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
             // unlike as in serverGravity() here I divide by the lerped value instead of multiply, I dont know why I multiply in serverGravity() anyway, but
             // obviously I need to divide here as lower physics rate results in higher strafe speeds, need to have the per-tick change higher also!
-            const float fPlayerStrafeChangePerTick = 
+            const float fPlayerStrafeChangePerTick =
                 fTargetStrafeSpeed / GAME_STRAFE_PHYSICS_RATE_DIVIDER
                 /* no need to divide by nPhysicsRate as those const values assigned to fTargetStrafeSpeed are already divided by it */;
             player.getStrafeSpeed() += fPlayerStrafeChangePerTick;
-            
+
             // always limit strafe speed to target strafe speed
             if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() > fTargetStrafeSpeed))
                 ||
@@ -588,15 +716,15 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
                 vecOriginalJumpForce = player.getJumpForce();
             }
 
-            if ( !player.isInAir() ||
-                 (m_bAllowStrafeMidAir &&
-                 (
-                    /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
-                    (vecOriginalJumpForce.getX() == 0.f) ||
-                    /* if we have horizontal jump force, we cannot add more to it in the same direction */
-                    ((vecOriginalJumpForce.getX() > 0.f) && (player.getStrafeSpeed() < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (player.getStrafeSpeed() > 0.f))
-                 ))
-               )
+            if (!player.isInAir() ||
+                (m_bAllowStrafeMidAir &&
+                    (
+                        /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
+                        (vecOriginalJumpForce.getX() == 0.f) ||
+                        /* if we have horizontal jump force, we cannot add more to it in the same direction */
+                        ((vecOriginalJumpForce.getX() > 0.f) && (player.getStrafeSpeed() < 0.f)) || ((vecOriginalJumpForce.getX() < 0.f) && (player.getStrafeSpeed() > 0.f))
+                        ))
+                )
             {
                 ++nContinuousStrafeCountForDebugServerPlayerMovement;
                 //getConsole().EOLn("Tick Strafe");
@@ -745,7 +873,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
             if (player.getWillSomersaultInNextTick())
             {
                 // only here can we really trigger on-ground somersaulting
-                player.startSomersaultServer(false); 
+                player.startSomersaultServer(false);
             }
 
             if (!player.isInAir() && (player.getStrafeSpeed() != 0.f) && player.isRunning() && !player.getCrouchStateCurrent())
@@ -762,113 +890,13 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
             player.getActuallyRunningOnGround().set(false);
         }
     } // end for player
-}
+} // serverPlayerCollisionWithWalls_legacy()
 
-bool proofps_dd::Physics::serverPlayerCollisionWithWalls_LoopKernelVertical(
-    proofps_dd::Player& player,
-    const PureObject3D* obj,
-    const int& iJumppad /* -1 means no jumppad */,
-    const float& fPlayerHalfHeight,
-    const float& fPlayerOPos1XMinusHalf,
-    const float& fPlayerOPos1XPlusHalf,
-    const float& fPlayerPos1YMinusHalf,
-    const float& fPlayerPos1YPlusHalf,
-    const float& fBlockSizeXhalf,
-    const float& fBlockSizeYhalf,
-    XHair& xhair,
-    PureVector& vecCamShakeForce
-    )
+
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
 {
-    assert(obj);
-
-    if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
-    {
-        return false;
-    }
-
-    if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf))
-    {
-        return false;
-    }
-
-    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
-    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-    player.getPos().set(
-        PureVector(
-            player.getPos().getNew().getX(),
-            obj->getPosVec().getY() + fAlignCloseToWall,
-            player.getPos().getNew().getZ()
-        ));
-
-    if (nAlignUnderOrAboveWall == 1)
-    {
-        // we fell from above
-        const bool bOriginalFalling = player.isFalling();
-        float fFallHeight = 0.f;
-        int nDamage = 0;
-
-        // handle fall damage
-        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
-        {
-            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-            static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
-            if (fFallHeight > fFallDamageFromHeight)
-            {
-                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
-                // player invulnerability does NOT affect physics damage so we always do damage here!
-                player.doDamage(nDamage, nDamage);
-                if (std::as_const(player).getHealth() == 0)
-                {
-                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
-                }
-            }
-
-            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
-            //    static_cast<int>(nFallDurationMillisecs),
-            //    fFallHeight,
-            //    nDamage);
-        }
-
-        if (bOriginalFalling)
-        {
-            // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
-            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
-        }
-        player.setCanFall(false);
-
-        // maybe not null everything out in the future but only decrement the components by
-        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
-        // at this moment. Currently we want to null out the strafe-jump-induced force.
-        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
-        // we can zero out jumpforce here completely!
-        player.getJumpForce().Set(0.f, 0.f, 0.f);
-        player.setGravity(0.f);
-
-        if (iJumppad >= 0)
-        {
-            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
-            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
-            player.handleJumppadActivated();
-        }
-    }
-    else
-    {
-        // we hit ceiling with our head during jumping
-        //getConsole().EOLn("start falling (hit ceiling)");
-        player.setCanFall(true);
-        player.stopJumping();
-        player.getHasJustStoppedJumpingInThisTick() = true;
-        player.setGravity(0.f);
-    }
-
-    return true;
-}
-
-
-// ############################### PRIVATE ###############################
-
+    (void)nPhysicsRate;
+    (void)xhair;
+    (void)gameMode;
+    (void)vecCamShakeForce;
+} // serverPlayerCollisionWithWalls_legacy()

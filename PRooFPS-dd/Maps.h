@@ -32,6 +32,10 @@ namespace proofps_dd
         static constexpr char* szCVarSvMap = "sv_map";
         static constexpr char* szCVarSvMapTeamSpawnGroups = "sv_map_team_spawn_groups";
 
+        static constexpr char* szCVarSvMapCollisionMode = "sv_map_collision_mode";
+        static constexpr char* szCVarSvMapCollisionBvhDebugRender = "sv_map_collision_bvh_debug_render";
+        static constexpr char* szCVarSvMapCollisionBvhMaxDepth = "sv_map_collision_bvh_max_depth";
+
         static constexpr float fMapBlockSizeWidth = 1.0f;
         static constexpr float fMapBlockSizeHeight = 1.0f;
         static constexpr float fMapBlockSizeDepth = 1.0f;

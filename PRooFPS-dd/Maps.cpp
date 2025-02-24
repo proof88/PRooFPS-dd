@@ -74,7 +74,7 @@ bool proofps_dd::Maps::initialize()
 
     if (m_texRed && m_texDecorJumpPadVertical)
     {
-        bInitialized = m_mapcycle.initialize();
+        bInitialized = m_mapcycle.initialize() && m_bvh.setMaxDepthLevel(m_cfgProfiles.getVars()[szCVarSvMapCollisionBvhMaxDepth].getAsUInt());
     }
 
     if (!bInitialized)
@@ -357,11 +357,15 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         m_blockPosMax.getY() + proofps_dd::Maps::fMapBlockSizeHeight / 2.f,
         m_blockPosMax.getZ() + proofps_dd::Maps::fMapBlockSizeDepth / 2.f);
 
-    m_bvh.updateAndEnableAabbDebugRendering(m_gfx.getObject3DManager());
+    if (m_cfgProfiles.getVars()[szCVarSvMapCollisionBvhDebugRender].getAsBool())
+    {
+        m_bvh.updateAndEnableAabbDebugRendering(m_gfx.getObject3DManager());
+    }
     //m_bvh.updateAndEnableNodeDebugRendering(m_gfx.getObject3DManager()); // octree nodes
     getConsole().EOLn(
-        "%s Built BVH: pos: [%f,%f,%f], size: %f, AABB pos: [%f,%f,%f], AABB size: [%f,%f,%f]",
+        "%s Built BVH: maxdepth: %u, pos: [%f,%f,%f], size: %f, AABB pos: [%f,%f,%f], AABB size: [%f,%f,%f]",
         __func__,
+        m_bvh.getMaxDepthLevel(),
         m_bvh.getPos().getX(),
         m_bvh.getPos().getY(),
         m_bvh.getPos().getZ(),
@@ -866,8 +870,11 @@ void proofps_dd::Maps::update(const float& fps, const PureObject3D& objCurrentPl
         );
     }
 
-    auto pTightestPlayerFittingBvhNode = m_bvh.findTightestFittingNode(objCurrentPlayer);
-    m_bvh.markAabbDebugRendering(pTightestPlayerFittingBvhNode);
+    if (m_cfgProfiles.getVars()[szCVarSvMapCollisionBvhDebugRender].getAsBool())
+    {
+        auto pTightestPlayerFittingBvhNode = m_bvh.findTightestFittingNode(objCurrentPlayer);
+        m_bvh.markAabbDebugRendering(pTightestPlayerFittingBvhNode);
+    }
 }
 
 bool proofps_dd::Maps::handleMapItemUpdateFromServer(
@@ -1476,7 +1483,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             if (!m_bvh.insertObject(*pNewBlockObj))
             {
                 getConsole().EOLn(
-                    "%s Failed to insert block into BVH at [x,y,z]: [%f,%f,%f], BVH is at: [%f,%f,%f], BVH size: %f !",
+                    "%s Failed to insert block into BVH at [x,y,z]: [%f,%f,%f], BVH is at: [%f,%f,%f], BVH size: %f, maxdepth: %u !",
                     __func__,
                     pNewBlockObj->getPosVec().getX(),
                     pNewBlockObj->getPosVec().getY(),
@@ -1484,7 +1491,8 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     m_bvh.getPos().getX(),
                     m_bvh.getPos().getY(), 
                     m_bvh.getPos().getZ(),
-                    m_bvh.getSize());
+                    m_bvh.getSize(),
+                    m_bvh.getMaxDepthLevel());
                 return false;
             }
         }

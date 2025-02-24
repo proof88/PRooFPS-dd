@@ -183,6 +183,11 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
         return false;
     }
 
+    // BAD: physics stuff should not be set here, it should be done in config.validate(), however
+    // in that case Config would need the Physics definition which overall leads to circular including each other,
+    // leading to GameMode.cpp unable to compile.
+    serverSetCollisionModeBvh(getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
+
     m_gui.initialize();
 
     m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)

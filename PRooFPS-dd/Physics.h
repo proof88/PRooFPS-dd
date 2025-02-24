@@ -81,6 +81,7 @@ namespace proofps_dd
         void serverSetAllowStrafeMidAir(bool bAllow);
         void serverSetAllowStrafeMidAirFull(bool bAllow);
         void serverSetFallDamageMultiplier(int n);
+        void serverSetCollisionModeBvh(bool state);
         void serverGravity(
             XHair& xhair,
             const unsigned int& nPhysicsRate,
@@ -90,6 +91,20 @@ namespace proofps_dd
             XHair& xhair,
             proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
             PureVector& vecCamShakeForce);
+
+    private:
+
+        // ---------------------------------------------------------------------------
+
+        PGE& m_pge;
+        proofps_dd::Durations& m_durations;
+        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
+        proofps_dd::Maps& m_maps;
+        proofps_dd::Sounds& m_sounds;
+        bool m_bAllowStrafeMidAir;
+        bool m_bAllowStrafeMidAirFull;
+        int m_nFallDamageMultiplier;
+        bool m_bCollisionModeBvh;
 
         bool serverPlayerCollisionWithWalls_LoopKernelVertical(
             Player& player,
@@ -105,18 +120,16 @@ namespace proofps_dd
             XHair& xhair,
             PureVector& vecCamShakeForce);
 
-    private:
-
-        // ---------------------------------------------------------------------------
-
-        PGE& m_pge;
-        proofps_dd::Durations& m_durations;
-        std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
-        proofps_dd::Maps& m_maps;
-        proofps_dd::Sounds& m_sounds;
-        bool m_bAllowStrafeMidAir;
-        bool m_bAllowStrafeMidAirFull;
-        int m_nFallDamageMultiplier;
+        void serverPlayerCollisionWithWalls_legacy(
+            const unsigned int& nPhysicsRate,
+            XHair& xhair,
+            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
+            PureVector& vecCamShakeForce);
+        void serverPlayerCollisionWithWalls_bvh(
+            const unsigned int& nPhysicsRate,
+            XHair& xhair,
+            proofps_dd::GameMode& gameMode /* TODO: get rid of GameMode, Physics should not have it */,
+            PureVector& vecCamShakeForce);
 
     }; // class Physics
 
