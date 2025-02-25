@@ -1477,7 +1477,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
 
         pNewBlockObj->getPosVec().Set(x, y, bBackground ? 0.0f : -proofps_dd::Maps::fMapBlockSizeDepth);
 
-        if (bForeground)
+        if (bForeground && !bJumppad)
         {
             // only here we can insert into BVH because block position has just been set
             if (!m_bvh.insertObject(*pNewBlockObj))
