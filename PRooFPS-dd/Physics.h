@@ -129,6 +129,11 @@ namespace proofps_dd
             XHair& xhair,
             PureVector& vecCamShakeForce);
 
+        void serverPlayerCollisionWithWalls_strafe(
+            const unsigned int& nPhysicsRate,
+            Player& player,
+            PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */);
+
         void serverPlayerCollisionWithWalls_legacy(
             const unsigned int& nPhysicsRate,
             XHair& xhair,
