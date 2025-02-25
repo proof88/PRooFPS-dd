@@ -1097,7 +1097,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
                 const PureAxisAlignedBoundingBox aabbPlayer(
                     PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
-                    PureVector(plobj->getScaledSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getScaledSizeVec().getZ()));
+                    PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
                 const bool bCanStandUp = (m_maps.getBVH().findColliderObject(aabbPlayer, nullptr) == nullptr);
                 if (bCanStandUp)
                 {
@@ -1108,30 +1108,16 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
 
         serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
-        const float fPlayerPos1XMinusHalf = player.getPos().getNew().getX() - plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1XPlusHalf = player.getPos().getNew().getX() + plobj->getSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
-        const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + fPlayerHalfHeight;
-
         bool bHorizontalCollisionOccured = false;
         if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
-            for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+            const PureAxisAlignedBoundingBox aabbPlayer(
+                PureVector(player.getPos().getNew().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
+                PureVector(plobj->getSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getSizeVec().getZ()));
+            const PureObject3D* const pWallObj = m_maps.getBVH().findColliderObject(aabbPlayer, nullptr);
+
+            if (pWallObj)
             {
-                // TODO: RFR: we can introduce a HorizontalKernel function similar to the VerticalKernel stuff above
-                const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                assert(obj);  // we dont store nulls there
-
-                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerPos1XPlusHalf))
-                {
-                    continue;
-                }
-
-                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
-                {
-                    continue;
-                }
-
                 bHorizontalCollisionOccured = true;
 
                 if (m_bAllowStrafeMidAir || player.canFall())
@@ -1144,8 +1130,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 }
 
                 // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
-                const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
+                const int nAlignLeftOrRightToWall = pWallObj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
+                const float fAlignNextToWall = nAlignLeftOrRightToWall * (pWallObj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
                 //getConsole().EOLn(
                 //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
                 //    player.getPos().getOld().getX(),
@@ -1154,13 +1140,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 // PPPKKKGGGGGG
                 player.getPos().set(
                     PureVector(
-                        obj->getPosVec().getX() + fAlignNextToWall,
+                        pWallObj->getPosVec().getX() + fAlignNextToWall,
                         player.getPos().getNew().getY(),
                         player.getPos().getNew().getZ()
                     ));
-
-                break;
-            } // end for i
+            } // end bHorizontalCollisionOccured
         } // end XPos changed
 
         if (!bHorizontalCollisionOccured)
