@@ -1006,7 +1006,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         // we need the CURRENT jump force LATER below for strafe movement, save it because vertical collision handling might change it!
         const PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
 
-        const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
         const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
@@ -1015,63 +1014,54 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
         // Object3D is then repositioned to Player's own position vector.
         // On the long run we should use colliders so physics does not depend on graphics.
-        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getScaledSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getScaledSizeVec().getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
-        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
+
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
-            // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
-            // check for vertical collision with regular foreground blocks.
-            // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
-            // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
-            // regular one first and break from the loop immediately then.
-            bool bCollided = false;
-            for (size_t iJumppad = 0; iJumppad < m_maps.getJumppads().size(); iJumppad++)
+            const PureAxisAlignedBoundingBox aabbPlayer(
+                PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
+                PureVector(plobj->getScaledSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getScaledSizeVec().getZ()));
+            std::vector<const PureObject3D*> colliders;
+            const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects(aabbPlayer, nullptr, colliders);
+            if (bVerticalCollisionOccured)
             {
-                assert(m_maps.getJumppads()[iJumppad]);  // we dont store nulls there
-                bCollided = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
+                assert(!colliders.empty());
+
+                // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
+                // check for vertical collision with regular foreground blocks.
+                // We need to check vertical collision _with jump pads first_, because otherwise if we have vertical collision with a
+                // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with a
+                // single regular block.
+                // So we find all colliders and check if there is jump pad there:
+                // - if yes, handle it and stop the vertical collision checking;
+                // - if no, continue with handling vertical collision with the 1st found object(any other object will be at same Y-pos / -size anyway).
+
+                int iCollidedWithJumppad = -1;
+                const PureObject3D* pObj = *colliders.begin(); // if no jumppad collision is detected in the loop below, then we handle collision with this
+                for (size_t iCollider = 0; (iCollider < colliders.size()) && (iCollidedWithJumppad == -1); iCollider++)
+                {
+                    for (size_t iJumppad = 0; (iJumppad < m_maps.getJumppads().size()) && (iCollidedWithJumppad == -1); iJumppad++)
+                    {
+                        if (m_maps.getJumppads()[iJumppad] == colliders[iCollider])
+                        {
+                            // vertical collision with a jump pad occurred
+                            iCollidedWithJumppad = iJumppad;
+                            pObj = colliders[iCollider];
+                        }
+                    }
+
+                }
+
+                serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
                     player,
-                    m_maps.getJumppads()[iJumppad],
-                    static_cast<int>(iJumppad),
+                    pObj,
+                    iCollidedWithJumppad,
                     fPlayerHalfHeight,
-                    fPlayerOPos1XMinusHalf,
-                    fPlayerOPos1XPlusHalf,
-                    fPlayerPos1YMinusHalf,
-                    fPlayerPos1YPlusHalf,
-                    fBlockSizeXhalf,
                     fBlockSizeYhalf,
                     xhair,
                     vecCamShakeForce);
+            } // endif bVerticalCollisionOccured
 
-                if (bCollided)
-                {
-                    // there is no need to check further, since we handle collision with only 1 jumppad at a time
-                    break;
-                }
-            } // end for jumppads
-
-            if (!bCollided)
-            {
-                const PureAxisAlignedBoundingBox aabbPlayer(
-                    PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
-                    PureVector(plobj->getScaledSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getScaledSizeVec().getZ()));
-                const PureObject3D* const pObj = m_maps.getBVH().findColliderObject(aabbPlayer, nullptr);
-                if (pObj)
-                {
-                    bCollided = true; // ignore loopkernelvertical() return value
-                    serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
-                        player,
-                        pObj,
-                        -1 /* invalid jumppad index */,
-                        fPlayerHalfHeight,
-                        fBlockSizeYhalf,
-                        xhair,
-                        vecCamShakeForce);
-                }
-            }
-
-            if (!bCollided && player.isFalling() && (std::as_const(player).getHealth() > 0))
+            if (!bVerticalCollisionOccured && player.isFalling() && (std::as_const(player).getHealth() > 0))
             {
                 // we have been in the air for a while now
 
@@ -1098,7 +1088,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 const PureAxisAlignedBoundingBox aabbPlayer(
                     PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
                     PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
-                const bool bCanStandUp = (m_maps.getBVH().findColliderObject(aabbPlayer, nullptr) == nullptr);
+                const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject(aabbPlayer, nullptr) == nullptr);
                 if (bCanStandUp)
                 {
                     player.doStandupServer();
@@ -1109,12 +1099,12 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         bool bHorizontalCollisionOccured = false;
-        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
+        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())                                     
         {
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getNew().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
                 PureVector(plobj->getSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getSizeVec().getZ()));
-            const PureObject3D* const pWallObj = m_maps.getBVH().findColliderObject(aabbPlayer, nullptr);
+            const PureObject3D* const pWallObj = m_maps.getBVH().findOneColliderObject(aabbPlayer, nullptr);
 
             if (pWallObj)
             {

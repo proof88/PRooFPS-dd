@@ -162,10 +162,10 @@ namespace proofps_dd
         PureObject3D** m_blocks; // TODO: not nice, in future we switch to cpp container
         int m_blocks_h;
 
-        PureObject3D** m_foregroundBlocks; // TODO: as BVH has been introduced, this might be removed in the future, BVH is also holding almost same objects (except jumppads)!
+        PureObject3D** m_foregroundBlocks; // TODO: as BVH has been introduced, this might be removed in the future, BVH is also holding almost same objects!
         int m_foregroundBlocks_h;
 
-        PureBoundingVolumeHierarchyRoot m_bvh; // for now, same as m_foregroundBlocks, except jumppads which are NOT stored in here.
+        PureBoundingVolumeHierarchyRoot m_bvh; // for now, same as m_foregroundBlocks
 
         std::map<std::string, PGEcfgVariable> m_vars;
         std::string m_sRawName;     /**< Raw map name, basically filename without extension. */
