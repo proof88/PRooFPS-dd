@@ -795,11 +795,11 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
+    const bool bCollisionModeBvh = (m_pge.getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
+
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
     pge_network::PgePacket newPktBulletUpdate;
-    const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
-    const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
     bool bEndGame = gameMode.isGameWon();
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
     size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
@@ -944,47 +944,29 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             if (!bDeleteBullet)
             {
                 // check if bullet is hitting a map element
-                // 
-                // TODO: this part slows the game down in debug mode with a few bullets.
-                // Originally with only 6 bullets, with VSync FPS went down from 60 to 45 on main dev machine, so
-                // I recommend using spatial hierarchy to effectively reduce the number of collision checks ...
-                // For now with the small bullet direction optimization in the loop I managed to keep FPS around 45-50
-                // with 10-15 bullets.
-                for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+                
+                if (bCollisionModeBvh)
                 {
-                    const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                    const bool bGoingLeft = (bullet.getObject3D().getAngleVec().getY() == 0.f); // otherwise it would be 180.f
-                    const float fMapObjPosX = obj->getPosVec().getX();
-                    const float fMapObjPosY = obj->getPosVec().getY();
-
-                    if ((bGoingLeft && (fMapObjPosX - fBlockSizeXhalf > fBulletPosX)) ||
-                        (!bGoingLeft && (fMapObjPosX + fBlockSizeXhalf < fBulletPosX)))
-                    {
-                        // optimization: rule out those blocks which are not in bullet's direction
-                        continue;
-                    }
-
-                    const float fBulletPosXMinusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
-                    const float fBulletPosXPlusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
-                    const float fBulletPosYMinusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
-                    const float fBulletPosYPlusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
-
-                    if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
-                    {
-                        continue;
-                    }
-
-                    if ((fMapObjPosY + fBlockSizeYhalf < fBulletPosYMinusHalf) || (fMapObjPosY - fBlockSizeYhalf > fBulletPosYPlusHalf))
-                    {
-                        continue;
-                    }
-
-                    bDeleteBullet = true;
-                    bWallHit = true;
-                    break; // we can stop since 1 bullet can touch only 1 map element
+                    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+                    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+                    bWallHit = serverUpdateBullets_collisionWithWalls_bvh(
+                        fBulletPosX, fBulletPosY, fBulletPosZ,
+                        fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
                 }
-            }
-        }
+                else
+                {
+                    bWallHit = serverUpdateBullets_collisionWithWalls_legacy(
+                        bullet,
+                        fBulletPosX, fBulletPosY,
+                        fBulletScaledSizeX, fBulletScaledSizeY);
+                }
+
+                if (bWallHit)
+                {
+                    bDeleteBullet = true;
+                }
+            }  // endif !bDeleteBullet
+        }  // endif !bDeleteBullet
 
         if (bDeleteBullet)
         {
@@ -1714,6 +1696,10 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
     }
 }
 
+
+// ############################### PRIVATE ###############################
+
+
 void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 {
     if ((bullet.getParticleType() == Bullet::ParticleType::Smoke) && (m_config.getSmokeConfigAmount() != Smoke::SmokeConfigAmount::None))
@@ -1732,4 +1718,75 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 }
 
 
-// ############################### PRIVATE ###############################
+/**
+* Used before v0.5.
+* 
+* @return True if bullet hit a wall (foreground block), false otherwise.
+*/
+bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
+    PooledBullet& bullet,
+    const float& fBulletPosX,
+    const float& fBulletPosY,
+    const float& fBulletScaledSizeX,
+    const float& fBulletScaledSizeY)
+{
+    // Originally with only 6 bullets, with VSync FPS went down from 60 to 45 on main dev machine.
+    // For now with the small bullet direction optimization in the loop I managed to keep FPS around 45-50
+    // with 10-15 bullets.
+    const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+    const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
+
+    for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+    {
+        const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
+        const bool bGoingLeft = (bullet.getObject3D().getAngleVec().getY() == 0.f); // otherwise it would be 180.f
+        const float fMapObjPosX = obj->getPosVec().getX();
+        const float fMapObjPosY = obj->getPosVec().getY();
+
+        if ((bGoingLeft && (fMapObjPosX - fBlockSizeXhalf > fBulletPosX)) ||
+            (!bGoingLeft && (fMapObjPosX + fBlockSizeXhalf < fBulletPosX)))
+        {
+            // optimization: rule out those blocks which are not in bullet's direction
+            continue;
+        }
+
+        const float fBulletPosXMinusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
+        const float fBulletPosXPlusHalf = fBulletPosX - fBulletScaledSizeX / 2.f;
+        const float fBulletPosYMinusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
+        const float fBulletPosYPlusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
+
+        if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
+        {
+            continue;
+        }
+
+        if ((fMapObjPosY + fBlockSizeYhalf < fBulletPosYMinusHalf) || (fMapObjPosY - fBlockSizeYhalf > fBulletPosYPlusHalf))
+        {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+} // serverUpdateBullets_collisionWithWalls_legacy()
+
+/**
+* Used from v0.5.
+*
+* @return True if bullet hit a wall (foreground block), false otherwise.
+*/
+bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_bvh(
+    const float& fBulletPosX,
+    const float& fBulletPosY,
+    const float& fBulletPosZ,
+    const float& fBulletScaledSizeX,
+    const float& fBulletScaledSizeY,
+    const float& fBulletScaledSizeZ)
+{
+    const PureAxisAlignedBoundingBox aabbBullet(
+        PureVector(fBulletPosX, fBulletPosY, fBulletPosZ),
+        PureVector(fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ));
+    
+    return (m_maps.getBVH().findOneColliderObject(aabbBullet, nullptr) != nullptr);
+} // serverUpdateBullets_collisionWithWalls_bvh()
