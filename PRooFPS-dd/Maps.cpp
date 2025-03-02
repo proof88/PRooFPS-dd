@@ -1093,7 +1093,12 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
     const float& fStairstepPosX,
     const float& fStairstepPosY,
     const float& fStairstepSizeX,
-    const float& fStairstepSizeY
+    const float& fStairstepSizeY,
+    PureTexture* pTexture,
+    const float& fU0,
+    const float& fV0,
+    const float& fU1,
+    const float& fV1
 )
 {
     assert(!bDryRun);
@@ -1102,30 +1107,79 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
     m_blocks_h++;
     m_foregroundBlocks_h++;  // same for m_foregroundBlocks_h
 
-    PureObject3D* const pStair = m_gfx.getObject3DManager().createBox(
+    PureObject3D* const pStairstep = m_gfx.getObject3DManager().createBox(
         fStairstepSizeX, fStairstepSizeY, proofps_dd::Maps::fMapBlockSizeWidth,
         PURE_VMOD_DYNAMIC /* based on createBox() API doc, argument bForceUseClientMemory is considered only if modifying habit is dynamic */,
         PURE_VREF_DIRECT,
         true /* force-use client memory because we override UV coords first, and then upload geometry to server memory */);
 
-    // TODO update UVW
-    // TODO set vertex transfer!
+    // here we have valid texture only for descending stairsteps, but for ascending it is nullptr!
+    // For ascending, we set the texture in lineHandleLayout(), after the next normal foreground block is created!!!
+    pStairstep->getMaterial().setTexture(pTexture);
 
-    m_blocks[m_blocks_h - 1] = pStair;
+    // update UVW
+    assert(pStairstep->getCount() == 1);  // box always has exactly 1 subobj
+    PureObject3D* const pSubObj = dynamic_cast<PureObject3D*>(pStairstep->getAttachedAt(0));
+    if (!pSubObj)
+    {
+        getConsole().EOLn("%s pSubObj cast failure!", __func__);
+        return false;
+    }
+    
+    if (pSubObj->getMaterial().getTexcoordsCount() != 24)
+    {
+        getConsole().EOLn("%s pSubObj unexpected texcoords count: %u!", __func__, pSubObj->getMaterial().getTexcoordsCount());
+        return false;
+    }
+    
+    for (TPureUInt iTexcoord = 0; iTexcoord < pSubObj->getMaterial().getTexcoordsCount(); iTexcoord += 4)
+    {
+        // left bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].u = fU0;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].v = fV0;
+        // right bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].u = fU1;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].v = fV0;
+        // right top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].u = fU1;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].v = fV1;
+        // left top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].u = fU0;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].v = fV1;
+    }
+
+    // finally upload with new UV-coords to server memory
+    const TPURE_VERTEX_TRANSFER_MODE vtransmode = PureVertexTransfer::selectVertexTransferMode(
+        PURE_VMOD_STATIC,
+        PURE_VREF_DIRECT /* in the future we may change this to indexed probably */,
+        false /* no force-use client mem */
+    );
+    if (!pStairstep->setVertexTransferMode(vtransmode))
+    {
+        // do not terminate, but will render slow
+        getConsole().EOLn("%s setVertexTransferMode(%u) failed!", __func__, vtransmode);
+    }
+    if (!PureVertexTransfer::isVideoMemoryUsed(vtransmode))
+    {
+        getConsole().EOLn("%s WARNING selectVertexTransferMode(): %u NOT using VRAM!", __func__, vtransmode);
+    }
+    getConsole().OLn("%s selectVertexTransferMode(): %u", __func__, vtransmode);
+
+    m_blocks[m_blocks_h - 1] = pStairstep;
     m_blocks[m_blocks_h - 1]->SetLit(true);
 
-    pStair->getPosVec().Set(fStairstepPosX, fStairstepPosY, -proofps_dd::Maps::fMapBlockSizeDepth);
+    pStairstep->getPosVec().Set(fStairstepPosX, fStairstepPosY, -proofps_dd::Maps::fMapBlockSizeDepth);
 
-    m_foregroundBlocks[m_foregroundBlocks_h - 1] = pStair;
+    m_foregroundBlocks[m_foregroundBlocks_h - 1] = pStairstep;
 
-    if (!m_bvh.insertObject(*pStair))
+    if (!m_bvh.insertObject(*pStairstep))
     {
         getConsole().EOLn(
             "%s Failed to insert block into BVH at [x,y,z]: [%f,%f,%f], BVH is at: [%f,%f,%f], BVH size: %f, maxdepth: %u !",
             __func__,
-            pStair->getPosVec().getX(),
-            pStair->getPosVec().getY(),
-            pStair->getPosVec().getZ(),
+            pStairstep->getPosVec().getX(),
+            pStairstep->getPosVec().getY(),
+            pStairstep->getPosVec().getZ(),
             m_bvh.getPos().getX(),
             m_bvh.getPos().getY(),
             m_bvh.getPos().getZ(),
@@ -1166,8 +1220,6 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
         return false;
     }
 
-    constexpr size_t nStairstepsCount = 4;
-
     if (bDryRun)
     {
         // since m_blocks_h is incremented in dry run, then reset, and incremented again in non-dry run, we have to keep
@@ -1191,6 +1243,9 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
             return false;
         }
 
+        // since all regular foreground blocks are clones, we need the referred object where texture is actually set!
+        assert(m_blocks[iObjectFgToBeCopied]->getReferredObject());
+
         // building stairsteps from top to bottom, left to right
         bool bRet = true;
         const float fStairsBlockLeftEdge = fBlockPosX - proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
@@ -1203,7 +1258,12 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairsBlockLeftEdge + fStairstepWidth / 2.f,
                 fStairsBlockTopEdge - (i * fStairstepHeight) - fStairstepHeight / 2.f,
                 fStairstepWidth,
-                fStairstepHeight);
+                fStairstepHeight,
+                m_blocks[iObjectFgToBeCopied]->getReferredObject()->getMaterial().getTexture(),
+                0.f,
+                0.f,
+                1.f,
+                1.f);
         }
         
         if (!bRet)
@@ -1228,7 +1288,12 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairsBlockRightEdge - fStairstepWidth / 2.f,
                 fStairsBlockBottomEdge + (i * fStairstepHeight) + fStairstepHeight / 2.f,
                 fStairstepWidth,
-                fStairstepHeight);
+                fStairstepHeight,
+                nullptr,
+                0.f,
+                0.f,
+                1.f,
+                1.f);
         }
 
         if (!bRet)
@@ -1303,7 +1368,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
 
     TPureFloat x = 0.0f;
     TPureFloat maxx = x;
-    std::string::size_type iLinePos = 0;
+    int iLinePos = -1;
     
     // Item character specifies the item type, but not the background behind the item.
     // So the idea is to copy the previous _neighbor_ background block to be used behind the item, but
@@ -1316,10 +1381,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
     // described above with special background blocks.
     int iObjectFgToBeCopied = -1;
 
-    while ( iLinePos != sLine.length() )
+    while ( iLinePos != static_cast<int>(sLine.length()) )
     {
+        ++iLinePos;
+        assert(iLinePos >= 0);
         const char c = sLine[iLinePos];
-        iLinePos++;
         const bool bForeground = foregroundBlocks.find(c) != foregroundBlocks.end();
         const bool bBackground = backgroundBlocks.find(c) != backgroundBlocks.end();
 
@@ -1669,6 +1735,26 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     m_bvh.getSize(),
                     m_bvh.getMaxDepthLevel());
                 return false;
+            }
+
+            if ((iLinePos > 0) && (sLine[iLinePos-1] == '/'))
+            {
+                // Only now we can set the texture for the previous ascending stairsteps,
+                // as createSmallStairStepsForSingleBigStairsBlock() sets proper texture only for descending stairsteps!!!
+                // Even tho createSmallStairStepsForSingleBigStairsBlock() creates all kind of stairsteps.
+                assert(m_blocks_h > nStairstepsCount);
+
+                // since all regular foreground blocks are clones, we need the referred object where texture is actually set!
+                assert(pNewBlockObj->getReferredObject());
+                PureTexture* const pTexFgBlock = pNewBlockObj->getReferredObject()->getMaterial().getTexture();
+                for (auto iStairstep = 0; iStairstep < nStairstepsCount; iStairstep++)
+                {
+                    const size_t iStairstepInBlocksArray = m_blocks_h - 1 - nStairstepsCount + iStairstep;
+                    m_blocks[iStairstepInBlocksArray]->getMaterial().setTexture(pTexFgBlock);
+                    // as of 2025 March, after setTexture() we dont need to reupload geometry to VRAM because PURE does not
+                    // put any texture binding call into display lists or anywhere else during setVertexTransferMode(), therefore
+                    // setting texture can be always done.
+                }
             }
         }
     }  // while

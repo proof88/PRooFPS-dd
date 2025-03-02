@@ -40,6 +40,8 @@ namespace proofps_dd
         static constexpr float fMapBlockSizeHeight = 1.0f;
         static constexpr float fMapBlockSizeDepth = 1.0f;
 
+        static constexpr size_t nStairstepsCount = 4;
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
@@ -200,7 +202,12 @@ namespace proofps_dd
             const float& fStairstepPosX,
             const float& fStairstepPosY,
             const float& fStairstepSizeX,
-            const float& fStairstepSizeY
+            const float& fStairstepSizeY,
+            PureTexture* pTexture,
+            const float& fU0,
+            const float& fV0,
+            const float& fU1,
+            const float& fV1
         );
         bool createSmallStairStepsForSingleBigStairsBlock(
             const bool& bDryRun,
