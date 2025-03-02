@@ -1086,7 +1086,160 @@ bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::
     m_vars[sVar] = sValue.c_str();
 
     return true;
-}
+} // lineHandleAssignment()
+
+bool proofps_dd::Maps::createSingleSmallStairStep(
+    const bool& bDryRun,
+    const float& fStairstepPosX,
+    const float& fStairstepPosY,
+    const float& fStairstepSizeX,
+    const float& fStairstepSizeY
+)
+{
+    assert(!bDryRun);
+
+    // in dry run, these counters are incremented by caller, but in non-dry run here we increment for each stairstep
+    m_blocks_h++;
+    m_foregroundBlocks_h++;  // same for m_foregroundBlocks_h
+
+    PureObject3D* const pStair = m_gfx.getObject3DManager().createBox(
+        fStairstepSizeX, fStairstepSizeY, proofps_dd::Maps::fMapBlockSizeWidth,
+        PURE_VMOD_DYNAMIC /* based on createBox() API doc, argument bForceUseClientMemory is considered only if modifying habit is dynamic */,
+        PURE_VREF_DIRECT,
+        true /* force-use client memory because we override UV coords first, and then upload geometry to server memory */);
+
+    // TODO update UVW
+    // TODO set vertex transfer!
+
+    m_blocks[m_blocks_h - 1] = pStair;
+    m_blocks[m_blocks_h - 1]->SetLit(true);
+
+    pStair->getPosVec().Set(fStairstepPosX, fStairstepPosY, -proofps_dd::Maps::fMapBlockSizeDepth);
+
+    m_foregroundBlocks[m_foregroundBlocks_h - 1] = pStair;
+
+    if (!m_bvh.insertObject(*pStair))
+    {
+        getConsole().EOLn(
+            "%s Failed to insert block into BVH at [x,y,z]: [%f,%f,%f], BVH is at: [%f,%f,%f], BVH size: %f, maxdepth: %u !",
+            __func__,
+            pStair->getPosVec().getX(),
+            pStair->getPosVec().getY(),
+            pStair->getPosVec().getZ(),
+            m_bvh.getPos().getX(),
+            m_bvh.getPos().getY(),
+            m_bvh.getPos().getZ(),
+            m_bvh.getSize(),
+            m_bvh.getMaxDepthLevel());
+        return false;
+    }
+
+    return true;
+} // createSingleSmallStairStep()
+
+/**
+* Invoked when a stairs block character is encountered.
+* 
+* @param bDryRun              Caller must pass their same variable. Need to have same logic based on this variable as caller has.
+* @param iLinePos             The current horizontal position index in the current line.
+* @param bCopyPreviousFgBlock True if we are handling a descending stairs block i.e. the previous block's texture needs to be copied.
+*                             False if we are handling an ascending stairs block.
+* @param iObjectFgToBeCopied  Index of the foreground block of which texture needs to be copied.
+*                             Valid only if bCopyPreviousFgBlock is true i.e. when handling a descending stairs block.
+* @param fBlockPosX           The horizontal world-position of the stairs block we are handling now.
+* @param fBlockPosY           The vertical world-position of the stairs block we are handling now.
+*/
+bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
+    const bool& bDryRun,
+    const size_t& iLinePos,
+    const size_t& nLineLength,
+    const bool& bCopyPreviousFgBlock,
+    const int& iObjectFgToBeCopied,
+    const float& fBlockPosX,
+    const float& fBlockPosY)
+{
+    if ((iLinePos == 0) || (iLinePos >= (nLineLength-1)))
+    {
+        // no line can start or end with any stairs block, this restriction is due to how m_blocksVertexPosMin and m_blocksVertexPosMax are
+        // calculated after loading a map, they are using const width and height values and I'm not changing that for now.
+        getConsole().OLn("%s: A line is starting or ending with a stairs block, which is not permitted!", __func__);
+        return false;
+    }
+
+    constexpr size_t nStairstepsCount = 4;
+
+    if (bDryRun)
+    {
+        // since m_blocks_h is incremented in dry run, then reset, and incremented again in non-dry run, we have to keep
+        // the same logic as caller does for non-stairs blocks.
+        // However, for more clarity, during dry run here we simply increase by the number of stairsteps that are created in non-dry run,
+        // and return quickly, but in non-dry run we increase these numbers in the loops below.
+        m_blocks_h += nStairstepsCount;
+        m_foregroundBlocks_h += nStairstepsCount;  // same for m_foregroundBlocks_h
+
+        // thats all for now
+        return true;
+    }
+
+    const float fStairstepHeight = proofps_dd::Maps::fMapBlockSizeHeight / static_cast<float>(nStairstepsCount);
+    if (bCopyPreviousFgBlock)
+    {
+        // create descending stair blocks
+        if (iObjectFgToBeCopied == -1)
+        {
+            getConsole().OLn("%s: bCopyPreviousFgBlock is set but iObjectFgToBeCopied is -1!", __func__);
+            return false;
+        }
+
+        // building stairsteps from top to bottom, left to right
+        bool bRet = true;
+        const float fStairsBlockLeftEdge = fBlockPosX - proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+        const float fStairsBlockTopEdge = fBlockPosY + proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
+        for (auto i = 0; bRet && (i < nStairstepsCount); i++)
+        {
+            const float fStairstepWidth = (i + 1) * proofps_dd::Maps::fMapBlockSizeWidth / static_cast<float>(nStairstepsCount);
+            bRet &= createSingleSmallStairStep(
+                bDryRun,
+                fStairsBlockLeftEdge + fStairstepWidth / 2.f,
+                fStairsBlockTopEdge - (i * fStairstepHeight) - fStairstepHeight / 2.f,
+                fStairstepWidth,
+                fStairstepHeight);
+        }
+        
+        if (!bRet)
+        {
+            getConsole().OLn("%s: error during creating small stairstep!", __func__);
+            return false;
+        }
+    }
+    else
+    {
+        // create ascending stair blocks
+
+        // building stairsteps from bottom to top, left to right
+        bool bRet = true;
+        const float fStairsBlockRightEdge = fBlockPosX + proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+        const float fStairsBlockBottomEdge = fBlockPosY - proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
+        for (auto i = 0; bRet && (i < nStairstepsCount); i++)
+        {
+            const float fStairstepWidth = (nStairstepsCount-i) * proofps_dd::Maps::fMapBlockSizeWidth / static_cast<float>(nStairstepsCount);
+            bRet &= createSingleSmallStairStep(
+                bDryRun,
+                fStairsBlockRightEdge - fStairstepWidth / 2.f,
+                fStairsBlockBottomEdge + (i * fStairstepHeight) + fStairstepHeight / 2.f,
+                fStairstepWidth,
+                fStairstepHeight);
+        }
+
+        if (!bRet)
+        {
+            getConsole().OLn("%s: error during creating small stairstep!", __func__);
+            return false;
+        }
+    }
+
+    return true;
+} // createSmallStairStepsForSingleBigStairsBlock()
 
 /**
  * This function to be invoked for every single line of the map layout definition.
@@ -1298,6 +1451,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         bool bCopyPreviousFgBlock = false;
         bool bSpecialFgBlock = false;
         bool bJumppad = false;
+        bool bStairs = false;
         switch (c)
         {
         case '^':
@@ -1319,6 +1473,15 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             bCopyPreviousFgBlock = iObjectFgToBeCopied > -1;
             break;
         }
+        case '/':
+            bStairs = true;
+            // in case of ascending stairs, next fg object's texture shall be applied when handling that fg object
+            break;
+        case '\\':
+            bStairs = true;
+            // in case of descending stairs, previous fg object's texture shall be applied
+            bCopyPreviousFgBlock = iObjectFgToBeCopied > -1;
+            break;
         default:
             break;
         }
@@ -1332,13 +1495,24 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         }
 
         PureObject3D* pNewBlockObj = nullptr;
-        if (!bSpecialBgBlock || (bSpecialBgBlock && bCopyPreviousBgBlock))
+        if (bStairs)
+        {
+            // in case of a single "stairs" block, multiple smaller-sized blocks are created.
+            // I'm handling it in this separated code because currently we are not utilizing object cloning for stairs, 
+            if (!createSmallStairStepsForSingleBigStairsBlock(bDryRun, iLinePos, sLine.length(), bCopyPreviousFgBlock, iObjectFgToBeCopied, x, y))
+            {
+                getConsole().EOLn("%s: Stairs handling problem in line: %s!", __func__, sLine.c_str());
+                assert(false);
+                return false;
+            }
+        }
+        else if (!bSpecialBgBlock || (bSpecialBgBlock && bCopyPreviousBgBlock))
         {
             m_blocks_h++;
             if (!bSpecialBgBlock && bBackground)
             {
                 iObjectBgToBeCopied = m_blocks_h - 1;
-            } else if (!bSpecialFgBlock && bForeground)
+            } else if (!bSpecialFgBlock && bForeground && !bStairs)
             {
                 iObjectFgToBeCopied = m_blocks_h - 1;
             }
@@ -1429,7 +1603,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                             getConsole().EOLn("%s Not assigning any texture for block %s!", __func__, sc.c_str());
                         }
                         m_mapReferenceBlockObject3Ds[c]->getMaterial().setTexture(tex);
-                        
+
                         // finally upload with new UV-coords to server memory
                         const TPURE_VERTEX_TRANSFER_MODE vtransmode = PureVertexTransfer::selectVertexTransferMode(
                             PURE_VMOD_STATIC,
@@ -1453,7 +1627,7 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                 //pNewBlockObj->Show();
                 m_blocks[m_blocks_h - 1] = pNewBlockObj;
                 m_blocks[m_blocks_h - 1]->SetLit(true);
-            }
+            } // endif !dryRun
 
             if (bForeground)
             {
@@ -1468,10 +1642,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
                     }
                 }
             }
-        }
+        } // endif !bStairs && ...
 
         if (!pNewBlockObj)
         {
+            // it is null for stairs, therefore createSmallStairStepsForSingleBigStairsBlock() shall set stair blocks position and insert into BVH!
             continue;
         }
 

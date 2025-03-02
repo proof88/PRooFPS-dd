@@ -278,7 +278,21 @@ jumppad_3 = 2 -6
 #          #
 ############
 
-# '\' and '/' chars are reserved for (not yet supported) stairs.
+# '/' and '\' chars are reserved for stairs blocks.
+# '/' represents left-to-right ascending stairsteps.
+# '\' represents left-to-right descending stairsteps.
+# Such a single block will generate multiple small stairsteps within the area of the block.
+#
+# The stairsteps of an ascending ('/') stairs block use the texture of the next neighbor foreground block.
+# Therefore, right after and ascending stairs block there must be at least 1 foreground block.
+# The stairsteps of a descending ('\') stairs block use the texture of the previous neighbor foreground block.
+# Therefore, right before a descending stairs block there must be at least 1 foreground block.
+#
+# In summary: /X\ is ok (X is any of the foreground block characters), but /\ is NOT ok.
+# Between '/' and '\' can be multiple foreground blocks, but at least one.
+#
+# A map layout line cannot start with '/' and cannot end with '\'.
+# This restriction can be lift upon request in the future but for now it would break some calculations.
 
 ################
 #              #

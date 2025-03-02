@@ -195,6 +195,21 @@ namespace proofps_dd
 
         bool lineHandleDecalAssignment(const std::string& sValue);
         bool lineHandleAssignment(const std::string& sVar, const std::string& sValue);
+        bool createSingleSmallStairStep(
+            const bool& bDryRun,
+            const float& fStairstepPosX,
+            const float& fStairstepPosY,
+            const float& fStairstepSizeX,
+            const float& fStairstepSizeY
+        );
+        bool createSmallStairStepsForSingleBigStairsBlock(
+            const bool& bDryRun,
+            const size_t& iLinePos,
+            const size_t& nLineLength,
+            const bool& bCopyPreviousFgBlock,
+            const int& iObjectFgToBeCopied,
+            const float& fBlockPosX,
+            const float& fBlockPosY);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
         bool parseTeamSpawnpointsFromString(
             const std::string& sVarValue, std::set<size_t>& targetSet);
