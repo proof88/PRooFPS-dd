@@ -1216,7 +1216,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
     {
         // no line can start or end with any stairs block, this restriction is due to how m_blocksVertexPosMin and m_blocksVertexPosMax are
         // calculated after loading a map, they are using const width and height values and I'm not changing that for now.
-        getConsole().OLn("%s: A line is starting or ending with a stairs block, which is not permitted!", __func__);
+        getConsole().EOLn("%s: A line is starting or ending with a stairs block, which is not permitted!", __func__);
         return false;
     }
 
@@ -1239,7 +1239,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
         // create descending stair blocks
         if (iObjectFgToBeCopied == -1)
         {
-            getConsole().OLn("%s: bCopyPreviousFgBlock is set but iObjectFgToBeCopied is -1!", __func__);
+            getConsole().EOLn("%s: bCopyPreviousFgBlock is set but iObjectFgToBeCopied is -1!", __func__);
             return false;
         }
 
@@ -1268,7 +1268,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
         
         if (!bRet)
         {
-            getConsole().OLn("%s: error during creating small stairstep!", __func__);
+            getConsole().EOLn("%s: error during creating small stairstep!", __func__);
             return false;
         }
     }
@@ -1298,7 +1298,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
 
         if (!bRet)
         {
-            getConsole().OLn("%s: error during creating small stairstep!", __func__);
+            getConsole().EOLn("%s: error during creating small stairstep!", __func__);
             return false;
         }
     }
