@@ -424,6 +424,8 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertic
     PureVector& vecCamShakeForce
 )
 {
+    // TODO: RFR: this is 99% same as the bvh version, let's refactor!
+
     assert(obj);
 
     if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
@@ -515,8 +517,17 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertic
 } // serverPlayerCollisionWithWalls_legacy_LoopKernelVertical()
 
 
-bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(Player& player, const PureObject3D* obj, const int& iJumppad, const float& fPlayerHalfHeight, const float& fBlockSizeYhalf, XHair& xhair, PureVector& vecCamShakeForce)
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
+    Player& player,
+    const PureObject3D* obj,
+    const int& iJumppad,
+    const float& fPlayerHalfHeight,
+    const float& fBlockSizeYhalf,
+    XHair& xhair,
+    PureVector& vecCamShakeForce)
 {
+    // TODO: RFR: this is 99% same as the legacy version, let's refactor!
+
     assert(obj);
 
     const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
@@ -778,8 +789,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
         // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
         // could be fetched into cache for even faster iteration on its elements ...
 
-        const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
-        const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
+        constexpr float fUsualBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+        constexpr float fUsualBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
         // At this point, player.getPos().getY() is already updated by Gravity().
@@ -811,8 +822,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     fPlayerOPos1XPlusHalf,
                     fPlayerPos1YMinusHalf,
                     fPlayerPos1YPlusHalf,
-                    fBlockSizeXhalf,
-                    fBlockSizeYhalf,
+                    fUsualBlockSizeXhalf,
+                    fUsualBlockSizeYhalf,
                     xhair,
                     vecCamShakeForce);
 
@@ -844,8 +855,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     fPlayerOPos1XPlusHalf,
                     fPlayerPos1YMinusHalf,
                     fPlayerPos1YPlusHalf,
-                    fBlockSizeXhalf,
-                    fBlockSizeYhalf,
+                    pObj->getSizeVec().getX() / 2.f,
+                    pObj->getSizeVec().getY() / 2.f,
                     xhair,
                     vecCamShakeForce);
             } // end for i
@@ -883,12 +894,15 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                     assert(obj);  // we dont store nulls there
 
-                    if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+                    const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
+                    const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+
+                    if ((obj->getPosVec().getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
                     {
                         continue;
                     }
 
-                    if ((obj->getPosVec().getY() + fBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
+                    if ((obj->getPosVec().getY() + fRealBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fRealBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
                     {
                         continue;
                     }
@@ -920,12 +934,15 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                 const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
                 assert(obj);  // we dont store nulls there
 
-                if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerPos1XPlusHalf))
+                const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
+                const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+
+                if ((obj->getPosVec().getX() + fRealBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fRealBlockSizeXhalf > fPlayerPos1XPlusHalf))
                 {
                     continue;
                 }
 
-                if ((obj->getPosVec().getY() + fBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
+                if ((obj->getPosVec().getY() + fRealBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fRealBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
                 {
                     continue;
                 }
@@ -1006,7 +1023,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         // we need the CURRENT jump force LATER below for strafe movement, save it because vertical collision handling might change it!
         const PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
 
-        const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
         const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
 
         // At this point, player.getPos().getY() is already updated by Gravity().
@@ -1056,7 +1072,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                     pObj,
                     iCollidedWithJumppad,
                     fPlayerHalfHeight,
-                    fBlockSizeYhalf,
+                    pObj->getSizeVec().getY() / 2.f,
                     xhair,
                     vecCamShakeForce);
             } // endif bVerticalCollisionOccured

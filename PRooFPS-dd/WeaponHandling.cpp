@@ -1733,8 +1733,6 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
     // Originally with only 6 bullets, with VSync FPS went down from 60 to 45 on main dev machine.
     // For now with the small bullet direction optimization in the loop I managed to keep FPS around 45-50
     // with 10-15 bullets.
-    const float fBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
-    const float fBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
 
     for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
     {
@@ -1742,9 +1740,11 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
         const bool bGoingLeft = (bullet.getObject3D().getAngleVec().getY() == 0.f); // otherwise it would be 180.f
         const float fMapObjPosX = obj->getPosVec().getX();
         const float fMapObjPosY = obj->getPosVec().getY();
+        const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
+        const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
 
-        if ((bGoingLeft && (fMapObjPosX - fBlockSizeXhalf > fBulletPosX)) ||
-            (!bGoingLeft && (fMapObjPosX + fBlockSizeXhalf < fBulletPosX)))
+        if ((bGoingLeft && (fMapObjPosX - fRealBlockSizeXhalf > fBulletPosX)) ||
+            (!bGoingLeft && (fMapObjPosX + fRealBlockSizeXhalf < fBulletPosX)))
         {
             // optimization: rule out those blocks which are not in bullet's direction
             continue;
@@ -1755,12 +1755,12 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
         const float fBulletPosYMinusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
         const float fBulletPosYPlusHalf = fBulletPosY - fBulletScaledSizeY / 2.f;
 
-        if ((fMapObjPosX + fBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fBlockSizeXhalf > fBulletPosXPlusHalf))
+        if ((fMapObjPosX + fRealBlockSizeXhalf < fBulletPosXMinusHalf) || (fMapObjPosX - fRealBlockSizeXhalf > fBulletPosXPlusHalf))
         {
             continue;
         }
 
-        if ((fMapObjPosY + fBlockSizeYhalf < fBulletPosYMinusHalf) || (fMapObjPosY - fBlockSizeYhalf > fBulletPosYPlusHalf))
+        if ((fMapObjPosY + fRealBlockSizeYhalf < fBulletPosYMinusHalf) || (fMapObjPosY - fRealBlockSizeYhalf > fBulletPosYPlusHalf))
         {
             continue;
         }
