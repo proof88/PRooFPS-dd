@@ -1261,9 +1261,9 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairstepHeight,
                 m_blocks[iObjectFgToBeCopied]->getReferredObject()->getMaterial().getTexture(),
                 0.f,
-                0.f,
-                1.f,
-                1.f);
+                (nStairstepsCount - i - 1) / static_cast<float>(nStairstepsCount),
+                (i + 1) / static_cast<float>(nStairstepsCount),
+                (nStairstepsCount - i) / static_cast<float>(nStairstepsCount));
         }
         
         if (!bRet)
@@ -1290,10 +1290,10 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairstepWidth,
                 fStairstepHeight,
                 nullptr,
-                0.f,
-                0.f,
+                (i) / static_cast<float>(nStairstepsCount),
+                (i) / static_cast<float>(nStairstepsCount),
                 1.f,
-                1.f);
+                (i+1) / static_cast<float>(nStairstepsCount));
         }
 
         if (!bRet)
