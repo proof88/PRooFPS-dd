@@ -170,6 +170,7 @@ decal = proba128x128x24-blackbg.bmp 36 6 3 3
 # '3' char represents machine gun.
 # '4' char represents bazooka.
 # '5' char represents pusha.
+# '6' char represents machine pistol.
 # ',' char represents armor.
 # '+' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
@@ -330,7 +331,7 @@ jumppad_2 = 2.2 -3.3
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaa6aaaaaa  aaaaaaaa
 ooooacno^ooooooooooooooooooooo  oooooooo
 nnnnnnnnnnn4nnnnnnn/IIIII\nn^n  nnnnnnnn
 oSoooooooooJoooooSooupoooooooo  oooSoooo

@@ -24,6 +24,7 @@ namespace proofps_dd
         ITEM_WPN_MACHINEGUN,
         ITEM_WPN_BAZOOKA,
         ITEM_WPN_PUSHA,
+        ITEM_WPN_MACHINEPISTOL,
         ITEM_HEALTH,
         ITEM_ARMOR
     };
@@ -44,6 +45,7 @@ namespace proofps_dd
         static constexpr uint32_t ITEM_WPN_MACHINEGUN_RESPAWN_SECS = 20;
         static constexpr uint32_t ITEM_WPN_BAZOOKA_RESPAWN_SECS = 20;
         static constexpr uint32_t ITEM_WPN_PUSHA_RESPAWN_SECS = 20;
+        static constexpr uint32_t ITEM_WPN_MACHINEPISTOL_RESPAWN_SECS = 30;
     
         static const MapItemId& getGlobalMapItemId();
         static void resetGlobalData();

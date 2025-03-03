@@ -154,6 +154,7 @@ y = paperboxes.bmp
 # '3' char represents machine gun.
 # '4' char represents bazooka.
 # '5' char represents pusha.
+# '6' char represents machine pistol.
 # ',' char represents health/medkit.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
@@ -316,7 +317,7 @@ jumppad_2 = 3.7 -0.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2,   5       +  4    S 4  3           2    5     S c+cccc   
+ccS   2,   5  6    +  4    S 4  3      6    2    5     S c+cccc   
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
 FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHa5HHHHHHHHHa,c22cccccccFF   
@@ -328,19 +329,19 @@ FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF
 cc4cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHccccc3ccFFFF   
 FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
 FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  SaenaacFccccccFFFF   
-FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2aaaaorDyFFFcc+c2FFFF   
+FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2a6aaorDyFFFcc+c2FFFF   
 BBBBBB\wwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB  5
 BBBBBBB\wwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwww/BBBB   
 IIIIIIII\xxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/IIIII   
 IIIIIIIII\xxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxx/IIIIII   
-IIIIIIIIIIIxxxxxxxx3/III\3x/III\3xx2/IIIIII\+xx/IIIII\x/IIIIIII   
+IIIIIIIIIII6xxxxxxx3/III\3x/III\3xx2/IIIIII\+xx/IIIII\x/IIIIIII   
 IIIIIIIIIIIxx4x3IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
-xxxxxxxxxxxxxxxxxxxxxxxx433333333334xxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxxxxxxxxxxxxxx433336333334xxxxxxxxxxxxxxxxxxxxxxxxxxx   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
-xxxxxxxxxxxx++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxx++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  6
 xxxxxxxxxxxx^^xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  I
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ^I
 
