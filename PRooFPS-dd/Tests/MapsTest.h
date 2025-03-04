@@ -95,6 +95,7 @@ protected:
 
     virtual bool setUp() override
     {
+        m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapCollisionBvhMaxDepth].Set(4); // otherwise Maps::initialize() will fail on value 0
         return assertTrue(engine && engine->isInitialized());
     }
 
@@ -118,7 +119,7 @@ protected:
 
 private:
 
-    static const unsigned int MAP_TEST_W = 44u;
+    static const unsigned int MAP_TEST_W = 49u;
     static const unsigned int MAP_TEST_H = 10u;
 
     pge_audio::PgeAudio m_audio;  // we just use it uninitialized, dont deal with sounds in unit tests
@@ -372,13 +373,13 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
         // items
-        b &= assertEquals(8u, maps.getItems().size(), "item count");
-        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertEquals(9u, maps.getItems().size(), "item count");
+        b &= assertEquals(9u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         if (b)
         {
             auto it = maps.getItems().begin();
             b &= assertNotNull(it->second, "item 0") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, it->second->getType(), "item 0 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, it->second->getType(), "item 0 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 0 referred obj");
             if (b)
             {
@@ -387,7 +388,7 @@ private:
 
             it++;
             b &= assertNotNull(it->second, "item 1") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 1 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, it->second->getType(), "item 1 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
             if (b)
             {
@@ -396,25 +397,25 @@ private:
 
             it++;
             b &= assertNotNull(it->second, "item 2") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 2 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 2 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 2 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 2 tex");
             }
-            
+
             it++;
             b &= assertNotNull(it->second, "item 3") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 3 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 3 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 3 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 3 tex");
             }
-
+            
             it++;
             b &= assertNotNull(it->second, "item 4") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, it->second->getType(), "item 4 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 4 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
             if (b)
             {
@@ -423,16 +424,16 @@ private:
 
             it++;
             b &= assertNotNull(it->second, "item 5") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 5 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, it->second->getType(), "item 5 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 5 tex");
             }
-            
+
             it++;
             b &= assertNotNull(it->second, "item 6") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 6 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 6 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 6 referred obj");
             if (b)
             {
@@ -441,11 +442,20 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 7") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 7 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 7 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 7 referred obj");
             if (b)
             {
                 b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 7 tex");
+            }
+            
+            it++;
+            b &= assertNotNull(it->second, "item 8") &&
+                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 8 type");
+            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 8 referred obj");
+            if (b)
+            {
+                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 8 tex");
             }
         }
 
@@ -465,11 +475,19 @@ private:
         }
         catch (const std::exception&) { b = false; /* should not come here */ }
 
-        // all visible block objects are just clones of reference objects
+        // almost all visible block objects are just clones of reference objects,
+        // exception: stairsteps are unique objects.
+        constexpr size_t nStairBlocks = 4;
+        constexpr size_t nStairsteps = nStairBlocks * proofps_dd::Maps::nStairstepsCount;
+        size_t nClonedObjects = 0;
         for (int i = 0; i < maps.getBlockCount(); i++)
         {
-            b &= assertNotNull((maps.getBlocks()[i])->getReferredObject(), (std::string("block ") + std::to_string(i) + " is NOT cloned object!").c_str());
+            if ((maps.getBlocks()[i])->getReferredObject())
+            {
+                nClonedObjects++;
+            }
         }
+        b &= assertEquals(nStairsteps, maps.getBlockCount() - nClonedObjects, "number of cloned objects");
 
         return b;
     }
@@ -519,8 +537,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
 
         // items
-        b &= assertEquals(8u, maps.getItems().size(), "item count 1");
-        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        b &= assertEquals(9u, maps.getItems().size(), "item count 1");
+        b &= assertEquals(9u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
 
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 1");
@@ -585,8 +603,8 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         // items
-        b &= assertEquals(8u, maps.getItems().size(), "item count 3");
-        b &= assertEquals(8u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        b &= assertEquals(9u, maps.getItems().size(), "item count 3");
+        b &= assertEquals(9u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
 
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 3");
@@ -797,6 +815,11 @@ private:
 
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+        if (!b)
+        {
+            return false;
+        }
+
         b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "2");
 
         m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
@@ -832,6 +855,11 @@ private:
 
         b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+        if (!b)
+        {
+            return false;
+        }
+
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
 
         m_cfgProfiles.getVars()[proofps_dd::Maps::szCVarSvMapTeamSpawnGroups].Set(true);
@@ -872,6 +900,12 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good_with_unassigned_sp.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+
+        if (!b)
+        {
+            return false;
+        }
+
         b &= assertEquals("map_test_good_with_unassigned_sp.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
         b &= assertEquals("map_test_good_with_unassigned_sp.txt", maps.getFilename(), "filename");
 
@@ -916,6 +950,11 @@ private:
         bool b = assertTrue(maps.initialize(), "init");
         b &= assertTrue(maps.load("map_test_good_no_spawn_group.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
         b &= assertTrue(maps.loaded(), "loaded");
+        if (!b)
+        {
+            return false;
+        }
+
         b &= assertEquals("map_test_good_no_spawn_group.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
         b &= assertEquals("map_test_good_no_spawn_group.txt", maps.getFilename(), "filename");
 
