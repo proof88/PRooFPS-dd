@@ -1088,6 +1088,22 @@ bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::
     return true;
 } // lineHandleAssignment()
 
+/**
+* Invoked when a stairs block character is encountered.
+*
+* @param bDryRun         Caller must pass its own such variable.
+*                        To be on the same page, this function shall never run in dry run!
+* @param fStairstepPosX  World-space position X where to place this new stairstep.
+* @param fStairstepPosY  World-space position Y where to place this new stairstep.
+* @param fStairstepSizeX Horizontal size of this new stairstep.
+* @param fStairstepSizeY Vertical size of this new stairstep.
+* @param pTexture        Texture to be set.
+*                        Expected to be nullptr for ascending stairsteps since the next regular foreground block will decide that.
+* @param fU0             Texture U coordinate of the 2 LEFT-side vertices of the front face of the stairstep box.
+* @param fU1             Texture U coordinate of the 2 RIGHT-side vertices of the front face of the stairstep box.
+* @param fV0             Texture V coordinate of the 2 BOTTOM vertices of the front face of the stairstep box.
+* @param fV1             Texture V coordinate of the 2 TOP vertices of the front face of the stairstep box.
+*/
 bool proofps_dd::Maps::createSingleSmallStairStep(
     const bool& bDryRun,
     const float& fStairstepPosX,
@@ -1200,6 +1216,10 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
 *                             False if we are handling an ascending stairs block.
 * @param iObjectFgToBeCopied  Index of the foreground block of which texture needs to be copied.
 *                             Valid only if bCopyPreviousFgBlock is true i.e. when handling a descending stairs block.
+* @param bCopyPreviousBgBlock True if we can use iObjectBgToBeCopied to make a copy of another background block behind this new stairs block.
+*                             False if we don't create such background block behind this new stairs block.
+* @param iObjectBgToBeCopied  Index of the background block of we are going to copy.
+*                             Valid only if bCopyPreviousBgBlock is true.
 * @param fBlockPosX           The horizontal world-position of the stairs block we are handling now.
 * @param fBlockPosY           The vertical world-position of the stairs block we are handling now.
 */
@@ -1209,6 +1229,8 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
     const size_t& nLineLength,
     const bool& bCopyPreviousFgBlock,
     const int& iObjectFgToBeCopied,
+    const bool& bCopyPreviousBgBlock,
+    const int& iObjectBgToBeCopied,
     const float& fBlockPosX,
     const float& fBlockPosY)
 {
@@ -1228,6 +1250,12 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
         // and return quickly, but in non-dry run we increase these numbers in the loops below.
         m_blocks_h += nStairstepsCount;
         m_foregroundBlocks_h += nStairstepsCount;  // same for m_foregroundBlocks_h
+
+        if (bCopyPreviousBgBlock)
+        {
+            // because we will also make 1 extra bg block behind!
+            m_blocks_h++;
+        }
 
         // thats all for now
         return true;
@@ -1301,6 +1329,20 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
             getConsole().EOLn("%s: error during creating small stairstep!", __func__);
             return false;
         }
+    }
+
+    if (bCopyPreviousBgBlock)
+    {
+        if (iObjectBgToBeCopied == -1)
+        {
+            getConsole().EOLn("%s: bCopyPreviousBgBlock is set but iObjectBgToBeCopied is -1!", __func__);
+            return false;
+        }
+        PureObject3D* const pNewBgBlockObj = m_gfx.getObject3DManager().createCloned(*(m_blocks[iObjectBgToBeCopied]->getReferredObject()));
+        pNewBgBlockObj->getPosVec().Set(fBlockPosX, fBlockPosY, 0.0f);
+        m_blocks_h++;
+        m_blocks[m_blocks_h - 1] = pNewBgBlockObj;
+        m_blocks[m_blocks_h - 1]->SetLit(true);
     }
 
     return true;
@@ -1552,11 +1594,13 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         }
         case '/':
             bStairs = true;
-            // in case of ascending stairs, next fg object's texture shall be applied when handling that fg object
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1; // otherwise there will be "hole" behind the stairs block!
+            // in case of ascending stairs, next neighbor regular fg object's texture shall be applied when handling that fg object
             break;
         case '\\':
             bStairs = true;
-            // in case of descending stairs, previous fg object's texture shall be applied
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1; // otherwise there will be "hole" behind the stairs block!
+            // in case of descending stairs, previous regular fg object's texture shall be applied
             bCopyPreviousFgBlock = iObjectFgToBeCopied > -1;
             break;
         default:
@@ -1576,10 +1620,10 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             // in case of a single "stairs" block, multiple smaller-sized blocks are created.
             // I'm handling it in this separated code because currently we are not utilizing object cloning for stairs, 
-            if (!createSmallStairStepsForSingleBigStairsBlock(bDryRun, iLinePos, sLine.length(), bCopyPreviousFgBlock, iObjectFgToBeCopied, x, y))
+            if (!createSmallStairStepsForSingleBigStairsBlock(
+                    bDryRun, iLinePos, sLine.length(), bCopyPreviousFgBlock, iObjectFgToBeCopied, bCopyPreviousBgBlock, iObjectBgToBeCopied, x, y))
             {
                 getConsole().EOLn("%s: Stairs handling problem in line: %s!", __func__, sLine.c_str());
-                assert(false);
                 return false;
             }
         }
@@ -1751,17 +1795,21 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             if ((iLinePos > 0) && (sLine[iLinePos-1] == '/'))
             {
                 // Only now we can set the texture for the previous ascending stairsteps,
-                // as createSmallStairStepsForSingleBigStairsBlock() sets proper texture only for descending stairsteps!!!
-                // Even tho createSmallStairStepsForSingleBigStairsBlock() creates all kind of stairsteps.
+                // as createSmallStairStepsForSingleBigStairsBlock() sets proper texture only for descending stairsteps,
+                // even tho createSmallStairStepsForSingleBigStairsBlock() creates all kind of stairsteps.
                 assert(m_blocks_h > nStairstepsCount);
+                assert(m_foregroundBlocks_h > nStairstepsCount);
 
                 // since all regular foreground blocks are clones, we need the referred object where texture is actually set!
                 assert(pNewBlockObj->getReferredObject());
                 PureTexture* const pTexFgBlock = pNewBlockObj->getReferredObject()->getMaterial().getTexture();
                 for (auto iStairstep = 0; iStairstep < nStairstepsCount; iStairstep++)
                 {
-                    const size_t iStairstepInBlocksArray = m_blocks_h - 1 - nStairstepsCount + iStairstep;
-                    m_blocks[iStairstepInBlocksArray]->getMaterial().setTexture(pTexFgBlock);
+                    // we are indexing in m_foregroundBlocks instead of m_blocks, because in m_blocks there MIGHT BE also a
+                    // background block that was created behind the stairs block. In m_foregroundBlocks we can be sure that only
+                    // the stairsteps are right before pNewBlockObj.
+                    const size_t iStairstepInBlocksArray = m_foregroundBlocks_h - 1 - nStairstepsCount + iStairstep;
+                    m_foregroundBlocks[iStairstepInBlocksArray]->getMaterial().setTexture(pTexFgBlock);
                     // as of 2025 March, after setTexture() we dont need to reupload geometry to VRAM because PURE does not
                     // put any texture binding call into display lists or anywhere else during setVertexTransferMode(), therefore
                     // setting texture can be always done.

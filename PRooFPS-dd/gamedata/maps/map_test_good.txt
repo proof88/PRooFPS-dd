@@ -304,15 +304,18 @@ jumppad_2 = 2.2 -3.3
 # Such a single block will generate multiple small stairsteps within the area of the block.
 #
 # The stairsteps of an ascending ('/') stairs block use the texture of the next neighbor foreground block.
-# Therefore, right after and ascending stairs block there must be at least 1 foreground block.
-# The stairsteps of a descending ('\') stairs block use the texture of the previous neighbor foreground block.
-# Therefore, right before a descending stairs block there must be at least 1 foreground block.
+# Therefore, right after an ascending stairs block there must be at least 1 regular foreground block.
+# The stairsteps of a descending ('\') stairs block use the texture of the previous regular foreground block within the same line.
+# Therefore, before a descending stairs block there must be at least 1 regular foreground block in the same line (don't need to be neighbor).
 #
 # In summary: /X\ is ok (X is any of the foreground block characters), but /\ is NOT ok.
-# Between '/' and '\' can be multiple foreground blocks, but at least one.
+# Between '/' and '\' can be multiple regular foreground blocks, but at least one is must.
+# Between '\' and '/' no foreground block is needed, i.e. \/ is correct.
 #
 # A map layout line cannot start with '/' and cannot end with '\'.
 # This restriction can be lift upon request in the future but for now it would break some calculations.
+#
+# A background block might be implicitly created behind a stairs block with the same rule as with pickupable items.
 
 ################
 #              #
@@ -331,9 +334,9 @@ jumppad_2 = 2.2 -3.3
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
 cccccccccccccccccccccccccccccc  cccccccc
-aaaaaaaaaaaaaaaaaaaaaaa6aaaaaa  aaaaaaaa
+aI\/Iaaaaaaaaaaaaaaaaaa6aaaaaa  aaaaaaaa
 ooooacno^ooooooooooooooooooooo  oooooooo
-nnnnnnnnnnn4nnnnnnn/IIIII\nn^n  nnnnnnnn    I
+nnnnnnnnnnn4nnnnnnn/IIIIn\nn^n  nnnnnnnn    I
 oSoooooooooJoooooSooupoooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr    /F\ B
 aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +

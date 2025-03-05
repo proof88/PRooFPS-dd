@@ -1,0 +1,42 @@
+Name = Test Map
+
+#######################
+#                     #
+#  BLOCK DEFINITIONS  #
+#                     #
+#######################
+
+#######################
+#                     #
+#  DECAL ASSIGNMENTS  #
+#                     #
+#######################
+
+##################
+#                #
+#  SPAWN GROUPS  #
+#                #
+##################
+
+###############
+#             #
+#  JUMP PADS  #
+#             #
+###############
+
+################
+#              #
+#  MAP LAYOUT  #
+#              #
+################
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+cccccccccccccccccccccccccccccc  cccccccc
+/aaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+ooooacnooooooooooooooooooooooo  oooooooo
+nnnnnnnnnnn4nnnnnnnnnnnnnnnnnn  nnnnnnnn
+oSoooooooooJoooooSooupoooooooo  oooSoooo
+rrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr
+aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD B B  
+BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD

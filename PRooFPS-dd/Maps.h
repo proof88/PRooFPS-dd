@@ -216,6 +216,8 @@ namespace proofps_dd
             const size_t& nLineLength,
             const bool& bCopyPreviousFgBlock,
             const int& iObjectFgToBeCopied,
+            const bool& bCopyPreviousBgBlock,
+            const int& iObjectBgToBeCopied,
             const float& fBlockPosX,
             const float& fBlockPosY);
         bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);

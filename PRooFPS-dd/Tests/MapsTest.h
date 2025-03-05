@@ -76,6 +76,8 @@ protected:
         addSubTest("test_map_load_bad_spawn_group_double_spawn_index_2", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_double_spawn_index_2);
         addSubTest("test_map_load_bad_spawn_group_spawn_index", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_spawn_index);
         addSubTest("test_map_load_bad_spawn_group_spawn_word_as_index", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_spawn_group_spawn_word_as_index);
+        addSubTest("test_map_load_bad_first_block_in_line_cannot_be_stairs", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_first_block_in_line_cannot_be_stairs);
+        addSubTest("test_map_load_bad_last_block_in_line_cannot_be_stairs", (PFNUNITSUBTEST)&MapsTest::test_map_load_bad_last_block_in_line_cannot_be_stairs);
         addSubTest("test_map_load_good", (PFNUNITSUBTEST) &MapsTest::test_map_load_good);
         addSubTest("test_map_unload_and_load_again", (PFNUNITSUBTEST) &MapsTest::test_map_unload_and_load_again);
         addSubTest("test_map_shutdown", (PFNUNITSUBTEST)&MapsTest::test_map_shutdown);
@@ -330,6 +332,26 @@ private:
         return b;
     }
 
+    bool test_map_load_bad_first_block_in_line_cannot_be_stairs()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_first_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_map_has_default_values(maps);
+
+        return b;
+    }
+
+    bool test_map_load_bad_last_block_in_line_cannot_be_stairs()
+    {
+        proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
+        bool b = assertTrue(maps.initialize(), "init");
+        b &= assertFalse(maps.load("map_test_bad_last_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= test_map_has_default_values(maps);
+
+        return b;
+    }
+
     bool test_map_load_good()
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
@@ -477,7 +499,7 @@ private:
 
         // almost all visible block objects are just clones of reference objects,
         // exception: stairsteps are unique objects.
-        constexpr size_t nStairBlocks = 4;
+        constexpr size_t nStairBlocks = 6; // update this value based on map_test_good layout!
         constexpr size_t nStairsteps = nStairBlocks * proofps_dd::Maps::nStairstepsCount;
         size_t nClonedObjects = 0;
         for (int i = 0; i < maps.getBlockCount(); i++)
