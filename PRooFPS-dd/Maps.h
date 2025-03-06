@@ -205,6 +205,7 @@ namespace proofps_dd
             const float& fStairstepSizeX,
             const float& fStairstepSizeY,
             PureTexture* pTexture,
+            const bool& bDescending,
             const float& fU0,
             const float& fV0,
             const float& fU1,

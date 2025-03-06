@@ -1089,7 +1089,9 @@ bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::
 } // lineHandleAssignment()
 
 /**
-* Invoked when a stairs block character is encountered.
+* Creates a stairstep.
+* The given texture UV-coordinates are for the front and back faces only, the other faces will have different UV-coordinates so
+* that the texture will look properly aligned on all surfaces.
 *
 * @param bDryRun         Caller must pass its own such variable.
 *                        To be on the same page, this function shall never run in dry run!
@@ -1099,10 +1101,11 @@ bool proofps_dd::Maps::lineHandleAssignment(const std::string& sVar, const std::
 * @param fStairstepSizeY Vertical size of this new stairstep.
 * @param pTexture        Texture to be set.
 *                        Expected to be nullptr for ascending stairsteps since the next regular foreground block will decide that.
-* @param fU0             Texture U coordinate of the 2 LEFT-side vertices of the front face of the stairstep box.
-* @param fU1             Texture U coordinate of the 2 RIGHT-side vertices of the front face of the stairstep box.
-* @param fV0             Texture V coordinate of the 2 BOTTOM vertices of the front face of the stairstep box.
-* @param fV1             Texture V coordinate of the 2 TOP vertices of the front face of the stairstep box.
+* @param bDescending     True if we are creating stairstep as part of a descending stairs block, false if for ascending.
+* @param fU0             Texture U coordinate of the 2 LEFT-side vertices of the front and back faces of the stairstep box.
+* @param fU1             Texture U coordinate of the 2 RIGHT-side vertices of the front and back faces of the stairstep box.
+* @param fV0             Texture V coordinate of the 2 BOTTOM vertices of the front and back faces of the stairstep box.
+* @param fV1             Texture V coordinate of the 2 TOP vertices of the front and back faces of the stairstep box.
 */
 bool proofps_dd::Maps::createSingleSmallStairStep(
     const bool& bDryRun,
@@ -1111,12 +1114,14 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
     const float& fStairstepSizeX,
     const float& fStairstepSizeY,
     PureTexture* pTexture,
+    const bool& bDescending,
     const float& fU0,
     const float& fV0,
     const float& fU1,
     const float& fV1
 )
 {
+    (void)bDescending;
     assert(!bDryRun);
 
     // in dry run, these counters are incremented by caller, but in non-dry run here we increment for each stairstep
@@ -1148,7 +1153,11 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
         return false;
     }
     
-    for (TPureUInt iTexcoord = 0; iTexcoord < pSubObj->getMaterial().getTexcoordsCount(); iTexcoord += 4)
+    // order of box faces:
+    // front, back, left, right, top, bottom.
+
+    // first set only front and back to exactly same as specified in parameters:
+    for (TPureUInt iTexcoord = 0; iTexcoord < 8; iTexcoord += 4)
     {
         // left bottom vertex
         pSubObj->getMaterial().getTexcoords()[iTexcoord].u = fU0;
@@ -1162,6 +1171,40 @@ bool proofps_dd::Maps::createSingleSmallStairStep(
         // left top vertex
         pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].u = fU0;
         pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].v = fV1;
+    }
+
+    // then left and right faces:
+    for (TPureUInt iTexcoord = 8; iTexcoord < 16; iTexcoord += 4)
+    {
+        // left bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].u = 0.f;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].v = fV0;
+        // right bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].u = 1.f;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].v = fV0;
+        // right top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].u = 1.f;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].v = fV1;
+        // left top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].u = 0.f;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].v = fV1;
+    }
+
+    // then top and bottom faces:
+    for (TPureUInt iTexcoord = 16; iTexcoord < 24; iTexcoord += 4)
+    {
+        // left bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].u = fU0;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord].v = 0.f;
+        // right bottom vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].u = fU1;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 1].v = 0.f;
+        // right top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].u = fU1;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 2].v = 1.f;
+        // left top vertex
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].u = fU0;
+        pSubObj->getMaterial().getTexcoords()[iTexcoord + 3].v = 1.f;
     }
 
     // finally upload with new UV-coords to server memory
@@ -1288,6 +1331,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairstepWidth,
                 fStairstepHeight,
                 m_blocks[iObjectFgToBeCopied]->getReferredObject()->getMaterial().getTexture(),
+                bCopyPreviousFgBlock,
                 0.f,
                 (nStairstepsCount - i - 1) / static_cast<float>(nStairstepsCount),
                 (i + 1) / static_cast<float>(nStairstepsCount),
@@ -1318,6 +1362,7 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
                 fStairstepWidth,
                 fStairstepHeight,
                 nullptr,
+                bCopyPreviousFgBlock,
                 (i) / static_cast<float>(nStairstepsCount),
                 (i) / static_cast<float>(nStairstepsCount),
                 1.f,
