@@ -801,15 +801,16 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
 
         constexpr float fUsualBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
         constexpr float fUsualBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
-        const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
+        const PureVector vecPlayerScaledSize = plobj->getScaledSizeVec();
+        const float fPlayerHalfHeight = vecPlayerScaledSize.getY() / 2.f;
 
         // At this point, player.getPos().getY() is already updated by Gravity().
         // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
         // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
         // Object3D is then repositioned to Player's own position vector.
         // On the long run we should use colliders so physics does not depend on graphics.
-        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - plobj->getScaledSizeVec().getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + plobj->getScaledSizeVec().getX() / 2.f;
+        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - vecPlayerScaledSize.getX() / 2.f;
+        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + vecPlayerScaledSize.getX() / 2.f;
         const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
         const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
@@ -890,6 +891,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
         }
 
+        // TODO: RFR: when this standup part is extracted into a function, it should return the final selected Y size of the player so
+        // we dont have to query it again later.
         if (player.getWantToStandup() && !player.isSomersaulting())
         {
             if (player.getCrouchStateCurrent())
@@ -907,13 +910,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
 
                     const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
                     const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+                    const PureVector& vecFgBlockPos = obj->getPosVec();
 
-                    if ((obj->getPosVec().getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+                    if ((vecFgBlockPos.getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (vecFgBlockPos.getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
                     {
                         continue;
                     }
 
-                    if ((obj->getPosVec().getY() + fRealBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (obj->getPosVec().getY() - fRealBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
+                    if ((vecFgBlockPos.getY() + fRealBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (vecFgBlockPos.getY() - fRealBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
                     {
                         continue;
                     }
@@ -951,13 +955,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
 
                 const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
                 const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+                const PureVector& vecFgBlockPos = obj->getPosVec();
 
-                if ((obj->getPosVec().getX() + fRealBlockSizeXhalf < fPlayerPos1XMinusHalf) || (obj->getPosVec().getX() - fRealBlockSizeXhalf > fPlayerPos1XPlusHalf))
+                if ((vecFgBlockPos.getX() + fRealBlockSizeXhalf < fPlayerPos1XMinusHalf) || (vecFgBlockPos.getX() - fRealBlockSizeXhalf > fPlayerPos1XPlusHalf))
                 {
                     continue;
                 }
 
-                if ((obj->getPosVec().getY() + fRealBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (obj->getPosVec().getY() - fRealBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
+                if ((vecFgBlockPos.getY() + fRealBlockSizeYhalf < fPlayerPos1YMinusHalf_2) || (vecFgBlockPos.getY() - fRealBlockSizeYhalf > fPlayerPos1YPlusHalf_2))
                 {
                     continue;
                 }
@@ -967,7 +972,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                 // TODO: RFR: this part down below is again same as in serverPlayerCollisionWithWalls_bvh()
 
                 // maybe this is a stairstep we can step onto
-                if (!player.isFalling() && !player.canFall() && ((obj->getPosVec().getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
+                if (!player.isFalling() && !player.canFall() && ((vecFgBlockPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
                 {
                     // TODO: check if there is enough space to step onto the stairstep!
                     // For now I'm not doing it, it would introduce additional slowdown when stepping up on each stairstep and currently this is
@@ -977,7 +982,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     player.getPos().set(
                         PureVector(
                             player.getPos().getNew().getX(),
-                            obj->getPosVec().getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
+                            vecFgBlockPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
                             player.getPos().getNew().getZ()
                         ));
                 }
@@ -996,7 +1001,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     }
 
                     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                    const int nAlignLeftOrRightToWall = obj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
+                    const int nAlignLeftOrRightToWall = vecFgBlockPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
                     const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
                     //getConsole().EOLn(
                     //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
@@ -1006,7 +1011,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     // PPPKKKGGGGGG
                     player.getPos().set(
                         PureVector(
-                            obj->getPosVec().getX() + fAlignNextToWall,
+                            vecFgBlockPos.getX() + fAlignNextToWall,
                             player.getPos().getNew().getY(),
                             player.getPos().getNew().getZ()
                         ));
@@ -1064,7 +1069,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         // we need the CURRENT jump force LATER below for strafe movement, save it because vertical collision handling might change it!
         const PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
 
-        const float fPlayerHalfHeight = plobj->getScaledSizeVec().getY() / 2.f;
+        const PureVector vecPlayerScaledSize = plobj->getScaledSizeVec();
+        const float fPlayerHalfHeight = vecPlayerScaledSize.getY() / 2.f;
 
         // At this point, player.getPos().getY() is already updated by Gravity().
         // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
@@ -1078,7 +1084,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
 
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
-                PureVector(plobj->getScaledSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getScaledSizeVec().getZ()));
+                PureVector(vecPlayerScaledSize.getX(), vecPlayerScaledSize.getY(), vecPlayerScaledSize.getZ()));
             const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects(aabbPlayer, nullptr, colliders);
             if (bVerticalCollisionOccured)
             {
@@ -1137,6 +1143,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
         }
 
+        // TODO: RFR: when this standup part is extracted into a function, it should return the final selected Y size of the player so
+        // we dont have to query it again later.
         if (player.getWantToStandup() && !player.isSomersaulting())
         {
             if (player.getCrouchStateCurrent())
@@ -1178,8 +1186,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
 
                 // TODO: RFR: this part down below is again same as in serverPlayerCollisionWithWalls_legacy()
 
+                const PureVector& vecWallObjPos = pWallObj->getPosVec();
                 // maybe this is a stairstep we can step onto
-                if (!player.isFalling() && !player.canFall() && ((pWallObj->getPosVec().getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
+                if (!player.isFalling() && !player.canFall() && ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
                 {
                     // TODO: check if there is enough space to step onto the stairstep!
                     // For now I'm not doing it, it would introduce additional slowdown when stepping up on each stairstep and currently this is
@@ -1189,7 +1198,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                     player.getPos().set(
                         PureVector(
                             player.getPos().getNew().getX(),
-                            pWallObj->getPosVec().getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
+                            vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
                             player.getPos().getNew().getZ()
                         ));
                 }
@@ -1208,7 +1217,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                     }
 
                     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                    const int nAlignLeftOrRightToWall = pWallObj->getPosVec().getX() < player.getPos().getOld().getX() ? 1 : -1;
+                    const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
                     const float fAlignNextToWall = nAlignLeftOrRightToWall * (pWallObj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
                     //getConsole().EOLn(
                     //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
@@ -1218,7 +1227,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                     // PPPKKKGGGGGG
                     player.getPos().set(
                         PureVector(
-                            pWallObj->getPosVec().getX() + fAlignNextToWall,
+                            vecWallObjPos.getX() + fAlignNextToWall,
                             player.getPos().getNew().getY(),
                             player.getPos().getNew().getZ()
                         ));

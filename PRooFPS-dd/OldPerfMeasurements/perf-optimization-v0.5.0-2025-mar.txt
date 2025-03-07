@@ -1,0 +1,55 @@
+v0.5.0
+
+Do not forget to change recoil of the weapon to 1.0 so the bullets wont hit closer blocks too early!
+
+From this version, we introduce the following changes:
+ - instead of machinegun, machine pistol shall be used for firing.
+ - BVH collision also needs to be tested, by manually overriding sv_map_collision_mode in cfg file.
+ - measurement done on 2 spawnpoints:
+   - first is the original spawn point:
+     T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+   - second is the rightmost underground spawn point:
+     T jobb alsó underground részhez, ahol van közel machine pistol, felszedni, majd balra nézve vízszintesen kilőni a tárat.
+
+================
+Legacy collision
+================
+
+Debug 1 player: at upper left spawn point with shooting:
+
+
+Release 1 player: at upper left spawn point with shooting:
+
+
+Release 2 player: at upper left spawn point with shooting:
+
+
+Debug 1 player: at lower right spawn point with shooting:
+
+
+Release 1 player: at lower right spawn point with shooting:
+
+
+Release 2 player: at lower right spawn point with shooting:
+
+
+=============
+BVH collision
+=============
+
+Debug 1 player: at upper left spawn point with shooting:
+
+
+Release 1 player: at upper left spawn point with shooting:
+
+
+Release 2 player: at upper left spawn point with shooting:
+
+
+Debug 1 player: at lower right spawn point with shooting:
+
+
+Release 1 player: at lower right spawn point with shooting:
+
+
+Release 2 player: at lower right spawn point with shooting:
