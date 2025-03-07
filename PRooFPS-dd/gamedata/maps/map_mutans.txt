@@ -27,6 +27,11 @@
 #      - added jumppads
 #      - added initial usage of decal feature
 #
+# v3.0 - Update for FarsangLAN vol. 4
+#      - separated spawn points for two teams
+#      - added machine pistol spawn
+#      - added some stairs
+#  
 # TODO:
 #      - move all posters to decals
 #      - add objects for freed up map elements
@@ -73,6 +78,10 @@ decal = bg-mutans.bmp 70.5 3.5 2 2
 decal = bg-mutans.bmp 15.5 14.5 2 2
 decal = bg-mutans.bmp 70.5 14.5 2 2
 
+# lower 2 spawn points not used for team-deathmatch
+spawngroup_1 = 1 3 5
+spawngroup_2 = 0 2 4
+
 #12345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 c                                            cccccccc
 c                      cccccccc              cccccccc   cccccccc
@@ -80,28 +89,28 @@ c   c   c   cccccccc   cccccccc              cccccccc   cccccccc   cccccccc   c 
 c c   c   c cccccccc   cccccccc   cccccccc   cccScccc   cccccccc   cccccccc c   c   c c
 c   c   c   cccccccc   cccScccc   cccccccc   cc2cc,cc   cccScccc   cccccccc   c   c   c
 c c   c   c cccScccc   cc3cc,cc   cccccccc   aaLHLLaa   cc3cc,cc   cccScccc c   c   c c
-c   c   c   cc2cc,cc   aaLHLLaa   cccScccc   aaaaaaaa   aaLHLLaa   cc2cc,cc   c   c   c
+c   c   c   cc6cc,cc   aaLHLLaa   cccScccc   aaaaaaaa   aaLHLLaa   cc6cc,cc   c   c   c
 a a   a   a aaLHLLaa   aaaaaaaa   cc2cc,cc   aaaaaaaa   aaaaaaaa   aaLHLLaa a   a   a a
 a   a   a   aaaaaaaa   aaaaaaaa   aaLHLLaa   aaaaaaaa   aaaaaaaa   aaaaaaaa   a   a   a
 a a   a   a aaaaaaaa   aaaaoaaa 4 aaaaaaaa   aaaaaaaa 4 aaaoaaaa   aaaaaaaa a   a   a a
 a   a   a   aaaaaaaaa aaaaaraaa B aaaaaaaa   aaaaaaaa I aaaraaaaa aaaaaaaaa   a   a   a
-a a   a   a +aaaaaaFLLLaaaaaaaa D aaaaaaaa   aaaaaaaa J aaaaaaaQLLLaaaaaaa+ a   a   a a
+a a   a   a +aaaaa/FLLL\aaaaaaa D aaaaaaaa   aaaaaaaa J aaaaaa/QLLL\aaaaaa+ a   a   a a
 a   a   a   aKLLLLLLLLLLLLLLLLa   aaaaaaaa   aaaaaaaa   aKLLLLLLLLLLLLLLLLa   a   a   a
 c c   c  Tc ccccccccccccccccccc   aaaaaaaa 5 aaaaaaaa   ccccccccccccccccccc c   c   c c
 c   c   cT Tccccccccccccccccecc   aaaoaaaa F aaaaoaaa   ceccccccccccccccccc   c   c   c
 c c   c  T Tccccccccccccccccccc   aaaraaaaa aaaaaraaa   ccccccccccccccccccc c   c   c c
-c   c   cT TcccSccccccccccccncc   aaaaaaaGLL^aaaaaaaa   cnccccccccccccScccc   c   c   c
+c   c   cT TcccSccccccccccccncc   aaaaaa/GLL^aaaaaaaa   cnccccccccccccScccc   c   c   c
 c c   c  T Tcc2cc,ccccccccccccc   aKLLLLLLLLLLLLLLLLa   ccccccccccccc2cc,cc c   c   c c
 a   a   aT TaaLHLLaaaaaaaaaavaa + aaaaaaaa   aaaaaaaa + avaaaaaaaaaaaLHLLaa   a   a   a
 a a   a  T Taaaaaaaaaaaaaaaaaaa I aaaaaaea   anaaaaaa B aaaaaaaaaaaaaaaaaaa a   a   a a
 a   a   aT Taaaaaaaaaaaaaaaauaa J aaaaaaaa   aaaaaaaa D auaaaaaaaaaaaaaaaaa   a   a   a
 a a   a  T TaaaaaaaaQaaGLLLaaaaa aaaaaaana   aeaaaaaaa aaaaaaaFaaGLLLaaaaaa a   a   a a
-a   a   aT T+aaaaFLLLLa+4+aaaaaaaaaaaa,aaa   aaa,aaaaaaaaaaQLLLLaa+4+aaaaa+   a   a   a
+a   a   aT T+aaaaFLLLLa+4+aaaaaaaaaaaa,aaa   aaa,aaaaaaaaa/QLLLLaa+4+aaaaa+   a   a   a
 a a   a  T TKLLLLLLLLLLLLLL^LLLLLLLLLLLLLa 4 aKLLLLLLLLLLLLLLLLLLLLLL^LLLLL a   a   a a
 a   a   aT  a+5+aaaaaaaaaaaaaaaaaaaaaaaaaa I aaaaaaaaaaaaaaaaaaaaaaaaaa+5+a  Ta   a   a
-a a   a  TKLLLLLLLaaaaaaaaaaaaaaaaaaaaaava J auaaaaaaaaaaaaaaaaaaaaaaKLLLLLLLL  a   a a
-a   a   a   aaaaaaaKLLLaaaaaaaaaaaaFaaaaaaa aaaaaaaFaaaaaaaaaaaaKLLLaaaaaaa   a   a   a
-a a   a 3 a a+4+aaaaaaaaFLLLaaaaaaGLLa+aGL^L^LLa+aGLLaaaaaaFLLLaaaaaaaa+4+a a 3 a   a a
+a a   a  TKLLLLLLL\aaaaaaaaaaaaaaaaaaaaava J auaaaaaaaaaaaaaaaaaaaaa/KLLLLLLLL  a   a a
+a   a   a   aaaaaaKLLLLaaaaaaaaaaaaFaaaaaaa aaaaaaaFaaaaaaaaaaaaKLLLLaaaaaa   a   a   a
+a a   a 3 a a+4+aaaaaaaa/FLLL\aaa/GLL\+aGL^L^LLa+/GLL\aaa/FLLL\aaaaaaaa+4+a a 3 a   a a
 a   a   a   KLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL   a   a   a
 a a   a   a TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT a   a   a a
 a   a   a   TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT   a   a   a
