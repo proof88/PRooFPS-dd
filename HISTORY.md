@@ -32,8 +32,14 @@ A compressed build for Windows is available for [download here](https://drive.go
 
 This version brings the following new features:
  - new game mode: team deathmatch;
+ - new map block type: stairs;
+ - new weapon: machine pistol;
  - respawn countdown can be speeden up by mouse clicks: the more you click, the sooner you respawn;
  - frag table has new columns: player ranking based on K/D ratio, aim accuracy, etc.
+ - camera tilting when hitting ground.
+
+Note: machine pistol's fire rate is currently suppressed due to the "fast collision detection" being postponed to the next release.
+General performance degradation is expected in this current release due to still using legacy collision detection with now arbitrary dimensioned map elements e.g. stairs.
 
 This version brings the following bug fixes:
  - minimap transparency setting did not take effect until game restart;
