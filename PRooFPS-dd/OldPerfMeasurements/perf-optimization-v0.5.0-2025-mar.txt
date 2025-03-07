@@ -1,6 +1,10 @@
 v0.5.0
 
-Do not forget to change recoil of the weapon to 1.0 so the bullets wont hit closer blocks too early!
+Do not forget to change some parameters of the weapon in its txt file before doing the tests:
+ - acc_angle = 0.0
+ - recoil_m = 1.0
+ - recoil_cooldown = 0
+ - recoil_control = off
 
 From this version, we introduce the following changes:
  - instead of machinegun, machine pistol shall be used for firing.
@@ -17,20 +21,116 @@ Legacy collision
 
 Debug 1 player: at upper left spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 862
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 21233.0156 usecs
+   - FullOnPacketReceivedDuration: 20.5858 usecs
+     - HandleUserCmdMoveDuration: 0.6253 usecs
+   - FullOnGameRunningDuration: 6335.5093 usecs
+     - GravityCollisionDuration: 1674.4478 usecs
+     - ActiveWindowStuffDuration: 280.4281 usecs
+     - UpdateWeaponDuration: 19.9432 usecs
+     - UpdateBulletsDuration: 2970.7715 usecs
+     - UpdateRespawnTimersDuration: 0.0673 usecs
+     - PickupAndRespawnItemsDuration: 299.2506 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 6.3063 usecs
+     - SendUserUpdatesDuration: 6.1647 usecs
+
 
 Release 1 player: at upper left spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 813
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16806.0176 usecs
+   - FullOnPacketReceivedDuration: 3.8376 usecs
+     - HandleUserCmdMoveDuration: 0.0849 usecs
+   - FullOnGameRunningDuration: 654.5178 usecs
+     - GravityCollisionDuration: 90.6236 usecs
+     - ActiveWindowStuffDuration: 206.8622 usecs
+     - UpdateWeaponDuration: 4.3788 usecs
+     - UpdateBulletsDuration: 206.4982 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 19.3973 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.4317 usecs
+     - SendUserUpdatesDuration: 0.6433 usecs
 
 
 Release 2 player: at upper left spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 892
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16791.7559 usecs
+   - FullOnPacketReceivedDuration: 3.935 usecs
+     - HandleUserCmdMoveDuration: 0.13 usecs
+   - FullOnGameRunningDuration: 849.8027 usecs
+     - GravityCollisionDuration: 236.5404 usecs
+     - ActiveWindowStuffDuration: 198.4899 usecs
+     - UpdateWeaponDuration: 7.0482 usecs
+     - UpdateBulletsDuration: 215.574 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 36.4888 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.8274 usecs
+     - SendUserUpdatesDuration: 3.8688 usecs
+
 
 Debug 1 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 683
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 25034.2891 usecs
+   - FullOnPacketReceivedDuration: 18.2621 usecs
+     - HandleUserCmdMoveDuration: 0.5139 usecs
+   - FullOnGameRunningDuration: 9483.71 usecs
+     - GravityCollisionDuration: 4570.4292 usecs
+     - ActiveWindowStuffDuration: 311.6588 usecs
+     - UpdateWeaponDuration: 22.4261 usecs
+     - UpdateBulletsDuration: 3293.8667 usecs
+     - UpdateRespawnTimersDuration: 0.0805 usecs
+     - PickupAndRespawnItemsDuration: 352.855 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 5.9927 usecs
+     - SendUserUpdatesDuration: 5.634 usecs
 
 
 Release 1 player: at lower right spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 908
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16790.8594 usecs
+   - FullOnPacketReceivedDuration: 2.7852 usecs
+     - HandleUserCmdMoveDuration: 0.0529 usecs
+   - FullOnGameRunningDuration: 714.0011 usecs
+     - GravityCollisionDuration: 212.402 usecs
+     - ActiveWindowStuffDuration: 193.2247 usecs
+     - UpdateWeaponDuration: 4.3899 usecs
+     - UpdateBulletsDuration: 162.0947 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 20.6982 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.402 usecs
+     - SendUserUpdatesDuration: 0.4901 usecs
+
 
 Release 2 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 939
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16786.3984 usecs
+   - FullOnPacketReceivedDuration: 3.2354 usecs
+     - HandleUserCmdMoveDuration: 0.0927 usecs
+   - FullOnGameRunningDuration: 938.8946 usecs
+     - GravityCollisionDuration: 374.8286 usecs
+     - ActiveWindowStuffDuration: 196.0969 usecs
+     - UpdateWeaponDuration: 7.6912 usecs
+     - UpdateBulletsDuration: 186.4143 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 37.2204 usecs
+     - UpdateGameModeDuration: 0.0064 usecs
+     - CameraMovementDuration: 1.6944 usecs
+     - SendUserUpdatesDuration: 2.639 usecs
 
 
 =============
@@ -39,17 +139,114 @@ BVH collision
 
 Debug 1 player: at upper left spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 780
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 18759.7969 usecs
+   - FullOnPacketReceivedDuration: 21.4577 usecs
+     - HandleUserCmdMoveDuration: 0.5949 usecs
+   - FullOnGameRunningDuration: 3349.8411 usecs
+     - GravityCollisionDuration: 240.0192 usecs
+     - ActiveWindowStuffDuration: 289.241 usecs
+     - UpdateWeaponDuration: 21.3167 usecs
+     - UpdateBulletsDuration: 1414.5795 usecs
+     - UpdateRespawnTimersDuration: 0.0141 usecs
+     - PickupAndRespawnItemsDuration: 265.2346 usecs
+     - UpdateGameModeDuration: 0.0397 usecs
+     - CameraMovementDuration: 6.3269 usecs
+     - SendUserUpdatesDuration: 6.2231 usecs
+
 
 Release 1 player: at upper left spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 718
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16828.4492 usecs
+   - FullOnPacketReceivedDuration: 4.6295 usecs
+     - HandleUserCmdMoveDuration: 0.0961 usecs
+   - FullOnGameRunningDuration: 561.0822 usecs
+     - GravityCollisionDuration: 35.7521 usecs
+     - ActiveWindowStuffDuration: 234.4332 usecs
+     - UpdateWeaponDuration: 5.1435 usecs
+     - UpdateBulletsDuration: 118.8357 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 23.4763 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.4624 usecs
+     - SendUserUpdatesDuration: 0.5822 usecs
 
 
 Release 2 player: at upper left spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 787
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16807.5391 usecs
+   - FullOnPacketReceivedDuration: 4.4917 usecs
+     - HandleUserCmdMoveDuration: 0.1614 usecs
+   - FullOnGameRunningDuration: 576.5972 usecs
+     - GravityCollisionDuration: 47.648 usecs
+     - ActiveWindowStuffDuration: 213.2897 usecs
+     - UpdateWeaponDuration: 7.3825 usecs
+     - UpdateBulletsDuration: 118.2706 usecs
+     - UpdateRespawnTimersDuration: 0.0038 usecs
+     - PickupAndRespawnItemsDuration: 35.3215 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.3748 usecs
+     - SendUserUpdatesDuration: 3.6836 usecs
+
 
 Debug 1 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 680
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 18135.2891 usecs
+   - FullOnPacketReceivedDuration: 21.7721 usecs
+     - HandleUserCmdMoveDuration: 0.6441 usecs
+   - FullOnGameRunningDuration: 2500.7441 usecs
+     - GravityCollisionDuration: 247.7603 usecs
+     - ActiveWindowStuffDuration: 322.4941 usecs
+     - UpdateWeaponDuration: 22.0721 usecs
+     - UpdateBulletsDuration: 689.0265 usecs
+     - UpdateRespawnTimersDuration: 0.1059 usecs
+     - PickupAndRespawnItemsDuration: 262.3073 usecs
+     - UpdateGameModeDuration: 0.0132 usecs
+     - CameraMovementDuration: 6.6265 usecs
+     - SendUserUpdatesDuration: 6.4794 usecs
 
 
 Release 1 player: at lower right spawn point with shooting:
 
+FramesElapsedSinceLastDurationsReset: 729
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16823.459 usecs
+   - FullOnPacketReceivedDuration: 3.7956 usecs
+     - HandleUserCmdMoveDuration: 0.0796 usecs
+   - FullOnGameRunningDuration: 477.609 usecs
+     - GravityCollisionDuration: 14.8916 usecs
+     - ActiveWindowStuffDuration: 230.4815 usecs
+     - UpdateWeaponDuration: 5.5021 usecs
+     - UpdateBulletsDuration: 64.2743 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 25.3141 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.4966 usecs
+     - SendUserUpdatesDuration: 0.4883 usecs
+
 
 Release 2 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 735
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16825.457 usecs
+   - FullOnPacketReceivedDuration: 4.0476 usecs
+     - HandleUserCmdMoveDuration: 0.117 usecs
+   - FullOnGameRunningDuration: 525.0109 usecs
+     - GravityCollisionDuration: 31.5905 usecs
+     - ActiveWindowStuffDuration: 233.5374 usecs
+     - UpdateWeaponDuration: 7.6653 usecs
+     - UpdateBulletsDuration: 70.117 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 37.6667 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.4626 usecs
+     - SendUserUpdatesDuration: 3.332 usecs
+
