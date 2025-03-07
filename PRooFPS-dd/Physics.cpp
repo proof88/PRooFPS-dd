@@ -14,6 +14,8 @@
 
 #include "Physics.h"
 
+#include "Benchmarks.h"
+
 
 // ############################### PUBLIC ################################
 
@@ -428,6 +430,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertic
 )
 {
     // TODO: RFR: this is 99% same as the bvh version, let's refactor!
+    ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
 
     assert(obj);
 
@@ -530,6 +533,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
     PureVector& vecCamShakeForce)
 {
     // TODO: RFR: this is 99% same as the legacy version, let's refactor!
+    ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
 
     assert(obj);
 
@@ -616,6 +620,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
     Player& player,
     PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */)
 {
+    ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
+
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = Player::fBaseSpeedCrouch / nPhysicsRate;
@@ -768,6 +774,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
 {
+    ScopeBenchmarker<std::chrono::microseconds> bm_main(__func__);
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
@@ -807,6 +814,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
         const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
+            ScopeBenchmarker<std::chrono::microseconds> bm("legacy vertical collision");
             // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
             // check for vertical collision with regular foreground blocks.
             // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
@@ -933,6 +941,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
         bool bHorizontalCollisionOccured = false;
         if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
+            ScopeBenchmarker<std::chrono::microseconds> bm("legacy horizontal collision");
+
             for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
             {
                 // TODO: RFR: we can introduce a HorizontalKernel function similar to the VerticalKernel stuff above
@@ -1034,6 +1044,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
 {
+    static std::vector<const PureObject3D*> colliders;
+    ScopeBenchmarker<std::chrono::microseconds> bm_main(__func__);
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
@@ -1062,10 +1074,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
 
         if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
         {
+            ScopeBenchmarker<std::chrono::microseconds> bm("bvh vertical collision");
+
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
                 PureVector(plobj->getScaledSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getScaledSizeVec().getZ()));
-            std::vector<const PureObject3D*> colliders;
             const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects(aabbPlayer, nullptr, colliders);
             if (bVerticalCollisionOccured)
             {
@@ -1146,6 +1159,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         bool bHorizontalCollisionOccured = false;
         if (player.getPos().getOld().getX() != player.getPos().getNew().getX())                                     
         {
+            ScopeBenchmarker<std::chrono::microseconds> bm("bvh horizontal collision");
+
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getNew().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
                 PureVector(plobj->getSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getSizeVec().getZ()));

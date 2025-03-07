@@ -16,6 +16,9 @@
 
 #include "SharedWithTest.h"
 
+#include "Test.h"
+#include "Benchmarks.h"
+
 static constexpr float SndWpnDryFireDistMin = 6.f;
 static constexpr float SndWpnDryFireDistMax = 14.f;
 
@@ -609,9 +612,30 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         getConsole().OLn("   - CameraMovementDuration: %f usecs", m_durations.m_nCameraMovementDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
         getConsole().OLn("   - SendUserUpdatesDuration: %f usecs", m_durations.m_nSendUserUpdatesDurationUSecs / static_cast<float>(m_durations.m_nFramesElapsedSinceLastDurationsReset));
         getConsole().OLn("");
+
+        getConsole().OLn("ScopeBenchmarkers:");
+        for (const auto& bmData : ScopeBenchmarkerDataStore::getAllData())
+        {
+            std::string sBmLog =
+                ("    " +
+                    bmData.second.m_name +
+                    " Iterations: " + std::to_string(bmData.second.m_iterations) +
+                    ", Durations: Min/Max/Avg: " +
+                    std::to_string(bmData.second.m_durationsMin) + "/" +
+                    std::to_string(bmData.second.m_durationsMax) + "/" +
+                    /* Test::toString() for getting rid of unneeded zeros after decimal point */
+                    Test::toString(bmData.second.getAverageDuration()) +
+                    " " + bmData.second.getUnitString() +
+                    ", Total: " +
+                    std::to_string(bmData.second.m_durationsTotal) +
+                    " " + bmData.second.getUnitString());
+            getConsole().OLn("%s", sBmLog.c_str());
+        }
+        getConsole().OLn("");
         getConsole().SetLoggingState(getLoggerModuleName(), false);
         
         m_durations.reset();
+        ScopeBenchmarkerDataStore::clear(); // since ScopeBenchmarker works with static data, make sure we dont leave anything there
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('.')))
