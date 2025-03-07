@@ -32,7 +32,7 @@ You can follow the project on my **[facebook page](https://www.facebook.com/whis
 
 ## Try the Game
 
-The latest available download version [v0.4.3 Private Beta is here](https://drive.google.com/file/d/1T5d9ksZYaB6SNq0FGmOuKkerI0h_QFiY/view?usp=drive_link).  
+The latest available download version [v0.5.0 Private Beta is here](https://drive.google.com/file/d/1DJGDVqWaAaNDSENsDF7ofiL028kTMzCB/view?usp=drive_link).  
 The latest ALP (Approofed für Lan Party) version is also this.  
 If the game cannot start due to missing DLL files, [this Visual C++ Redistributable Package](https://drive.google.com/file/d/1B61VzifHvK-wTNGUai4HaEeik2cXLRHH/view?usp=share_link) should be installed.
 
@@ -58,7 +58,7 @@ From the main menu, you can either start a new server or join to an existing one
 
 **Weapons**
 
- - **1,2,3,4,5 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha);
+ - **1,2,3,4,5,6 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha, machine pistol);
  - **R**: reload current weapon;
  - **Mouse Click**: attack (fire weapon).
 
