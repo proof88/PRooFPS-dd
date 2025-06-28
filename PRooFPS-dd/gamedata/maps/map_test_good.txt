@@ -57,7 +57,7 @@ J = crate.bmp
 # Background blocks are 1 unit away from the players' depth towards
 # the background, they can be used as background walls.
 # The following chars are used for defining background blocks in this map:
-# acnorempu
+# acenompru
 # Remaining chars to be used as background blocks in this map: uvwxyz
 
 c = texture-atlas.bmp 0.02 0.02 0.48 0.48

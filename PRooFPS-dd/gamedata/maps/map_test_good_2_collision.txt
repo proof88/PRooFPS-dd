@@ -1,0 +1,53 @@
+Name = Collision Test Map
+
+# This test map recreates cases that were handled wrongly by the BVH collision detection implementation in PRooFPS-dd v0.5.
+# So this map is expected to have bad collision in v0.5 when BVH collision method is enabled.
+# But this map shall work flawlessly in v0.5.1 with BVH collision method.
+
+# The following chars are used for defining foreground blocks in this map:
+# Remaining chars to be used as foreground blocks in this map: BDGHIKLQT
+
+F = floor.bmp
+
+# The following chars are used for defining background blocks in this map:
+# Remaining chars to be used as background blocks in this map: acmnopruvwxyz
+e = texture-atlas.bmp 0.02 0.02 0.48 0.48
+
+# This is the minimum layout that recreates the collision problem in v0.5.
+# As soon as we decrease either the map size vertically by 1 line, or
+# horizontally by moving the right-side 'e' 1 column left, the problem disappears.
+# Also, the problem disappears if we delete any of the foreground blocks.
+e                                                                                   e
+e                                                              
+e                                                                                   
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                            F                                                        
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                                                                                     
+e                         S                                                           
+e                                                                                     
+e                      F /F                                                           
+e                                                                                     
+e                                 
+e                                 
+e                                 
+
+# After or in between the map layout lines, we do not accept anything else.
