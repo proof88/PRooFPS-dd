@@ -1085,6 +1085,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
                 PureVector(vecPlayerScaledSize.getX(), vecPlayerScaledSize.getY(), vecPlayerScaledSize.getZ()));
+            // findOneCollider would also work for the collision itself, BUT here we also need to check for jumppads, therefore we need
+            // the whole set of objects we are colliding with. Because we could collide with a regular foreground block below us and
+            // a jumppad too at the same time from above. TODO: shall be improved somehow so findOneColliderObject() could also work.
             const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects(aabbPlayer, nullptr, colliders);
             if (bVerticalCollisionOccured)
             {
