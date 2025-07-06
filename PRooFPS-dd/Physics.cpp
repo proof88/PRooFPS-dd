@@ -1088,7 +1088,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             // findOneCollider would also work for the collision itself, BUT here we also need to check for jumppads, therefore we need
             // the whole set of objects we are colliding with. Because we could collide with a regular foreground block below us and
             // a jumppad too at the same time from above. TODO: shall be improved somehow so findOneColliderObject() could also work.
-            const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects(aabbPlayer, nullptr, colliders);
+            const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects_startFromLowestLevelFittingNode(aabbPlayer, nullptr, colliders);
             if (bVerticalCollisionOccured)
             {
                 assert(!colliders.empty());
@@ -1157,7 +1157,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 const PureAxisAlignedBoundingBox aabbPlayer(
                     PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
                     PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
-                const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject(aabbPlayer, nullptr) == nullptr);
+                const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject_startFromLowestLevelFittingNode(aabbPlayer, nullptr) == nullptr);
                 if (bCanStandUp)
                 {
                     player.doStandupServer();
@@ -1175,7 +1175,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getNew().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
                 PureVector(plobj->getSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getSizeVec().getZ()));
-            const PureObject3D* const pWallObj = m_maps.getBVH().findOneColliderObject(aabbPlayer, nullptr);
+            const PureObject3D* const pWallObj = m_maps.getBVH().findOneColliderObject_startFromLowestLevelFittingNode(aabbPlayer, nullptr);
 
             if (pWallObj)
             {
