@@ -1168,7 +1168,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
         serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         bool bHorizontalCollisionOccured = false;
-        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())                                     
+        if (player.getPos().getOld().getX() != player.getPos().getNew().getX())
         {
             ScopeBenchmarker<std::chrono::microseconds> bm("bvh horizontal collision");
 
