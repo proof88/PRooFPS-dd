@@ -872,7 +872,7 @@ void proofps_dd::Maps::update(const float& fps, const PureObject3D& objCurrentPl
 
     if (m_cfgProfiles.getVars()[szCVarSvMapCollisionBvhDebugRender].getAsBool())
     {
-        auto pTightestPlayerFittingBvhNode = m_bvh.findOneLowestLevelFittingNode(objCurrentPlayer);
+        auto pTightestPlayerFittingBvhNode = m_bvh.findOneLowestLevelFittingNode(objCurrentPlayer, BvhSearchDirection::DownFromRootNode);
         m_bvh.markAabbDebugRendering(pTightestPlayerFittingBvhNode);
     }
 }
