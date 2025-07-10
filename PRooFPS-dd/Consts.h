@@ -13,8 +13,8 @@ namespace proofps_dd
 {
 
     static const std::string GAME_NAME = "PRooFPS-dd";
-    static const std::string GAME_VERSION = "0.5.0.0 Private Beta";
-    static const std::string GAME_VERSION_LATEST_ALP = "0.4.3";
+    static const std::string GAME_VERSION = "0.5.1 Private Beta";
+    static const std::string GAME_VERSION_LATEST_ALP = "0.5.0";
 
     // TODO: unsure why I'm not using unsigned for these. Anyway, these will need to be handled in different way anyway in near future,
     // to have object for each of these with validation rules defined in object: https://github.com/proof88/PRooFPS-dd/issues/251 .
