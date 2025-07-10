@@ -16,7 +16,7 @@
 
 #include "CameraHandling.h"
 
-static constexpr float GAME_CAM_Z = -20.0f;
+static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
 static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 

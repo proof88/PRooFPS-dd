@@ -362,7 +362,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
         m_bvh.updateAndEnableAabbDebugRendering(m_gfx.getObject3DManager());
     }
     //m_bvh.updateAndEnableNodeDebugRendering(m_gfx.getObject3DManager()); // octree nodes
-    getConsole().EOLn(
+    getConsole().OLn(
         "%s Built BVH: maxdepth: %u, pos: [%f,%f,%f], size: %f, AABB pos: [%f,%f,%f], AABB size: [%f,%f,%f]",
         __func__,
         m_bvh.getMaxDepthLevel(),
