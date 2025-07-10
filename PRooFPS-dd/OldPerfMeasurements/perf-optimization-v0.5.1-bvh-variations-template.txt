@@ -1,0 +1,48 @@
+v0.5.1
+
+Do not forget to change some parameters of the weapon in its txt file before doing the tests:
+ - acc_angle = 0.0
+ - recoil_m = 1.0
+ - recoil_cooldown = 0
+ - recoil_control = off
+
+From this version, we introduce the following changes:
+ - in this file, all measurements with mch pistol have same firing rate as mch gun, therefore
+   results are comparable with the v0.5.0 measurements.
+ - but in this test, we are testing different variations of BVH config, so this file shall be
+   compared with other files having "bvh-variations" in file name.
+ - BVH collision is the default from this version, no need to override sv_map_collision_mode in cfg file.
+ - measurement done on 2 spawnpoints:
+   - first is the original spawn point:
+     T bal fent belül téglás részhez, felugrani felszedni gépfegyvert, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+   - second is the rightmost underground spawn point:
+     T jobb alsó underground részhez, ahol van közel machine pistol, felszedni, majd balra nézve vízszintesen kilőni a tárat.
+
+Template file for the following tests:
+
+- bvh a _startFromLowestLevelFittingNode fajta implementációval
+
+  - BvhSearchDirection::DownFromRootNode
+    - max depth: 3, 4, 5
+
+  - BvhSearchDirection::UpFromLeafNode
+    - max depth: 3, 4, 5
+
+- bvh a _startFromFirstNode fajta implementációval
+   - max depth: 3, 4, 5
+
+==================================================================
+BVH collision with implementation _startFromLowestLevelFittingNode
+==================================================================
+
+Debug 1 player: at upper left spawn point with shooting:
+
+
+Release 1 player: at upper left spawn point with shooting:
+
+
+Debug 1 player: at lower right spawn point with shooting:
+
+
+Release 1 player: at lower right spawn point with shooting:
+
