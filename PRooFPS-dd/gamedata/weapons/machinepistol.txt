@@ -107,7 +107,7 @@ firing_mode_max = auto
 
 # Time needed to elapse between 2 shots, in millisecs.
 # Cannot be 0.
-firing_cooldown = 150
+firing_cooldown = 50
 
 # Sound of a regular shot fired
 firing_snd = mac10-1.wav
