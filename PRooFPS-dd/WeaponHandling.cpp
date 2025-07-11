@@ -1789,5 +1789,5 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_bvh(
         PureVector(fBulletPosX, fBulletPosY, fBulletPosZ),
         PureVector(fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ));
     
-    return (m_maps.getBVH().findOneColliderObject_startFromLowestLevelFittingNode(aabbBullet, nullptr, BvhSearchDirection::DownFromRootNode) != nullptr);
+    return (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbBullet, nullptr) != nullptr);
 } // serverUpdateBullets_collisionWithWalls_bvh()
