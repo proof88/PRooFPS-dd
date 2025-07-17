@@ -938,7 +938,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
         const float fPlayerPos1XMinusHalf = player.getPos().getNew().getX() - plobj->getSizeVec().getX() / 2.f;
         const float fPlayerPos1XPlusHalf = player.getPos().getNew().getX() + plobj->getSizeVec().getX() / 2.f;
         // TODO: I think here we shall introduce a fPlayerHalfHeight2 because if above we stood up then we need to fetch updated height!
-        // But for now this is considered a corner case I'm not handling.
+        // But, if I do that then at some points I cannot somersault up to a block because it repositions me horizontally
+        // back next to it and I fall down. This is same as in the BVH function.
         const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
         const float fPlayerPos1YPlusHalf_2 = player.getPos().getNew().getY() + fPlayerHalfHeight;
 
@@ -1021,7 +1022,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             } // end for i
         } // end XPos changed
 
-        // TODO: RFR: this part is also came as in serverPlayerCollisionWithWalls_bvh()
+        // TODO: RFR: this part is also same as in serverPlayerCollisionWithWalls_bvh()
         if (!bHorizontalCollisionOccured)
         {
             if (player.getWillSomersaultInNextTick())
@@ -1174,7 +1175,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
 
             const PureAxisAlignedBoundingBox aabbPlayer(
                 PureVector(player.getPos().getNew().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
-                PureVector(plobj->getSizeVec().getX(), plobj->getScaledSizeVec().getY(), plobj->getSizeVec().getZ()));
+                PureVector(vecPlayerScaledSize.getX(), vecPlayerScaledSize.getY(), vecPlayerScaledSize.getZ()));
             const PureObject3D* const pWallObj = m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbPlayer, nullptr);
 
             if (pWallObj)
@@ -1182,7 +1183,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                 // horizontal collision occurred BUT its effect might be cancelled if we can step up on the object
                 const float fRealBlockSizeYhalf = pWallObj->getSizeVec().getY() / 2.f;
                 // TODO: I think here we shall introduce a fPlayerHalfHeight2 because if above we stood up then we need to fetch updated height!
-                // But for now this is considered a corner case I'm not handling so fPlayerHalfHeight is good enough.
+                // But, if I do that then at some points I cannot somersault up to a block because it repositions me horizontally
+                // back next to it and I fall down. This is same as in the legacy function.
                 const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
 
                 //getConsole().EOLn("lolol");
@@ -1238,7 +1240,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             } // endif object touched horizontally
         } // endif XPos changed
 
-        // TODO: RFR: this part is also came as in serverPlayerCollisionWithWalls_legacy()
+        // TODO: RFR: this part is also same as in serverPlayerCollisionWithWalls_legacy()
         if (!bHorizontalCollisionOccured)
         {
             if (player.getWillSomersaultInNextTick())
