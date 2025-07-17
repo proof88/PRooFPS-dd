@@ -150,8 +150,13 @@ private:
         b &= assertNull(maps.getForegroundBlocks(), "foreground blocks");
         b &= assertEquals(0, maps.getForegroundBlockCount(), "foreground block count");
         b &= assertEquals(PureOctree::NodeType::LeafEmpty, maps.getBVH().getNodeType(), "bvh empty");
-        b &= assertEquals(PureVector(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos");
-        b &= assertEquals(PureVector(), maps.getBVH().getAABB().getSizeVec(), "bvh aabb size");
+        b &= assertEquals(maps.getBVH().getPos(), maps.getBVH().getAABB().getPosVec(), "bvh aabb pos");
+        b &= assertEquals(
+            PureVector(
+                maps.getBVH().getSize(),
+                maps.getBVH().getSize(),
+                maps.getBVH().getSize()),
+            maps.getBVH().getAABB().getSizeVec(), "bvh aabb size");
 
         // variables
         b &= assertTrue(maps.getVars().empty(), "getVars");
