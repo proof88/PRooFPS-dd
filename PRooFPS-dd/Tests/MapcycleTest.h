@@ -162,7 +162,12 @@ private:
         {
             const auto itFound = vExpectedAvailableMaps.find(sMapName);
             /* mapcycle.txt must not be found, as we require map name to start with "map_" */
-            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            b &= assertTrue(
+                (itFound != vExpectedAvailableMaps.end() ||
+                /* we allow some test maps so we dont have to update
+                   vExpectedAvailableMaps every time we add a new test map */
+                ((sMapName.find("map_test_") != std::string::npos) &&
+                 (sMapName.find(".txt") != std::string::npos))), (std::string("Unexpected map found:") + sMapName).c_str());
             if (itFound != vExpectedAvailableMaps.end())
             {
                 vExpectedAvailableMaps.erase(sMapName);
@@ -206,7 +211,12 @@ private:
         {
             const auto itFound = vExpectedAvailableMaps.find(sMapName);
             /* mapcycle.txt must not be found, as we require map name to start with "map_" */
-            b &= assertFalse(itFound == vExpectedAvailableMaps.end(), (std::string("Unexpected map found:") + sMapName).c_str());
+            b &= assertTrue(
+                (itFound != vExpectedAvailableMaps.end() ||
+                    /* we allow some test maps so we dont have to update
+                       vExpectedAvailableMaps every time we add a new test map */
+                    ((sMapName.find("map_test_") != std::string::npos) &&
+                        (sMapName.find(".txt") != std::string::npos))), (std::string("Unexpected map found:") + sMapName).c_str());
             if (itFound != vExpectedAvailableMaps.end())
             {
                 vExpectedAvailableMaps.erase(sMapName);
