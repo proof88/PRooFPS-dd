@@ -617,6 +617,93 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_fallingDown(bool
     }
 }
 
+/**
+* If the player is currently crouching but wants to stand up, it checks it there is enough space for
+* standing up and if so, it makes the player stand up.
+* 
+* Shall not be called if the player is somersaulting now.
+* 
+* @return The new Y-size of the player (it stays the same if the player cannot stand up, does not want to stand up, already standing, etc.).
+*/
+float proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_handleStandup(Player& player, const float& fPlayerOPos1XMinusHalf, const float& fPlayerOPos1XPlusHalf)
+{
+    assert(!player.isSomersaulting());
+
+    if (!player.getWantToStandup() || !player.getCrouchStateCurrent())
+    {
+        return player.getObject3D()->getScaledSizeVec().getY();
+    }
+
+    // we need to check if there is enough space to stand up
+    constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
+    const float fProposedNewPlayerPosY = player.getProposedNewPosYforStandup();
+    const float fProposedNewPlayerPos1YMinusHalf = fProposedNewPlayerPosY - fProposedNewPlayerHalfHeight;
+    const float fProposedNewPlayerPos1YPlusHalf = fProposedNewPlayerPosY + fProposedNewPlayerHalfHeight;
+    bool bCanStandUp = true;
+    for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+    {
+        const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
+        assert(obj);  // we dont store nulls there
+
+        const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
+        const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+        const PureVector& vecFgBlockPos = obj->getPosVec();
+
+        if ((vecFgBlockPos.getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (vecFgBlockPos.getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+        {
+            continue;
+        }
+
+        if ((vecFgBlockPos.getY() + fRealBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (vecFgBlockPos.getY() - fRealBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
+        {
+            continue;
+        }
+
+        // found a blocking object, cannot stand up
+        bCanStandUp = false;
+        break;
+    } // end for i
+
+    if (bCanStandUp)
+    {
+        player.doStandupServer();
+    }
+
+    return player.getObject3D()->getScaledSizeVec().getY();
+}
+
+/**
+* If the player is currently crouching but wants to stand up, it checks it there is enough space for
+* standing up and if so, it makes the player stand up.
+*
+* Shall not be called if the player is somersaulting now.
+*
+* @return The new Y-size of the player (it stays the same if the player cannot stand up, does not want to stand up, already standing, etc.).
+*/
+float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Player& player, const PureObject3D* plobj)
+{
+    assert(!player.isSomersaulting());
+    assert(plobj);
+
+    if (!player.getWantToStandup() || !player.getCrouchStateCurrent())
+    {
+        return plobj->getScaledSizeVec().getY();
+    }
+
+    // we need to check if there is enough space to stand up
+    constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
+    const PureAxisAlignedBoundingBox aabbPlayer(
+        PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
+        PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
+    const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbPlayer, nullptr) == nullptr);
+    if (bCanStandUp)
+    {
+        player.doStandupServer();
+    }
+
+    return plobj->getScaledSizeVec().getY();
+}
+
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
     const unsigned int& nPhysicsRate,
     Player& player,
@@ -885,48 +972,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
             player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
         }
-
-        // TODO: RFR: when this standup part is extracted into a function, it should return the final selected Y size of the player so
-        // we dont have to query it again later.
-        if (player.getWantToStandup() && !player.isSomersaulting())
+        else
         {
-            if (player.getCrouchStateCurrent())
-            {
-                // we need to check if there is enough space to stand up
-                constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
-                const float fProposedNewPlayerPosY = player.getProposedNewPosYforStandup();
-                const float fProposedNewPlayerPos1YMinusHalf = fProposedNewPlayerPosY - fProposedNewPlayerHalfHeight;
-                const float fProposedNewPlayerPos1YPlusHalf = fProposedNewPlayerPosY + fProposedNewPlayerHalfHeight;
-                bool bCanStandUp = true;
-                for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
-                {
-                    const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
-                    assert(obj);  // we dont store nulls there
-
-                    const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
-                    const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
-                    const PureVector& vecFgBlockPos = obj->getPosVec();
-
-                    if ((vecFgBlockPos.getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (vecFgBlockPos.getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
-                    {
-                        continue;
-                    }
-
-                    if ((vecFgBlockPos.getY() + fRealBlockSizeYhalf < fProposedNewPlayerPos1YMinusHalf) || (vecFgBlockPos.getY() - fRealBlockSizeYhalf > fProposedNewPlayerPos1YPlusHalf))
-                    {
-                        continue;
-                    }
-
-                    // found a blocking object, cannot stand up
-                    bCanStandUp = false;
-                    break;
-                } // end for i
-                if (bCanStandUp)
-                {
-                    player.doStandupServer();
-                }
-            }
-        } // end if (player.getWantToStandup())
+            // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
+            serverPlayerCollisionWithWalls_legacy_handleStandup(
+                player,
+                fPlayerOPos1XMinusHalf,
+                fPlayerOPos1XPlusHalf);
+        }
 
         serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
@@ -1134,25 +1187,13 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
             player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
         }
-
-        // TODO: RFR: when this standup part is extracted into a function, it should return the final selected Y size of the player so
-        // we dont have to query it again later.
-        if (player.getWantToStandup() && !player.isSomersaulting())
+        else
         {
-            if (player.getCrouchStateCurrent())
-            {
-                // we need to check if there is enough space to stand up
-                constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
-                const PureAxisAlignedBoundingBox aabbPlayer(
-                    PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
-                    PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
-                const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbPlayer, nullptr) == nullptr);
-                if (bCanStandUp)
-                {
-                    player.doStandupServer();
-                }
-            }
-        } // end if (player.getWantToStandup())
+            // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
+            serverPlayerCollisionWithWalls_bvh_handleStandup(
+                player,
+                plobj);
+        }
 
         serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 

@@ -143,6 +143,15 @@ namespace proofps_dd
             bool bVerticalCollisionOccured,
             Player& player);
 
+        float serverPlayerCollisionWithWalls_legacy_handleStandup(
+            Player& player,
+            const float& fPlayerOPos1XMinusHalf,
+            const float& fPlayerOPos1XPlusHalf);
+
+        float serverPlayerCollisionWithWalls_bvh_handleStandup(
+            Player& player,
+            const PureObject3D* plobj);
+
         void serverPlayerCollisionWithWalls_strafe(
             const unsigned int& nPhysicsRate,
             Player& player,
