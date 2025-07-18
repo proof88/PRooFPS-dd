@@ -414,6 +414,111 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
 static constexpr float fHeightPlayerCanStillStepUpOnto = 0.3f;
 
 
+/**
+* Used by both the legacy and BVH collision paths' LoopKernelVertical functions.
+* Regardless which path is calling this, the given player is colliding with the given object.
+*
+* @param player   The player object colliding with the given object.
+* @param obj      The object colliding with the given player.
+* @param iJumppad Shall be valid jumppad index if the given object represents a jumppad block in the map, -1 otherwise.
+*
+* @return True if player collided with given object, false otherwise.
+*/
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertical_actualCollHandler(
+    Player& player,
+    const PureObject3D* obj,
+    const int& iJumppad,
+    const float& fPlayerHalfHeight,
+    const float& fBlockSizeYhalf,
+    XHair& xhair,
+    PureVector& vecCamShakeForce)
+{
+    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
+    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
+    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
+    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
+    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
+    player.getPos().set(
+        PureVector(
+            player.getPos().getNew().getX(),
+            obj->getPosVec().getY() + fAlignCloseToWall,
+            player.getPos().getNew().getZ()
+        ));
+
+    if (nAlignUnderOrAboveWall == 1)
+    {
+        // we fell from above
+        const bool bOriginalFalling = player.isFalling();
+        float fFallHeight = 0.f;
+        int nDamage = 0;
+
+        // handle fall damage
+        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
+        {
+            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
+            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+            static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
+            if (fFallHeight > fFallDamageFromHeight)
+            {
+                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
+                // player invulnerability does NOT affect physics damage so we always do damage here!
+                player.doDamage(nDamage, nDamage);
+                if (std::as_const(player).getHealth() == 0)
+                {
+                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
+                }
+            }
+
+            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
+            //    static_cast<int>(nFallDurationMillisecs),
+            //    fFallHeight,
+            //    nDamage);
+        }
+
+        if (bOriginalFalling)
+        {
+            // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
+            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
+        }
+        player.setCanFall(false);
+
+        // maybe not null everything out in the future but only decrement the components by
+        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
+        // at this moment. Currently we want to null out the strafe-jump-induced force.
+        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
+        // we can zero out jumpforce here completely!
+        player.getJumpForce().Set(0.f, 0.f, 0.f);
+        player.setGravity(0.f);
+
+        if (iJumppad >= 0)
+        {
+            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
+            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
+            player.handleJumppadActivated();
+        }
+    }
+    else
+    {
+        // we hit ceiling with our head during jumping
+        //getConsole().EOLn("start falling (hit ceiling)");
+        player.setCanFall(true);
+        player.stopJumping();
+        player.getHasJustStoppedJumpingInThisTick() = true;
+        player.setGravity(0.f);
+    }
+} // serverPlayerCollisionWithWalls_common_LoopKernelVertical_actualCollHandler()
+
+/**
+* Used in the legacy collision path, handling player's vertical collision i.e. when player's previous Y pos does not equal to
+* new Y pos and given player is colliding with the given object.
+* 
+* @param player   The player object to check for collision with given object.
+* @param obj      The object to check for collision with given player.
+* @param iJumppad Shall be valid jumppad index if the given object represents a jumppad block in the map, -1 otherwise.
+* 
+* @return True if player collided with given object, false otherwise.
+*/
 bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
     proofps_dd::Player& player,
     const PureObject3D* obj,
@@ -429,10 +534,10 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertic
     PureVector& vecCamShakeForce
 )
 {
-    // TODO: RFR: this is 99% same as the bvh version, let's refactor!
     ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
 
     assert(obj);
+    assert(iJumppad > -2);
 
     if ((obj->getPosVec().getX() + fBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (obj->getPosVec().getX() - fBlockSizeXhalf > fPlayerOPos1XPlusHalf))
     {
@@ -444,85 +549,34 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_LoopKernelVertic
         return false;
     }
 
-    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
-    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-    player.getPos().set(
-        PureVector(
-            player.getPos().getNew().getX(),
-            obj->getPosVec().getY() + fAlignCloseToWall,
-            player.getPos().getNew().getZ()
-        ));
-
-    if (nAlignUnderOrAboveWall == 1)
-    {
-        // we fell from above
-        const bool bOriginalFalling = player.isFalling();
-        float fFallHeight = 0.f;
-        int nDamage = 0;
-
-        // handle fall damage
-        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
-        {
-            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-            static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
-            if (fFallHeight > fFallDamageFromHeight)
-            {
-                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
-                // player invulnerability does NOT affect physics damage so we always do damage here!
-                player.doDamage(nDamage, nDamage);
-                if (std::as_const(player).getHealth() == 0)
-                {
-                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
-                }
-            }
-
-            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
-            //    static_cast<int>(nFallDurationMillisecs),
-            //    fFallHeight,
-            //    nDamage);
-        }
-
-        if (bOriginalFalling)
-        {
-            // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
-            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
-        }
-        player.setCanFall(false);
-
-        // maybe not null everything out in the future but only decrement the components by
-        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
-        // at this moment. Currently we want to null out the strafe-jump-induced force.
-        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
-        // we can zero out jumpforce here completely!
-        player.getJumpForce().Set(0.f, 0.f, 0.f);
-        player.setGravity(0.f);
-
-        if (iJumppad >= 0)
-        {
-            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
-            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
-            player.handleJumppadActivated();
-        }
-    }
-    else
-    {
-        // we hit ceiling with our head during jumping
-        //getConsole().EOLn("start falling (hit ceiling)");
-        player.setCanFall(true);
-        player.stopJumping();
-        player.getHasJustStoppedJumpingInThisTick() = true;
-        player.setGravity(0.f);
-    }
+    serverPlayerCollisionWithWalls_common_LoopKernelVertical_actualCollHandler(
+        player,
+        obj,
+        iJumppad,
+        fPlayerHalfHeight,
+        fBlockSizeYhalf,
+        xhair,
+        vecCamShakeForce);
 
     return true;
 } // serverPlayerCollisionWithWalls_legacy_LoopKernelVertical()
 
 
+/**
+* Used in the BVH collision path, handling player's vertical collision i.e. when player's previous Y pos does not equal to
+* new Y pos and given player is colliding with the given object.
+* Unlike the similar function in the legacy path, this is actually not a loop kernel because this is not invoked from
+* a loop iterating over the potential colliders, however this function is the rough equivalent of the legacy path's
+* LoopKernelVertical function, so we kept the name similar.
+* The given player is colliding with the given object for sure, so unlike with the legacy path's similar named function, here
+* we don't do any further collision checks.
+*
+* @param player   The player object colliding with the given object.
+* @param obj      The object colliding with the given player.
+* @param iJumppad Shall be valid jumppad index if the given object represents a jumppad block in the map, -1 otherwise.
+*
+* @return Always true because when this function is invoked, it is known that the given object is colliding with given player.
+*/
 bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
     Player& player,
     const PureObject3D* obj,
@@ -532,85 +586,19 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
     XHair& xhair,
     PureVector& vecCamShakeForce)
 {
-    // TODO: RFR: this is 99% same as the legacy version, let's refactor!
     ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
 
     assert(obj);
+    assert(iJumppad > -2);
 
-    const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
-    // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-    // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-    // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-    player.getPos().set(
-        PureVector(
-            player.getPos().getNew().getX(),
-            obj->getPosVec().getY() + fAlignCloseToWall,
-            player.getPos().getNew().getZ()
-        ));
-
-    if (nAlignUnderOrAboveWall == 1)
-    {
-        // we fell from above
-        const bool bOriginalFalling = player.isFalling();
-        float fFallHeight = 0.f;
-        int nDamage = 0;
-
-        // handle fall damage
-        if ((std::as_const(player).getHealth() > 0) && (player.isFalling()) && (iJumppad == -1) /* no fall damage when falling on jumppad */)
-        {
-            //const auto nFallDurationMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - player.getTimeStartedFalling()).count();
-            fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-            static constexpr float fFallDamageFromHeight = 3.5f;  // should not have fall damage from doing mid-air salto with 1.5x jump-force multiplier
-            if (fFallHeight > fFallDamageFromHeight)
-            {
-                nDamage = static_cast<int>(std::lroundf((fFallHeight - fFallDamageFromHeight) * m_nFallDamageMultiplier));
-                // player invulnerability does NOT affect physics damage so we always do damage here!
-                player.doDamage(nDamage, nDamage);
-                if (std::as_const(player).getHealth() == 0)
-                {
-                    // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                    handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
-                }
-            }
-
-            //getConsole().EOLn("Finished falling for %d millisecs, height: %f, damage: %d",
-            //    static_cast<int>(nFallDurationMillisecs),
-            //    fFallHeight,
-            //    nDamage);
-        }
-
-        if (bOriginalFalling)
-        {
-            // now handleLanded() has both the server- and client-side logic, this design should be the future design for most game logic
-            player.handleLanded(fFallHeight, nDamage > 0, std::as_const(player).getHealth() == 0, vecCamShakeForce, isMyConnection(player.getServerSideConnectionHandle()));
-        }
-        player.setCanFall(false);
-
-        // maybe not null everything out in the future but only decrement the components by
-        // some value, since if there is an explosion-induced force, it shouldnt be nulled out
-        // at this moment. Currently we want to null out the strafe-jump-induced force.
-        // Update in v0.2.0.0: I decided to use separate vector for explosion-induced force, looks like
-        // we can zero out jumpforce here completely!
-        player.getJumpForce().Set(0.f, 0.f, 0.f);
-        player.setGravity(0.f);
-
-        if (iJumppad >= 0)
-        {
-            // this way jump() will be executed by caller main serverPlayerCollisionWithWalls() func, in same tick
-            player.setWillJumpInNextTick(m_maps.getJumppadForceFactors(iJumppad).y, m_maps.getJumppadForceFactors(iJumppad).x);
-            player.handleJumppadActivated();
-        }
-    }
-    else
-    {
-        // we hit ceiling with our head during jumping
-        //getConsole().EOLn("start falling (hit ceiling)");
-        player.setCanFall(true);
-        player.stopJumping();
-        player.getHasJustStoppedJumpingInThisTick() = true;
-        player.setGravity(0.f);
-    }
+    serverPlayerCollisionWithWalls_common_LoopKernelVertical_actualCollHandler(
+        player,
+        obj,
+        iJumppad,
+        fPlayerHalfHeight,
+        fBlockSizeYhalf,
+        xhair,
+        vecCamShakeForce);
 
     return true;
 }

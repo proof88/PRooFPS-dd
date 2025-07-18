@@ -106,6 +106,16 @@ namespace proofps_dd
         int m_nFallDamageMultiplier;
         bool m_bCollisionModeBvh;
 
+        void serverPlayerCollisionWithWalls_common_LoopKernelVertical_actualCollHandler(
+            Player& player,
+            const PureObject3D* obj,
+            const int& iJumppad,
+            const float& fPlayerHalfHeight,
+            const float& fBlockSizeYhalf,
+            XHair& xhair,
+            PureVector& vecCamShakeForce
+        );
+
         bool serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
             Player& player,
             const PureObject3D* obj,
