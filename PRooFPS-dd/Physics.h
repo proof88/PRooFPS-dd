@@ -139,6 +139,10 @@ namespace proofps_dd
             XHair& xhair,
             PureVector& vecCamShakeForce);
 
+        void serverPlayerCollisionWithWalls_common_fallingDown(
+            bool bVerticalCollisionOccured,
+            Player& player);
+
         void serverPlayerCollisionWithWalls_strafe(
             const unsigned int& nPhysicsRate,
             Player& player,

@@ -603,6 +603,20 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
     return true;
 }
 
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_fallingDown(bool bVerticalCollisionOccured, Player& player)
+{
+    if (!bVerticalCollisionOccured && player.isFalling() && (std::as_const(player).getHealth() > 0))
+    {
+        // we have been in the air for a while now
+
+        const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+        if (fFallHeight >= 6.f)
+        {
+            player.handleFallingFromHigh(0 /* relevant for clients, but for server it is unused as input, server will update this parameter within function */);
+        }
+    }
+}
+
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
     const unsigned int& nPhysicsRate,
     Player& player,
@@ -809,11 +823,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
             // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
             // regular one first and break from the loop immediately then.
-            bool bCollided = false;
+            bool bVerticalCollisionOccured = false;
             for (size_t iJumppad = 0; iJumppad < m_maps.getJumppads().size(); iJumppad++)
             {
                 assert(m_maps.getJumppads()[iJumppad]);  // we dont store nulls there
-                bCollided = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
+                bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
                     player,
                     m_maps.getJumppads()[iJumppad],
                     static_cast<int>(iJumppad),
@@ -827,14 +841,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     xhair,
                     vecCamShakeForce);
 
-                if (bCollided)
+                if (bVerticalCollisionOccured)
                 {
                     // there is no need to check further, since we handle collision with only 1 jumppad at a time
                     break;
                 }
             } // end for jumppads
 
-            for (int i = 0; !bCollided && (i < m_maps.getForegroundBlockCount()); i++)
+            for (int i = 0; !bVerticalCollisionOccured && (i < m_maps.getForegroundBlockCount()); i++)
             {
                 const PureObject3D* const pObj = m_maps.getForegroundBlocks()[i];
                 assert(pObj);  // we dont store nulls there
@@ -846,7 +860,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     continue;
                 }
 
-                bCollided = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
+                bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
                     player,
                     pObj,
                     -1 /* invalid jumppad index */,
@@ -861,16 +875,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
                     vecCamShakeForce);
             } // end for i
 
-            if (!bCollided && player.isFalling() && (std::as_const(player).getHealth() > 0))
-            {
-                // we have been in the air for a while now
-
-                const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-                if (fFallHeight >= 6.f)
-                {
-                    player.handleFallingFromHigh(0 /* relevant for clients, but for server it is unused as input, server will update this parameter within function */);
-                }
-            }
+            serverPlayerCollisionWithWalls_common_fallingDown(
+                bVerticalCollisionOccured,
+                player);
         } // end if YPos changed
 
         if (player.isSomersaulting())
@@ -1117,16 +1124,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
                     vecCamShakeForce);
             } // endif bVerticalCollisionOccured
 
-            if (!bVerticalCollisionOccured && player.isFalling() && (std::as_const(player).getHealth() > 0))
-            {
-                // we have been in the air for a while now
-
-                const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-                if (fFallHeight >= 6.f)
-                {
-                    player.handleFallingFromHigh(0 /* relevant for clients, but for server it is unused as input, server will update this parameter within function */);
-                }
-            }
+            serverPlayerCollisionWithWalls_common_fallingDown(
+                bVerticalCollisionOccured,
+                player);
         } // end if YPos changed
 
         if (player.isSomersaulting())
