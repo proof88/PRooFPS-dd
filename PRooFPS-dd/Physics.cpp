@@ -862,6 +862,68 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
 }
 
 /**
+* Handle the actual collision between player and a foreground block (wall, ground, etc.).
+* Used by both BVH- and legacy path.
+* 
+* @return False if collision was cancelled by successful stepping onto the object, true otherwise.
+*/
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handleCollisionOccurred(
+    Player& player,
+    const PureObject3D& wallObj,
+    const PureVector& vecWallObjPos,
+    const float fRealBlockSizeYhalf,
+    const float fPlayerPos1YMinusHalf_2,
+    const float& fPlayerHalfHeight)
+{
+    // maybe this is a stairstep we can step onto
+    if (!player.isFalling() && !player.canFall() && ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
+    {
+        // TODO: check if there is enough space to step onto the stairstep!
+        // For now I'm not doing it, it would introduce additional slowdown when stepping up on each stairstep and currently this is
+        // considered as a corner case.
+
+        // PPPKKKGGGGGG
+        player.getPos().set(
+            PureVector(
+                player.getPos().getNew().getX(),
+                vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
+                player.getPos().getNew().getZ()
+            ));
+
+        return false;
+    }
+
+    // could not step up onto the object so actually horizontal collision occurred
+
+    if (m_bAllowStrafeMidAir || player.canFall())
+    {
+        // Horizontal collision must stop horizontal jump-induced force (unlike explosion-induced force).
+        // However, in case of m_bAllowStrafeMidAir == false it would make it impossible to jump on a box
+        // when jump is initiated from right next to the box. So as a cheat we allow keeping the horizontal
+        // jump-induced force for the period of jumping and just zero it out at the moment of starting to fall.
+        player.getJumpForce().SetX(0.f);
+    }
+
+    // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
+    const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
+    const float fAlignNextToWall = nAlignLeftOrRightToWall * (wallObj.getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
+    //getConsole().EOLn(
+    //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
+    //    player.getPos().getOld().getX(),
+    //    player.getPos().getNew().getX(),
+    //    fAlignNextToWall);
+    // PPPKKKGGGGGG
+    player.getPos().set(
+        PureVector(
+            vecWallObjPos.getX() + fAlignNextToWall,
+            player.getPos().getNew().getY(),
+            player.getPos().getNew().getZ()
+        ));
+
+    return true;
+}
+
+/**
 * Player's horizontal collision handling for the legacy path.
 *
 * @param player              The player for which we are checking and handling horizontal collision.
@@ -913,56 +975,16 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_horizontal(Playe
 
         // horizontal collision occurred BUT its effect might be cancelled if we can step up on the object
 
-        // TODO: RFR: this part down below is again same as in serverPlayerCollisionWithWalls_bvh()
-
-        // maybe this is a stairstep we can step onto
-        if (!player.isFalling() && !player.canFall() && ((vecFgBlockPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
-        {
-            // TODO: check if there is enough space to step onto the stairstep!
-            // For now I'm not doing it, it would introduce additional slowdown when stepping up on each stairstep and currently this is
-            // considered as a corner case.
-
-            // PPPKKKGGGGGG
-            player.getPos().set(
-                PureVector(
-                    player.getPos().getNew().getX(),
-                    vecFgBlockPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
-                    player.getPos().getNew().getZ()
-                ));
-
-            return false;
-        }
-
-        // could not step up onto the object so actually horizontal collision occurred
-
-        if (m_bAllowStrafeMidAir || player.canFall())
-        {
-            // Horizontal collision must stop horizontal jump-induced force (unlike explosion-induced force).
-            // However, in case of m_bAllowStrafeMidAir == false it would make it impossible to jump on a box
-            // when jump is initiated from right next to the box. So as a cheat we allow keeping the horizontal
-            // jump-induced force for the period of jumping and just zero it out at the moment of starting to fall.
-            player.getJumpForce().SetX(0.f);
-        }
-
-        // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-        const int nAlignLeftOrRightToWall = vecFgBlockPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
-        const float fAlignNextToWall = nAlignLeftOrRightToWall * (obj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
-        //getConsole().EOLn(
-        //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
-        //    player.getPos().getOld().getX(),
-        //    player.getPos().getNew().getX(),
-        //    fAlignNextToWall);
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                vecFgBlockPos.getX() + fAlignNextToWall,
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ()
-            ));
-
-        return true;
+        return serverPlayerCollisionWithWalls_common_horizontal_handleCollisionOccurred(
+            player,
+            *obj,
+            vecFgBlockPos,
+            fRealBlockSizeYhalf,
+            fPlayerPos1YMinusHalf_2,
+            fPlayerHalfHeight);
     } // end for i
 
+    // player did not collide with anything
     return false;
 } // serverPlayerCollisionWithWalls_legacy_horizontal()
 
@@ -1002,63 +1024,21 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_horizontal(
     }
 
     // horizontal collision occurred BUT its effect might be cancelled if we can step up on the object
+
+    
     const float fRealBlockSizeYhalf = pWallObj->getSizeVec().getY() / 2.f;
     // TODO: I think here we shall introduce a fPlayerHalfHeight2 because if above we stood up then we need to fetch updated height!
     // But, if I do that then at some points I cannot somersault up to a block because it repositions me horizontally
     // back next to it and I fall down. This is same as in the legacy function.
     const float fPlayerPos1YMinusHalf_2 = player.getPos().getNew().getY() - fPlayerHalfHeight;
 
-    //getConsole().EOLn("lolol");
-
-    // TODO: RFR: this part down below is again same as in serverPlayerCollisionWithWalls_legacy()
-
-    const PureVector& vecWallObjPos = pWallObj->getPosVec();
-    // maybe this is a stairstep we can step onto
-    if (!player.isFalling() && !player.canFall() && ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
-    {
-        // TODO: check if there is enough space to step onto the stairstep!
-        // For now I'm not doing it, it would introduce additional slowdown when stepping up on each stairstep and currently this is
-        // considered as a corner case.
-
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                player.getPos().getNew().getX(),
-                vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f,
-                player.getPos().getNew().getZ()
-            ));
-
-        return false;
-    }
-
-    // could not step up onto the object so actually horizontal collision occurred
-
-    if (m_bAllowStrafeMidAir || player.canFall())
-    {
-        // Horizontal collision must stop horizontal jump-induced force (unlike explosion-induced force).
-        // However, in case of m_bAllowStrafeMidAir == false it would make it impossible to jump on a box
-        // when jump is initiated from right next to the box. So as a cheat we allow keeping the horizontal
-        // jump-induced force for the period of jumping and just zero it out at the moment of starting to fall.
-        player.getJumpForce().SetX(0.f);
-    }
-
-    // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-    const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
-    const float fAlignNextToWall = nAlignLeftOrRightToWall * (pWallObj->getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
-    //getConsole().EOLn(
-    //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
-    //    player.getPos().getOld().getX(),
-    //    player.getPos().getNew().getX(),
-    //    fAlignNextToWall);
-    // PPPKKKGGGGGG
-    player.getPos().set(
-        PureVector(
-            vecWallObjPos.getX() + fAlignNextToWall,
-            player.getPos().getNew().getY(),
-            player.getPos().getNew().getZ()
-        ));
-
-    return true;
+    return serverPlayerCollisionWithWalls_common_horizontal_handleCollisionOccurred(
+        player,
+        *pWallObj,
+        pWallObj->getPosVec(),
+        fRealBlockSizeYhalf,
+        fPlayerPos1YMinusHalf_2,
+        fPlayerHalfHeight);
 } // serverPlayerCollisionWithWalls_bvh_horizontal()
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
