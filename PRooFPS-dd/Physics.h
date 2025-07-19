@@ -157,6 +157,16 @@ namespace proofps_dd
             Player& player,
             PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */);
 
+        bool serverPlayerCollisionWithWalls_legacy_horizontal(
+            Player& player,
+            const float& fPlayerHalfHeight,
+            const PureVector& vecPlayerScaledSize);
+
+        bool serverPlayerCollisionWithWalls_bvh_horizontal(
+            Player& player,
+            const float& fPlayerHalfHeight,
+            const PureVector& vecPlayerScaledSize);
+
         void serverPlayerCollisionWithWalls_legacy(
             const unsigned int& nPhysicsRate,
             XHair& xhair,
