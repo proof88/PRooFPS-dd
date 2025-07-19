@@ -865,6 +865,14 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
 * Handle the actual collision between player and a foreground block (wall, ground, etc.).
 * Used by both BVH- and legacy path.
 * 
+* @param player                  The player colliding with the given wall object.
+* @param wallObj                 The wall object the player is colliding with.
+* @param vecWallObjPos           The position vector of the wall object.
+* @param fRealBlockSizeYhalf     The half of the Y size of the wall object.
+* @param fPlayerPos1YMinusHalf_2 Player's latest updated Y position minus half player's vertical size.
+* @param fPlayerHalfHeight       The original half of the height of the player, saved before somersaulting or standup/crouching
+*                                was handled in this physics loop.
+* 
 * @return False if collision was cancelled by successful stepping onto the object, true otherwise.
 */
 bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handleCollisionOccurred(
@@ -1041,6 +1049,30 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_horizontal(
         fPlayerHalfHeight);
 } // serverPlayerCollisionWithWalls_bvh_horizontal()
 
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_updatePlayerAfterCollisionHandling(Player& player, bool bHorizontalCollisionOccured)
+{
+    if (bHorizontalCollisionOccured)
+    {
+        player.getActuallyRunningOnGround().set(false);
+        return;
+    }
+
+    if (player.getWillSomersaultInNextTick())
+    {
+        // only here can we really trigger on-ground somersaulting
+        player.startSomersaultServer(false);
+    }
+
+    if (!player.isInAir() && (player.getStrafeSpeed() != 0.f) && player.isRunning() && !player.getCrouchStateCurrent())
+    {
+        player.getActuallyRunningOnGround().set(true);
+    }
+    else
+    {
+        player.getActuallyRunningOnGround().set(false);
+    }
+}
+
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
 {
     ScopeBenchmarker<std::chrono::microseconds> bm_main(__func__);
@@ -1168,28 +1200,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             fPlayerHalfHeight,
             vecPlayerScaledSize);
 
-        // TODO: RFR: this part is also same as in serverPlayerCollisionWithWalls_bvh()
-        if (!bHorizontalCollisionOccured)
-        {
-            if (player.getWillSomersaultInNextTick())
-            {
-                // only here can we really trigger on-ground somersaulting
-                player.startSomersaultServer(false);
-            }
+        serverPlayerCollisionWithWalls_common_updatePlayerAfterCollisionHandling(player, bHorizontalCollisionOccured);
 
-            if (!player.isInAir() && (player.getStrafeSpeed() != 0.f) && player.isRunning() && !player.getCrouchStateCurrent())
-            {
-                player.getActuallyRunningOnGround().set(true);
-            }
-            else
-            {
-                player.getActuallyRunningOnGround().set(false);
-            }
-        }
-        else
-        {
-            player.getActuallyRunningOnGround().set(false);
-        }
     } // end for player
 } // serverPlayerCollisionWithWalls_legacy()
 
@@ -1301,27 +1313,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             fPlayerHalfHeight,
             vecPlayerScaledSize);
 
-        // TODO: RFR: this part is also same as in serverPlayerCollisionWithWalls_legacy()
-        if (!bHorizontalCollisionOccured)
-        {
-            if (player.getWillSomersaultInNextTick())
-            {
-                // only here can we really trigger on-ground somersaulting
-                player.startSomersaultServer(false);
-            }
+        serverPlayerCollisionWithWalls_common_updatePlayerAfterCollisionHandling(player, bHorizontalCollisionOccured);
 
-            if (!player.isInAir() && (player.getStrafeSpeed() != 0.f) && player.isRunning() && !player.getCrouchStateCurrent())
-            {
-                player.getActuallyRunningOnGround().set(true);
-            }
-            else
-            {
-                player.getActuallyRunningOnGround().set(false);
-            }
-        }
-        else
-        {
-            player.getActuallyRunningOnGround().set(false);
-        }
     } // end for player
 } // serverPlayerCollisionWithWalls_bvh()

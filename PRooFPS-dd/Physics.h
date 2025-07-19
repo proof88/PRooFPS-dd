@@ -175,6 +175,10 @@ namespace proofps_dd
             const float& fPlayerHalfHeight,
             const PureVector& vecPlayerScaledSize);
 
+        void serverPlayerCollisionWithWalls_common_updatePlayerAfterCollisionHandling(
+            Player& player,
+            bool bHorizontalCollisionOccured);
+
         void serverPlayerCollisionWithWalls_legacy(
             const unsigned int& nPhysicsRate,
             XHair& xhair,
