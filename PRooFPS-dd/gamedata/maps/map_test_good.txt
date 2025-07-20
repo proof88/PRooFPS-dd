@@ -333,9 +333,9 @@ jumppad_2 = 2.2 -3.3
 # are strictly not recommended.
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
-cccccccccccccccccccccccccccccc  cccccccc
-aI\/Iaaaaaaaaaaaaaaaaaa6aaaaaa  aaaaaaaa
-ooooacno^ooooooooooooooooooooo  oooooooo
+ccccccccccccccccccccccFFFFcccc  cccccccc
+aI\/IaaaaaaaaaaaaaaFFaa6aaaaaa  aaaaaaaa
+ooooacno^ooooooooooooo/F\ooooo  oooooooo
 nnnnnnnnnnn4nnnnnnn/IIIIn\nn^n  nnnnnnnn    I
 oSoooooooooJoooooSooupoooooooo  oooSoooo
 rrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr    /F\ B
