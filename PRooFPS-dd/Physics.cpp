@@ -680,9 +680,11 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_handleStandup(P
 *
 * @return The new Y-size of the player (it stays the same if the player cannot stand up, does not want to stand up, already standing, etc.).
 */
-float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Player& player, const PureObject3D* plobj)
+float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Player& player)
 {
     assert(!player.isSomersaulting());
+
+    const PureObject3D* const plobj = player.getObject3D();
     assert(plobj);
 
     if (!player.getWantToStandup() || !player.getCrouchStateCurrent())
@@ -704,7 +706,7 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Play
     return plobj->getScaledSizeVec().getY();
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     const unsigned int& nPhysicsRate,
     Player& player,
     PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */)
@@ -859,7 +861,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_strafe(
             player.getPos().getNew().getY(),
             player.getPos().getNew().getZ()
         ));
-}
+} // serverPlayerCollisionWithWalls_common_strafe()
 
 /**
 * Handle the actual collision between player and a foreground block (wall, ground, etc.).
@@ -932,6 +934,126 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
 }
 
 /**
+* Player's vertical collision handling for the legacy path.
+*
+* @param nPhysicsRate        The configured physics rate (e.g. 60 for 60 Hz).
+* @param player              The player for which we are checking and handling vertical collision.
+* @param fPlayerHalfHeight   The original half of the height of the player, saved before somersaulting or standup/crouching
+*                            was handled in this physics loop.
+* @param vecPlayerScaledSize The original scaled size of the player, saved before somersaulting or standup/crouching was handled
+*                            in this physics loop. I dont know why I have weird bug if this is NOT the saved but the current
+*                            scaled size, maybe in the future I will debug it.
+*
+* @return True if vertical collision occurred, false otherwise.
+*         True is also returned if the vertical collision was with a jumppad.
+*/
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
+    const unsigned int& nPhysicsRate,
+    Player& player,
+    const float& fPlayerHalfHeight,
+    const PureVector& vecPlayerScaledSize,
+    XHair& xhair,
+    PureVector& vecCamShakeForce)
+{
+    ScopeBenchmarker<std::chrono::microseconds> bm("legacy vertical collision");
+
+    bool bVerticalCollisionOccured = false;
+
+    // At this point, player.getPos().getY() is already updated by Gravity().
+    // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
+    // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+    // Object3D is then repositioned to Player's own position vector.
+    // On the long run we should use colliders so physics does not depend on graphics.
+    const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - vecPlayerScaledSize.getX() / 2.f;
+    const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + vecPlayerScaledSize.getX() / 2.f;
+    
+    if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
+    {
+        constexpr float fUsualBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
+        constexpr float fUsualBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
+
+        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
+        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
+
+        // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
+        // check for vertical collision with regular foreground blocks.
+        // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
+        // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
+        // regular one first and break from the loop immediately then.
+        for (size_t iJumppad = 0; iJumppad < m_maps.getJumppads().size(); iJumppad++)
+        {
+            assert(m_maps.getJumppads()[iJumppad]);  // we dont store nulls there
+            bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
+                player,
+                m_maps.getJumppads()[iJumppad],
+                static_cast<int>(iJumppad),
+                fPlayerHalfHeight,
+                fPlayerOPos1XMinusHalf,
+                fPlayerOPos1XPlusHalf,
+                fPlayerPos1YMinusHalf,
+                fPlayerPos1YPlusHalf,
+                fUsualBlockSizeXhalf,
+                fUsualBlockSizeYhalf,
+                xhair,
+                vecCamShakeForce);
+
+            if (bVerticalCollisionOccured)
+            {
+                // there is no need to check further, since we handle collision with only 1 jumppad at a time
+                break;
+            }
+        } // end for jumppads
+
+        for (int i = 0; !bVerticalCollisionOccured && (i < m_maps.getForegroundBlockCount()); i++)
+        {
+            const PureObject3D* const pObj = m_maps.getForegroundBlocks()[i];
+            assert(pObj);  // we dont store nulls there
+
+            const auto itJumppad = std::find(m_maps.getJumppads().begin(), m_maps.getJumppads().end(), pObj);
+            if (itJumppad != m_maps.getJumppads().end())
+            {
+                // we already checked them in above loop
+                continue;
+            }
+
+            bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
+                player,
+                pObj,
+                -1 /* invalid jumppad index */,
+                fPlayerHalfHeight,
+                fPlayerOPos1XMinusHalf,
+                fPlayerOPos1XPlusHalf,
+                fPlayerPos1YMinusHalf,
+                fPlayerPos1YPlusHalf,
+                pObj->getSizeVec().getX() / 2.f,
+                pObj->getSizeVec().getY() / 2.f,
+                xhair,
+                vecCamShakeForce);
+        } // end for i
+
+        serverPlayerCollisionWithWalls_common_fallingDown(
+            bVerticalCollisionOccured,
+            player);
+    } // end if YPos changed
+
+    if (player.isSomersaulting())
+    {
+        const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
+        player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
+    }
+    else
+    {
+        // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
+        serverPlayerCollisionWithWalls_legacy_handleStandup(
+            player,
+            fPlayerOPos1XMinusHalf,
+            fPlayerOPos1XPlusHalf);
+    }
+
+    return bVerticalCollisionOccured;
+} // serverPlayerCollisionWithWalls_legacy_vertical()
+
+/**
 * Player's horizontal collision handling for the legacy path.
 *
 * @param player              The player for which we are checking and handling horizontal collision.
@@ -995,6 +1117,108 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_horizontal(Playe
     // player did not collide with anything
     return false;
 } // serverPlayerCollisionWithWalls_legacy_horizontal()
+
+/**
+* Player's vertical collision handling for the legacy path.
+*
+* @param nPhysicsRate        The configured physics rate (e.g. 60 for 60 Hz).
+* @param player              The player for which we are checking and handling vertical collision.
+* @param fPlayerHalfHeight   The original half of the height of the player, saved before somersaulting or standup/crouching
+*                            was handled in this physics loop.
+* @param vecPlayerScaledSize The original scaled size of the player, saved before somersaulting or standup/crouching was handled
+*                            in this physics loop. I dont know why I have weird bug if this is NOT the saved but the current
+*                            scaled size, maybe in the future I will debug it.
+*
+* @return True if vertical collision occurred, false otherwise.
+*         True is also returned if the vertical collision was with a jumppad.
+*/
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
+    const unsigned int& nPhysicsRate,
+    Player& player,
+    const float& fPlayerHalfHeight,
+    const PureVector& vecPlayerScaledSize,
+    XHair& xhair,
+    PureVector& vecCamShakeForce)
+{
+    static std::vector<const PureObject3D*> colliders;
+
+    // At this point, player.getPos().getY() is already updated by serverGravity().
+    // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
+    // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
+    // Object3D is then repositioned to Player's own position vector.
+    // On the long run we should use colliders so physics does not depend on graphics.
+
+    ScopeBenchmarker<std::chrono::microseconds> bm("bvh vertical collision");
+    
+    bool bVerticalCollisionOccured = false;
+    if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
+    {
+        const PureAxisAlignedBoundingBox aabbPlayer(
+            PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
+            PureVector(vecPlayerScaledSize.getX(), vecPlayerScaledSize.getY(), vecPlayerScaledSize.getZ()));
+        // findOneCollider would also work for the collision itself, BUT here we also need to check for jumppads, therefore we need
+        // the whole set of objects we are colliding with. Because we could collide with a regular foreground block below us and
+        // a jumppad too at the same time from above.
+        // TODO: shall be improved somehow so findOneColliderObject() could also work. For example, jumppads could be placed in a separate
+        // BVH.
+        bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects_startFromFirstNode(aabbPlayer, nullptr, colliders);
+        if (bVerticalCollisionOccured)
+        {
+            assert(!colliders.empty());
+
+            // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
+            // check for vertical collision with regular foreground blocks.
+            // We need to check vertical collision _with jump pads first_, because otherwise if we have vertical collision with a
+            // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with a
+            // single regular block.
+            // So we find all colliders and check if there is jump pad there:
+            // - if yes, handle it and stop the vertical collision checking;
+            // - if no, continue with handling vertical collision with the 1st found object(any other object will be at same Y-pos / -size anyway).
+
+            int iCollidedWithJumppad = -1;
+            const PureObject3D* pObj = *colliders.begin(); // if no jumppad collision is detected in the loop below, then we handle collision with this
+            for (size_t iCollider = 0; (iCollider < colliders.size()) && (iCollidedWithJumppad == -1); iCollider++)
+            {
+                for (size_t iJumppad = 0; (iJumppad < m_maps.getJumppads().size()) && (iCollidedWithJumppad == -1); iJumppad++)
+                {
+                    if (m_maps.getJumppads()[iJumppad] == colliders[iCollider])
+                    {
+                        // vertical collision with a jump pad occurred
+                        iCollidedWithJumppad = iJumppad;
+                        pObj = colliders[iCollider];
+                    }
+                }
+
+            }
+
+            serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
+                player,
+                pObj,
+                iCollidedWithJumppad,
+                fPlayerHalfHeight,
+                pObj->getSizeVec().getY() / 2.f,
+                xhair,
+                vecCamShakeForce);
+        } // endif bVerticalCollisionOccured
+
+        serverPlayerCollisionWithWalls_common_fallingDown(
+            bVerticalCollisionOccured,
+            player);
+    } // end if YPos changed
+
+    if (player.isSomersaulting())
+    {
+        const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
+        player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
+    }
+    else
+    {
+        // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
+        serverPlayerCollisionWithWalls_bvh_handleStandup(player);
+    }
+
+    return bVerticalCollisionOccured;
+} // serverPlayerCollisionWithWalls_bvh_vertical()
 
 /**
 * Player's horizontal collision handling for the BVH path.
@@ -1090,110 +1314,32 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             continue;
         }
 
-        const PureObject3D* const plobj = player.getObject3D();
         // we need the CURRENT jump force LATER below for strafe movement, save it because vertical collision handling might change it!
         const PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
 
-        // how to make collision detection even faster:
+        // How to make legacy collision detection even faster:
         // if we dont want to use spatial hierarchy like BVH, just store the map elements in a matrix that we can address with i and j,
         // and based on player's position it is very easy to know which few map elements around matrix[i][j] should be checked ...
         // And I'm also thinking that not pointers but the objects themselves could be stored in matrix, that way the whole matrix
         // could be fetched into cache for even faster iteration on its elements ...
+        // However, matrix-based approach works only if map elements are same sized, however it is not true anymore since we introduced
+        // stairs. It can be made to work with a little trick with stairs too, but I dont want to limit the size variability of map elements
+        // anymore, therefore I will never implement the matrix stuff here in the legacy path. The BVH-path is the way to go.
 
-        constexpr float fUsualBlockSizeXhalf = proofps_dd::Maps::fMapBlockSizeWidth / 2.f;
-        constexpr float fUsualBlockSizeYhalf = proofps_dd::Maps::fMapBlockSizeHeight / 2.f;
-        const PureVector vecPlayerScaledSize = plobj->getScaledSizeVec();
+        // for some reason I have to use the CURRENT scaled size of the player across the functions even if it changes in the meantime
+        // due to standing up or crouching, so I save it here.
+        const PureVector vecPlayerScaledSize = player.getObject3D()->getScaledSizeVec();
         const float fPlayerHalfHeight = vecPlayerScaledSize.getY() / 2.f;
 
-        // At this point, player.getPos().getY() is already updated by Gravity().
-        // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
-        // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
-        // Object3D is then repositioned to Player's own position vector.
-        // On the long run we should use colliders so physics does not depend on graphics.
-        const float fPlayerOPos1XMinusHalf = player.getPos().getOld().getX() - vecPlayerScaledSize.getX() / 2.f;
-        const float fPlayerOPos1XPlusHalf = player.getPos().getOld().getX() + vecPlayerScaledSize.getX() / 2.f;
-        const float fPlayerPos1YMinusHalf = player.getPos().getNew().getY() - fPlayerHalfHeight;
-        const float fPlayerPos1YPlusHalf = player.getPos().getNew().getY() + fPlayerHalfHeight;
-        if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
-        {
-            ScopeBenchmarker<std::chrono::microseconds> bm("legacy vertical collision");
-            // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
-            // check for vertical collision with regular foreground blocks.
-            // Also, actually we need to check with jump pads first, because otherwise if we have vertical collision with a
-            // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with the
-            // regular one first and break from the loop immediately then.
-            bool bVerticalCollisionOccured = false;
-            for (size_t iJumppad = 0; iJumppad < m_maps.getJumppads().size(); iJumppad++)
-            {
-                assert(m_maps.getJumppads()[iJumppad]);  // we dont store nulls there
-                bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
-                    player,
-                    m_maps.getJumppads()[iJumppad],
-                    static_cast<int>(iJumppad),
-                    fPlayerHalfHeight,
-                    fPlayerOPos1XMinusHalf,
-                    fPlayerOPos1XPlusHalf,
-                    fPlayerPos1YMinusHalf,
-                    fPlayerPos1YPlusHalf,
-                    fUsualBlockSizeXhalf,
-                    fUsualBlockSizeYhalf,
-                    xhair,
-                    vecCamShakeForce);
+        serverPlayerCollisionWithWalls_legacy_vertical(
+            nPhysicsRate,
+            player,
+            fPlayerHalfHeight,
+            vecPlayerScaledSize,
+            xhair,
+            vecCamShakeForce);
 
-                if (bVerticalCollisionOccured)
-                {
-                    // there is no need to check further, since we handle collision with only 1 jumppad at a time
-                    break;
-                }
-            } // end for jumppads
-
-            for (int i = 0; !bVerticalCollisionOccured && (i < m_maps.getForegroundBlockCount()); i++)
-            {
-                const PureObject3D* const pObj = m_maps.getForegroundBlocks()[i];
-                assert(pObj);  // we dont store nulls there
-
-                const auto itJumppad = std::find(m_maps.getJumppads().begin(), m_maps.getJumppads().end(), pObj);
-                if (itJumppad != m_maps.getJumppads().end())
-                {
-                    // we already checked them in above loop
-                    continue;
-                }
-
-                bVerticalCollisionOccured = serverPlayerCollisionWithWalls_legacy_LoopKernelVertical(
-                    player,
-                    pObj,
-                    -1 /* invalid jumppad index */,
-                    fPlayerHalfHeight,
-                    fPlayerOPos1XMinusHalf,
-                    fPlayerOPos1XPlusHalf,
-                    fPlayerPos1YMinusHalf,
-                    fPlayerPos1YPlusHalf,
-                    pObj->getSizeVec().getX() / 2.f,
-                    pObj->getSizeVec().getY() / 2.f,
-                    xhair,
-                    vecCamShakeForce);
-            } // end for i
-
-            serverPlayerCollisionWithWalls_common_fallingDown(
-                bVerticalCollisionOccured,
-                player);
-        } // end if YPos changed
-
-        if (player.isSomersaulting())
-        {
-            const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
-            player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
-        }
-        else
-        {
-            // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
-            serverPlayerCollisionWithWalls_legacy_handleStandup(
-                player,
-                fPlayerOPos1XMinusHalf,
-                fPlayerOPos1XPlusHalf);
-        }
-
-        serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
+        serverPlayerCollisionWithWalls_common_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         const bool bHorizontalCollisionOccured = serverPlayerCollisionWithWalls_legacy_horizontal(
             player,
@@ -1208,7 +1354,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int& nPhysicsRate, XHair& xhair, proofps_dd::GameMode& gameMode, PureVector& vecCamShakeForce)
 {
-    static std::vector<const PureObject3D*> colliders;
     ScopeBenchmarker<std::chrono::microseconds> bm_main(__func__);
     for (auto& playerPair : m_mapPlayers)
     {
@@ -1224,89 +1369,23 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             continue;
         }
 
-        const PureObject3D* const plobj = player.getObject3D();
         // we need the CURRENT jump force LATER below for strafe movement, save it because vertical collision handling might change it!
         const PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
 
-        // for some reason we need this saved size instead of the updated size after crouch/standup handling, so save it now
-        const PureVector vecPlayerScaledSize = plobj->getScaledSizeVec();
+        // for some reason I have to use the CURRENT scaled size of the player across the functions even if it changes in the meantime
+        // due to standing up or crouching, so I save it here.
+        const PureVector vecPlayerScaledSize = player.getObject3D()->getScaledSizeVec();
         const float fPlayerHalfHeight = vecPlayerScaledSize.getY() / 2.f;
 
-        // At this point, player.getPos().getY() is already updated by serverGravity().
-        // We use Player's Object3D scaling since that is used in physics calculations also in serverGravity(),
-        // but we dont need to set Object3D position because Player object has its own position vector that is used in physics.
-        // Object3D is then repositioned to Player's own position vector.
-        // On the long run we should use colliders so physics does not depend on graphics.
+        serverPlayerCollisionWithWalls_bvh_vertical(
+            nPhysicsRate,
+            player,
+            fPlayerHalfHeight,
+            vecPlayerScaledSize,
+            xhair,
+            vecCamShakeForce);
 
-        if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
-        {
-            ScopeBenchmarker<std::chrono::microseconds> bm("bvh vertical collision");
-
-            const PureAxisAlignedBoundingBox aabbPlayer(
-                PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY(), player.getPos().getNew().getZ()),
-                PureVector(vecPlayerScaledSize.getX(), vecPlayerScaledSize.getY(), vecPlayerScaledSize.getZ()));
-            // findOneCollider would also work for the collision itself, BUT here we also need to check for jumppads, therefore we need
-            // the whole set of objects we are colliding with. Because we could collide with a regular foreground block below us and
-            // a jumppad too at the same time from above. TODO: shall be improved somehow so findOneColliderObject() could also work.
-            const bool bVerticalCollisionOccured = m_maps.getBVH().findAllColliderObjects_startFromFirstNode(aabbPlayer, nullptr, colliders);
-            if (bVerticalCollisionOccured)
-            {
-                assert(!colliders.empty());
-
-                // first we check collision with jump pads, because it is faster to check, and if we collide, we can skip further
-                // check for vertical collision with regular foreground blocks.
-                // We need to check vertical collision _with jump pads first_, because otherwise if we have vertical collision with a
-                // regular block and with jump pad at the same time, it won't make us jump if we handle the collision with a
-                // single regular block.
-                // So we find all colliders and check if there is jump pad there:
-                // - if yes, handle it and stop the vertical collision checking;
-                // - if no, continue with handling vertical collision with the 1st found object(any other object will be at same Y-pos / -size anyway).
-
-                int iCollidedWithJumppad = -1;
-                const PureObject3D* pObj = *colliders.begin(); // if no jumppad collision is detected in the loop below, then we handle collision with this
-                for (size_t iCollider = 0; (iCollider < colliders.size()) && (iCollidedWithJumppad == -1); iCollider++)
-                {
-                    for (size_t iJumppad = 0; (iJumppad < m_maps.getJumppads().size()) && (iCollidedWithJumppad == -1); iJumppad++)
-                    {
-                        if (m_maps.getJumppads()[iJumppad] == colliders[iCollider])
-                        {
-                            // vertical collision with a jump pad occurred
-                            iCollidedWithJumppad = iJumppad;
-                            pObj = colliders[iCollider];
-                        }
-                    }
-
-                }
-
-                serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
-                    player,
-                    pObj,
-                    iCollidedWithJumppad,
-                    fPlayerHalfHeight,
-                    pObj->getSizeVec().getY() / 2.f,
-                    xhair,
-                    vecCamShakeForce);
-            } // endif bVerticalCollisionOccured
-
-            serverPlayerCollisionWithWalls_common_fallingDown(
-                bVerticalCollisionOccured,
-                player);
-        } // end if YPos changed
-
-        if (player.isSomersaulting())
-        {
-            const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
-            player.stepSomersaultAngleServer(GAME_PLAYER_SOMERSAULT_ROTATE_STEP);
-        }
-        else
-        {
-            // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
-            serverPlayerCollisionWithWalls_bvh_handleStandup(
-                player,
-                plobj);
-        }
-
-        serverPlayerCollisionWithWalls_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
+        serverPlayerCollisionWithWalls_common_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         const bool bHorizontalCollisionOccured = serverPlayerCollisionWithWalls_bvh_horizontal(
             player,

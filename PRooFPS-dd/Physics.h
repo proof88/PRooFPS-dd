@@ -149,10 +149,9 @@ namespace proofps_dd
             const float& fPlayerOPos1XPlusHalf);
 
         float serverPlayerCollisionWithWalls_bvh_handleStandup(
-            Player& player,
-            const PureObject3D* plobj);
+            Player& player);
 
-        void serverPlayerCollisionWithWalls_strafe(
+        void serverPlayerCollisionWithWalls_common_strafe(
             const unsigned int& nPhysicsRate,
             Player& player,
             PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */);
@@ -165,10 +164,26 @@ namespace proofps_dd
             const float fPlayerPos1YMinusHalf_2,
             const float& fPlayerHalfHeight);
 
+        bool serverPlayerCollisionWithWalls_legacy_vertical(
+            const unsigned int& nPhysicsRate,
+            Player& player,
+            const float& fPlayerHalfHeight,
+            const PureVector& vecPlayerScaledSize,
+            XHair& xhair,
+            PureVector& vecCamShakeForce);
+
         bool serverPlayerCollisionWithWalls_legacy_horizontal(
             Player& player,
             const float& fPlayerHalfHeight,
             const PureVector& vecPlayerScaledSize);
+
+        bool serverPlayerCollisionWithWalls_bvh_vertical(
+            const unsigned int& nPhysicsRate,
+            Player& player,
+            const float& fPlayerHalfHeight,
+            const PureVector& vecPlayerScaledSize,
+            XHair& xhair,
+            PureVector& vecCamShakeForce);
 
         bool serverPlayerCollisionWithWalls_bvh_horizontal(
             Player& player,
