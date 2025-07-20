@@ -26,6 +26,19 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.5.1 Private Beta (July 20, 2025)
+
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1JUiqWUTJKve-xOOZnN4rkNGRUu0_KuPI/view?usp=sharing).
+
+This version brings the long-awaited **fast collision detection** feature.  
+This technically replaces the naive linear algorithm with an Octree-based BVH (Bounding Volume Hierarchy)-based algorithm.  
+This lead to 5-8x faster collision detection between players and map elements, and between bullets and map elements.
+
+With this being introduced, the **machine pistol's fire rate is set to 20 bullets / second**.
+
+Also, **a fix is delivered**: in the previous release we introduced stairs, but the physics code did not check if there was enough space for the player to step onto a stairstep.  
+This could lead to a visual glitch or even to get stuck in wall elements on the mutans map, but the fix takes care of this.
+
 ## v0.5.0 Private Beta (March 07, 2025, Latest ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1DJGDVqWaAaNDSENsDF7ofiL028kTMzCB/view?usp=drive_link).
