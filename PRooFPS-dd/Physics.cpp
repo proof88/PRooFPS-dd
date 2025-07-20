@@ -693,10 +693,9 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Play
     }
 
     // we need to check if there is enough space to stand up
-    constexpr float fProposedNewPlayerHalfHeight = Player::fObjHeightStanding / 2.f;
     const PureAxisAlignedBoundingBox aabbPlayer(
         PureVector(player.getPos().getOld().getX(), player.getProposedNewPosYforStandup(), player.getPos().getNew().getZ()),
-        PureVector(plobj->getSizeVec().getX(), fProposedNewPlayerHalfHeight, plobj->getSizeVec().getZ()));
+        PureVector(plobj->getSizeVec().getX(), Player::fObjHeightStanding, plobj->getSizeVec().getZ()));
     const bool bCanStandUp = (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbPlayer, nullptr) == nullptr);
     if (bCanStandUp)
     {
