@@ -238,6 +238,7 @@ namespace proofps_dd
         PureVector& getJumpForce();
         bool getWillWallJumpInNextTick() const;
         void setWillWallJumpInNextTick();
+        void cancelWillWallJump();
         void wallJump();
 
         PgeOldNewValue<bool>& getCrouchInput();

@@ -268,6 +268,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
                 // starting somersault and wall jump at the same time is allowed, and in fact, they need to be handled with their separate conditions,
                 // because even if player is late to initiate somersaulting, possibility of initiating wall jumping should be still available.
+                // Player angle Y and strafe must be also updated for this to work properly, both of them are updated in earlier lines above.
                 player.setWillWallJumpInNextTick();
                 //getConsole().EOLn("will wall jump set");
             }

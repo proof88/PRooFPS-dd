@@ -812,7 +812,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
     if (player.getWillJumpYInNextTick() > 0.f)
     {
-        getConsole().EOLn("start jumping");
+        //getConsole().EOLn("start jumping");
         // now we can actually jump and have the correct forces be saved for the jump
         player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
     }
@@ -971,7 +971,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
     // Even if we zeroed out horizontal jump force due to above condition, we might set it to non-zero here.
     if (player.getWillWallJumpInNextTick())
     {
-        getConsole().EOLn("wall jump initiated");
+        //getConsole().EOLn("wall jump initiated");
         player.wallJump();
     }
 
@@ -1178,6 +1178,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_horizontal(Playe
     } // end for i
 
     // player did not collide with anything
+    player.cancelWillWallJump();
     return false;
 } // serverPlayerCollisionWithWalls_legacy_horizontal()
 
@@ -1315,6 +1316,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_horizontal(
 
     if (!pWallObj)
     {
+        player.cancelWillWallJump();
         return false;
     }
 

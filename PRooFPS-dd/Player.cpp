@@ -978,7 +978,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
     //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
-    getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
+    //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
 }
 
 void proofps_dd::Player::stopJumping()
@@ -999,7 +999,7 @@ float proofps_dd::Player::getWillJumpYInNextTick() const
 
 /**
 * Sets the multipliers for jump force that will be used for the next jump.
-* The jump can happen in the current or in the next tick, depending on WHEN this function is called.
+* The jump will actually happen in the current or in the next tick, depending on WHEN this function is called.
 * See Physics code for details.
 * 
 * @param factorY Multiplier for Player::fJumpGravityStartFromStanding. Use 1.0 to trigger a regular jump from standing position.
@@ -1035,11 +1035,13 @@ bool proofps_dd::Player::getWillWallJumpInNextTick() const
 
 /**
 * Sets the multipliers for jump force that will be used for the next wall jump.
-* The wall jump can happen in the current or in the next tick, depending on WHEN this function is called.
+* The wall jump will actually happen in the current or in the next tick, depending on WHEN this function is called.
 * See Physics code for details.
 * 
 * Unlike a regular jump, wall jump can be initiated only if the player has already initiated a regular jump before, and
 * the player is still "in" that regular jump i.e. not yet started to fall down or already on ground.
+* Additional requirement is that the player must look in the opposite direction of the wall they are strafing against.
+* So if player is strafing towards left wall, they shall look to the right when triggering wall jump.
 */
 void proofps_dd::Player::setWillWallJumpInNextTick()
 {
@@ -1048,11 +1050,31 @@ void proofps_dd::Player::setWillWallJumpInNextTick()
         return;
     }
 
-   // m_fWillJumpMultFactorY = 1.f;
-    //m_fWillJumpMultFactorX = 0.f;
+    // player needs to face opposite direction
+    if (((m_strafe == Strafe::LEFT) && (getAngleY() == 0.f))
+        ||
+        ((m_strafe == Strafe::RIGHT) && (getAngleY() == 180.f)))
+    {
+        return;
+    }
+
     m_bWillWallJump = true;
     m_timeLastWillJump = std::chrono::steady_clock::now();
 }
+
+/**
+* Resets getWillWallJumpInNextTick().
+* In some case, a triggered wall jump should be cancelled.
+* Since wall jumping is triggered by player in input handling, but actually triggered in physics, we
+* have to cancel the player-triggered wall jump in physics if we detect no actual horizontal wall collision.
+* Otherwise, the wall jump would be really triggered by physics later due to the set flag.
+*/
+void proofps_dd::Player::cancelWillWallJump()
+{
+    m_bWillWallJump = false;
+}
+
+
 
 void proofps_dd::Player::wallJump()
 {
@@ -1061,11 +1083,11 @@ void proofps_dd::Player::wallJump()
     m_fGravity = /*proofps_dd::Player::fJumpGravityStartFromCrouching*/ proofps_dd::Player::fJumpGravityStartFromStanding;
     
     // unlike with regular jump, here we have to set negative horizontal force since we do it against the wall,
-    // and we set double force, because it needs to overcome the strafe speed and its negative direction
-    // since we are strafing towards the wall but we want to jump from there! And in-air strafe might be enabled, so
-    // essentially we are fighting against in-air strafe with this doubled and negated force.
-    m_vecJumpForce.SetX(-(getPos().getNew().getX() - getPos().getOld().getX()) * 2);
-    getConsole().EOLn("wall jump x force: %f", m_vecJumpForce.getX());
+    // and we set bigger force, because it needs to overcome the strafe speed and its negative direction,
+    // since we are strafing TOWARDS the wall but we want to jump AGAINST it! And in-air strafe might be enabled, so
+    // essentially we are fighting against in-air strafe with this negated force.
+    m_vecJumpForce.SetX(-(getPos().getNew().getX() - getPos().getOld().getX()) * 1.5f);
+    //getConsole().EOLn("wall jump x force: %f", m_vecJumpForce.getX());
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
@@ -1270,7 +1292,7 @@ void proofps_dd::Player::startSomersaultServer(bool bJumpInduced)
         // triggering mid-air somersaulting modifies player jump force and gravity, not the impact force
         // TODO: this should be accessed thru Config::getSomersaultMidAirJumpForceMultiplier(), however that introduces unforeseen mass of compilation problems now!
         m_vecJumpForce.SetX(m_vecJumpForce.getX() * m_cfgProfiles.getVars()[szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat());
-        getConsole().EOLn("somersault set jump force x: %f", m_vecJumpForce.getX());
+        //getConsole().EOLn("somersault set jump force x: %f", m_vecJumpForce.getX());
         m_fGravity *= m_cfgProfiles.getVars()[szCVarSvSomersaultMidAirJumpForceMultiplier].getAsFloat();
     }
     else
