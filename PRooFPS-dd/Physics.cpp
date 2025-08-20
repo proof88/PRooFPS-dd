@@ -389,7 +389,7 @@ void proofps_dd::Physics::serverGravity(
             //}
         }
     }
-}
+} // serverGravity()
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls(
     const unsigned int& nPhysicsRate,
@@ -812,7 +812,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
     if (player.getWillJumpYInNextTick() > 0.f)
     {
-        //getConsole().EOLn("start jumping");
+        getConsole().EOLn("start jumping");
         // now we can actually jump and have the correct forces be saved for the jump
         player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
     }
@@ -965,6 +965,14 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         // when jump is initiated from right next to the box. So as a cheat we allow keeping the horizontal
         // jump-induced force for the period of jumping and just zero it out at the moment of starting to fall.
         player.getJumpForce().SetX(0.f);
+    }
+
+    // serverPlayerCollisionWithWalls_common_strafe() has set input-induced jump in this same tick.
+    // Even if we zeroed out horizontal jump force due to above condition, we might set it to non-zero here.
+    if (player.getWillWallJumpInNextTick())
+    {
+        getConsole().EOLn("wall jump initiated");
+        player.wallJump();
     }
 
     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall

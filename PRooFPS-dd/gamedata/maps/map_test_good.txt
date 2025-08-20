@@ -332,15 +332,15 @@ jumppad_2 = 2.2 -3.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
-ccccccccccccccccccccccFFFFcccc  cccccccc
-aI\/IaaaaaaaaaaaaaaFFaa6aaaaaa  aaaaaaaa
-ooooacno^ooooooooooooo/F\ooooo  oooooooo
-nnnnnnnnnnn4nnnnnnn/IIIIn\nn^n  nnnnnnnn    I
-oSoooooooooJoooooSooupoooooooo  oooSoooo
-rrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr    /F\ B
-aaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +
-BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
-BIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  aaaaaaaa
+cccccccccccccccccccccccccFFFFcccc  cccccccc
+aaaaI\/IaaaaaaaaaaaaaaFFaa6aaaaaa  aaaaaaaa
+oooooooacno^ooooooooooooo/F\ooooo  oooooooo
+nnnInnnnnnnnnn4nnnnnnn/IIIIn\nn^n  nnnnnnnn    I
+JoooSoooooooooJoooooSooupoooooooo  oooSoooo
+JrrrrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr    /F\ B
+Jaaaaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aaa,aa 2 +
+BBBBIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
+BBBBIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
 
 # After or in between the map layout lines, we do not accept anything else.

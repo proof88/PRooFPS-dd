@@ -256,6 +256,8 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
             if (player.isJumping())
             {
+                //getConsole().EOLn("jumping");
+
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
                 if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump <= m_nKeyPressSomersaultMaximumWaitMilliseconds))
@@ -263,9 +265,15 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
                     player.startSomersaultServer(true);
                 }
+
+                // starting somersault and wall jump at the same time is allowed, and in fact, they need to be handled with their separate conditions,
+                // because even if player is late to initiate somersaulting, possibility of initiating wall jumping should be still available.
+                player.setWillWallJumpInNextTick();
+                //getConsole().EOLn("will wall jump set");
             }
             else
             {
+                //getConsole().EOLn("not jumping");
                 if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
                 {
                     // should NOT had received this from client this early (actually could, see explanation below)
