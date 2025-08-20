@@ -1074,8 +1074,6 @@ void proofps_dd::Player::cancelWillWallJump()
     m_bWillWallJump = false;
 }
 
-
-
 void proofps_dd::Player::wallJump()
 {
     m_bJumping = true;
@@ -1086,7 +1084,7 @@ void proofps_dd::Player::wallJump()
     // and we set bigger force, because it needs to overcome the strafe speed and its negative direction,
     // since we are strafing TOWARDS the wall but we want to jump AGAINST it! And in-air strafe might be enabled, so
     // essentially we are fighting against in-air strafe with this negated force.
-    m_vecJumpForce.SetX(-(getPos().getNew().getX() - getPos().getOld().getX()) * 1.5f);
+    m_vecJumpForce.SetX(-getStrafeSpeed() * 1.5f);
     //getConsole().EOLn("wall jump x force: %f", m_vecJumpForce.getX());
 }
 
