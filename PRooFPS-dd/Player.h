@@ -237,9 +237,9 @@ namespace proofps_dd
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
         PureVector& getJumpForce();
         bool getWillWallJumpInNextTick() const;
-        void setWillWallJumpInNextTick();
+        void setWillWallJumpInNextTick(/*float factorY, float factorX*/);
         void cancelWillWallJump();
-        void wallJump();
+        void wallJump(/*const float& fRunSpeedPerTickForJumppadHorizontalForce = 0.f*/);
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
@@ -444,6 +444,7 @@ namespace proofps_dd
         */
         float m_fWillJumpMultFactorY = 0.f;
         bool m_bWillWallJump = false;
+        PureVector m_angleSavedForWallJump;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall = true;
         bool m_bFalling = true;

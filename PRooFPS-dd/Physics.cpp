@@ -890,7 +890,9 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
     const PureVector& vecPlayerScaledSize)
 {
     // maybe this is a stairstep we can step onto
-    if (!player.isFalling() && !player.canFall() && ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
+    if (!player.getWillWallJumpInNextTick() /* otherwise stairstep auto-alignment will cancel ongoing walljump request */
+        && !player.isFalling() && !player.canFall() &&
+        ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
     {
         // check if there is enough space to step onto the object?
         const float fProposedNewYPos = vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f;

@@ -1,0 +1,55 @@
+# Lines starting with hashtag are comments and ignored by loader.
+
+# Blank lines are also ignored by loader.
+
+# Variable names are case-sensitive!
+
+# If opened in Notepad++, I recommend setting INI or Makefile syntax highlighting in Language menu.
+
+# Name of the map is that will be displayed in map select submenu.
+Name = Test Map
+
+#######################
+#                     #
+#  BLOCK DEFINITIONS  #
+#                     #
+#######################
+
+# The following chars are used for defining foreground blocks in this map:
+# D
+# Remaining chars to be used as foreground blocks in this map: BFGHIJKLQT
+D = floor.bmp
+
+# The following chars are used for defining background blocks in this map:
+# 
+# Remaining chars to be used as background blocks in this map: acenompruvwxyz
+
+#######################
+#                     #
+#  DECAL ASSIGNMENTS  #
+#                     #
+#######################
+
+###############
+#             #
+#  JUMP PADS  #
+#             #
+###############
+
+################
+#              #
+#  MAP LAYOUT  #
+#              #
+################
+
+DD  DD
+DD  DD
+DD  DD
+DD  DD
+DD  DD
+DD  DD
+DDS DD
+DD  DD
+DDDDDDD
+
+# After or in between the map layout lines, we do not accept anything else.

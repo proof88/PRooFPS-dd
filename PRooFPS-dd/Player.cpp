@@ -927,7 +927,7 @@ void proofps_dd::Player::setJumpAllowed(bool b)
 * 
 * Cannot trigger another jump if already jumping or somersaulting.
 * 
-* Since jump() is also used to trigger jumppad-induced jumps, that could be also trigger horizontal force,
+* Since jump() is also used to trigger jumppad-induced jumps, that could also trigger horizontal force,
 * we have fRunSpeedPerTickForJumppadHorizontalForce optional argument for such calculation.
 * 
 * @param fRunSpeedPerTickForJumppadHorizontalForce Optional, only used in case of jumppad-induced jumps to calculate horizontal jump force.
@@ -1043,9 +1043,19 @@ bool proofps_dd::Player::getWillWallJumpInNextTick() const
 * Additional requirement is that the player must look in the opposite direction of the wall they are strafing against.
 * So if player is strafing towards left wall, they shall look to the right when triggering wall jump.
 */
-void proofps_dd::Player::setWillWallJumpInNextTick()
+void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factorX*/)
 {
+    // TODO: input arguments shall be similar to setWillJumpInNextTick(), so PurePosUpTarget shall be
+    // calculated outside or even here instead of wallJump(), I'm not 100% sure about this though.
     if (!isJumping())
+    {
+        return;
+    }
+
+    m_angleSavedForWallJump = getWeaponAngle().getNew();
+    // Z-angle is in [-90, 90] range, let's restrict it a bit so full vertical walljumps will
+    // NOT be allowed, because it is unreal.
+    if ((m_angleSavedForWallJump.getZ() < -70.f) || (m_angleSavedForWallJump.getZ() > 70.f))
     {
         return;
     }
@@ -1058,7 +1068,11 @@ void proofps_dd::Player::setWillWallJumpInNextTick()
         return;
     }
 
+    //getConsole().EOLn("will wall jump really set");
+
     m_bWillWallJump = true;
+    //m_fWillJumpMultFactorY = factorY;
+   // m_fWillJumpMultFactorX = factorX;
     m_timeLastWillJump = std::chrono::steady_clock::now();
 }
 
@@ -1074,18 +1088,38 @@ void proofps_dd::Player::cancelWillWallJump()
     m_bWillWallJump = false;
 }
 
-void proofps_dd::Player::wallJump()
+void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHorizontalForce*/)
 {
-    m_bJumping = true;
     m_bWillWallJump = false;
-    m_fGravity = /*proofps_dd::Player::fJumpGravityStartFromCrouching*/ proofps_dd::Player::fJumpGravityStartFromStanding;
-    
+    m_bJumping = true;
+   
+    PurePosUpTarget put;
+    put.SetRotation(
+        0.f,
+        (m_angleSavedForWallJump.getY() > 0.0f) ? 90.f : -90.f,
+        (m_angleSavedForWallJump.getY() > 0.0f) ? m_angleSavedForWallJump.getZ() : -m_angleSavedForWallJump.getZ());
+
+    float fOldIdeaY = proofps_dd::Player::fJumpGravityStartFromStanding;
+    float fNewIdeaY = put.getTargetVec().getY() * proofps_dd::Player::fJumpGravityStartFromStanding * 1.5f;
+    fNewIdeaY = PFL::constrain(fNewIdeaY, fNewIdeaY, proofps_dd::Player::fJumpGravityStartFromStanding);
+    m_fGravity = fNewIdeaY;
+
     // unlike with regular jump, here we have to set negative horizontal force since we do it against the wall,
     // and we set bigger force, because it needs to overcome the strafe speed and its negative direction,
     // since we are strafing TOWARDS the wall but we want to jump AGAINST it! And in-air strafe might be enabled, so
     // essentially we are fighting against in-air strafe with this negated force.
-    m_vecJumpForce.SetX(-getStrafeSpeed() * 1.5f);
-    //getConsole().EOLn("wall jump x force: %f", m_vecJumpForce.getX());
+    float fOldIdeaX = -getStrafeSpeed() * 1.5f;
+
+    float fNewIdeaX = put.getTargetVec().getX() / 7.f;
+    m_vecJumpForce.SetX(fNewIdeaX);
+
+    //getConsole().EOLn("Original Idea: gravity: %f, wall jump x force: %f",
+    //    fOldIdeaY,
+    //    fOldIdeaX);
+    //getConsole().EOLn("New Idea     : put y: %f, put x: %f, angle Z: %f",
+    //    fNewIdeaY,
+    //    fNewIdeaX,
+    //    m_angleSavedForWallJump.getZ());
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
