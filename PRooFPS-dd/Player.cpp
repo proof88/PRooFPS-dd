@@ -219,6 +219,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bAllowJump(other.m_bAllowJump),
     m_fWillJumpMultFactorX(other.m_fWillJumpMultFactorX),
     m_fWillJumpMultFactorY(other.m_fWillJumpMultFactorY),
+    m_bWillWallJump(other.m_bWillWallJump),
+    m_nConsecutiveWallJump(other.m_nConsecutiveWallJump),
     m_bCanFall(other.m_bCanFall),
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
@@ -985,6 +987,7 @@ void proofps_dd::Player::stopJumping()
 {
     m_bJumping = false;
     m_bWillWallJump = false;
+    m_nConsecutiveWallJump = 0;
 }
 
 float proofps_dd::Player::getWillJumpXInNextTick() const
@@ -1033,6 +1036,11 @@ bool proofps_dd::Player::getWillWallJumpInNextTick() const
     return m_bWillWallJump;
 }
 
+//bool proofps_dd::Player::getConsecutiveWallJump() const
+//{
+//    return m_nConsecutiveWallJump != 0;
+//}
+
 /**
 * Sets the multipliers for jump force that will be used for the next wall jump.
 * The wall jump will actually happen in the current or in the next tick, depending on WHEN this function is called.
@@ -1045,6 +1053,7 @@ bool proofps_dd::Player::getWillWallJumpInNextTick() const
 */
 void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factorX*/)
 {
+    getConsole().EOLn("1 set");
     // TODO: input arguments shall be similar to setWillJumpInNextTick(), so PurePosUpTarget shall be
     // calculated outside or even here instead of wallJump(), I'm not 100% sure about this though.
     if (!isJumping())
@@ -1052,25 +1061,41 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
         return;
     }
 
+    getConsole().EOLn("2 set");
     m_angleSavedForWallJump = getWeaponAngle().getNew();
     // Z-angle is in [-90, 90] range, let's restrict it a bit so full vertical walljumps will
     // NOT be allowed, because it is unreal.
-    if ((m_angleSavedForWallJump.getZ() < -70.f) || (m_angleSavedForWallJump.getZ() > 70.f))
+    // We don't care about this in consecutive wall jumps because those are using saved angles.
+    if ((m_nConsecutiveWallJump == 0) &&
+        ((m_angleSavedForWallJump.getZ() < -70.f) || (m_angleSavedForWallJump.getZ() > 70.f)))
     {
         return;
     }
 
-    // player needs to face opposite direction
-    if (((m_strafe == Strafe::LEFT) && (getAngleY() == 0.f))
-        ||
-        ((m_strafe == Strafe::RIGHT) && (getAngleY() == 180.f)))
+    getConsole().EOLn("3 set");
+    // player needs to face opposite direction relative to strafing if this is the first wall jump in a row,
+    // since we are pushing ourselves from the walls, however strafing should be considered only
+    // during the first jump, consecutive jumps should be easier.
+    if ((m_nConsecutiveWallJump == 0) &&
+        (((m_strafe == Strafe::LEFT) && (getAngleY() == 0.f))
+         ||
+         ((m_strafe == Strafe::RIGHT) && (getAngleY() == 180.f))
+        )
+       )
     {
         return;
     }
 
-    //getConsole().EOLn("will wall jump really set");
+    static int dssdfgs = 0;
+    dssdfgs++;
+    getConsole().EOLn("will wall jump really set %d, consecutive: %d", dssdfgs, m_nConsecutiveWallJump);
 
-    m_bWillWallJump = true;
+    if (!m_bWillWallJump)
+    {
+        m_bWillWallJump = true;
+        m_nConsecutiveWallJump = 0;
+    }
+    m_nConsecutiveWallJump++;
     //m_fWillJumpMultFactorY = factorY;
    // m_fWillJumpMultFactorX = factorX;
     m_timeLastWillJump = std::chrono::steady_clock::now();
@@ -1110,7 +1135,7 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     // essentially we are fighting against in-air strafe with this negated force.
     float fOldIdeaX = -getStrafeSpeed() * 1.5f;
 
-    float fNewIdeaX = put.getTargetVec().getX() / 7.f;
+    float fNewIdeaX = put.getTargetVec().getX() / 5.f;
     m_vecJumpForce.SetX(fNewIdeaX);
 
     //getConsole().EOLn("Original Idea: gravity: %f, wall jump x force: %f",

@@ -50,6 +50,6 @@ DD  DD
 DD  DD
 DDS DD
 DD  DD
-DDDDDDD
+DDDDDD
 
 # After or in between the map layout lines, we do not accept anything else.
