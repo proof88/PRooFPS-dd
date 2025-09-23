@@ -241,6 +241,7 @@ namespace proofps_dd
         void setWillWallJumpInNextTick(/*float factorY, float factorX*/);
         void cancelWillWallJump();
         void wallJump(/*const float& fRunSpeedPerTickForJumppadHorizontalForce = 0.f*/);
+        int& getTicksSinceLastHorizontalCollision();
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
@@ -446,6 +447,7 @@ namespace proofps_dd
         float m_fWillJumpMultFactorY = 0.f;
         bool m_bWillWallJump = false;
         int m_nConsecutiveWallJump = 0;
+        int m_nTicksSinceLastHorizontalCollision = 0;
         PureVector m_angleSavedForWallJump;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall = true;

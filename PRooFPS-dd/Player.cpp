@@ -1053,7 +1053,7 @@ bool proofps_dd::Player::getWillWallJumpInNextTick() const
 */
 void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factorX*/)
 {
-    getConsole().EOLn("1 set");
+    //getConsole().EOLn("1 set");
     // TODO: input arguments shall be similar to setWillJumpInNextTick(), so PurePosUpTarget shall be
     // calculated outside or even here instead of wallJump(), I'm not 100% sure about this though.
     if (!isJumping())
@@ -1061,7 +1061,7 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
         return;
     }
 
-    getConsole().EOLn("2 set");
+    //getConsole().EOLn("2 set");
     // consecutive wall jumps use saved angles
     if (m_nConsecutiveWallJump == 0)
     {
@@ -1076,7 +1076,7 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
         return;
     }
 
-    getConsole().EOLn("3 set");
+    //getConsole().EOLn("3 set");
     // player needs to face opposite direction relative to strafing if this is the first wall jump in a row,
     // since we are pushing ourselves from the walls, however strafing should be considered only
     // during the first jump, consecutive jumps should be easier.
@@ -1092,7 +1092,7 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
 
     static int dssdfgs = 0;
     dssdfgs++;
-    getConsole().EOLn("will wall jump really set %d, consecutive: %d", dssdfgs, m_nConsecutiveWallJump);
+    //getConsole().EOLn("will wall jump really set %d, consecutive: %d", dssdfgs, m_nConsecutiveWallJump);
 
     m_bWillWallJump = true;
     m_nConsecutiveWallJump++;
@@ -1135,7 +1135,7 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     // essentially we are fighting against in-air strafe with this negated force.
     const float fOldIdeaX = -getStrafeSpeed() * 1.5f;
 
-    const float fNewIdeaX = put.getTargetVec().getX() / 5.f;
+    const float fNewIdeaX = put.getTargetVec().getX() / 6.f;
     m_vecJumpForce.SetX(fNewIdeaX);
 
     //getConsole().EOLn("Original Idea: gravity: %f, wall jump x force: %f",
@@ -1147,12 +1147,17 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     //    m_angleSavedForWallJump.getZ());
 
     // have to negate the horizontal direction so a next consecutive wall jump can be in the reverse direction
-    getConsole().EOLn("old m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
+    //getConsole().EOLn("old m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
     m_angleSavedForWallJump.SetY(
         (m_angleSavedForWallJump.getY() > 0) ?
         0.f :
         180.f);
-    getConsole().EOLn("new m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
+    //getConsole().EOLn("new m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
+}
+
+int& proofps_dd::Player::getTicksSinceLastHorizontalCollision()
+{
+    return m_nTicksSinceLastHorizontalCollision;
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()

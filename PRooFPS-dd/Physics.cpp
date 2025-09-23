@@ -969,14 +969,6 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         player.getJumpForce().SetX(0.f);
     }
 
-    // serverPlayerCollisionWithWalls_common_strafe() has set input-induced jump in this same tick.
-    // Even if we zeroed out horizontal jump force due to above condition, we might set it to non-zero here.
-    if (player.getWillWallJumpInNextTick())
-    {
-        //getConsole().EOLn("wall jump initiated");
-        player.wallJump();
-    }
-
     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
     const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
     const float fAlignNextToWall = nAlignLeftOrRightToWall * (wallObj.getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
@@ -1345,10 +1337,30 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_updatePlayerAfte
 {
     if (bHorizontalCollisionOccured)
     {
+        player.getTicksSinceLastHorizontalCollision() = 0;
         player.getActuallyRunningOnGround().set(false);
-        return;
+    }
+    
+    static constexpr int nTicksWithinNextConsecutiveWallJumpCanBeTriggeredWithoutActualHorizontalCollision = 2;
+    if (player.getWillWallJumpInNextTick() &&
+        (player.getTicksSinceLastHorizontalCollision() < nTicksWithinNextConsecutiveWallJumpCanBeTriggeredWithoutActualHorizontalCollision))
+    {
+        //getConsole().EOLn("wall jump initiated");
+        player.wallJump();
     }
 
+    if (bHorizontalCollisionOccured)
+    {
+        // checking this again otherwise I cannot return without handling wall jumping above
+        return;
+    }
+    player.getTicksSinceLastHorizontalCollision()++;
+
+    // originally, this was in serverPlayerCollisionWithWalls_common_horizontal_handleCollisionOccurred(), however
+    // I have moved it here because it would be very difficult for players to trigger consecutive / chained wall jump
+    // exactly in the same tick as another horizontal collision happens with the wall on the other side, so I decided
+    // to have a short "time window" when wall jump can be triggered from the moment of horizontal collision.
+    // This way it is easy to trigger consecutive / chained wall jump when hitting the wall on the other side.
     if (player.getWillSomersaultInNextTick())
     {
         // only here can we really trigger on-ground somersaulting
