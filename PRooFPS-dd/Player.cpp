@@ -1062,7 +1062,11 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
     }
 
     getConsole().EOLn("2 set");
-    m_angleSavedForWallJump = getWeaponAngle().getNew();
+    // consecutive wall jumps use saved angles
+    if (m_nConsecutiveWallJump == 0)
+    {
+        m_angleSavedForWallJump = getWeaponAngle().getNew();
+    }
     // Z-angle is in [-90, 90] range, let's restrict it a bit so full vertical walljumps will
     // NOT be allowed, because it is unreal.
     // We don't care about this in consecutive wall jumps because those are using saved angles.
@@ -1090,11 +1094,7 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
     dssdfgs++;
     getConsole().EOLn("will wall jump really set %d, consecutive: %d", dssdfgs, m_nConsecutiveWallJump);
 
-    if (!m_bWillWallJump)
-    {
-        m_bWillWallJump = true;
-        m_nConsecutiveWallJump = 0;
-    }
+    m_bWillWallJump = true;
     m_nConsecutiveWallJump++;
     //m_fWillJumpMultFactorY = factorY;
    // m_fWillJumpMultFactorX = factorX;
@@ -1117,14 +1117,14 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
 {
     m_bWillWallJump = false;
     m_bJumping = true;
-   
+  
     PurePosUpTarget put;
     put.SetRotation(
         0.f,
-        (m_angleSavedForWallJump.getY() > 0.0f) ? 90.f : -90.f,
+        (m_angleSavedForWallJump.getY() > 0.0f) ? 90.f : -90.f /* getY() is either 0 or 180, that is why we set 90 or -90 */,
         (m_angleSavedForWallJump.getY() > 0.0f) ? m_angleSavedForWallJump.getZ() : -m_angleSavedForWallJump.getZ());
 
-    float fOldIdeaY = proofps_dd::Player::fJumpGravityStartFromStanding;
+    const float fOldIdeaY = proofps_dd::Player::fJumpGravityStartFromStanding;
     float fNewIdeaY = put.getTargetVec().getY() * proofps_dd::Player::fJumpGravityStartFromStanding * 1.5f;
     fNewIdeaY = PFL::constrain(fNewIdeaY, fNewIdeaY, proofps_dd::Player::fJumpGravityStartFromStanding);
     m_fGravity = fNewIdeaY;
@@ -1133,9 +1133,9 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     // and we set bigger force, because it needs to overcome the strafe speed and its negative direction,
     // since we are strafing TOWARDS the wall but we want to jump AGAINST it! And in-air strafe might be enabled, so
     // essentially we are fighting against in-air strafe with this negated force.
-    float fOldIdeaX = -getStrafeSpeed() * 1.5f;
+    const float fOldIdeaX = -getStrafeSpeed() * 1.5f;
 
-    float fNewIdeaX = put.getTargetVec().getX() / 5.f;
+    const float fNewIdeaX = put.getTargetVec().getX() / 5.f;
     m_vecJumpForce.SetX(fNewIdeaX);
 
     //getConsole().EOLn("Original Idea: gravity: %f, wall jump x force: %f",
@@ -1145,6 +1145,14 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     //    fNewIdeaY,
     //    fNewIdeaX,
     //    m_angleSavedForWallJump.getZ());
+
+    // have to negate the horizontal direction so a next consecutive wall jump can be in the reverse direction
+    getConsole().EOLn("old m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
+    m_angleSavedForWallJump.SetY(
+        (m_angleSavedForWallJump.getY() > 0) ?
+        0.f :
+        180.f);
+    getConsole().EOLn("new m_angleSavedForWallJump Y: %f, Z: %f", m_angleSavedForWallJump.getY(), m_angleSavedForWallJump.getZ());
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
