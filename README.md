@@ -62,11 +62,11 @@ LEFT strafe key shall be pressed if the wall is on your left, otherwise the RIGH
 As soon as you trigger the wall jump, strafe key shall be released, otherwise the mid-air strafing will work against your triggered jump.
 
 The player should look in the direction they want to wall-jump: if you look at the wall, wall jump cannot be triggered (to avoid triggering it accidentally).  
-The direction of wall jumping can be set using the X-Hair: player will jump towards the same direction it is looking to.  
+**The direction of wall jumping can be set using the X-Hair**: player will jump towards the same direction it is looking to.  
 This means you can set jump force on both vertical and horizontal axes, you can even wall jump downwards.
 
 **Chained Wall jump**: means you can trigger a consecutive wall jump during wall jumping, before starting to fall down.  
-If you are hitting the side of another wall during a wall jump, just hit the jump key once to trigger a consecutive wall jump in the other direction.  
+If you are hitting the side of another wall during a wall jump, just **hit the jump key once again to trigger a consecutive wall jump in the other direction**.  
 The angle of next consecutive (chained) wall jumps uses the angle of the first wall jump, just automatically inverting it on the horizontal axis.  
 This way, consecutive wall jumps can be triggered without the need of pressing the strafe key or moving the X-Hair to set the angle of wall jump.  
 Using this technique you can even continuously bounce yourself upwards between 2 close walls if the initial wall jump angle is set properly.
