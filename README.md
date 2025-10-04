@@ -67,8 +67,8 @@ This means you can set jump force on both vertical and horizontal axes, you can 
 
 **Chained Wall jump**: means you can trigger a consecutive wall jump during wall jumping, before starting to fall down.  
 If you are hitting the side of another wall during a wall jump, just hit the jump key once to trigger a consecutive wall jump in the other direction.  
-This way, consecutive wall jumps can be triggered without the need of pressing the strafe key or moving the X-Hair to set the angle of wall jump.  
 The angle of next consecutive (chained) wall jumps uses the angle of the first wall jump, just automatically inverting it on the horizontal axis.  
+This way, consecutive wall jumps can be triggered without the need of pressing the strafe key or moving the X-Hair to set the angle of wall jump.  
 Using this technique you can even continuously bounce yourself upwards between 2 close walls if the initial wall jump angle is set properly.
 
 **Weapons**
