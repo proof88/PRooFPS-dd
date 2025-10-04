@@ -56,6 +56,21 @@ From the main menu, you can either start a new server or join to an existing one
 
 **In-air salto/somersault**: jump-jump or jump-crouch-jump combo, depending on server configuration of CVAR `sv_somersault_mid_air_auto_crouch`.
 
+**Wall jump**: jump-jump-strafe, the strafe key must be pressed at the same time as the second jump key is pressed.  
+Can be initiated only during a jump, similar to in-air somersaulting, but proper use of strafe key is also required:  
+LEFT strafe key shall be pressed if the wall is on your left, otherwise the RIGHT key, to emphasize that you want to push yourself FROM the wall you are strafing TO.  
+As soon as you trigger the wall jump, strafe key shall be released, otherwise the mid-air strafing will work against your triggered jump.
+
+The player should look in the direction they want to wall-jump: if you look at the wall, wall jump cannot be triggered (to avoid triggering it accidentally).  
+The direction of wall jumping can be set using the X-Hair: player will jump towards the same direction it is looking to.  
+This means you can set jump force on both vertical and horizontal axes, you can even wall jump downwards.
+
+**Chained Wall jump**: means you can trigger a consecutive wall jump during wall jumping, before starting to fall down.  
+If you are hitting the side of another wall during a wall jump, just hit the jump key once to trigger a consecutive wall jump in the other direction.  
+This way, consecutive wall jumps can be triggered without the need of pressing the strafe key or moving the X-Hair to set the angle of wall jump.  
+The angle of next consecutive (chained) wall jumps uses the angle of the first wall jump, just automatically inverting it on the horizontal axis.  
+Using this technique you can even continuously bounce yourself upwards between 2 close walls if the initial wall jump angle is set properly.
+
 **Weapons**
 
  - **1,2,3,4,5,6 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha, machine pistol);
