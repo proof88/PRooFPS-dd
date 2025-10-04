@@ -1065,6 +1065,13 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
     // consecutive wall jumps use saved angles
     if (m_nConsecutiveWallJump == 0)
     {
+        // WeaponAngle is synced properly with clients too.
+        // Also, it is better to use weapon angle for this, because if startSomersaultServer() is triggered
+        // also during the jump, it changes the player's Z angle, without altering weapon's Z angle, so
+        // here we still have the unchanged weapon angle.
+        // Weapon Z angle is changed by somersaulting only in consecutive ticks by stepSomersaultAngleServer().
+        // We are not impacted in chained wall jumping either by using this saved value and just negating
+        // its direction in consecutive wall jumps.
         m_angleSavedForWallJump = getWeaponAngle().getNew();
     }
     // Z-angle is in [-90, 90] range, let's restrict it a bit so full vertical walljumps will
@@ -1081,9 +1088,9 @@ void proofps_dd::Player::setWillWallJumpInNextTick(/*float factorY, float factor
     // since we are pushing ourselves from the walls, however strafing should be considered only
     // during the first jump, consecutive jumps should be easier.
     if ((m_nConsecutiveWallJump == 0) &&
-        (((m_strafe == Strafe::LEFT) && (getAngleY() == 0.f))
+        (((m_strafe == Strafe::LEFT) && (m_angleSavedForWallJump.getY() == 0.f))
          ||
-         ((m_strafe == Strafe::RIGHT) && (getAngleY() == 180.f))
+         ((m_strafe == Strafe::RIGHT) && (m_angleSavedForWallJump.getY() == 180.f))
         )
        )
     {
