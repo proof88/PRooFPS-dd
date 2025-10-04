@@ -27,6 +27,14 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.6.0 Private Beta (TBD, 2025)
+
+TBD A compressed build for Windows is available for TBD.
+
+This version brings the following features:
+ - Wall jumping, the jump from the side of a wall, in the direction of the X-Hair. Wall jumps can be easily chained together by bouncing in between nearby walls.
+ - TBD.
+
 ## v0.5.1 Private Beta (July 20, 2025)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1JUiqWUTJKve-xOOZnN4rkNGRUu0_KuPI/view?usp=sharing).
