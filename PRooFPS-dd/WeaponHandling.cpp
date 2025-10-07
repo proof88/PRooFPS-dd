@@ -183,6 +183,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
     bool bShotHitTargetStatUpdated = false; // make sure we increase it only once for the shooter, no matter how many players are hit!
     const auto itShooter = m_mapPlayers.find(xpl.getOwner());
+    int nPlayersDiedByThisExplosion = 0;
 
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
@@ -248,6 +249,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
             if (playerConst.getHealth() == 0)
             {
+                nPlayersDiedByThisExplosion++;
                 pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
                 if (itShooter == m_mapPlayers.end())
                 {
@@ -287,7 +289,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
             }
         }
-    }
+    } // for players
+
+    //getConsole().EOLn("WeaponHandling::%s() nPlayersDiedByThisExplosion: %d", __func__, nPlayersDiedByThisExplosion);
 
     return m_explosions.back();
 }
@@ -852,6 +856,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     // bullet cannot hit the owner, at least for now ...
                     // in the future, when bullets start in proper position, we won't need this check ...
                     // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
+                    // Hint: if we don't solve the proper launch position, we can just introduce a 1-second time window from the moment of launch,
+                    // within this time window the rocket cannot hit the owner.
                     continue;
                 }
 
