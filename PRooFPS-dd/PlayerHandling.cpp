@@ -244,6 +244,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
         }
     }
 
+    // suppress such events if we are still not fully loaded and connected
     if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
     {
         m_gui.getServerEvents()->addTeamChangedEvent(
@@ -251,6 +252,21 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
             GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iPrevTeamId)),
             iTeamId,
             GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeamId)));
+    }
+}
+
+void proofps_dd::PlayerHandling::handleExplosionMultiKill(
+    int nPlayersDiedByExplosion,
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles)
+{
+    // both server and client comes here
+
+    // suppress such events if we are still not fully loaded and connected
+    if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
+    {
+        m_gui.getServerEvents()->addExplosionMultiKillEvent(nPlayersDiedByExplosion);
+        getConsole().EOLn("PlayerHandling::%s() nPlayersDiedByExplosion: %d", __func__, nPlayersDiedByExplosion);
     }
 }
 
@@ -1174,6 +1190,9 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         break;
     case PlayerEventId::TeamIdChanged:
         handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
+        break;
+    case PlayerEventId::ExplosionMultiKill:
+        handleExplosionMultiKill(msg.m_optData1.m_nValue, config, cfgProfiles);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);

@@ -35,7 +35,8 @@ namespace proofps_dd
         Landed,
         ItemTake,
         JumppadActivated,
-        TeamIdChanged
+        TeamIdChanged,
+        ExplosionMultiKill /* not for a specific player, but felt convenient to put here */
     };
 
     class Player

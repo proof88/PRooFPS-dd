@@ -20,7 +20,8 @@ namespace proofps_dd
         {
             Connected,
             Disconnected,
-            TeamChanged
+            TeamChanged,
+            ExplosionMultiKill
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
@@ -100,6 +101,13 @@ namespace proofps_dd
             m_sAuxText = " joined Team " + std::to_string(iNewTeamId);
         }
 
+        ServerEvent(
+            int nPlayersKilledByExplosion) :
+            m_eEventType(EventType::ExplosionMultiKill)
+        {
+            m_sAuxText = "Explosion killed " + std::to_string(nPlayersKilledByExplosion) + " players";
+        }
+
         void draw()
         {
             // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
@@ -149,6 +157,12 @@ namespace proofps_dd
             const ImVec4& clrNewTeam)
         {
             addEvent(std::move(ServerEvent(sName, clrName, iNewTeamId, clrNewTeam)));
+        }
+
+        void addExplosionMultiKillEvent(
+            int nPlayersKilledByExplosion)
+        {
+            addEvent(std::move(ServerEvent(nPlayersKilledByExplosion)));
         }
 
     protected:

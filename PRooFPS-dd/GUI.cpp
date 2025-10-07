@@ -2668,7 +2668,7 @@ void proofps_dd::GUI::updateServerEvents()
             ImGui::PopStyleColor();
             break;
 
-        default: // TeamChanged
+        case ServerEvent::EventType::TeamChanged:
             ImGui::PushStyleColor(
                 ImGuiCol_Text,
                 elem.m_event.m_clrPlayerName
@@ -2689,8 +2689,14 @@ void proofps_dd::GUI::updateServerEvents()
                 ImGui::GetCursorPos().y,
                 elem.m_event.m_sAuxText);
             ImGui::PopStyleColor();
+            break;
+
+        default: // ExplosionMultiKill
+            drawTextHighlighted(
+                ImGui::GetCursorPos().x,
+                ImGui::GetCursorPos().y,
+                elem.m_event.m_sAuxText);
         }
-        
 
         i = eventsQ.prev_index(i);
     }

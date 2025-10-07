@@ -293,6 +293,20 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
     //getConsole().EOLn("WeaponHandling::%s() nPlayersDiedByThisExplosion: %d", __func__, nPlayersDiedByThisExplosion);
 
+    if (nPlayersDiedByThisExplosion > 1)
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            pge_network::ServerConnHandle /* unused */,
+            PlayerEventId::ExplosionMultiKill,
+            nPlayersDiedByThisExplosion);
+        m_pge.getNetwork().getServer().sendToAllClientsExcept(pktPlayerEvent);
+        
+        // server adds event to GUI here, clients do it when processing above message
+        m_gui.getServerEvents()->addExplosionMultiKillEvent(nPlayersDiedByThisExplosion);
+    }
+
     return m_explosions.back();
 }
 
