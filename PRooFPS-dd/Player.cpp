@@ -117,6 +117,7 @@ proofps_dd::Player::Player(
         {
             ptr = new SoLoud::Wav();
         }
+        m_sndPlayerFunnyLaughDiedByLanding = new SoLoud::Wav();
     }
 
     // note that due to config can be changed in settings, we need to check if sound is actually loaded and try load again if it was
@@ -154,8 +155,11 @@ proofps_dd::Player::Player(
             m_nMaxSndPlayerFootstepDurationMillisecs,
             TimeBetween2FootstepsMillisecs
         );
+
         getConsole().OLn("Player::%s() m_nMaxSndPlayerFootstepDurationMillisecs: %d", __func__, m_nMaxSndPlayerFootstepDurationMillisecs);
         getConsole().OLn("Player::%s() m_nMinTimeBetweenPlayerWalkSoundsMillisecs: %d", __func__, m_nMinTimeBetweenPlayerWalkSoundsMillisecs);
+
+        m_audio.loadSound(*m_sndPlayerFunnyLaughDiedByLanding, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/crazy-dog-laugh-meme.wav");
 
         // these are played only for self and should be stopped automatically when played again to avoid multiple instances to be played in parallel,
         // without the need for explicit call to AudioSource->stop(). By default these would be played in parallel as many times play() or play3d() is invoked.
@@ -1858,6 +1862,7 @@ void proofps_dd::Player::handleLanded(
     assert(m_sndPlayerLandSmallFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerLandBigFall);  // otherwise new operator would had thrown already in ctor
     assert(m_sndPlayerDamage);  // otherwise new operator would had thrown already in ctor
+    assert(m_sndPlayerFunnyLaughDiedByLanding);  // otherwise new operator would had thrown already in ctor
 
     m_bFallingHighTriggered = false;
 
@@ -1890,10 +1895,17 @@ void proofps_dd::Player::handleLanded(
         m_handleSndPlayerLandSmallFall = m_audio.play3dSound(*m_sndPlayerLandSmallFall, playerPos);
     }
 
-    if (bDamageTaken && !bDied)
+    if (bDamageTaken)
     {
-        // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
-        m_handleSndPlayerDamage = m_audio.play3dSound(*m_sndPlayerDamage, playerPos);
+        if (bDied)
+        {
+            m_audio.playSound(*m_sndPlayerFunnyLaughDiedByLanding);
+        }
+        else
+        {
+            // no need to play this in case of dieing because die sound is played anyway in PlayerHandling::handlePlayerDied()
+            m_handleSndPlayerDamage = m_audio.play3dSound(*m_sndPlayerDamage, playerPos);
+        }
     }
 
     if (!m_network.isServer())
@@ -2110,6 +2122,7 @@ SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandBigFall = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerDamage = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerFootstep[4] = { nullptr };
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerFunnyLaughDiedByLanding = nullptr;
 std::chrono::milliseconds::rep proofps_dd::Player::m_nMaxSndPlayerFootstepDurationMillisecs = 0;
 std::chrono::milliseconds::rep proofps_dd::Player::m_nMinTimeBetweenPlayerWalkSoundsMillisecs = 0;
 

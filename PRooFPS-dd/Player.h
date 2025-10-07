@@ -352,6 +352,7 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndPlayerLandBigFall;
         static SoLoud::Wav* m_sndPlayerDamage;
         static SoLoud::Wav* m_sndPlayerFootstep[4];
+        static SoLoud::Wav* m_sndPlayerFunnyLaughDiedByLanding;
         static std::chrono::milliseconds::rep m_nMaxSndPlayerFootstepDurationMillisecs;    // in this we just store the longest length
         static std::chrono::milliseconds::rep m_nMinTimeBetweenPlayerWalkSoundsMillisecs;  // in this is the final chosen minimum break between 2 footsteps
 
