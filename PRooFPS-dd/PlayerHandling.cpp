@@ -266,7 +266,7 @@ void proofps_dd::PlayerHandling::handleExplosionMultiKill(
     if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
     {
         m_gui.getServerEvents()->addExplosionMultiKillEvent(nPlayersDiedByExplosion);
-        getConsole().EOLn("PlayerHandling::%s() nPlayersDiedByExplosion: %d", __func__, nPlayersDiedByExplosion);
+        //getConsole().EOLn("PlayerHandling::%s() nPlayersDiedByExplosion: %d", __func__, nPlayersDiedByExplosion);
     }
 }
 

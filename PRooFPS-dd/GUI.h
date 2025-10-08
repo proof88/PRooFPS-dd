@@ -179,6 +179,7 @@ namespace proofps_dd
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
+        static PureObject3D* m_pObjProof88Laugh;
 
         static ImFont* m_pImFontFragTableNonScaled;
         static ImFont* m_pImFontHudGeneralScaled;

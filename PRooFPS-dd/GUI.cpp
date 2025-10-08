@@ -126,6 +126,22 @@ void proofps_dd::GUI::initialize()
     m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsServer = new ServerEventLister();
 
+    m_pObjProof88Laugh = m_pPge->getPure().getObject3DManager().createPlane(512.f, 256.f);
+    if (!m_pObjProof88Laugh)
+    {
+        getConsole().EOLn("GUI::%s(): failed to create m_pObjProof88Laugh!", __func__);
+        return;
+    }
+    m_pObjProof88Laugh->SetStickedToScreen(true);
+    m_pObjProof88Laugh->SetDoubleSided(true);
+    m_pObjProof88Laugh->SetTestingAgainstZBuffer(false);
+    m_pObjProof88Laugh->SetLit(false);
+    PureTexture* const texProof88Laugh = m_pPge->getPure().getTextureManager().createFromFile(
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "proof88-laugh-mirrored-size256.bmp").c_str());
+    m_pObjProof88Laugh->getMaterial().setTexture(texProof88Laugh);
+    m_pObjProof88Laugh->getMaterial(false).setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+    m_pObjProof88Laugh->Hide();
+
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
     // This bg plane is used to cover game objects such as map, players, etc.,
@@ -187,6 +203,7 @@ void proofps_dd::GUI::initialize()
     // note that setRelativeScaling() called with weapon accuracy also has impact on the general scaling so lerp() values
     // there should be also adjusted if we modify base scaling here!
     m_pXHair->setBaseScaling(fScalingFactor * 1.5f);
+    m_pObjProof88Laugh->SetScaling(fScalingFactor);
 
     // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
     // Anyway, for I will just use height for scaling the default font size.
@@ -286,6 +303,12 @@ void proofps_dd::GUI::initialize()
 void proofps_dd::GUI::shutdown()
 {
     m_sAvailableMapsListForForceSelectComboBox.clear();
+
+    if (m_pObjProof88Laugh)
+    {
+        delete m_pObjProof88Laugh;
+        m_pObjProof88Laugh = nullptr;
+    }
 
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
     {
@@ -631,6 +654,7 @@ proofps_dd::ServerEventLister* proofps_dd::GUI::m_pEventsServer = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenBg = nullptr;
 PureObject3D* proofps_dd::GUI::m_pObjLoadingScreenLogoImg = nullptr;
 std::string proofps_dd::GUI::m_sAvailableMapsListForForceSelectComboBox;
+PureObject3D* proofps_dd::GUI::m_pObjProof88Laugh = nullptr;
 
 ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
