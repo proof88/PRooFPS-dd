@@ -23,6 +23,7 @@
 #include "Minimap.h"
 #include "Networking.h"
 #include "Player.h"
+#include "PureObject3dInOutSlider.h"
 #include "ServerEventLister.h"
 #include "Smoke.h"
 #include "XHair.h"
@@ -179,7 +180,7 @@ namespace proofps_dd
         static PureObject3D* m_pObjLoadingScreenBg;
         static PureObject3D* m_pObjLoadingScreenLogoImg;
         static std::string m_sAvailableMapsListForForceSelectComboBox;
-        static PureObject3D* m_pObjProof88Laugh;
+        static PureObject3dInOutSlider m_pSlidingProof88Laugh;
 
         static ImFont* m_pImFontFragTableNonScaled;
         static ImFont* m_pImFontHudGeneralScaled;

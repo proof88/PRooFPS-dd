@@ -393,6 +393,12 @@
     <ClInclude Include="..\..\PGE\PGE\PURE\include\external\SpatialStructures\PureOctree.h">
       <Filter>Header Files\PGE\PURE\SpatialStructures</Filter>
     </ClInclude>
+    <ClInclude Include="InOutSlider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PureObject3dInOutSlider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -468,6 +474,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Smoke.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InOutSlider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

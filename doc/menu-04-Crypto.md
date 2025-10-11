@@ -25,6 +25,8 @@ TODO:
  - https://x.com/CryptoRugMunch/status/1848812359730794624
  - Yen vs USD, interest rate cut, in connection with ETH price, from 45:41: https://youtu.be/FOy5Me2ZkiI?si=yYJfsfhZ1FPw9EFN&t=2741
  - Preparing for the last pump before recession, Jan 2025, from 4:06 to 33:31 (hungarian): https://www.youtube.com/live/4aZctf2Z5qM?si=kR8vnsKhh1k0aRWF&t=246
+ - 2025. 10. 10. dip: tanulsag: mindig legyenek pofátlanul alacsony buy orderek spoton
+ - 2025. 10. 10. dip: https://x.com/Nstr_tj/status/1976797928116437394?t=YJc5gItQcCloCwpUEGeQBg&s=19
  
 [TOC]
 

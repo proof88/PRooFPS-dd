@@ -253,6 +253,7 @@
     <ClInclude Include="Explosion.h" />
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="GUI.h" />
+    <ClInclude Include="InOutSlider.h" />
     <ClInclude Include="InputHandling.h" />
     <ClInclude Include="Mapcycle.h" />
     <ClInclude Include="MapItem.h" />
@@ -264,6 +265,7 @@
     <ClInclude Include="PRooFPS-dd-packet.h" />
     <ClInclude Include="PRooFPS-dd-PGE.h" />
     <ClInclude Include="Maps.h" />
+    <ClInclude Include="PureObject3dInOutSlider.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ServerEventLister.h" />
     <ClInclude Include="SharedWithTest.h" />
@@ -293,6 +295,7 @@
     <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />
+    <ClCompile Include="InOutSlider.cpp" />
     <ClCompile Include="InputHandling.cpp" />
     <ClCompile Include="Mapcycle.cpp" />
     <ClCompile Include="MapItem.cpp" />
