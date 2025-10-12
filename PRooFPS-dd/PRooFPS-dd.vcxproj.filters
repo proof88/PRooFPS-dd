@@ -476,9 +476,6 @@
     <ClCompile Include="Smoke.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InOutSlider.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PRooFPS-dd.rc">

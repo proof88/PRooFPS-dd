@@ -295,7 +295,6 @@
     <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="GameMode.cpp" />
     <ClCompile Include="GUI.cpp" />
-    <ClCompile Include="InOutSlider.cpp" />
     <ClCompile Include="InputHandling.cpp" />
     <ClCompile Include="Mapcycle.cpp" />
     <ClCompile Include="MapItem.cpp" />

@@ -43,6 +43,16 @@ namespace proofps_dd
         PureObject3dInOutSlider(PureObject3dInOutSlider&&) = delete;
         PureObject3dInOutSlider& operator=(PureObject3dInOutSlider&&) = delete;
 
+        virtual void update() override
+        {
+            InOutSlider::update();
+            if (m_pObj)
+            {
+                m_pObj->getPosVec().SetX(getScreenCurrentPos().x);
+                m_pObj->getPosVec().SetY(getScreenCurrentPos().y);
+            }
+        }
+
         void clear()
         {
             if (m_pObj)
@@ -114,6 +124,30 @@ namespace proofps_dd
         }
 
     protected:
+        virtual void stateEntered(const AnimState& /*oldState*/, const AnimState& newState) override
+        {
+            switch (newState)
+            {
+            case AnimState::Finished:
+                if (m_pObj)
+                {
+                    m_pObj->Hide();
+                }
+                break;
+            case AnimState::SlidingIn:
+                if (m_pObj)
+                {
+                    m_pObj->Show();
+                }
+                break;
+            case AnimState::WaitingForTimeout:
+            case AnimState::SlidingOut:
+                // no-op
+                break;
+            default:
+                getConsole().EOLn("PureObject3dInOutSlider::%s(): ERROR: unhandled new state: %d!", __func__, newState);
+            }
+        };
 
     private:
 
