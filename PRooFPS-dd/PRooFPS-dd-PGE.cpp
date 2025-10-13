@@ -785,6 +785,9 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
 
 /**
     Both clients and listen-server executes this.
+    Called back by PRooFPSddPGE::onGameRunning() in every frame.
+    Note that periodical update of Dear ImGui elements shall be done in proofps_dd::GUI::drawDearImGuiCb() instead.
+
     Dedicated server won't need this.
 */
 void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
@@ -810,6 +813,8 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     // TODO: basically 1 single public setPosVec() should be added to XHair, which will automatically invoke these functions too!
     // Everywhere objXHair.getPosVec().Set() should be replaced by a new function: m_gui.getXHair().setPosVec().
     m_gui.getXHair()->updateVisuals();
+
+    m_gui.updateNonDearImGuiElements();
 
     //if (!isServer())
     //{

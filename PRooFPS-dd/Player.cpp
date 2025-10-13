@@ -1135,7 +1135,7 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
         (m_angleSavedForWallJump.getY() > 0.0f) ? 90.f : -90.f /* getY() is either 0 or 180, that is why we set 90 or -90 */,
         (m_angleSavedForWallJump.getY() > 0.0f) ? m_angleSavedForWallJump.getZ() : -m_angleSavedForWallJump.getZ());
 
-    const float fOldIdeaY = proofps_dd::Player::fJumpGravityStartFromStanding;
+    //const float fOldIdeaY = proofps_dd::Player::fJumpGravityStartFromStanding;
     float fNewIdeaY = put.getTargetVec().getY() * proofps_dd::Player::fJumpGravityStartFromStanding * 1.5f;
     fNewIdeaY = PFL::constrain(fNewIdeaY, fNewIdeaY, proofps_dd::Player::fJumpGravityStartFromStanding);
     m_fGravity = fNewIdeaY;
@@ -1144,7 +1144,7 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
     // and we set bigger force, because it needs to overcome the strafe speed and its negative direction,
     // since we are strafing TOWARDS the wall but we want to jump AGAINST it! And in-air strafe might be enabled, so
     // essentially we are fighting against in-air strafe with this negated force.
-    const float fOldIdeaX = -getStrafeSpeed() * 1.5f;
+    //const float fOldIdeaX = -getStrafeSpeed() * 1.5f;
 
     const float fNewIdeaX = put.getTargetVec().getX() / 6.f;
     m_vecJumpForce.SetX(fNewIdeaX);

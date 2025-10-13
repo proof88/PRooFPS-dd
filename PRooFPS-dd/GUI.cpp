@@ -135,6 +135,14 @@ void proofps_dd::GUI::initialize()
         return;
     }
     m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+    m_pSlidingProof88Laugh.setTimeoutInWaitingState(3000);
+    m_pSlidingProof88Laugh.getScreenStartPos().x = m_pPge->getPure().getWindow().getClientWidth() / 2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getX() / 2.f;
+    m_pSlidingProof88Laugh.getScreenStartPos().y = m_pPge->getPure().getWindow().getClientHeight() / -2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getY() / 2.f;
+    m_pSlidingProof88Laugh.getScreenFinishPos().x = m_pSlidingProof88Laugh.getScreenStartPos().x -
+        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getX();
+    m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -605,6 +613,16 @@ void proofps_dd::GUI::fastForwardRespawnTimer(std::chrono::milliseconds::rep byM
     }
 
     m_timePlayerDied -= std::chrono::milliseconds(byMillisecs);
+}
+
+void proofps_dd::GUI::updateNonDearImGuiElements()
+{
+    m_pSlidingProof88Laugh.update();
+}
+
+proofps_dd::PureObject3dInOutSlider& proofps_dd::GUI::getSlidingProof88Laugh()
+{
+    return m_pSlidingProof88Laugh;
 }
 
 
@@ -2174,6 +2192,9 @@ void proofps_dd::GUI::drawInGameMenu(
  * PURE invokes this function every frame, AFTER rendering the 2D sticked-to-screen objects (PureObject3D::SetStickedToScreen()).
  * Thus, calculations in this function having effect on the PURE sticked-to-screen objects, will be visible only in the next frame.
  * So in general it is highly recommended to do ONLY Dear ImGui-specific stuff here.
+ * 
+ * If we want to update something every frame BEFORE rendering the same frame happens, I recommend doing that
+ * around PRooFPSddPGE::onGameRunning(). For example, in mainLoopConnectedShared() which is common code for server and clients.
  */
 void proofps_dd::GUI::drawDearImGuiCb()
 {

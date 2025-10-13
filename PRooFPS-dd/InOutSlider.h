@@ -136,7 +136,7 @@ namespace proofps_dd
         */
         const TXY& getScreenCurrentPos() const
         {
-            return m_posScreenFinish;
+            return m_posScreenCurrent;
         }
 
         /**
@@ -238,7 +238,7 @@ namespace proofps_dd
         /**
         * Invoked by stateEnter() after a successful state transition.
         */
-        virtual void stateEntered(const AnimState& oldState, const AnimState& newState)
+        virtual void stateEntered(const AnimState& /*oldState*/, const AnimState& /*newState*/)
         {};
 
     private:
@@ -263,7 +263,7 @@ namespace proofps_dd
             switch (newState)
             {
             case AnimState::Finished:
-                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) ||
+                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) &&
                     (m_state != AnimState::SlidingOut))
                 {
                     getConsole().EOLn("InOutSlider::%s(): ERROR: invalid state transition: %d -> %d!", __func__, m_state, newState);
@@ -272,17 +272,21 @@ namespace proofps_dd
                 m_posScreenTarget = m_posScreenFinish;
                 break;
             case AnimState::SlidingIn:
-                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) ||
-                    (m_state != AnimState::Finished) ||
+                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) &&
+                    (m_state != AnimState::Finished) &&
                     (m_state != AnimState::SlidingOut))
                 {
                     getConsole().EOLn("InOutSlider::%s(): ERROR: invalid state transition: %d -> %d!", __func__, m_state, newState);
                     return false;
                 }
                 m_posScreenTarget = m_posScreenFinish;
+                if (m_state == AnimState::Finished)
+                {
+                    m_posScreenCurrent = m_posScreenStart;
+                }
                 break;
             case AnimState::WaitingForTimeout:
-                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) ||
+                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) &&
                     (m_state != AnimState::SlidingIn))
                 {
                     getConsole().EOLn("InOutSlider::%s(): ERROR: invalid state transition: %d -> %d!", __func__, m_state, newState);
@@ -292,8 +296,8 @@ namespace proofps_dd
                 m_timeEnteredWaitingState = std::chrono::steady_clock::now();
                 break;
             case AnimState::SlidingOut:
-                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) ||
-                    (m_state != AnimState::SlidingIn) ||
+                if ((m_state != newState /* transition to same state is always allowed, e.g.: show(), hide() */) &&
+                    (m_state != AnimState::SlidingIn) &&
                     (m_state != AnimState::WaitingForTimeout))
                 {
                     getConsole().EOLn("InOutSlider::%s(): ERROR: invalid state transition: %d -> %d!", __func__, m_state, newState);
@@ -319,13 +323,15 @@ namespace proofps_dd
         */
         void stateUpdate()
         {
+            constexpr float fSmoothSpeed = 10.f;
+            constexpr float fEpsilon = 0.1f;
             switch (m_state)
             {
             case AnimState::Finished:
                 break;
             case AnimState::SlidingIn:
-                m_posScreenCurrent.x = PFL::smooth(m_posScreenCurrent.x, m_posScreenTarget.x, 1.f);
-                m_posScreenCurrent.y = PFL::smooth(m_posScreenCurrent.y, m_posScreenTarget.y, 1.f);
+                m_posScreenCurrent.x = PFL::smooth(m_posScreenCurrent.x, m_posScreenTarget.x, fSmoothSpeed, fEpsilon);
+                m_posScreenCurrent.y = PFL::smooth(m_posScreenCurrent.y, m_posScreenTarget.y, fSmoothSpeed, fEpsilon);
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {
@@ -344,8 +350,8 @@ namespace proofps_dd
                 }
                 break;
             case AnimState::SlidingOut:
-                m_posScreenCurrent.x = PFL::smooth(m_posScreenCurrent.x, m_posScreenTarget.x, 1.f);
-                m_posScreenCurrent.y = PFL::smooth(m_posScreenCurrent.y, m_posScreenTarget.y, 1.f);
+                m_posScreenCurrent.x = PFL::smooth(m_posScreenCurrent.x, m_posScreenTarget.x, fSmoothSpeed, fEpsilon);
+                m_posScreenCurrent.y = PFL::smooth(m_posScreenCurrent.y, m_posScreenTarget.y, fSmoothSpeed, fEpsilon);
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {

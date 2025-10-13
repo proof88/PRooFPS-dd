@@ -646,6 +646,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         ScopeBenchmarkerDataStore::clear(); // since ScopeBenchmarker works with static data, make sure we dont leave anything there
     }
 
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan(',')))
+    {
+        m_gui.getSlidingProof88Laugh().show();
+    }
+
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('.')))
     {
         if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())

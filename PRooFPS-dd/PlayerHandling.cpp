@@ -257,8 +257,8 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
 
 void proofps_dd::PlayerHandling::handleExplosionMultiKill(
     int nPlayersDiedByExplosion,
-    const proofps_dd::Config& config,
-    PGEcfgProfiles& cfgProfiles)
+    const proofps_dd::Config& /*config*/,
+    PGEcfgProfiles& /*cfgProfiles*/)
 {
     // both server and client comes here
 
@@ -266,6 +266,7 @@ void proofps_dd::PlayerHandling::handleExplosionMultiKill(
     if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
     {
         m_gui.getServerEvents()->addExplosionMultiKillEvent(nPlayersDiedByExplosion);
+        m_gui.getSlidingProof88Laugh().show();
         //getConsole().EOLn("PlayerHandling::%s() nPlayersDiedByExplosion: %d", __func__, nPlayersDiedByExplosion);
     }
 }

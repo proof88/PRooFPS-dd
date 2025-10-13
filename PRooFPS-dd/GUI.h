@@ -139,6 +139,9 @@ namespace proofps_dd
         void fastForwardRespawnTimer(
             std::chrono::milliseconds::rep byMillisecs);
 
+        void updateNonDearImGuiElements();
+        PureObject3dInOutSlider& getSlidingProof88Laugh();
+
     protected:
 
     private:
