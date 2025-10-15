@@ -131,10 +131,11 @@ void proofps_dd::GUI::initialize()
         m_pPge->getPure().getObject3DManager(),
         (std::string(proofps_dd::GAME_TEXTURES_DIR) + "proof88-laugh-mirrored-size256.bmp").c_str()))
     {
-        getConsole().EOLn("GUI::%s(): failed to create m_pSlidingProof88Laugh!", __func__);
+        getConsole().EOLn("GUI::%s(): ERROR: failed to create m_pSlidingProof88Laugh!", __func__);
         return;
     }
     m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+    m_pSlidingProof88Laugh.getMaterial()->getTexture()->setTextureWrappingMode(PURE_TW_REPEAT, PURE_TW_MIRRORED_REPEAT);
     m_pSlidingProof88Laugh.setTimeoutInWaitingState(3000);
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair

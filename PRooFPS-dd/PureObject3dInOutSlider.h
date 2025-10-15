@@ -123,6 +123,16 @@ namespace proofps_dd
             m_pObj->SetScaling(scaling);
         }
 
+        PureMaterial* getMaterial()
+        {
+            return m_pObj ? &(m_pObj->getMaterial()) : nullptr;
+        }
+
+        const PureMaterial* getMaterial() const
+        {
+            return m_pObj ? &(m_pObj->getMaterial()) : nullptr;
+        }
+
     protected:
         virtual void stateEntered(const AnimState& /*oldState*/, const AnimState& newState) override
         {
