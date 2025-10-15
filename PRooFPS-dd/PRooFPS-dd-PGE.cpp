@@ -693,6 +693,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     m_gui.getPlayerAmmoChangeEvents()->clear();
     m_gui.getXHair()->hide();
     m_gui.getMinimap()->hide();
+    m_gui.getSlidingProof88Laugh().hide(getAudio(), true /* forceStopAudio */);
     for (auto& connHandlePlayerPair : m_mapPlayers)
     {
         connHandlePlayerPair.second.getObject3D()->Hide();

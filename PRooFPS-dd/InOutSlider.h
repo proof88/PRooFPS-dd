@@ -213,10 +213,10 @@ namespace proofps_dd
             case AnimState::Finished:
             case AnimState::SlidingIn:
             case AnimState::SlidingOut:
-                stateEnter(audio, AnimState::SlidingIn);
+                stateEnter(audio, AnimState::SlidingIn, false /* forceStopAudio */);
                 break;
             case AnimState::WaitingForTimeout:
-                stateEnter(audio, AnimState::WaitingForTimeout);
+                stateEnter(audio, AnimState::WaitingForTimeout, false /* forceStopAudio */);
                 break;
             default:
                 getConsole().EOLn("InOutSlider::%s(): ERROR: unhandled current state: %d!", __func__, m_state);
@@ -232,18 +232,21 @@ namespace proofps_dd
         * 
         * If current state is WaitingForTimeout, we are transitioning to SlidingOut even if a non-zero
         * timeout duration is not yet elapsed.
+        * 
+        * @param forceStopAudio Set it to true to immediately stop the optionally playing audio that was previously
+        *                       loaded by loadSoundForSlidingIn().
         */
-        void hide(pge_audio::PgeAudio& audio)
+        void hide(pge_audio::PgeAudio& audio, bool forceStopAudio)
         {
             switch (m_state)
             {
             case AnimState::WaitingForTimeout:
             case AnimState::SlidingIn:
             case AnimState::SlidingOut:
-                stateEnter(audio, AnimState::SlidingOut);
+                stateEnter(audio, AnimState::SlidingOut, forceStopAudio);
                 break;
             case AnimState::Finished:
-                stateEnter(audio, AnimState::Finished);
+                stateEnter(audio, AnimState::Finished, false);
                 break;
             default:
                 getConsole().EOLn("InOutSlider::%s(): ERROR: unhandled current state: %d!", __func__, m_state);
@@ -297,9 +300,14 @@ namespace proofps_dd
         /**
         * Expected to be invoked only for events, such as explicit call to show(), hide(), or when update() detects an event.
         */
-        bool stateEnter(pge_audio::PgeAudio& audio, const AnimState& newState)
+        bool stateEnter(pge_audio::PgeAudio& audio, const AnimState& newState, bool forceStopAudio)
         {
             //getConsole().EOLn("InOutSlider::%s(): %d -> %d", __func__, m_state, newState);
+
+            if (forceStopAudio && m_sndPlayedInSlidingInState)
+            {
+                m_sndPlayedInSlidingInState->stop();
+            }
             
             switch (newState)
             {
@@ -380,7 +388,7 @@ namespace proofps_dd
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {
-                    stateEnter(audio, AnimState::WaitingForTimeout);
+                    stateEnter(audio, AnimState::WaitingForTimeout, false /* forceStopAudio */);
                 }
                 break;
             case AnimState::WaitingForTimeout:
@@ -390,7 +398,7 @@ namespace proofps_dd
                         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeEnteredWaitingState).count();
                     if (nTimeElapsedSinceEnteredWaitingStateMillisecs >= m_durationTimeoutMillisecsInWaitingState)
                     {
-                        stateEnter(audio, AnimState::SlidingOut);
+                        stateEnter(audio, AnimState::SlidingOut, false /* forceStopAudio */);
                     }
                 }
                 break;
@@ -400,7 +408,7 @@ namespace proofps_dd
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {
-                    stateEnter(audio, AnimState::Finished);
+                    stateEnter(audio, AnimState::Finished, false /* forceStopAudio */);
                 }
                 break;
             default:
