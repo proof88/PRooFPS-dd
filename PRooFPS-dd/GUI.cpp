@@ -136,13 +136,6 @@ void proofps_dd::GUI::initialize()
     }
     m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
     m_pSlidingProof88Laugh.setTimeoutInWaitingState(3000);
-    m_pSlidingProof88Laugh.getScreenStartPos().x = m_pPge->getPure().getWindow().getClientWidth() / 2.f +
-        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getX() / 2.f;
-    m_pSlidingProof88Laugh.getScreenStartPos().y = m_pPge->getPure().getWindow().getClientHeight() / -2.f +
-        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getY() / 2.f;
-    m_pSlidingProof88Laugh.getScreenFinishPos().x = m_pSlidingProof88Laugh.getScreenStartPos().x -
-        m_pSlidingProof88Laugh.getPureObject()->getSizeVec().getX();
-    m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -206,6 +199,13 @@ void proofps_dd::GUI::initialize()
     // there should be also adjusted if we modify base scaling here!
     m_pXHair->setBaseScaling(fScalingFactor * 1.5f);
     m_pSlidingProof88Laugh.setScaling(fScalingFactor);
+    m_pSlidingProof88Laugh.getScreenStartPos().x = m_pPge->getPure().getWindow().getClientWidth() / 2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX() / 2.f;
+    m_pSlidingProof88Laugh.getScreenStartPos().y = m_pPge->getPure().getWindow().getClientHeight() / -2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getY() / 2.f;
+    m_pSlidingProof88Laugh.getScreenFinishPos().x = m_pSlidingProof88Laugh.getScreenStartPos().x -
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX();
+    m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
 
     // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
     // Anyway, for I will just use height for scaling the default font size.
