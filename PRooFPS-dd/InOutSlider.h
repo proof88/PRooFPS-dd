@@ -11,6 +11,7 @@
 
 #include "CConsole.h"
 #include "PURE/include/external/PureTypes.h"
+#include "Audio/PgeAudio.h"
 
 namespace proofps_dd
 {
@@ -84,7 +85,14 @@ namespace proofps_dd
 
         InOutSlider() = default;
 
-        virtual ~InOutSlider() {};
+        virtual ~InOutSlider()
+        {
+            if (m_sndPlayedInSlidingInState)
+            {
+                m_sndPlayedInSlidingInState->stop();
+                delete m_sndPlayedInSlidingInState;
+            }
+        };
 
         InOutSlider(const InOutSlider&) = default;
         InOutSlider& operator=(const InOutSlider&) = default;
@@ -173,6 +181,24 @@ namespace proofps_dd
             m_durationTimeoutMillisecsInWaitingState = millisecs;
         }
 
+        void loadSoundForSlidingIn(pge_audio::PgeAudio& audio, const char* szFilename)
+        {
+            if (m_sndPlayedInSlidingInState)
+            {
+                m_sndPlayedInSlidingInState->stop();
+                delete m_sndPlayedInSlidingInState;
+                m_sndPlayedInSlidingInState = nullptr;
+            }
+
+            m_sndPlayedInSlidingInState = new SoLoud::Wav();
+            // new would had thrown in case of failure, no need to check
+            audio.loadSound(*m_sndPlayedInSlidingInState, szFilename);
+            if (m_sndPlayedInSlidingInState->getLength() == 0.f)
+            {
+                getConsole().EOLn("InOutSlider::%s(): ERROR: failed to load sound: %s!", __func__, szFilename);
+            }
+        }
+
         /**
         * Starts or resumes the slide-in animation from the Current position towards the Finish position.
         * No visible effect if the animation is already in SlidingIn or WaitingForTimeout state.
@@ -180,17 +206,17 @@ namespace proofps_dd
         * A periodical call to update() is required to eventually reach the Finish position.
         * It is advised to call show() only when you want to start the slide-in animation.
         */
-        void show()
+        void show(pge_audio::PgeAudio& audio)
         {
             switch (m_state)
             {
             case AnimState::Finished:
             case AnimState::SlidingIn:
             case AnimState::SlidingOut:
-                stateEnter(AnimState::SlidingIn);
+                stateEnter(audio, AnimState::SlidingIn);
                 break;
             case AnimState::WaitingForTimeout:
-                stateEnter(AnimState::WaitingForTimeout);
+                stateEnter(audio, AnimState::WaitingForTimeout);
                 break;
             default:
                 getConsole().EOLn("InOutSlider::%s(): ERROR: unhandled current state: %d!", __func__, m_state);
@@ -207,17 +233,17 @@ namespace proofps_dd
         * If current state is WaitingForTimeout, we are transitioning to SlidingOut even if a non-zero
         * timeout duration is not yet elapsed.
         */
-        void hide()
+        void hide(pge_audio::PgeAudio& audio)
         {
             switch (m_state)
             {
             case AnimState::WaitingForTimeout:
             case AnimState::SlidingIn:
             case AnimState::SlidingOut:
-                stateEnter(AnimState::SlidingOut);
+                stateEnter(audio, AnimState::SlidingOut);
                 break;
             case AnimState::Finished:
-                stateEnter(AnimState::Finished);
+                stateEnter(audio, AnimState::Finished);
                 break;
             default:
                 getConsole().EOLn("InOutSlider::%s(): ERROR: unhandled current state: %d!", __func__, m_state);
@@ -229,9 +255,23 @@ namespace proofps_dd
         * Direction and speed depends on the Current position and the SlidingIn state.
         * Derived class may extend this function by using the updated Current position.
         */
-        virtual void update()
+        virtual void update(pge_audio::PgeAudio& audio)
         {
-            stateUpdate();
+            stateUpdate(audio);
+        }
+
+        /**
+        * Frees up any loaded resource, like the sound that can be optionally loaded by loadSoundForSlidingIn().
+        * Derived classes must extend this method by freeing up their loaded resources as well.
+        */
+        virtual void clear()
+        {
+            if (m_sndPlayedInSlidingInState)
+            {
+                m_sndPlayedInSlidingInState->stop();
+                delete m_sndPlayedInSlidingInState;
+                m_sndPlayedInSlidingInState = nullptr;
+            }
         }
 
     protected:
@@ -250,15 +290,16 @@ namespace proofps_dd
         AnimState m_state{ AnimState::Finished };
         std::chrono::milliseconds::rep m_durationTimeoutMillisecsInWaitingState{ 0 };
         std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredWaitingState;
+        SoLoud::Wav* m_sndPlayedInSlidingInState{ nullptr };
 
         // ---------------------------------------------------------------------------
 
         /**
         * Expected to be invoked only for events, such as explicit call to show(), hide(), or when update() detects an event.
         */
-        bool stateEnter(const AnimState& newState)
+        bool stateEnter(pge_audio::PgeAudio& audio, const AnimState& newState)
         {
-            getConsole().EOLn("InOutSlider::%s(): %d -> %d", __func__, m_state, newState);
+            //getConsole().EOLn("InOutSlider::%s(): %d -> %d", __func__, m_state, newState);
             
             switch (newState)
             {
@@ -283,6 +324,10 @@ namespace proofps_dd
                 if (m_state == AnimState::Finished)
                 {
                     m_posScreenCurrent = m_posScreenStart;
+                    if (m_sndPlayedInSlidingInState)
+                    {
+                        audio.playSound(*m_sndPlayedInSlidingInState);
+                    }
                 }
                 break;
             case AnimState::WaitingForTimeout:
@@ -321,7 +366,7 @@ namespace proofps_dd
         /**
         * Expected to be invoked periodically.
         */
-        void stateUpdate()
+        void stateUpdate(pge_audio::PgeAudio& audio)
         {
             constexpr float fSmoothSpeed = 10.f;
             constexpr float fEpsilon = 0.1f;
@@ -335,7 +380,7 @@ namespace proofps_dd
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {
-                    stateEnter(AnimState::WaitingForTimeout);
+                    stateEnter(audio, AnimState::WaitingForTimeout);
                 }
                 break;
             case AnimState::WaitingForTimeout:
@@ -345,7 +390,7 @@ namespace proofps_dd
                         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeEnteredWaitingState).count();
                     if (nTimeElapsedSinceEnteredWaitingStateMillisecs >= m_durationTimeoutMillisecsInWaitingState)
                     {
-                        stateEnter(AnimState::SlidingOut);
+                        stateEnter(audio, AnimState::SlidingOut);
                     }
                 }
                 break;
@@ -355,7 +400,7 @@ namespace proofps_dd
                 if ((m_posScreenCurrent.x == m_posScreenTarget.x) &&
                     (m_posScreenCurrent.y == m_posScreenTarget.y))
                 {
-                    stateEnter(AnimState::Finished);
+                    stateEnter(audio, AnimState::Finished);
                 }
                 break;
             default:

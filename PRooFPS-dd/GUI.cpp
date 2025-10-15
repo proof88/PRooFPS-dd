@@ -136,7 +136,8 @@ void proofps_dd::GUI::initialize()
     }
     m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
     m_pSlidingProof88Laugh.getMaterial()->getTexture()->setTextureWrappingMode(PURE_TW_REPEAT, PURE_TW_MIRRORED_REPEAT);
-    m_pSlidingProof88Laugh.setTimeoutInWaitingState(3000);
+    m_pSlidingProof88Laugh.setTimeoutInWaitingState(5000);
+    m_pSlidingProof88Laugh.loadSoundForSlidingIn(m_pPge->getAudio(), (std::string(proofps_dd::GAME_AUDIO_DIR) + "player/PR00F_20060606_220744.wav").c_str());
 
     // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
     // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
@@ -618,7 +619,7 @@ void proofps_dd::GUI::fastForwardRespawnTimer(std::chrono::milliseconds::rep byM
 
 void proofps_dd::GUI::updateNonDearImGuiElements()
 {
-    m_pSlidingProof88Laugh.update();
+    m_pSlidingProof88Laugh.update(m_pPge->getAudio());
 }
 
 proofps_dd::PureObject3dInOutSlider& proofps_dd::GUI::getSlidingProof88Laugh()

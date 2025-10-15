@@ -43,9 +43,9 @@ namespace proofps_dd
         PureObject3dInOutSlider(PureObject3dInOutSlider&&) = delete;
         PureObject3dInOutSlider& operator=(PureObject3dInOutSlider&&) = delete;
 
-        virtual void update() override
+        virtual void update(pge_audio::PgeAudio& audio) override
         {
-            InOutSlider::update();
+            InOutSlider::update(audio);
             if (m_pObj)
             {
                 m_pObj->getPosVec().SetX(getScreenCurrentPos().x);
@@ -53,13 +53,14 @@ namespace proofps_dd
             }
         }
 
-        void clear()
+        virtual void clear() override
         {
             if (m_pObj)
             {
                 delete m_pObj;  // this triggers remove from Object3dManager too
                 m_pObj = nullptr;
             }
+            InOutSlider::clear();
         }
 
         const PureObject3D* getPureObject() const

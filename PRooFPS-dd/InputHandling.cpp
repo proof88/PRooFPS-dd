@@ -648,7 +648,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan(',')))
     {
-        m_gui.getSlidingProof88Laugh().show();
+        m_gui.getSlidingProof88Laugh().show(m_pge.getAudio());
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('.')))
