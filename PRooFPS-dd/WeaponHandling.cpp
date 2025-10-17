@@ -304,7 +304,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         m_pge.getNetwork().getServer().sendToAllClientsExcept(pktPlayerEvent);
         
         // server adds event to GUI here, clients do it when processing above message
-        m_gui.getServerEvents()->addExplosionMultiKillEvent(nPlayersDiedByThisExplosion);
+        handleExplosionMultiKill(nPlayersDiedByThisExplosion);
     }
 
     return m_explosions.back();

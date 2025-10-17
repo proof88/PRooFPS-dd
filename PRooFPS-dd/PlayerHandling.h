@@ -79,9 +79,7 @@ namespace proofps_dd
             const proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles);
         void handleExplosionMultiKill(
-            int nPlayersDiedByExplosion,
-            const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles);
+            int nPlayersDiedByExplosion);
         void updatePlayersOldValues();
         void writePlayerList();
         bool handleUserConnected(
