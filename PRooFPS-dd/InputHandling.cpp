@@ -559,22 +559,32 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_TEAMSELECTION))) &&
         gameMode.isTeamBasedGame())
     {
-        if (playerConst.getTeamId() == 0u)
+        // avoid key function if we are in a differen in-game menu!
+        if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
+            (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect))
         {
-            if (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect)
+            if (playerConst.getTeamId() == 0u)
             {
-                // we dont have spectator mode, so if unassigned player hides team selection menu, frag table shall be automatically visible
-                m_gui.showGameObjectives();
+                if (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect)
+                {
+                    // we dont have spectator mode, so if unassigned player hides team selection menu, frag table shall be automatically visible
+                    m_gui.showGameObjectives();
+                }
             }
+            m_gui.showHideInGameTeamSelectMenu();
         }
-        m_gui.showHideInGameTeamSelectMenu();
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_SERVERADMIN))))
     {
         if (m_pge.getNetwork().isServer())
         {
-            m_gui.showHideInGameServerAdminMenu();
+            // avoid key function if we are in a differen in-game menu!
+            if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
+                (m_gui.getInGameMenuState() == GUI::InGameMenuState::ServerAdmin))
+            {
+                m_gui.showHideInGameServerAdminMenu();
+            }
         }
     }
 
