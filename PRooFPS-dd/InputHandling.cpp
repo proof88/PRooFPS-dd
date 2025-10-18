@@ -548,19 +548,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
-    // active in-game menu cancels any player control
-    static bool bRequireKeyUpBeforeAcceptingPlayerInput = false;
-    if (bRequireKeyUpBeforeAcceptingPlayerInput ||
-        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
-    {
-        if (m_pge.getInput().getKeyboard().isKeyPressed())
-        {
-            bRequireKeyUpBeforeAcceptingPlayerInput = true; // sticky until all keys are released
-            return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-        }
-        bRequireKeyUpBeforeAcceptingPlayerInput = false;
-    }
-
     const auto& playerConst = player;
 
     if (playerConst.getHealth() == 0)
@@ -589,6 +576,25 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         {
             m_gui.showHideInGameServerAdminMenu();
         }
+    }
+
+    // active in-game menu cancels any player control, and
+    // in-game menu input is ignored here after in-game menu is closed
+    static bool bRequireKeyUpBeforeAcceptingPlayerInput = false;
+    if (bRequireKeyUpBeforeAcceptingPlayerInput ||
+        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
+    {
+        if (m_pge.getInput().getKeyboard().isKeyPressed())
+        {
+            bRequireKeyUpBeforeAcceptingPlayerInput = true; // sticky until all keys are released
+            return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+        }
+        bRequireKeyUpBeforeAcceptingPlayerInput = false;
+    }
+    if (bRequireKeyUpBeforeAcceptingPlayerInput ||
+        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
+    {
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
@@ -921,9 +927,22 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     // the amount of wheel rotation accumulating too much
     const short int nMouseWheelChange = m_pge.getInput().getMouse().getWheel();
 
-    if (m_gui.getInGameMenuState() != GUI::InGameMenuState::None)
+    // active in-game menu cancels any player control, and
+    // in-game menu input is ignored here after in-game menu is closed
+    static bool bRequireMouseUpBeforeAcceptingPlayerInput = false;
+    if (bRequireMouseUpBeforeAcceptingPlayerInput ||
+        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
     {
-        // in-game menu mouse is handled by Dear ImGui and GUI::drawInGameMenu()
+        if (m_pge.getInput().getMouse().isButtonPressed())
+        {
+            bRequireMouseUpBeforeAcceptingPlayerInput = true; // sticky until all mouse buttons are released
+            return false;
+        }
+        bRequireMouseUpBeforeAcceptingPlayerInput = false;
+    }
+    if (bRequireMouseUpBeforeAcceptingPlayerInput ||
+        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
+    {
         return false;
     }
 
