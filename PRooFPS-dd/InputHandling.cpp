@@ -548,6 +548,19 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
+    // active in-game menu cancels any player control
+    static bool bRequireKeyUpBeforeAcceptingPlayerInput = false;
+    if (bRequireKeyUpBeforeAcceptingPlayerInput ||
+        (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
+    {
+        if (m_pge.getInput().getKeyboard().isKeyPressed())
+        {
+            bRequireKeyUpBeforeAcceptingPlayerInput = true; // sticky until all keys are released
+            return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+        }
+        bRequireKeyUpBeforeAcceptingPlayerInput = false;
+    }
+
     const auto& playerConst = player;
 
     if (playerConst.getHealth() == 0)
