@@ -2046,7 +2046,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
     const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
     
-    const float fButtonWidthMinPixels = ImGui::CalcTextSize("JOIN TEAM X").x + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonWidthMinPixels = ImGui::CalcTextSize("JOIN TEAM (X)").x + 2 * ImGui::GetStyle().FramePadding.x;
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
@@ -2114,7 +2114,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
             const char* const szTeam1BtnCaption =
                 (currentPlayer.getTeamId() == 1u) ?
-                "KEEP TEAM 1" : "JOIN TEAM 1";
+                "KEEP TEAM (1)" : "JOIN TEAM (1)";
             // In case of buttons, remove size argument (ImVec2) to auto-resize.
             if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
                 ImGui::IsKeyPressed(ImGuiKey_1))
@@ -2128,7 +2128,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
             const char* const szTeam2BtnCaption =
                 (currentPlayer.getTeamId() == 2u) ?
-                "KEEP TEAM 2" : "JOIN TEAM 2";
+                "KEEP TEAM (2)" : "JOIN TEAM (2)";
             if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
                 ImGui::IsKeyPressed(ImGuiKey_2))
             {
@@ -2154,7 +2154,8 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
             }
 
             ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
-            if (ImGui::Button("VIEW TEAMS", ImVec2(fBtnWidth, fBtnHeight)))
+            if (ImGui::Button("(V)IEW TEAMS", ImVec2(fBtnWidth, fBtnHeight)) ||
+                ImGui::IsKeyPressed(ImGuiKey_V))
             {
                 bCloseThisPopup = true;
                 showGameObjectives(); // will start showing frag table in next frame
@@ -2196,7 +2197,7 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
     const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
 
-    const float fButtonWidthMinPixels = ImGui::CalcTextSize("X. RESTART GAME").x + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonWidthMinPixels = ImGui::CalcTextSize("(R)ESTART GAME").x + 2 * ImGui::GetStyle().FramePadding.x;
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
@@ -2236,7 +2237,7 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
         bool bCloseThisPopup = false;
         ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
         // In case of buttons, remove size argument (ImVec2) to auto-resize.
-        if (ImGui::Button("1. RESTART GAME", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_1))
+        if (ImGui::Button("(R)ESTART GAME", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_R))
         {
             bCloseThisPopup = true;
             // TODO: shall invoke PRooFPSddPGE::serverRestartGame() but we cannot access it from here, therefore
@@ -2245,7 +2246,7 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
 
         ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
         // In case of buttons, remove size argument (ImVec2) to auto-resize.
-        if (ImGui::Button("2. NEXT MAP", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_2))
+        if (ImGui::Button("(N)EXT MAP", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_N))
         {
             bCloseThisPopup = true;
 
