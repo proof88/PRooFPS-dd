@@ -570,6 +570,14 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         m_gui.showHideInGameTeamSelectMenu();
     }
 
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_SERVERADMIN))))
+    {
+        if (m_pge.getNetwork().isServer())
+        {
+            m_gui.showHideInGameServerAdminMenu();
+        }
+    }
+
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
     {
         if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
@@ -644,21 +652,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         
         m_durations.reset();
         ScopeBenchmarkerDataStore::clear(); // since ScopeBenchmarker works with static data, make sure we dont leave anything there
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('.')))
-    {
-        if (m_pge.getNetwork().isServer() && !m_maps.getMapcycle().mapcycleGet().empty())
-        {
-            m_maps.getMapcycle().mapcycleNext();
-            pge_network::PgePacket newPktMapChange;
-            if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_maps.getMapcycle().mapcycleGetCurrent()))
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-                assert(false);
-            }
-            m_pge.getNetwork().getServer().sendToAll(newPktMapChange);
-        }
     }
 
     // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!

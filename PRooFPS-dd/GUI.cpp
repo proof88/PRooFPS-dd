@@ -412,6 +412,18 @@ void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
     }
 }
 
+void proofps_dd::GUI::showHideInGameServerAdminMenu()
+{
+    if (m_currentMenuInInGameMenu == InGameMenuState::None)
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::ServerAdmin;
+    }
+    else
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::None;
+    }
+}
+
 void proofps_dd::GUI::resetMenuStates(bool bExitingFromGameSession)
 {
     m_currentMenuInInGameMenu = InGameMenuState::None;
@@ -796,6 +808,8 @@ float proofps_dd::GUI::drawPlayerNameInputBox()
 
 void proofps_dd::GUI::drawCreateGameServerMapSelection()
 {
+    assert(m_pMaps);
+
     ImGui::TextUnformatted("[ Map Configuration ]");
 
     ImGui::Indent();
@@ -1313,6 +1327,8 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
 
 void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 {
+    assert(m_pMaps);
+
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
     constexpr float fContentHeight = 300.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
@@ -2035,7 +2051,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
-    constexpr int nTextRows = 6;
+    constexpr int nTextRows = 6;  /* 2 x (window title on top + extra text above buttons + notice text at bottom) */
     constexpr int nButtonRows = 3;
     const float fContentHeight =
         m_fFontSizePxHudGeneralScaled * nTextRows +
@@ -2057,13 +2073,13 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     // We would not need this if we were using the regular BeginWindow() stuff, but we want to use this popup/modal window functionality of
     // Dear ImGui so GUI input is restricted to this window, and auto-dim of background is also applied which is nice!
     // Also, OpenPopup() / EndPopup() / CloseCurrentPopup() are explicitly invoked so Dear ImGui can maintain its internal window hierarchy properly.
-    constexpr char* const szTeamSelectWindowMenuName = "##WndInGameTeamSelectMenu";
-    if (!ImGui::IsPopupOpen(szTeamSelectWindowMenuName))
+    constexpr char* const szWindowMenuName = "##WndInGameTeamSelectMenu";
+    if (!ImGui::IsPopupOpen(szWindowMenuName))
     {
-        ImGui::OpenPopup(szTeamSelectWindowMenuName);
+        ImGui::OpenPopup(szWindowMenuName);
     }
      
-    if (ImGui::BeginPopupModal(szTeamSelectWindowMenuName, NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    if (ImGui::BeginPopupModal(szWindowMenuName, NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
     {
         drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
 
@@ -2160,10 +2176,111 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
         }
 
         ImGui::EndPopup();
-    }
+    } // BeginPopupModal()
 
     style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
-}
+} // drawInGameTeamSelectMenu()
+
+void proofps_dd::GUI::drawInGameServerAdminMenu()
+{
+    assert(m_pPge);
+    assert(m_pMaps);
+
+    m_pPge->getPure().getWindow().SetCursorVisible(true);
+
+    constexpr char* const szWindowTitle = "Server Admin";
+
+    constexpr float fWindowWidthDesired = 300.f;
+    // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
+    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
+    const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
+    const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
+
+    const float fButtonWidthMinPixels = ImGui::CalcTextSize("X. RESTART GAME").x + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
+    const float fBtnWidth = fButtonWidthMinPixels + 30.f;
+    const float fBtnHeight = fButtonHeightMinPixels + 10.f;
+
+    constexpr int nTextRows = 4; /* 2 x (window title on top + notice text at bottom) */
+    constexpr int nButtonRows = 2;
+    const float fContentHeight =
+        m_fFontSizePxHudGeneralScaled * nTextRows +
+        nButtonRows * fBtnHeight +
+        (nTextRows + nButtonRows - 1) * ImGui::GetStyle().ItemSpacing.y;
+    const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_FirstUseEver);
+
+    // for now we decide in-game menu transparency based on minimap transparency setting
+    const float fPopupBgAlpha =
+        m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent].getAsBool() ? 0.8f : 1.f;
+    ImGuiStyle& style = ImGui::GetStyle();
+    const auto prevPopupBgColor = style.Colors[ImGuiCol_PopupBg];
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(prevPopupBgColor.x, prevPopupBgColor.y, prevPopupBgColor.z, fPopupBgAlpha);
+
+    // we always open the popup here, that is why we are in this function afterall!
+    // We would not need this if we were using the regular BeginWindow() stuff, but we want to use this popup/modal window functionality of
+    // Dear ImGui so GUI input is restricted to this window, and auto-dim of background is also applied which is nice!
+    // Also, OpenPopup() / EndPopup() / CloseCurrentPopup() are explicitly invoked so Dear ImGui can maintain its internal window hierarchy properly.
+    constexpr char* const szWindowMenuName = "##WndInGameServerAdminMenu";
+    if (!ImGui::IsPopupOpen(szWindowMenuName))
+    {
+        ImGui::OpenPopup(szWindowMenuName);
+    }
+
+    if (ImGui::BeginPopupModal(szWindowMenuName, NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
+        drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
+
+        bool bCloseThisPopup = false;
+        ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
+        // In case of buttons, remove size argument (ImVec2) to auto-resize.
+        if (ImGui::Button("1. RESTART GAME", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_1))
+        {
+            bCloseThisPopup = true;
+            // TODO: shall invoke PRooFPSddPGE::serverRestartGame() but we cannot access it from here, therefore
+            // in a separate commit, that function should be moved to somewhere else so we can access it from here.
+        }
+
+        ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+        // In case of buttons, remove size argument (ImVec2) to auto-resize.
+        if (ImGui::Button("2. NEXT MAP", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_2))
+        {
+            bCloseThisPopup = true;
+
+            if (!m_pMaps->getMapcycle().mapcycleGet().empty())
+            {
+                m_pMaps->getMapcycle().mapcycleNext();
+                pge_network::PgePacket newPktMapChange;
+                if (!proofps_dd::MsgMapChangeFromServer::initPkt(newPktMapChange, m_pMaps->getMapcycle().mapcycleGetCurrent()))
+                {
+                    getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                }
+                m_pPge->getNetwork().getServer().sendToAll(newPktMapChange);
+            }
+        }
+
+        static const std::string sNotice =
+            std::string("Key '") + GAME_INPUT_KEY_MENU_SERVERADMIN + "' toggles this window.";
+        drawText(
+            ImGui::GetCursorPosX(),
+            ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+            sNotice);
+
+        if (bCloseThisPopup)
+        {
+            ImGui::CloseCurrentPopup();
+            showHideInGameServerAdminMenu();  // since it is true now, will flip it to false
+            // remember: do not return, let the entire function finish as planned with EndPopup() and prev color reset stuff!
+        }
+
+        ImGui::EndPopup();
+    } // BeginPopupModal()
+
+    style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
+} // drawInGameServerAdminMenu()
 
 /**
 * @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
@@ -2179,6 +2296,11 @@ void proofps_dd::GUI::drawInGameMenu(
     case InGameMenuState::TeamSelect:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
         drawInGameTeamSelectMenu(itCurrentPlayer);
+        ImGui::PopFont();
+        break;
+    case InGameMenuState::ServerAdmin:
+        ImGui::PushFont(m_pImFontHudGeneralScaled);
+        drawInGameServerAdminMenu();
         ImGui::PopFont();
         break;
     default:

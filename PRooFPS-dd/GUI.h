@@ -53,7 +53,8 @@ namespace proofps_dd
         enum class InGameMenuState
         {
             None,
-            TeamSelect
+            TeamSelect,
+            ServerAdmin
         };
 
         /** As of v0.5, values are looped by pressing TAB in-game. */
@@ -97,6 +98,7 @@ namespace proofps_dd
         static void showHideInGameTeamSelectMenu();
         static void showInGameTeamSelectMenu();
         static void showMandatoryGameModeConfigMenu();
+        static void showHideInGameServerAdminMenu();
 
         /**
         * Primarily for main menu control, but shall reset any other menu as well.
@@ -308,6 +310,7 @@ namespace proofps_dd
 
         static void drawInGameTeamSelectMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
+        static void drawInGameServerAdminMenu();
         static void drawInGameMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
 
