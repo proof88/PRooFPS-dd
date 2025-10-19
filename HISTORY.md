@@ -32,8 +32,10 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 TBD A compressed build for Windows is available for TBD.
 
 This version brings the following features:
- - Wall jumping, the jump from the side of a wall, in the direction of the X-Hair. Wall jumps can be easily chained together by bouncing in between nearby walls.
- - TBD.
+ - Wall jumping: jumping from the side of a wall, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
+ - Removed '.' key for jumping to next map.
+ - New In-Game Menu: Server Admin menu, toggled by 'H' key: for now with 2 actions: Jump to next map and Restart game.
+ - Extra funny sound effects for: dying from falling from high altitude, and when multiple players are killed by a single explosion.
 
 ## v0.5.1 Private Beta (July 20, 2025)
 
