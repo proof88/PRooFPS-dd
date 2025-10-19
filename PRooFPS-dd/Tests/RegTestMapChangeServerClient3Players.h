@@ -176,7 +176,21 @@ protected:
                 input_sim_test::bringWindowToFront(hServerMainGameWindow);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('.'), 100);
+                if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+                {
+                    // hide team selection menu, otherwise we cannot open server admin menu
+                    input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
+                }
+
+                // need a bit sleep after team selection in-game menu closes, otherwise
+                // any control inputs will be ignored
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                // open server admin menu
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('h'), 100);
+
+                // press 'n' for Next map
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('n'), 100);
             }
 
             // wait for all instances change the map

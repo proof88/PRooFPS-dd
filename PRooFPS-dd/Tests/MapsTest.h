@@ -121,7 +121,7 @@ protected:
 
 private:
 
-    static const unsigned int MAP_TEST_W = 49u;
+    static const unsigned int MAP_TEST_W = 52u;
     static const unsigned int MAP_TEST_H = 10u;
 
     pge_audio::PgeAudio m_audio;  // we just use it uninitialized, dont deal with sounds in unit tests
@@ -504,7 +504,7 @@ private:
 
         // almost all visible block objects are just clones of reference objects,
         // exception: stairsteps are unique objects.
-        constexpr size_t nStairBlocks = 6; // update this value based on map_test_good layout!
+        constexpr size_t nStairBlocks = 8; // update this value based on map_test_good layout!
         constexpr size_t nStairsteps = nStairBlocks * proofps_dd::Maps::nStairstepsCount;
         size_t nClonedObjects = 0;
         for (int i = 0; i < maps.getBlockCount(); i++)

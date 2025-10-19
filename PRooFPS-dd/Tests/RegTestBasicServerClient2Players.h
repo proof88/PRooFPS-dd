@@ -171,8 +171,12 @@ protected:
             if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
             {
                 // server player selects team 1
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('1'), 100); // jump over the hole
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('1'), 100);
             }
+
+            // need a bit sleep after team selection in-game menu closes, otherwise
+            // player control inputs will be ignored
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
@@ -197,8 +201,12 @@ protected:
             if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
             {
                 // server player selects team 2
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100); // jump over the hole
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100);
             }
+
+            // need a bit sleep after team selection in-game menu closes, otherwise
+            // player control inputs will be ignored
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
             input_sim_test::keybdPressNoRelease(VK_LEFT);
             {

@@ -589,6 +589,17 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
+    // accept this ENTER key for testing before returning if we are in an in-game menu so that reg-tests can dump to file here
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
+    {
+        if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
+        {
+            getConsole().SetLoggingState("4LLM0DUL3S", true);
+            regTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
+            getConsole().SetLoggingState("4LLM0DUL3S", false);
+        }
+    }
+
     // active in-game menu cancels any player control, and
     // in-game menu input is ignored here after in-game menu is closed
     static bool bRequireKeyUpBeforeAcceptingPlayerInput = false;
@@ -606,16 +617,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_RETURN))
-    {
-        if (m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
-        {
-            getConsole().SetLoggingState("4LLM0DUL3S", true);
-            regTestDumpToFile(gameMode, player, nTickrate, nClUpdateRate, nPhysicsRateMin);
-            getConsole().SetLoggingState("4LLM0DUL3S", false);
-        }
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
