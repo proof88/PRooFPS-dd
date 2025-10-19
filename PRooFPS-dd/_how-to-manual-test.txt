@@ -23,6 +23,10 @@
  - Check if Server Admin menu actions such as Restart Game and Next Map are working properly.
    - Check these also when a game is already won and we are waiting for the game to restart.
 
+ - Mad dog laugh sound effect shall be played when an explosive bullets kills at least 2 players.
+
+ - My laugh and my picture shall be played and shown when someone dies from falling from high altitude.
+
  - Start a server instance with "Deathmatch" Game Mode, and 2 client instances, then:
    - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
    - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
