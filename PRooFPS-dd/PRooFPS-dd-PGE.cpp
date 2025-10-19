@@ -967,6 +967,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
     m_gui.getDeathKillEvents()->clear();
     m_gui.getServerEvents()->addGameRestartedEvent(); // server adds it here, clients add when they process MsgGameSessionStateFromServer
     GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
+    m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer(); // server does it here, clients add when they process MsgGameSessionStateFromServer 
 }
 
 void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
@@ -1144,6 +1145,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
     if (msg.m_bGameRestarted)
     {
         m_gui.getServerEvents()->addGameRestartedEvent();
+        m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer();
     }
     
     return true;

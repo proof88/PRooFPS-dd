@@ -112,6 +112,7 @@ namespace proofps_dd
         static void showHideInGameTeamSelectMenu();
         static void showInGameTeamSelectMenu();
         static void showMandatoryGameModeConfigMenu();
+        static void showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer();
         static void showHideInGameServerAdminMenu();
 
         /**

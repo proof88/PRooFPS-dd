@@ -393,11 +393,12 @@ void proofps_dd::GUI::hideInGameMenu()
 
 void proofps_dd::GUI::showHideInGameTeamSelectMenu()
 {
+    // reason of these complicated conditions is explained in showHideInGameServerAdminMenu()
     if (m_currentMenuInInGameMenu == InGameMenuState::None)
     {
         m_currentMenuInInGameMenu = InGameMenuState::TeamSelect;
     }
-    else
+    else if (m_currentMenuInInGameMenu == InGameMenuState::TeamSelect)
     {
         m_currentMenuInInGameMenu = InGameMenuState::None;
     }
@@ -417,13 +418,37 @@ void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
     }
 }
 
+void proofps_dd::GUI::showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer()
+{
+    assert(GameMode::getGameMode());
+
+    if (GameMode::getGameMode()->isTeamBasedGame())
+    {
+        assert(m_pMapPlayers);
+        const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
+        if (it != m_pMapPlayers->end())
+        {
+            if (!GameMode::getGameMode()->isPlayerAllowedForGameplay(it->second))
+            {
+                showInGameTeamSelectMenu();
+            }
+        }
+    }
+}
+
 void proofps_dd::GUI::showHideInGameServerAdminMenu()
 {
+    // these complicated conditions are needed because it CAN happen that when this function
+    // is invoked from the Server Admin menu, current m_currentMenuInInGameMenu has been already
+    // changed to something else e.g. Team Selection menu due to Game Restart action selected
+    // (can happen if the current server player still not yet selected any team), in such case
+    // we should not set it to None here.
+    // And as a rule of thumb, we do not toggle in-game menus from each other.
     if (m_currentMenuInInGameMenu == InGameMenuState::None)
     {
         m_currentMenuInInGameMenu = InGameMenuState::ServerAdmin;
     }
-    else
+    else if (m_currentMenuInInGameMenu == InGameMenuState::ServerAdmin)
     {
         m_currentMenuInInGameMenu = InGameMenuState::None;
     }
