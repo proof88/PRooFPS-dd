@@ -156,8 +156,8 @@ u = proba128x128x24.bmp 0.0 0.5 0.5 1.0
 # Example where we position the center of a decal to block position (row=2.5, col=3), and set decal size to (1x1):
 #   decal = proba128x128x24.bmp 2.5 3 1 1
 
-decal = proba128x128x24-blackbg.bmp 1.5 5.5 2 2
-decal = proba128x128x24-blackbg.bmp 36 6 3 3
+decal = proba128x128x24-blackbg.bmp 2 5.5 2 2
+decal = proba128x128x24-blackbg.bmp 37 6 3 3
 
 ######################
 #                    #
