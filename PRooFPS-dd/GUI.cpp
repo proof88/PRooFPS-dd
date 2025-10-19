@@ -3618,7 +3618,7 @@ void proofps_dd::GUI::drawGameObjectives()
     std::string sCaption;
     if (GameMode::getGameMode()->isGameWon())
     {
-        sCaption = "Game Ended! Waiting for restart ...";
+        sCaption = "Game Ended! Waiting maximum 1 minute for server to restart ...";
     }
     else
     {

@@ -534,6 +534,20 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::Exit;
     }
 
+    // allow server to operate server admin menu even if game is already in won state or when player is dead.
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_SERVERADMIN))))
+    {
+        if (m_pge.getNetwork().isServer())
+        {
+            // avoid key function if we are in a differen in-game menu!
+            if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
+                (m_gui.getInGameMenuState() == GUI::InGameMenuState::ServerAdmin))
+            {
+                m_gui.showHideInGameServerAdminMenu();
+            }
+        }
+    }
+
     if (gameMode.isGameWon())
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
@@ -572,19 +586,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                 }
             }
             m_gui.showHideInGameTeamSelectMenu();
-        }
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_SERVERADMIN))))
-    {
-        if (m_pge.getNetwork().isServer())
-        {
-            // avoid key function if we are in a differen in-game menu!
-            if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
-                (m_gui.getInGameMenuState() == GUI::InGameMenuState::ServerAdmin))
-            {
-                m_gui.showHideInGameServerAdminMenu();
-            }
         }
     }
 

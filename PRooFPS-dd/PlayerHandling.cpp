@@ -1255,6 +1255,12 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
     {
         auto& player = playerPair.second;
 
+        if (GameMode::getGameMode()->isGameWon())
+        {
+            player.getObject3D()->Hide();
+            continue;
+        }
+
         player.updateAudioVisuals(
             config, m_pge.getNetwork().isServer(), gameMode.isPlayerAllowedForGameplay(player));
         

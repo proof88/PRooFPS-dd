@@ -973,20 +973,12 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    if (GameMode::getGameMode()->isGameWon())
+    static bool bGameWonStateInPrevFrame = false;
+    const bool bGameWonStateThisFrame = GameMode::getGameMode()->isGameWon();
+    if (!bGameWonStateInPrevFrame && bGameWonStateThisFrame)
     {
-        if (getNetwork().isServer())
-        {
-            const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode()->getWinTime()).count();
-            if (nSecsSinceWin >= 15)
-            {
-                serverRestartGame();
-            }
-        }
-
-        // these are being executed frame by frame during waiting for game restart, however these are cheap operations so I dont care ...
-        m_gui.showGameObjectives();
         m_gui.hideInGameMenu();
+        m_gui.showGameObjectives();
         m_gui.getXHair()->hide();
         m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)
@@ -995,6 +987,20 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
             playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
         }
     }
+
+    if (bGameWonStateThisFrame)
+    {
+        if (getNetwork().isServer())
+        {
+            const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode()->getWinTime()).count();
+            if (nSecsSinceWin >= 60)
+            {
+                serverRestartGame();
+            }
+        }
+    }
+
+    bGameWonStateInPrevFrame = bGameWonStateThisFrame;
 
     m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
