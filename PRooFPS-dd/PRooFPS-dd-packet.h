@@ -162,14 +162,15 @@ namespace proofps_dd
     static_assert(std::is_standard_layout_v<MsgServerInfoFromServer>);
 
     // server -> clients
-    // sent to all clients when game session state is changed (e.g. frag limit reached or whatever goal is defined in GameMode object).
+    // sent to all clients when game session state is changed (e.g. game restart, or frag limit reached or whatever goal is defined in GameMode object, etc.).
     struct MsgGameSessionStateFromServer
     {
         static const PRooFPSappMsgId id = PRooFPSappMsgId::GameSessionStateFromServer;
 
         static bool initPkt(
             pge_network::PgePacket& pkt,
-            bool bGameSessionEnd)
+            bool bGameSessionEnd,
+            bool bRestarted)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgGameSessionStateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -187,11 +188,13 @@ namespace proofps_dd
             proofps_dd::MsgGameSessionStateFromServer& msgGameSessionState = reinterpret_cast<proofps_dd::MsgGameSessionStateFromServer&>(*pMsgAppData);
             
             msgGameSessionState.m_bGameSessionEnd = bGameSessionEnd;
+            msgGameSessionState.m_bGameRestarted = bRestarted;
 
             return true;
         }
 
         bool m_bGameSessionEnd;
+        bool m_bGameRestarted;
     };  // struct MsgGameSessionStateFromServer
     static_assert(std::is_trivial_v<MsgGameSessionStateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgGameSessionStateFromServer>);

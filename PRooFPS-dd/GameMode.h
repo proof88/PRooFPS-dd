@@ -311,7 +311,7 @@ namespace proofps_dd
         GameMode&& operator=(GameMode&&) = delete;
 
         bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
-        bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network);
+        bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart);
         void handleEventGameWon(pge_network::PgeINetwork& network);
 
     private:

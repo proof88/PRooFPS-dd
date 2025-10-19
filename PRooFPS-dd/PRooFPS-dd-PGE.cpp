@@ -965,6 +965,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
 
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
+    m_gui.getServerEvents()->addGameRestartedEvent(); // server adds it here, clients add when they process MsgGameSessionStateFromServer
     GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
 }
 
@@ -1132,6 +1133,11 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
         // GUI should be invoked in GameMode's restartWithoutRemovingPlayers(), however I cannot include GUI.h in GameMode now ...
         m_gui.hideGameObjectives();
         m_gui.getDeathKillEvents()->clear();
+    }
+
+    if (msg.m_bGameRestarted)
+    {
+        m_gui.getServerEvents()->addGameRestartedEvent();
     }
     
     return true;

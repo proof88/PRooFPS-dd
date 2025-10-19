@@ -21,7 +21,8 @@ namespace proofps_dd
             Connected,
             Disconnected,
             TeamChanged,
-            ExplosionMultiKill
+            ExplosionMultiKill,
+            GameRestarted
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
@@ -36,6 +37,28 @@ namespace proofps_dd
 
         ServerEvent()
         {}
+
+        ServerEvent(const EventType& eventType) :
+            m_eEventType(eventType)
+        {
+            switch (eventType)
+            {
+            case EventType::GameRestarted:
+                m_sAuxText = "Game restarted";
+                break;
+            default:
+                assert(false);
+                m_sAuxText = "!!! Unhandled Server Event !!!";
+                break;
+            }
+        }
+
+        ServerEvent(
+            int nPlayersKilledByExplosion) :
+            m_eEventType(EventType::ExplosionMultiKill)
+        {
+            m_sAuxText = "Explosion killed " + std::to_string(nPlayersKilledByExplosion) + " players";
+        }
 
         ServerEvent(
             const std::string& sPlayerName,
@@ -101,13 +124,6 @@ namespace proofps_dd
             m_sAuxText = " joined Team " + std::to_string(iNewTeamId);
         }
 
-        ServerEvent(
-            int nPlayersKilledByExplosion) :
-            m_eEventType(EventType::ExplosionMultiKill)
-        {
-            m_sAuxText = "Explosion killed " + std::to_string(nPlayersKilledByExplosion) + " players";
-        }
-
         void draw()
         {
             // TODO: cannot be implemented until drawTextHighlighted() is moved from GUI.cpp to separate unit.
@@ -163,6 +179,11 @@ namespace proofps_dd
             int nPlayersKilledByExplosion)
         {
             addEvent(std::move(ServerEvent(nPlayersKilledByExplosion)));
+        }
+
+        void addGameRestartedEvent()
+        {
+            addEvent(std::move(ServerEvent(ServerEvent::EventType::GameRestarted)));
         }
 
     protected:

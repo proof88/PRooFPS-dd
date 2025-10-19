@@ -268,7 +268,7 @@ void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwor
 
     if (network.isServer())
     {
-        serverSendGameSessionStateToClients(network);
+        serverSendGameSessionStateToClients(network, true /* restart flag */);
     }
     // extended in derived class
 }
@@ -379,7 +379,8 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     pge_network::PgePacket pktGameSessionState;
     if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
         pktGameSessionState,
-        m_bWon))
+        m_bWon,
+        false /* this is never a restart case when we are sending this to a single client only */))
     {
         getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -390,13 +391,14 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     return true;
 }
 
-bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network)
+bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart)
 {
     assert(network.isServer());
     pge_network::PgePacket pktGameSessionState;
     if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
         pktGameSessionState,
-        m_bWon))
+        m_bWon,
+        bGameRestart))
     {
         getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -411,7 +413,8 @@ void proofps_dd::GameMode::handleEventGameWon(pge_network::PgeINetwork& network)
 {
     m_bWon = true;
     m_timeWin = std::chrono::steady_clock::now();
-    serverSendGameSessionStateToClients(network);
+    serverSendGameSessionStateToClients(
+        network, false /* game winning is never a restart case */);
 }
 
 
