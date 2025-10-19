@@ -15,9 +15,13 @@
    - Friendly fire working as per config?
    - Team Spawn Groups working as per config?
    - Check if Frag Table shows the 2 teams properly.
+   - Check if any non-first team change actually increases death count by 1.
 
  - Now disconnect the client and server instances, and invert the Friendly fire and Team Spawn Groups config, then
    repeat the above test.
+
+ - Check if Server Admin menu actions such as Restart Game and Next Map are working properly.
+   - Check these also when a game is already won and we are waiting for the game to restart.
 
  - Start a server instance with "Deathmatch" Game Mode, and 2 client instances, then:
    - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
