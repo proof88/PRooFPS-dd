@@ -252,6 +252,8 @@ void proofps_dd::GameMode::restart(pge_network::PgeINetwork& network)
 
 void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network)
 {
+    // invoked by both server and client
+
     m_timeReset = std::chrono::steady_clock::now();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;

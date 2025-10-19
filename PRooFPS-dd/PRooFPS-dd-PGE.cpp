@@ -189,6 +189,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     serverSetCollisionModeBvh(getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
 
     m_gui.initialize();
+    m_gui.setServerRestartGameCallback([this]() { serverRestartGame(); });
 
     m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
     {
@@ -918,10 +919,12 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
     m_gui.textForNextFrame(ssFps.str(), window.getClientWidth() - 50, window.getClientHeight() - 2 * getPure().getUImanager().getDefaultFontSizeLegacy());
 }
 
+// TODO: RFR: Shall be moved this to where we are able to access: playerhandling, maps, gui, gamemode, and
+// gui shall be able to invoke it. For now we just register this as callback in gui so gui can call it back.
 void proofps_dd::PRooFPSddPGE::serverRestartGame()
 {
     assert(getNetwork().isServer());
-
+    
     for (auto& playerPair : m_mapPlayers)
     {
         serverRespawnPlayer(playerPair.second, true, m_config);

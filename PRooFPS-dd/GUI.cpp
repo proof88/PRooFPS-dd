@@ -376,6 +376,11 @@ const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
     return m_currentMenuInMainMenu;
 }
 
+void proofps_dd::GUI::setServerRestartGameCallback(ServerRestartGameCallback cb)
+{
+    m_cbServerRestartGame = std::move(cb);
+}
+
 const proofps_dd::GUI::InGameMenuState& proofps_dd::GUI::getInGameMenuState() const
 {
     return m_currentMenuInInGameMenu;
@@ -652,6 +657,8 @@ proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
 const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
+
+proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerRestartGame{};
 
 proofps_dd::GUI::MainMenuState proofps_dd::GUI::m_currentMenuInMainMenu = proofps_dd::GUI::MainMenuState::Main;
 
@@ -2240,8 +2247,8 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
         if (ImGui::Button("(R)ESTART GAME", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_R))
         {
             bCloseThisPopup = true;
-            // TODO: shall invoke PRooFPSddPGE::serverRestartGame() but we cannot access it from here, therefore
-            // in a separate commit, that function should be moved to somewhere else so we can access it from here.
+            assert(m_cbServerRestartGame);
+            m_cbServerRestartGame();
         }
 
         ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));

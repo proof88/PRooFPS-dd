@@ -93,6 +93,20 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
+        /*
+        * As of Oct 2025, we have the following dependency between PRooFPSddPGE, GameMode, GUI, Maps and PlayerHandling:
+        * - GameMode and Maps don't depend on anything,
+        * - GUI uses GameMode and Maps,
+        * - PlayerHandling uses GameMode, GUI and Maps,
+        * - PRooFPSddPGE uses all.
+        * Since serverRestartGame() is implemented in PRooFPSddPGE, we cannot invoke it from GUI, and since
+        * serverRestartGame() uses GameMode, GUI, Maps and PlayerHandling, it would lead to cyclic dependency
+        * anyway to move that function to some other class from PRooFPSddPGE, therefore the easiest solution is to
+        * have a callback registered by PRooFPSddPGE in GUI so GUI can simply invoke it without dependency on PRooFPSddPGE's dependencies.
+        */
+        using ServerRestartGameCallback = std::function<void()>;
+        static void setServerRestartGameCallback(ServerRestartGameCallback cb);
+
         const InGameMenuState& getInGameMenuState() const;
         static void hideInGameMenu();
         static void showHideInGameTeamSelectMenu();
@@ -170,6 +184,7 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
+        static ServerRestartGameCallback m_cbServerRestartGame;
         static InGameMenuState m_currentMenuInInGameMenu;
 
         /* Misc */
