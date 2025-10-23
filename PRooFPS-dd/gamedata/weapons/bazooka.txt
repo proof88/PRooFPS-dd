@@ -228,6 +228,7 @@ damage_ap = 80
 # Radius of circular area within damage is taken by player.
 # 0 means no area damage (only direct hit causes damage).
 # A positive area damage triggers an explosion.
+# So if you want explosive bullet, set this to positive value (e.g. rocket, grenade).
 # HP and AP are both affected by area damage.
 damage_area_size = 2.0
 
@@ -239,7 +240,7 @@ damage_area_size = 2.0
 damage_area_effect = linear
 
 # Amount of push force applied to players within damage area.
-# No effect when damage_area_size is 0.
+# Must be zero if damage_area_size is zero.
 damage_area_pulse = 30.0
 
 # Model file displayed as explosion effect.
