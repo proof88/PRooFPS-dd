@@ -84,7 +84,6 @@ reload_end_snd =
 # Accepted values (from lowest to highest available):
 #  - semi : trigger needs to be pulled-and-released as many times as many bullets we want to fire;
 #  - burst: similar to semi, but 1 trigger pull shots some (limited amount) bullets after each other;
-#  - proj : similar to burst, but 1 trigger pull shots some (limited amount) of projectiles AT ONCE, e.g. shotguns;
 #  - auto : trigger needs to be pulled only once to fire continuously until we have bullet.
 
 # Default firing mode
@@ -174,6 +173,12 @@ bullet_visible = false
 bullet_size_x = 0.2
 bullet_size_y = 0.2
 bullet_size_z = 0.0
+
+# Number of ACTUAL bullets created as a result of a single shot.
+# For most weapons this shall be 1.
+# For weapons where actually multiple subprojectiles are shot when the trigger is pulled, this shall be more than 1.
+# Any value less than 1 is NOT accepted.
+bullet_subprojectiles = 1
 
 # Max speed is 1000, it means instant hit, e.g. rail gun
 bullet_speed = 10
