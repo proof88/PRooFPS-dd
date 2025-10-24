@@ -88,18 +88,12 @@ reload_end_snd = ump45_boltslap.wav
 
 # Default firing mode
 # For pistols, this is usually "semi".
-# For shotguns, this is usually "proj".
 # For rifles, this is usually "auto".
 # Must be "semi" for melee type weapons.
 firing_mode_def = auto
 
 # Maximum supported firing mode.
 # User can loop from default to max firing mode using a mode selector.
-# Note that a weapon cannot have both "burst" and "proj" modes. So the user wont be able to loop
-# to "burst" if "proj" is max, and cannot loop to "proj" if "burst" is max.
-# Also, user wont be able to select "proj" if that is not the default.
-# The user is able to select "auto" though even if "proj" is the default, in that case
-# weapon will shot projectiles in automatic mode (e.g. XM1014/Leone YG1265 Auto Shotgun in CS 1.6).
 # Max cannot be less than the default.
 # Must be "semi" for melee type weapons.
 firing_mode_max = auto
@@ -222,11 +216,11 @@ damage_wall_snd =
 damage_player_snd =
 
 # Damage to health when hit directly.
-# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
+# If bullet_subprojectiles is bigger than 1 then each hitting bullet or projectile causes this amount of damage.
 damage_hp = 15
 
 # Damage to armor when hit directly.
-# If firing mode is "proj" or "burst", each hitting bullet or projectile causes this amount of damage.
+# If bullet_subprojectiles is bigger than 1 then each hitting bullet or projectile causes this amount of damage.
 damage_ap = 7
 
 # Area damage.
