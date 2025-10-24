@@ -1419,7 +1419,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         insertedPlayer.setExpectingAfterBootUpDelayedUpdate(false);
     }
 
-    float fMaxFiringRatePerSec = 0.f;
+    float fMaxBulletRatePerSec = 0.f;
     for (const auto& entry : std::filesystem::directory_iterator(proofps_dd::GAME_WEAPONS_DIR))
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): %s!", __func__, entry.path().filename().string().c_str());
@@ -1455,16 +1455,17 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                         loadedWpn->getVars()["damage_area_snd"].getAsString());
                 }
 
-                // bullet pool capacity is determined using the fastest firing weapon
-                if (loadedWpn->getFiringRate() > fMaxFiringRatePerSec)
+                // bullet pool capacity is determined using the fastest bullet firing weapon
+                if (loadedWpn->getBulletRate() > fMaxBulletRatePerSec)
                 {
-                    fMaxFiringRatePerSec = loadedWpn->getFiringRate();
+                    fMaxBulletRatePerSec = loadedWpn->getBulletRate();
                 }
 
                 // just log some weapon info only when 1st player is created to avoid spamming
-                getConsole().OLn("PRooFPSddPGE::%s(): weapon %s dpfr: %f, fr: %f, dpsr: %f",
+                getConsole().OLn("PRooFPSddPGE::%s(): weapon %s br: %f, dpfr: %f, fr: %f, dpsr: %f",
                     __func__,
                     loadedWpn->getFilename().c_str(),
+                    loadedWpn->getBulletRate(),
                     loadedWpn->getDamagePerFireRating(),
                     loadedWpn->getFiringRate(),
                     loadedWpn->getDamagePerSecondRating());
@@ -1474,12 +1475,12 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
 
     if (getBullets().capacity() == 0)
     {
-        // considering a bullet lifetime up to 10 secs, a player can have up to 10 * fMaxFiringRatePerSec active bullets on the map, and
+        // considering a bullet lifetime up to 10 secs, a player can have up to 10 * fMaxBulletRatePerSec active bullets on the map, and
         // max expected number of players is coming from config
-        getConsole().OLn("PRooFPSddPGE::%s(): highest firing rate: %f", __func__, fMaxFiringRatePerSec);
+        getConsole().OLn("PRooFPSddPGE::%s(): highest bullet rate: %f", __func__, fMaxBulletRatePerSec);
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), true);
         getBullets().reserve("bullets", static_cast<size_t>(
-            std::ceil(getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsUInt() * 10 * fMaxFiringRatePerSec)), getPure()
+            std::ceil(getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsUInt() * 10 * fMaxBulletRatePerSec)), getPure()
         );
         CConsole::getConsoleInstance().SetLoggingState(getBullets().getLoggerModuleName(), false);
     }
