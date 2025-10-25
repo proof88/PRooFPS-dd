@@ -320,28 +320,28 @@ jumppad_2 = 3.7 -0.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2,   5  4    +  4    S 4  3      6    2    5     S c+cccc   
+ccS   2,   5  4    +  4    S 4  3  7   6    2    5     S c+cccc   
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
-FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHa5HHHHHHHHHa,c22cccccccFF   
+FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHa5HHHHHHHHHa,c22cc7ccccFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF   
 cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF   
-FFFFccSc36ccaaaaaaaa,vvvaaa3aauSuaaaaaaaaaaaSaaa24accccFFF3FFFF   
+FFFFccSc36ccaaaaaaaa,vvvaaa3aauSuaa7aaaaaaaaSaaa24accccFFF3FFFF   
 FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23a,aa2aaaGGGGGFFcccFF3FFFF   
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF   
-cc4cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHccccc3ccFFFF   
+c74cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHc7ccc3ccFFFF   
 FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
 FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  SaenaacFccccccFFFF   
 FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2a6aaorDyFFFcc+c2FFFF   
 wBBBBB\wwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB  5
 wBBBBBB\wwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwww/BBBB   
-xIIIIIII\xxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6xxxxxxxx/IIIII   
+xIIIIIII\xxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6xxxxxxxx/IIIII  7
 xIIIIIIII\xxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxx/IIIIII   
 IIIIIIIIIIIx6xxxxxx3/III\3x/III\3xx2/IIIIII\+xx/IIIII\x/IIIIIII   
 IIIIIIIIIIIxx4x3IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
-xxxxxxxxxxxxxxxxxxxxxxxx433336333334xxxxxxxxxxxxxxxxxxxxxxxxxxx   
+xxxxxxxxxxxxxxxxxxxxxxxx433376733334xxxxxxxxxxxxxxxxxxxxxxxxxxx   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
 xxxxxxxxxxxx++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  6

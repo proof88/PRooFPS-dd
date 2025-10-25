@@ -313,16 +313,16 @@ jumppad_3 = 2 -6
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-BBBB                                            S3S4S4S3S                                            BBBB
+BBBB                                        7   S3S4S4S3S   7                                        BBBB
 BBBB                                            a3636363a                                            BBBB
-BBBB                                         ^ aBBBBBBaBBa ^                                         BBBB
-BBBB    SSSSSS4                               a3aaaaaaaaa3a                               4SSSSSS    BBBB
-BBBBa3aa333333a                               a  aaaaaBa  a                               a333333aa3aBBBB
+BBBB               7                         ^ aBBBBBBaBBa ^                         7               BBBB
+BBBB    SSSSSS4    7                          a3aaaaaaaaa3a                          7    4SSSSSS    BBBB
+BBBBa3aa333333a    7                          a  aaaaaBa  a                          7    a333333aa3aBBBB
 BBBBaaa/BBBBBBa ,                            aa   aa aa   aa                            , aBBBBBB\aaaBBBB
 BBBBaa2aaaBaaaa ^                            aa   aaBaa   aa                            ^ aaaaBaaa2aaBBBB
-aBBBB\aa,,aaaaa          ccc54ccccc          aa  aBaaaaa  aa          ccccc45ccc          aaaaa,,aa/BBBBB
+aBBBB\aa,,aaaaa          cc754ccccc          aa  aBaaaaa  aa          ccccc457cc          aaaaa,,aa/BBBBB
 aBBBBB\aaSSSaaa        c,c/DDDDDD\ccc       aaaaaaaaaaaaaaaaa       ccc/DDDDDD\c,c        aaaSSSaa/BBBBBB
-aBBBBBB\a++++Bacccc543+c/DDDDDDDDDD\cccccccaaa/B\aa+++aaaaaaaaccccccc/DDDDDDDDDD\c+345ccccaB++++a/BBBBBBB
+aBBBBBB\a++++Baccc7543+c/DDDDDDDDDD\cccccccaaa/B\aa+++aaaaaaaaccccccc/DDDDDDDDDD\c+3457cccaB++++a/BBBBBBB
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
