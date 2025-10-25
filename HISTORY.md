@@ -33,6 +33,7 @@ TBD A compressed build for Windows is available for TBD.
 
 This version brings the following features:
  - Wall jumping: jumping from the side of a wall, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
+ - New Weapon: Shotgun.
  - Removed '.' key for jumping to next map.
  - New In-Game Menu: Server Admin menu, toggled by 'H' key: for now with 2 actions: Jump to next map and Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
