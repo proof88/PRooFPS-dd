@@ -178,6 +178,9 @@ private:
         b &= assertTrue(player.getWeaponManager().setDefaultAvailableWeaponByFilename("pistol.txt"), "wm set default wpn");
         b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/machinegun.txt", 0), "wm wpn load mchgun");
         b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/bazooka.txt", 0), "wm wpn load bazooka");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/pusha.txt", 0), "wm wpn load pusha");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/machinepistol.txt", 0), "wm wpn load machinepistol");
+        b &= assertTrue(player.getWeaponManager().load("gamedata/weapons/shotgun.txt", 0), "wm wpn load shotgun");
 
         for (const auto pSrcWpn : player.getWeaponManager().getWeapons())
         {
@@ -2214,6 +2217,9 @@ private:
         const proofps_dd::MapItem miPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         const proofps_dd::MapItem miMchgun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const proofps_dd::MapItem miBazooka(*m_engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
+        const proofps_dd::MapItem miPusha(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PUSHA, PureVector(1, 2, 3));
+        const proofps_dd::MapItem miMchPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, PureVector(1, 2, 3));
+        const proofps_dd::MapItem miShotgun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, PureVector(1, 2, 3));
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
         {
             return false;
@@ -2226,6 +2232,9 @@ private:
 
         b &= assertTrue(player.canTakeItem(miMchgun), "3");
         b &= assertTrue(player.canTakeItem(miBazooka), "4");
+        b &= assertTrue(player.canTakeItem(miPusha), "5");
+        b &= assertTrue(player.canTakeItem(miMchPistol), "6");
+        b &= assertTrue(player.canTakeItem(miShotgun), "7");
 
         return b;
     }
@@ -2359,7 +2368,10 @@ private:
         // positive tests
         b &= assertEquals(player.getWeaponManager().getWeaponByFilename("pistol.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_PISTOL), "pistol") &
             assertEquals(player.getWeaponManager().getWeaponByFilename("machinegun.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), "mchgun") &
-            assertEquals(player.getWeaponManager().getWeaponByFilename("bazooka.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA), "bazooka");
+            assertEquals(player.getWeaponManager().getWeaponByFilename("bazooka.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA), "bazooka") &
+            assertEquals(player.getWeaponManager().getWeaponByFilename("pusha.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_PUSHA), "pusha") &
+            assertEquals(player.getWeaponManager().getWeaponByFilename("machinepistol.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL), "mchpistol") &
+            assertEquals(player.getWeaponManager().getWeaponByFilename("shotgun.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN), "shotgun");
 
         return b;
     }

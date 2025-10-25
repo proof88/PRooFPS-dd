@@ -56,6 +56,8 @@ uint32_t proofps_dd::MapItem::getItemRespawnTimeSecs(const proofps_dd::MapItem& 
         return ITEM_WPN_PUSHA_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
         return ITEM_WPN_MACHINEPISTOL_RESPAWN_SECS;
+    case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
+        return ITEM_WPN_SHOTGUN_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_ARMOR:
         return ITEM_ARMOR_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_HEALTH:
@@ -79,6 +81,8 @@ std::string proofps_dd::MapItem::toString(const proofps_dd::MapItemType& eMapIte
         return "Pusha";
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
         return "Machine Pistol";
+    case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
+        return "Shotgun";
     case proofps_dd::MapItemType::ITEM_ARMOR:
         return "Armor";
     case proofps_dd::MapItemType::ITEM_HEALTH:
@@ -120,6 +124,9 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
             break;
         case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchpistol.bmp");
+            break;
+        case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_shotgun.bmp");
             break;
         case proofps_dd::MapItemType::ITEM_ARMOR:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_armor.bmp");

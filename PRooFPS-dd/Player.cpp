@@ -1642,6 +1642,7 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
     case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
     {
         const Weapon* const pWpn = getWeaponInstanceByMapItemType(item.getType());
         if (!pWpn)
@@ -1677,6 +1678,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
     case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
     {
         Weapon* const pWpnBecomingAvailable = getWeaponInstanceByMapItemType(item.getType());
         if (!pWpnBecomingAvailable)
@@ -1757,6 +1759,7 @@ const Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemTy
     case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
     case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
+    case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
     {
         const auto it = m_mapItemTypeToWeaponFilename.find(mapItemType);
         if (it == m_mapItemTypeToWeaponFilename.end())
@@ -2107,7 +2110,8 @@ const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapIt
     {proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, "machinegun.txt"},
     {proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, "bazooka.txt"},
     {proofps_dd::MapItemType::ITEM_WPN_PUSHA, "pusha.txt"},
-    {proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, "machinepistol.txt"}
+    {proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, "machinepistol.txt"},
+    {proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, "shotgun.txt"}
 };
 
 uint32_t proofps_dd::Player::m_nPlayerInstanceCntr = 0;
