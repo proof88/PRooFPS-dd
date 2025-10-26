@@ -179,14 +179,15 @@ bullet_speed = 8
 
 # Gravity affecting the travel path of the bullet.
 # 0 means no effect of gravity.
-# Obviously no effect when speed is max.
-# Throwables like grenades are typically affected by gravity.
+# Shall be 0 when bullet_speed is set to maximum value, e.g. rail gun.
+# The resulting bullet path shall be fine-tuned together with bullet_speed and bullet_drag.
+# Typically throwables (e.g. grenade) should have higher gravity and drag values.
 bullet_gravity = 0
 
 # Drag or air resistance tells how much the bullet is slowed down by air during travel.
-# 0 means no effect of drag
-# Obviously no effect when speed is max.
-bullet_drag = 0.2
+# 0 means no effect of drag.
+# Shall be 0 when bullet_speed is set to maximum value, e.g. rail gun.
+bullet_drag = 0.0
 
 # If fragile, bullet can be destroyed by other bullet.
 # E.g. a rocket can explode in air when hit by another bullet.
