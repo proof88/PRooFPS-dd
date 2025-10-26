@@ -320,18 +320,18 @@ jumppad_2 = 3.7 -0.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2,   5  4    +  4    S 4  3  7   6    2    5     S c+cccc   
+ccS   2, 8 5  4    +  4    S 4  3  7   6    2  8 5     S c+cccc   
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
 FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHa5HHHHHHHHHa,c22cc7ccccFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF   
-cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF   
-FFFFccSc36ccaaaaaaaa,vvvaaa3aauSuaa7aaaaaaaaSaaa24accccFFF3FFFF   
+cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF  8
+FFFFccSc36ccaaaaaaaa,vvvaaa3a8uSuaa7aaaaaaaaSaaa24accccFFF3FFFF   
 FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23a,aa2aaaGGGGGFFcccFF3FFFF   
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF   
 c74cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHc7ccc3ccFFFF   
-FFFFccc+cFFFaaaaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
-FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  SaenaacFccccccFFFF   
+FFFFccc+cFFFa8aaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
+FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  Saena8cFccccccFFFF   
 FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2a6aaorDyFFFcc+c2FFFF   
 wBBBBB\wwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB  5
 wBBBBBB\wwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwww/BBBB   

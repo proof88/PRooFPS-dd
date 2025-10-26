@@ -240,7 +240,7 @@ damage_area_effect = linear
 
 # Amount of push force applied to players within damage area.
 # Must be zero if damage_area_size is zero.
-damage_area_pulse = 10.0
+damage_area_pulse = 25.0
 
 # Model file displayed as explosion effect.
 # Valid only when damage_area_size is not 0.
