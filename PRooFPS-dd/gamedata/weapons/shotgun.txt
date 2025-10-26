@@ -197,7 +197,7 @@ bullet_fragile = false
 # After travelling this distance, bullet gets destroyed even if it did not hit anything.
 # 0 means no distance limit.
 # Cannot be negative.
-bullet_distance_max = 0
+bullet_distance_max = 6
 
 # Type of particles emitted by the bullet.
 # Can be "none" or "smoke".
