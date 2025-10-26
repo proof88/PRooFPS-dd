@@ -81,7 +81,8 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling(PGEcfgProfiles& cfgPro
         {'4', "bazooka.txt"},
         {'5', "pusha.txt"},
         {'6', "machinepistol.txt"},
-        {'7', "shotgun.txt"}
+        {'7', "shotgun.txt"},
+        {'8', "grenadelauncher.txt"}
     };
 
     Explosion::resetGlobalExplosionId();

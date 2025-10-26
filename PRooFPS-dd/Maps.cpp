@@ -1590,6 +1590,17 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
+        case '8':
+        {
+            if (bDryRun)
+            {
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_GRENADELAUNCHER, PureVector(x, y, GAME_ITEMS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
+            bSpecialBgBlock = true;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
+            break;
+        }
         case 'S':
         {
             if (!bDryRun)

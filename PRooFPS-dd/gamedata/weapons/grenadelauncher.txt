@@ -123,16 +123,16 @@ firing_dry_snd = dryfire_rifle.wav
 # Relative angle is randomized in [-acc_angle, acc_angle] range.
 # 0 means maximum accuracy i.e. always shooting the middle of the crosshair.
 # Cannot be negative.
-acc_angle = 15.0
+acc_angle = 0.8
 
 # Multipliers of acc_angle in different player poses.
 # Multiple multipliers can be in effect at the same time, e.g.
 # moving while ducking, then both m_walk and m_duck will be used: acc_angle_pose = acc_angle * acc_m_walk * acc_m_duck .
 # Thus values above 1.0 decrease accuracy, values below 1.0 increase accuracy.
 # Cannot be negative.
-acc_m_walk = 1.1
-acc_m_run  = 1.2
-acc_m_duck = 0.8
+acc_m_walk = 1.5
+acc_m_run  = 2.5
+acc_m_duck = 0.6
 
 # Recoil also multiplies accuracy angle.
 # 1.0 means no recoil.
@@ -172,10 +172,10 @@ bullet_size_z = 0.0
 # For most weapons this shall be 1.
 # For weapons where actually multiple subprojectiles are shot when the trigger is pulled, this shall be more than 1.
 # Any value less than 1 is NOT accepted.
-bullet_subprojectiles = 3
+bullet_subprojectiles = 1
 
 # Max speed is 1000, it means instant hit, e.g. rail gun
-bullet_speed = 12
+bullet_speed = 10
 
 # Gravity affecting the travel path of the bullet.
 # 0 means no effect of gravity.
@@ -190,7 +190,7 @@ bullet_drag = 0.2
 
 # If fragile, bullet can be destroyed by other bullet.
 # E.g. a rocket can explode in air when hit by another bullet.
-bullet_fragile = false
+bullet_fragile = true
 
 # After travelling this distance, bullet gets destroyed even if it did not hit anything.
 # 0 means no distance limit.
