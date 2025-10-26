@@ -100,7 +100,7 @@ firing_mode_max = semi
 
 # Time needed to elapse between 2 shots, in millisecs.
 # Cannot be 0.
-firing_cooldown = 1000
+firing_cooldown = 400
 
 # Sound of a regular shot fired
 firing_snd = grenadelauncher_fire.wav
@@ -142,7 +142,7 @@ recoil_m = 4.0
 # Time needed for recoil to disappear after 1 shot, in millisecs.
 # No effect when recoil_m is 1.0.
 # Must be greater or equal to firing_cooldown if recoil is enabled (see above).
-recoil_cooldown = 1200
+recoil_cooldown = 600
 
 # If available, recoil control can improve the accuracy degradation
 # caused by accumulating recoil across multiple shots.
@@ -165,7 +165,7 @@ recoil_control = off
 bullet_visible = true
 
 bullet_size_x = 0.1
-bullet_size_y = 0.05
+bullet_size_y = 0.1
 bullet_size_z = 0.0
 
 # Number of ACTUAL bullets created as a result of a single shot.
@@ -183,7 +183,7 @@ bullet_speed = 10
 # Shall be 0 when bullet_speed is set to maximum value, e.g. rail gun.
 # The resulting bullet path shall be fine-tuned together with bullet_speed and bullet_drag with experimenting.
 # Typically throwables (e.g. grenade) should have higher gravity and drag values.
-bullet_gravity = 0
+bullet_gravity = 0.15
 
 # Drag or air resistance tells how much the bullet is slowed down by air during travel.
 # 0 means no effect of drag.
