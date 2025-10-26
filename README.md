@@ -73,7 +73,7 @@ Using this technique you can even continuously bounce yourself upwards between 2
 
 **Weapons**
 
- - **1,2,3,4,5,6 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha, machine pistol);
+ - **1,2,3,4,5,6,7 / Mouse Wheel**: change weapon (knife, pistol, machine gun, bazooka, pusha, machine pistol, shotgun);
  - **R**: reload current weapon;
  - **Mouse Click**: attack (fire weapon).
 
