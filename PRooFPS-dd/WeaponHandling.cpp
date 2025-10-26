@@ -816,6 +816,13 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
+    // COPY-PASTE START from Physics::serverGravity()
+    static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
+    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_GRAVITY_CONST = PFL::lerp(80.f /* 20 Hz */, 90.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+    const float fGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate; /* fGravityChangePerTick: -1.5 with 60 Hz physics rate as of PRooFPS-dd v0.6 */
+    // COPY-PASTE END from Physics::serverGravity()
+
     const bool bCollisionModeBvh = (m_pge.getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
 
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
@@ -846,7 +853,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         }
         else
         {
-            bullet.Update(nPhysicsRate);
+            bullet.update(nPhysicsRate, fGravityChangePerTick, GAME_FALL_GRAVITY_MIN);
 
             if ((bullet.getTravelDistanceMax() > 0.f) && (bullet.getTravelledDistance() >= bullet.getTravelDistanceMax()))
             {
@@ -1100,6 +1107,14 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
 {
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
+
+    // COPY-PASTE START from WeaponHandling::serverUpdateBullets()
+    static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
+    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+    const float GAME_GRAVITY_CONST = PFL::lerp(80.f /* 20 Hz */, 90.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+    const float fGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
+    // COPY-PASTE END from WeaponHandling::serverUpdateBullets()
+
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
     size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
     // we need iti because there is no way to explicitly iterate over the used elems on the object pool
@@ -1118,7 +1133,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
         // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
         // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
-        bullet.Update(nPhysicsRate);
+        bullet.update(nPhysicsRate, fGravityChangePerTick, GAME_FALL_GRAVITY_MIN);
         emitParticles(bullet);
 
         // There was a time when I was thinking that client should check against out of map bounds to cover corner case when we somehow miss

@@ -178,9 +178,10 @@ bullet_subprojectiles = 1
 bullet_speed = 8
 
 # Gravity affecting the travel path of the bullet.
+# This value multiplies game gravity, for example 0.1 means only 10% of game gravity will be applied to the bullet.
 # 0 means no effect of gravity.
 # Shall be 0 when bullet_speed is set to maximum value, e.g. rail gun.
-# The resulting bullet path shall be fine-tuned together with bullet_speed and bullet_drag.
+# The resulting bullet path shall be fine-tuned together with bullet_speed and bullet_drag with experimenting.
 # Typically throwables (e.g. grenade) should have higher gravity and drag values.
 bullet_gravity = 0
 

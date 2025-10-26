@@ -311,7 +311,7 @@ void proofps_dd::Physics::serverGravity(
 
         player.setHasJustStartedFallingNaturallyInThisTick(false);
         player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(false);
-        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
+        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;  /* fGravityChangePerTick: -1.5 with 60 Hz physics rate as of PRooFPS-dd v0.6 */
 
         player.setGravity(player.getGravity() + fPlayerGravityChangePerTick);
         if (player.isJumping())
