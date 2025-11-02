@@ -33,9 +33,12 @@ TBD A compressed build for Windows is available for TBD.
 
 This version brings the following features:
  - Wall jumping: jumping from the side of a wall, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
- - New Weapons: Shotgun, Grenade Launcher.
- - Removed '.' key for jumping to next map.
- - New In-Game Menu: Server Admin menu, toggled by 'H' key: for now with 2 actions: Jump to next map and Restart game.
+ - New Weapons:
+   - Shotgun,
+   - Grenade Launcher.
+ - Removed '.' key for jumping to next map, instead use the New In-Game Menu: Server Admin menu, toggled by 'H' key: for now with 2 actions:
+   - Jump to next map,
+   - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
  - Extra funny sound effects for: dying from falling from high altitude, and when multiple players are killed by a single explosion.
 
