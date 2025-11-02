@@ -29,9 +29,8 @@ https://github.com/danielkrupinski/StringPool?tab=readme-ov-file
 
 \subsection add_new_bullet_property Adding New Bullet Property
 
-I hate that anytime I'm adding a new property to Bullet, I need to extend MsgBulletUpdateFromServer.  
-Clients are able to find out those weapon-specific bullet properties anyway, we should just send the weapon ID in MsgBulletUpdateFromServer.  
-We have already introduced m_eMapItemType in MsgWpnUpdateFromServer, either that should be used here as well, or something more weapon-specific ID.
+MsgBulletUpdateFromServer already contains the weapon ID, and based on the client is able to find out bullet properties.  
+Therefore, we could remove a lot of things already from MsgBulletUpdateFromServer and stop extending that struct.  
 
 \section baddesign_community Community/Modding Perspective
 

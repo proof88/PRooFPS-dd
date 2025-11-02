@@ -225,6 +225,13 @@ damage_hp = 40
 # If bullet_subprojectiles is bigger than 1 then each hitting bullet or projectile causes this amount of damage.
 damage_ap = 20
 
+# Bullet damage is relative to distance.
+# If true, then caused damage is linearly decreasing as per the already travelled bullet distance relative to bullet_distance_max.
+# If false, then caused damage is constant i.e. not related to travelled bullet distance.
+# Irrelevant for explosive bullets.
+# Shall be false if bullet_distance_max is 0.
+damage_rel_distance = true
+
 # Area damage.
 # Radius of circular area within damage is taken by player.
 # 0 means no area damage (only direct hit causes damage).
