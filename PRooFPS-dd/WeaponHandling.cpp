@@ -1336,6 +1336,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
             /* fragile is not used by client-side ctor */
             wpn->getVars()["bullet_distance_max"].getAsFloat(),
             wpn->getVars()["damage_rel_distance"].getAsBool(),
+            wpn->getVars()["bullet_bounces"].getAsBool(),
+            /* timer is not used by client-side ctor */
             (wpn->getVars()["bullet_particle"].getAsString() == "smoke" ?
                 Bullet::ParticleType::Smoke :
                 Bullet::ParticleType::None),

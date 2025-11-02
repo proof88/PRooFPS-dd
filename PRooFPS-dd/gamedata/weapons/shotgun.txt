@@ -199,6 +199,18 @@ bullet_fragile = false
 # Cannot be negative.
 bullet_distance_max = 6
 
+# If true, the bullet is allowed to bounce off walls without being destroyed.
+# Useful for thrown bullets, like grenade.
+# Not really meaningful for regular bullets, so leave it false for them.
+bullet_bounces = false
+
+# Time in seconds, needed to elapse before the bullet is destroyed automatically.
+# Useful for thrown bullets, like grenade.
+# 0 means no timer set.
+# Not really meaningful for regular bullets, so leave it 0 for them.
+# Cannot be negative.
+bullet_timer = 0
+
 # Type of particles emitted by the bullet.
 # Can be "none" or "smoke".
 bullet_particle = none
