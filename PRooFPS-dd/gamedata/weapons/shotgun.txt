@@ -164,8 +164,8 @@ recoil_control = off
 
 bullet_visible = true
 
-bullet_size_x = 0.03
-bullet_size_y = 0.03
+bullet_size_x = 0.05
+bullet_size_y = 0.05
 bullet_size_z = 0.0
 
 # Number of ACTUAL bullets created as a result of a single shot.
