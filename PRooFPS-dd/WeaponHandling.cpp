@@ -847,6 +847,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         bool bDeleteBullet = false;
         bool bWallHit = false;
         bool bPlayerHit = false;
+        const PurePosUpTarget oldPut = bullet.getPut();  // TODO save just position, PUT is overkill
         if (bEndGame)
         {
             bDeleteBullet = true;
@@ -975,25 +976,82 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
             {
                 // check if bullet is hitting a map element
                 
-                if (bCollisionModeBvh)
+                if (bullet.canBounce())
                 {
-                    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
-                    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
-                    bWallHit = serverUpdateBullets_collisionWithWalls_bvh(
-                        fBulletPosX, fBulletPosY, fBulletPosZ,
-                        fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
+                    if (bCollisionModeBvh)
+                    {
+                        const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+                        const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+
+                        // first check for vertical collision
+                        const PureObject3D* pWallHit = serverUpdateBullets_collisionWithWalls_bvh(
+                            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
+                            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
+
+                        if (pWallHit)
+                        {
+                            bWallHit = true;
+
+                            bullet.setCurrentGravity(0.f);
+
+                            const int nAlignUnderOrAboveWall = pWallHit->getPosVec().getY() < oldPut.getPosVec().getY() ? 1 : -1;
+                            const float fAlignCloseToWall = nAlignUnderOrAboveWall * (pWallHit->getSizeVec().getY()/2.f + fBulletScaledSizeY / 2.f + 0.01f);
+                            // TODO: we could write this simpler if PureVector::Set() would return the object itself!
+                            // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
+                            // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
+
+                            bullet.getPut().getPosVec().SetY(pWallHit->getPosVec().getY() + fAlignCloseToWall);
+                            bullet.getPut().getTargetVec().SetY(
+                                bullet.getPut().getPosVec().getY() - (bullet.getPut().getTargetVec().getY() - bullet.getPut().getPosVec().getY()));
+                        }
+
+                        // then check for horizontal collision
+                        pWallHit = serverUpdateBullets_collisionWithWalls_bvh(
+                            bullet.getPut().getPosVec().getX(), bullet.getPut().getPosVec().getY(), fBulletPosZ,
+                            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
+
+                        if (pWallHit)
+                        {
+                            bWallHit = true;
+
+                            // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
+                            const int nAlignLeftOrRightToWall = pWallHit->getPosVec().getX() < oldPut.getPosVec().getX() ? 1 : -1;
+                            const float fAlignNextToWall = nAlignLeftOrRightToWall * (pWallHit->getSizeVec().getX() / 2.f + fBulletScaledSizeX / 2.0f + 0.01f);
+
+                            bullet.getPut().getPosVec().SetX(pWallHit->getPosVec().getX() + fAlignNextToWall);
+                            bullet.getPut().getTargetVec().SetX(
+                                bullet.getPut().getPosVec().getX() - (bullet.getPut().getTargetVec().getX() - bullet.getPut().getPosVec().getX()));
+                        }
+                    }
+                    else
+                    {
+                        // TODO
+                    }
+
+                    bullet.getObject3D().getPosVec() = bullet.getPut().getPosVec();
                 }
                 else
                 {
-                    bWallHit = serverUpdateBullets_collisionWithWalls_legacy(
-                        bullet,
-                        fBulletPosX, fBulletPosY,
-                        fBulletScaledSizeX, fBulletScaledSizeY);
-                }
+                    if (bCollisionModeBvh)
+                    {
+                        const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+                        const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+                        bWallHit = (serverUpdateBullets_collisionWithWalls_bvh(
+                            fBulletPosX, fBulletPosY, fBulletPosZ,
+                            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) != nullptr);
+                    }
+                    else
+                    {
+                        bWallHit = (serverUpdateBullets_collisionWithWalls_legacy(
+                            bullet,
+                            fBulletPosX, fBulletPosY,
+                            fBulletScaledSizeX, fBulletScaledSizeY) != nullptr);
+                    }
 
-                if (bWallHit)
-                {
-                    bDeleteBullet = true;
+                    if (bWallHit)
+                    {
+                        bDeleteBullet = true;
+                    }
                 }
             }  // endif !bDeleteBullet
         }  // endif !bDeleteBullet
@@ -1764,7 +1822,7 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 * 
 * @return True if bullet hit a wall (foreground block), false otherwise.
 */
-bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
+const PureObject3D* proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
     PooledBullet& bullet,
     const float& fBulletPosX,
     const float& fBulletPosY,
@@ -1806,10 +1864,10 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
             continue;
         }
 
-        return true;
+        return obj;
     }
 
-    return false;
+    return nullptr;
 } // serverUpdateBullets_collisionWithWalls_legacy()
 
 /**
@@ -1817,7 +1875,7 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_legacy(
 *
 * @return True if bullet hit a wall (foreground block), false otherwise.
 */
-bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_bvh(
+const PureObject3D* proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_bvh(
     const float& fBulletPosX,
     const float& fBulletPosY,
     const float& fBulletPosZ,
@@ -1829,5 +1887,5 @@ bool proofps_dd::WeaponHandling::serverUpdateBullets_collisionWithWalls_bvh(
         PureVector(fBulletPosX, fBulletPosY, fBulletPosZ),
         PureVector(fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ));
     
-    return (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbBullet, nullptr) != nullptr);
+    return m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbBullet, nullptr);
 } // serverUpdateBullets_collisionWithWalls_bvh()
