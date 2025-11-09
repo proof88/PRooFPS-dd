@@ -929,98 +929,102 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         {
             emitParticles(bullet);
 
-            // check if bullet is hitting a player
-            for (auto& playerPair : m_mapPlayers)
+            // bouncing bullets don't need collision check with players because they don't do damage anyway upon collision
+            if (!bullet.canBounce())
             {
-                auto& player = playerPair.second;
-                if (bullet.getOwner() == player.getServerSideConnectionHandle())
+                // check if bullet is hitting a player
+                for (auto& playerPair : m_mapPlayers)
                 {
-                    // bullet cannot hit the owner, at least for now ...
-                    // in the future, when bullets start in proper position, we won't need this check ...
-                    // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
-                    // Hint: if we don't solve the proper launch position, we can just introduce a 1-second time window from the moment of launch,
-                    // within this time window the rocket cannot hit the owner.
-                    continue;
-                }
-
-                if (player.getInvulnerability())
-                {
-                    continue;
-                }
-
-                if (!gameMode.isPlayerAllowedForGameplay(player))
-                {
-                    continue;
-                }
-
-                const auto& playerConst = player;
-                const auto playerScaledSizeVec = player.getObject3D()->getScaledSizeVec();
-                const auto itShooter = m_mapPlayers.find(bullet.getOwner());
-                if ((playerConst.getHealth() > 0) &&
-                    canBulletHitPerFriendlyFireConfig(playerConst, itShooter) &&
-                    colliding2_NoZ(
-                        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-                        playerScaledSizeVec.getX(), playerScaledSizeVec.getY(),
-                        fBulletPosX, fBulletPosY,
-                        fBulletScaledSizeX, fBulletScaledSizeY))
-                {
-                    bDeleteBullet = true;
-                    bPlayerHit = true;
-                    if (bullet.getAreaDamageSize() == 0.f)
+                    auto& player = playerPair.second;
+                    if (bullet.getOwner() == player.getServerSideConnectionHandle())
                     {
-                        // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
-                        player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
+                        // bullet cannot hit the owner, at least for now ...
+                        // in the future, when bullets start in proper position, we won't need this check ...
+                        // this check will be bad anyway in future when we will have the guided rockets that actually can hit the owner if guided in suicide way!
+                        // Hint: if we don't solve the proper launch position, we can just introduce a 1-second time window from the moment of launch,
+                        // within this time window the rocket cannot hit the owner.
+                        continue;
+                    }
 
-                        if (itShooter != m_mapPlayers.end())
-                        {
-                            // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
-                            const Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
-                            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
-                            if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee))
-                            {
-                                ++itShooter->second.getShotsHitTarget();
-                                assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
-                                itShooter->second.getFiringAccuracy() =
-                                    (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
-                                    0.f :
-                                    (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
-                            }
-                        } // otherwise shooter got disconnected before hitting the player
+                    if (player.getInvulnerability())
+                    {
+                        continue;
+                    }
 
-                        if (playerConst.getHealth() == 0)
+                    if (!gameMode.isPlayerAllowedForGameplay(player))
+                    {
+                        continue;
+                    }
+
+                    const auto& playerConst = player;
+                    const auto playerScaledSizeVec = player.getObject3D()->getScaledSizeVec();
+                    const auto itShooter = m_mapPlayers.find(bullet.getOwner());
+                    if ((playerConst.getHealth() > 0) &&
+                        canBulletHitPerFriendlyFireConfig(playerConst, itShooter) &&
+                        colliding2_NoZ(
+                            player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+                            playerScaledSizeVec.getX(), playerScaledSizeVec.getY(),
+                            fBulletPosX, fBulletPosY,
+                            fBulletScaledSizeX, fBulletScaledSizeY))
+                    {
+                        bDeleteBullet = true;
+                        bPlayerHit = true;
+                        if (bullet.getAreaDamageSize() == 0.f)
                         {
-                            pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                            if (itShooter == m_mapPlayers.end())
+                            // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
+                            player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
+
+                            if (itShooter != m_mapPlayers.end())
                             {
-                                // if killer got disconnected before the kill, we can say the killer is the player itself, since
-                                // we still want to display the death notification without the killer's name, but we won't decrease
-                                // frag count for the player because HandlePlayerDied() is not doing that.
-                                nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
-                                //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                                //    __func__, playerPair.first.c_str());
-                            }
-                            else
-                            {
-                                nKillerConnHandleServerSide = itShooter->first;
-                                if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
+                                // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
+                                const Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                                // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
+                                if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee))
                                 {
-                                    --itShooter->second.getFrags();
+                                    ++itShooter->second.getShotsHitTarget();
+                                    assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                                    itShooter->second.getFiringAccuracy() =
+                                        (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                                        0.f :
+                                        (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                                }
+                            } // otherwise shooter got disconnected before hitting the player
+
+                            if (playerConst.getHealth() == 0)
+                            {
+                                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
+                                if (itShooter == m_mapPlayers.end())
+                                {
+                                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
+                                    // we still want to display the death notification without the killer's name, but we won't decrease
+                                    // frag count for the player because HandlePlayerDied() is not doing that.
+                                    nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
+                                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                                    //    __func__, playerPair.first.c_str());
                                 }
                                 else
                                 {
-                                    ++itShooter->second.getFrags();
+                                    nKillerConnHandleServerSide = itShooter->first;
+                                    if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
+                                    {
+                                        --itShooter->second.getFrags();
+                                    }
+                                    else
+                                    {
+                                        ++itShooter->second.getFrags();
+                                    }
+                                    bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
+                                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                                    //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
                                 }
-                                bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
-                                //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                                //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
+                                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                                handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
                             }
-                            // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                            handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
                         }
+                        break; // we can stop since a bullet can touch 1 playerPair only at a time
                     }
-                    break; // we can stop since a bullet can touch 1 playerPair only at a time
-                }
-            }
+                } // for all players
+            }  // !bullet.canBounce()
 
             if (!bDeleteBullet)
             {
