@@ -152,6 +152,7 @@ namespace proofps_dd
             const bool& bCollisionModeBvh,
             PooledBullet& bullet,
             const PurePosUpTarget& oldPut,
+            const float& fBulletPosX,
             const float& fBulletPosY,
             const float& fBulletScaledSizeX,
             const float& fBulletScaledSizeY,
