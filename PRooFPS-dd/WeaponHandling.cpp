@@ -1136,8 +1136,15 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     bullet.getOwner(),
                     bullet.getId(),
                     bullet.getWeaponId(),
-                    fBulletPosX,
-                    fBulletPosY,
+                    /* from v0.6 clients also simulate bouncing bullet physics, but to make sure they also end up with same simulation,
+                       we have to send the original bullet positions to them, so they start simulation with same initial values e.g. gravity.
+                       Here it would be a mistake to send fBulletPosX and fBulletPosY because the related gravity and other bullets properties
+                       have been also changed on our side.
+                       The downside of sending the original positions here is that clients will see more delayed bullets. But that delay should be
+                       still minor. Later we can modify the logic, maybe move this sending stuff to the beginning of this loop. */
+                    oldPut.getPosVec().getX(),
+                    oldPut.getPosVec().getY(),
+                    /* these should be also original values but they are NOT altered by bullet.update() so they actually stay original */
                     bullet.getObject3D().getPosVec().getZ(),
                     bullet.getObject3D().getAngleVec().getX(),
                     bullet.getObject3D().getAngleVec().getY(),
