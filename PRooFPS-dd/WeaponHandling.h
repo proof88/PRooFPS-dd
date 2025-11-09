@@ -148,6 +148,15 @@ namespace proofps_dd
         bool shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(
             const Player& playerHit,
             const Player& playerShooter) const;
+        bool sharedUpdateBouncingBullets(
+            const bool& bCollisionModeBvh,
+            PooledBullet& bullet,
+            const PurePosUpTarget& oldPut,
+            const float& fBulletPosY,
+            const float& fBulletScaledSizeX,
+            const float& fBulletScaledSizeY,
+            const unsigned int& nPhysicsRate,
+            const float& fFallGravityMin);
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,
@@ -218,14 +227,14 @@ namespace proofps_dd
 
         void emitParticles(PooledBullet& bullet);
 
-        const PureObject3D* serverUpdateBullets_collisionWithWalls_legacy(
+        const PureObject3D* sharedUpdateBullets_collisionWithWalls_legacy(
             PooledBullet& bullet,
             const float& fBulletPosX,
             const float& fBulletPosY,
             const float& fBulletScaledSizeX,
             const float& fBulletScaledSizeY);
 
-        const PureObject3D* serverUpdateBullets_collisionWithWalls_bvh(
+        const PureObject3D* sharedUpdateBullets_collisionWithWalls_bvh(
             const float& fBulletPosX,
             const float& fBulletPosY,
             const float& fBulletPosZ,
