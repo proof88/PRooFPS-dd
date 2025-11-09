@@ -1176,6 +1176,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
     const float fGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
     // COPY-PASTE END from WeaponHandling::serverUpdateBullets()
 
+    const bool bCollisionModeBvh = (m_pge.getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
     size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
     // we need iti because there is no way to explicitly iterate over the used elems on the object pool
@@ -1190,6 +1191,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
         iti++;
 
         auto& bullet = *it;
+        const PurePosUpTarget oldPut = bullet.getPut();  // TODO save just position, PUT is overkill
 
         // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
@@ -1204,6 +1206,18 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
         // bounds earlier, so it deletes the bullet, however in next moment a bullet update for the same bullet is coming from the server,
         // then client would have to create that bullet again which would bring performance penalty. Then next moment another msg from server
         // would come about deleting the bullet. So I think we should just wait anyway for server to tell us delete bullet for any reason.
+
+        // clients do bounce physics calculation too, so that they can visualize that kind of bullet movements without traffic from server,
+        // but still server tells when to delete a bullet.
+        if (bullet.canBounce())
+        {
+            //const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
+            const float fBulletPosY = bullet.getObject3D().getPosVec().getY();
+            const float fBulletScaledSizeX = bullet.getObject3D().getScaledSizeVec().getX();
+            const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
+            sharedUpdateBouncingBullets(bCollisionModeBvh, bullet, oldPut, fBulletPosY, fBulletScaledSizeX, fBulletScaledSizeY, nPhysicsRate, GAME_FALL_GRAVITY_MIN);
+        }
+
         it++;
     }
 }
