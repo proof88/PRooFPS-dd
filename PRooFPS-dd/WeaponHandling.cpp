@@ -829,36 +829,39 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     const float& fFallGravityMin)
 {
     bool bWallHit = false;
-    if (bCollisionModeBvh)
-    {
-        const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
-        const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
 
-        // first check for vertical collision with old X, new Y
-        const PureObject3D* pWallHit = sharedUpdateBullets_collisionWithWalls_bvh(
+    // first check for vertical collision with old X, new Y
+    const PureObject3D* pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
             oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            oldPut.getPosVec().getX(), fBulletPosY,
+            fBulletScaledSizeX, fBulletScaledSizeY);
 
-        if (pWallHit)
-        {
-            bWallHit = true;
-            bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
-        }
-
-        // then check for horizontal collision with new X, updated Y
-        pWallHit = sharedUpdateBullets_collisionWithWalls_bvh(
-            bullet.getPut().getPosVec().getX(), bullet.getPut().getPosVec().getY(), fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
-
-        if (pWallHit)
-        {
-            bWallHit = true;
-            bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
-        }
-    }
-    else
+    if (pWallHit)
     {
-        // TODO legacy collision
+        bWallHit = true;
+        bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
+    }
+
+    // then check for horizontal collision with new X, updated Y
+    pWallHit = bCollisionModeBvh ? 
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            bullet.getPut().getPosVec().getX(), bullet.getPut().getPosVec().getY(), fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            bullet.getPut().getPosVec().getX(), bullet.getPut().getPosVec().getY(),
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    if (pWallHit)
+    {
+        bWallHit = true;
+        bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
     }
 
     return bWallHit;
@@ -1849,7 +1852,7 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 * @return True if bullet hit a wall (foreground block), false otherwise.
 */
 const PureObject3D* proofps_dd::WeaponHandling::sharedUpdateBullets_collisionWithWalls_legacy(
-    PooledBullet& bullet,
+    const PooledBullet& bullet,
     const float& fBulletPosX,
     const float& fBulletPosY,
     const float& fBulletScaledSizeX,

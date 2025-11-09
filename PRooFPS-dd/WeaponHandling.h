@@ -228,7 +228,7 @@ namespace proofps_dd
         void emitParticles(PooledBullet& bullet);
 
         const PureObject3D* sharedUpdateBullets_collisionWithWalls_legacy(
-            PooledBullet& bullet,
+            const PooledBullet& bullet,
             const float& fBulletPosX,
             const float& fBulletPosY,
             const float& fBulletScaledSizeX,
