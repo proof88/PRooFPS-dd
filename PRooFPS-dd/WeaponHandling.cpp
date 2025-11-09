@@ -983,7 +983,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
                         const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
 
-                        // first check for vertical collision
+                        // first check for vertical collision with old X, new Y
                         const PureObject3D* pWallHit = serverUpdateBullets_collisionWithWalls_bvh(
                             oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
                             fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
@@ -991,21 +991,10 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         if (pWallHit)
                         {
                             bWallHit = true;
-
-                            bullet.setCurrentGravity(0.f);
-
-                            const int nAlignUnderOrAboveWall = pWallHit->getPosVec().getY() < oldPut.getPosVec().getY() ? 1 : -1;
-                            const float fAlignCloseToWall = nAlignUnderOrAboveWall * (pWallHit->getSizeVec().getY()/2.f + fBulletScaledSizeY / 2.f + 0.01f);
-                            // TODO: we could write this simpler if PureVector::Set() would return the object itself!
-                            // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
-                            // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
-
-                            bullet.getPut().getPosVec().SetY(pWallHit->getPosVec().getY() + fAlignCloseToWall);
-                            bullet.getPut().getTargetVec().SetY(
-                                bullet.getPut().getPosVec().getY() - (bullet.getPut().getTargetVec().getY() - bullet.getPut().getPosVec().getY()));
+                            bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, GAME_FALL_GRAVITY_MIN);
                         }
 
-                        // then check for horizontal collision
+                        // then check for horizontal collision with new X, updated Y
                         pWallHit = serverUpdateBullets_collisionWithWalls_bvh(
                             bullet.getPut().getPosVec().getX(), bullet.getPut().getPosVec().getY(), fBulletPosZ,
                             fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ);
@@ -1013,14 +1002,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         if (pWallHit)
                         {
                             bWallHit = true;
-
-                            // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
-                            const int nAlignLeftOrRightToWall = pWallHit->getPosVec().getX() < oldPut.getPosVec().getX() ? 1 : -1;
-                            const float fAlignNextToWall = nAlignLeftOrRightToWall * (pWallHit->getSizeVec().getX() / 2.f + fBulletScaledSizeX / 2.0f + 0.01f);
-
-                            bullet.getPut().getPosVec().SetX(pWallHit->getPosVec().getX() + fAlignNextToWall);
-                            bullet.getPut().getTargetVec().SetX(
-                                bullet.getPut().getPosVec().getX() - (bullet.getPut().getTargetVec().getX() - bullet.getPut().getPosVec().getX()));
+                            bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
                         }
                     }
                     else
@@ -1028,7 +1010,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         // TODO
                     }
 
-                    bullet.getObject3D().getPosVec() = bullet.getPut().getPosVec();
+                    
                 }
                 else
                 {
@@ -1190,7 +1172,8 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
 
         // since v0.1.4, client simulates bullet movement, without any delete condition check, because delete happens only if server says so!
         // This can also mean that with higher latency, clients can render bullets moving over/into walls, players, etc. but it doesnt matter
-        // because still the server is the authorative entity, and such visual anomalies might happen only for moments only.
+        // because still the server is the authorative entity, and such visual anomalies might happen only for moments when network latency
+        // is bigger than desired.
         bullet.update(nPhysicsRate, fGravityChangePerTick, GAME_FALL_GRAVITY_MIN);
         emitParticles(bullet);
 
