@@ -204,6 +204,11 @@ bullet_distance_max = 0
 # Not really meaningful for regular bullets, so leave it false for them.
 bullet_bounces = false
 
+# Sound of bullet bouncing off a wall.
+# Triggered only if bullet_bounces is true.
+# Can always stay empty, in such case bouncing will be silent.
+bullet_bounce_snd =
+
 # Time in seconds, needed to elapse before the bullet is destroyed automatically.
 # Useful for thrown bullets, like grenade.
 # 0 means no timer set.

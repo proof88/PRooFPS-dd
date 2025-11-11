@@ -142,6 +142,7 @@ namespace proofps_dd
             const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
         void play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
         void play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dBulletBounceSound(const Bullet& bullet);
         bool canBulletHitPerFriendlyFireConfig(
             const Player& playerHit,
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;

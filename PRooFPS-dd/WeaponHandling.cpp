@@ -23,6 +23,8 @@ static constexpr float SndWpnReloadDistMax = SndWpnFireDistMax;
 static constexpr float SndMeleeWpnBulletHitDistMin = 6.f;
 static constexpr float SndMeleeWpnBulletHitDistMax = 14.f;
 
+static constexpr float SndBulletBounceDistMin = 6.f;
+static constexpr float SndBulletBounceDistMax = 14.f;
 
 // ############################### PUBLIC ################################
 
@@ -789,6 +791,25 @@ void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const Bullet& bullet,
     play3dMeleeWeaponHitSound(bullet.getWeaponId(), bullet.getObject3D().getPosVec(), hitType);
 }
 
+void proofps_dd::WeaponHandling::play3dBulletBounceSound(const Bullet& bullet)
+{
+    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
+    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+    if (!wpnForSound)
+    {
+        return;
+    }
+
+    if (wpnForSound && (bullet.canBounce()))
+    {
+        const auto handleSndBounce = m_pge.getAudio().play3dSound(
+            wpnForSound->getBulletBounceSound(),
+            bullet.getPut().getPosVec());
+        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndBounce, SndBulletBounceDistMin, SndBulletBounceDistMax);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndBounce, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+    }
+}
+
 bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
     const Player& playerHit,
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const
@@ -865,6 +886,14 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
         bWallHit = true;
         // bullet.getPut().getPosVec().getX() is expected to be updated by this call
         bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
+    }
+
+    if (bWallHit &&
+        /* very small bounces like the never-ending bouncing on ground shall not trigger sound */
+        ((abs(bullet.getPut().getPosVec().getY() - oldPut.getPosVec().getY()) > 0.01f) ||
+        (abs(bullet.getPut().getPosVec().getX() - oldPut.getPosVec().getX()) > 0.01f)))
+    {
+        play3dBulletBounceSound(bullet);
     }
 
     return bWallHit;
