@@ -955,7 +955,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         bool bWallHit = false;
         bool bPlayerHit = false;
         const PurePosUpTarget oldPut = bullet.getPut();  // TODO save just position, PUT is overkill
-        if (bEndGame)
+        if (bEndGame || bullet.expired())
         {
             bDeleteBullet = true;
         }
