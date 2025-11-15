@@ -854,6 +854,9 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
     const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
 
+    //static int counter = 0;
+    //counter++;
+
     // first check for vertical collision with old X, new Y
     const PureObject3D* pWallHit = bCollisionModeBvh ?
         sharedUpdateBullets_collisionWithWalls_bvh(
@@ -869,6 +872,15 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
         bWallHit = true;
         // bullet.getPut().getPosVec().getY() is expected to be updated by this call
         bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
+
+        //getConsole().EOLn(
+        //    "WeaponHandling::%s(): cntr: %d, vertical collision, gravityCurrent: %f, old put Y: %f, fBulletPosY: %f, new put Y: %f",
+        //    __func__,
+        //    counter,
+        //    bullet.getCurrentGravity(),
+        //    oldPut.getPosVec().getY(),
+        //    fBulletPosY,
+        //    bullet.getPut().getPosVec().getY());
     }
 
     // then check for horizontal collision with new X, updated Y
@@ -886,12 +898,20 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
         bWallHit = true;
         // bullet.getPut().getPosVec().getX() is expected to be updated by this call
         bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
+
+        //getConsole().EOLn(
+        //    "WeaponHandling::%s(): cntr: %d, horizontal collision, old put X: %f, fBulletPosX: %f, new put X: %f",
+        //    __func__,
+        //    counter,
+        //    oldPut.getPosVec().getX(),
+        //    fBulletPosX,
+        //    bullet.getPut().getPosVec().getX());
     }
 
     if (bWallHit &&
         /* very small bounces like the never-ending bouncing on ground shall not trigger sound */
-        ((abs(bullet.getPut().getPosVec().getY() - oldPut.getPosVec().getY()) > 0.01f) ||
-        (abs(bullet.getPut().getPosVec().getX() - oldPut.getPosVec().getX()) > 0.01f)))
+        ((abs(fBulletPosY - oldPut.getPosVec().getY()) > 0.015f /* this const literal is based on experimenting */) ||
+        (abs(fBulletPosX - oldPut.getPosVec().getX()) > 0.015f)))
     {
         play3dBulletBounceSound(bullet);
     }
