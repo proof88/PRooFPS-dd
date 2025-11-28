@@ -839,6 +839,12 @@ void proofps_dd::Player::setGravity(float value) {
     }
 }
 
+PgeOldNewValue<bool>& proofps_dd::Player::getJumpInput()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvJumpInput));
+}
+
 bool proofps_dd::Player::isJumping() const
 {
     return m_bJumping;
@@ -1169,6 +1175,11 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
 int& proofps_dd::Player::getTicksSinceLastHorizontalCollision()
 {
     return m_nTicksSinceLastHorizontalCollision;
+}
+
+bool proofps_dd::Player::hasAntiGravityActive() const
+{
+    return true;
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()

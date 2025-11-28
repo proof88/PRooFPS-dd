@@ -290,6 +290,19 @@ void proofps_dd::Physics::serverGravity(
             continue;
         }
 
+        if (player.hasAntiGravityActive())
+        {
+            if (player.getJumpInput())
+            {
+                player.getImpactForce().SetY(
+                    std::max(5.f, player.getImpactForce().getY()));
+            }
+            if (player.getCrouchInput())
+            {
+                player.getImpactForce().SetY(
+                    std::min(-5.f, player.getImpactForce().getY()));
+            }
+        }
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
@@ -309,54 +322,64 @@ void proofps_dd::Physics::serverGravity(
             }
         }
 
-        player.setHasJustStartedFallingNaturallyInThisTick(false);
-        player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(false);
-        const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;  /* fGravityChangePerTick: -1.5 with 60 Hz physics rate as of PRooFPS-dd v0.6 */
-
-        player.setGravity(player.getGravity() + fPlayerGravityChangePerTick);
-        if (player.isJumping())
+        if (player.hasAntiGravityActive())
         {
-            if (player.getGravity() < 0.0f)
-            {
-                //getConsole().EOLn("stopped jumping up (natural): %f", player.getGravity());
-                player.setGravity(0.f);
-                player.stopJumping();
-                player.getHasJustStoppedJumpingInThisTick() = true;
-                player.setCanFall(true);
-            }
+            // the idea with antigravity is that player gravity is forced to 0 and player input is affecting its impactforce only.
+            player.setGravity(0.f);
         }
         else
         {
-            if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
-            {
-                // This means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down.
-                // We won't come here in next tick.
-                if (player.getHasJustStoppedJumpingInThisTick())
-                {
-                    player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
-                    //const auto nMillisecsJumpDuration =
-                    //    std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
-                    //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
-                    //    player.getGravity(),
-                    //    nMillisecsJumpDuration);
-                }
-                else
-                {
-                    //getConsole().EOLn("Started falling naturally: %f", player.getGravity());
-                    player.setHasJustStartedFallingNaturallyInThisTick(true);
-                }
-                player.getHasJustStoppedJumpingInThisTick() = false;
-            }
-            player.setCanFall(true);
-            // player gravity cannot go below GAME_FALL_GRAVITY_MIN
-            player.setGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
-        }
 
-        if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
-        {
-            // player just initiated crouching by input
-            player.doCrouchServer();
-        } // end handle crouch
+            player.setHasJustStartedFallingNaturallyInThisTick(false);
+            player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(false);
+            const float fPlayerGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;  /* fGravityChangePerTick: -1.5 with 60 Hz physics rate as of PRooFPS-dd v0.6 */
+
+            player.setGravity(player.getGravity() + fPlayerGravityChangePerTick);
+            if (player.isJumping())
+            {
+                if (player.getGravity() < 0.0f)
+                {
+                    //getConsole().EOLn("stopped jumping up (natural): %f", player.getGravity());
+                    player.setGravity(0.f);
+                    player.stopJumping();
+                    player.getHasJustStoppedJumpingInThisTick() = true;
+                    player.setCanFall(true);
+                }
+            }
+            else
+            {
+                if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
+                {
+                    // This means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down.
+                    // We won't come here in next tick.
+                    if (player.getHasJustStoppedJumpingInThisTick())
+                    {
+                        player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
+                        //const auto nMillisecsJumpDuration =
+                        //    std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
+                        //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
+                        //    player.getGravity(),
+                        //    nMillisecsJumpDuration);
+                    }
+                    else
+                    {
+                        //getConsole().EOLn("Started falling naturally: %f", player.getGravity());
+                        player.setHasJustStartedFallingNaturallyInThisTick(true);
+                    }
+                    player.getHasJustStoppedJumpingInThisTick() = false;
+                }
+                player.setCanFall(true);
+                // player gravity cannot go below GAME_FALL_GRAVITY_MIN
+                player.setGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
+            }
+
+            if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
+            {
+                // player just initiated crouching by input
+                player.doCrouchServer();
+            } // end handle crouch
+
+        } // hasAntiGravityActive()
 
         // PPPKKKGGGGGG
         player.getPos().set(
@@ -444,6 +467,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertic
             obj->getPosVec().getY() + fAlignCloseToWall,
             player.getPos().getNew().getZ()
         ));
+
+    if (player.hasAntiGravityActive())
+    {
+        return;
+    }
 
     if (nAlignUnderOrAboveWall == 1)
     {

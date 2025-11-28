@@ -47,6 +47,8 @@ proofps_dd::InputHandling::InputHandling(
     m_bAttack(false),
     m_bPrevCrouch(false),
     m_bCrouch(false),
+    m_bPrevJump(false),
+    m_bJump(false),
     m_fLastPlayerAngleYSent(-1.f),
     m_fLastWeaponAngleZSent(0.f)
 {
@@ -86,7 +88,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
        in keyboard(), this is needed if only clientMouseWhenConnectedToServer() generates reason to send the pkt */
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_bJump, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
         clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin, wpnHandling);
@@ -233,19 +235,24 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     // crouching is also continuous op
     player.getCrouchInput().set(pktUserCmdMove.m_bCrouch);
-    // crouch-induced player scaling and repositioning are handled in the physics class
-    if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
+    if (!player.hasAntiGravityActive() /* antigravity descending is handled in serverGravity() */)
     {
-        player.getWantToStandup() = true;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
-        //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
-    }
-    else if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
-    {
-        //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
-        player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
+        // crouch-induced player scaling and repositioning are handled in the physics class
+        if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
+        {
+            player.getWantToStandup() = true;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
+            //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
+        }
+        else if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
+        {
+            //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
+            player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
+        }
     }
 
-    if (pktUserCmdMove.m_bJumpAction)
+    // since v0.6 jump is also continuous op to support antigravity movement (e.g. jetpack)
+    player.getJumpInput().set(pktUserCmdMove.m_bJumpAction);
+    if (pktUserCmdMove.m_bJumpAction && !player.hasAntiGravityActive() /* antigravity lifting is handled in serverGravity() */)
     {
         //getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
 
@@ -257,7 +264,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             if (player.isJumping())
             {
                 //getConsole().EOLn("jumping");
-
+        
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
                 if (/*player.getCrouchInput().getNew() &&*/ !player.isSomersaulting() && (nMillisecsSinceLastJump <= m_nKeyPressSomersaultMaximumWaitMilliseconds))
@@ -265,7 +272,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                     //getConsole().EOLn("InputHandling::%s(): player %s somersault initiated!", __func__, sClientUserName.c_str());
                     player.startSomersaultServer(true);
                 }
-
+        
                 // starting somersault and wall jump at the same time is allowed, and in fact, they need to be handled with their separate conditions,
                 // because even if player is late to initiate somersaulting, possibility of initiating wall jumping should be still available.
                 // Player angle Y and strafe must be also updated for this to work properly, both of them are updated in earlier lines above.
@@ -703,11 +710,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
     m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
 
-    bool bSendJumpAction = false;
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
-    {
-        bSendJumpAction = true;
-    }
+    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE);
+    //if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
+    //{
+    //    bSendJumpAction = true;
+    //}
 
     bool bToggleRunWalk = false;
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
@@ -904,15 +911,16 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     //    getConsole().EOLn("InputHandling::%s(): send request to switch to: %s!", __func__, std::to_string(cWeaponSwitch).c_str());
     //}
 
-    if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || bSendJumpAction || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+    if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || (m_bPrevJump != m_bJump) || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
     {
         // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
         // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
         // as one-time actions.
-        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, bSendJumpAction, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
+        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, m_bJump, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
     }
     m_prevStrafe = m_strafe;
     m_bPrevCrouch = m_bCrouch;
+    m_bPrevJump = m_bJump;
 
     return proofps_dd::InputHandling::PlayerAppActionRequest::None;
 }

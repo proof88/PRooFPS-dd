@@ -215,6 +215,7 @@ namespace proofps_dd
         float getGravity() const;
         void setGravity(float value);
 
+        PgeOldNewValue<bool>& getJumpInput();
         bool isJumping() const;
         // TODO: canFall() and setCanFall() are a bit fishy. They have been around since the very beginning, but using isFalling() seems to be better.
         bool canFall() const;
@@ -243,6 +244,8 @@ namespace proofps_dd
         void cancelWillWallJump();
         void wallJump(/*const float& fRunSpeedPerTickForJumppadHorizontalForce = 0.f*/);
         int& getTicksSinceLastHorizontalCollision();
+
+        bool hasAntiGravityActive() const;
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
@@ -335,7 +338,8 @@ namespace proofps_dd
             OvWpnMomentaryAccuracy,
             OvCrouchInput,
             OvActuallyRunningOnGround,
-            OvInvulnerability
+            OvInvulnerability,
+            OvJumpInput
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -400,6 +404,10 @@ namespace proofps_dd
                 {OldNewValueName::OvCrouchInput, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
+                /** Current state of player jump input, regardless of current jumping state.
+                    Player is setting it as per input.
+                    Continuous op. */
+                {OldNewValueName::OvJumpInput, PgeOldNewValue<bool>(false)}
         };
 
         /** Which team this player belongs to.
