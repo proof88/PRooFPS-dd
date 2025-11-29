@@ -292,15 +292,42 @@ void proofps_dd::Physics::serverGravity(
 
         if (player.hasAntiGravityActive())
         {
+            float fTargetAntiGravityThrust = 0.f;
             if (player.getJumpInput())
             {
-                player.getImpactForce().SetY(
-                    std::max(5.f, player.getImpactForce().getY()));
+                fTargetAntiGravityThrust = 5.f;
             }
             if (player.getCrouchInput())
             {
-                player.getImpactForce().SetY(
-                    std::min(-5.f, player.getImpactForce().getY()));
+                fTargetAntiGravityThrust = -5.f;
+            }
+
+            const float GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER = PFL::lerp(20.f /* 20 Hz */, 60.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+
+            float fPlayerAntiGravityThrustChangePerTick = 0.f;
+            if (fTargetAntiGravityThrust != 0.f)
+            {
+                fPlayerAntiGravityThrustChangePerTick = fTargetAntiGravityThrust / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+            }
+            else
+            {
+                fPlayerAntiGravityThrustChangePerTick = -player.getAntiGravityForce().getY() / (GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER * 1.5f /* make it slower a bit */);
+            }
+
+            player.getAntiGravityForce().SetY(player.getAntiGravityForce().getY() + fPlayerAntiGravityThrustChangePerTick);
+            //getConsole().EOLn("%s antigravity y: %f", __func__, player.getAntiGravityForce().getY());
+
+            // always limit thrust speed to target thrust speed
+            if (((fTargetAntiGravityThrust > 0.f) && (player.getAntiGravityForce().getY() > fTargetAntiGravityThrust))
+                ||
+                ((fTargetAntiGravityThrust < 0.f) && (player.getAntiGravityForce().getY() < fTargetAntiGravityThrust)))
+            {
+                player.getAntiGravityForce().SetY(fTargetAntiGravityThrust);
+            }
+
+            if (abs(player.getAntiGravityForce().getY()) < 0.01f)
+            {
+                player.getAntiGravityForce().SetY(0.f);
             }
         }
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
@@ -324,7 +351,7 @@ void proofps_dd::Physics::serverGravity(
 
         if (player.hasAntiGravityActive())
         {
-            // the idea with antigravity is that player gravity is forced to 0 and player input is affecting its impactforce only.
+            // the idea with antigravity is that player gravity is forced to 0 and player input is affecting its antigravity forces only.
             player.setGravity(0.f);
         }
         else
@@ -385,7 +412,7 @@ void proofps_dd::Physics::serverGravity(
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY() / nPhysicsRate,
+                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY() / nPhysicsRate + player.getAntiGravityForce().getY() / nPhysicsRate,
                 player.getPos().getNew().getZ()
             ));
 
@@ -876,6 +903,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
         
         const float GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER = PFL::lerp(20.f /* 20 Hz */, 60.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
         
+        // marker
         float fPlayerAntiGravityThrustChangePerTick = 0.f;
         if (fTargetAntiGravityThrust != 0.f)
         {
