@@ -33,8 +33,9 @@ TBD A compressed build for Windows is available for TBD.
 
 This version brings the following **features**:
  - **Wall jumping:** jumping from the side of walls, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
- - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the 'E' key.
- - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time.
+ - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the **'E' key**.
+ - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time.  
+ After collecting it, use anytime by pressing the **'E' key**.
  - **New Weapons:**
    - **Shotgun**, the first weapon featuring multiple, distance-limited bullets fired at once;
    - **Grenade Launcher**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
