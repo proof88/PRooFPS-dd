@@ -708,9 +708,9 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
     // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
-    m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
+    m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
 
-    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE);
+    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'));
     //if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
     //{
     //    bSendJumpAction = true;
