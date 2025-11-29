@@ -31,16 +31,18 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 
 TBD A compressed build for Windows is available for TBD.
 
-This version brings the following features:
- - Wall jumping: jumping from the side of a wall, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
- - New Weapons:
-   - Shotgun,
-   - Grenade Launcher.
- - Removed '.' key for jumping to next map, instead use the New In-Game Menu: Server Admin menu, toggled by 'H' key: for now with 2 actions:
-   - Jump to next map,
+This version brings the following **features**:
+ - **Wall jumping:** jumping from the side of walls, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
+ - **Concept of Inventory:** inventory is where a player can store gathered items and allows on-demand item use, with the 'E' key.
+ - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time.
+ - **New Weapons:**
+   - **Shotgun**, the first weapon featuring multiple, distance-limited bullets fired at once;
+   - **Grenade Launcher**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
+ - New In-Game Menu: **Server Admin menu**, toggled by 'H' key anytime during the game, for now with 2 actions:
+   - Jump to next map (removed '.' key's same functionality),
    - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
- - Extra funny sound effects for:
+ - **Extra funny sound effects** for:
    - dying from falling from high altitude,
    - and when multiple players are killed by a single explosion.
 
