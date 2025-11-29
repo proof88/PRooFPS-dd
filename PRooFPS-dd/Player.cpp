@@ -206,6 +206,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_timeDied(other.m_timeDied),
     m_bRespawn(other.m_bRespawn),
     m_vecImpactForce(other.m_vecImpactForce),
+    m_vecAntiGravityForce(other.m_vecAntiGravityForce),
     m_pObj(PGENULL),
     m_pTexPlayerStand(PGENULL),
     m_pTexPlayerCrouch(PGENULL),
@@ -258,6 +259,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
 //    m_timeDied = other.m_timeDied;
 //    m_bRespawn = other.m_bRespawn;
 //    m_vecImpactForce = other.m_vecImpactForce;
+//    m_vecAntiGravityForce = other.m_vecAntiGravityForce;
 //    //m_audio = other.m_audio;  // deleted function
 //    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
 //    //m_bullets = other.m_bullets;  // deleted
@@ -740,6 +742,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     doStandupShared();
     getWantToStandup() = true;
     getImpactForce().SetZero();
+    getAntiGravityForce().SetZero();
     getJumpForce().Set(0.f, 0.f, 0.f);
     setGravity(0.f);
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
@@ -1180,6 +1183,11 @@ int& proofps_dd::Player::getTicksSinceLastHorizontalCollision()
 bool proofps_dd::Player::hasAntiGravityActive() const
 {
     return true;
+}
+
+PureVector& proofps_dd::Player::getAntiGravityForce()
+{
+    return m_vecAntiGravityForce;
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()

@@ -380,6 +380,7 @@ private:
             assertEquals(0u, player.getInvulnerabilityDurationSeconds(), "invulnerability duration") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
+            assertEquals(PureVector(), player.getAntiGravityForce(), "antigravity force")&
             assertFalse(player.getWeaponAngle().isDirty(), "old wpn angle") &
             assertEquals(PureVector(), player.getWeaponAngle(), "wpn angle") &
             assertFalse(player.getPos().isDirty(), "old pos") &
@@ -1098,6 +1099,7 @@ private:
             assertFalse(player.getCrouchStateCurrent(), "getCrouchStateCurrent") &
             assertTrue(player.getWantToStandup(), "wantstandup") &
             assertEquals(PureVector(), player.getImpactForce(), "impact force") &
+            assertEquals(PureVector(), player.getAntiGravityForce(), "antigravity force") &
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(0.f, player.getGravity(), "gravity") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe") &

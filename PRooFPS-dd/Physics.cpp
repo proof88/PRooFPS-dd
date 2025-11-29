@@ -434,6 +434,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls(
 // ############################### PRIVATE ###############################
 
 
+static constexpr float fPlayerAlignCloseToWallExtraPadding = 0.001f;
 static constexpr float fHeightPlayerCanStillStepUpOnto = 0.3f;
 
 
@@ -457,7 +458,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertic
     PureVector& vecCamShakeForce)
 {
     const int nAlignUnderOrAboveWall = obj->getPosVec().getY() < player.getPos().getOld().getY() ? 1 : -1;
-    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + 0.01f);
+    const float fAlignCloseToWall = nAlignUnderOrAboveWall * (fBlockSizeYhalf + fPlayerHalfHeight + fPlayerAlignCloseToWallExtraPadding);
     // TODO: we could write this simpler if PureVector::Set() would return the object itself!
     // e.g.: player.getPos().set( PureVector(player.getPos().getNew()).setY(obj->getPosVec().getY() + fAlignCloseToWall) )
     // do this everywhere where Ctrl+F finds this text (in Project): PPPKKKGGGGGG
@@ -739,10 +740,12 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */)
 {
     ScopeBenchmarker<std::chrono::microseconds> bm(__func__);
+    assert(nPhysicsRate > 0);
 
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = Player::fBaseSpeedCrouch / nPhysicsRate;
+    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
 
     static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
 
@@ -768,7 +771,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
         }
 
         // using same way of calculation here as in serverGravity()
-        const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
         const float GAME_STRAFE_PHYSICS_RATE_DIVIDER = PFL::lerp(5.f /* 20 Hz */, 10.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
         // unlike as in serverGravity() here I divide by the lerped value instead of multiply, I dont know why I multiply in serverGravity() anyway, but
         // obviously I need to divide here as lower physics rate results in higher strafe speeds, need to have the per-tick change higher also!
@@ -862,18 +864,45 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
 
     if ((playerConst.getHealth() > 0) && player.hasAntiGravityActive())
     {
+        float fTargetAntiGravityThrust = 0.f;
         if (player.getStrafe() == proofps_dd::Strafe::RIGHT)
         {
-            player.getImpactForce().SetX(
-                std::max(5.f, player.getImpactForce().getX()));
+            fTargetAntiGravityThrust = 3.f;
         }
         if (player.getStrafe() == proofps_dd::Strafe::LEFT)
         {
-            player.getImpactForce().SetX(
-                std::min(-5.f, player.getImpactForce().getX()));
+            fTargetAntiGravityThrust = -3.f;
+        }
+        
+        const float GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER = PFL::lerp(20.f /* 20 Hz */, 60.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+        
+        float fPlayerAntiGravityThrustChangePerTick = 0.f;
+        if (fTargetAntiGravityThrust != 0.f)
+        {
+            fPlayerAntiGravityThrustChangePerTick = fTargetAntiGravityThrust / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+        }
+        else
+        {
+            fPlayerAntiGravityThrustChangePerTick = -player.getAntiGravityForce().getX() / (GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER * 1.5f /* make it slower a bit */);
+        }
+
+        player.getAntiGravityForce().SetX(player.getAntiGravityForce().getX() + fPlayerAntiGravityThrustChangePerTick);
+        //getConsole().EOLn("%s antigravity x: %f", __func__, player.getAntiGravityForce().getX());
+
+        // always limit thrust speed to target thrust speed
+        if (((fTargetAntiGravityThrust > 0.f) && (player.getAntiGravityForce().getX() > fTargetAntiGravityThrust))
+            ||
+            ((fTargetAntiGravityThrust < 0.f) && (player.getAntiGravityForce().getX() < fTargetAntiGravityThrust)))
+        {
+            player.getAntiGravityForce().SetX(fTargetAntiGravityThrust);
+        }
+
+        if (abs(player.getAntiGravityForce().getX()) < 0.01f)
+        {
+            player.getAntiGravityForce().SetX(0.f);
         }
     }
-    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+   
     const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
     if (player.getImpactForce().getX() > 0.f)
@@ -897,7 +926,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // PPPKKKGGGGGG
     player.getPos().set(
         PureVector(
-            player.getPos().getNew().getX() + player.getImpactForce().getX() / nPhysicsRate,
+            player.getPos().getNew().getX() + player.getImpactForce().getX() / nPhysicsRate + player.getAntiGravityForce().getX() / nPhysicsRate,
             player.getPos().getNew().getY(),
             player.getPos().getNew().getZ()
         ));
@@ -936,7 +965,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         ((vecWallObjPos.getY() + fRealBlockSizeYhalf) - fPlayerPos1YMinusHalf_2) <= fHeightPlayerCanStillStepUpOnto)
     {
         // check if there is enough space to step onto the object?
-        const float fProposedNewYPos = vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + 0.01f;
+        const float fProposedNewYPos = vecWallObjPos.getY() + fRealBlockSizeYhalf + fPlayerHalfHeight + fPlayerAlignCloseToWallExtraPadding;
         bool bCanStepOntoTheGivenObject = false;
 
         if (isBvh)
@@ -1010,9 +1039,12 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         player.getJumpForce().SetX(0.f);
     }
 
+    // TODO: zero this out, or just decrease it, halve it, leave it alone? Not sure now ...
+    //player.getAntiGravityForce().SetX(0.f);
+
     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
     const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;
-    const float fAlignNextToWall = nAlignLeftOrRightToWall * (wallObj.getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + 0.01f);
+    const float fAlignNextToWall = nAlignLeftOrRightToWall * (wallObj.getSizeVec().getX() / 2 + proofps_dd::Player::fObjWidth / 2.0f + fPlayerAlignCloseToWallExtraPadding);
     //getConsole().EOLn(
     //    "x align to wall: old pos x: %f, new pos x: %f, fAlignNextToWall: %f",
     //    player.getPos().getOld().getX(),

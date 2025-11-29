@@ -246,6 +246,7 @@ namespace proofps_dd
         int& getTicksSinceLastHorizontalCollision();
 
         bool hasAntiGravityActive() const;
+        PureVector& getAntiGravityForce();
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
@@ -427,6 +428,7 @@ namespace proofps_dd
         unsigned int m_nShotsHitTarget = 0; // together with OvShotsFired, they make value of OvFiringAccuracy
         
         PureVector m_vecImpactForce;
+        PureVector m_vecAntiGravityForce;
 
         PureObject3D* m_pObj = nullptr;
         PureTexture* m_pTexPlayerStand = nullptr;
