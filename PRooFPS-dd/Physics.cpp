@@ -747,7 +747,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
 
     const auto& playerConst = player;
-    if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
+    if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE) && !player.hasAntiGravityActive())
     {
         float fTargetStrafeSpeed =
             player.getCrouchStateCurrent() ?
@@ -860,6 +860,19 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             player.getPos().getNew().getZ()
         ));
 
+    if ((playerConst.getHealth() > 0) && player.hasAntiGravityActive())
+    {
+        if (player.getStrafe() == proofps_dd::Strafe::RIGHT)
+        {
+            player.getImpactForce().SetX(
+                std::max(5.f, player.getImpactForce().getX()));
+        }
+        if (player.getStrafe() == proofps_dd::Strafe::LEFT)
+        {
+            player.getImpactForce().SetX(
+                std::min(-5.f, player.getImpactForce().getX()));
+        }
+    }
     const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
