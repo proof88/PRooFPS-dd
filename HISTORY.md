@@ -39,7 +39,7 @@ This version brings the following **features**:
  - **New Weapons:**
    - **Shotgun**, the first weapon featuring multiple, distance-limited bullets fired at once;
    - **Grenade Launcher**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
- - New In-Game Menu: **Server Admin menu**, toggled by 'H' key anytime during the game, for now with 2 actions:
+ - New In-Game Menu: **Server Admin menu** (only for the server player), toggled by **'H' key** anytime during the game, for now with 2 actions:
    - Jump to next map (removed '.' key's same functionality),
    - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
