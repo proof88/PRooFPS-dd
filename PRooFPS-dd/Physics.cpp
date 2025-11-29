@@ -743,35 +743,82 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     const float GAME_PLAYER_SPEED_WALK = Player::fBaseSpeedWalk / nPhysicsRate;
     const float GAME_PLAYER_SPEED_RUN = Player::fBaseSpeedRun / nPhysicsRate;
     const float GAME_PLAYER_SPEED_CROUCH = Player::fBaseSpeedCrouch / nPhysicsRate;
-    const float GAME_PLAYER_SPEED_FLY = Player::fBaseSpeedFly / nPhysicsRate;
 
     static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
 
     const auto& playerConst = player;
-    float fTargetStrafeSpeed = 0.f;
     if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE))
     {
-        fTargetStrafeSpeed =
-            player.hasAntiGravityActive() ?
-            GAME_PLAYER_SPEED_FLY :
-            (player.getCrouchStateCurrent() ?
-                (player.isSomersaulting() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_CROUCH) :
-                (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK));
+        float fTargetStrafeSpeed =
+            player.getCrouchStateCurrent() ?
+            (player.isSomersaulting() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_CROUCH) :
+            (player.isRunning() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_WALK);
         if (player.getStrafe() == proofps_dd::Strafe::LEFT)
         {
             fTargetStrafeSpeed = -fTargetStrafeSpeed;
         }
 
-        if (!player.hasAntiGravityActive())
+        // in case of strafe input direction change, always start changing strafe speed from 0, otherwise it will feel like
+        // we have thruster that we need to work against :D (jetpack-like)
+        if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() < 0.f))
+            ||
+            ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() > 0.f)))
         {
-            // in case of strafe input direction change, always start changing strafe speed from 0, otherwise it will feel like
-            // we have thruster that we need to work against :D (jetpack-like)
-            if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() < 0.f))
-                ||
-                ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() > 0.f)))
+            player.getStrafeSpeed() = 0.f;
+        }
+
+        // using same way of calculation here as in serverGravity()
+        const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
+        const float GAME_STRAFE_PHYSICS_RATE_DIVIDER = PFL::lerp(5.f /* 20 Hz */, 10.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
+        // unlike as in serverGravity() here I divide by the lerped value instead of multiply, I dont know why I multiply in serverGravity() anyway, but
+        // obviously I need to divide here as lower physics rate results in higher strafe speeds, need to have the per-tick change higher also!
+        const float fPlayerStrafeChangePerTick =
+            fTargetStrafeSpeed / GAME_STRAFE_PHYSICS_RATE_DIVIDER
+            /* no need to divide by nPhysicsRate as those const values assigned to fTargetStrafeSpeed are already divided by it */;
+        player.getStrafeSpeed() += fPlayerStrafeChangePerTick;
+
+        // always limit strafe speed to target strafe speed
+        if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() > fTargetStrafeSpeed))
+            ||
+            ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() < fTargetStrafeSpeed)))
+        {
+            player.getStrafeSpeed() = fTargetStrafeSpeed;
+        }
+
+        if (player.getHasJustStartedFallingNaturallyInThisTick())
+        {
+            player.getJumpForce().SetX(player.getStrafeSpeed());
+            vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
+        }
+
+        if (!player.isInAir() ||
+            (m_bAllowStrafeMidAir &&
+                (
+                    /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
+                    (vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() == 0.f) ||
+                    /* if we have horizontal jump force, we cannot add more to it in the same direction */
+                    ((vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() > 0.f) && (player.getStrafeSpeed() < 0.f)) ||
+                    ((vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() < 0.f) && (player.getStrafeSpeed() > 0.f))
+                    ))
+            )
+        {
+            ++nContinuousStrafeCountForDebugServerPlayerMovement;
+            //getConsole().EOLn("Tick Strafe");
+
+            if (m_bAllowStrafeMidAirFull)
             {
-                player.getStrafeSpeed() = 0.f;
+                // cancel the saved horizontal force, let the player have full control over mid-air strafe
+                player.getJumpForce().SetX(0.f);
+                vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
             }
+
+            // PPPKKKGGGGGG
+            player.getPos().set(
+                PureVector(
+                    player.getPos().getNew().getX() + player.getStrafeSpeed(),
+                    player.getPos().getNew().getY(),
+                    player.getPos().getNew().getZ()
+                ));
         }
     }
     else
@@ -782,62 +829,6 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             nContinuousStrafeCountForDebugServerPlayerMovement = 0;
         }
     }
-
-    // using same way of calculation here as in serverGravity()
-    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
-    const float GAME_STRAFE_PHYSICS_RATE_DIVIDER = PFL::lerp(30.f /* 20 Hz */, 60.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
-    // unlike as in serverGravity() here I divide by the lerped value instead of multiply, I dont know why I multiply in serverGravity() anyway, but
-    // obviously I need to divide here as lower physics rate results in higher strafe speeds, need to have the per-tick change higher also!
-    const float fPlayerStrafeChangePerTick =
-        fTargetStrafeSpeed / GAME_STRAFE_PHYSICS_RATE_DIVIDER
-        /* no need to divide by nPhysicsRate as those const values assigned to fTargetStrafeSpeed are already divided by it */;
-    player.getStrafeSpeed() += fPlayerStrafeChangePerTick;
-
-    // always limit strafe speed to target strafe speed
-    if (((fTargetStrafeSpeed > 0.f) && (player.getStrafeSpeed() > fTargetStrafeSpeed))
-        ||
-        ((fTargetStrafeSpeed < 0.f) && (player.getStrafeSpeed() < fTargetStrafeSpeed)))
-    {
-        player.getStrafeSpeed() = fTargetStrafeSpeed;
-    }
-
-    if (player.getHasJustStartedFallingNaturallyInThisTick())
-    {
-        player.getJumpForce().SetX(player.getStrafeSpeed());
-        vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
-    }
-
-    if (!player.isInAir() ||
-        player.hasAntiGravityActive() ||
-        (m_bAllowStrafeMidAir &&
-            (
-                /* if jump was initiated without horizontal force or we nulled it out due to hitting a wall */
-                (vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() == 0.f) ||
-                /* if we have horizontal jump force, we cannot add more to it in the same direction */
-                ((vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() > 0.f) && (player.getStrafeSpeed() < 0.f)) ||
-                ((vecOriginalJumpForceBeforeVerticalCollisionHandled.getX() < 0.f) && (player.getStrafeSpeed() > 0.f))
-                ))
-        )
-    {
-        ++nContinuousStrafeCountForDebugServerPlayerMovement;
-        //getConsole().EOLn("Tick Strafe");
-
-        if (m_bAllowStrafeMidAirFull)
-        {
-            // cancel the saved horizontal force, let the player have full control over mid-air strafe
-            player.getJumpForce().SetX(0.f);
-            vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
-        }
-
-        // PPPKKKGGGGGG
-        player.getPos().set(
-            PureVector(
-                player.getPos().getNew().getX() + player.getStrafeSpeed(),
-                player.getPos().getNew().getY(),
-                player.getPos().getNew().getZ()
-            ));
-    }
-    
 
     // serverPlayerCollisionWithWalls_LoopKernelVertical() could had also set WillJumpInNextTick() to true (i.e. non-0) above, in that case, we are
     // jumping in the same tick as that condition was detected.
@@ -869,6 +860,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             player.getPos().getNew().getZ()
         ));
 
+    const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
     if (player.getImpactForce().getX() > 0.f)
