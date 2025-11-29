@@ -49,8 +49,8 @@ From the main menu, you can either start a new server or join to an existing one
 
  - **A/D, LEFT/RIGHT:** strafe: move the player in either left or right direction;
  - **LSHIFT:** toggle move speed: walking or running;
- - **SPACE:** jump;
- - **LCTRL:** crouch/duck.
+ - **W/SPACE:** jump;
+ - **S/LCTRL:** crouch/duck.
 
 **On-the-ground somersault**: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).
 
@@ -79,6 +79,7 @@ Using this technique you can even continuously bounce yourself upwards between 2
 
 **Misc**
 
+ - **E:** toggle/use current inventory item;
  - **TAB:** show frag table, server config, client live network data;
  - **M:** select team (only in team-based game modes);
  - **H:** server admin menu (restart game, switch to next map based on mapcycle.txt, etc.);
