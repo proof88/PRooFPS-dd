@@ -53,6 +53,7 @@ namespace proofps_dd
         static constexpr float fBaseSpeedWalk = 2.f;
         static constexpr float fBaseSpeedRun = 4.f;
         static constexpr float fBaseSpeedCrouch = 1.5f;
+        static constexpr float fBaseSpeedFly = 4.f;
 
         /*
           For the future:
