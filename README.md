@@ -94,7 +94,7 @@ Since they are saved in HTML format, it is easy to open and read them in your fa
 
 If you have performance issues and you are running the server instance of the game, pressing 'T' key anytime during the game saves extra information into the HTML log file.  
 
-If you have network related issue, you can check real-time network statistics by displaying the frag table by pressing the 'TAB' key.  
+If you have network related issue, you can check real-time network statistics by pressing the 'TAB' key at least 2 times.  
 Note that some network statistics are also saved into the HTML log file whenever a client- or server instance disconnects.
 
 ## FAQ
@@ -123,10 +123,10 @@ This is considered as a game bug, the issue is tracked (https://github.com/proof
 
 ### Why the Compressed Release is So Big?
 
-At this point of development, I'm not really concerned about the disk space usage of my game. We are talking about a ZIP file less than 10 MiBytes.  
-I'm also fully aware of the existence of a big UNUSED texture file in map_warhouse directory, and I also know that textures could be downscaled a bit.  
-Believe it or not but there is also a build configuration issue that results in unnecessary big executable size.  
-Look at the version number and you will understand why disk space usage is really not my number 1 priority at this point.
+At this point of development, I'm not really concerned about the disk space usage of my game. We are talking about a ZIP file around 10 MiBytes of size.  
+Believe it or not but there is a build configuration issue that results in unnecessary big executable size.  
+Look at the version number and you will understand why disk space usage is really not my number 1 priority at this point.  
+Hint: the version number starts with '0'.
 
 ## Build
 
