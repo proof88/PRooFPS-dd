@@ -1524,6 +1524,17 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
             break;
         }
+        case '.':
+        {
+            if (bDryRun)
+            {
+                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_JETLAX, PureVector(x, y, GAME_ITEMS_POS_Z));
+                m_items.insert({ pMapItem->getId(), pMapItem });
+            }
+            bSpecialBgBlock = true;
+            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
+            break;
+        }
         case '2':
         {
             if (bDryRun)

@@ -242,7 +242,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bJustCreatedAndExpectingStartPos(other.m_bJustCreatedAndExpectingStartPos),
     m_strafe(other.m_strafe),
     m_prevActualStrafe(other.m_prevActualStrafe),
-    m_bAttack(other.m_bAttack)
+    m_bAttack(other.m_bAttack),
+    m_bHasJetLax(other.m_bHasJetLax)
 {
     BuildPlayerObject(true);
 }
@@ -628,6 +629,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
         //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
     }
     setHealth(0);
+    setHasJetLax(false);
     getAttack() = false;
     hide();
     if (bServer)
@@ -748,6 +750,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
     setArmor(0);
+    setHasJetLax(false);
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
@@ -1178,6 +1181,16 @@ void proofps_dd::Player::wallJump(/*const float& fRunSpeedPerTickForJumppadHoriz
 int& proofps_dd::Player::getTicksSinceLastHorizontalCollision()
 {
     return m_nTicksSinceLastHorizontalCollision;
+}
+
+bool proofps_dd::Player::hasJetLax() const
+{
+    return m_bHasJetLax;
+}
+
+void proofps_dd::Player::setHasJetLax(bool state)
+{
+    m_bHasJetLax = state;
 }
 
 bool proofps_dd::Player::hasAntiGravityActive() const
@@ -1676,6 +1689,8 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
         return (getArmor() < 100);
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
+    case proofps_dd::MapItemType::ITEM_JETLAX:
+        return !hasJetLax();
     default:
         ;
     }
@@ -1764,6 +1779,11 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
         handleTakeNonWeaponItem(MapItemType::ITEM_HEALTH);
+        break;
+    case proofps_dd::MapItemType::ITEM_JETLAX:
+        item.take();
+        setHasJetLax(true);
+        handleTakeNonWeaponItem(MapItemType::ITEM_JETLAX);
         break;
     default:
         getConsole().EOLn(
@@ -2009,6 +2029,11 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_audio.play3dSound(*m_sndMedkit, getPos().getNew());
             m_eventsItemPickup.addEvent("Medkit: +" + std::to_string(MapItem::ITEM_HEALTH_HP_INC) + " HP");
+            break;
+        case MapItemType::ITEM_JETLAX:
+            //getConsole().EOLn("Player::%s() playing sound", __func__);
+            m_audio.play3dSound(*m_sndArmor, getPos().getNew());
+            m_eventsItemPickup.addEvent("JetLax added to inventory!");
             break;
         default:
             getConsole().EOLn(

@@ -155,7 +155,10 @@ y = paperboxes.bmp
 # '4' char represents bazooka.
 # '5' char represents pusha.
 # '6' char represents machine pistol.
+# '7' char represents shotgun.
+# '8' char represents grenade launcher.
 # ',' char represents health/medkit.
+# '.' char represents JetLax.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
 # next to them. In such case, that previous background block's texture will be
@@ -320,24 +323,24 @@ jumppad_2 = 3.7 -0.3
 # Since all lines are trimmed before being processed, starting layout definition with whitespaces
 # are strictly not recommended.
 
-ccS   2, 8 5  4    +  4    S 4  3  7   6    2  8 5     S c+cccc   
+ccS   2, 8 5  4    +  4  , S 4  3  7   6  . 2  8 5 ,   S c+cccc   
 FcccccccccccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccFFcFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHHHFFFFFFFFccFF   
 FFFFFFFFFFFFHHa2HHHHHHHHHHHHHHHHHHHHHHa5HHHHHHHHHa,c22cc7ccccFF   
 FFFFFFFFFFFFHHHaHHHHHHHHHHHHHHHHHHHHHHaaHHHHHHHHHaHFFFFFFFFFcFF   
-cFFF+cccccccaaaaaaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF  8
+cFFF+cccccccaaa.aaaaav2vaaaaaau+uaaaaaaaaaaaaaaaaaaccccFFFcccFF  8
 FFFFccSc36ccaaaaaaaa,vvvaaa3a8uSuaa7aaaaaaaaSaaa24accccFFF3FFFF   
 FFFFccccFFFFa  Saa3aavDvaa+aaauuuaaa23a,aa2aaaGGGGGFFcccFF3FFFF   
 FFFFcccccFFFGaaaaaHaaDDDaaHHaaGGGaaaGGaa3aaaGGGGGGGFFc+ccFcFFFF   
 c74cccFccFFFHHHHaaaaaHHHaaHHaaHHHaHHHHaaHHaHHHHHHHHc7ccc3ccFFFF   
-FFFFccc+cFFFa8aaaaaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
+FFFFccc+cFFFa8aa,aaaavvvaa2aaauuuaa3aaaaaaaaaaaaaaacccccc2cFFFF  ,
 FFFFFccccFFFa+ Saenaavvvaaaaaau,uaaaaaaaaaa  Saena8cFccccccFFFF   
 FFFFFFcccFFFyDa2aoraDvDva2aa3GGuua2aaaaaaG2a6aaorDyFFFcc+c2FFFF   
 wBBBBB\wwwBBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBBBwwBwwwBBBB  5
 wBBBBBB\wwwwBBBBBBBBBBBBBBBBBBBBBBBBBBwwBBBBBBBBBBBBwwwwww/BBBB   
 xIIIIIII\xxxx+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6xxxxxxxx/IIIII  7
-xIIIIIIII\xxxxxxxSxxxxxxxxxxxxxxxxxxxxxxxxxxxSxxxxxxxxxx/IIIIII   
-IIIIIIIIIIIx6xxxxxx3/III\3x/III\3xx2/IIIIII\+xx/IIIII\x/IIIIIII   
+xIIIIIIII\xxxxxxxSxxxx,xxxxxxxxxxxxxxxxxxxxxxSxxxxx,xxxx/IIIIII   
+IIIIIIIIIIIx6xxx,xx3/III\3x/III\3xx2/IIIIII\+xx/IIIII\x/IIIIIII   
 IIIIIIIIIIIxx4x3IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 IIIIIIIIIIIIxxIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII   
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   

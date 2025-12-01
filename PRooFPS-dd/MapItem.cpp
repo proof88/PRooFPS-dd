@@ -64,6 +64,8 @@ uint32_t proofps_dd::MapItem::getItemRespawnTimeSecs(const proofps_dd::MapItem& 
         return ITEM_ARMOR_RESPAWN_SECS;
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return ITEM_HEALTH_RESPAWN_SECS;
+    case proofps_dd::MapItemType::ITEM_JETLAX:
+        return ITEM_JETLAX_RESPAWN_SECS;
     default:
         return 10000;  // dont let unhandled item respawn soon, so we will see there must be a problem
     }
@@ -91,6 +93,8 @@ std::string proofps_dd::MapItem::toString(const proofps_dd::MapItemType& eMapIte
         return "Armor";
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return "MedKit";
+    case proofps_dd::MapItemType::ITEM_JETLAX:
+        return "JetLax";
     default:
         return "Unknown Item";
     }
@@ -140,6 +144,9 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
             break;
         case proofps_dd::MapItemType::ITEM_HEALTH:
             tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
+            break;
+        case proofps_dd::MapItemType::ITEM_JETLAX:
+            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_jetlax.bmp");
             break;
         default:
             // TODO: throw for unhandled type

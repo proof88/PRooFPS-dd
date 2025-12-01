@@ -171,8 +171,11 @@ decal = proba128x128x24-blackbg.bmp 37 6 3 3
 # '4' char represents bazooka.
 # '5' char represents pusha.
 # '6' char represents machine pistol.
+# '7' char represents shotgun.
+# '8' char represents grenade launcher.
 # ',' char represents armor.
 # '+' char represents health/medkit.
+# '.' char represents JetLax.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
 # next to them. In such case, that previous background block's texture will be
@@ -339,7 +342,7 @@ oooooooacno^ooooooooooooo/F\ooooo  oooooooo
 nnnInnnnnnnnnn4nnnnnnn/IIIIn\nn^n  nnnnnnnn    I
 JoooSoooooooooJoooooSooupoooooooo  oooSoooo
 JrrrrrrrrrrrrJJrrrrrrrremrrrrrrrr  rrrrrrrr    /F\ B
-Jaaaaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aa8,7a 2 +
+Jaaaaa##aaaaJJJJaaaaaaa2a3a+aaaaa  a5aa8,7a 2 .
 BBBBIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD^B B  
 BBBBIJ##FGBIJDBHGBIJDBFGBIJDBFGBI  DBFGBIJD
 

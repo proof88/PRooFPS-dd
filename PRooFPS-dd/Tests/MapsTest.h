@@ -496,7 +496,7 @@ private:
             
             it++;
             b &= assertNotNull(it->second, "item 10") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 10 type");
+                assertEquals(proofps_dd::MapItemType::ITEM_JETLAX, it->second->getType(), "item 10 type");
             b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 10 referred obj");
             if (b)
             {

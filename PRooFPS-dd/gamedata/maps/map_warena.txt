@@ -142,8 +142,11 @@ c = dirt2.bmp
 # '4' char represents bazooka.
 # '5' char represents pusha.
 # '6' char represents machine pistol.
+# '7' char represents shotgun.
+# '8' char represents grenade launcher.
 # ',' char represents armor.
 # '+' char represents health/medkit.
+# '.' char represents JetLax.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
 # next to them. In such case, that previous background block's texture will be
@@ -320,9 +323,9 @@ BBBB    SSSSSS4    7                          a3aaaaaaaaa3a                     
 BBBBa3aa333333a    7                          a  aaaaaBa  a                          7    a333333aa3aBBBB
 BBBBaaa/BBBBBBa ,                            aa   aa aa   aa                            , aBBBBBB\aaaBBBB
 BBBBaa2aaaBaaaa ^                            aa   aaBaa   aa                            ^ aaaaBaaa2aaBBBB
-aBBBB\aa,,aaaaa          cc754ccccc          aa  aBaaaaa  aa          ccccc457cc          aaaaa,,aa/BBBBB
-aBBBBB\aaSSSaaa        c,c/DDDDDD\ccc       aaaaaaaaaaaaaaaaa       ccc/DDDDDD\c,c        aaaSSSaa/BBBBBB
-aBBBBBB\a++++Bacc87543+c/DDDDDDDDDD\cccccc8aaa/B\aa+++aaaaaaaac8ccccc/DDDDDDDDDD\c+34578ccaB++++a/BBBBBBB
+aBBBB\aa,,a..aa          c.754ccccc          aa  aBaaaaa  aa          ccccc457.c          aa..a,,aa/BBBBB
+aBBBBB\aaSSS,aa        c,c/DDDDDD\ccc       aaaaaaaaaaaaaaaaa       ccc/DDDDDD\c,c        aa,SSSaa/BBBBBB
+aBBBBBB\,++,+Bacc87543+c/DDDDDDDDDD\ccc.cc8aaa/B\aa+++aaaaaaaac8c.ccc/DDDDDDDDDD\c+34578ccaB+,++,/BBBBBBB
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD

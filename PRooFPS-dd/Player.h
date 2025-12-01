@@ -245,6 +245,8 @@ namespace proofps_dd
         void wallJump(/*const float& fRunSpeedPerTickForJumppadHorizontalForce = 0.f*/);
         int& getTicksSinceLastHorizontalCollision();
 
+        bool hasJetLax() const;
+        void setHasJetLax(bool state);
         bool hasAntiGravityActive() const;
         PureVector& getAntiGravityForce();
 
@@ -528,6 +530,8 @@ namespace proofps_dd
         float m_strafeSpeed = 0.f;
 
         bool m_bAttack = false;       // continuous op
+
+        bool m_bHasJetLax = false;
 
         // ---------------------------------------------------------------------------
 

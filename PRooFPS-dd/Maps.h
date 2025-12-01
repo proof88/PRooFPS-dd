@@ -143,6 +143,7 @@ namespace proofps_dd
             /* the special foreground stuff (e.g. items) are treated as background blocks too, see special handling in lineHandleLayout(): */
             ',' /* armor */,
             '+' /* medkit */,
+            '.' /* jetlax */,
             '2' /* weapon key 2 */,
             '3' /* weapon key 3 */,
             '4' /* weapon key 4 */,
