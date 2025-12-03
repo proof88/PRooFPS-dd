@@ -207,7 +207,13 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
         else
         {
+            const bool bOldHasAntiGravityActive = player.hasAntiGravityActive();
             player.setHasAntiGravityActive(!player.hasAntiGravityActive());
+            if (!bOldHasAntiGravityActive && player.hasAntiGravityActive())
+            {
+                // bump-lift the player on activation because why not? It looks cool.
+                player.getAntiGravityForce().SetY(1.f);
+            }
         }
     }
 
