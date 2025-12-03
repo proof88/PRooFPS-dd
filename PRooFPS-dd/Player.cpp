@@ -243,7 +243,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_strafe(other.m_strafe),
     m_prevActualStrafe(other.m_prevActualStrafe),
     m_bAttack(other.m_bAttack),
-    m_bHasJetLax(other.m_bHasJetLax)
+    m_bHasJetLax(other.m_bHasJetLax),
+    m_bHasAntiGravityActive(other.m_bHasAntiGravityActive)
 {
     BuildPlayerObject(true);
 }
@@ -1195,7 +1196,13 @@ void proofps_dd::Player::setHasJetLax(bool state)
 
 bool proofps_dd::Player::hasAntiGravityActive() const
 {
-    return true;
+    return m_bHasAntiGravityActive;
+}
+
+void proofps_dd::Player::setHasAntiGravityActive(bool state)
+{
+    m_bHasAntiGravityActive = state && hasJetLax();
+    m_timeLastToggleUseItem = std::chrono::steady_clock::now();
 }
 
 PureVector& proofps_dd::Player::getAntiGravityForce()
@@ -1509,6 +1516,11 @@ void proofps_dd::Player::setRun(bool state)
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastToggleRun() const
 {
     return m_timeLastToggleRun;
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastToggleUseItem() const
+{
+    return m_timeLastToggleUseItem;
 }
 
 const proofps_dd::Strafe& proofps_dd::Player::getStrafe() const

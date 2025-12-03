@@ -523,7 +523,8 @@ namespace proofps_dd
             bool bSwitchToRunning,
             bool bCrouch,
             bool bRequestReload,
-            unsigned char cWeaponSwitch)
+            unsigned char cWeaponSwitch,
+            bool bToggleUseItem)
         {
             // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
             proofps_dd::MsgUserCmdFromClient& msgUserCmdMove = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserCmdFromClient>(pkt);
@@ -534,6 +535,7 @@ namespace proofps_dd
             msgUserCmdMove.m_bCrouch = bCrouch;
             msgUserCmdMove.m_bRequestReload = bRequestReload;
             msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
+            msgUserCmdMove.m_bToggleUseItem = bToggleUseItem;
         }
 
         static unsigned char getWeaponSwitch(const pge_network::PgePacket& pkt)
@@ -606,6 +608,7 @@ namespace proofps_dd
         bool m_bCrouch;                  // continuous op
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;
+        bool m_bToggleUseItem;
     };  // struct MsgUserCmdFromClient
     static_assert(std::is_trivial_v<MsgUserCmdFromClient>);
     static_assert(std::is_trivially_copyable_v<MsgUserCmdFromClient>);

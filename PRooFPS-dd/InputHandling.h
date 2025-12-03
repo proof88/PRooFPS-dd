@@ -38,6 +38,7 @@ namespace proofps_dd
 
         static constexpr std::chrono::milliseconds::rep m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds = 500;
         static constexpr std::chrono::milliseconds::rep m_nKeyPressOnceJumpMinumumWaitMilliseconds = 50;
+        static constexpr std::chrono::milliseconds::rep m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds = 50;
         static constexpr std::chrono::milliseconds::rep m_nKeyPressSomersaultMaximumWaitMilliseconds = 300;
         static constexpr std::chrono::milliseconds::rep m_nWeaponActionMinimumWaitMillisecondsAfterSwitch = 1000;
         static constexpr std::chrono::milliseconds::rep m_nPlayerAngleYSendIntervalMilliseconds = 100;

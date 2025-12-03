@@ -87,6 +87,7 @@ protected:
         addSubTest("test_step_somersault_angle_server", (PFNUNITSUBTEST)&PlayerTest::test_step_somersault_angle_server);
         addSubTest("test_set_somersault_client", (PFNUNITSUBTEST)&PlayerTest::test_set_somersault_client);
         addSubTest("test_set_run", (PFNUNITSUBTEST)&PlayerTest::test_set_run);
+        addSubTest("test_toggle_has_antigravityactive", (PFNUNITSUBTEST)&PlayerTest::test_toggle_has_antigravityactive);
         addSubTest("test_set_strafe", (PFNUNITSUBTEST)&PlayerTest::test_set_strafe);
         addSubTest("test_server_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_server_do_crouch);
         addSubTest("test_client_do_crouch", (PFNUNITSUBTEST)&PlayerTest::test_client_do_crouch);
@@ -395,7 +396,10 @@ private:
             assertFalse(player.getActuallyRunningOnGround().isDirty(), "old actuallyRunningOnGround")&
             assertFalse(player.getActuallyRunningOnGround(), "actuallyRunningOnGround")&
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
-            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */) != 0;
+            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") &
+            assertEquals(0, player.getTimeLastToggleUseItem().time_since_epoch().count(), "time last use item toggle") &
+            assertFalse(player.hasAntiGravityActive(), "antigravityactive") &
+            assertFalse(player.hasJetLax(), "has jetlax") /* weapons need to be manually loaded and added, maybe this change in future */) != 0;
     }
 
     bool test_set_name()
@@ -1899,6 +1903,27 @@ private:
             assertTrue(player.getTimeLastToggleRun() <= std::chrono::steady_clock::now(), "cmp timeAfter")) != 0;
         
         return (b & assertFalse(player.isRunning(), "running")) != 0;
+    }
+
+    bool test_toggle_has_antigravityactive()
+    {
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggle1 = std::chrono::steady_clock::now();
+        player.setHasAntiGravityActive(true);
+
+        bool b = (assertTrue(player.getTimeLastToggleUseItem() >= timeBeforeToggle1, "cmp timeBefore 1") &
+            assertTrue(player.getTimeLastToggleUseItem() <= std::chrono::steady_clock::now(), "cmp timeAfter 1")) != 0;
+
+        b &= assertFalse(player.hasAntiGravityActive(), "has antigravity active 1");
+        
+        player.setHasJetLax(true);
+        const std::chrono::time_point<std::chrono::steady_clock> timeBeforeToggle2 = std::chrono::steady_clock::now();
+        player.setHasAntiGravityActive(true);
+        b &= (assertTrue(player.getTimeLastToggleUseItem() >= timeBeforeToggle2, "cmp timeBefore 2") &
+            assertTrue(player.getTimeLastToggleUseItem() <= std::chrono::steady_clock::now(), "cmp timeAfter 2")) != 0;
+
+        return (b & assertTrue(player.hasAntiGravityActive(), "has antigravity active 2")) != 0;
     }
 
     bool test_set_strafe()

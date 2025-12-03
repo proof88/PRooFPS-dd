@@ -516,6 +516,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertic
             player.getPos().getNew().getZ()
         ));
 
+    player.getAntiGravityForce().SetY(0.f);
     if (player.hasAntiGravityActive())
     {
         return;
@@ -1060,8 +1061,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         player.getJumpForce().SetX(0.f);
     }
 
-    // TODO: zero this out, or just decrease it, halve it, leave it alone? Not sure now ...
-    //player.getAntiGravityForce().SetX(0.f);
+    player.getAntiGravityForce().SetX(0.f);
 
     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
     const int nAlignLeftOrRightToWall = vecWallObjPos.getX() < player.getPos().getOld().getX() ? 1 : -1;

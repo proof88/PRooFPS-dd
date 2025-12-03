@@ -193,6 +193,24 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
     }
 
+    if (pktUserCmdMove.m_bToggleUseItem)
+    {
+        const auto nMillisecsSinceLastToggle =
+            std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleUseItem()).count();
+        if (nMillisecsSinceLastToggle < m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds)
+        {
+            // should NOT had received this from client this early
+            getConsole().OLn("InputHandling::%s(): player %s sent toggle use item request too early, ignoring (actual: %d, req: %d)!",
+                __func__, sClientUserName.c_str(), nMillisecsSinceLastToggle, m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds);
+            // Dont terminate for now, just log. Reason explained below at handling jumping.
+            //assert(false);  // in debug mode, terminate the game
+        }
+        else
+        {
+            player.setHasAntiGravityActive(!player.hasAntiGravityActive());
+        }
+    }
+
     // make sure we have an up-to-date angle Y so startSomersaultServer() has the up-to-date data to decide things
     if ((pktUserCmdMove.m_fPlayerAngleY != -1.f) && (!player.isSomersaulting()))
     {
@@ -722,6 +740,15 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         bToggleRunWalk = true;
     }
 
+    bool bToggleUseItem = false;
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('e'), m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds))
+    {
+        if (player.hasJetLax())
+        {
+            bToggleUseItem = true;
+        }
+    }
+
     const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
     if (bFireButtonPressed)
     {
@@ -911,12 +938,12 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     //    getConsole().EOLn("InputHandling::%s(): send request to switch to: %s!", __func__, std::to_string(cWeaponSwitch).c_str());
     //}
 
-    if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || (m_bPrevJump != m_bJump) || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0'))
+    if ((m_prevStrafe != m_strafe) || (m_bPrevCrouch != m_bCrouch) || (m_bPrevJump != m_bJump) || bToggleRunWalk || bRequestReload || (cWeaponSwitch != '\0') || bToggleUseItem)
     {
         // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
         // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
         // as one-time actions.
-        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, m_bJump, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch);
+        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, m_bJump, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch, bToggleUseItem);
     }
     m_prevStrafe = m_strafe;
     m_bPrevCrouch = m_bCrouch;

@@ -248,6 +248,7 @@ namespace proofps_dd
         bool hasJetLax() const;
         void setHasJetLax(bool state);
         bool hasAntiGravityActive() const;
+        void setHasAntiGravityActive(bool state);
         PureVector& getAntiGravityForce();
 
         PgeOldNewValue<bool>& getCrouchInput();
@@ -275,6 +276,7 @@ namespace proofps_dd
         bool isRunning() const;
         void setRun(bool state);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleRun() const;
+        const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastToggleUseItem() const;
 
         const proofps_dd::Strafe& getStrafe() const;
         void setStrafe(const proofps_dd::Strafe& strafe);
@@ -517,6 +519,7 @@ namespace proofps_dd
         
         bool m_bRunning = true;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleRun;
+        std::chrono::time_point<std::chrono::steady_clock> m_timeLastToggleUseItem;
 
         bool m_bJustCreatedAndExpectingStartPos = true;
 
@@ -532,6 +535,7 @@ namespace proofps_dd
         bool m_bAttack = false;       // continuous op
 
         bool m_bHasJetLax = false;
+        bool m_bHasAntiGravityActive = false;
 
         // ---------------------------------------------------------------------------
 
