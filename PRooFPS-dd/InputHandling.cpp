@@ -730,12 +730,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     if (player.hasAntiGravityActive())
     {
-        m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds) ||
-            m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+        m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
     }
     else
     {
-        m_bJump = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+        m_bJump = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
     }
 
     bool bToggleRunWalk = false;
