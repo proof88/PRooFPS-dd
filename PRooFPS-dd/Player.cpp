@@ -631,6 +631,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     }
     setHealth(0);
     setHasJetLax(false);
+    setHasAntiGravityActive(false);
     getAttack() = false;
     hide();
     if (bServer)
@@ -752,6 +753,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     m_prevActualStrafe = Strafe::NONE;
     setArmor(0);
     setHasJetLax(false);
+    setHasAntiGravityActive(false);
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
