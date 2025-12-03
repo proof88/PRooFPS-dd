@@ -728,11 +728,15 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
     m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
 
-    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'));
-    //if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds))
-    //{
-    //    bSendJumpAction = true;
-    //}
+    if (player.hasAntiGravityActive())
+    {
+        m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds) ||
+            m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+    }
+    else
+    {
+        m_bJump = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+    }
 
     bool bToggleRunWalk = false;
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SHIFT, m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds))
