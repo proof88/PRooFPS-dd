@@ -211,8 +211,14 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             player.setHasAntiGravityActive(!player.hasAntiGravityActive());
             if (!bOldHasAntiGravityActive && player.hasAntiGravityActive())
             {
+                // just enabled antigravity,
+                // if there was any non-zero jumpforce (turned antigravity on in the middle of a jump), save it but
+                // jumpforce must be zeroed since it is not used in antigravity!
+                player.getAntiGravityForce() = player.getJumpForce() * 10 /* antigravity is decreased in different way that is why we multiply */;
+                player.getJumpForce().Set(0.f, 0.f, 0.f);
+
                 // bump-lift the player on activation because why not? It looks cool.
-                player.getAntiGravityForce().SetY(1.f);
+                player.getAntiGravityForce().SetY(player.getAntiGravityForce().getY() + 1.f);
             }
         }
     }
