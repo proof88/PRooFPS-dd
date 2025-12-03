@@ -336,9 +336,10 @@ void proofps_dd::Physics::serverGravity(
             continue;
         }
 
-        if (player.hasAntiGravityActive())
+        const auto& playerConst = player;
+        float fTargetAntiGravityThrust = 0.f;
+        if (player.hasAntiGravityActive() && (playerConst.getHealth() > 0))
         {
-            float fTargetAntiGravityThrust = 0.f;
             if (player.getJumpInput())
             {
                 fTargetAntiGravityThrust = 5.f;
@@ -347,9 +348,9 @@ void proofps_dd::Physics::serverGravity(
             {
                 fTargetAntiGravityThrust = -5.f;
             }
-
-            updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), true /* vertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
         }
+        updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), true /* vertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
+
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
@@ -436,7 +437,6 @@ void proofps_dd::Physics::serverGravity(
                 player.getPos().getNew().getZ()
             ));
 
-        const auto& playerConst = player;
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
         {
             // need to die, out of map lower bound ... and this applies also when we player has invulnerability!
@@ -567,6 +567,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertic
         // we can zero out jumpforce here completely!
         player.getJumpForce().Set(0.f, 0.f, 0.f);
         player.setGravity(0.f);
+        player.getAntiGravityForce().SetX(0.f);
 
         if (iJumppad >= 0)
         {
@@ -910,9 +911,9 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             player.getPos().getNew().getZ()
         ));
 
+    float fTargetAntiGravityThrust = 0.f;
     if ((playerConst.getHealth() > 0) && player.hasAntiGravityActive())
     {
-        float fTargetAntiGravityThrust = 0.f;
         if (player.getStrafe() == proofps_dd::Strafe::RIGHT)
         {
             fTargetAntiGravityThrust = 3.f;
@@ -921,9 +922,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
         {
             fTargetAntiGravityThrust = -3.f;
         }
-        
-        updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
     }
+    updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
    
     const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
