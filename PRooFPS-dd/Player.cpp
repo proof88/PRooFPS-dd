@@ -2041,7 +2041,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
         setHasJetLax(true);
         break;
     default:
-        ;/* no-op */
+        break; /* no-op */
     }
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
@@ -2061,7 +2061,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
         case MapItemType::ITEM_JETLAX:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_audio.play3dSound(*m_sndArmor, getPos().getNew());
-            m_eventsItemPickup.addEvent("JetLax added to inventory!");
+            m_eventsItemPickup.addEvent("JetLax added to inventory");
             m_eventsInventoryChange.addEvent("+ JetLax");
             break;
         default:

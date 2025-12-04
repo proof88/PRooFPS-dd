@@ -279,6 +279,10 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
         }
     }
+    else
+    {
+        player.getWantToStandup() = true;  // this stays permanent across frames
+    }
 
     // since v0.6 jump is also continuous op to support antigravity movement (e.g. jetpack)
     player.getJumpInput().set(pktUserCmdMove.m_bJumpAction);
