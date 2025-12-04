@@ -37,7 +37,7 @@ This version brings the following **features**:
  Activation: strafe against a wall, move the X-Hair in opposite direction (so look away from the wall) and hit jump key twice. The vertical direction of wall jump depends on how much you look up/down.
  Wall jumps can be easily chained together bouncing in between nearby walls.
  - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the **'E' key**.
- - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time.  
+ - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time, by farting.  
  After collecting it, use anytime by pressing the **'E' key**.
  - **New Weapons:**
    - **Shotgun**, the first weapon featuring multiple, distance-limited bullets fired at once;
