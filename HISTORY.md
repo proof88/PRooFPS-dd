@@ -32,7 +32,9 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 TBD A compressed build for Windows is available for TBD.
 
 This version brings the following **features**:
- - **Wall jumping:** jumping from the side of walls, towards X-Hair direction. Wall jumps can be easily chained together bouncing in between nearby walls.
+ - **Wall jumping:** jumping from the side of walls, towards X-Hair direction.  
+ Activation: strafe against a wall, move the X-Hair in opposite direction (so look away from the wall) and hit jump key twice. The vertical direction of wall jump depends on how much you look up/down.
+ Wall jumps can be easily chained together bouncing in between nearby walls.
  - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the **'E' key**.
  - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time.  
  After collecting it, use anytime by pressing the **'E' key**.
