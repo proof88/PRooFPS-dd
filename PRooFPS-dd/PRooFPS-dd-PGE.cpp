@@ -1399,7 +1399,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                 getAudio(),
                 getConfigProfiles(),
                 getBullets(),
-                *m_gui.getItemPickupEvents(), *m_gui.getPlayerAmmoChangeEvents(),
+                *m_gui.getItemPickupEvents(), *m_gui.getPlayerInventoryChangeEvents(), *m_gui.getPlayerAmmoChangeEvents(),
                 getPure(), getNetwork(), connHandleServerSide, msg.m_szIpAddress)
         }); // TODO: emplace_back()
     if (!insertRes.second)

@@ -80,6 +80,7 @@ proofps_dd::Player::Player(
     PGEcfgProfiles& cfgProfiles,
     PgeObjectPool<PooledBullet>& bullets,
     EventLister<>& eventsItemPickup,
+    EventLister<>& eventsInventoryChange,
     EventLister<>& eventsAmmoChange,
     PR00FsUltimateRenderingEngine& gfx,
     pge_network::PgeINetwork& network,
@@ -92,6 +93,7 @@ proofps_dd::Player::Player(
     m_cfgProfiles(cfgProfiles),
     m_bullets(bullets),
     m_eventsItemPickup(eventsItemPickup),
+    m_eventsInventoryChange(eventsInventoryChange),
     m_eventsAmmoChange(eventsAmmoChange),
     m_gfx(gfx),
     m_network(network)
@@ -215,6 +217,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_cfgProfiles(other.m_cfgProfiles),
     m_bullets(other.m_bullets),
     m_eventsItemPickup(other.m_eventsItemPickup),
+    m_eventsInventoryChange(other.m_eventsInventoryChange),
     m_eventsAmmoChange(other.m_eventsAmmoChange),
     m_gfx(other.m_gfx),
     m_network(other.m_network),
@@ -266,6 +269,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
 //    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
 //    //m_bullets = other.m_bullets;  // deleted
 //    //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
+//    //m_eventsInventoryChange = other.m_eventsInventoryChange;
 //    //m_eventsAmmoChange = other.m_eventsAmmoChange;  // inaccessible
 //    m_gfx = other.m_gfx;
 //    m_network = other.m_network;
@@ -1796,7 +1800,6 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         break;
     case proofps_dd::MapItemType::ITEM_JETLAX:
         item.take();
-        setHasJetLax(true);
         handleTakeNonWeaponItem(MapItemType::ITEM_JETLAX);
         break;
     default:
@@ -2026,9 +2029,20 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 
     // this function is not invoked for all taken items, because this was introduced in v0.2.6, far later than MsgWpnUpdateFromServer,
     // so for example it does not get invoked for picked up weapons.
+    // But it gets invoked for player inventory items too.
 
     assert(m_sndArmor);   // otherwise new operator would had thrown already in ctor
-    assert(m_sndMedkit);  
+    assert(m_sndMedkit);
+
+    switch (eMapItemType)
+    {
+    /* for now this is how both client and server instance learn about owning this inventory item */
+    case MapItemType::ITEM_JETLAX:
+        setHasJetLax(true);
+        break;
+    default:
+        ;/* no-op */
+    }
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
@@ -2048,6 +2062,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             //getConsole().EOLn("Player::%s() playing sound", __func__);
             m_audio.play3dSound(*m_sndArmor, getPos().getNew());
             m_eventsItemPickup.addEvent("JetLax added to inventory!");
+            m_eventsInventoryChange.addEvent("+ JetLax");
             break;
         default:
             getConsole().EOLn(
@@ -2056,6 +2071,8 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
     }
     else if (m_network.isServer())
     {
+        // TODO: here we can send out this update to ALL clients if it is an inventory item, that way
+        // all clients will be updated about each player's inventory which will be needed later for jetlax!
         pge_network::PgePacket pktPlayerEvent;
         proofps_dd::MsgPlayerEventFromServer::initPkt(
             pktPlayerEvent,

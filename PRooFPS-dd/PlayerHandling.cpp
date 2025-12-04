@@ -531,11 +531,13 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
         m_gui.hideGameObjectives();
         assert(m_gui.getDeathKillEvents());
         assert(m_gui.getItemPickupEvents());
+        assert(m_gui.getPlayerInventoryChangeEvents());
         assert(m_gui.getPlayerHpChangeEvents());
         assert(m_gui.getPlayerApChangeEvents());
         assert(m_gui.getPlayerAmmoChangeEvents());
         m_gui.getDeathKillEvents()->clear();
         m_gui.getItemPickupEvents()->clear();
+        m_gui.getPlayerInventoryChangeEvents()->clear();
         m_gui.getPlayerHpChangeEvents()->clear();
         m_gui.getPlayerApChangeEvents()->clear();
         m_gui.getPlayerAmmoChangeEvents()->clear();

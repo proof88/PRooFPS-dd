@@ -121,6 +121,7 @@ void proofps_dd::GUI::initialize()
 
     m_pEventsDeathKill = new DeathKillEventLister();
     m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
+    m_pEventsPlayerInventoryChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
     m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
@@ -342,6 +343,12 @@ void proofps_dd::GUI::shutdown()
         m_pEventsPlayerHpChange = nullptr;
     }
 
+    if (m_pEventsPlayerInventoryChange)
+    {
+        delete m_pEventsPlayerInventoryChange;
+        m_pEventsPlayerInventoryChange = nullptr;
+    }
+
     if (m_pEventsItemPickup)
     {
         delete m_pEventsItemPickup;
@@ -547,6 +554,11 @@ proofps_dd::EventLister<>* proofps_dd::GUI::getItemPickupEvents()
     return m_pEventsItemPickup;
 }
 
+proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerInventoryChangeEvents()
+{
+    return m_pEventsPlayerInventoryChange;
+}
+
 proofps_dd::EventLister<>* proofps_dd::GUI::getPlayerHpChangeEvents()
 {
     return m_pEventsPlayerHpChange;
@@ -701,6 +713,7 @@ proofps_dd::XHair* proofps_dd::GUI::m_pXHair = nullptr;
 proofps_dd::Minimap* proofps_dd::GUI::m_pMinimap = nullptr;
 proofps_dd::DeathKillEventLister* proofps_dd::GUI::m_pEventsDeathKill = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsItemPickup = nullptr;
+proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerInventoryChange = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerHpChange = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerApChange = nullptr;
 proofps_dd::EventLister<>* proofps_dd::GUI::m_pEventsPlayerAmmoChange = nullptr;
@@ -2576,6 +2589,12 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
 
     drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
     updatePlayerHpChangeEvents();
+
+    if (player.hasJetLax())
+    {
+        drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Inventory: JetLax");
+        updatePlayerInventoryChangeEvents();
+    }
 }
 
 void proofps_dd::GUI::updateDeathKillEvents()
@@ -2686,6 +2705,38 @@ void proofps_dd::GUI::updateItemPickupEvents()
             ImGui::GetCursorPos().y,
             elem.m_event.m_str);
         
+        i = eventsQ.prev_index(i);
+    }
+}
+
+void proofps_dd::GUI::updatePlayerInventoryChangeEvents()
+{
+    assert(m_pEventsPlayerInventoryChange);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    m_pEventsPlayerInventoryChange->update();
+
+    // TODO: move this draw logic to new class NumericChangeEventLister::draw(), after DrawableEventLister class is already implemented!
+
+    auto& eventsQ = m_pEventsPlayerInventoryChange->getEvents();
+    size_t i = eventsQ.rbegin_index();
+    for (size_t n = 0; n < eventsQ.size(); n++)
+    {
+        ImGui::SameLine();
+
+        const auto& elem = eventsQ.underlying_array()[i];
+
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
+        );
+
+        drawTextHighlighted(
+            ImGui::GetCursorPos().x,
+            ImGui::GetCursorPos().y,
+            elem.m_event.m_str);
+
+        ImGui::PopStyleColor();
+
         i = eventsQ.prev_index(i);
     }
 }

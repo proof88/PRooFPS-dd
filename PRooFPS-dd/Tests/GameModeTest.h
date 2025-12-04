@@ -91,6 +91,7 @@ public:
         tdm(nullptr),
         m_cfgProfiles(cfgProfiles),
         m_itemPickupEvents(8 /* time limit secs */, 5 /* event count limit */),
+        m_inventoryChangeEvents(8 /* time limit secs */, 5 /* event count limit */),
         m_ammoChangeEvents(8 /* time limit secs */, 5 /* event count limit */, proofps_dd::Orientation::Horizontal),
         m_engine(nullptr),
         m_network(cfgProfiles)
@@ -152,6 +153,8 @@ protected:
     virtual bool setUp() override
     {
         m_itemPickupEvents.clear();
+        m_inventoryChangeEvents.clear();
+        m_ammoChangeEvents.clear();
 
         bool b = assertTrue(m_engine && m_engine->isInitialized(), "engine inited");
 
@@ -217,6 +220,7 @@ private:
     PGEcfgProfiles& m_cfgProfiles;
     PgeObjectPool<PooledBullet> m_bullets;
     proofps_dd::EventLister<> m_itemPickupEvents;
+    proofps_dd::EventLister<> m_inventoryChangeEvents;
     proofps_dd::EventLister<> m_ammoChangeEvents;
     PR00FsUltimateRenderingEngine* m_engine;
     pge_network::PgeNetworkStub m_network;
@@ -452,7 +456,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 2;
@@ -460,7 +464,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 1;
@@ -468,7 +472,7 @@ private:
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 0;
@@ -476,7 +480,7 @@ private:
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 0;
@@ -817,7 +821,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 0;
@@ -826,7 +830,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 0;
@@ -835,7 +839,7 @@ private:
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 0;
@@ -844,7 +848,7 @@ private:
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 0;
@@ -910,7 +914,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 10;
@@ -919,7 +923,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
@@ -928,7 +932,7 @@ private:
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 8;
@@ -937,7 +941,7 @@ private:
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 8;
@@ -1003,7 +1007,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 10;
@@ -1012,7 +1016,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
@@ -1021,7 +1025,7 @@ private:
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             player3.setName("Joe");
             player3.getFrags() = 8;
@@ -1030,7 +1034,7 @@ private:
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
             player4.setName("Banana");
             player4.getFrags() = 8;
@@ -1094,7 +1098,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
         player1.getFrags() = 10;
@@ -1103,7 +1107,7 @@ private:
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Apple");
         player2.getFrags() = 5;
@@ -1217,7 +1221,7 @@ private:
 
             proofps_dd::Player playerAdam(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
@@ -1226,7 +1230,7 @@ private:
 
             proofps_dd::Player playerApple(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             playerApple.setName("Apple");
             playerApple.getFrags() = 5;
@@ -1235,7 +1239,7 @@ private:
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
@@ -1347,7 +1351,7 @@ private:
 
             proofps_dd::Player playerAdam(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
@@ -1369,7 +1373,7 @@ private:
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
@@ -1426,7 +1430,7 @@ private:
 
             proofps_dd::Player playerAdam(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             playerAdam.setName("Adam");
             playerAdam.getFrags() = dm->getFragLimit();
@@ -1443,7 +1447,7 @@ private:
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
@@ -1513,7 +1517,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getFrags() = 15;
@@ -1521,7 +1525,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getFrags() = 5;
@@ -1640,7 +1644,7 @@ private:
 
             proofps_dd::Player player1(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getTeamId() = 1;
@@ -1652,7 +1656,7 @@ private:
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
-                m_itemPickupEvents, m_ammoChangeEvents,
+                m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getTeamId() = 2;
@@ -1834,7 +1838,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;
@@ -1843,7 +1847,7 @@ private:
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Adam");
         player2.getFrags() = 2;
@@ -1913,7 +1917,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Adam");
         player1.getFrags() = 0;
@@ -1922,7 +1926,7 @@ private:
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Apple");
         player2.getFrags() = 2;
@@ -2081,7 +2085,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;
@@ -2143,7 +2147,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;
@@ -2152,7 +2156,7 @@ private:
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
         player2.setName("Adam");
         player2.getFrags() = 2;
@@ -2161,7 +2165,7 @@ private:
 
         proofps_dd::Player player3(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
         player3.setName("Joe");
         player3.getFrags() = dm->getFragLimit();  // game would be already won if this player had a valid teamId!
@@ -2259,7 +2263,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;
@@ -2309,7 +2313,7 @@ private:
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_ammoChangeEvents,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
         player1.setName("Apple");
         player1.getFrags() = 0;

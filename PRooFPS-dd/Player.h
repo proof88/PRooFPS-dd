@@ -121,6 +121,7 @@ namespace proofps_dd
             PGEcfgProfiles& cfgProfiles,
             PgeObjectPool<PooledBullet>& bullets,
             EventLister<>& eventsItemPickup,
+            EventLister<>& eventsInventoryChange,
             EventLister<>& eventsAmmoChange,
             PR00FsUltimateRenderingEngine& gfx,
             pge_network::PgeINetwork& network,
@@ -443,6 +444,7 @@ namespace proofps_dd
         PGEcfgProfiles& m_cfgProfiles;
         PgeObjectPool<PooledBullet>& m_bullets;
         EventLister<>& m_eventsItemPickup;
+        EventLister<>& m_eventsInventoryChange;
         EventLister<>& m_eventsAmmoChange;
         PR00FsUltimateRenderingEngine& m_gfx;
         pge_network::PgeINetwork& m_network;

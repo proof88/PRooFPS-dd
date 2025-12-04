@@ -139,6 +139,7 @@ namespace proofps_dd
         Minimap* getMinimap();
         DeathKillEventLister* getDeathKillEvents();
         EventLister<>* getItemPickupEvents();
+        EventLister<>* getPlayerInventoryChangeEvents();
         EventLister<>* getPlayerHpChangeEvents();
         EventLister<>* getPlayerApChangeEvents();
         EventLister<>* getPlayerAmmoChangeEvents();
@@ -194,6 +195,7 @@ namespace proofps_dd
         static Minimap* m_pMinimap;
         static DeathKillEventLister* m_pEventsDeathKill;
         static EventLister<>* m_pEventsItemPickup;
+        static EventLister<>* m_pEventsPlayerInventoryChange;
         static EventLister<>* m_pEventsPlayerHpChange;
         static EventLister<>* m_pEventsPlayerApChange;
         static EventLister<>* m_pEventsPlayerAmmoChange;
@@ -240,6 +242,7 @@ namespace proofps_dd
         static void updatePlayerHpChangeEvents();
         static void updatePlayerApChangeEvents();
         static void updatePlayerAmmoChangeEvents();
+        static void updatePlayerInventoryChangeEvents();
         static void updateServerEvents();
         
         static void calculatePlayerNameColWidthAndTableWidthPixels(
