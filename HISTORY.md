@@ -49,7 +49,7 @@ This version brings the following **features**:
    - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
  - **Extra funny sound effects** for:
-   - dying from falling from high altitude,
+   - dying by falling from high altitude,
    - and when multiple players are killed by a single explosion.
 
 ## v0.5.1 Private Beta (July 20, 2025)
