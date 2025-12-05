@@ -498,7 +498,7 @@ void proofps_dd::GUI::showLoadingScreen(int nProgress, const std::string& sMapFi
     if ( showBgWithLogo() )
     {
         textForNextFrame(
-            "Loading Map: " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
+            "Let me think a bit about " + sMapFilename + " ... " + std::to_string(nProgress) + " %",
             200,
             m_pPge->getPure().getWindow().getClientHeight() / 2 +
             static_cast<int>(m_pObjLoadingScreenLogoImg->getPosVec().getY() -

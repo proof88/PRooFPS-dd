@@ -664,8 +664,8 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     getPure().getUImanager().removeAllTextPermanentLegacy(); // cannot find better way to get rid of permanent texts
     const std::string sPrintText =
         sExtraDebugText.empty() ?
-        "Unloading resources ..." :
-        "Unloading resources ... Reason: " + sExtraDebugText;
+        "Thinking ..." :
+        "Thinking ... Reason: " + sExtraDebugText;
     m_gui.textForNextFrame(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
     m_gui.hideRespawnTimer();
     getPure().getRenderer()->RenderScene();
