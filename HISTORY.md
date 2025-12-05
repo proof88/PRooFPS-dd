@@ -42,7 +42,7 @@ This version brings the following **features**:
  Control horizontal flying by strafe keys, vertical flying by jump/crouch keys.
  - **'W' and 'S' keys** are now also bound to jump and crouch functionality for more intuitive flying control.
  - **New Weapons:**
-   - **Shotgun (key '7')**, the first weapon featuring multiple, distance-limited bullets fired at once;
+   - **Shotgun (key '7')**, the first weapon featuring multiple, distance-limited bullets fired at once which lose their hit damage linear to their travelled distance;
    - **Grenade Launcher (key '8')**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
  - New In-Game Menu: **Server Admin menu** (only for the server player), toggled by **'H' key** anytime during the game, for now with 2 actions:
    - Jump to next map (removed '.' key's same functionality),
