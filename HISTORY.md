@@ -38,16 +38,18 @@ This version brings the following **features**:
  Wall jumps can be easily chained together bouncing in between nearby walls.
  - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the **'E' key**.
  - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time, by farting.  
- After collecting it, use anytime by pressing the **'E' key**.
+ After pickup it will be added to your inventory, and you can toggle it anytime by pressing the **'E' key**.  
+ Control horizontal flying by strafe keys, vertical flying by jump/crouch keys.
+ - **'W' and 'S' keys** are now also bound to jump and crouch functionality for more intuitive flying control.
  - **New Weapons:**
-   - **Shotgun**, the first weapon featuring multiple, distance-limited bullets fired at once;
-   - **Grenade Launcher**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
+   - **Shotgun (key '7')**, the first weapon featuring multiple, distance-limited bullets fired at once, losing their hit damage linear to their travel distance;
+   - **Grenade Launcher (key '8')**, the first weapon featuring bouncing, timed "bullets": exploding not upon hit but after 3 seconds.
  - New In-Game Menu: **Server Admin menu** (only for the server player), toggled by **'H' key** anytime during the game, for now with 2 actions:
    - Jump to next map (removed '.' key's same functionality),
    - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
  - **Extra funny sound effects** for:
-   - dying from falling from high altitude,
+   - dying by falling from high altitude,
    - and when multiple players are killed by a single explosion.
 
 ## v0.5.1 Private Beta (July 20, 2025)
