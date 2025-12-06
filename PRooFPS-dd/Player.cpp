@@ -17,6 +17,8 @@ static constexpr float SndPlayerLandedDistMin = 6.f;
 static constexpr float SndPlayerLandedDistMax = 8.f;
 static constexpr float SndPlayerHighFallYellDistMin = 9.f;
 static constexpr float SndPlayerHighFallYellDistMax = 22.f;
+static constexpr float SndPlayerItemActivateAntiGravityDistMin = SndPlayerLandedDistMin;
+static constexpr float SndPlayerItemActivateAntiGravityDistMax = SndPlayerLandedDistMax;
 static constexpr float SndPlayerFootstepDistMin = SndPlayerLandedDistMin;
 static constexpr float SndPlayerFootstepDistMax = SndPlayerLandedDistMax;
 
@@ -110,6 +112,7 @@ proofps_dd::Player::Player(
         m_sndArmor = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
         m_sndJumppad = new SoLoud::Wav();
+        m_sndPlayerItemActivateAntiGravity = new SoLoud::Wav();
         m_sndFallYell_1 = new SoLoud::Wav();
         m_sndFallYell_2 = new SoLoud::Wav();
         m_sndPlayerLandSmallFall = new SoLoud::Wav();
@@ -136,6 +139,7 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndArmor, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_armor.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
         m_audio.loadSound(*m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
+        m_audio.loadSound(*m_sndPlayerItemActivateAntiGravity, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/item_jetlax_activate.wav");
         m_audio.loadSound(*m_sndFallYell_1, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
         m_audio.loadSound(*m_sndFallYell_2, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-wilhelm-scream.wav");
         m_audio.loadSound(*m_sndPlayerLandSmallFall, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/player_land_smallfall.wav");
@@ -180,6 +184,9 @@ proofps_dd::Player::Player(
 
         m_sndFallYell_2->set3dMinMaxDistance(SndPlayerHighFallYellDistMin, SndPlayerHighFallYellDistMax);
         m_sndFallYell_2->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+        m_sndPlayerItemActivateAntiGravity->set3dMinMaxDistance(SndPlayerItemActivateAntiGravityDistMin, SndPlayerItemActivateAntiGravityDistMax);
+        m_sndPlayerItemActivateAntiGravity->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
         m_sndPlayerLandSmallFall->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_sndPlayerLandSmallFall->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
@@ -2106,7 +2113,11 @@ void proofps_dd::Player::handleToggleInventoryItem(
     }
 
     setHasAntiGravityActive(bNewAntiGravityActive);
-    // TODO: add a sound to be played at player's position
+    if (bNewAntiGravityActive)
+    {
+        assert(m_sndPlayerItemActivateAntiGravity);  // otherwise new operator would had thrown already in ctor
+        m_audio.play3dSound(*m_sndPlayerItemActivateAntiGravity, getPos().getNew());
+    }
 
     if (!m_network.isServer())
     {
@@ -2253,6 +2264,7 @@ SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndArmor = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndPlayerItemActivateAntiGravity = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_1 = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_2 = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerLandSmallFall = nullptr;
