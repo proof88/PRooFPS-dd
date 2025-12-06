@@ -34,6 +34,7 @@ namespace proofps_dd
         FallingFromHigh = 0,
         Landed,
         ItemTake,
+        InventoryItemToggle,
         JumppadActivated,
         TeamIdChanged,
         ExplosionMultiKill /* not for a specific player, but felt convenient to put here */
@@ -318,6 +319,8 @@ namespace proofps_dd
             const bool& bMe);
         void handleActuallyRunningOnGround();
         void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
+        void handleToggleInventoryItem(
+            const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(
             const proofps_dd::MapItemType& eMapItemType,
             const Weapon& wpnTaken,

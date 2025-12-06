@@ -634,8 +634,8 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
         //getConsole().OLn("PRooFPSddPGE::%s(): other player died!", __func__);
     }
     setHealth(0);
-    setHasJetLax(false);
     setHasAntiGravityActive(false);
+    setHasJetLax(false);
     getAttack() = false;
     hide();
     if (bServer)
@@ -756,8 +756,8 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
     setArmor(0);
-    setHasJetLax(false);
     setHasAntiGravityActive(false);
+    setHasJetLax(false);
 
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
@@ -2027,6 +2027,8 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 {
     // both server and client execute this function, so be careful with conditions here
 
+    // due to assertion in handlePlayerEventFromServer(), this always gets invoked only for the relevant player who took the item!
+
     // this function is not invoked for all taken items, because this was introduced in v0.2.6, far later than MsgWpnUpdateFromServer,
     // so for example it does not get invoked for picked up weapons.
     // But it gets invoked for player inventory items too.
@@ -2081,7 +2083,57 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             static_cast<int>(eMapItemType));
         m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
     }
-}
+} // handleTakeNonWeaponItem()
+
+void proofps_dd::Player::handleToggleInventoryItem(
+    const proofps_dd::MapItemType& eMapItemType)
+{
+    // both server and client execute this function, so be careful with conditions here;
+    // ALL instances execute this function!
+
+    // Invoked only based on player input!
+    // NOT invoked when player dies or respawns because there explicit false is set for both item use and availability.
+
+    assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
+
+    const bool bOldAntiGravityActive = hasAntiGravityActive();
+    const bool bNewAntiGravityActive = !bOldAntiGravityActive;
+    if (bNewAntiGravityActive && !hasJetLax())
+    {
+        // should not happen because then this is programmer error
+        getConsole().EOLn("Player::%s(): SHALL NOT HAPPEN: bNewAntiGravityActive is true but does not have item in inventory!", __func__);
+        assert(false); // crash in debug
+    }
+
+    setHasAntiGravityActive(bNewAntiGravityActive);
+    // TODO: add a sound to be played at player's position
+
+    if (!m_network.isServer())
+    {
+        return;
+    }
+    
+    if (!bOldAntiGravityActive)
+    {
+        // just enabled antigravity,
+        // if there was any non-zero jumpforce (turned antigravity on in the middle of a jump), save it but
+        // jumpforce must be zeroed since it is not used in antigravity fly!
+        getAntiGravityForce() = getJumpForce() * 10 /* antigravity is decreased in different way that is why we multiply jumpforce */;
+        getJumpForce().Set(0.f, 0.f, 0.f);
+
+        // bump-lift the player on activation because why not? It looks cool.
+        getAntiGravityForce().SetY(getAntiGravityForce().getY() + 1.f);
+    }
+
+    // here we can send out this update to ALL clients so they will be updated about each player's just activated or deactivated inventory item.
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::InventoryItemToggle,
+        static_cast<int>(eMapItemType));
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
+} // handleToggleInventoryItem()
 
 void proofps_dd::Player::handleTakeWeaponItem(
     const proofps_dd::MapItemType& eMapItemType,
@@ -2114,11 +2166,13 @@ void proofps_dd::Player::handleTakeWeaponItem(
             m_eventsAmmoChange.addEvent(std::to_string(nAmmoIncrease));
         }
     }
-}
+} // handleTakeWeaponItem()
 
 void proofps_dd::Player::handleJumppadActivated()
 {
     assert(m_sndJumppad);  // otherwise new operator would had thrown already in ctor
+
+    // due to assertion in handlePlayerEventFromServer(), this always gets invoked only for the relevant player who took the item!
 
     if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
     {
