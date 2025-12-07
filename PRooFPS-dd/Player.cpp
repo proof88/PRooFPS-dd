@@ -2140,6 +2140,10 @@ void proofps_dd::Player::handleToggleInventoryItem(
         getAntiGravityForce() = getJumpForce() * 10 /* antigravity is decreased in different way that is why we multiply jumpforce */;
         getJumpForce().Set(0.f, 0.f, 0.f);
 
+        // vertical AG-force shall also take any strafe speed so momentum is carried on
+        getAntiGravityForce().SetX(getAntiGravityForce().getX() + getStrafeSpeed() * 20 /* why multiply: same reason as with jumpforce above */);
+        getStrafeSpeed() = 0.f;
+
         // bump-lift the player on activation because why not? It looks cool.
         getAntiGravityForce().SetY(getAntiGravityForce().getY() + 1.f);
     }
