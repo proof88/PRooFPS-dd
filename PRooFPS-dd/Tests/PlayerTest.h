@@ -106,8 +106,10 @@ protected:
         addSubTest("test_handle_falling_from_high_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_client_instance);
         addSubTest("test_handle_landed_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_server_instance);
         addSubTest("test_handle_landed_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_client_instance);
-        addSubTest("test_handle_take_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_server_instance);
-        addSubTest("test_handle_take_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_item_client_instance);
+        addSubTest("test_handle_take_non_inventory_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_non_inventory_item_server_instance);
+        addSubTest("test_handle_take_inventory_item_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_inventory_item_server_instance);
+        addSubTest("test_handle_take_non_inventory_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_non_inventory_item_client_instance);
+        addSubTest("test_handle_take_inventory_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_inventory_item_client_instance);
         addSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
         addSubTest("test_handle_jumppad_activated_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_server);
         addSubTest("test_handle_jumppad_activated_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_client);
@@ -2585,8 +2587,10 @@ private:
         return b;
     }
 
-    bool test_handle_take_item_server_instance()
+    bool test_handle_take_non_inventory_item_server_instance()
     {
+        // PgeNetwork is initialized as server in this test.
+        // As of 2025-12-07, there is always 1 connected client simulated in PgeServerStub.
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
@@ -2594,11 +2598,11 @@ private:
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
-        playerServer.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        playerServer.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, true /* bMe */);
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
 
         // no sound play (I cannot check sound now, need stubs for that), tx to client player
-        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, false /* bMe */);
         b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
         try
         {
@@ -2613,7 +2617,7 @@ private:
         }
 
         // same actions as above, no protective flag is in place that needs to be cleared first
-        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, false /* bMe */);
         b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
         try
         {
@@ -2630,8 +2634,58 @@ private:
         return b;
     }
 
-    bool test_handle_take_item_client_instance()
+    bool test_handle_take_inventory_item_server_instance()
     {
+        // PgeNetwork is initialized as server in this test.
+        // As of 2025-12-07, there is always 1 connected client simulated in PgeServerStub.
+        // TODO: would be better to have more virtual clients in these tests to actually see that
+        // inventory-take pkt is replicated to not only the affected client but ALL clients!
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+
+        bool b = true;
+        // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
+        playerServer.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_JETLAX, true /* bMe */);
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        // no sound play (I cannot check sound now, need stubs for that), tx to client player
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_JETLAX, false /* bMe */);
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
+
+        // same actions as above, no protective flag is in place that needs to be cleared first
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_JETLAX, false /* bMe */);
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        return b;
+    }
+
+    bool test_handle_take_non_inventory_item_client_instance()
+    {
+        // PgeNetwork is initialized as client in this test
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
 
         // client-only test
@@ -2645,9 +2699,38 @@ private:
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
         bool b = true;
 
-        // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
-        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH);
+        // client never sends pkt from this function, and always plays sound for itself (I cannot check sound now, need stubs for that)
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, true /* bMe */);
         b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, false /* bMe */);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+
+        return b;
+    }
+
+    bool test_handle_take_inventory_item_client_instance()
+    {
+        // PgeNetwork is initialized as client in this test
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+
+        // client-only test
+        m_network.shutdown();
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as client");
+        }
+
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        bool b = true;
+
+        // client never sends pkt from this function, and always plays sound for itself (I cannot check sound now, need stubs for that)
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_JETLAX, true /* bMe */);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        playerClient.handleTakeNonWeaponItem(proofps_dd::MapItemType::ITEM_HEALTH, false /* bMe */);
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
 
         return b;
     }

@@ -318,7 +318,9 @@ namespace proofps_dd
             PureVector& vecCamShakeForce,
             const bool& bMe);
         void handleActuallyRunningOnGround();
-        void handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType);
+        void handleTakeNonWeaponItem(
+            const proofps_dd::MapItemType& eMapItemType,
+            const bool& bMe);
         void handleToggleInventoryItem(
             const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(

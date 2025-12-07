@@ -1734,6 +1734,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
 {
     assert(m_network.isServer());
 
+    const bool bCurrentPlayer = (getServerSideConnectionHandle() == pge_network::ServerConnHandle);
+
     switch (item.getType())
     {
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
@@ -1777,7 +1779,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
 
         // !!! BADDESIGN !!! Not nice, but clients play sounds for these events in handleWpnUpdateFromServer().
         // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
-        if (getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+        if (bCurrentPlayer)
         {
             handleTakeWeaponItem(item.getType(), *pWpnBecomingAvailable, bHasJustBecomeAvailable, nAmmoIncrease);
         }
@@ -1801,16 +1803,16 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_ARMOR:
         item.take();
         setArmor(getArmor() + static_cast<int>(MapItem::ITEM_ARMOR_AP_INC)); // client will learn about new AP from the usual UserUpdateFromServer
-        handleTakeNonWeaponItem(MapItemType::ITEM_ARMOR);
+        handleTakeNonWeaponItem(MapItemType::ITEM_ARMOR, bCurrentPlayer);
         break;
     case proofps_dd::MapItemType::ITEM_HEALTH:
         item.take();
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
-        handleTakeNonWeaponItem(MapItemType::ITEM_HEALTH);
+        handleTakeNonWeaponItem(MapItemType::ITEM_HEALTH, bCurrentPlayer);
         break;
     case proofps_dd::MapItemType::ITEM_JETLAX:
         item.take();
-        handleTakeNonWeaponItem(MapItemType::ITEM_JETLAX);
+        handleTakeNonWeaponItem(MapItemType::ITEM_JETLAX, bCurrentPlayer);
         break;
     default:
         getConsole().EOLn(
@@ -2033,11 +2035,15 @@ void proofps_dd::Player::handleActuallyRunningOnGround()
     m_timeLastSndPlayerFootstepPlayed = std::chrono::steady_clock::now();
 }
 
-void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& eMapItemType)
+void proofps_dd::Player::handleTakeNonWeaponItem(
+    const proofps_dd::MapItemType& eMapItemType,
+    const bool& bMe)
 {
     // both server and client execute this function, so be careful with conditions here
 
-    // due to assertion in handlePlayerEventFromServer(), this always gets invoked only for the relevant player who took the item!
+    // ALL instances execute this function, but not for all items:
+    // - for inventory items, all players are informed,
+    // - for other items (health, armor), only the affected player is informed!
 
     // this function is not invoked for all taken items, because this was introduced in v0.2.6, far later than MsgWpnUpdateFromServer,
     // so for example it does not get invoked for picked up weapons.
@@ -2045,10 +2051,11 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
 
     assert(m_sndArmor);   // otherwise new operator would had thrown already in ctor
     assert(m_sndMedkit);
+    assert(m_sndJetlax);
 
     switch (eMapItemType)
     {
-    /* for now this is how both client and server instance learn about owning this inventory item */
+    /* all instances must be aware of what inventory items other players have */
     case MapItemType::ITEM_JETLAX:
         setHasJetLax(true);
         break;
@@ -2056,7 +2063,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
         break; /* no-op */
     }
 
-    if (!m_network.isServer() || (getServerSideConnectionHandle() == pge_network::ServerConnHandle))
+    if (bMe)
     {
         switch (eMapItemType)
         {
@@ -2081,10 +2088,25 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
                 "Player::%s(): unhandled item type %d!", __func__, eMapItemType);
         }
     }
-    else if (m_network.isServer())
+
+    if (!m_network.isServer())
     {
-        // TODO: here we can send out this update to ALL clients if it is an inventory item, that way
-        // all clients will be updated about each player's inventory which will be needed later for jetlax!
+        return;
+    }
+
+    // no need to inform all players about non-inventory item pickups
+    if (eMapItemType == MapItemType::ITEM_JETLAX)
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            getServerSideConnectionHandle(),
+            PlayerEventId::ItemTake,
+            static_cast<int>(eMapItemType));
+        m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
+    }
+    else if (!bMe /* no need to inform them about server player took non-inventory item */)
+    {
         pge_network::PgePacket pktPlayerEvent;
         proofps_dd::MsgPlayerEventFromServer::initPkt(
             pktPlayerEvent,
@@ -2093,6 +2115,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             static_cast<int>(eMapItemType));
         m_network.getServer().send(pktPlayerEvent, getServerSideConnectionHandle());
     }
+    
 } // handleTakeNonWeaponItem()
 
 void proofps_dd::Player::handleToggleInventoryItem(
@@ -2141,6 +2164,7 @@ void proofps_dd::Player::handleToggleInventoryItem(
         getJumpForce().Set(0.f, 0.f, 0.f);
 
         // vertical AG-force shall also take any strafe speed so momentum is carried on
+        // Note: this strafe speed is from previous frame but it is not a problem.
         getAntiGravityForce().SetX(getAntiGravityForce().getX() + getStrafeSpeed() * 20 /* why multiply: same reason as with jumpforce above */);
         getStrafeSpeed() = 0.f;
 

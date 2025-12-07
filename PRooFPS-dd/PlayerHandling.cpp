@@ -1182,8 +1182,7 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         player.handleLanded(msg.m_optData1.m_fValue, msg.m_optData2.m_bValue, msg.m_optData3.m_bValue, vecCamShakeForce, bCurrentClient);
         break;
     case PlayerEventId::ItemTake:
-        assert(bCurrentClient);
-        player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
+        player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue), bCurrentClient);
         break;
     case PlayerEventId::InventoryItemToggle:
         player.handleToggleInventoryItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
