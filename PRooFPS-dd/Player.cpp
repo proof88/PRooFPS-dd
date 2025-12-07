@@ -2137,19 +2137,13 @@ void proofps_dd::Player::handleToggleInventoryItem(
     // both server and client execute this function, so be careful with conditions here;
     // ALL instances execute this function!
 
-    // Invoked only based on player input!
     // NOT invoked when player dies or respawns because there explicit false is set for both item use and availability.
+    // Triggered by player input (toggle on/off) or when server wants to turn it off because of loss of power.
 
     assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
 
-    if (getCurrentInventoryItemPower() <= 0.f)
-    {
-        // nothing is allowed based on player input
-        return;
-    }
-
     const bool bOldAntiGravityActive = hasAntiGravityActive();
-    const bool bNewAntiGravityActive = !bOldAntiGravityActive;
+    const bool bNewAntiGravityActive = !bOldAntiGravityActive && hasJetLax() && (getCurrentInventoryItemPower() > 0.f);
     if (bNewAntiGravityActive && !hasJetLax())
     {
         // should not happen because then this is programmer error
@@ -2158,7 +2152,7 @@ void proofps_dd::Player::handleToggleInventoryItem(
     }
 
     setHasAntiGravityActive(bNewAntiGravityActive);
-    if (bNewAntiGravityActive)
+    if (!bOldAntiGravityActive && bNewAntiGravityActive)
     {
         assert(m_sndPlayerItemActivateAntiGravity);  // otherwise new operator would had thrown already in ctor
         m_audio.play3dSound(*m_sndPlayerItemActivateAntiGravity, getPos().getNew());
@@ -2169,13 +2163,13 @@ void proofps_dd::Player::handleToggleInventoryItem(
         return;
     }
     
-    if (bOldAntiGravityActive)
+    if (bOldAntiGravityActive && !bNewAntiGravityActive)
     {
         // just disabled antigravity, from now on jumpforce takes over
         getJumpForce() = getAntiGravityForce() / 100.f;
         setGravity(getAntiGravityForce().getY() * 2.f);
     }
-    else
+    else if (!bOldAntiGravityActive && bNewAntiGravityActive)
     {
         // just enabled antigravity,
         // if there was any non-zero jumpforce (turned antigravity on in the middle of a jump), save it but

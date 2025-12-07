@@ -334,8 +334,7 @@ static void serverUpdateAntiGravityForce(
 
         if (player.getCurrentInventoryItemPower() == 0.f)
         {
-            // TODO: inform clients
-            player.setHasAntiGravityActive(false);
+            player.handleToggleInventoryItem(proofps_dd::MapItemType::ITEM_JETLAX);
             player.setHasJetLax(false);
         }
     }
