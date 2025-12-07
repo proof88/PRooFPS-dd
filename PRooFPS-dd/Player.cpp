@@ -2173,6 +2173,7 @@ void proofps_dd::Player::handleToggleInventoryItem(
     {
         // just disabled antigravity, from now on jumpforce takes over
         getJumpForce() = getAntiGravityForce() / 100.f;
+        setGravity(getAntiGravityForce().getY() * 2.f);
     }
     else
     {

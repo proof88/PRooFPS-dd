@@ -433,7 +433,9 @@ void proofps_dd::Physics::serverGravity(
         player.getPos().set(
             PureVector(
                 player.getPos().getNew().getX(),
-                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + player.getImpactForce().getY() / nPhysicsRate + player.getAntiGravityForce().getY() / nPhysicsRate,
+                player.getPos().getNew().getY() + player.getGravity() / nPhysicsRate + 
+                player.getImpactForce().getY() / nPhysicsRate + 
+                player.getAntiGravityForce().getY() / nPhysicsRate,
                 player.getPos().getNew().getZ()
             ));
 
