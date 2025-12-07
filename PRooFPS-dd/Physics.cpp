@@ -254,14 +254,14 @@ void proofps_dd::Physics::serverSetCollisionModeBvh(bool state)
     m_bCollisionModeBvh = state;
 }
 
-static void updateAntiGravityForce(
+static void serverUpdateAntiGravityForce(
     const float& fTargetAntiGravityThrust,
-    PureVector& vecAntiGravityForce,
+    proofps_dd::Player& player,
     const bool& bVertical,
     const float& GAME_PHYSICS_RATE_LERP_FACTOR)
 {
     const float GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER = PFL::lerp(20.f /* 20 Hz */, 60.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
-    const float fInAntiGravityForceXorY = bVertical ? vecAntiGravityForce.getY() : vecAntiGravityForce.getX();
+    const float fInAntiGravityForceXorY = bVertical ? player.getAntiGravityForce().getY() : player.getAntiGravityForce().getX();
 
     float fPlayerAntiGravityThrustChangePerTick = 0.f;
     if (fTargetAntiGravityThrust != 0.f)
@@ -292,11 +292,52 @@ static void updateAntiGravityForce(
     // RFR: wouldnt need bVertical if PureVector would return reference to its components!
     if (bVertical)
     {
-        vecAntiGravityForce.SetY(fOutAntiGravityForceXorY);
+        player.getAntiGravityForce().SetY(fOutAntiGravityForceXorY);
     }
     else
     {
-        vecAntiGravityForce.SetX(fOutAntiGravityForceXorY);
+        player.getAntiGravityForce().SetX(fOutAntiGravityForceXorY);
+    }
+
+    if (player.hasAntiGravityActive())
+    {
+        float fPlayerAntiGravityPowerChangePerTick = 0.f;
+        if (bVertical)
+        {
+            // no power usage if we are going down
+            if (fTargetAntiGravityThrust > 0.f)
+            {
+                fPlayerAntiGravityPowerChangePerTick = -5.f / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+            }
+            else if (fTargetAntiGravityThrust == 0.f)
+            {
+                // minimal power usage when no thrust power
+                fPlayerAntiGravityPowerChangePerTick = -1.f / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+            }
+        }
+        else
+        {
+            // power usage is the same in both horizontal directions
+            if (fTargetAntiGravityThrust != 0)
+            {
+                fPlayerAntiGravityPowerChangePerTick = -2.f / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+            }
+            else
+            {
+                // minimal power usage when no thrust power
+                fPlayerAntiGravityPowerChangePerTick = -1.f / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
+            }
+        }
+        assert(fPlayerAntiGravityPowerChangePerTick <= 0.f);
+        player.getCurrentInventoryItemPower().set(
+            std::max(0.f, (player.getCurrentInventoryItemPower() + fPlayerAntiGravityPowerChangePerTick).getNew()));
+
+        if (player.getCurrentInventoryItemPower() == 0.f)
+        {
+            // TODO: inform clients
+            player.setHasAntiGravityActive(false);
+            player.setHasJetLax(false);
+        }
     }
 } // updateAntiGravityForce()
 
@@ -350,7 +391,7 @@ void proofps_dd::Physics::serverGravity(
             }
         }
         //getConsole().EOLn("fTargetAntiGravityThrust Y: %f", fTargetAntiGravityThrust);
-        updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), true /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
+        serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, true /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
 
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
@@ -927,7 +968,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             fTargetAntiGravityThrust = -3.f;
         }
     }
-    updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
+    serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
    
     const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
