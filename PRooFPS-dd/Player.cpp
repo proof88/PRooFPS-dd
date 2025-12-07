@@ -2142,6 +2142,12 @@ void proofps_dd::Player::handleToggleInventoryItem(
 
     assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
 
+    if (getCurrentInventoryItemPower() <= 0.f)
+    {
+        // nothing is allowed based on player input
+        return;
+    }
+
     const bool bOldAntiGravityActive = hasAntiGravityActive();
     const bool bNewAntiGravityActive = !bOldAntiGravityActive;
     if (bNewAntiGravityActive && !hasJetLax())
@@ -2176,13 +2182,17 @@ void proofps_dd::Player::handleToggleInventoryItem(
         getAntiGravityForce() = getJumpForce() * 10 /* antigravity is decreased in different way that is why we multiply jumpforce */;
         getJumpForce().Set(0.f, 0.f, 0.f);
 
-        // vertical AG-force shall also take any strafe speed so momentum is carried on
+        // horizontal AG-force shall also take any strafe speed so momentum is carried on
         // Note: this strafe speed is from previous frame but it is not a problem.
         getAntiGravityForce().SetX(getAntiGravityForce().getX() + getStrafeSpeed() * 20 /* why multiply: same reason as with jumpforce above */);
         getStrafeSpeed() = 0.f;
 
-        // bump-lift the player on activation because why not? It looks cool.
-        getAntiGravityForce().SetY(getAntiGravityForce().getY() + 1.f);
+        // vertical AG-force shall also take current player gravity into account to carry on the momentum (fall/jump)
+        getAntiGravityForce().SetY(
+            getAntiGravityForce().getY() +
+            getGravity() / 10.f +
+            1.f /* bump-lift the player on activation because why not? It looks cool */);
+        setGravity(0.f);
     }
 
     // here we can send out this update to ALL clients so they will be updated about each player's just activated or deactivated inventory item.
