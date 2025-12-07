@@ -641,7 +641,8 @@ namespace proofps_dd
             unsigned int nSuicides,
             float fFiringAccuracy,
             unsigned int nShotsFired,
-            bool bInvulnerability)
+            bool bInvulnerability,
+            float fCurrentInventoryItemPower)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -679,6 +680,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_fFiringAccuracy = fFiringAccuracy;
             msgUserCmdUpdate.m_nShotsFired = nShotsFired;
             msgUserCmdUpdate.m_bInvulnerability = bInvulnerability;
+            msgUserCmdUpdate.m_fCurrentInventoryItemPower = fCurrentInventoryItemPower;
 
             return true;
         }
@@ -702,6 +704,7 @@ namespace proofps_dd
         float m_fFiringAccuracy;
         unsigned int m_nShotsFired;
         bool m_bInvulnerability;
+        float m_fCurrentInventoryItemPower;  // e.g. jetlax. Makes sense to include it here since usually it changes with player's position.
     };  // struct MsgUserUpdateFromServer
     static_assert(std::is_trivial_v<MsgUserUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgUserUpdateFromServer>);

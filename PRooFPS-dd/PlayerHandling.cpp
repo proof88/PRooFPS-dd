@@ -356,7 +356,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     0 /* nSuicides */,
                     0.f /* fFiringAccuracy */,
                     0 /* nShotsFiredCount */,
-                    false /* bInvulnerability */))
+                    false /* bInvulnerability */,
+                    0.f /* fCurrentInventoryItemPower */))
                 {
                     // server injects this msg to self so resources for player will be allocated upon processing these
                     m_pge.getNetwork().getServer().send(newPktSetup);
@@ -445,7 +446,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             0 /* nSuicides */,
             0.f /* fFiringAccuracy */,
             0 /* nShotsFiredCount */,
-            true /* invulnerable by default */))
+            true /* invulnerable by default */,
+            0.f /* fCurrentInventoryItemPower */))
         {
             getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -825,7 +827,8 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 playerConst.getSuicides(),
                 playerConst.getFiringAccuracy(),
                 playerConst.getShotsFiredCount(),
-                playerConst.getInvulnerability()))
+                playerConst.getInvulnerability(),
+                playerConst.getCurrentInventoryItemPower()))
             {
                 player.clearNetDirty();
 

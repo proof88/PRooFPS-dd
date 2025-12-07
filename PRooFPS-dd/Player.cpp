@@ -1226,6 +1226,18 @@ PureVector& proofps_dd::Player::getAntiGravityForce()
     return m_vecAntiGravityForce;
 }
 
+PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
+}
+
+const PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
+}
+
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class

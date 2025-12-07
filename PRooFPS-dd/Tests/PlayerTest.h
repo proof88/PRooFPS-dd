@@ -403,10 +403,12 @@ private:
             assertFalse(player.getActuallyRunningOnGround().isDirty(), "old actuallyRunningOnGround")&
             assertFalse(player.getActuallyRunningOnGround(), "actuallyRunningOnGround")&
             assertNull(player.getWeaponManager().getCurrentWeapon(), "current weapon") &
-            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") &
+            assertTrue(player.getWeaponManager().getWeapons().empty(), "weapons") /* weapons need to be manually loaded and added, maybe this change in future */ &
             assertEquals(0, player.getTimeLastToggleUseItem().time_since_epoch().count(), "time last use item toggle") &
             assertFalse(player.hasAntiGravityActive(), "antigravityactive") &
-            assertFalse(player.hasJetLax(), "has jetlax") /* weapons need to be manually loaded and added, maybe this change in future */) != 0;
+            assertFalse(player.hasJetLax(), "has jetlax") &
+            assertFalse(player.getCurrentInventoryItemPower().isDirty(), "old current inventory item power")&
+            assertEquals(0.f, player.getCurrentInventoryItemPower(), "current inventory item power") ) != 0;
     }
 
     bool test_set_name()
@@ -733,6 +735,15 @@ private:
         b &= assertTrue(player.isNetDirty(), "net dirty J 2");
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty J 3");
+
+        player.getCurrentInventoryItemPower().set(100.f);
+        b &= assertTrue(player.isDirty(), "dirty K 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty K 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty K 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty K 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty K 3");
 
         return b;
     }

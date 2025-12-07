@@ -252,6 +252,8 @@ namespace proofps_dd
         bool hasAntiGravityActive() const;
         void setHasAntiGravityActive(bool state);
         PureVector& getAntiGravityForce();
+        PgeOldNewValue<float>& getCurrentInventoryItemPower();
+        const PgeOldNewValue<float>& getCurrentInventoryItemPower() const;
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
@@ -350,7 +352,8 @@ namespace proofps_dd
             OvCrouchInput,
             OvActuallyRunningOnGround,
             OvInvulnerability,
-            OvJumpInput
+            OvJumpInput,
+            OvCurrentInventoryItemPower
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -414,13 +417,14 @@ namespace proofps_dd
                 /** Current state of player crouch input, regardless of current crouching state.
                     Player is setting it as per input.
                     Continuous op. */
-                {OldNewValueName::OvCrouchInput, PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvCrouchInput,             PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
-                {OldNewValueName::OvInvulnerability,  PgeOldNewValue<bool>(true)},
+                {OldNewValueName::OvInvulnerability,         PgeOldNewValue<bool>(true)},
                 /** Current state of player jump input, regardless of current jumping state.
                     Player is setting it as per input.
                     Continuous op. */
-                {OldNewValueName::OvJumpInput, PgeOldNewValue<bool>(false)}
+                {OldNewValueName::OvJumpInput,                 PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvCurrentInventoryItemPower, PgeOldNewValue<float>(0.f)}
         };
 
         /** Which team this player belongs to.
@@ -545,6 +549,7 @@ namespace proofps_dd
 
         bool m_bHasJetLax = false;
         bool m_bHasAntiGravityActive = false;
+        PgeOldNewValue<float> m_fCurrentInventoryItemPower{ 0.f };
 
         // ---------------------------------------------------------------------------
 
