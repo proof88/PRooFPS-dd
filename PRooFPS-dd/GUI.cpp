@@ -2599,7 +2599,10 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
                 ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
             );
         }
-        drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Inventory: JetLax");
+        drawTextHighlighted(
+            10,
+            ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+            "Inventory: JetLax: " + std::to_string(static_cast<int>(std::lroundf(player.getCurrentInventoryItemPower()))) + " %");
         if (player.hasAntiGravityActive())
         {
             ImGui::PopStyleColor();
