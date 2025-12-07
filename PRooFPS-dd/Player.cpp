@@ -111,6 +111,7 @@ proofps_dd::Player::Player(
         m_sndWpnNew = new SoLoud::Wav();
         m_sndArmor = new SoLoud::Wav();
         m_sndMedkit = new SoLoud::Wav();
+        m_sndJetlax = new SoLoud::Wav();
         m_sndJumppad = new SoLoud::Wav();
         m_sndPlayerItemActivateAntiGravity = new SoLoud::Wav();
         m_sndFallYell_1 = new SoLoud::Wav();
@@ -138,6 +139,7 @@ proofps_dd::Player::Player(
         m_audio.loadSound(*m_sndWpnNew, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_wpn_new.wav");
         m_audio.loadSound(*m_sndArmor, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_armor.wav");
         m_audio.loadSound(*m_sndMedkit, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_medkit.wav");
+        m_audio.loadSound(*m_sndJetlax, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/item_jetlax.wav");
         m_audio.loadSound(*m_sndJumppad, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/jumppad.wav");
         m_audio.loadSound(*m_sndPlayerItemActivateAntiGravity, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/item_jetlax_activate.wav");
         m_audio.loadSound(*m_sndFallYell_1, std::string(proofps_dd::GAME_AUDIO_DIR) + "player/the-howie-scream-2.wav");
@@ -173,6 +175,7 @@ proofps_dd::Player::Player(
         m_sndWpnAmmo->setSingleInstance(true);
         m_sndArmor->setSingleInstance(true);
         m_sndMedkit->setSingleInstance(true);
+        m_sndJetlax->setSingleInstance(true);
         m_sndJumppad->setSingleInstance(true);
 
         // These are hearable by other players as well so min/max distance is very important.
@@ -2069,7 +2072,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(const proofps_dd::MapItemType& 
             break;
         case MapItemType::ITEM_JETLAX:
             //getConsole().EOLn("Player::%s() playing sound", __func__);
-            m_audio.play3dSound(*m_sndArmor, getPos().getNew());
+            m_audio.play3dSound(*m_sndJetlax, getPos().getNew());
             m_eventsItemPickup.addEvent("JetLax added to inventory");
             m_eventsInventoryChange.addEvent("+ JetLax");
             break;
@@ -2263,6 +2266,7 @@ SoLoud::Wav* proofps_dd::Player::m_sndWpnAmmo = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndWpnNew = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndArmor = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndMedkit = nullptr;
+SoLoud::Wav* proofps_dd::Player::m_sndJetlax = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndJumppad = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndPlayerItemActivateAntiGravity = nullptr;
 SoLoud::Wav* proofps_dd::Player::m_sndFallYell_1 = nullptr;

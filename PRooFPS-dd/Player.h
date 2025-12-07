@@ -359,6 +359,7 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndWpnNew;
         static SoLoud::Wav* m_sndArmor;
         static SoLoud::Wav* m_sndMedkit;
+        static SoLoud::Wav* m_sndJetlax;
         static SoLoud::Wav* m_sndJumppad;
         static SoLoud::Wav* m_sndPlayerItemActivateAntiGravity;
         static SoLoud::Wav* m_sndFallYell_1;
