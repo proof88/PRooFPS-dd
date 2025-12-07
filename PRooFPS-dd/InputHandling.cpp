@@ -253,7 +253,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     // crouching is also continuous op
     player.getCrouchInput().set(pktUserCmdMove.m_bCrouch);
-    if (!player.hasAntiGravityActive() /* antigravity descending is handled in serverGravity() */)
+    if (!player.hasAntiGravityActive())
     {
         // crouch-induced player scaling and repositioning are handled in the physics class
         if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
@@ -269,6 +269,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     }
     else
     {
+        /* antigravity descending is handled in serverGravity() */
         player.getWantToStandup() = true;  // this stays permanent across frames
     }
 
@@ -734,11 +735,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     if (player.hasAntiGravityActive())
     {
-        m_bJump = m_pge.getInput().getKeyboard().isKeyPressed(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+        m_bJump = m_pge.getInput().getKeyboard().areKeysPressed(VK_SPACE, (unsigned char)VkKeyScan('w'));
     }
     else
     {
-        m_bJump = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+        m_bJump = m_pge.getInput().getKeyboard().areKeysPressedOnce(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
     }
 
     bool bToggleRunWalk = false;

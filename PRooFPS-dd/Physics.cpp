@@ -283,7 +283,7 @@ static void updateAntiGravityForce(
     {
         fOutAntiGravityForceXorY = fTargetAntiGravityThrust;
     }
-
+    
     if (abs(fOutAntiGravityForceXorY) < 0.01f)
     {
         fOutAntiGravityForceXorY = 0.f;
@@ -349,7 +349,8 @@ void proofps_dd::Physics::serverGravity(
                 fTargetAntiGravityThrust = -5.f;
             }
         }
-        updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), true /* vertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
+        //getConsole().EOLn("fTargetAntiGravityThrust Y: %f", fTargetAntiGravityThrust);
+        updateAntiGravityForce(fTargetAntiGravityThrust, player.getAntiGravityForce(), true /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
 
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
@@ -374,6 +375,7 @@ void proofps_dd::Physics::serverGravity(
         {
             // the idea with antigravity is that player gravity is forced to 0 and player input is affecting its antigravity forces only.
             player.setGravity(0.f);
+            //getConsole().EOLn("AG-force Y: %f", player.getAntiGravityForce().getY());
         }
         else
         {
