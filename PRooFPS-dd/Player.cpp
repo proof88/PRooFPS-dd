@@ -2127,7 +2127,12 @@ void proofps_dd::Player::handleToggleInventoryItem(
         return;
     }
     
-    if (!bOldAntiGravityActive)
+    if (bOldAntiGravityActive)
+    {
+        // just disabled antigravity, from now on jumpforce takes over
+        getJumpForce() = getAntiGravityForce() / 100.f;
+    }
+    else
     {
         // just enabled antigravity,
         // if there was any non-zero jumpforce (turned antigravity on in the middle of a jump), save it but
