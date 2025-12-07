@@ -1730,7 +1730,7 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     case proofps_dd::MapItemType::ITEM_HEALTH:
         return (getHealth() < 100);
     case proofps_dd::MapItemType::ITEM_JETLAX:
-        return !hasJetLax();
+        return !hasJetLax() || (getCurrentInventoryItemPower() < 70.f);
     default:
         ;
     }
