@@ -982,6 +982,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getSuicides() = msg.m_nSuicides;
     player.getFiringAccuracy() = msg.m_fFiringAccuracy;
     player.getShotsFiredCount() = msg.m_nShotsFired;
+    player.getCurrentInventoryItemPower() = msg.m_fCurrentInventoryItemPower;
 
     //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
     //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
