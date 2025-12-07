@@ -2592,7 +2592,19 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
 
     if (player.hasJetLax())
     {
+        if (player.hasAntiGravityActive())
+        {
+            ImGui::PushStyleColor(
+                ImGuiCol_Text,
+                ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+            );
+        }
         drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Inventory: JetLax");
+        if (player.hasAntiGravityActive())
+        {
+            ImGui::PopStyleColor();
+        }
+
         updatePlayerInventoryChangeEvents();
     }
 }
