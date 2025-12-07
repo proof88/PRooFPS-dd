@@ -342,7 +342,7 @@ void proofps_dd::Physics::serverGravity(
         {
             if (player.getJumpInput())
             {
-                fTargetAntiGravityThrust = 5.f;
+                fTargetAntiGravityThrust = 3.f;
             }
             if (player.getCrouchInput())
             {
