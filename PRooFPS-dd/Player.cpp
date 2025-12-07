@@ -2070,6 +2070,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(
     /* all instances must be aware of what inventory items other players have */
     case MapItemType::ITEM_JETLAX:
         setHasJetLax(true);
+        getCurrentInventoryItemPower().set(100.f); // this is sent in MsgUserUpdateFromServer too when scheduled, but anyway why not set here too ...
         break;
     default:
         break; /* no-op */
