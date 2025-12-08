@@ -1,0 +1,21 @@
+/*
+  ###################################################################################
+  _how-to-manual-test-02-inventory.txt
+  Part of the PRooFPS-dd manual tests.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2025
+  ###################################################################################
+*/
+
+- Inventory item usage test, when client connects in LATER
+  (this tests if server replays inventory messages properly to late clients):
+
+  - Start a server instance in any Game Mode.
+  - pick up an inventory item with server player.
+  - start and connect a client to the server.
+  - activate inventory item by server player, it shall be visible and/or audible as expected by the client player.
+  - disconnect the client.
+  - reconnect client.
+  - active use of inventory item by server player shall be still visible and/or audible as expected by the client player.
+  - deactivate inventory item by server player.
+  - deactivation shall be visible and/or audible as expected by the client player.

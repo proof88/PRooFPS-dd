@@ -1,0 +1,18 @@
+/*
+  ###################################################################################
+  _how-to-manual-test-04-general.txt
+  Part of the PRooFPS-dd manual tests.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2025
+  ###################################################################################
+*/
+
+ Start a server instance in any Game Mode, and 2 client instances (and connect them to server), then:
+   - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
+   - make sure that the player can go into the small tunnel on the very left side of warhouse by crouch+jumping;
+   - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto.
+
+   - 3D sound check:
+     - mute server and 1 client instance, check if you hear proper sound (other players' walk, shooting, falling-from-high-yell) in the unmuted client instance;
+     - mute the client instance, unmute the other client, check for same proper sounds (other players' walk, shooting, falling-from-high-yell);
+     - mute both client instances, unmute server and check for same proper sounds (other players' walk, shooting, falling-from-high-yell).

@@ -1,0 +1,14 @@
+/*
+  ###################################################################################
+  _how-to-manual-test-00.txt
+  Steps how to test the game manually.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2025
+  ###################################################################################
+*/
+
+ - Build a Release version with "Release" configuration;
+
+ - Copy the built PRooFPS-dd.exe to the main PRooFPS-dd directory, overwrite the existing .exe there;
+
+ - Execute the tests as defined in the rest of the _how-to-manual-test-*.txt files.
