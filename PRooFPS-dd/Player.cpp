@@ -2194,6 +2194,13 @@ void proofps_dd::Player::handleToggleInventoryItem(
             getGravity() / 10.f +
             1.f /* bump-lift the player on activation because why not? It looks cool */);
         setGravity(0.f);
+
+        // satisfy isInAir()
+        setCanFall(true); /* we are NOT on-ground, so definitely can fall */
+        stopJumping(); /* definitely not jumping anymore even if we were not even jumping at this moment */
+
+        // otherwise it will trigger yelling only once
+        m_bFallingHighTriggered = false;
     }
 
     // here we can send out this update to ALL clients so they will be updated about each player's just activated or deactivated inventory item.
