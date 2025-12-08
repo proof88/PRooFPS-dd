@@ -2156,6 +2156,12 @@ void proofps_dd::Player::handleToggleInventoryItem(
     {
         assert(m_sndPlayerItemActivateAntiGravity);  // otherwise new operator would had thrown already in ctor
         m_audio.play3dSound(*m_sndPlayerItemActivateAntiGravity, getPos().getNew());
+
+        // if we have already started yelling due to falling from high, stop it! :D
+        if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+        {
+            m_audio.stopSoundInstance(m_handleFallYell);
+        }
     }
 
     if (!m_network.isServer())
