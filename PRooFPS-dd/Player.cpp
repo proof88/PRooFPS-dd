@@ -2143,13 +2143,16 @@ void proofps_dd::Player::handleToggleInventoryItem(
     assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
 
     const bool bOldAntiGravityActive = hasAntiGravityActive();
-    const bool bNewAntiGravityActive = !bOldAntiGravityActive && hasJetLax() && (getCurrentInventoryItemPower() > 0.f);
+    bool bNewAntiGravityActive = !bOldAntiGravityActive; // first set it like this just to have the assertion possible below
     if (bNewAntiGravityActive && !hasJetLax())
     {
         // should not happen because then this is programmer error
         getConsole().EOLn("Player::%s(): SHALL NOT HAPPEN: bNewAntiGravityActive is true but does not have item in inventory!", __func__);
         assert(false); // crash in debug
     }
+
+    // now set it more properly so we dont try enable something we dont even have
+    bNewAntiGravityActive = !bOldAntiGravityActive && hasJetLax() && (getCurrentInventoryItemPower() > 0.f);
 
     setHasAntiGravityActive(bNewAntiGravityActive);
     if (!bOldAntiGravityActive && bNewAntiGravityActive)
