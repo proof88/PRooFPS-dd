@@ -2071,6 +2071,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(
     case MapItemType::ITEM_JETLAX:
         setHasJetLax(true);
         getCurrentInventoryItemPower().set(100.f); // this is sent in MsgUserUpdateFromServer too when scheduled, but anyway why not set here too ...
+        //getConsole().EOLn("Player::%s(): %s now has JetLax!", __func__, getName().c_str());
         break;
     default:
         break; /* no-op */
@@ -2132,15 +2133,23 @@ void proofps_dd::Player::handleTakeNonWeaponItem(
 } // handleTakeNonWeaponItem()
 
 void proofps_dd::Player::handleToggleInventoryItem(
-    const proofps_dd::MapItemType& eMapItemType)
+    const proofps_dd::MapItemType& eMapItemType,
+    const bool& bSyncHistory)
 {
     // both server and client execute this function, so be careful with conditions here;
     // ALL instances execute this function!
 
     // NOT invoked when player dies or respawns because there explicit false is set for both item use and availability.
     // Triggered by player input (toggle on/off) or when server wants to turn it off because of loss of power.
+    // Also triggered when server informs a newly connected client about another player's ACTIVE inventory item state, and in
+    // this case, bSyncHistory flag is set to true.
 
     assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
+
+    // bSyncHistory is for informing late-connecting clients about active item state, therefore server shall never have it set here.
+    assert(
+        (m_network.isServer() && !bSyncHistory) ||
+        !m_network.isServer());
 
     const bool bOldAntiGravityActive = hasAntiGravityActive();
     bool bNewAntiGravityActive = !bOldAntiGravityActive; // first set it like this just to have the assertion possible below
@@ -2155,17 +2164,25 @@ void proofps_dd::Player::handleToggleInventoryItem(
     bNewAntiGravityActive = !bOldAntiGravityActive && hasJetLax() && (getCurrentInventoryItemPower() > 0.f);
 
     setHasAntiGravityActive(bNewAntiGravityActive);
-    if (!bOldAntiGravityActive && bNewAntiGravityActive)
+    
+    if (!bSyncHistory)
     {
-        assert(m_sndPlayerItemActivateAntiGravity);  // otherwise new operator would had thrown already in ctor
-        m_audio.play3dSound(*m_sndPlayerItemActivateAntiGravity, getPos().getNew());
-
-        // if we have already started yelling due to falling from high, stop it! :D
-        if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+        if (!bOldAntiGravityActive && bNewAntiGravityActive)
         {
-            m_audio.stopSoundInstance(m_handleFallYell);
+            assert(m_sndPlayerItemActivateAntiGravity);  // otherwise new operator would had thrown already in ctor
+            m_audio.play3dSound(*m_sndPlayerItemActivateAntiGravity, getPos().getNew());
+
+            // if we have already started yelling due to falling from high, stop it! :D
+            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
+            {
+                m_audio.stopSoundInstance(m_handleFallYell);
+            }
         }
     }
+    //else
+    //{
+    //    getConsole().EOLn("Player::%s(): synced bNewAntiGravityActive %b for player %s!", __func__, bNewAntiGravityActive, getName().c_str());
+    //}
 
     if (!m_network.isServer())
     {
@@ -2212,7 +2229,8 @@ void proofps_dd::Player::handleToggleInventoryItem(
         pktPlayerEvent,
         getServerSideConnectionHandle(),
         PlayerEventId::InventoryItemToggle,
-        static_cast<int>(eMapItemType));
+        static_cast<int>(eMapItemType),
+        false /* bSyncHistory */);
     m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 } // handleToggleInventoryItem()
 

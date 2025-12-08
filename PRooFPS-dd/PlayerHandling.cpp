@@ -1189,7 +1189,9 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         player.handleTakeNonWeaponItem(static_cast<MapItemType>(msg.m_optData1.m_nValue), bCurrentClient);
         break;
     case PlayerEventId::InventoryItemToggle:
-        player.handleToggleInventoryItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
+        player.handleToggleInventoryItem(
+            static_cast<MapItemType>(msg.m_optData1.m_nValue),
+            msg.m_optData2.m_bValue);
         break;
     case PlayerEventId::ItemUntake:
         player.handleUntakeInventoryItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));

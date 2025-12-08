@@ -325,7 +325,8 @@ namespace proofps_dd
             const proofps_dd::MapItemType& eMapItemType,
             const bool& bMe);
         void handleToggleInventoryItem(
-            const proofps_dd::MapItemType& eMapItemType);
+            const proofps_dd::MapItemType& eMapItemType,
+            const bool& bSyncHistory);
         void handleUntakeInventoryItem(
             const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(

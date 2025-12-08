@@ -1321,6 +1321,40 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     static_cast<int>(it.second.getTeamId()));
                 getNetwork().getServer().send(pktPlayerEvent, connHandleServerSide);
 
+                // send item availability BEFORE MsgUserUpdateFromServer because latter has the up-to-date getCurrentInventoryItemPower()
+                if (it.second.hasJetLax())
+                {
+                    pge_network::PgePacket pktPlayerInventoryItemAvailable;
+                    if (!proofps_dd::MsgPlayerEventFromServer::initPkt(
+                        pktPlayerInventoryItemAvailable,
+                        it.second.getServerSideConnectionHandle(),
+                        PlayerEventId::ItemTake,
+                        static_cast<int>(MapItemType::ITEM_JETLAX)))
+                    {
+                        getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                        assert(false);
+                        continue;
+                    }
+                    getNetwork().getServer().send(pktPlayerInventoryItemAvailable, connHandleServerSide);
+                }
+
+                if (it.second.hasAntiGravityActive())
+                {
+                    pge_network::PgePacket pktPlayerInventoryItemActive;
+                    if (!proofps_dd::MsgPlayerEventFromServer::initPkt(
+                        pktPlayerInventoryItemActive,
+                        it.second.getServerSideConnectionHandle(),
+                        PlayerEventId::InventoryItemToggle,
+                        static_cast<int>(MapItemType::ITEM_JETLAX),
+                        true /* bSyncHistory */))
+                    {
+                        getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                        assert(false);
+                        continue;
+                    }
+                    getNetwork().getServer().send(pktPlayerInventoryItemActive, connHandleServerSide);
+                }
+
                 pge_network::PgePacket newPktUserUpdate;
                 if (!proofps_dd::MsgUserUpdateFromServer::initPkt(
                     newPktUserUpdate,

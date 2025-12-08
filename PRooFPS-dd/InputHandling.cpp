@@ -207,7 +207,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
         else
         {
-            player.handleToggleInventoryItem(MapItemType::ITEM_JETLAX);
+            player.handleToggleInventoryItem(MapItemType::ITEM_JETLAX, false);
         }
     }
 
