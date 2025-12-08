@@ -2107,7 +2107,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(
         return;
     }
 
-    // no need to inform all players about non-inventory item pickups
+    // need to inform all players about inventory item pickups
     if (eMapItemType == MapItemType::ITEM_JETLAX)
     {
         pge_network::PgePacket pktPlayerEvent;
@@ -2199,6 +2199,41 @@ void proofps_dd::Player::handleToggleInventoryItem(
         static_cast<int>(eMapItemType));
     m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 } // handleToggleInventoryItem()
+
+void proofps_dd::Player::handleUntakeInventoryItem(
+    const proofps_dd::MapItemType& eMapItemType)
+{
+    // both server and client execute this function, so be careful with conditions here;
+    // ALL instances execute this function!
+
+    // NOT invoked when player dies or respawns because there explicit false is set for both item use and availability.
+    // Triggered when server wants player to untake it because of loss of power.
+
+    assert(eMapItemType == MapItemType::ITEM_JETLAX); // for now this is the only allowed item here
+
+    if (hasAntiGravityActive())
+    {
+        // should not happen because then this is programmer error, server shall always turn item off before triggering untake!
+        getConsole().EOLn("Player::%s(): SHALL NOT HAPPEN: hasAntiGravityActive is still true!", __func__);
+        assert(false); // crash in debug
+    }
+
+    //getConsole().EOLn("Player::%s(): %u (%s) does not have jetlax anymore", __func__, getServerSideConnectionHandle(), getName().c_str());
+    setHasJetLax(false);
+
+    if (!m_network.isServer())
+    {
+        return;
+    }
+
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::ItemUntake,
+        static_cast<int>(eMapItemType));
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
+} // handleUntakeInventoryItem()
 
 void proofps_dd::Player::handleTakeWeaponItem(
     const proofps_dd::MapItemType& eMapItemType,

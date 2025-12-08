@@ -1191,6 +1191,9 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
     case PlayerEventId::InventoryItemToggle:
         player.handleToggleInventoryItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
         break;
+    case PlayerEventId::ItemUntake:
+        player.handleUntakeInventoryItem(static_cast<MapItemType>(msg.m_optData1.m_nValue));
+        break;
     case PlayerEventId::JumppadActivated:
         assert(bCurrentClient);
         player.handleJumppadActivated();

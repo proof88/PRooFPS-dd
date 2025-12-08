@@ -34,6 +34,7 @@ namespace proofps_dd
         FallingFromHigh = 0,
         Landed,
         ItemTake,
+        ItemUntake,
         InventoryItemToggle,
         JumppadActivated,
         TeamIdChanged,
@@ -324,6 +325,8 @@ namespace proofps_dd
             const proofps_dd::MapItemType& eMapItemType,
             const bool& bMe);
         void handleToggleInventoryItem(
+            const proofps_dd::MapItemType& eMapItemType);
+        void handleUntakeInventoryItem(
             const proofps_dd::MapItemType& eMapItemType);
         void handleTakeWeaponItem(
             const proofps_dd::MapItemType& eMapItemType,
