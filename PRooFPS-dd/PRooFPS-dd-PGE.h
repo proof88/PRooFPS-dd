@@ -121,7 +121,7 @@ namespace proofps_dd
 
         void updateFramesPerSecond(PureWindow& window);
         void serverRestartGame();
-        void updateVisualsForGameMode();
+        void updateAudioVisualsForGameModeShared();
 
         void serverPickupAndRespawnItems();
 

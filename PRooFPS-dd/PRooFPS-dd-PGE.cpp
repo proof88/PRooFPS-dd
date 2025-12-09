@@ -226,6 +226,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
 
     getAudio().loadSound(m_sounds.m_sndMenuMusic,     std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Monkeys_Spinning_Monkeys.mp3");
     m_sounds.m_sndMenuMusic.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndEndgameMusic, std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Fart_with_Musical_Instrument_XSoundEffect.mp3");
+    m_sounds.m_sndEndgameMusic.setSingleInstance(true);
     getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");
     getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
@@ -386,6 +388,7 @@ void proofps_dd::PRooFPSddPGE::onGameRunning()
     }
     else
     {
+        getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
         if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndMenuMusicHandle))
         {
             m_sounds.m_sndMenuMusicHandle = getAudio().playSound(m_sounds.m_sndMenuMusic);
@@ -850,7 +853,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
         m_config.getCameraRolling());
     
     updatePlayersVisuals(m_config, *GameMode::getGameMode()); // maybe we should do this per-tick instead of per-frame in the future
-    updateVisualsForGameMode();
+    updateAudioVisualsForGameModeShared();
     m_maps.update(m_fps, *player.getObject3D());
     m_maps.updateVisibilitiesForRenderer();
 }
@@ -965,19 +968,25 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
 
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
+    getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle); // server stops it here, clients stop it when they process MsgGameSessionStateFromServer
     m_gui.getServerEvents()->addGameRestartedEvent(); // server adds it here, clients add when they process MsgGameSessionStateFromServer
     GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
     m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer(); // server does it here, clients add when they process MsgGameSessionStateFromServer 
 }
 
-void proofps_dd::PRooFPSddPGE::updateVisualsForGameMode()
+void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
 {
+    // both server and client instances execute this
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     static bool bGameWonStateInPrevFrame = false;
     const bool bGameWonStateThisFrame = GameMode::getGameMode()->isGameWon();
     if (!bGameWonStateInPrevFrame && bGameWonStateThisFrame)
     {
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndEndgameMusicHandle))
+        {
+            m_sounds.m_sndEndgameMusicHandle = getAudio().playSound(m_sounds.m_sndEndgameMusic);
+        }
         m_gui.hideInGameMenu();
         m_gui.showGameObjectives();
         m_gui.getXHair()->hide();
@@ -1134,8 +1143,10 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
     assert(GameMode::getGameMode());
     GameMode::getGameMode()->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
 
+    // Note: although clients stop endgame music here, starting the music is in common code in updateAudioVisualsForGameModeShared()
     if (!msg.m_bGameSessionEnd)
     {
+        getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
         // !!! BADDESIGN !!!
         // GUI should be invoked in GameMode's restartWithoutRemovingPlayers(), however I cannot include GUI.h in GameMode now ...
         m_gui.hideGameObjectives();
@@ -1144,6 +1155,7 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
 
     if (msg.m_bGameRestarted)
     {
+        getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
         m_gui.getServerEvents()->addGameRestartedEvent();
         m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer();
     }
@@ -1572,6 +1584,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
 
     // TODO: make sure received map name is properly null-terminated! someone else could had sent that, e.g. malicious server
 
+    getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
     if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndMenuMusicHandle))
     {
         m_sounds.m_sndMenuMusicHandle = getAudio().playSound(m_sounds.m_sndMenuMusic);

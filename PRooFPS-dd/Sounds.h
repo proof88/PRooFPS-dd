@@ -35,6 +35,8 @@ namespace proofps_dd
         // TODO: to be moved
         SoLoud::Wav m_sndMenuMusic;
         SoLoud::handle m_sndMenuMusicHandle{};
+        SoLoud::Wav m_sndEndgameMusic;
+        SoLoud::handle m_sndEndgameMusicHandle{};
         SoLoud::Wav m_sndLetsgo;
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;
