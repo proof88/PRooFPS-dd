@@ -1922,7 +1922,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 300.f;
+    constexpr float fContentHeight = 400.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -2005,6 +2005,20 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     if (ImGui::TextHyperLink("Licensed under Flaticon License", true))
     {
         browseToUrl("https://www.flaticon.com/legal#nav-flaticon-agreement");
+    }
+
+    ImGui::TextUnformatted("");
+    if (ImGui::TextHyperLink("Stomach Growling Sound Effect (on Game Sounds Youtube Channel)", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=NPTBnYUb9pc");
+    }
+    if (ImGui::TextHyperLink("Real fart sounds. (on Jersmoke's Youtube Channel)", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=vAuA4E83ZzE");
+    }
+    if (ImGui::TextHyperLink("Crazy dog laughing meme template (on Effectus lab Youtube Channel)", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=_oHXa4y1BOM");
     }
 
     ImGui::Separator();

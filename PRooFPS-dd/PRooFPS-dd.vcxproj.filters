@@ -493,6 +493,11 @@
   <ItemGroup>
     <Text Include="_how-to-release.txt" />
     <Text Include="_how-to-auto-test.txt" />
-    <Text Include="_how-to-manual-test.txt" />
+    <Text Include="_how-to-manual-test-00.txt" />
+    <Text Include="_how-to-manual-test-01-team-deathmatch.txt" />
+    <Text Include="_how-to-manual-test-02-inventory.txt" />
+    <Text Include="_how-to-manual-test-03-misc.txt" />
+    <Text Include="_how-to-manual-test-05-weapon-settings.txt" />
+    <Text Include="_how-to-manual-test-04-general.txt" />
   </ItemGroup>
 </Project>
