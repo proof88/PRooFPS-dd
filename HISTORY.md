@@ -49,6 +49,7 @@ This version brings the following **features**:
    - Jump to next map (removed '.' key's same functionality),
    - Restart game.
  - After game is won, frag table is shown for up to 60 seconds before automatic game restart, but server can use Server Admin menu to trigger an action earlier.
+ - After game is won, **a new music** is being played while the frag table is displayed.
  - **Extra funny sound effects** for:
    - dying by falling from high altitude,
    - and when multiple players are killed by a single explosion.
