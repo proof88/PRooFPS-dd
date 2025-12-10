@@ -1324,7 +1324,8 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
                 !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
             {
                 m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = true;
-                m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemLowThrustAntiGravity, getPos().getNew());
+                m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(
+                    *m_sndPlayerItemLowThrustAntiGravity, getPos().getNew(), false /* bKillWhenInAudible */);
             }
             m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
             if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
@@ -1339,7 +1340,8 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
                 !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
             {
                 m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = true;
-                m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemHighThrustAntiGravity, getPos().getNew());
+                m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(
+                    *m_sndPlayerItemHighThrustAntiGravity, getPos().getNew(), false /* bKillWhenInAudible */);
             }
             m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
             if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
