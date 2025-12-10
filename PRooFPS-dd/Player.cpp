@@ -2297,7 +2297,11 @@ void proofps_dd::Player::handleToggleInventoryItem(
     }
 
     // now set it more properly so we dont try enable something we dont even have
-    bNewAntiGravityActive = !bOldAntiGravityActive && hasJetLax() && (getCurrentInventoryItemPower() > 0.f);
+    bNewAntiGravityActive =
+        !bOldAntiGravityActive &&
+        hasJetLax() &&
+        (getCurrentInventoryItemPower() > 0.f) &&
+        !getCrouchStateCurrent();
 
     setHasAntiGravityActive(bNewAntiGravityActive);
     
