@@ -80,7 +80,6 @@ namespace proofps_dd
             PGEcfgProfiles& cfgProfiles);
         void handleExplosionMultiKill(
             int nPlayersDiedByExplosion);
-        void updatePlayersOldValues();
         void writePlayerList();
         bool handleUserConnected(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -98,6 +97,7 @@ namespace proofps_dd
             proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
+        void serverUpdatePlayersOldValues();
         void serverSendUserUpdates(
             PGEcfgProfiles& cfgProfiles,
             proofps_dd::Config& config,

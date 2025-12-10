@@ -1264,8 +1264,11 @@ PureVector& proofps_dd::Player::getAntiGravityForce()
 * Unlike with other PgeOldNewValue functions, we do not define a non-const version of
 * getCurrentInventoryItemPower(), so this way we force that both server- and client instances
 * must call this function for updating inventory item power.
-* Reason: this is a convenient and reliable way to control the inventory item sound based on
-* power drop (low drop vs high drop) at a single location.
+* Reason: originally we wanted to use this as a convenient and reliable way to control the
+* inventory item sound based on power drop (low drop vs high drop) at a single location.
+* But the server still invokes this 2 times per frame, from Physics' serverUpdateAntiGravityForce()
+* and that messed up this plan. So we now control sound in a separate function:
+* updateCurrentInventoryItemPowerAudioVisualsShared().
 */
 void proofps_dd::Player::setCurrentInventoryItemPower(const float& newValue)
 {
@@ -1274,57 +1277,74 @@ void proofps_dd::Player::setCurrentInventoryItemPower(const float& newValue)
         std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
 
     ovCurrentInventoryItemPower = newValue;
-
-    // for now this function assumes inventory item can be only JETLAX, will need to generalize more!
-    if (hasAntiGravityActive())
-    {
-        const float fPowerDiff = ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld();
-        if (fPowerDiff < 0.f)
-        {
-            // drop in item power
-            // 
-            //getConsole().EOLn(
-            //    "diff: %f",
-            //    (ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld()));
-            
-            if (fPowerDiff > -0.05f)
-            {
-                // low power drop
-                if (!m_bSndPlayerItemLowThrustAntiGravityLoopingStarted &&
-                    !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
-                {
-                    m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = true;
-                    m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemLowThrustAntiGravity, getPos().getNew());
-                }
-                m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
-                if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
-                {
-                    m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
-                }
-            }
-            else
-            {
-                // high power drop
-                if (!m_bSndPlayerItemHighThrustAntiGravityLoopingStarted &&
-                    !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
-                {
-                    m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = true;
-                    m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemHighThrustAntiGravity, getPos().getNew());
-                }
-                m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
-                if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
-                {
-                    m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
-                }
-            }
-        }
-    }
 }
 
 const PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
+}
+
+
+/**
+* For this audio-visual control to work properly, this function shall be invoked MAX 1 time per frame!
+* 
+* Server instance shall invoke it after it updated current inventory item power for the last time in the current frame,
+* but before clearing dirtiness of old-new values.
+* 
+* Client instance shall invoke it when it processes MsgUserUpdateFromServer.
+*/
+void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
+{   
+    // for now this function assumes inventory item can be only JETLAX, will need to generalize more!
+    
+    if (!hasAntiGravityActive())
+    {
+        // TODO
+        return;
+    }
+
+    const PgeOldNewValue<float>& ovCurrentInventoryItemPower = getCurrentInventoryItemPower();
+    const float fPowerDiff = ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld();
+    if (fPowerDiff < 0.f)
+    {
+        // drop in item power
+
+        //getConsole().EOLn(
+        //    "diff: %f",
+        //    (ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld()));
+
+        if (fPowerDiff > -0.05f)
+        {
+            // low power drop
+            if (!m_bSndPlayerItemLowThrustAntiGravityLoopingStarted &&
+                !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+            {
+                m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = true;
+                m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemLowThrustAntiGravity, getPos().getNew());
+            }
+            m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
+            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+            {
+                m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
+            }
+        }
+        else
+        {
+            // high power drop
+            if (!m_bSndPlayerItemHighThrustAntiGravityLoopingStarted &&
+                !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+            {
+                m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = true;
+                m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemHighThrustAntiGravity, getPos().getNew());
+            }
+            m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
+            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+            {
+                m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
+            }
+        }
+    }
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()

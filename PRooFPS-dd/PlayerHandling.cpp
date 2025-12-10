@@ -269,19 +269,6 @@ void proofps_dd::PlayerHandling::handleExplosionMultiKill(
     }
 }
 
-void proofps_dd::PlayerHandling::updatePlayersOldValues()
-{
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
-        // Server invokes it here in every physics iteration. 2 reasons:
-        // - consecutive physics iterations require old and new values to be properly set;
-        // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
-        player.updateOldValues();
-    }
-}
-
 void proofps_dd::PlayerHandling::writePlayerList()
 {
     getConsole().OLnOI("PlayerHandling::%s()", __func__);
@@ -765,6 +752,21 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
     m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
 }
 
+void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues()
+{
+    assert(m_pge.getNetwork().isServer());
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
+        // Server invokes it here in every physics iteration. 2 reasons:
+        // - consecutive physics iterations require old and new values to be properly set;
+        // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
+        player.updateCurrentInventoryItemPowerAudioVisualsShared();  // must be invoked BEFORE clearing old-new value dirtiness!
+        player.updateOldValues();
+    }
+}
+
 void proofps_dd::PlayerHandling::serverSendUserUpdates(
     PGEcfgProfiles& /*cfgProfiles*/,
     proofps_dd::Config& config,
@@ -1074,6 +1076,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (!m_pge.getNetwork().isServer())
     {
         // server already invoked updateOldValues() when it sent out this update message
+        player.updateCurrentInventoryItemPowerAudioVisualsShared(); // must be invoked BEFORE clearing old-new value dirtiness!
         player.updateOldValues();
     }
 

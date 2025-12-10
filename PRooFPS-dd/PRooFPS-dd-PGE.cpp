@@ -759,7 +759,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         serverUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
         updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
-        updatePlayersOldValues();
+        serverUpdatePlayersOldValues();
 
         // @PHYSICS-RATE END
     }  // for iPhyIter

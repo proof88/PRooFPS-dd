@@ -255,6 +255,7 @@ namespace proofps_dd
         PureVector& getAntiGravityForce();
         void setCurrentInventoryItemPower(const float& newValue);
         const PgeOldNewValue<float>& getCurrentInventoryItemPower() const;
+        void updateCurrentInventoryItemPowerAudioVisualsShared();
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();
