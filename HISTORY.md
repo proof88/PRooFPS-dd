@@ -38,8 +38,9 @@ This version brings the following **features**:
  Wall jumps can be easily chained together bouncing in between nearby walls.
  - **Concept of Inventory:** inventory is where a player can store collected items and allows on-demand item use, with the **'E' key**.
  - **JetLax:** the first inventory item in the game: a laxative medicine that allows the player to have jetpack-style flying around the map for a limited amount of time, by farting.  
- After pickup it will be added to your inventory, and you can toggle it anytime by pressing the **'E' key**.  
- Control horizontal flying by strafe keys, vertical flying by jump/crouch keys.
+ After pickup it will be added to your inventory, and you can **toggle** it anytime by pressing the **'E' key**.  
+ Note: another JetLax can be picked up only if the remaining power of your current JetLax is less than 70%!
+ Flight control: use the strafe keys for horizontal, jump/crouch keys for vertical maneuvering.
  - **'W' and 'S' keys** are now also bound to jump and crouch functionality for more intuitive flying control.
  - **New Weapons:**
    - **Shotgun (key '7')**, the first weapon featuring multiple, distance-limited bullets fired at once, losing their hit damage linear to their travel distance;
