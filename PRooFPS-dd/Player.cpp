@@ -208,9 +208,11 @@ proofps_dd::Player::Player(
 
         m_sndPlayerItemLowThrustAntiGravity->set3dMinMaxDistance(SndPlayerItemLowThrustAntiGravityDistMin, SndPlayerItemLowThrustAntiGravityDistMax);
         m_sndPlayerItemLowThrustAntiGravity->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+        m_sndPlayerItemLowThrustAntiGravity->setLooping(true);
 
         m_sndPlayerItemHighThrustAntiGravity->set3dMinMaxDistance(SndPlayerItemHighThrustAntiGravityDistMin, SndPlayerItemHighThrustAntiGravityDistMax);
         m_sndPlayerItemHighThrustAntiGravity->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+        m_sndPlayerItemHighThrustAntiGravity->setLooping(true);
 
         m_sndPlayerLandSmallFall->set3dMinMaxDistance(SndPlayerLandedDistMin, SndPlayerLandedDistMax);
         m_sndPlayerLandSmallFall->set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
@@ -475,12 +477,20 @@ void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bo
         }
     }
 
-    // so far this is the only 3D sound that needs continuous position update because it is relatively longer than others AND played when player position is rapidly changing,
-    // AND other players need to continuously hear from the updated position e.g. we want them experience the sound coming down from above with the falling player :)
+    // Player-related 3D sounds that are relatively longer than others need continuous position update because the player
+    // AND other players need to continuously hear them from the updated position e.g. we want them experience the sound coming down from above with the falling player :)
+    const PureVector& playerPos = getPos().getNew();
     if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleFallYell))
     {
-        const PureVector& playerPos = getPos().getNew();
         m_audio.getAudioEngineCore().set3dSourcePosition(m_handleFallYell, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+    }
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+    {
+        m_audio.getAudioEngineCore().set3dSourcePosition(m_handleSndPlayerItemLowThrustAntiGravity, playerPos.getX(), playerPos.getY(), playerPos.getZ());
+    }
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+    {
+        m_audio.getAudioEngineCore().set3dSourcePosition(m_handleSndPlayerItemHighThrustAntiGravity, playerPos.getX(), playerPos.getY(), playerPos.getZ());
     }
 }
 
@@ -657,6 +667,8 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     m_timeDied = std::chrono::steady_clock::now();
     m_audio.stopSoundInstance(m_handleFallYell);
     m_audio.stopSoundInstance(m_handleSndPlayerItemDeactivateAntiGravity);
+    m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
+    m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
     if (bMe)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
@@ -2213,6 +2225,15 @@ void proofps_dd::Player::handleToggleInventoryItem(
             if (!m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemDeactivateAntiGravity))
             {
                 m_handleSndPlayerItemDeactivateAntiGravity = m_audio.play3dSound(*m_sndPlayerItemDeactivateAntiGravity, getPos().getNew());
+            }
+
+            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+            {
+                m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
+            }
+            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+            {
+                m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
             }
         }
     }
