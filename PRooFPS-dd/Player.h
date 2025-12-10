@@ -505,7 +505,9 @@ namespace proofps_dd
         // for these we should set proper attenuation model with min/max distance!
         SoLoud::handle m_handleSndPlayerItemDeactivateAntiGravity = 0;
         SoLoud::handle m_handleSndPlayerItemLowThrustAntiGravity = 0;
+        bool           m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
         SoLoud::handle m_handleSndPlayerItemHighThrustAntiGravity = 0;
+        bool           m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
         SoLoud::handle m_handleFallYell = 0;
         SoLoud::handle m_handleSndPlayerLandSmallFall = 0;
         SoLoud::handle m_handleSndPlayerLandBigFall = 0;

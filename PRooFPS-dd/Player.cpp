@@ -1290,10 +1290,13 @@ void proofps_dd::Player::setCurrentInventoryItemPower(const float& newValue)
             if (fPowerDiff > -0.05f)
             {
                 // low power drop
-                if (!m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+                if (!m_bSndPlayerItemLowThrustAntiGravityLoopingStarted &&
+                    !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
                 {
+                    m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = true;
                     m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemLowThrustAntiGravity, getPos().getNew());
                 }
+                m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
                 if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
                 {
                     m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
@@ -1302,10 +1305,13 @@ void proofps_dd::Player::setCurrentInventoryItemPower(const float& newValue)
             else
             {
                 // high power drop
-                if (!m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+                if (!m_bSndPlayerItemHighThrustAntiGravityLoopingStarted &&
+                    !m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
                 {
+                    m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = true;
                     m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemHighThrustAntiGravity, getPos().getNew());
                 }
+                m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
                 if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
                 {
                     m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
