@@ -738,7 +738,7 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
         m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::Maps::fMapBlockSizeDepth); // ah why dont we have vector-scalar subtract operator defined ...
     const PureVector vRelaxedMapMaxBounds(
         m_maps.getBlocksVertexPosMax().getX() + proofps_dd::Maps::fMapBlockSizeWidth * 4,
-        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight * 4,
+        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight * 6,
         m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
     
     return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getScaledSizeVec());
