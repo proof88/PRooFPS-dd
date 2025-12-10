@@ -371,6 +371,9 @@ namespace proofps_dd
         static SoLoud::Wav* m_sndJetlax;
         static SoLoud::Wav* m_sndJumppad;
         static SoLoud::Wav* m_sndPlayerItemActivateAntiGravity;
+        static SoLoud::Wav* m_sndPlayerItemDeactivateAntiGravity;
+        static SoLoud::Wav* m_sndPlayerItemLowThrustAntiGravity;
+        static SoLoud::Wav* m_sndPlayerItemHighThrustAntiGravity;
         static SoLoud::Wav* m_sndFallYell_1;
         static SoLoud::Wav* m_sndFallYell_2;
         static SoLoud::Wav* m_sndPlayerLandSmallFall;
@@ -500,6 +503,7 @@ namespace proofps_dd
 
         // these sounds for which we store handles, they are played for any player so other players can also hear them, remember
         // for these we should set proper attenuation model with min/max distance!
+        SoLoud::handle m_handleSndPlayerItemDeactivateAntiGravity = 0;
         SoLoud::handle m_handleFallYell = 0;
         SoLoud::handle m_handleSndPlayerLandSmallFall = 0;
         SoLoud::handle m_handleSndPlayerLandBigFall = 0;
