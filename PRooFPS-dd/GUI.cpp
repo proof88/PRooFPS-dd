@@ -1984,6 +1984,14 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     }
 
     ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Game End Music:");
+    ImGui::SameLine();
+    if (ImGui::TextHyperLink("\"Fart with Musical Instrument\" by X Sound Effect", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=lCCwBYcPads");
+    }
+
+    ImGui::TextUnformatted("");
     ImGui::TextUnformatted("Smoke Texture:");
     ImGui::SameLine();
     if (ImGui::TextHyperLink("OpenGameArt.org", true))
@@ -2012,9 +2020,13 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     {
         browseToUrl("https://www.youtube.com/watch?v=NPTBnYUb9pc");
     }
-    if (ImGui::TextHyperLink("Real fart sounds. (on Jersmoke's Youtube Channel)", true))
+    if (ImGui::TextHyperLink("World's Longest Flappy Fart, from Catapult Reservatory, LLC", true))
     {
-        browseToUrl("https://www.youtube.com/watch?v=vAuA4E83ZzE");
+        browseToUrl("https://www.youtube.com/watch?v=ZuRJWukmr2g");
+    }
+    if (ImGui::TextHyperLink("Fart SFX, Long and Deep, from Catapult Reservatory, LLC", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=A_TIwbqMw_c");
     }
     if (ImGui::TextHyperLink("Crazy dog laughing meme template (on Effectus lab Youtube Channel)", true))
     {

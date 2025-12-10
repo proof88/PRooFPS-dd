@@ -329,7 +329,7 @@ static void serverUpdateAntiGravityForce(
             }
         }
         assert(fPlayerAntiGravityPowerChangePerTick <= 0.f);
-        player.getCurrentInventoryItemPower().set(
+        player.setCurrentInventoryItemPower(
             std::max(0.f, (player.getCurrentInventoryItemPower() + fPlayerAntiGravityPowerChangePerTick).getNew()));
 
         if (player.getCurrentInventoryItemPower() == 0.f)

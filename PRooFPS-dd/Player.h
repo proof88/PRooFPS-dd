@@ -253,7 +253,7 @@ namespace proofps_dd
         bool hasAntiGravityActive() const;
         void setHasAntiGravityActive(bool state);
         PureVector& getAntiGravityForce();
-        PgeOldNewValue<float>& getCurrentInventoryItemPower();
+        void setCurrentInventoryItemPower(const float& newValue);
         const PgeOldNewValue<float>& getCurrentInventoryItemPower() const;
 
         PgeOldNewValue<bool>& getCrouchInput();

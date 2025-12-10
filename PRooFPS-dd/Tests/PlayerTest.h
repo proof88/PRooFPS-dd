@@ -736,7 +736,7 @@ private:
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty J 3");
 
-        player.getCurrentInventoryItemPower().set(100.f);
+        player.setCurrentInventoryItemPower(100.f);
         b &= assertTrue(player.isDirty(), "dirty K 1");
         b &= assertFalse(player.isNetDirty(), "net dirty K 1");
         player.updateOldValues();

@@ -1260,10 +1260,59 @@ PureVector& proofps_dd::Player::getAntiGravityForce()
     return m_vecAntiGravityForce;
 }
 
-PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower()
+/**
+* Unlike with other PgeOldNewValue functions, we do not define a non-const version of
+* getCurrentInventoryItemPower(), so this way we force that both server- and client instances
+* must call this function for updating inventory item power.
+* Reason: this is a convenient and reliable way to control the inventory item sound based on
+* power drop (low drop vs high drop) at a single location.
+*/
+void proofps_dd::Player::setCurrentInventoryItemPower(const float& newValue)
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
-    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
+    PgeOldNewValue<float>& ovCurrentInventoryItemPower =
+        std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
+
+    ovCurrentInventoryItemPower = newValue;
+
+    // for now this function assumes inventory item can be only JETLAX, will need to generalize more!
+    if (hasAntiGravityActive())
+    {
+        const float fPowerDiff = ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld();
+        if (fPowerDiff < 0.f)
+        {
+            // drop in item power
+            // 
+            //getConsole().EOLn(
+            //    "diff: %f",
+            //    (ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld()));
+            
+            if (fPowerDiff > -0.05f)
+            {
+                // low power drop
+                if (!m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+                {
+                    m_handleSndPlayerItemLowThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemLowThrustAntiGravity, getPos().getNew());
+                }
+                if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+                {
+                    m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
+                }
+            }
+            else
+            {
+                // high power drop
+                if (!m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+                {
+                    m_handleSndPlayerItemHighThrustAntiGravity = m_audio.play3dSound(*m_sndPlayerItemHighThrustAntiGravity, getPos().getNew());
+                }
+                if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+                {
+                    m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
+                }
+            }
+        }
+    }
 }
 
 const PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower() const
@@ -2104,7 +2153,7 @@ void proofps_dd::Player::handleTakeNonWeaponItem(
     /* all instances must be aware of what inventory items other players have */
     case MapItemType::ITEM_JETLAX:
         setHasJetLax(true);
-        getCurrentInventoryItemPower().set(100.f); // this is sent in MsgUserUpdateFromServer too when scheduled, but anyway why not set here too ...
+        setCurrentInventoryItemPower(100.f); // this is sent in MsgUserUpdateFromServer too when scheduled, but anyway why not set here too ...
         //getConsole().EOLn("Player::%s(): %s now has JetLax!", __func__, getName().c_str());
         break;
     default:
