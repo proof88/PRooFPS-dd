@@ -380,11 +380,11 @@ void proofps_dd::Physics::serverGravity(
         float fTargetAntiGravityThrust = 0.f;
         if (player.hasAntiGravityActive() && (playerConst.getHealth() > 0))
         {
-            if (player.getJumpInput())
+            if (player.getJumpInput() && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMax().getY() + 1.f))
             {
                 fTargetAntiGravityThrust = 3.f;
             }
-            if (player.getCrouchInput())
+            if (player.getCrouchInput() && (playerConst.getPos().getNew().getY() > m_maps.getBlockPosMin().getY()))
             {
                 fTargetAntiGravityThrust = -5.f;
             }
@@ -958,11 +958,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     float fTargetAntiGravityThrust = 0.f;
     if ((playerConst.getHealth() > 0) && player.hasAntiGravityActive())
     {
-        if (player.getStrafe() == proofps_dd::Strafe::RIGHT)
+        if ((player.getStrafe() == proofps_dd::Strafe::RIGHT) && (playerConst.getPos().getNew().getX() < m_maps.getBlockPosMax().getX()))
         {
             fTargetAntiGravityThrust = 3.f;
         }
-        if (player.getStrafe() == proofps_dd::Strafe::LEFT)
+        if ((player.getStrafe() == proofps_dd::Strafe::LEFT) && (playerConst.getPos().getNew().getX() > m_maps.getBlockPosMin().getX()))
         {
             fTargetAntiGravityThrust = -3.f;
         }
