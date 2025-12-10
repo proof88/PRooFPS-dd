@@ -256,6 +256,7 @@ namespace proofps_dd
         void setCurrentInventoryItemPower(const float& newValue);
         const PgeOldNewValue<float>& getCurrentInventoryItemPower() const;
         void updateCurrentInventoryItemPowerAudioVisualsShared();
+        void forceDeactivateCurrentInventoryItem();
 
         PgeOldNewValue<bool>& getCrouchInput();
         bool& getCrouchStateCurrent();

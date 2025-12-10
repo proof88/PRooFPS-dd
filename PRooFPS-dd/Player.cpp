@@ -337,6 +337,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
 
 proofps_dd::Player::~Player()
 {
+    forceDeactivateCurrentInventoryItem();
+
     if (m_pObj)
     {
         delete m_pObj;  // yes, dtor will remove this from its Object3DManager too!
@@ -453,6 +455,7 @@ void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bo
     if (!bAllowedForGameplay)
     {
         hide();
+        forceDeactivateCurrentInventoryItem();
         return;
     }
 
@@ -667,8 +670,7 @@ void proofps_dd::Player::die(bool bMe, bool bServer)
     m_timeDied = std::chrono::steady_clock::now();
     m_audio.stopSoundInstance(m_handleFallYell);
     m_audio.stopSoundInstance(m_handleSndPlayerItemDeactivateAntiGravity);
-    m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
-    m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
+    forceDeactivateCurrentInventoryItem();
     if (bMe)
     {
         //getConsole().OLn("PRooFPSddPGE::%s(): I died!", __func__);
@@ -800,6 +802,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
     setArmor(0);
+    forceDeactivateCurrentInventoryItem();
     setHasAntiGravityActive(false);
     setHasJetLax(false);
 
@@ -1345,6 +1348,28 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
             }
         }
     }
+}
+
+void proofps_dd::Player::forceDeactivateCurrentInventoryItem()
+{
+    // invoked by both server and client instances,
+    // useful when we need to cut any active item-related audio, etc., for example, when
+    // a game ends and we are displaying the results, players don't die but
+    // still shall stop their activities, like looping inventory item sounds.
+
+    m_bSndPlayerItemHighThrustAntiGravityLoopingStarted = false;
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
+    {
+        m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
+    }
+
+    m_bSndPlayerItemLowThrustAntiGravityLoopingStarted = false;
+    if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
+    {
+        m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
+    }
+
+    setHasAntiGravityActive(false);
 }
 
 PgeOldNewValue<bool>& proofps_dd::Player::getCrouchInput()
@@ -2302,14 +2327,7 @@ void proofps_dd::Player::handleToggleInventoryItem(
                 m_handleSndPlayerItemDeactivateAntiGravity = m_audio.play3dSound(*m_sndPlayerItemDeactivateAntiGravity, getPos().getNew());
             }
 
-            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemLowThrustAntiGravity))
-            {
-                m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
-            }
-            if (m_audio.getAudioEngineCore().isValidVoiceHandle(m_handleSndPlayerItemHighThrustAntiGravity))
-            {
-                m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
-            }
+            forceDeactivateCurrentInventoryItem();
         }
     }
     //else

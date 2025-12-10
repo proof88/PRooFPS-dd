@@ -173,6 +173,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
         player.getFiringAccuracy() = 0.f;
         player.getShotsFiredCount() = 0;
         player.getShotsHitTarget() = 0;
+        player.forceDeactivateCurrentInventoryItem(); // clients will invoke this when they process MsgGameSessionStateFromServer
     }
 }
 
@@ -1274,6 +1275,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
         if (GameMode::getGameMode()->isGameWon())
         {
             player.getObject3D()->Hide();
+            player.forceDeactivateCurrentInventoryItem();
             continue;
         }
 

@@ -995,6 +995,7 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
         {
             playerPair.second.getObject3D()->Hide();
             playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+            playerPair.second.forceDeactivateCurrentInventoryItem();
         }
     }
 
@@ -1155,6 +1156,12 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
 
     if (msg.m_bGameRestarted)
     {
+        for (auto& playerPair : m_mapPlayers)
+        {
+            // server handled this in PlayerHandling::serverRespawnPlayer() already
+            auto& player = playerPair.second;
+            player.forceDeactivateCurrentInventoryItem();
+        }
         getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
         m_gui.getServerEvents()->addGameRestartedEvent();
         m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer();
