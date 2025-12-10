@@ -700,6 +700,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
     m_gui.getSlidingProof88Laugh().hide(getAudio(), true /* forceStopAudio */);
     for (auto& connHandlePlayerPair : m_mapPlayers)
     {
+        connHandlePlayerPair.second.forceDeactivateCurrentInventoryItem();
         connHandlePlayerPair.second.getObject3D()->Hide();
         if (connHandlePlayerPair.second.getWeaponManager().getCurrentWeapon())
         {
