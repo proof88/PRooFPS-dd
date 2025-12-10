@@ -481,7 +481,7 @@ void proofps_dd::Physics::serverGravity(
                 player.getPos().getNew().getZ()
             ));
 
-        if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 5.0f))
+        if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 3.0f))
         {
             // need to die, out of map lower bound ... and this applies also when we player has invulnerability!
 
@@ -828,6 +828,7 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Play
 }
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
+    XHair& xhair,
     const unsigned int& nPhysicsRate,
     Player& player,
     PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */)
@@ -996,6 +997,20 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
             player.getPos().getNew().getY(),
             player.getPos().getNew().getZ()
         ));
+
+    if (playerConst.getHealth() > 0)
+    {
+        if ((playerConst.getPos().getNew().getX() < (m_maps.getBlockPosMin().getX() - 3.0f)) ||
+            (playerConst.getPos().getNew().getX() > (m_maps.getBlockPosMax().getX() + 3.0f)))
+        {
+            // need to die, out of map side bounds ... and this applies also when player has invulnerability!
+
+            // TODO: Same problem I have with this code from organizing perspective as explained in serverGravity().
+            --player.getFrags(); // suicide
+            ++player.getSuicides();
+            handlePlayerDied(player, xhair, player.getServerSideConnectionHandle());
+        }
+    }
 } // serverPlayerCollisionWithWalls_common_strafe()
 
 /**
@@ -1557,7 +1572,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
             xhair,
             vecCamShakeForce);
 
-        serverPlayerCollisionWithWalls_common_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
+        serverPlayerCollisionWithWalls_common_strafe(xhair, nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         const bool bHorizontalCollisionOccured = serverPlayerCollisionWithWalls_legacy_horizontal(
             player,
@@ -1603,7 +1618,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
             xhair,
             vecCamShakeForce);
 
-        serverPlayerCollisionWithWalls_common_strafe(nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
+        serverPlayerCollisionWithWalls_common_strafe(xhair, nPhysicsRate, player, vecOriginalJumpForceBeforeVerticalCollisionHandled);
 
         const bool bHorizontalCollisionOccured = serverPlayerCollisionWithWalls_bvh_horizontal(
             player,

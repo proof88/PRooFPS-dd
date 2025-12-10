@@ -152,6 +152,7 @@ namespace proofps_dd
             Player& player);
 
         void serverPlayerCollisionWithWalls_common_strafe(
+            XHair& xhair,
             const unsigned int& nPhysicsRate,
             Player& player,
             PureVector vecOriginalJumpForceBeforeVerticalCollisionHandled /* yes, copy it in */);
