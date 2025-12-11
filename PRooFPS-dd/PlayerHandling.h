@@ -97,7 +97,9 @@ namespace proofps_dd
             proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
-        void serverUpdatePlayersOldValues();
+        void serverUpdatePlayersOldValues(
+            proofps_dd::Config& config,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
         void serverSendUserUpdates(
             PGEcfgProfiles& cfgProfiles,
             proofps_dd::Config& config,
@@ -107,7 +109,8 @@ namespace proofps_dd
             const proofps_dd::MsgUserUpdateFromServer& msg,
             XHair& xhair,
             const proofps_dd::Config& config,
-            proofps_dd::GameMode& gameMode);
+            proofps_dd::GameMode& gameMode,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
         bool handleDeathNotificationFromServer(
             pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
         bool handlePlayerEventFromServer(

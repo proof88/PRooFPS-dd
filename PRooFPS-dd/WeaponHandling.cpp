@@ -533,6 +533,11 @@ void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(We
     m_pWpnAutoSwitchWhenPickedUp = wpn;
 }
 
+PgeObjectPool<proofps_dd::Smoke>& proofps_dd::WeaponHandling::getSmokePool()
+{
+    return m_smokes;
+}
+
 const PgeObjectPool<proofps_dd::Smoke>& proofps_dd::WeaponHandling::getSmokePool() const
 {
     return m_smokes;

@@ -753,7 +753,9 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
     m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
 }
 
-void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues()
+void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues(
+    proofps_dd::Config& config,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     assert(m_pge.getNetwork().isServer());
     for (auto& playerPair : m_mapPlayers)
@@ -763,7 +765,7 @@ void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues()
         // Server invokes it here in every physics iteration. 2 reasons:
         // - consecutive physics iterations require old and new values to be properly set;
         // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
-        player.updateCurrentInventoryItemPowerAudioVisualsShared();  // must be invoked BEFORE clearing old-new value dirtiness!
+        player.updateCurrentInventoryItemPowerAudioVisualsShared(config, smokes);  // must be invoked BEFORE clearing old-new value dirtiness!
         player.updateOldValues();
     }
 }
@@ -873,8 +875,9 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserUpdateFromServer& msg,
     XHair& xhair,
-    const proofps_dd::Config& /*config*/,
-    proofps_dd::GameMode& gameMode)
+    const proofps_dd::Config& config,
+    proofps_dd::GameMode& gameMode,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     // Due to https://github.com/proof88/PRooFPS-dd/issues/268, we need to apply WA here.
     // Explained in details in handlePlayerEventFromServer().
@@ -1077,7 +1080,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     if (!m_pge.getNetwork().isServer())
     {
         // server already invoked updateOldValues() when it sent out this update message
-        player.updateCurrentInventoryItemPowerAudioVisualsShared(); // must be invoked BEFORE clearing old-new value dirtiness!
+        player.updateCurrentInventoryItemPowerAudioVisualsShared(config, smokes); // must be invoked BEFORE clearing old-new value dirtiness!
         player.updateOldValues();
     }
 

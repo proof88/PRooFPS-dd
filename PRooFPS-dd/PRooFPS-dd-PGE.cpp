@@ -498,7 +498,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserUpdateFromServer>(pkt),
                 *m_gui.getXHair(),
                 m_config,
-                *GameMode::getGameMode());
+                *GameMode::getGameMode(),
+                getSmokePool());
             break;
         case proofps_dd::MsgBulletUpdateFromServer::id:
             bRet = handleBulletUpdateFromServer(
@@ -760,7 +761,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         serverUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
         updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
         serverPickupAndRespawnItems();
-        serverUpdatePlayersOldValues();
+        serverUpdatePlayersOldValues(m_config, getSmokePool());
 
         // @PHYSICS-RATE END
     }  // for iPhyIter

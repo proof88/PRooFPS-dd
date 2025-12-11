@@ -24,6 +24,7 @@
 #include "Durations.h"
 #include "EventLister.h"
 #include "PRooFPS-dd-packet.h"
+#include "Smoke.h"
 #include "Strafe.h"
 
 namespace proofps_dd
@@ -255,7 +256,9 @@ namespace proofps_dd
         PureVector& getAntiGravityForce();
         void setCurrentInventoryItemPower(const float& newValue);
         const PgeOldNewValue<float>& getCurrentInventoryItemPower() const;
-        void updateCurrentInventoryItemPowerAudioVisualsShared();
+        void updateCurrentInventoryItemPowerAudioVisualsShared(
+            const proofps_dd::Config& config,
+            PgeObjectPool<Smoke>& smokes);
         void forceDeactivateCurrentInventoryItem();
 
         PgeOldNewValue<bool>& getCrouchInput();
@@ -565,9 +568,17 @@ namespace proofps_dd
         bool m_bHasAntiGravityActive = false;
         PgeOldNewValue<float> m_fCurrentInventoryItemPower{ 0.f };
 
+        int m_nParticleEmitPerNthPhysicsIterCntr{ 0 };    /**< Counter to be used by particle emitter logic. Used by both PGE client and server instances. */
+
         // ---------------------------------------------------------------------------
 
         void BuildPlayerObject(bool blend);
+
+        int& getParticleEmitPerNthPhysicsIterationCntr();
+        const int& getParticleEmitPerNthPhysicsIterationCntr() const;
+        void emitParticles(
+            const proofps_dd::Config& config,
+            PgeObjectPool<Smoke>& smokes);
 
         PgeOldNewValue<int>& getArmor();
         PgeOldNewValue<int>& getHealth();

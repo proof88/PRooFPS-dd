@@ -280,7 +280,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_prevActualStrafe(other.m_prevActualStrafe),
     m_bAttack(other.m_bAttack),
     m_bHasJetLax(other.m_bHasJetLax),
-    m_bHasAntiGravityActive(other.m_bHasAntiGravityActive)
+    m_bHasAntiGravityActive(other.m_bHasAntiGravityActive),
+    m_nParticleEmitPerNthPhysicsIterCntr(other.m_nParticleEmitPerNthPhysicsIterCntr)
 {
     BuildPlayerObject(true);
 }
@@ -1288,16 +1289,17 @@ const PgeOldNewValue<float>& proofps_dd::Player::getCurrentInventoryItemPower() 
     return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvCurrentInventoryItemPower));
 }
 
-
 /**
 * For this audio-visual control to work properly, this function shall be invoked MAX 1 time per frame!
 * 
 * Server instance shall invoke it after it updated current inventory item power for the last time in the current frame,
-* but before clearing dirtiness of old-new values.
+* but before clearing dirtiness of old-new values. Basically it is invoked at tick-rate.
 * 
-* Client instance shall invoke it when it processes MsgUserUpdateFromServer.
+* Client instance shall invoke it before clearing dirtiness of old-new values.
 */
-void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
+void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared(
+    const proofps_dd::Config& config,
+    PgeObjectPool<Smoke>& smokes)
 {   
     // for now this function assumes inventory item can be only JETLAX, will need to generalize more!
     
@@ -1316,6 +1318,8 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared()
         //getConsole().EOLn(
         //    "diff: %f",
         //    (ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld()));
+
+        emitParticles(config, smokes);
 
         if (fPowerDiff > -0.05f)
         {
@@ -2579,6 +2583,41 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
 
     m_timeCtor = std::chrono::steady_clock::now();
+}
+
+int& proofps_dd::Player::getParticleEmitPerNthPhysicsIterationCntr()
+{
+    return m_nParticleEmitPerNthPhysicsIterCntr;
+}
+
+const int& proofps_dd::Player::getParticleEmitPerNthPhysicsIterationCntr() const
+{
+    return m_nParticleEmitPerNthPhysicsIterCntr;
+}
+
+void proofps_dd::Player::emitParticles(
+    const proofps_dd::Config& config,
+    PgeObjectPool<Smoke>& smokes)
+{
+    if (!getObject3D() || (config.getSmokeConfigAmount() == Smoke::SmokeConfigAmount::None))
+    {
+        return;
+    }
+
+    getParticleEmitPerNthPhysicsIterationCntr()++;
+    assert(static_cast<int>(m_config.getSmokeConfigAmount()) < static_cast<int>(Smoke::smokeEmitOperValues.size()));
+
+    if (getParticleEmitPerNthPhysicsIterationCntr() >= Smoke::smokeEmitOperValues[static_cast<int>(config.getSmokeConfigAmount())].m_nEmitInEveryNPhysicsIteration)
+    {
+        getParticleEmitPerNthPhysicsIterationCntr() = 0;
+        PureVector vecFartPos = getPos().getNew();
+        vecFartPos.SetY(vecFartPos.getY() - getObject3D()->getSizeVec().getY() / 2.f);
+        // not the best targetVec to use here but I need to hurry up with the release :)
+        PurePosUpTarget playerPut(vecFartPos, PureVector(), PureVector(0, 1, 0));
+        smokes.create(
+            playerPut,
+            (getObject3D()->getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
+    }
 }
 
 PgeOldNewValue<int>& proofps_dd::Player::getArmor()

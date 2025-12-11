@@ -123,6 +123,7 @@ namespace proofps_dd
         void clearWeaponPickupInducedAutoSwitchRequest();
         void scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn);
 
+        PgeObjectPool<Smoke>& getSmokePool();
         const PgeObjectPool<Smoke>& getSmokePool() const;
 
     protected:
