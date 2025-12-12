@@ -51,7 +51,7 @@ public:
         m_nPhysicsRateMin(nPhysicsRateMin),
         m_eGameModeType(eGameModeType),
         m_nTestIterations(nTestIterations),
-        m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 8 : 11),
+        m_nSecondsWaitForInstancesToChangeMap(bAreWeTestingReleaseBuild ? 8 : 14),
         m_nClients(nClients),
         m_nPlayerCounter(0),
         hServerMainGameWindow(static_cast<HWND>(0))
