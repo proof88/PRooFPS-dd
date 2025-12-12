@@ -3,3 +3,4 @@
 map_warhouse.txt
 map_warena.txt
 map_mutans.txt
+map_construction.txt

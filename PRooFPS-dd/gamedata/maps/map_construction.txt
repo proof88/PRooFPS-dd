@@ -1,0 +1,80 @@
+Name = Agard
+
+B = bricks.bmp
+D = cabinet.bmp
+F = debris.bmp
+G = thermofloc.bmp
+H = roof.bmp
+I = floor.bmp
+J = desk.bmp
+K = couch.bmp
+L = parquet.bmp
+Q = chair.bmp
+T = railing.bmp
+^ = railing
+
+a = sky.bmp
+c = beam.bmp
+e = plaster.bmp
+n = whitewall.bmp
+o = wall.bmp
+m = stone.bmp
+#p = 
+r = paneling.bmp
+#u = 
+#v = 
+w = wallpaper.bmp
+#x
+#y
+#z
+
+decal = kitchen.bmp 8 11 6 2
+decal = container.bmp 41 19 4 4
+decal = calendar.bmp 24 14 1 1.5
+decal = fridge.bmp 22 15 1 3
+decal = workshop.bmp 7 14 9 4
+decal = window.bmp 20 3 2 2
+decal = boiler.bmp 18 14.5 3 3
+
+# Pickupable items:
+# '2' char represents pistol.
+# '3' char represents machine gun.
+# '4' char represents bazooka.
+# '5' char represents pusha.
+# '6' char represents machine pistol.
+# '7' char represents shotgun.
+# '8' char represents grenade launcher.
+# ',' char represents armor.
+# '+' char represents health/medkit.
+# '.' char represents JetLax.
+
+spawngroup_1 = 0
+
+jumppad_0 = 1.6 -10
+jumppad_1 = 2.0 -1.4
+jumppad_2 = 1.6 -1.2
+jumppad_3 = 3 1.2
+jumppad_4 = 1.6 -1.2
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaa7aS2aaaa4aaaaIa2Sa7aaaaaaaaaaaaaaaa
+aaaa,HHHHHHHHHHHHHHaaHHHHHHHaaaaaaaaaaaaaaa
+aaaaHcccccccccccccccccccccccHaaaaaaaaaaaaaa
+aaaaaccccccccccccccccccccGcceeeeeaaaaaaaaaa
+aaIaac6Gc7c.crrcccccBI5cSGGce6eeT^aaaaaaaaa
+aaIIIIIIIIIIIIrrrrIIIIIIIIIIIIIIIIaaaaaaaaa
+aaInnnnnnnnnnnI\rrrrIwwwwwwwwIeee,aaaaaaaaa
+aaInnnnnnnnnnnII\rrrIwwwwwwwwIeeeeaaaaaaaaa
+aaInnnnn+nnnnnrrr\rrwww+wwwwwIeee.aaaaaaaaa
+aaIn7nn2QnnnnnrrrrrrwwwKww6wwweeeeaaaaaaaaa
+aaInQnSQQQnnnnrrrrrJw4KKwwJwwweeeSSaT^aaaaa
+aaIIIIIIIIIIIrrrIILLLLLLLLLLL+eeeIIIIIaaaaa
+aaI8oooIooooI\rrrrrrIooooooo4I\oeeeeeeaaaaa
+aaIIo.oooo+ooI\rrrrrooooooooDII\oeeeeeaaaaa
+aaI,oIoS2IIooooIrrr6oooSD7ooDIII\oeSeeB^aaa
+aamIIIIIIIIIoooIIooIIIIIIIIIIIIIIIIIIIIIaaa
+aamm4mmmmmmmmmmmmmmeeeeeeeeeeeeeeeeeeeeeaaa
+aammmmmmmmmmmBmmmmmeeeeeeeeeeeeeeeeeeeeeaaa
+I^mm,mmS2mmFFFBmmFmeeBBB,eFBee2SFe+++eeeF^a
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+# After or in between the map layout lines, we do not accept anything else.
