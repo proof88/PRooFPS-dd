@@ -89,7 +89,10 @@ namespace proofps_dd
 
         void init(
             const PurePosUpTarget& put,
-            bool bGoingLeft);
+            bool bGoingLeft,
+            TPureFloat fClrRedAsFloat = 1.f,
+            TPureFloat fClrGreenAsFloat = 1.f,
+            TPureFloat fClrBlueAsFloat = 1.f);
 
         virtual void onSetUsed() override;
 
@@ -113,6 +116,9 @@ namespace proofps_dd
         TPureFloat m_fScaling;                   /**< To be increased during animation. Used by both PGE client and server instances. */
         PurePosUpTarget m_put;                   /**< PUT to calculate next position. Used by both PGE client and server instances. */
         bool m_bGoingLeft;                       /**< True if bullet and smoke going to left, false otherwise. Used by both PGE client and server instances. */
+        TPureFloat m_fInitialClrRedAsFloat;
+        TPureFloat m_fInitialClrGreenAsFloat;
+        TPureFloat m_fInitialClrBlueAsFloat;
 
         // ---------------------------------------------------------------------------
 

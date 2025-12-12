@@ -75,7 +75,10 @@ proofps_dd::Smoke::Smoke(
     m_gfx(gfx),
     m_obj(nullptr),
     m_fScaling(1.f),
-    m_bGoingLeft(false)
+    m_bGoingLeft(false),
+    m_fInitialClrRedAsFloat(1.f),
+    m_fInitialClrGreenAsFloat(1.f),
+    m_fInitialClrBlueAsFloat(1.f)
 {
     build3dObject();
 }
@@ -90,7 +93,10 @@ proofps_dd::Smoke::~Smoke()
 
 void proofps_dd::Smoke::init(
     const PurePosUpTarget& put,
-    bool bGoingLeft)
+    bool bGoingLeft,
+    TPureFloat fClrRedAsFloat,
+    TPureFloat fClrGreenAsFloat,
+    TPureFloat fClrBlueAsFloat)
 {
     assert(m_obj);
     // probably looks more interesting if positions are a bit displaced randomly from the requested position ...
@@ -103,7 +109,13 @@ void proofps_dd::Smoke::init(
     m_put.getPosVec() = m_obj->getPosVec();
     // even initial scaling is randomized a bit for less easily visible repeating smoke pattern
     m_fScaling = 1.f + ((PFL::random(0, 10) - 5) / 10.f);
+    m_obj->SetScaling(PureVector(m_fScaling, m_fScaling, m_obj->getScaling().getZ()));
     m_bGoingLeft = bGoingLeft;
+    m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(fClrRedAsFloat, fClrGreenAsFloat, fClrBlueAsFloat, 1.f);
+    // storing the readback values because SetAsFloats() does PFL::constrain() for us too
+    m_fInitialClrRedAsFloat = m_obj->getMaterial(false).getTextureEnvColor().getRedAsFloat();
+    m_fInitialClrGreenAsFloat = m_obj->getMaterial(false).getTextureEnvColor().getGreenAsFloat();
+    m_fInitialClrBlueAsFloat = m_obj->getMaterial(false).getTextureEnvColor().getBlueAsFloat();
 }
 
 void proofps_dd::Smoke::onSetUsed()
@@ -150,7 +162,10 @@ void proofps_dd::Smoke::update(const unsigned int& nFactor)
         // fading away only when fAnimationProgress has reached 0.3f, so that recently emitted smokes "saturate" a bit more.
         const float fAnimationProgress = m_fScaling / fTargetScaling;
         const float fTargetTransparency = 1 - fAnimationProgress;
-        m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(fTargetTransparency, fTargetTransparency, fTargetTransparency, 1.f);
+        m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(
+            m_fInitialClrRedAsFloat * fTargetTransparency,
+            m_fInitialClrGreenAsFloat * fTargetTransparency,
+            m_fInitialClrBlueAsFloat * fTargetTransparency, 1.f);
     }
 }
 

@@ -2616,7 +2616,8 @@ void proofps_dd::Player::emitParticles(
         PurePosUpTarget playerPut(vecFartPos, PureVector(), PureVector(0, 1, 0));
         smokes.create(
             playerPut,
-            (getObject3D()->getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
+            (getObject3D()->getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */,
+            107.f/255.f, 88.f/255.f, 52.f/255.f /* r,g,b as floats*/);
     }
 }
 
