@@ -1319,8 +1319,6 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared(
         //    "diff: %f",
         //    (ovCurrentInventoryItemPower.getNew() - ovCurrentInventoryItemPower.getOld()));
 
-        emitParticles(config, smokes);
-
         if (fPowerDiff > -0.05f)
         {
             // low power drop
@@ -1336,6 +1334,8 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared(
             {
                 m_audio.stopSoundInstance(m_handleSndPlayerItemHighThrustAntiGravity);
             }
+
+            emitParticles(config, smokes, false /* bHighPowerTrust */);
         }
         else
         {
@@ -1352,6 +1352,8 @@ void proofps_dd::Player::updateCurrentInventoryItemPowerAudioVisualsShared(
             {
                 m_audio.stopSoundInstance(m_handleSndPlayerItemLowThrustAntiGravity);
             }
+
+            emitParticles(config, smokes, true /* bHighPowerTrust */);
         }
     }
 }
@@ -2597,7 +2599,8 @@ const int& proofps_dd::Player::getParticleEmitPerNthPhysicsIterationCntr() const
 
 void proofps_dd::Player::emitParticles(
     const proofps_dd::Config& config,
-    PgeObjectPool<Smoke>& smokes)
+    PgeObjectPool<Smoke>& smokes,
+    const bool& bHighPowerThrust)
 {
     if (!getObject3D() || (config.getSmokeConfigAmount() == Smoke::SmokeConfigAmount::None))
     {
@@ -2607,7 +2610,12 @@ void proofps_dd::Player::emitParticles(
     getParticleEmitPerNthPhysicsIterationCntr()++;
     assert(static_cast<int>(m_config.getSmokeConfigAmount()) < static_cast<int>(Smoke::smokeEmitOperValues.size()));
 
-    if (getParticleEmitPerNthPhysicsIterationCntr() >= Smoke::smokeEmitOperValues[static_cast<int>(config.getSmokeConfigAmount())].m_nEmitInEveryNPhysicsIteration)
+    const int nEmitInEveryNPhysicsIteration =
+        bHighPowerThrust ?
+        Player::smokeEmitOperValuesHighPowerThrust[static_cast<int>(config.getSmokeConfigAmount())].m_nEmitInEveryNPhysicsIteration :
+        Player::smokeEmitOperValuesLowPowerThrust[static_cast<int>(config.getSmokeConfigAmount())].m_nEmitInEveryNPhysicsIteration;
+    
+    if (getParticleEmitPerNthPhysicsIterationCntr() >= nEmitInEveryNPhysicsIteration)
     {
         getParticleEmitPerNthPhysicsIterationCntr() = 0;
         PureVector vecFartPos = getPos().getNew();
@@ -2617,7 +2625,7 @@ void proofps_dd::Player::emitParticles(
         smokes.create(
             playerPut,
             (getObject3D()->getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */,
-            107.f/255.f, 88.f/255.f, 52.f/255.f /* r,g,b as floats*/);
+            185.f/255.f, 122.f/255.f, 87.f/255.f /* r,g,b as floats*/);
     }
 }
 

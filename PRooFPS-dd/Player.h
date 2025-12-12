@@ -365,6 +365,26 @@ namespace proofps_dd
             OvCurrentInventoryItemPower
         };
 
+        /**
+        * See explanation of this at Smoke::smokeEmitOperValues.
+        */
+        static constexpr auto smokeEmitOperValuesLowPowerThrust = PFL::std_array_of<Smoke::SmokeEmitOperValues>(
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 15 }, /* SmokeConfigAmount::None, max smoke/player: 0, in this case these are just dummies */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 15 }, /* SmokeConfigAmount::Moderate, max smoke/player: 4, */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 10 }, /* SmokeConfigAmount::Normal, max smoke/player: 6, */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 6 }  /* SmokeConfigAmount::Extreme, max smoke/player: 10 */
+        );
+
+        /**
+        * See explanation of this at Smoke::smokeEmitOperValues.
+        */
+        static constexpr auto smokeEmitOperValuesHighPowerThrust = PFL::std_array_of<Smoke::SmokeEmitOperValues>(
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 15 }, /* SmokeConfigAmount::None, max smoke/player: 0, in this case these are just dummies */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 6 }, /* SmokeConfigAmount::Moderate, max smoke/player: 10, */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 4 }, /* SmokeConfigAmount::Normal, max smoke/player: 15, */
+            Smoke::SmokeEmitOperValues{ /* m_fScalingSpeed */ 2.f, /* m_nEmitInEveryNPhysicsIteration */ 3 }  /* SmokeConfigAmount::Extreme, max smoke/player: 20 */
+        );
+
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
         static uint32_t m_nPlayerInstanceCntr;
 
@@ -578,7 +598,8 @@ namespace proofps_dd
         const int& getParticleEmitPerNthPhysicsIterationCntr() const;
         void emitParticles(
             const proofps_dd::Config& config,
-            PgeObjectPool<Smoke>& smokes);
+            PgeObjectPool<Smoke>& smokes,
+            const bool& bHighPowerThrust);
 
         PgeOldNewValue<int>& getArmor();
         PgeOldNewValue<int>& getHealth();
