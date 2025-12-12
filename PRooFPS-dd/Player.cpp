@@ -2608,7 +2608,7 @@ void proofps_dd::Player::emitParticles(
     }
 
     getParticleEmitPerNthPhysicsIterationCntr()++;
-    assert(static_cast<int>(m_config.getSmokeConfigAmount()) < static_cast<int>(Smoke::smokeEmitOperValues.size()));
+    assert(static_cast<int>(config.getSmokeConfigAmount()) < static_cast<int>(Smoke::smokeEmitOperValues.size()));
 
     const int nEmitInEveryNPhysicsIteration =
         bHighPowerThrust ?
