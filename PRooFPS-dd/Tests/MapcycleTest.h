@@ -203,7 +203,8 @@ private:
             "map_test_bad_order.txt",
             "map_test_good.txt",
             "map_warena.txt",
-            "map_warhouse.txt"
+            "map_warhouse.txt",
+            "map_construction.txt"
         };
 
         const auto& foundAvailableMaps = mapcycle.availableMapsGet();
@@ -525,7 +526,7 @@ private:
             const std::string sLastMapName = mapcycle.mapcycleForwardToLast();
             b &= assertFalse(sLastMapName.empty(), "mapcycle forward to last 2 a");
             b &= assertNotEquals(sFirstMapName, sLastMapName, "mapcycle forward to last 2 b");
-            b &= assertEquals("map_mutans.txt", sLastMapName, "mapcycle forward to last 2 c specific name");
+            b &= assertEquals("map_construction.txt", sLastMapName, "mapcycle forward to last 2 c specific name");
             b &= assertTrue(mapcycle.mapcycleIsCurrentLast(), "mapcycle islast 3");
         }
 

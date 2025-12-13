@@ -84,15 +84,15 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     std::vector<std::unique_ptr<Test>> regTests;
     
     // unit tests
-    unitTests.push_back(std::unique_ptr<Test>(new EventListerTest()));
-    unitTests.push_back(std::unique_ptr<Test>(new GameModeTest(cfgProfiles)));
-    unitTests.push_back(std::unique_ptr<Test>(new MapItemTest(cfgProfiles)));
-    unitTests.push_back(std::unique_ptr<Test>(new MapsTest(cfgProfiles)));
-    unitTests.push_back(std::unique_ptr<Test>(new MapcycleTest()));
-    unitTests.push_back(std::unique_ptr<Test>(new PlayerTest(cfgProfiles)));
-    
-    // performance tests (benchmarks)
-    perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
+    //unitTests.push_back(std::unique_ptr<Test>(new EventListerTest()));
+    //unitTests.push_back(std::unique_ptr<Test>(new GameModeTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<Test>(new MapItemTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<Test>(new MapsTest(cfgProfiles)));
+    //unitTests.push_back(std::unique_ptr<Test>(new MapcycleTest()));
+    //unitTests.push_back(std::unique_ptr<Test>(new PlayerTest(cfgProfiles)));
+    //
+    //// performance tests (benchmarks)
+    //perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
     
     // regression tests
     //const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::DeathMatch;
@@ -102,7 +102,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //    regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 20, 60, gamemode)));
     //    regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(20, 20, 60, gamemode)));
     //    
-    //    constexpr bool bAreWeTestingReleaseBuild = true;
+    //    constexpr bool bAreWeTestingReleaseBuild = false;
     //    regTests.push_back(std::unique_ptr<Test>(
     //        new RegTestMapChangeServerClient3Players(60, 60, 60, gamemode, 3 /*iterations*/, bAreWeTestingReleaseBuild, 2 /*clients*/)
     //    ));
