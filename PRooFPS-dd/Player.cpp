@@ -1795,7 +1795,9 @@ bool proofps_dd::Player::attack()
         getCrouchStateCurrent()
     );
 
-    if (bRet && (wpn->getType() != Weapon::Type::Melee))
+    if (bRet && (wpn->getType() != Weapon::Type::Melee) &&
+        /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
+        (wpn->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
     {
         // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
         ++getShotsFiredCount();

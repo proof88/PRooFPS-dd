@@ -1035,9 +1035,12 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                             if (itShooter != m_mapPlayers.end())
                             {
                                 // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
-                                const Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                                /* TODO: put back const to wpnForType after we don't need to call getVars() below! */
+                                Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
                                 // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
-                                if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee))
+                                if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee) &&
+                                    /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
+                                   (wpnForType->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
                                 {
                                     ++itShooter->second.getShotsHitTarget();
                                     assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
@@ -1139,7 +1142,14 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 {
                     // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
                     Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
-                    if (wpnForExplosionData)
+                    if (wpnForExplosionData->getVars()["bullet_subprojectiles"].getAsUInt() != 1)
+                    {
+                        // crash the game, to make sure we never allow explosive weapon firing multiple bullets within a single fire, until
+                        // this bug is solved: https://github.com/proof88/PRooFPS-dd/issues/354 .
+                        assert(false);
+                        getConsole().EOLn("%s ERROR: explosive bullet launched with other bullet(s) by the same firing event, not allowed!", __func__);
+                    }
+                    else if (wpnForExplosionData)
                     {
                         createExplosionServer(
                             bullet.getOwner(),
