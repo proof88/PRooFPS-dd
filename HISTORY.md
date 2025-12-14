@@ -54,6 +54,10 @@ This version brings the following **features**:
  - **Extra funny sound effects** for:
    - dying by falling from high altitude,
    - and when multiple players are killed by a single explosion.
+  
+**Limitations:**
+ - Shotgun does not contribute to player aim accuracy stats;
+ - JetLax cannot be used while crouching.
 
 ## v0.5.1 Private Beta (July 20, 2025)
 
