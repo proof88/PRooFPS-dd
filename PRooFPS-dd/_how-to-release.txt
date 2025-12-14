@@ -13,11 +13,12 @@
 
  - delete all previous reg test dumps ("RegTestDump*.txt") from the main PRooFPS-dd directory;
 
- - run auto tests as explained in _how-to-auto-test.txt;
-
  - make a separate directory for this new version under OldRegTestDumps directory and copy all
-   the new reg test dumps there so we will have a saved reference later for packet numbers later, these
+   the new reg test dumps there, but only run for Team Deathmatch game mode, and without the
+   map switching tests, so we will have a saved reference later for packet numbers later, these
    are also (should be) version-controlled;
+
+ - run ALL auto tests as explained in _how-to-auto-test.txt;
 
  - run manual tests as explained in _how-to-manual-test.txt;
 
