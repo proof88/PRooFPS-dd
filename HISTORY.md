@@ -30,7 +30,7 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
-TBD A compressed build for Windows is available for TBD.
+A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1mQHlZnRwHb49QlxFFJzH5OrF5sCReG67/view?usp=drive_link).
 
 This version brings the following **features**:
  - **Wall jumping:** jumping from the side of walls, towards X-Hair direction.  
