@@ -22,7 +22,7 @@
 
  - run manual tests as explained in _how-to-manual-test.txt;
 
- - update the packet rate and packet data rate calculations in https://github.com/proof88/PGE/blob/master/PGE/docpages/menu-04-Networking.md ;
+ - update the packet rate and packet data rate calculations in PRooFPS-dd/doc/PRooFPS-dd-Packet-Rates.xlsx ;
 
  - if this is a bigger version number increment, it would be nice also to create a new benchmark measurement
    stored in OldPerfMeasurements directory, to understand if we have improvement or regression wrt performance;
