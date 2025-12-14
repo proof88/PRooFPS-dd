@@ -1,0 +1,189 @@
+v0.6.0
+
+Do not forget to change some parameters of the weapon in its txt file before doing the tests:
+ - acc_angle = 0.0
+ - recoil_m = 1.0
+ - recoil_cooldown = 0
+ - recoil_control = off
+
+From this version, we introduce the following changes:
+ - instead of machinegun, machine pistol shall be used for firing.
+ - in this file, all measurements with mch pistol have new firing rate, faster than mch gun's firing rate!
+ - therefore, results are NOT comparable with pre-v0.5.1 measurements!
+ - BVH collision is the default, no need to override sv_map_collision_mode in cfg file.
+ - measurement done on 2 spawnpoints:
+   - first is the original spawn point:
+     T bal fent belül téglás részhez, felugrani felszedni machine pistolt, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+   - second is the rightmost underground spawn point:
+     T jobb alsó underground részhez, ahol van közel machine pistol, felszedni, majd balra nézve vízszintesen kilőni a tárat.
+
+Conclusion:
+
+
+
+Debug 1 player: at upper left spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 666
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 19799.5742 usecs
+   - FullOnPacketReceivedDuration: 24.476 usecs
+     - HandleUserCmdMoveDuration: 0.7267 usecs
+   - FullOnGameRunningDuration: 2693.9866 usecs
+     - GravityCollisionDuration: 137.0736 usecs
+     - ActiveWindowStuffDuration: 331.476 usecs
+     - UpdateWeaponDuration: 74.8063 usecs
+     - UpdateBulletsDuration: 628.1802 usecs
+     - UpdateRespawnTimersDuration: 0.1622 usecs
+     - PickupAndRespawnItemsDuration: 368.452 usecs
+     - UpdateGameModeDuration: 0.015 usecs
+     - CameraMovementDuration: 7.2898 usecs
+     - SendUserUpdatesDuration: 7.497 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 790, Durations: Min/Max/Avg: 35/195/72.1 us, Total: 56959 us
+      findOneColliderObject_startFromFirstNode Iterations: 9168, Durations: Min/Max/Avg: 26/233/35.1132 us, Total: 321918 us
+      findAllColliderObjects_startFromFirstNode Iterations: 790, Durations: Min/Max/Avg: 27/171/50.8089 us, Total: 40139 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 790, Durations: Min/Max/Avg: 9/139/9.98987 us, Total: 7892 us
+      bvh horizontal collision Iterations: 46, Durations: Min/Max/Avg: 33/108/56.0217 us, Total: 2577 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 791, Durations: Min/Max/Avg: 1/274/98.9494 us, Total: 78269 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 748, Durations: Min/Max/Avg: 4/21/5.34492 us, Total: 3998 us
+
+
+Release 1 player: at upper left spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 809
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16808.082 usecs
+   - FullOnPacketReceivedDuration: 2.9876 usecs
+     - HandleUserCmdMoveDuration: 0.1162 usecs
+   - FullOnGameRunningDuration: 447.78 usecs
+     - GravityCollisionDuration: 18.2015 usecs
+     - ActiveWindowStuffDuration: 211.8319 usecs
+     - UpdateWeaponDuration: 5.445 usecs
+     - UpdateBulletsDuration: 49.6823 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 23.7108 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.3671 usecs
+     - SendUserUpdatesDuration: 0.44 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 814, Durations: Min/Max/Avg: 0/27/12.4939 us, Total: 10170 us
+      findOneColliderObject_startFromFirstNode Iterations: 9183, Durations: Min/Max/Avg: 2/35/3.00773 us, Total: 27620 us
+      findAllColliderObjects_startFromFirstNode Iterations: 813, Durations: Min/Max/Avg: 2/25/9.98032 us, Total: 8114 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 814, Durations: Min/Max/Avg: 0/1/0.138821 us, Total: 113 us
+      bvh horizontal collision Iterations: 62, Durations: Min/Max/Avg: 3/36/5.43548 us, Total: 337 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 815, Durations: Min/Max/Avg: 0/47/15.3337 us, Total: 12497 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 777, Durations: Min/Max/Avg: 0/10/0.034749 us, Total: 27 us
+
+
+Release 2 player: at upper left spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 819
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16802.4785 usecs
+   - FullOnPacketReceivedDuration: 4.1282 usecs
+     - HandleUserCmdMoveDuration: 0.2039 usecs
+   - FullOnGameRunningDuration: 530.9927 usecs
+     - GravityCollisionDuration: 29.8791 usecs
+     - ActiveWindowStuffDuration: 218.8168 usecs
+     - UpdateWeaponDuration: 8.7631 usecs
+     - UpdateBulletsDuration: 58.5812 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 47.4115 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.9524 usecs
+     - SendUserUpdatesDuration: 3.1136 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 1651, Durations: Min/Max/Avg: 3/137/10.5754 us, Total: 17460 us
+      findOneColliderObject_startFromFirstNode Iterations: 9205, Durations: Min/Max/Avg: 2/150/3.6981 us, Total: 34041 us
+      findAllColliderObjects_startFromFirstNode Iterations: 1651, Durations: Min/Max/Avg: 2/135/8.75954 us, Total: 14462 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 1651, Durations: Min/Max/Avg: 0/11/0.0993337 us, Total: 164 us
+      bvh horizontal collision Iterations: 44, Durations: Min/Max/Avg: 3/13/5 us, Total: 220 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 826, Durations: Min/Max/Avg: 8/159/25.6538 us, Total: 21190 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 1620, Durations: Min/Max/Avg: 0/17/0.0222222 us, Total: 36 us
+
+
+Debug 1 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 589
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 19928.4004 usecs
+   - FullOnPacketReceivedDuration: 19.6689 usecs
+     - HandleUserCmdMoveDuration: 0.5331 usecs
+   - FullOnGameRunningDuration: 2606.6978 usecs
+     - GravityCollisionDuration: 150.2988 usecs
+     - ActiveWindowStuffDuration: 358.4448 usecs
+     - UpdateWeaponDuration: 79.1154 usecs
+     - UpdateBulletsDuration: 676.2037 usecs
+     - UpdateRespawnTimersDuration: 0.1171 usecs
+     - PickupAndRespawnItemsDuration: 375.1833 usecs
+     - UpdateGameModeDuration: 0.0255 usecs
+     - CameraMovementDuration: 7.146 usecs
+     - SendUserUpdatesDuration: 6.4126 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 704, Durations: Min/Max/Avg: 43/229/82.1719 us, Total: 57849 us
+      findOneColliderObject_startFromFirstNode Iterations: 8060, Durations: Min/Max/Avg: 16/234/35.5885 us, Total: 286843 us
+      findAllColliderObjects_startFromFirstNode Iterations: 704, Durations: Min/Max/Avg: 33/203/60.5724 us, Total: 42643 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 704, Durations: Min/Max/Avg: 9/23/9.76705 us, Total: 6876 us
+      bvh horizontal collision Iterations: 56, Durations: Min/Max/Avg: 39/74/48.0714 us, Total: 2692 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 705, Durations: Min/Max/Avg: 1/252/109.088 us, Total: 76907 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 698, Durations: Min/Max/Avg: 4/29/5.4212 us, Total: 3784 us
+
+
+Release 1 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 750
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16820.0039 usecs
+   - FullOnPacketReceivedDuration: 3.1253 usecs
+     - HandleUserCmdMoveDuration: 0.068 usecs
+   - FullOnGameRunningDuration: 457.9627 usecs
+     - GravityCollisionDuration: 19.3907 usecs
+     - ActiveWindowStuffDuration: 228.428 usecs
+     - UpdateWeaponDuration: 6.16 usecs
+     - UpdateBulletsDuration: 44.376 usecs
+     - UpdateRespawnTimersDuration: 0. usecs
+     - PickupAndRespawnItemsDuration: 25.74 usecs
+     - UpdateGameModeDuration: 0.012 usecs
+     - CameraMovementDuration: 1.488 usecs
+     - SendUserUpdatesDuration: 0.456 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 756, Durations: Min/Max/Avg: 3/36/13.332 us, Total: 10079 us
+      findOneColliderObject_startFromFirstNode Iterations: 7917, Durations: Min/Max/Avg: 2/23/3.01036 us, Total: 23833 us
+      findAllColliderObjects_startFromFirstNode Iterations: 756, Durations: Min/Max/Avg: 3/33/10.7341 us, Total: 8115 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 756, Durations: Min/Max/Avg: 0/13/0.212963 us, Total: 161 us
+      bvh horizontal collision Iterations: 54, Durations: Min/Max/Avg: 4/8/4.44444 us, Total: 240 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 757, Durations: Min/Max/Avg: 0/40/16.2219 us, Total: 12280 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 750, Durations: Min/Max/Avg: 0/10/0.024 us, Total: 18 us
+
+
+Release 2 player: at lower right spawn point with shooting:
+
+FramesElapsedSinceLastDurationsReset: 646
+  Avg Durations per Frame:
+   - FullRoundtripDuration: 16846.4082 usecs
+   - FullOnPacketReceivedDuration: 4.1966 usecs
+     - HandleUserCmdMoveDuration: 0.1192 usecs
+   - FullOnGameRunningDuration: 570.6115 usecs
+     - GravityCollisionDuration: 32.4288 usecs
+     - ActiveWindowStuffDuration: 265.5758 usecs
+     - UpdateWeaponDuration: 10.2817 usecs
+     - UpdateBulletsDuration: 58.6981 usecs
+     - UpdateRespawnTimersDuration: 0.0139 usecs
+     - PickupAndRespawnItemsDuration: 45.4056 usecs
+     - UpdateGameModeDuration: 0. usecs
+     - CameraMovementDuration: 1.9721 usecs
+     - SendUserUpdatesDuration: 3.209 usecs
+
+  ScopeBenchmarkers:
+      bvh vertical collision Iterations: 1305, Durations: Min/Max/Avg: 3/41/11.5732 us, Total: 15103 us
+      findOneColliderObject_startFromFirstNode Iterations: 7982, Durations: Min/Max/Avg: 1/15/3.22651 us, Total: 25754 us
+      findAllColliderObjects_startFromFirstNode Iterations: 1305, Durations: Min/Max/Avg: 2/38/9.60077 us, Total: 12529 us
+      serverPlayerCollisionWithWalls_common_strafe Iterations: 1305, Durations: Min/Max/Avg: 0/3/0.108812 us, Total: 142 us
+      bvh horizontal collision Iterations: 52, Durations: Min/Max/Avg: 4/9/4.57692 us, Total: 238 us
+      serverPlayerCollisionWithWalls_bvh Iterations: 653, Durations: Min/Max/Avg: 9/53/28.1577 us, Total: 18387 us
+      serverPlayerCollisionWithWalls_bvh_LoopKernelVertical Iterations: 1299, Durations: Min/Max/Avg: 0/17/0.0369515 us, Total: 48 us

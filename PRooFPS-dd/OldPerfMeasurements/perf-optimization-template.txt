@@ -1,0 +1,41 @@
+v0.6.0
+
+Do not forget to change some parameters of the weapon in its txt file before doing the tests:
+ - acc_angle = 0.0
+ - recoil_m = 1.0
+ - recoil_cooldown = 0
+ - recoil_control = off
+
+From this version, we introduce the following changes:
+ - instead of machinegun, machine pistol shall be used for firing.
+ - in this file, all measurements with mch pistol have new firing rate, faster than mch gun's firing rate!
+ - therefore, results are NOT comparable with pre-v0.5.1 measurements!
+ - BVH collision is the default, no need to override sv_map_collision_mode in cfg file.
+ - measurement done on 2 spawnpoints:
+   - first is the original spawn point:
+     T bal fent belül téglás részhez, felugrani felszedni machine pistolt, majd felugrani és vízszintesen kitartva lőni kelet felé amíg kiürül.
+   - second is the rightmost underground spawn point:
+     T jobb alsó underground részhez, ahol van közel machine pistol, felszedni, majd balra nézve vízszintesen kilőni a tárat.
+
+Conclusion:
+
+
+
+Debug 1 player: at upper left spawn point with shooting:
+
+
+Release 1 player: at upper left spawn point with shooting:
+
+
+Release 2 player: at upper left spawn point with shooting:
+
+
+Debug 1 player: at lower right spawn point with shooting:
+
+
+Release 1 player: at lower right spawn point with shooting:
+
+
+Release 2 player: at lower right spawn point with shooting:
+
+
