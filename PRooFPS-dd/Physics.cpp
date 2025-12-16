@@ -264,13 +264,17 @@ static void serverUpdateAntiGravityForce(
     const float fInAntiGravityForceXorY = bVertical ? player.getAntiGravityForce().getY() : player.getAntiGravityForce().getX();
 
     float fPlayerAntiGravityThrustChangePerTick = 0.f;
+    const float fRandomizer = bVertical ?
+        (PFL::random(-5, 5) / 2.f) :
+        ((player.getObject3D()->getAngleVec().getY() == 0.f) ? (PFL::random(-5, 2) / 5.f) : (PFL::random(-2, 5) / 5.f));
+
     if (fTargetAntiGravityThrust != 0.f)
     {
         fPlayerAntiGravityThrustChangePerTick = fTargetAntiGravityThrust / GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER;
     }
     else
     {
-        fPlayerAntiGravityThrustChangePerTick = -fInAntiGravityForceXorY / (GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER * 1.5f /* make slowing down longer a bit */);
+        fPlayerAntiGravityThrustChangePerTick = (-fInAntiGravityForceXorY + fRandomizer) / (GAME_ANTIGRAVITY_TRUST_PHYSICS_RATE_DIVIDER * 1.5f /* make slowing down longer a bit */);
     }
 
     float fOutAntiGravityForceXorY = fInAntiGravityForceXorY + fPlayerAntiGravityThrustChangePerTick;
