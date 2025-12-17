@@ -1916,7 +1916,9 @@ void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
             bullet.getParticleEmitPerNthPhysicsIterationCntr() = 0;
             m_smokes.create(
                 bullet.getPut(),
-                (bullet.getObject3D().getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */);
+                (bullet.getObject3D().getAngleVec().getY() == 0.f) /* goingLeft, otherwise it would be 180.f */,
+                1.f, 1.f, 1.f /* rgb as floats */,
+                0.6f, 0.6f, 0.3f /* rgb as floats */);
         }
     }
 }

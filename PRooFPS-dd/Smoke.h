@@ -92,7 +92,10 @@ namespace proofps_dd
             bool bGoingLeft,
             TPureFloat fClrRedAsFloat = 1.f,
             TPureFloat fClrGreenAsFloat = 1.f,
-            TPureFloat fClrBlueAsFloat = 1.f);
+            TPureFloat fClrBlueAsFloat = 1.f,
+            TPureFloat fClrAltDarkRedAsFloat = 1.f,
+            TPureFloat fClrAltDarkGreenAsFloat = 1.f,
+            TPureFloat fClrAltDarkBlueAsFloat = 1.f);
 
         virtual void onSetUsed() override;
 

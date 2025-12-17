@@ -96,7 +96,10 @@ void proofps_dd::Smoke::init(
     bool bGoingLeft,
     TPureFloat fClrRedAsFloat,
     TPureFloat fClrGreenAsFloat,
-    TPureFloat fClrBlueAsFloat)
+    TPureFloat fClrBlueAsFloat,
+    TPureFloat fClrAltDarkRedAsFloat,
+    TPureFloat fClrAltDarkGreenAsFloat,
+    TPureFloat fClrAltDarkBlueAsFloat)
 {
     assert(m_obj);
     // probably looks more interesting if positions are a bit displaced randomly from the requested position ...
@@ -111,6 +114,37 @@ void proofps_dd::Smoke::init(
     m_fScaling = 1.f + ((PFL::random(0, 10) - 5) / 10.f);
     m_obj->SetScaling(PureVector(m_fScaling, m_fScaling, m_obj->getScaling().getZ()));
     m_bGoingLeft = bGoingLeft;
+
+    assert(0.f <= fClrRedAsFloat);
+    assert(0.f <= fClrGreenAsFloat);
+    assert(0.f <= fClrBlueAsFloat);
+    assert(fClrRedAsFloat <= 1.f);
+    assert(fClrGreenAsFloat <= 1.f);
+    assert(fClrBlueAsFloat <= 1.f);
+
+    if ((fClrAltDarkRedAsFloat != 1.f) ||
+        (fClrAltDarkGreenAsFloat != 1.f) ||
+        (fClrAltDarkBlueAsFloat != 1.f))
+    {
+        assert(0.f <= fClrAltDarkRedAsFloat);
+        assert(0.f <= fClrAltDarkGreenAsFloat);
+        assert(0.f <= fClrAltDarkBlueAsFloat);
+        assert(fClrAltDarkRedAsFloat <= fClrRedAsFloat);
+        assert(fClrAltDarkGreenAsFloat <= fClrGreenAsFloat);
+        assert(fClrAltDarkBlueAsFloat <= fClrBlueAsFloat);
+
+        const float fMinDistanceFromBrightColor = std::min(
+            fClrRedAsFloat - fClrAltDarkRedAsFloat,
+            std::min(fClrGreenAsFloat - fClrAltDarkGreenAsFloat, fClrBlueAsFloat - fClrAltDarkBlueAsFloat));
+
+        const int nMinDistanceFromBrightColor = static_cast<int>(std::lroundf(fMinDistanceFromBrightColor * 100));
+        const float fNewInitialColorDist = PFL::random(0, nMinDistanceFromBrightColor) / 100.f;
+
+        fClrRedAsFloat -= fNewInitialColorDist;
+        fClrGreenAsFloat -= fNewInitialColorDist;
+        fClrBlueAsFloat -= fNewInitialColorDist;
+    }
+
     m_obj->getMaterial(false).getTextureEnvColor().SetAsFloats(fClrRedAsFloat, fClrGreenAsFloat, fClrBlueAsFloat, 1.f);
     // storing the readback values because SetAsFloats() does PFL::constrain() for us too
     m_fInitialClrRedAsFloat = m_obj->getMaterial(false).getTextureEnvColor().getRedAsFloat();
