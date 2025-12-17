@@ -28,6 +28,22 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
+## v0.7.0 Private Beta (March 5, 2026)
+
+A compressed build for Windows is available for TODO.
+
+This version brings the following **new features**:
+
+TBD
+
+This version brings the following **enhancements**:
+ - JetLax: when activated but idle, randomized micro-forces push the player a bit away from their position.
+ - GFX: smoke colors are a bit more randomized (nobody will notice it though).
+
+This version brings the following **bug fixes**:
+
+TBD
+
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1mQHlZnRwHb49QlxFFJzH5OrF5sCReG67/view?usp=drive_link).
