@@ -36,7 +36,7 @@ This version brings the following **new features**:
 
 TBD
 
-This version brings the following **enhancements**:
+This version brings the following **changes and enhancements**:
  - JetLax: when activated but idle, randomized micro-forces push the player a bit away from their position.
  - GFX: smoke colors are a bit more randomized (nobody will notice it though).
 
