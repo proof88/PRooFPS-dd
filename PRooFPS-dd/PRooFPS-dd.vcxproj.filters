@@ -499,5 +499,6 @@
     <Text Include="_how-to-manual-test-03-misc.txt" />
     <Text Include="_how-to-manual-test-05-weapon-settings.txt" />
     <Text Include="_how-to-manual-test-04-general.txt" />
+    <Text Include="_how-to-add-feature.txt" />
   </ItemGroup>
 </Project>

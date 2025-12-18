@@ -43,7 +43,9 @@
 
  - check if game is able to start up on a separate machine after downloading;
 
- - update the wiki page on github (README.md), especially the "Try the game", "Debugging" and "History" sections;
+ - update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections;
+
+ - update the version changes page "History" (HISTORY.md);
 
  - make sure you pull the updated README.md, and then push a new commit including the changes regarding the
    RegTestDump files described above;

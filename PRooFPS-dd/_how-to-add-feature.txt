@@ -1,0 +1,19 @@
+/*
+  ###################################################################################
+  _how-to-add-feature.txt
+  Mandatory tasks when adding a new feature or changing a behavior or fixing a bug.
+  Made by PR00F88, West Whiskhyll Entertainment
+  2025
+  ###################################################################################
+*/
+
+ - Most important: update HISTORY.md.
+   It will be much easier to release the next version if the history of changes is continuously updated.
+
+ - Keep the packet rate and packet data rate calculations updated in PRooFPS-dd/doc/PRooFPS-dd-Packet-Rates.xlsx .
+
+ - Add info to the About menu text if there is any new used 3rd-party content.
+
+ - Update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections if needed.
+
+ - Run auto tests (unit- and E2E-tests) in full range to detect any regression much earlier than the release date.

@@ -329,6 +329,7 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="_how-to-add-feature.txt" />
     <Text Include="_how-to-auto-test.txt" />
     <Text Include="_how-to-manual-test-00.txt" />
     <Text Include="_how-to-manual-test-01-team-deathmatch.txt" />
