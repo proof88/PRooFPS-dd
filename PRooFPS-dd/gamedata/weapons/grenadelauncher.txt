@@ -209,6 +209,15 @@ bullet_bounces = true
 # Can always stay empty, in such case bouncing will be silent.
 bullet_bounce_snd = he_bounce-1.wav
 
+# If true, the bullet is allowed to hit and cause damage to players upon colliding with them.
+# This sounds to be always the default behavior, however it shall be false for typical thrown
+# bullets such as grenades that only detonate for other triggers such as an expired timer.
+# On the other hand, even if a bullet has both bouncing and timer enabled, can still have this
+# property set to false, such as the bullet fired from the grenade launcher.
+# Morale of the story is: for some reason the grenade launcher must do damage upon colliding
+# with a player while a hand-thrown grenade must not.
+bullet_hits_players = true
+
 # Time in seconds, needed to elapse before the bullet is destroyed automatically.
 # Useful for thrown bullets, like grenade.
 # 0 means no timer set.

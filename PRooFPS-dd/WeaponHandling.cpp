@@ -986,9 +986,8 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
         if (!bDeleteBullet)
         {
             emitParticles(bullet);
-
-            // bouncing bullets don't need collision check with players because they don't do damage anyway upon collision
-            if (!bullet.canBounce())
+            
+            if (bullet.hitsPlayers())
             {
                 // check if bullet is hitting a player
                 for (auto& playerPair : m_mapPlayers)
@@ -1085,7 +1084,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                         break; // we can stop since a bullet can touch 1 playerPair only at a time
                     }
                 } // for all players
-            }  // !bullet.canBounce()
+            }  // bullet.hitsPlayers()
 
             if (!bDeleteBullet)
             {
