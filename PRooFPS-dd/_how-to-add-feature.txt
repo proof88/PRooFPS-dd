@@ -16,4 +16,6 @@
 
  - Update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections if needed.
 
+ - Update the manual tests.
+
  - Run auto tests (unit- and E2E-tests) in full range to detect any regression much earlier than the release date.
