@@ -880,7 +880,8 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     {
         bWallHit = true;
         // bullet.getPut().getPosVec().getY() is expected to be updated by this call
-        bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
+        bullet.handleVerticalBounceOrRicochet(
+            *pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, -1.f /* negative value means do not set new angle */);
 
         //getConsole().EOLn(
         //    "WeaponHandling::%s(): cntr: %d, vertical collision, gravityCurrent: %f, old put Y: %f, fBulletPosY: %f, new put Y: %f",
@@ -906,7 +907,7 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     {
         bWallHit = true;
         // bullet.getPut().getPosVec().getX() is expected to be updated by this call
-        bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
+        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
 
         //getConsole().EOLn(
         //    "WeaponHandling::%s(): cntr: %d, horizontal collision, old put X: %f, fBulletPosX: %f, new put X: %f",
@@ -974,21 +975,30 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
 
     if (pWallHit)
     {
-        /* fAngleZinDegrees is:
-           - [ 0, 90] if bullet coming upwards, where 0 is perpendicular to the horizontal surface,
-           - [90,180] if bullet coming downwards, where 180 is perpendicular to the horizontal surface. */
+        /* fAngleZinDegrees is (in theory it is never 90 here):
+           - [ 0, 90) if bullet coming upwards, where 0 is perpendicular to the horizontal surface,
+           - (90,180] if bullet coming downwards, where 180 is perpendicular to the horizontal surface. */
         fAngleZinDegrees = PFL::radToDeg( acos(
-            vecView.getDotProduct(bullet.getPut().getUpVec()) / vecView.getLength() /* * getUpVec().getLength() which is 1 */) );
+            vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)) );
         
-        //getConsole().EOLn("WeaponHandling::%s(): vertical hit, angle to up vec: %f deg", __func__, fAngleZinDegrees);
+        float fNewAngleZinDegrees = -1.f; // -1 means no ricocheting, no need to set new angle
         if ((fAngleZinDegrees < (90.f - fDegreeDiffMaxToRicochet)) ||
             (fAngleZinDegrees > (90.f + fDegreeDiffMaxToRicochet)))
         {
             bWallHit = true; // to trigger delete
         }
-        
+        else
+        {
+            fNewAngleZinDegrees = fAngleZinDegrees < 90 ?
+                /* came upwards: need to put angle from [0, 90) into (90,180] range */
+                (180.f - fAngleZinDegrees) :
+                /* came downwards: need to put angle from (90,180] into [0, 90) range */
+                (180.f - fAngleZinDegrees);
+        }
+        getConsole().EOLn("WeaponHandling::%s(): vertical hit, angleZ to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+
         // bullet.getPut().getPosVec().getY() is expected to be updated by this call
-        bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
+        bullet.handleVerticalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, fNewAngleZinDegrees);
     }
 
     // then check for horizontal collision with new X, updated Y
@@ -1006,9 +1016,10 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
         if (fAngleZinDegrees == -1.f)
         {
             fAngleZinDegrees = PFL::radToDeg(acos(
-                vecView.getDotProduct(bullet.getPut().getUpVec()) / vecView.getLength() /* * getUpVec().getLength() which is 1 */));
-            //getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg", __func__, fAngleZinDegrees);
+                vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)));
         }
+        
+        float fNewAngleZinDegrees = -1.f; // -1 means no ricocheting, no need to set new angle
         /* fAngleZinDegrees is:
            - [ 0,180] if bullet coming from either left or right, where 90 is perpendicular to the vertical surface. */
         if ((fAngleZinDegrees > fDegreeDiffMaxToRicochet) &&
@@ -1017,8 +1028,10 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
             bWallHit = true; // to trigger delete
         }
 
+        getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+
         // bullet.getPut().getPosVec().getX() is expected to be updated by this call
-        bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
+        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
     }
 
     return bWallHit;
@@ -1208,6 +1221,7 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                     }
                     else
                     {
+                        // this part leads definitely to deleting a bullet in case of hit, so this part is not present on client side
                         if (bCollisionModeBvh)
                         {
                             const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
@@ -1396,7 +1410,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
         // then client would have to create that bullet again which would bring performance penalty. Then next moment another msg from server
         // would come about deleting the bullet. So I think we should just wait anyway for server to tell us delete bullet for any reason.
 
-        // clients do bounce physics calculation too, so that they can visualize that kind of bullet movements without traffic from server,
+        // clients do bounce and ricochet calculations too, so that they can visualize that kind of bullet movements without traffic from server,
         // but still server tells when to delete a bullet.
         if (bullet.canBounce())
         {
@@ -1406,6 +1420,18 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
             const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
             sharedUpdateBouncingBullets(
                 bCollisionModeBvh, bullet, oldPut, fBulletPosX, fBulletPosY, fBulletScaledSizeX, fBulletScaledSizeY, nPhysicsRate, GAME_FALL_GRAVITY_MIN);
+        }
+        else
+        {
+            if (bullet.getAreaDamageSize() == 0.f)
+            {
+                const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
+                const float fBulletPosY = bullet.getObject3D().getPosVec().getY();
+                const float fBulletScaledSizeX = bullet.getObject3D().getScaledSizeVec().getX();
+                const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
+                sharedUpdateRicochetingBullets(
+                    bCollisionModeBvh, bullet, oldPut, fBulletPosX, fBulletPosY, fBulletScaledSizeX, fBulletScaledSizeY, nPhysicsRate, GAME_FALL_GRAVITY_MIN);
+            }
         }
 
         it++;
