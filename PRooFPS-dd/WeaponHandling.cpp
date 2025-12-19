@@ -859,6 +859,9 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     const unsigned int& nPhysicsRate,
     const float& fFallGravityMin)
 {
+    // RFR: very similar to sharedUpdateRicochetingBullets(), but before any refactoring, plan with proper handling of the returned value
+    // because it has different meaning in the 2 functions.
+
     bool bWallHit = false;
     const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
     const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
@@ -882,6 +885,9 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
         // bullet.getPut().getPosVec().getY() is expected to be updated by this call
         bullet.handleVerticalBounceOrRicochet(
             *pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, -1.f /* negative value means do not set new angle */);
+
+        // We could introduce the same new angle Z calculation here as it is present in sharedUpdateRicochetingBullets() but
+        // for now I dont care, maybe later.
 
         //getConsole().EOLn(
         //    "WeaponHandling::%s(): cntr: %d, vertical collision, gravityCurrent: %f, old put Y: %f, fBulletPosY: %f, new put Y: %f",
@@ -947,6 +953,9 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
     const unsigned int& nPhysicsRate,
     const float& fFallGravityMin)
 {
+    // RFR: very similar to sharedUpdateBouncingBullets(), but before any refactoring, plan with proper handling of the returned value
+    // because it has different meaning in the 2 functions.
+
     bool bWallHit = false;
     const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
     const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
@@ -989,13 +998,18 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
         }
         else
         {
+            // fAngleZinDegrees is in [80.f, 100.f] range (if fDegreeDiffMaxToRicochet is 10.f)
+            
+            // TODO: fNewAngleZinDegrees is correctly calculated BUT put is not modified based on that in handleVerticalBounceOrRicochet()!
+            // Therefore, it doesnt have effect. Only flipDirectionY() is called but instead we should set angle for put!
+            const float fDecreaseSteepness = (fAngleZinDegrees - 90.f) / 2.f; /* make new angle even less steep */
             fNewAngleZinDegrees = fAngleZinDegrees < 90 ?
                 /* came upwards: need to put angle from [0, 90) into (90,180] range */
-                (180.f - fAngleZinDegrees) :
+                (180.f - fAngleZinDegrees + fDecreaseSteepness) :
                 /* came downwards: need to put angle from (90,180] into [0, 90) range */
-                (180.f - fAngleZinDegrees);
+                (180.f - fAngleZinDegrees + fDecreaseSteepness);
         }
-        getConsole().EOLn("WeaponHandling::%s(): vertical hit, angleZ to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+        //getConsole().EOLn("WeaponHandling::%s(): vertical hit, angleZ to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
 
         // bullet.getPut().getPosVec().getY() is expected to be updated by this call
         bullet.handleVerticalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, fNewAngleZinDegrees);
@@ -1028,7 +1042,7 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
             bWallHit = true; // to trigger delete
         }
 
-        getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+        //getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
 
         // bullet.getPut().getPosVec().getX() is expected to be updated by this call
         bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
