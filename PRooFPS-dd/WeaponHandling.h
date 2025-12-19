@@ -160,6 +160,16 @@ namespace proofps_dd
             const float& fBulletScaledSizeY,
             const unsigned int& nPhysicsRate,
             const float& fFallGravityMin);
+        bool sharedUpdateRicochetingBullets(
+            const bool& bCollisionModeBvh,
+            PooledBullet& bullet,
+            const PurePosUpTarget& oldPut,
+            const float& fBulletPosX,
+            const float& fBulletPosY,
+            const float& fBulletScaledSizeX,
+            const float& fBulletScaledSizeY,
+            const unsigned int& nPhysicsRate,
+            const float& fFallGravityMin);
         void serverUpdateBullets(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,

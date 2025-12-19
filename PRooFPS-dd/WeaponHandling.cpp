@@ -928,6 +928,102 @@ bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
     return bWallHit;
 }
 
+/**
+* Ricocheting bullet physics are simulated on both server- and client-side, this way server still does not need to update clients
+* about bullet positions continuously. However, bullet delete condition is still detected only by server, that logic is not shared.
+*
+* @return True if bullet needs to be deleted because it hit a foreground object in too steep angle, false otherwise.
+*         False means bullet survived and has just ricocheted off a foreground object, so no need to delete the bullet.
+*/
+bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
+    const bool& bCollisionModeBvh,
+    PooledBullet& bullet,
+    const PurePosUpTarget& oldPut,
+    const float& fBulletPosX,
+    const float& fBulletPosY,
+    const float& fBulletScaledSizeX,
+    const float& fBulletScaledSizeY,
+    const unsigned int& nPhysicsRate,
+    const float& fFallGravityMin)
+{
+    bool bWallHit = false;
+    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+
+    //static int counter = 0;
+    //counter++;
+
+    // first check for vertical collision with old X, new Y
+    const PureObject3D* pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            oldPut.getPosVec().getX(), fBulletPosY,
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    // https://www.youtube.com/watch?v=AKhT4QDSqKw
+    // although in the video they measured that ricochet easily happens already at 30° degrees but the target was metal.
+    // So I'm setting way smaller value here.
+    constexpr float fDegreeDiffMaxToRicochet = 10.f;
+
+    PureVector vecView = bullet.getPut().getTargetVec() - bullet.getPut().getPosVec();
+    vecView.Normalize();
+    float fAngleZinDegrees = -1; // lazy calculate only if there is an actual hit, -1 means not calculated yet
+
+    if (pWallHit)
+    {
+        /* fAngleZinDegrees is:
+           - [ 0, 90] if bullet coming upwards, where 0 is perpendicular to the horizontal surface,
+           - [90,180] if bullet coming downwards, where 180 is perpendicular to the horizontal surface. */
+        fAngleZinDegrees = PFL::radToDeg( acos(
+            vecView.getDotProduct(bullet.getPut().getUpVec()) / vecView.getLength() /* * getUpVec().getLength() which is 1 */) );
+        
+        //getConsole().EOLn("WeaponHandling::%s(): vertical hit, angle to up vec: %f deg", __func__, fAngleZinDegrees);
+        if ((fAngleZinDegrees < (90.f - fDegreeDiffMaxToRicochet)) ||
+            (fAngleZinDegrees > (90.f + fDegreeDiffMaxToRicochet)))
+        {
+            bWallHit = true; // to trigger delete
+        }
+        
+        // bullet.getPut().getPosVec().getY() is expected to be updated by this call
+        bullet.handleVerticalCollision(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin);
+    }
+
+    // then check for horizontal collision with new X, updated Y
+    pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            fBulletPosX, bullet.getPut().getPosVec().getY(), fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            fBulletPosX, bullet.getPut().getPosVec().getY(),
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    if (pWallHit)
+    {
+        if (fAngleZinDegrees == -1.f)
+        {
+            fAngleZinDegrees = PFL::radToDeg(acos(
+                vecView.getDotProduct(bullet.getPut().getUpVec()) / vecView.getLength() /* * getUpVec().getLength() which is 1 */));
+            //getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg", __func__, fAngleZinDegrees);
+        }
+        /* fAngleZinDegrees is:
+           - [ 0,180] if bullet coming from either left or right, where 90 is perpendicular to the vertical surface. */
+        if ((fAngleZinDegrees > fDegreeDiffMaxToRicochet) &&
+            (fAngleZinDegrees < (180.f - fDegreeDiffMaxToRicochet)))
+        {
+            bWallHit = true; // to trigger delete
+        }
+
+        // bullet.getPut().getPosVec().getX() is expected to be updated by this call
+        bullet.handleHorizontalCollision(*pWallHit, oldPut.getPosVec().getX());
+    }
+
+    return bWallHit;
+}
+
 void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
@@ -1105,25 +1201,33 @@ void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameM
                 }
                 else
                 {
-                    if (bCollisionModeBvh)
+                    if (bullet.getAreaDamageSize() == 0.f)
                     {
-                        const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
-                        const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
-                        bWallHit = (sharedUpdateBullets_collisionWithWalls_bvh(
-                            fBulletPosX, fBulletPosY, fBulletPosZ,
-                            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) != nullptr);
+                        bWallHit = sharedUpdateRicochetingBullets(
+                            bCollisionModeBvh, bullet, oldPut, fBulletPosX, fBulletPosY, fBulletScaledSizeX, fBulletScaledSizeY, nPhysicsRate, GAME_FALL_GRAVITY_MIN);
                     }
                     else
                     {
-                        bWallHit = (sharedUpdateBullets_collisionWithWalls_legacy(
-                            bullet,
-                            fBulletPosX, fBulletPosY,
-                            fBulletScaledSizeX, fBulletScaledSizeY) != nullptr);
+                        if (bCollisionModeBvh)
+                        {
+                            const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+                            const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+                            bWallHit = (sharedUpdateBullets_collisionWithWalls_bvh(
+                                fBulletPosX, fBulletPosY, fBulletPosZ,
+                                fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) != nullptr);
+                        }
+                        else
+                        {
+                            bWallHit = (sharedUpdateBullets_collisionWithWalls_legacy(
+                                bullet,
+                                fBulletPosX, fBulletPosY,
+                                fBulletScaledSizeX, fBulletScaledSizeY) != nullptr);
+                        }
                     }
 
                     if (bWallHit)
                     {
-                        // non-bouncing bullets need to be deleted upon hitting anything
+                        // non-bouncing bullets need to be deleted upon hitting anything if not ricocheted
                         bDeleteBullet = true;
                     }
                 }
