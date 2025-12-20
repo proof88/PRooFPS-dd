@@ -757,7 +757,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
             serverPlayerCollisionWithWalls(m_config.getPhysicsRate(), *m_gui.getXHair(), *GameMode::getGameMode(), cameraGetShakeForce());
             m_durations.m_nGravityCollisionDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         }
-        serverUpdateBullets(*GameMode::getGameMode(), *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
+        serverUpdateBulletsAndHandleHittingWallsAndPlayers(*GameMode::getGameMode(), *m_gui.getXHair(), m_config.getPhysicsRate(), cameraGetShakeForce());
         serverUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
         updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
         serverPickupAndRespawnItems();

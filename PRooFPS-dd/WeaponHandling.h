@@ -170,7 +170,7 @@ namespace proofps_dd
             const float& fBulletScaledSizeY,
             const unsigned int& nPhysicsRate,
             const float& fFallGravityMin);
-        void serverUpdateBullets(
+        void serverUpdateBulletsAndHandleHittingWallsAndPlayers(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,
             const unsigned int& nPhysicsRate,

@@ -245,7 +245,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 if (!bShotHitTargetStatUpdated)
                 {
                     bShotHitTargetStatUpdated = true;
-                    // unlike in serverUpdateBullets(), here we dont check for weapon type because we believe any explosive weapon is non-melee type!
+                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here we dont check for weapon type because we believe any explosive weapon is non-melee type!
                     ++itShooter->second.getShotsHitTarget();
                     assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
                     itShooter->second.getFiringAccuracy() =
@@ -272,7 +272,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 {
                     nKillerConnHandleServerSide = itShooter->first;
 
-                    // unlike in serverUpdateBullets(), here the owner of the explosion can kill even themself, so
+                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here the owner of the explosion can kill even themself, so
                     // in that case frags should be decremented!
                     if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
                     {
@@ -1051,7 +1051,7 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
     return bWallHit;
 }
 
-void proofps_dd::WeaponHandling::serverUpdateBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
+void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlayers(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
@@ -1386,12 +1386,12 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
 
-    // COPY-PASTE START from WeaponHandling::serverUpdateBullets()
+    // COPY-PASTE START from WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlayers()
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
     const float GAME_PHYSICS_RATE_LERP_FACTOR = (nPhysicsRate - GAME_TICKRATE_MIN) / static_cast<float>(GAME_TICKRATE_MAX - GAME_TICKRATE_MIN);
     const float GAME_GRAVITY_CONST = PFL::lerp(80.f /* 20 Hz */, 90.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fGravityChangePerTick = -GAME_GRAVITY_CONST / nPhysicsRate;
-    // COPY-PASTE END from WeaponHandling::serverUpdateBullets()
+    // COPY-PASTE END from WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlayers()
 
     const bool bCollisionModeBvh = (m_pge.getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
     PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
@@ -1454,7 +1454,7 @@ void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysic
 
 void proofps_dd::WeaponHandling::serverUpdateExplosions(proofps_dd::GameMode& gameMode, const unsigned int& nPhysicsRate)
 {
-    // on the long run this function needs to be part of the game engine itself, however first serverUpdateBullets() should be moved there!
+    // on the long run this function needs to be part of the game engine itself, however first serverUpdateBulletsAndHandleHittingWallsAndPlayers() should be moved there!
 
     const bool bEndGame = gameMode.isGameWon();
     auto it = m_explosions.begin();
