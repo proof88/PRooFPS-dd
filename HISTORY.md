@@ -33,8 +33,7 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 A compressed build for Windows is available for TODO.
 
 This version brings the following **new features**:
-
-TBD
+ - bullets can ricochet off the walls if they are hitting them in flat angle (<= 10°).
 
 This version brings the following **changes and enhancements**:
  - Grenade Launcher: grenade hitting a player also triggers explosion.
