@@ -21,6 +21,7 @@ namespace proofps_dd
         std::chrono::microseconds::rep m_nActiveWindowStuffDurationUSecs;
         std::chrono::microseconds::rep m_nUpdateWeaponsDurationUSecs;
         std::chrono::microseconds::rep m_nUpdateBulletsDurationUSecs;
+        std::chrono::microseconds::rep m_nBulletsVsBulletsDurationUSecs;
         std::chrono::microseconds::rep m_nUpdateRespawnTimersDurationUSecs;
         std::chrono::microseconds::rep m_nPickupAndRespawnItemsDurationUSecs;
         std::chrono::microseconds::rep m_nUpdateGameModeDurationUSecs;
@@ -44,6 +45,7 @@ namespace proofps_dd
             m_nActiveWindowStuffDurationUSecs = 0;
             m_nUpdateWeaponsDurationUSecs = 0;
             m_nUpdateBulletsDurationUSecs = 0;
+            m_nBulletsVsBulletsDurationUSecs = 0;
             m_nUpdateRespawnTimersDurationUSecs = 0;
             m_nPickupAndRespawnItemsDurationUSecs = 0;
             m_nUpdateGameModeDurationUSecs = 0;

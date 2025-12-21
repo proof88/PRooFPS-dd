@@ -175,6 +175,11 @@ namespace proofps_dd
             XHair& xhair,
             const unsigned int& nPhysicsRate,
             PureVector& vecCamShakeForce);
+        void serverHandleBulletsVsBullets(
+            proofps_dd::GameMode& gameMode,
+            XHair& xhair,
+            const unsigned int& nPhysicsRate,
+            PureVector& vecCamShakeForce);
         void clientUpdateBullets(const unsigned int& nPhysicsRate);
         void serverUpdateExplosions(
             proofps_dd::GameMode& gameMode,

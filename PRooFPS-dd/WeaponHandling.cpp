@@ -1033,7 +1033,6 @@ bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
                 vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)));
         }
         
-        float fNewAngleZinDegrees = -1.f; // -1 means no ricocheting, no need to set new angle
         /* fAngleZinDegrees is:
            - [ 0,180] if bullet coming from either left or right, where 90 is perpendicular to the vertical surface. */
         if ((fAngleZinDegrees > fDegreeDiffMaxToRicochet) &&
@@ -1379,6 +1378,218 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
     }
 
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& /*nPhysicsRate*/, PureVector& vecCamShakeForce)
+{
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    if (gameMode.isGameWon())
+    {
+        return;
+    }
+
+    // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
+    // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
+    pge_network::PgePacket newPktBulletUpdate;
+    PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
+    size_t itiOuter = 0; // to track how many used bullets we processed in the outer loop, to exit early if we already processed all used
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
+    auto itFragileBullet = bullets.begin();
+    while ((itiOuter < bullets.size()) && (itFragileBullet != bullets.end()))
+    {
+        if (!itFragileBullet->used())
+        {
+            itFragileBullet++;
+            continue;
+        }
+        itiOuter++;
+
+        auto& fragileBullet = *itFragileBullet;
+
+        if (!fragileBullet.isFragile())
+        {
+            itFragileBullet++;
+            continue;
+        }
+
+        const float fFragileBulletPosX = fragileBullet.getObject3D().getPosVec().getX();
+        const float fFragileBulletPosY = fragileBullet.getObject3D().getPosVec().getY();
+
+        bool bDeleteBothBullets = false; // if a fragile bullet is hit by any other bullet, both needs to be deleted
+
+        // check if this bullet is hitting any other bullet?
+        size_t itiInner = 0; // to track how many used bullets we processed in the inner loop, to exit early if we already processed all used
+        // we need iti because there is no way to explicitly iterate over the used elems on the object pool
+        auto itBullet = bullets.begin();
+        while ((itiInner < bullets.size()) && (itBullet != bullets.end()))
+        {
+            if (!itBullet->used())
+            {
+                itBullet++;
+                continue;
+            }
+            itiInner++;
+
+            if (itFragileBullet == itBullet)
+            {
+                // a bullet cannot hit itself
+                itBullet++;
+                continue;
+            }
+
+            auto& bullet = *itBullet;
+
+            if (bullet.isFragile() && (itiOuter >= itiInner /* do not repeat same test between fragile bullets */))
+            {
+                itBullet++;
+                continue;
+            }
+
+            const float fFragileBulletScaledSizeX = fragileBullet.getObject3D().getScaledSizeVec().getX();
+            const float fFragileBulletScaledSizeY = fragileBullet.getObject3D().getScaledSizeVec().getY();
+            const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
+            const float fBulletPosY = bullet.getObject3D().getPosVec().getY();
+            const float fBulletScaledSizeX = bullet.getObject3D().getScaledSizeVec().getX();
+            const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
+            // BUG: we should not use bDeleteBothBullets but instead a delete flag shall be in the bullets, we should just flip
+            // that flag, and only after we finish with the outer loop, actually delete all bullets where the flag has been flipped.
+            // Reason: if multiple bullets hit the same bullet at the same time, not all of them will be deleted since we are
+            // deleting only 2 of them here very early, not leaving chance for the other bullets iterated later to detect collision!
+
+            if (colliding2_NoZ(
+                fFragileBulletPosX, fFragileBulletPosY,
+                fFragileBulletScaledSizeX, fFragileBulletScaledSizeY,
+                fBulletPosX, fBulletPosY,
+                fBulletScaledSizeX, fBulletScaledSizeY))
+            {
+                bDeleteBothBullets = true;
+                // TODO: we should have a separate msg for deleting Bullet because its size would be much less than this msg!
+                // But now we have to stick to this because explosion create on client-side requires all values, see details in:
+                // handleBulletUpdateFromServer
+                proofps_dd::MsgBulletUpdateFromServer::initPkt(
+                    newPktBulletUpdate,
+                    bullet.getOwner(),
+                    bullet.getId(),
+                    bullet.getWeaponId(),
+                    fBulletPosX,
+                    fBulletPosY,
+                    bullet.getObject3D().getPosVec().getZ(),
+                    bullet.getObject3D().getAngleVec().getX(),
+                    bullet.getObject3D().getAngleVec().getY(),
+                    bullet.getObject3D().getAngleVec().getZ(),
+                    bullet.getDamageHp(),
+                    bullet.getAreaDamageSize(),
+                    bullet.getAreaDamageEffect(),
+                    bullet.getAreaDamagePulse()
+                );
+                // clients will also delete this bullet on their side because we set pkt's delete flag here
+                proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes;
+
+                if (bullet.getAreaDamageSize() > 0.f)
+                {
+                    // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
+                    Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                    if (wpnForExplosionData->getVars()["bullet_subprojectiles"].getAsUInt() != 1)
+                    {
+                        // crash the game, to make sure we never allow explosive weapon firing multiple bullets within a single fire, until
+                        // this bug is solved: https://github.com/proof88/PRooFPS-dd/issues/354 .
+                        assert(false);
+                        getConsole().EOLn("%s ERROR: explosive bullet launched with other bullet(s) by the same firing event, not allowed!", __func__);
+                    }
+                    else if (wpnForExplosionData)
+                    {
+                        createExplosionServer(
+                            bullet.getOwner(),
+                            bullet.getObject3D().getPosVec(),
+                            bullet.getAreaDamageSize(),
+                            bullet.getAreaDamageEffect(),
+                            bullet.getAreaDamagePulse(),
+                            wpnForExplosionData->getVars()["damage_area_gfx_obj"].getAsString(),
+                            bullet.getDamageAp(),
+                            bullet.getDamageHp(),
+                            xhair,
+                            vecCamShakeForce,
+                            gameMode);
+                    }
+                }
+
+                bullets.erase(itBullet);
+                m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
+                break;
+            }
+
+            // not yet found any bullet colliding with itFragileBullet, keep searching ...
+            itBullet++;
+        } // end while itBullet != bullets.end()
+
+        if (bDeleteBothBullets)
+        {
+            // itFragileBullet was hit by another bullet. Another bullet has been deleted, now delete itFragileBullet too!
+            
+            // TODO: we should have a separate msg for deleting Bullet because its size would be much less than this msg!
+            // But now we have to stick to this because explosion create on client-side requires all values, see details in:
+            // handleBulletUpdateFromServer
+            proofps_dd::MsgBulletUpdateFromServer::initPkt(
+                newPktBulletUpdate,
+                fragileBullet.getOwner(),
+                fragileBullet.getId(),
+                fragileBullet.getWeaponId(),
+                fFragileBulletPosX,
+                fFragileBulletPosY,
+                fragileBullet.getObject3D().getPosVec().getZ(),
+                fragileBullet.getObject3D().getAngleVec().getX(),
+                fragileBullet.getObject3D().getAngleVec().getY(),
+                fragileBullet.getObject3D().getAngleVec().getZ(),
+                fragileBullet.getDamageHp(),
+                fragileBullet.getAreaDamageSize(),
+                fragileBullet.getAreaDamageEffect(),
+                fragileBullet.getAreaDamagePulse()
+            );
+            // clients will also delete this bullet on their side because we set pkt's delete flag here
+            proofps_dd::MsgBulletUpdateFromServer::getDelete(newPktBulletUpdate) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes;
+
+            if (fragileBullet.getAreaDamageSize() > 0.f)
+            {
+                // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
+                Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(fragileBullet.getWeaponId());
+                if (wpnForExplosionData->getVars()["bullet_subprojectiles"].getAsUInt() != 1)
+                {
+                    // crash the game, to make sure we never allow explosive weapon firing multiple bullets within a single fire, until
+                    // this bug is solved: https://github.com/proof88/PRooFPS-dd/issues/354 .
+                    assert(false);
+                    getConsole().EOLn("%s ERROR: explosive bullet launched with other bullet(s) by the same firing event, not allowed!", __func__);
+                }
+                else if (wpnForExplosionData)
+                {
+                    createExplosionServer(
+                        fragileBullet.getOwner(),
+                        fragileBullet.getObject3D().getPosVec(),
+                        fragileBullet.getAreaDamageSize(),
+                        fragileBullet.getAreaDamageEffect(),
+                        fragileBullet.getAreaDamagePulse(),
+                        wpnForExplosionData->getVars()["damage_area_gfx_obj"].getAsString(),
+                        fragileBullet.getDamageAp(),
+                        fragileBullet.getDamageHp(),
+                        xhair,
+                        vecCamShakeForce,
+                        gameMode);
+                }
+            }
+
+            itFragileBullet = bullets.erase(itFragileBullet);
+            m_pge.getNetwork().getServer().sendToAllClientsExcept(newPktBulletUpdate);
+        }
+        else
+        {
+            // bullet didn't touch anything, go to next
+            itFragileBullet++;
+        }
+
+        // 'itFragileBullet' is referring to next bullet, don't use it from here!
+    } // end while itFragileBullet != bullets.end()
+
+    m_durations.m_nBulletsVsBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
 void proofps_dd::WeaponHandling::clientUpdateBullets(const unsigned int& nPhysicsRate)
