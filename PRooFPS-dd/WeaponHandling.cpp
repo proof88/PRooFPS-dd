@@ -315,6 +315,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         handleExplosionMultiKill(nPlayersDiedByThisExplosion);
     }
 
+    // TODO: check for other fragile bullets in range
+
     return m_explosions.back();
 }
 
@@ -1419,6 +1421,8 @@ void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(proofps_dd::GameMo
         bool bDeleteBothBullets = false; // if a fragile bullet is hit by any other bullet, both needs to be deleted
 
         // check if this bullet is hitting any other bullet?
+        // OPT: could be speeden up by using a Uniform grid / spatial hash where we keep updating the dynamic objects.
+        //      Such grid is much faster for updating than a BVH.
         size_t itiInner = 0; // to track how many used bullets we processed in the inner loop, to exit early if we already processed all used
         // we need iti because there is no way to explicitly iterate over the used elems on the object pool
         auto itBullet = bullets.begin();
