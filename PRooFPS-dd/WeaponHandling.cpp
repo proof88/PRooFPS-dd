@@ -820,6 +820,14 @@ void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(
                 continue;
             }
 
+            const auto itShooter1 = m_mapPlayers.find(fragileBullet.getOwner());
+            const auto itShooter2 = m_mapPlayers.find(bullet.getOwner());
+            if (!canBulletHitPerFriendlyFireConfig(itShooter1, itShooter2))
+            {
+                itBullet++;
+                continue;
+            }
+
             const float fFragileBulletScaledSizeX = fragileBullet.getObject3D().getScaledSizeVec().getX();
             const float fFragileBulletScaledSizeY = fragileBullet.getObject3D().getScaledSizeVec().getY();
             const float fBulletPosX = bullet.getObject3D().getPosVec().getX();
@@ -1966,6 +1974,20 @@ bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
 
     return !GameMode::getGameMode()->isTeamBasedGame() ||
         ((playerHit.getTeamId() != playerShooter.getTeamId()) || m_config.getFriendlyFire());
+}
+
+bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itPlayerHit,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const
+{
+    if ((itPlayerHit == m_mapPlayers.end()) || (itShooter == m_mapPlayers.end()))
+    {
+        // either shooter or hit player got disconnected in the meantime, in such case we allow depending on game mode and config
+        return !GameMode::getGameMode()->isTeamBasedGame() ||
+            (GameMode::getGameMode()->isTeamBasedGame() && m_config.getFriendlyFire());
+    }
+
+    return canBulletHitPerFriendlyFireConfig(itPlayerHit->second, itShooter);
 }
 
 bool proofps_dd::WeaponHandling::shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(const Player& playerHit, const Player& playerShooter) const

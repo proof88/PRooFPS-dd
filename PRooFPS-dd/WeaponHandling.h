@@ -230,6 +230,9 @@ namespace proofps_dd
         bool canBulletHitPerFriendlyFireConfig(
             const Player& playerHit,
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;
+        bool canBulletHitPerFriendlyFireConfig(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itPlayerHit,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;
         bool shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(
             const Player& playerHit,
             const Player& playerShooter) const;
