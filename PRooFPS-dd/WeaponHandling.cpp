@@ -120,258 +120,6 @@ bool proofps_dd::WeaponHandling::initializeWeaponHandling(PGEcfgProfiles& cfgPro
     return true;
 }
 
-float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
-    const Player& player,
-    const Explosion& xpl,
-    const Bullet::DamageAreaEffect& eDamageAreaEffect,
-    const TPureFloat& fDamageAreaPulse,
-    int& nDamageAp,
-    const int& nDamageHp,
-    PureVector& vecImpactForce)
-{
-    PureVector vDirPerAxis;
-    PureVector vDistancePerAxis;
-    const float fDistance = distance_NoZ_with_distancePerAxis(
-        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
-        xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
-        vDirPerAxis, vDistancePerAxis);
-
-    nDamageAp = static_cast<int>(std::lroundf(xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageAp)));
-    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageHp);
-
-    // basically we calculate impact force from nDamageHp property of the bullet because this is explosive bullet, its damage_hp property
-    // shall be bigger than its damage_ap, that is why we use damage_hp for this.
-    if (fRadiusDamage > 0.f)
-    {
-        // to determine the direction of impact, we should use the center positions of player and explosion, however
-        // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
-        // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
-        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
-        const float fDistanceXfactor =
-            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
-            (vDistancePerAxis.getX() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
-            std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
-        const float fDistanceYfactor =
-            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
-            (vDistancePerAxis.getY() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
-            std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
-        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * fDistanceXfactor;
-        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * fDistanceYfactor;
-        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
-        vecImpactForce.Set(fImpactX, fImpactY, 0.f);
-    }
-
-    return fRadiusDamage;
-}
-
-proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
-    const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos,
-    const TPureFloat& fDamageAreaSize,
-    const Bullet::DamageAreaEffect& eDamageAreaEffect,
-    const TPureFloat& fDamageAreaPulse,
-    const std::string& sExplosionGfxObjFilename,
-    const int& nDamageAp,
-    const int& nDamageHp,
-    XHair& xhair,
-    PureVector& vecCamShakeForce,
-    proofps_dd::GameMode& gameMode)
-{
-    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
-    m_explosions.push_back(
-        Explosion(
-            m_pge,
-            connHandle,
-            refId,
-            pos,
-            fDamageAreaSize));
-
-    const Explosion& xpl = m_explosions.back();
-
-    bool bShotHitTargetStatUpdated = false; // make sure we increase it only once for the shooter, no matter how many players are hit!
-    const auto itShooter = m_mapPlayers.find(xpl.getOwner());
-    int nPlayersDiedByThisExplosion = 0;
-
-    // apply area damage to players
-    for (auto& playerPair : m_mapPlayers)
-    {
-        auto& player = playerPair.second;
-        const auto& playerConst = player;
-
-        if (playerConst.getHealth() <= 0)
-        {
-            continue;
-        }
-
-        if (!gameMode.isPlayerAllowedForGameplay(player))
-        {
-            continue;
-        }
-
-        PureVector vecImpactForce;
-        int nDamageApCalculated = nDamageAp;
-        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApCalculated, nDamageHp, vecImpactForce
-        );
-        if (fRadiusDamage > 0.f)
-        {
-            /* player.getImpactForce() is decreased in Physics */
-            player.getImpactForce() += vecImpactForce;
-
-            if (playerConst.getServerSideConnectionHandle() == 0)
-            {
-                // this is server player so shake camera!
-                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
-                vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
-            }
-
-            if (player.getInvulnerability())
-            {
-                // even for invulnerable players we let the impact for to be modified as usual above
-                continue;
-            }
-
-            if (!canBulletHitPerFriendlyFireConfig(playerConst, itShooter))
-            {
-                continue;
-            }
-
-            player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
-            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
-
-            if (itShooter != m_mapPlayers.end())
-            {
-                if (!bShotHitTargetStatUpdated)
-                {
-                    bShotHitTargetStatUpdated = true;
-                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here we dont check for weapon type because we believe any explosive weapon is non-melee type!
-                    ++itShooter->second.getShotsHitTarget();
-                    assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
-                    itShooter->second.getFiringAccuracy() =
-                        (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
-                        0.f :
-                        (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
-                }
-            }
-
-            if (playerConst.getHealth() == 0)
-            {
-                nPlayersDiedByThisExplosion++;
-                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                if (itShooter == m_mapPlayers.end())
-                {
-                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
-                    // we still want to display the death notification without the killer's name, but we won't decrease
-                    // frag count for the player because HandlePlayerDied() is not doing that.
-                    nKillerConnHandleServerSide = playerConst.getServerSideConnectionHandle();
-                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                    //    __func__, playerPair.first.c_str());
-                }
-                else
-                {
-                    nKillerConnHandleServerSide = itShooter->first;
-
-                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here the owner of the explosion can kill even themself, so
-                    // in that case frags should be decremented!
-                    if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
-                    {
-                        --itShooter->second.getFrags();
-                        ++itShooter->second.getSuicides();
-                    }
-                    else
-                    {
-                        if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
-                        {
-                            --itShooter->second.getFrags();
-                        }
-                        else
-                        {
-                            ++itShooter->second.getFrags();
-                        }
-                    }
-                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                    //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
-                }
-                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
-                handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
-            }
-        }
-    } // for players
-
-    //getConsole().EOLn("WeaponHandling::%s() nPlayersDiedByThisExplosion: %d", __func__, nPlayersDiedByThisExplosion);
-
-    if (nPlayersDiedByThisExplosion > 1)
-    {
-        pge_network::PgePacket pktPlayerEvent;
-        proofps_dd::MsgPlayerEventFromServer::initPkt(
-            pktPlayerEvent,
-            pge_network::ServerConnHandle /* unused */,
-            PlayerEventId::ExplosionMultiKill,
-            nPlayersDiedByThisExplosion);
-        m_pge.getNetwork().getServer().sendToAllClientsExcept(pktPlayerEvent);
-        
-        // server adds event to GUI here, clients do it when processing above message
-        handleExplosionMultiKill(nPlayersDiedByThisExplosion);
-    }
-
-    // TODO: check for other fragile bullets in range
-
-    return m_explosions.back();
-}
-
-proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
-    const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
-    const pge_network::PgeNetworkConnectionHandle& connHandle,
-    const PureVector& pos,
-    const int& nDamageHp,
-    const TPureFloat& fDamageAreaSize,
-    const Bullet::DamageAreaEffect& eDamageAreaEffect,
-    const TPureFloat& fDamageAreaPulse,
-    const std::string& sExplosionGfxObjFilename,
-    PureVector& vecCamShakeForce)
-{
-    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
-    m_explosions.push_back(
-        Explosion(
-            m_pge,
-            id /* explosion id is not used on client-side */,
-            connHandle,
-            refId,
-            pos,
-            fDamageAreaSize));
-
-    Explosion& xpl = m_explosions.back();
-
-    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
-    if (playerIt == m_mapPlayers.end())
-    {
-        // must always find self player
-        assert(false);
-        return xpl;
-    }
-
-    const auto& playerConst = playerIt->second;
-    if (playerConst.getHealth() > 0)
-    {
-        // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
-        int nDamageApDummyVar;
-        PureVector vecImpactForce;
-        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
-            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApDummyVar, nDamageHp, vecImpactForce
-        );
-
-        if (fRadiusDamage > 0.f)
-        {
-            // close enough, shake camera!
-            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
-            vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
-        }
-    }
-
-    return xpl;
-}
-
 void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
     const Player& player,
     Weapon& wpnCurrent,
@@ -738,318 +486,6 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
     }  // end for playerPair
 
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
-
-bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) const
-{
-    // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
-    const PureVector vRelaxedMapMinBounds(
-        m_maps.getBlocksVertexPosMin().getX() - proofps_dd::Maps::fMapBlockSizeWidth * 4,
-        m_maps.getBlocksVertexPosMin().getY() - proofps_dd::Maps::fMapBlockSizeHeight * 4,
-        m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::Maps::fMapBlockSizeDepth); // ah why dont we have vector-scalar subtract operator defined ...
-    const PureVector vRelaxedMapMaxBounds(
-        m_maps.getBlocksVertexPosMax().getX() + proofps_dd::Maps::fMapBlockSizeWidth * 4,
-        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight * 6,
-        m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
-    
-    return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getScaledSizeVec());
-}
-
-Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
-{
-    if (m_mapPlayers.empty())
-    {
-        return nullptr;
-    }
-
-    return m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
-}
-
-void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(
-    const WeaponId& wpnId,
-    const float& posX,
-    const float& posY,
-    const float& posZ,
-    const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
-{
-    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No);
-    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes);
-
-    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
-    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(wpnId);
-    if (!wpnForSound)
-    {
-        return;
-    }
-
-    if (wpnForSound && (wpnForSound->getType() == Weapon::Type::Melee))
-    {
-        const auto handleSndHit = m_pge.getAudio().play3dSound(
-            ((hitType == proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer) ? wpnForSound->getPlayerHitSound() : wpnForSound->getWallHitSound()),
-            posX, posY, posZ);
-        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndHit, SndMeleeWpnBulletHitDistMin, SndMeleeWpnBulletHitDistMax);
-        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndHit, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-    }
-}
-
-void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
-{
-    play3dMeleeWeaponHitSound(wpnId, posVec.getX(), posVec.getY(), posVec.getZ(), hitType);
-}
-
-void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
-{
-    play3dMeleeWeaponHitSound(bullet.getWeaponId(), bullet.getObject3D().getPosVec(), hitType);
-}
-
-void proofps_dd::WeaponHandling::play3dBulletBounceSound(const Bullet& bullet)
-{
-    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
-    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
-    if (!wpnForSound)
-    {
-        return;
-    }
-
-    if (wpnForSound && (bullet.canBounce()))
-    {
-        const auto handleSndBounce = m_pge.getAudio().play3dSound(
-            wpnForSound->getBulletBounceSound(),
-            bullet.getPut().getPosVec());
-        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndBounce, SndBulletBounceDistMin, SndBulletBounceDistMax);
-        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndBounce, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
-    }
-}
-
-bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
-    const Player& playerHit,
-    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const
-{
-    if (itShooter == m_mapPlayers.end())
-    {
-        // shooter got disconnected in the meantime, in such case we allow depending on game mode and config
-        return !GameMode::getGameMode()->isTeamBasedGame() ||
-            (GameMode::getGameMode()->isTeamBasedGame() && m_config.getFriendlyFire());
-    }
-
-    const Player& playerShooter = itShooter->second;
-
-    return !GameMode::getGameMode()->isTeamBasedGame() ||
-        ((playerHit.getTeamId() != playerShooter.getTeamId()) || m_config.getFriendlyFire());
-}
-
-bool proofps_dd::WeaponHandling::shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(const Player& playerHit, const Player& playerShooter) const
-{
-    return GameMode::getGameMode()->isTeamBasedGame() &&
-        (playerHit.getTeamId() == playerShooter.getTeamId()) && m_config.getFriendlyFire();
-}
-
-/**
-* Bouncing bullet physics are simulated on both server- and client-side, this way server still does not need to update clients
-* about bullet positions continuously. However, bullet delete condition is still detected only by server, that logic is not shared.
-* 
-* @return True if bullet hit any map foreground block, false otherwise.
-*/
-bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
-    const bool& bCollisionModeBvh,
-    PooledBullet& bullet,
-    const PurePosUpTarget& oldPut,
-    const float& fBulletPosX,
-    const float& fBulletPosY,
-    const float& fBulletScaledSizeX,
-    const float& fBulletScaledSizeY,
-    const unsigned int& nPhysicsRate,
-    const float& fFallGravityMin)
-{
-    // RFR: very similar to sharedUpdateRicochetingBullets(), but before any refactoring, plan with proper handling of the returned value
-    // because it has different meaning in the 2 functions.
-
-    bool bWallHit = false;
-    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
-    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
-
-    //static int counter = 0;
-    //counter++;
-
-    // first check for vertical collision with old X, new Y
-    const PureObject3D* pWallHit = bCollisionModeBvh ?
-        sharedUpdateBullets_collisionWithWalls_bvh(
-            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
-        sharedUpdateBullets_collisionWithWalls_legacy(
-            bullet,
-            oldPut.getPosVec().getX(), fBulletPosY,
-            fBulletScaledSizeX, fBulletScaledSizeY);
-
-    if (pWallHit)
-    {
-        bWallHit = true;
-        // bullet.getPut().getPosVec().getY() is expected to be updated by this call
-        bullet.handleVerticalBounceOrRicochet(
-            *pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, -1.f /* negative value means do not set new angle */);
-
-        // We could introduce the same new angle Z calculation here as it is present in sharedUpdateRicochetingBullets() but
-        // for now I dont care, maybe later.
-
-        //getConsole().EOLn(
-        //    "WeaponHandling::%s(): cntr: %d, vertical collision, gravityCurrent: %f, old put Y: %f, fBulletPosY: %f, new put Y: %f",
-        //    __func__,
-        //    counter,
-        //    bullet.getCurrentGravity(),
-        //    oldPut.getPosVec().getY(),
-        //    fBulletPosY,
-        //    bullet.getPut().getPosVec().getY());
-    }
-
-    // then check for horizontal collision with new X, updated Y
-    pWallHit = bCollisionModeBvh ? 
-        sharedUpdateBullets_collisionWithWalls_bvh(
-            fBulletPosX, bullet.getPut().getPosVec().getY(), fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
-        sharedUpdateBullets_collisionWithWalls_legacy(
-            bullet,
-            fBulletPosX, bullet.getPut().getPosVec().getY(),
-            fBulletScaledSizeX, fBulletScaledSizeY);
-
-    if (pWallHit)
-    {
-        bWallHit = true;
-        // bullet.getPut().getPosVec().getX() is expected to be updated by this call
-        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
-
-        //getConsole().EOLn(
-        //    "WeaponHandling::%s(): cntr: %d, horizontal collision, old put X: %f, fBulletPosX: %f, new put X: %f",
-        //    __func__,
-        //    counter,
-        //    oldPut.getPosVec().getX(),
-        //    fBulletPosX,
-        //    bullet.getPut().getPosVec().getX());
-    }
-
-    if (bWallHit &&
-        /* very small bounces like the never-ending bouncing on ground shall not trigger sound */
-        ((abs(fBulletPosY - oldPut.getPosVec().getY()) > 0.015f /* this const literal is based on experimenting */) ||
-        (abs(fBulletPosX - oldPut.getPosVec().getX()) > 0.015f)))
-    {
-        play3dBulletBounceSound(bullet);
-    }
-
-    return bWallHit;
-}
-
-/**
-* Ricocheting bullet physics are simulated on both server- and client-side, this way server still does not need to update clients
-* about bullet positions continuously. However, bullet delete condition is still detected only by server, that logic is not shared.
-*
-* @return True if bullet needs to be deleted because it hit a foreground object in too steep angle, false otherwise.
-*         False means bullet survived and has just ricocheted off a foreground object, so no need to delete the bullet.
-*/
-bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
-    const bool& bCollisionModeBvh,
-    PooledBullet& bullet,
-    const PurePosUpTarget& oldPut,
-    const float& fBulletPosX,
-    const float& fBulletPosY,
-    const float& fBulletScaledSizeX,
-    const float& fBulletScaledSizeY,
-    const unsigned int& nPhysicsRate,
-    const float& fFallGravityMin)
-{
-    // RFR: very similar to sharedUpdateBouncingBullets(), but before any refactoring, plan with proper handling of the returned value
-    // because it has different meaning in the 2 functions.
-
-    bool bWallHit = false;
-    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
-    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
-
-    //static int counter = 0;
-    //counter++;
-
-    // first check for vertical collision with old X, new Y
-    const PureObject3D* pWallHit = bCollisionModeBvh ?
-        sharedUpdateBullets_collisionWithWalls_bvh(
-            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
-        sharedUpdateBullets_collisionWithWalls_legacy(
-            bullet,
-            oldPut.getPosVec().getX(), fBulletPosY,
-            fBulletScaledSizeX, fBulletScaledSizeY);
-
-    // https://www.youtube.com/watch?v=AKhT4QDSqKw
-    // although in the video they measured that ricochet easily happens already at 30° degrees but the target was metal.
-    // So I'm setting way smaller value here.
-    constexpr float fDegreeDiffMaxToRicochet = 10.f;
-
-    PureVector vecView = bullet.getPut().getTargetVec() - bullet.getPut().getPosVec();
-    vecView.Normalize();
-    float fAngleZinDegrees = -1; // lazy calculate only if there is an actual hit, -1 means not calculated yet
-
-    if (pWallHit)
-    {
-        /* fAngleZinDegrees is (in theory it is never 90 here):
-           - [ 0, 90) if bullet coming upwards, where 0 is perpendicular to the horizontal surface,
-           - (90,180] if bullet coming downwards, where 180 is perpendicular to the horizontal surface. */
-        fAngleZinDegrees = PFL::radToDeg( acos(
-            vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)) );
-        
-        float fNewAngleZinDegrees = -1.f; // -1 means no ricocheting, no need to set new angle
-        if ((fAngleZinDegrees < (90.f - fDegreeDiffMaxToRicochet)) ||
-            (fAngleZinDegrees > (90.f + fDegreeDiffMaxToRicochet)))
-        {
-            bWallHit = true; // to trigger delete
-        }
-        else
-        {
-            // fAngleZinDegrees is in [80.f, 100.f] range (if fDegreeDiffMaxToRicochet is 10.f)
-            
-            // TODO: fNewAngleZinDegrees is correctly calculated BUT put is not modified based on that in handleVerticalBounceOrRicochet()!
-            // Therefore, it doesnt have effect. Only flipDirectionY() is called but instead we should set angle for put!
-            const float fDecreaseSteepness = (fAngleZinDegrees - 90.f) / 2.f; /* make new angle even less steep */
-            fNewAngleZinDegrees = fAngleZinDegrees < 90 ?
-                /* came upwards: need to put angle from [0, 90) into (90,180] range */
-                (180.f - fAngleZinDegrees + fDecreaseSteepness) :
-                /* came downwards: need to put angle from (90,180] into [0, 90) range */
-                (180.f - fAngleZinDegrees + fDecreaseSteepness);
-        }
-        //getConsole().EOLn("WeaponHandling::%s(): vertical hit, angleZ to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
-
-        // bullet.getPut().getPosVec().getY() is expected to be updated by this call
-        bullet.handleVerticalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, fNewAngleZinDegrees);
-    }
-
-    // then check for horizontal collision with new X, updated Y
-    pWallHit = bCollisionModeBvh ?
-        sharedUpdateBullets_collisionWithWalls_bvh(
-            fBulletPosX, bullet.getPut().getPosVec().getY(), fBulletPosZ,
-            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
-        sharedUpdateBullets_collisionWithWalls_legacy(
-            bullet,
-            fBulletPosX, bullet.getPut().getPosVec().getY(),
-            fBulletScaledSizeX, fBulletScaledSizeY);
-
-    if (pWallHit)
-    {
-        if (fAngleZinDegrees == -1.f)
-        {
-            fAngleZinDegrees = PFL::radToDeg(acos(
-                vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)));
-        }
-        
-        /* fAngleZinDegrees is:
-           - [ 0,180] if bullet coming from either left or right, where 90 is perpendicular to the vertical surface. */
-        if ((fAngleZinDegrees > fDegreeDiffMaxToRicochet) &&
-            (fAngleZinDegrees < (180.f - fDegreeDiffMaxToRicochet)))
-        {
-            bWallHit = true; // to trigger delete
-        }
-
-        //getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
-
-        // bullet.getPut().getPosVec().getX() is expected to be updated by this call
-        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
-    }
-
-    return bWallHit;
 }
 
 void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlayers(proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
@@ -2261,6 +1697,570 @@ void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Pl
 
 // ############################### PRIVATE ###############################
 
+
+float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
+    const Player& player,
+    const Explosion& xpl,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
+    const TPureFloat& fDamageAreaPulse,
+    int& nDamageAp,
+    const int& nDamageHp,
+    PureVector& vecImpactForce)
+{
+    PureVector vDirPerAxis;
+    PureVector vDistancePerAxis;
+    const float fDistance = distance_NoZ_with_distancePerAxis(
+        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+        xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
+        vDirPerAxis, vDistancePerAxis);
+
+    nDamageAp = static_cast<int>(std::lroundf(xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageAp)));
+    const float fRadiusDamage = xpl.getDamageAtDistance(fDistance, eDamageAreaEffect, nDamageHp);
+
+    // basically we calculate impact force from nDamageHp property of the bullet because this is explosive bullet, its damage_hp property
+    // shall be bigger than its damage_ap, that is why we use damage_hp for this.
+    if (fRadiusDamage > 0.f)
+    {
+        // to determine the direction of impact, we should use the center positions of player and explosion, however
+        // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
+        // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
+        const float fDistanceXfactor =
+            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
+            (vDistancePerAxis.getX() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
+            std::max(0.f, (1 - (vDistancePerAxis.getX() / xpl.getDamageAreaSize())));
+        const float fDistanceYfactor =
+            (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
+            (vDistancePerAxis.getY() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
+            std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
+        const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * fDistanceXfactor;
+        const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * fDistanceYfactor;
+        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+        vecImpactForce.Set(fImpactX, fImpactY, 0.f);
+    }
+
+    return fRadiusDamage;
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos,
+    const TPureFloat& fDamageAreaSize,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
+    const TPureFloat& fDamageAreaPulse,
+    const std::string& sExplosionGfxObjFilename,
+    const int& nDamageAp,
+    const int& nDamageHp,
+    XHair& xhair,
+    PureVector& vecCamShakeForce,
+    proofps_dd::GameMode& gameMode)
+{
+    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
+    m_explosions.push_back(
+        Explosion(
+            m_pge,
+            connHandle,
+            refId,
+            pos,
+            fDamageAreaSize));
+
+    const Explosion& xpl = m_explosions.back();
+
+    bool bShotHitTargetStatUpdated = false; // make sure we increase it only once for the shooter, no matter how many players are hit!
+    const auto itShooter = m_mapPlayers.find(xpl.getOwner());
+    int nPlayersDiedByThisExplosion = 0;
+
+    // apply area damage to players
+    for (auto& playerPair : m_mapPlayers)
+    {
+        auto& player = playerPair.second;
+        const auto& playerConst = player;
+
+        if (playerConst.getHealth() <= 0)
+        {
+            continue;
+        }
+
+        if (!gameMode.isPlayerAllowedForGameplay(player))
+        {
+            continue;
+        }
+
+        PureVector vecImpactForce;
+        int nDamageApCalculated = nDamageAp;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApCalculated, nDamageHp, vecImpactForce
+        );
+        if (fRadiusDamage > 0.f)
+        {
+            /* player.getImpactForce() is decreased in Physics */
+            player.getImpactForce() += vecImpactForce;
+
+            if (playerConst.getServerSideConnectionHandle() == 0)
+            {
+                // this is server player so shake camera!
+                vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
+                vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
+            }
+
+            if (player.getInvulnerability())
+            {
+                // even for invulnerable players we let the impact for to be modified as usual above
+                continue;
+            }
+
+            if (!canBulletHitPerFriendlyFireConfig(playerConst, itShooter))
+            {
+                continue;
+            }
+
+            player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
+            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+
+            if (itShooter != m_mapPlayers.end())
+            {
+                if (!bShotHitTargetStatUpdated)
+                {
+                    bShotHitTargetStatUpdated = true;
+                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here we dont check for weapon type because we believe any explosive weapon is non-melee type!
+                    ++itShooter->second.getShotsHitTarget();
+                    assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                    itShooter->second.getFiringAccuracy() =
+                        (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                        0.f :
+                        (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                }
+            }
+
+            if (playerConst.getHealth() == 0)
+            {
+                nPlayersDiedByThisExplosion++;
+                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
+                if (itShooter == m_mapPlayers.end())
+                {
+                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
+                    // we still want to display the death notification without the killer's name, but we won't decrease
+                    // frag count for the player because HandlePlayerDied() is not doing that.
+                    nKillerConnHandleServerSide = playerConst.getServerSideConnectionHandle();
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
+                    //    __func__, playerPair.first.c_str());
+                }
+                else
+                {
+                    nKillerConnHandleServerSide = itShooter->first;
+
+                    // unlike in serverUpdateBulletsAndHandleHittingWallsAndPlayers(), here the owner of the explosion can kill even themself, so
+                    // in that case frags should be decremented!
+                    if (playerConst.getServerSideConnectionHandle() == xpl.getOwner())
+                    {
+                        --itShooter->second.getFrags();
+                        ++itShooter->second.getSuicides();
+                    }
+                    else
+                    {
+                        if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
+                        {
+                            --itShooter->second.getFrags();
+                        }
+                        else
+                        {
+                            ++itShooter->second.getFrags();
+                        }
+                    }
+                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                    //    __func__, playerPair.first.c_str(), itKiller->first.c_str(), itKiller->second.getFrags());
+                }
+                // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
+                handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
+            }
+        }
+    } // for players
+
+    //getConsole().EOLn("WeaponHandling::%s() nPlayersDiedByThisExplosion: %d", __func__, nPlayersDiedByThisExplosion);
+
+    if (nPlayersDiedByThisExplosion > 1)
+    {
+        pge_network::PgePacket pktPlayerEvent;
+        proofps_dd::MsgPlayerEventFromServer::initPkt(
+            pktPlayerEvent,
+            pge_network::ServerConnHandle /* unused */,
+            PlayerEventId::ExplosionMultiKill,
+            nPlayersDiedByThisExplosion);
+        m_pge.getNetwork().getServer().sendToAllClientsExcept(pktPlayerEvent);
+
+        // server adds event to GUI here, clients do it when processing above message
+        handleExplosionMultiKill(nPlayersDiedByThisExplosion);
+    }
+
+    // TODO: check for other fragile bullets in range
+
+    return m_explosions.back();
+}
+
+proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionClient(
+    const proofps_dd::Explosion::ExplosionId& id /* explosion id is not used on client-side */,
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    const PureVector& pos,
+    const int& nDamageHp,
+    const TPureFloat& fDamageAreaSize,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
+    const TPureFloat& fDamageAreaPulse,
+    const std::string& sExplosionGfxObjFilename,
+    PureVector& vecCamShakeForce)
+{
+    const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
+    m_explosions.push_back(
+        Explosion(
+            m_pge,
+            id /* explosion id is not used on client-side */,
+            connHandle,
+            refId,
+            pos,
+            fDamageAreaSize));
+
+    Explosion& xpl = m_explosions.back();
+
+    const auto playerIt = m_mapPlayers.find(m_nServerSideConnectionHandle);
+    if (playerIt == m_mapPlayers.end())
+    {
+        // must always find self player
+        assert(false);
+        return xpl;
+    }
+
+    const auto& playerConst = playerIt->second;
+    if (playerConst.getHealth() > 0)
+    {
+        // on server-side we calculate damage to do damage, but here on client-side we do it just to shake camera
+        int nDamageApDummyVar;
+        PureVector vecImpactForce;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            playerConst, xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApDummyVar, nDamageHp, vecImpactForce
+        );
+
+        if (fRadiusDamage > 0.f)
+        {
+            // close enough, shake camera!
+            vecCamShakeForce.SetX(abs(vecImpactForce.getX()) * 4);
+            vecCamShakeForce.SetY(abs(vecImpactForce.getY()) * 2);
+        }
+    }
+
+    return xpl;
+}
+
+bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) const
+{
+    // we relax map bounds a bit to let the bullets leave map area a bit more before destroying them ...
+    const PureVector vRelaxedMapMinBounds(
+        m_maps.getBlocksVertexPosMin().getX() - proofps_dd::Maps::fMapBlockSizeWidth * 4,
+        m_maps.getBlocksVertexPosMin().getY() - proofps_dd::Maps::fMapBlockSizeHeight * 4,
+        m_maps.getBlocksVertexPosMin().getZ() - proofps_dd::Maps::fMapBlockSizeDepth); // ah why dont we have vector-scalar subtract operator defined ...
+    const PureVector vRelaxedMapMaxBounds(
+        m_maps.getBlocksVertexPosMax().getX() + proofps_dd::Maps::fMapBlockSizeWidth * 4,
+        m_maps.getBlocksVertexPosMax().getY() + proofps_dd::Maps::fMapBlockSizeHeight * 6,
+        m_maps.getBlocksVertexPosMax().getZ() + proofps_dd::Maps::fMapBlockSizeDepth);
+
+    return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getScaledSizeVec());
+}
+
+Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
+{
+    if (m_mapPlayers.empty())
+    {
+        return nullptr;
+    }
+
+    return m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
+}
+
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(
+    const WeaponId& wpnId,
+    const float& posX,
+    const float& posY,
+    const float& posZ,
+    const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No);
+    assert(hitType != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes);
+
+    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
+    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(wpnId);
+    if (!wpnForSound)
+    {
+        return;
+    }
+
+    if (wpnForSound && (wpnForSound->getType() == Weapon::Type::Melee))
+    {
+        const auto handleSndHit = m_pge.getAudio().play3dSound(
+            ((hitType == proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer) ? wpnForSound->getPlayerHitSound() : wpnForSound->getWallHitSound()),
+            posX, posY, posZ);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndHit, SndMeleeWpnBulletHitDistMin, SndMeleeWpnBulletHitDistMax);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndHit, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+    }
+}
+
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    play3dMeleeWeaponHitSound(wpnId, posVec.getX(), posVec.getY(), posVec.getZ(), hitType);
+}
+
+void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType)
+{
+    play3dMeleeWeaponHitSound(bullet.getWeaponId(), bullet.getObject3D().getPosVec(), hitType);
+}
+
+void proofps_dd::WeaponHandling::play3dBulletBounceSound(const Bullet& bullet)
+{
+    // just for playing sound, let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now!
+    Weapon* const wpnForSound = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+    if (!wpnForSound)
+    {
+        return;
+    }
+
+    if (wpnForSound && (bullet.canBounce()))
+    {
+        const auto handleSndBounce = m_pge.getAudio().play3dSound(
+            wpnForSound->getBulletBounceSound(),
+            bullet.getPut().getPosVec());
+        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(handleSndBounce, SndBulletBounceDistMin, SndBulletBounceDistMax);
+        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(handleSndBounce, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+    }
+}
+
+bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
+    const Player& playerHit,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const
+{
+    if (itShooter == m_mapPlayers.end())
+    {
+        // shooter got disconnected in the meantime, in such case we allow depending on game mode and config
+        return !GameMode::getGameMode()->isTeamBasedGame() ||
+            (GameMode::getGameMode()->isTeamBasedGame() && m_config.getFriendlyFire());
+    }
+
+    const Player& playerShooter = itShooter->second;
+
+    return !GameMode::getGameMode()->isTeamBasedGame() ||
+        ((playerHit.getTeamId() != playerShooter.getTeamId()) || m_config.getFriendlyFire());
+}
+
+bool proofps_dd::WeaponHandling::shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(const Player& playerHit, const Player& playerShooter) const
+{
+    return GameMode::getGameMode()->isTeamBasedGame() &&
+        (playerHit.getTeamId() == playerShooter.getTeamId()) && m_config.getFriendlyFire();
+}
+
+/**
+* Bouncing bullet physics are simulated on both server- and client-side, this way server still does not need to update clients
+* about bullet positions continuously. However, bullet delete condition is still detected only by server, that logic is not shared.
+*
+* @return True if bullet hit any map foreground block, false otherwise.
+*/
+bool proofps_dd::WeaponHandling::sharedUpdateBouncingBullets(
+    const bool& bCollisionModeBvh,
+    PooledBullet& bullet,
+    const PurePosUpTarget& oldPut,
+    const float& fBulletPosX,
+    const float& fBulletPosY,
+    const float& fBulletScaledSizeX,
+    const float& fBulletScaledSizeY,
+    const unsigned int& nPhysicsRate,
+    const float& fFallGravityMin)
+{
+    // RFR: very similar to sharedUpdateRicochetingBullets(), but before any refactoring, plan with proper handling of the returned value
+    // because it has different meaning in the 2 functions.
+
+    bool bWallHit = false;
+    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+
+    //static int counter = 0;
+    //counter++;
+
+    // first check for vertical collision with old X, new Y
+    const PureObject3D* pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            oldPut.getPosVec().getX(), fBulletPosY,
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    if (pWallHit)
+    {
+        bWallHit = true;
+        // bullet.getPut().getPosVec().getY() is expected to be updated by this call
+        bullet.handleVerticalBounceOrRicochet(
+            *pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, -1.f /* negative value means do not set new angle */);
+
+        // We could introduce the same new angle Z calculation here as it is present in sharedUpdateRicochetingBullets() but
+        // for now I dont care, maybe later.
+
+        //getConsole().EOLn(
+        //    "WeaponHandling::%s(): cntr: %d, vertical collision, gravityCurrent: %f, old put Y: %f, fBulletPosY: %f, new put Y: %f",
+        //    __func__,
+        //    counter,
+        //    bullet.getCurrentGravity(),
+        //    oldPut.getPosVec().getY(),
+        //    fBulletPosY,
+        //    bullet.getPut().getPosVec().getY());
+    }
+
+    // then check for horizontal collision with new X, updated Y
+    pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            fBulletPosX, bullet.getPut().getPosVec().getY(), fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            fBulletPosX, bullet.getPut().getPosVec().getY(),
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    if (pWallHit)
+    {
+        bWallHit = true;
+        // bullet.getPut().getPosVec().getX() is expected to be updated by this call
+        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
+
+        //getConsole().EOLn(
+        //    "WeaponHandling::%s(): cntr: %d, horizontal collision, old put X: %f, fBulletPosX: %f, new put X: %f",
+        //    __func__,
+        //    counter,
+        //    oldPut.getPosVec().getX(),
+        //    fBulletPosX,
+        //    bullet.getPut().getPosVec().getX());
+    }
+
+    if (bWallHit &&
+        /* very small bounces like the never-ending bouncing on ground shall not trigger sound */
+        ((abs(fBulletPosY - oldPut.getPosVec().getY()) > 0.015f /* this const literal is based on experimenting */) ||
+            (abs(fBulletPosX - oldPut.getPosVec().getX()) > 0.015f)))
+    {
+        play3dBulletBounceSound(bullet);
+    }
+
+    return bWallHit;
+}
+
+/**
+* Ricocheting bullet physics are simulated on both server- and client-side, this way server still does not need to update clients
+* about bullet positions continuously. However, bullet delete condition is still detected only by server, that logic is not shared.
+*
+* @return True if bullet needs to be deleted because it hit a foreground object in too steep angle, false otherwise.
+*         False means bullet survived and has just ricocheted off a foreground object, so no need to delete the bullet.
+*/
+bool proofps_dd::WeaponHandling::sharedUpdateRicochetingBullets(
+    const bool& bCollisionModeBvh,
+    PooledBullet& bullet,
+    const PurePosUpTarget& oldPut,
+    const float& fBulletPosX,
+    const float& fBulletPosY,
+    const float& fBulletScaledSizeX,
+    const float& fBulletScaledSizeY,
+    const unsigned int& nPhysicsRate,
+    const float& fFallGravityMin)
+{
+    // RFR: very similar to sharedUpdateBouncingBullets(), but before any refactoring, plan with proper handling of the returned value
+    // because it has different meaning in the 2 functions.
+
+    bool bWallHit = false;
+    const float fBulletPosZ = bullet.getObject3D().getPosVec().getZ();
+    const float fBulletScaledSizeZ = bullet.getObject3D().getScaledSizeVec().getZ();
+
+    //static int counter = 0;
+    //counter++;
+
+    // first check for vertical collision with old X, new Y
+    const PureObject3D* pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            oldPut.getPosVec().getX(), fBulletPosY, fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            oldPut.getPosVec().getX(), fBulletPosY,
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    // https://www.youtube.com/watch?v=AKhT4QDSqKw
+    // although in the video they measured that ricochet easily happens already at 30° degrees but the target was metal.
+    // So I'm setting way smaller value here.
+    constexpr float fDegreeDiffMaxToRicochet = 10.f;
+
+    PureVector vecView = bullet.getPut().getTargetVec() - bullet.getPut().getPosVec();
+    vecView.Normalize();
+    float fAngleZinDegrees = -1; // lazy calculate only if there is an actual hit, -1 means not calculated yet
+
+    if (pWallHit)
+    {
+        /* fAngleZinDegrees is (in theory it is never 90 here):
+           - [ 0, 90) if bullet coming upwards, where 0 is perpendicular to the horizontal surface,
+           - (90,180] if bullet coming downwards, where 180 is perpendicular to the horizontal surface. */
+        fAngleZinDegrees = PFL::radToDeg(acos(
+            vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)));
+
+        float fNewAngleZinDegrees = -1.f; // -1 means no ricocheting, no need to set new angle
+        if ((fAngleZinDegrees < (90.f - fDegreeDiffMaxToRicochet)) ||
+            (fAngleZinDegrees > (90.f + fDegreeDiffMaxToRicochet)))
+        {
+            bWallHit = true; // to trigger delete
+        }
+        else
+        {
+            // fAngleZinDegrees is in [80.f, 100.f] range (if fDegreeDiffMaxToRicochet is 10.f)
+
+            // TODO: fNewAngleZinDegrees is correctly calculated BUT put is not modified based on that in handleVerticalBounceOrRicochet()!
+            // Therefore, it doesnt have effect. Only flipDirectionY() is called but instead we should set angle for put!
+            const float fDecreaseSteepness = (fAngleZinDegrees - 90.f) / 2.f; /* make new angle even less steep */
+            fNewAngleZinDegrees = fAngleZinDegrees < 90 ?
+                /* came upwards: need to put angle from [0, 90) into (90,180] range */
+                (180.f - fAngleZinDegrees + fDecreaseSteepness) :
+                /* came downwards: need to put angle from (90,180] into [0, 90) range */
+                (180.f - fAngleZinDegrees + fDecreaseSteepness);
+        }
+        //getConsole().EOLn("WeaponHandling::%s(): vertical hit, angleZ to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+
+        // bullet.getPut().getPosVec().getY() is expected to be updated by this call
+        bullet.handleVerticalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getY(), nPhysicsRate, fFallGravityMin, fNewAngleZinDegrees);
+    }
+
+    // then check for horizontal collision with new X, updated Y
+    pWallHit = bCollisionModeBvh ?
+        sharedUpdateBullets_collisionWithWalls_bvh(
+            fBulletPosX, bullet.getPut().getPosVec().getY(), fBulletPosZ,
+            fBulletScaledSizeX, fBulletScaledSizeY, fBulletScaledSizeZ) :
+        sharedUpdateBullets_collisionWithWalls_legacy(
+            bullet,
+            fBulletPosX, bullet.getPut().getPosVec().getY(),
+            fBulletScaledSizeX, fBulletScaledSizeY);
+
+    if (pWallHit)
+    {
+        if (fAngleZinDegrees == -1.f)
+        {
+            fAngleZinDegrees = PFL::radToDeg(acos(
+                vecView.getDotProduct(bullet.getPut().getUpVec()) / (vecView.getLength() /* * getUpVec().getLength() which is 1 */)));
+        }
+
+        /* fAngleZinDegrees is:
+           - [ 0,180] if bullet coming from either left or right, where 90 is perpendicular to the vertical surface. */
+        if ((fAngleZinDegrees > fDegreeDiffMaxToRicochet) &&
+            (fAngleZinDegrees < (180.f - fDegreeDiffMaxToRicochet)))
+        {
+            bWallHit = true; // to trigger delete
+        }
+
+        //getConsole().EOLn("WeaponHandling::%s(): horizontal hit, angle to up vec: %f deg, new angleZ: %f deg", __func__, fAngleZinDegrees, fNewAngleZinDegrees);
+
+        // bullet.getPut().getPosVec().getX() is expected to be updated by this call
+        bullet.handleHorizontalBounceOrRicochet(*pWallHit, oldPut.getPosVec().getX());
+    }
+
+    return bWallHit;
+}
 
 void proofps_dd::WeaponHandling::emitParticles(PooledBullet& bullet)
 {

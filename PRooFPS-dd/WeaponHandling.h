@@ -66,36 +66,6 @@ namespace proofps_dd
         WeaponHandling&& operator=(WeaponHandling&&) = delete;
 
         bool initializeWeaponHandling(PGEcfgProfiles& cfgProfiles);
-        float getDamageAndImpactForceAtDistance(
-            const Player& player,
-            const Explosion& xpl,
-            const Bullet::DamageAreaEffect& eDamageAreaEffect,
-            const TPureFloat& fDamageAreaPulse,
-            int& nDamageAp,
-            const int& nDamageHp,
-            PureVector& vecImpactForce);
-        Explosion& createExplosionServer(
-            const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos,
-            const TPureFloat& fDamageAreaSize,
-            const Bullet::DamageAreaEffect& eDamageAreaEffect,
-            const TPureFloat& fDamageAreaPulse,
-            const std::string& sExplosionGfxObjFilename,
-            const int& nDamageAp,
-            const int& nDamageHp,
-            XHair& xhair,
-            PureVector& vecCamShakeForce,
-            proofps_dd::GameMode& gameMode);
-        Explosion& createExplosionClient(
-            const proofps_dd::Explosion::ExplosionId& id,
-            const pge_network::PgeNetworkConnectionHandle& connHandle,
-            const PureVector& pos,
-            const int& nDamageHp,
-            const TPureFloat& fDamageAreaSize,
-            const Bullet::DamageAreaEffect& eDamageAreaEffect,
-            const TPureFloat& fDamageAreaPulse,
-            const std::string& sExplosionGfxObjFilename,
-            PureVector& vecCamShakeForce);
 
         void handleCurrentPlayersCurrentWeaponBulletCountsChangeShared(
             const Player& player,
@@ -128,48 +98,10 @@ namespace proofps_dd
 
     protected:
 
-
         void deleteWeaponHandlingAll(const bool& bDeallocBullets);
 
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         
-        bool isBulletOutOfMapBounds(const Bullet& bullet) const;
-        Weapon* getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId);
-        void play3dMeleeWeaponHitSound(
-            const WeaponId& wpnId,
-            const float& posX,
-            const float& posY,
-            const float& posZ,
-            const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
-        void play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
-        void play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
-        void play3dBulletBounceSound(const Bullet& bullet);
-        bool canBulletHitPerFriendlyFireConfig(
-            const Player& playerHit,
-            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;
-        bool shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(
-            const Player& playerHit,
-            const Player& playerShooter) const;
-        bool sharedUpdateBouncingBullets(
-            const bool& bCollisionModeBvh,
-            PooledBullet& bullet,
-            const PurePosUpTarget& oldPut,
-            const float& fBulletPosX,
-            const float& fBulletPosY,
-            const float& fBulletScaledSizeX,
-            const float& fBulletScaledSizeY,
-            const unsigned int& nPhysicsRate,
-            const float& fFallGravityMin);
-        bool sharedUpdateRicochetingBullets(
-            const bool& bCollisionModeBvh,
-            PooledBullet& bullet,
-            const PurePosUpTarget& oldPut,
-            const float& fBulletPosX,
-            const float& fBulletPosY,
-            const float& fBulletScaledSizeX,
-            const float& fBulletScaledSizeY,
-            const unsigned int& nPhysicsRate,
-            const float& fFallGravityMin);
         void serverUpdateBulletsAndHandleHittingWallsAndPlayers(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,
@@ -242,6 +174,75 @@ namespace proofps_dd
         // this pointer will be invalid! When window becomes active again, this ptr will be tried to be used to switch to this Weapon instance which
         // has been already deleted! Result: undefined behavior, sooner or later crash.
         Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
+
+        float getDamageAndImpactForceAtDistance(
+            const Player& player,
+            const Explosion& xpl,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
+            const TPureFloat& fDamageAreaPulse,
+            int& nDamageAp,
+            const int& nDamageHp,
+            PureVector& vecImpactForce);
+        Explosion& createExplosionServer(
+            const pge_network::PgeNetworkConnectionHandle& connHandle,
+            const PureVector& pos,
+            const TPureFloat& fDamageAreaSize,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
+            const TPureFloat& fDamageAreaPulse,
+            const std::string& sExplosionGfxObjFilename,
+            const int& nDamageAp,
+            const int& nDamageHp,
+            XHair& xhair,
+            PureVector& vecCamShakeForce,
+            proofps_dd::GameMode& gameMode);
+        Explosion& createExplosionClient(
+            const proofps_dd::Explosion::ExplosionId& id,
+            const pge_network::PgeNetworkConnectionHandle& connHandle,
+            const PureVector& pos,
+            const int& nDamageHp,
+            const TPureFloat& fDamageAreaSize,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
+            const TPureFloat& fDamageAreaPulse,
+            const std::string& sExplosionGfxObjFilename,
+            PureVector& vecCamShakeForce);
+
+        bool isBulletOutOfMapBounds(const Bullet& bullet) const;
+        Weapon* getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId);
+        void play3dMeleeWeaponHitSound(
+            const WeaponId& wpnId,
+            const float& posX,
+            const float& posY,
+            const float& posZ,
+            const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dMeleeWeaponHitSound(const WeaponId& wpnId, const PureVector& posVec, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dMeleeWeaponHitSound(const Bullet& bullet, const proofps_dd::MsgBulletUpdateFromServer::BulletDelete& hitType);
+        void play3dBulletBounceSound(const Bullet& bullet);
+        bool canBulletHitPerFriendlyFireConfig(
+            const Player& playerHit,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itShooter) const;
+        bool shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(
+            const Player& playerHit,
+            const Player& playerShooter) const;
+        bool sharedUpdateBouncingBullets(
+            const bool& bCollisionModeBvh,
+            PooledBullet& bullet,
+            const PurePosUpTarget& oldPut,
+            const float& fBulletPosX,
+            const float& fBulletPosY,
+            const float& fBulletScaledSizeX,
+            const float& fBulletScaledSizeY,
+            const unsigned int& nPhysicsRate,
+            const float& fFallGravityMin);
+        bool sharedUpdateRicochetingBullets(
+            const bool& bCollisionModeBvh,
+            PooledBullet& bullet,
+            const PurePosUpTarget& oldPut,
+            const float& fBulletPosX,
+            const float& fBulletPosY,
+            const float& fBulletScaledSizeX,
+            const float& fBulletScaledSizeY,
+            const unsigned int& nPhysicsRate,
+            const float& fFallGravityMin);
 
         void emitParticles(PooledBullet& bullet);
 
