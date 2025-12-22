@@ -34,7 +34,7 @@ A compressed build for Windows is available for TODO.
 
 This version brings the following **new features**:
  - bullets can **ricochet** off the walls if colliding in flat angle (<= 10°).
- - **bullet vs bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to the fragile bullet being destroyed.
+ - **bullet vs bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to the fragile bullet being destroyed.  
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration.
 
 This version brings the following **changes and enhancements**:
