@@ -175,6 +175,16 @@ namespace proofps_dd
         // has been already deleted! Result: undefined behavior, sooner or later crash.
         Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
 
+        blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator deleteBulletServer(
+            PgeObjectPool<PooledBullet>& bullets,
+            blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator itBullet,
+            const bool& bPlayerHit,
+            const bool& bWallHit,
+            XHair& xhair,
+            PureVector& vecCamShakeForce,
+            proofps_dd::GameMode& gameMode,
+            const bool& bEndGame);
+
         float getDamageAndImpactForceAtDistance(
             const Player& player,
             const Explosion& xpl,
