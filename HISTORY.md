@@ -39,7 +39,8 @@ This version brings the following **new features**:
 
 This version brings the following **changes and enhancements**:
  - Grenade Launcher: grenade hitting a player also triggers explosion.
- - JetLax: when activated but idle, randomized micro-forces push the player a bit away from their position.
+ In team deathmatch, it is based on the friendly fire configuration.
+ - JetLax: when activated but idle, randomized micro-forces push the player to give a bit more floating-like feeling.
  - GFX: smoke colors are a bit more randomized (nobody will notice it though).
 
 This version brings the following **bug fixes**:
