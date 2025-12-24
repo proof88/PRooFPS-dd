@@ -186,6 +186,18 @@ namespace proofps_dd
             const bool& bEndGame);
 
         float getDamageAndImpactForceAtDistance(
+            const float& fNearObjX,
+            const float& fNearObjY,
+            const float& fNearObjRealSizeX,
+            const float& fNearObjRealSizeY,
+            const Explosion& xpl,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
+            const TPureFloat& fDamageAreaPulse,
+            int& nDamageAp,
+            const int& nDamageHp,
+            PureVector& vecImpactForce);
+
+        float getDamageAndImpactForceAtDistance(
             const Player& player,
             const Explosion& xpl,
             const Bullet::DamageAreaEffect& eDamageAreaEffect,
@@ -193,7 +205,9 @@ namespace proofps_dd
             int& nDamageAp,
             const int& nDamageHp,
             PureVector& vecImpactForce);
+        
         Explosion& createExplosionServer(
+            const PooledBullet& causedByBullet,
             const pge_network::PgeNetworkConnectionHandle& connHandle,
             const PureVector& pos,
             const TPureFloat& fDamageAreaSize,

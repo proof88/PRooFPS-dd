@@ -1570,6 +1570,7 @@ blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator proofps_dd::WeaponHandl
             else if (wpnForExplosionData)
             {
                 createExplosionServer(
+                    bullet,
                     bullet.getOwner(),
                     bullet.getObject3D().getPosVec(),
                     bullet.getAreaDamageSize(),
@@ -1627,7 +1628,10 @@ blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator proofps_dd::WeaponHandl
 }
 
 float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
-    const Player& player,
+    const float& fNearObjX,
+    const float& fNearObjY,
+    const float& fNearObjRealSizeX,
+    const float& fNearObjRealSizeY,
     const Explosion& xpl,
     const Bullet::DamageAreaEffect& eDamageAreaEffect,
     const TPureFloat& fDamageAreaPulse,
@@ -1638,8 +1642,8 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
     PureVector vDirPerAxis;
     PureVector vDistancePerAxis;
     const float fDistance = distance_NoZ_with_distancePerAxis(
-        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
-        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+        fNearObjX, fNearObjY,
+        fNearObjRealSizeX, fNearObjRealSizeY,
         xpl.getPrimaryObject3D().getPosVec().getX(), xpl.getPrimaryObject3D().getPosVec().getY(),
         vDirPerAxis, vDistancePerAxis);
 
@@ -1653,7 +1657,12 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         // to determine the direction of impact, we should use the center positions of player and explosion, however
         // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
         // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
-        const float fPlayerWidthHeightRatio = player.getObject3D()->getScaledSizeVec().getX() / player.getObject3D()->getScaledSizeVec().getY();
+        assert(fNearObjRealSizeY != 0.f); // crash in debug
+        if (fNearObjRealSizeY == 0.f)
+        {
+            return 0.f; // graceful silent return in release
+        }
+        const float fPlayerWidthHeightRatio = fNearObjRealSizeX / fNearObjRealSizeY;
         const float fDistanceXfactor =
             (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
             (vDistancePerAxis.getX() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
@@ -1671,7 +1680,29 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
     return fRadiusDamage;
 }
 
+float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
+    const Player& player,
+    const Explosion& xpl,
+    const Bullet::DamageAreaEffect& eDamageAreaEffect,
+    const TPureFloat& fDamageAreaPulse,
+    int& nDamageAp,
+    const int& nDamageHp,
+    PureVector& vecImpactForce)
+{
+    return getDamageAndImpactForceAtDistance(
+        player.getPos().getNew().getX(), player.getPos().getNew().getY(),
+        player.getObject3D()->getScaledSizeVec().getX(), player.getObject3D()->getScaledSizeVec().getY(),
+        xpl,
+        eDamageAreaEffect,
+        fDamageAreaPulse,
+        nDamageAp,
+        nDamageHp,
+        vecImpactForce
+    );
+}
+
 proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
+    const PooledBullet& causedByBullet,
     const pge_network::PgeNetworkConnectionHandle& connHandle,
     const PureVector& pos,
     const TPureFloat& fDamageAreaSize,
@@ -1821,7 +1852,59 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         handleExplosionMultiKill(nPlayersDiedByThisExplosion);
     }
 
-    // TODO: check for other fragile bullets in range
+    // check for other fragile bullets in range
+    PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
+    size_t itiOuter = 0;
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
+    auto itFragileBullet = bullets.begin();
+    while ((itiOuter < bullets.size()) && (itFragileBullet != bullets.end()))
+    {
+        if (!itFragileBullet->used())
+        {
+            itFragileBullet++;
+            continue;
+        }
+        itiOuter++;
+
+        auto& fragileBullet = *itFragileBullet;
+
+        if ((&fragileBullet == &causedByBullet) || !fragileBullet.isFragile())
+        {
+            itFragileBullet++;
+            continue;
+        }
+
+        const auto itShooter1 = m_mapPlayers.find(fragileBullet.getOwner());
+        const auto itShooter2 = m_mapPlayers.find(xpl.getOwner());
+        if (!canBulletHitPerFriendlyFireConfig(itShooter1, itShooter2))
+        {
+            itFragileBullet++;
+            continue;
+        }
+
+        PureVector vecImpactForceDummy;
+        int nDamageApCalculatedDummy = 0;
+        const float fRadiusDamage = getDamageAndImpactForceAtDistance(
+            fragileBullet.getObject3D().getPosVec().getX(),
+            fragileBullet.getObject3D().getPosVec().getY(),
+            fragileBullet.getObject3D().getScaledSizeVec().getX(),
+            fragileBullet.getObject3D().getScaledSizeVec().getY(),
+            xpl, eDamageAreaEffect, fDamageAreaPulse, nDamageApCalculatedDummy, 100 /* HP */, vecImpactForceDummy
+        );
+        if (fRadiusDamage > 0.f)
+        {
+            // itFragileBullet is within the radius of the explosion!
+            // TODO: do something!
+            itFragileBullet++;
+        }
+        else
+        {
+            // bullet didn't touch anything, go to next
+            itFragileBullet++;
+        }
+
+        // 'itFragileBullet' is referring to next bullet, don't use it from here!
+    } // end while itFragileBullet != bullets.end()
 
     return m_explosions.back();
 }

@@ -9,6 +9,7 @@
 
  - Start a server instance with "Team Deathmatch" Game Mode, and 1 client instance (connect it to server), then test the following:
    - Friendly fire working as per current config?
+     - Not only check hitting players but also hitting fragile bullets!
    - Team Spawn Groups working as per current config?
    - Check if Frag Table shows the 2 teams properly (players grouped by teams, ordered by frags within teams).
    - Check if any non-first team change actually increases death count by 1.
