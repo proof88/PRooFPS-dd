@@ -1,0 +1,81 @@
+Name = Unnamed Concept
+
+#######################
+#                     #
+#  BLOCK DEFINITIONS  #
+#                     #
+#######################
+
+# The following chars are used for defining foreground blocks in this map:
+# BD
+# Remaining chars to be used as foreground blocks in this map: FGHIJKLQT
+
+B = brick1light.bmp
+D = dirt2light.bmp
+
+# The following chars are used for defining background blocks in this map:
+# ac
+# Remaining chars to be used as background blocks in this map: emnopruvwxyz
+
+a = brick1.bmp
+c = dirt2.bmp
+
+###############
+#             #
+#  JUMP PADS  #
+#             #
+###############
+
+# The following texture is used for jump pads not having an immediate left foregound block neighbor next to them.
+^ = brick1light.bmp
+
+# sp0-jp4
+jumppad_0 = 1.6 -7.5
+
+# sp0-jp1
+jumppad_1 = 1.3 -3
+
+# sp0-jp0
+jumppad_2 = 2 -1.3
+
+# sp0-jp3
+jumppad_3 = 3 -1.3
+
+# sp0-jp2
+jumppad_4 = 1.6 7.5
+
+# sp0-jp5
+# TODO: strange: if vertical force is 1 then horizontal force is ignored!
+jumppad_5 = 1.3 -3
+
+
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB    B                       ^                    BBBB
+BBBB                                                 BBBB
+BBBB            B        ^                           BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                         S                       BBBB
+BBBB                         ^                       BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+BBaa                                                 BBBB
+BBaa                                                 BBBB
+BBaa                                                 BBBB
+BBaa                                  ^B             BBBB
+BBaa             ^                                   BBBB
+BBaa                                                 BBBB
+BBBB     ^                                           BBBB
+BBBB                                                 BBBB
+BBBB                                                 BBBB
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+
+# After or in between the map layout lines, we do not accept anything else.
