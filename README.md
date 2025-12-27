@@ -86,6 +86,12 @@ Using this technique you can even continuously bounce yourself upwards between 2
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
 
+### User Manual
+
+Currently there is no detailed user manual for the game.  
+In case of any doubt, the manual test files can clarify the normal and expected behavior of the game.  
+These are the `_how-to-manual-test-*.txt` files under the [project tree's PRooFPS-dd directory](https://github.com/proof88/PRooFPS-dd/tree/main/PRooFPS-dd).
+
 ### Debugging
 
 If you have any problem with the game, it is always recommended to save the latest generated log file(s) from the game's main directory.  
