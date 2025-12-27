@@ -521,13 +521,12 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
 
         auto& bullet = *it;
 
-        bool bDeleteBullet = false;
         bool bWallHit = false;
         bool bPlayerHit = false;
         const PurePosUpTarget oldPut = bullet.getPut();  // TODO save just position, PUT is overkill
         if (bEndGame || bullet.expired())
         {
-            bDeleteBullet = true;
+            bullet.markForDeletion();
         }
         else
         {
@@ -535,7 +534,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
 
             if ((bullet.getTravelDistanceMax() > 0.f) && (bullet.getTravelledDistance() >= bullet.getTravelDistanceMax()))
             {
-                bDeleteBullet = true;
+                bullet.markForDeletion();
             }
         }
 
@@ -544,7 +543,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
         const float fBulletScaledSizeX = bullet.getObject3D().getScaledSizeVec().getX();
         const float fBulletScaledSizeY = bullet.getObject3D().getScaledSizeVec().getY();
 
-        if (!bDeleteBullet)
+        if (!bullet.isMarkedForDeletion())
         {
             emitParticles(bullet);
             
@@ -585,7 +584,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                             fBulletPosX, fBulletPosY,
                             fBulletScaledSizeX, fBulletScaledSizeY))
                     {
-                        bDeleteBullet = true;
+                        bullet.markForDeletion();
                         bPlayerHit = true;
                         if (bullet.getAreaDamageSize() == 0.f)
                         {
@@ -647,15 +646,15 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                 } // for all players
             }  // bullet.hitsPlayers()
 
-            if (!bDeleteBullet)
+            if (!bullet.isMarkedForDeletion())
             {
                 if (isBulletOutOfMapBounds(bullet))
                 {
-                    bDeleteBullet = true;
+                    bullet.markForDeletion();
                 }
             }
 
-            if (!bDeleteBullet)
+            if (!bullet.isMarkedForDeletion())
             {
                 // check if bullet is hitting a map element
                 
@@ -694,13 +693,13 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                     if (bWallHit)
                     {
                         // non-bouncing bullets need to be deleted upon hitting anything if not ricocheted
-                        bDeleteBullet = true;
+                        bullet.markForDeletion();
                     }
                 }
             }  // endif !bDeleteBullet
         }  // endif !bDeleteBullet
 
-        if (bDeleteBullet)
+        if (bullet.isMarkedForDeletion())
         {
             // delete it right now, otherwise later we would send further updates to clients about this bullet
             it = deleteBulletServer(bullets, it, bPlayerHit, bWallHit, xhair, vecCamShakeForce, gameMode, bEndGame);
@@ -847,6 +846,11 @@ void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(
             {
                 bDeleteBothBullets = true;
                 
+                // both bullets are marked immediately so that recursive calls to deleteBulletServer()/createExplosionServer() won't touch them,
+                // iterators stay valid for us.
+                itBullet->markForDeletion();
+                itFragileBullet->markForDeletion();
+
                 deleteBulletServer(bullets, itBullet, false /* bPlayerHit */, false /* bWallHit */, xhair, vecCamShakeForce, gameMode, gameMode.isGameWon());
 
                 break;
@@ -1551,6 +1555,12 @@ blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator proofps_dd::WeaponHandl
 {
     auto& bullet = *itBullet;
 
+    assert(bullet.isMarkedForDeletion());
+    if (!bullet.isMarkedForDeletion())
+    {
+        getConsole().EOLn("%s ERROR: bullet is NOT marked for deletion!", __func__);
+    }
+
     // make explosion first if required;
     // server does not send specific message to client about creating explosion, it is client's responsibility to create explosion
     // when it receives MsgBulletUpdateFromServer with bDelete flag set, if bullet has area damage!
@@ -1715,6 +1725,12 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     PureVector& vecCamShakeForce,
     proofps_dd::GameMode& gameMode)
 {
+    assert(causedByBullet.isMarkedForDeletion());
+    if (!causedByBullet.isMarkedForDeletion())
+    {
+        getConsole().EOLn("%s ERROR: causedByBullet is NOT marked for deletion!", __func__);
+    }
+
     const ExplosionObjRefId refId = PFL::calcHash(sExplosionGfxObjFilename);
     m_explosions.push_back(
         Explosion(
@@ -1868,7 +1884,7 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
 
         auto& fragileBullet = *itFragileBullet;
 
-        if ((&fragileBullet == &causedByBullet) || !fragileBullet.isFragile())
+        if ((&fragileBullet == &causedByBullet) || !fragileBullet.isFragile() || fragileBullet.isMarkedForDeletion())
         {
             itFragileBullet++;
             continue;
@@ -1894,8 +1910,9 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
         if (fRadiusDamage > 0.f)
         {
             // itFragileBullet is within the radius of the explosion!
-            // TODO: do something!
-            itFragileBullet++;
+            // marking it to be deleted, so recursive calls to deleteBulletServer()/createExplosionServer() won't touch it, iterator will stay valid for us!
+            fragileBullet.markForDeletion();
+            itFragileBullet = deleteBulletServer(bullets, itFragileBullet, false /* bPlayerHit */, false /* bWallHit */, xhair, vecCamShakeForce, gameMode, gameMode.isGameWon());
         }
         else
         {
