@@ -2072,7 +2072,7 @@ bool proofps_dd::WeaponHandling::canBulletHitPerFriendlyFireConfig(
 
     const Player& playerShooter = itShooter->second;
 
-    return !GameMode::getGameMode()->isTeamBasedGame() ||
+    return !GameMode::getGameMode()->isTeamBasedGame() || (&playerHit == &playerShooter) ||
         ((playerHit.getTeamId() != playerShooter.getTeamId()) || m_config.getFriendlyFire());
 }
 

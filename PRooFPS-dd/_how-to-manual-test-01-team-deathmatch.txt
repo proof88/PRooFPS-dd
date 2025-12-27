@@ -9,7 +9,21 @@
 
  - Start a server instance with "Team Deathmatch" Game Mode, and 1 client instance (connect it to server), then test the following:
    - Friendly fire working as per current config?
-     - Not only check hitting players but also hitting fragile bullets!
+     - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,
+     - Check non-bouncing explosive bullets (e.g. rocket) DIRECTLY hitting other players,
+     - Check bouncing explosive bullets (e.g. grenade) DIRECTLY hitting other players,
+       - note: owner of bouncing bullet cannot trigger explosion by colliding with such bullet.
+     - Check explosive bullets causing INDIRECT player damage within their damage radius:
+       - with friendly fire active, enemies and teammates and the owner are all taking damage within damage radius of explosion,
+       - with friendly fire off, only enemies and the owner of the explosion are taking damage within damage radius of explosion,
+         - note: impact force created by explosion still affects everyone within damage radius!
+     - Check DIRECTLY hitting fragile bullets:
+       - with friendly fire active, enemies and teammates can also destroy each other's fragile bullets,
+       - with friendly fire off, teammates cannot destroy each other's fragile bullets, only enemies can.
+     - Check INDIRECTLY hitting fragile bullets:
+       - with friendly fire active, enemies' and teammates' fragile bullets can be destroyed within each other's explosion radius,
+       - with friendly fire off, only enemies' fragile bullets can be destroyed within each other's explosion radius.
+   
    - Team Spawn Groups working as per current config?
    - Check if Frag Table shows the 2 teams properly (players grouped by teams, ordered by frags within teams).
    - Check if any non-first team change actually increases death count by 1.
