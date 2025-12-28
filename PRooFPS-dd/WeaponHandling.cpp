@@ -1667,12 +1667,14 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
         // to determine the direction of impact, we should use the center positions of player and explosion, however
         // to determine the magnitude of impact, we should use the edges/corners of player and explosion center per axis.
         // That is why fRadiusDamage itself is not good to be used for magnitude, as it is NOT per-axis.
+        // Update 2025-12-28: I have changed fPlayerWidthHeightRatio to be always 1.f though because I have tweaked
+        // impact force change behavior in Physics and this behaves better this way now.
         assert(fNearObjRealSizeY != 0.f); // crash in debug
         if (fNearObjRealSizeY == 0.f)
         {
             return 0.f; // graceful silent return in release
         }
-        const float fPlayerWidthHeightRatio = fNearObjRealSizeX / fNearObjRealSizeY;
+        const float fPlayerWidthHeightRatio = 1.f/*fNearObjRealSizeX / fNearObjRealSizeY*/;
         const float fDistanceXfactor =
             (eDamageAreaEffect == Bullet::DamageAreaEffect::Constant) ?
             (vDistancePerAxis.getX() <= xpl.getDamageAreaSize() ? 1.f : 0.f) :
@@ -1683,7 +1685,7 @@ float proofps_dd::WeaponHandling::getDamageAndImpactForceAtDistance(
             std::max(0.f, (1 - (vDistancePerAxis.getY() / xpl.getDamageAreaSize())));
         const float fImpactX = fDamageAreaPulse * fPlayerWidthHeightRatio * vDirPerAxis.getX() * fDistanceXfactor;
         const float fImpactY = fDamageAreaPulse * vDirPerAxis.getY() * fDistanceYfactor;
-        //getConsole().EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
+        //CConsole::getConsoleInstance(getLoggerModuleName()).EOLn("WeaponHandling::%s(): fX: %f, fY: %f!", __func__, fImpactX, fImpactY);
         vecImpactForce.Set(fImpactX, fImpactY, 0.f);
     }
 

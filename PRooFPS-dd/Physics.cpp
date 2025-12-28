@@ -399,7 +399,13 @@ void proofps_dd::Physics::serverGravity(
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
         {
-            /* player.getImpactForce() is set in WeaponHandling::createExplosionServer() */
+            // we use this trick to cancel gravity when impact force is pushing us upwards, because otherwise
+            // it is very difficult to make a good-looking, smooth launch in the air, since impact force and gravity
+            // are changed in different ways in each physics tick.
+            player.setGravity(0.f);
+
+            /* player.getImpactForce() is set in WeaponHandling::createExplosionServer() and also when
+               either player is shooting mid-air or being shot mid-air */
             player.getImpactForce().SetY(player.getImpactForce().getY() - fPlayerImpactForceYChangePerTick);
             if (player.getImpactForce().getY() < 0.f)
             {
@@ -564,6 +570,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_LoopKernelVertic
             player.getPos().getNew().getZ()
         ));
 
+    player.getImpactForce().SetY(0.f);
+    
     player.getAntiGravityForce().SetY(0.f);
     if (player.hasAntiGravityActive())
     {
@@ -974,7 +982,10 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     }
     serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
    
-    const float GAME_IMPACT_FORCE_X_CHANGE = PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
+    const float GAME_IMPACT_FORCE_X_CHANGE =
+        player.isInAir() ?
+        PFL::lerp(12.f, 13.f, GAME_PHYSICS_RATE_LERP_FACTOR) :
+        PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
     if (player.getImpactForce().getX() > 0.f)
     {
@@ -1124,6 +1135,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_common_horizontal_handl
         player.getJumpForce().SetX(0.f);
     }
 
+    player.getImpactForce().SetX(0.f);
     player.getAntiGravityForce().SetX(0.f);
 
     // in case of horizontal collision, we should not reposition to previous position, but align next to the wall
