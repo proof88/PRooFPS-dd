@@ -147,6 +147,18 @@ namespace proofps_dd
 
     private:
 
+        static float getDamageAndImpactForceAtDistance(
+            const float& fNearObjX,
+            const float& fNearObjY,
+            const float& fNearObjRealSizeX,
+            const float& fNearObjRealSizeY,
+            const Explosion& xpl,
+            const Bullet::DamageAreaEffect& eDamageAreaEffect,
+            const TPureFloat& fDamageAreaPulse,
+            int& nDamageAp,
+            const int& nDamageHp,
+            PureVector& vecImpactForce);
+
         // ---------------------------------------------------------------------------
 
         PGE& m_pge;
@@ -184,18 +196,6 @@ namespace proofps_dd
             PureVector& vecCamShakeForce,
             proofps_dd::GameMode& gameMode,
             const bool& bEndGame);
-
-        float getDamageAndImpactForceAtDistance(
-            const float& fNearObjX,
-            const float& fNearObjY,
-            const float& fNearObjRealSizeX,
-            const float& fNearObjRealSizeY,
-            const Explosion& xpl,
-            const Bullet::DamageAreaEffect& eDamageAreaEffect,
-            const TPureFloat& fDamageAreaPulse,
-            int& nDamageAp,
-            const int& nDamageHp,
-            PureVector& vecImpactForce);
 
         float getDamageAndImpactForceAtDistance(
             const Player& player,

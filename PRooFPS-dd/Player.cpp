@@ -1787,24 +1787,57 @@ bool proofps_dd::Player::attack()
 
     /* Invoked by serverUpdateWeapons() thus passing bMoving as old vs new positions won't work, because
        the physics tick will come later. Thus, we need to use previous tick's data to understand if we
-       are moving or not. */
+       are moving or not. That is why I have introduced isMoving() which is the only reliable function
+       for this purpose. */
 
+    PooledBullet* pLastCreatedBullet = nullptr;
     const bool bRet = wpn->pullTrigger(
         isMoving() && m_cfgProfiles.getVars()[szCVarSvMovingAffectsAim].getAsBool(),
         isRunning(),
-        getCrouchStateCurrent()
+        getCrouchStateCurrent(),
+        &pLastCreatedBullet
     );
 
-    if (bRet && (wpn->getType() != Weapon::Type::Melee) &&
-        /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
-        (wpn->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
+    if (bRet)
     {
-        // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
-        ++getShotsFiredCount();
-        getFiringAccuracy() =
-            (getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
-            0.f :
-            (getShotsHitTarget() / static_cast<float>(getShotsFiredCount()));
+        if (isInAir())
+        {
+            assert(!m_bullets.empty());
+            if (m_bullets.empty())
+            {
+                getConsole().EOLn("%s(): ERROR: CANNOT HAPPEN: bulletpool is empty!", __func__);
+                return false;
+            }
+
+            // we use the angle of the last created bullet for pushing the player!
+            assert(pLastCreatedBullet);
+            const float fBulletAngleZdeg = pLastCreatedBullet->getObject3D().getAngleVec().getZ();
+            const float fBulletAngleZrad = PFL::degToRad(fBulletAngleZdeg);
+            const float fImpactForceChangeX =
+                (pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ?
+                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier()) :
+                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * -1);
+            const float fImpactForceChangeY = sin(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier();
+            //getConsole().EOLn("%s(): bullet angle z: %f, sin: %f, cos: %f", __func__, fBulletAngleZdeg, fImpactForceChangeY, fImpactForceChangeX);
+
+            if (wpn->getType() != Weapon::Type::Melee)
+            {
+                getImpactForce().SetX(getImpactForce().getX() + fImpactForceChangeX);
+                getImpactForce().SetY(getImpactForce().getY() + fImpactForceChangeY);
+            }
+        } // isInAir()
+
+        if ((wpn->getType() != Weapon::Type::Melee) &&
+            /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
+            (wpn->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
+        {
+            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
+            ++getShotsFiredCount();
+            getFiringAccuracy() =
+                (getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                0.f :
+                (getShotsHitTarget() / static_cast<float>(getShotsFiredCount()));
+        }
     }
 
     return bRet;
