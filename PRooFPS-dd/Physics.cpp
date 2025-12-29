@@ -985,7 +985,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     const float GAME_IMPACT_FORCE_X_CHANGE =
         player.isInAir() ?
         PFL::lerp(12.f, 13.f, GAME_PHYSICS_RATE_LERP_FACTOR) :
-        PFL::lerp(25.f, 26.f, GAME_PHYSICS_RATE_LERP_FACTOR);
+        PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
     if (player.getImpactForce().getX() > 0.f)
     {

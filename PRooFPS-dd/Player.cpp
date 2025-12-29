@@ -1814,10 +1814,9 @@ bool proofps_dd::Player::attack()
             const float fBulletAngleZdeg = pLastCreatedBullet->getObject3D().getAngleVec().getZ();
             const float fBulletAngleZrad = PFL::degToRad(fBulletAngleZdeg);
             const float fImpactForceChangeX =
-                (pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ?
-                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier()) :
-                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * -1);
-            const float fImpactForceChangeY = sin(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier();
+                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * 2) *
+                ((pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ? 1 : -1);
+            const float fImpactForceChangeY = sin(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * 2;
             //getConsole().EOLn("%s(): bullet angle z: %f, sin: %f, cos: %f", __func__, fBulletAngleZdeg, fImpactForceChangeY, fImpactForceChangeX);
 
             if (wpn->getType() != Weapon::Type::Melee)
