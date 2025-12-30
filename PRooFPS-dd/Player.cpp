@@ -1800,30 +1800,44 @@ bool proofps_dd::Player::attack()
 
     if (bRet)
     {
-        if (isInAir())
+        assert(!m_bullets.empty());
+        if (m_bullets.empty())
         {
-            assert(!m_bullets.empty());
-            if (m_bullets.empty())
-            {
-                getConsole().EOLn("%s(): ERROR: CANNOT HAPPEN: bulletpool is empty!", __func__);
-                return false;
-            }
-
-            // we use the angle of the last created bullet for pushing the player!
+            getConsole().EOLn("%s(): ERROR: CANNOT HAPPEN: bulletpool is empty!", __func__);
+            return false;
+        }
+        
+        // we use the angle of the LAST created bullet for pushing the player (even if multiple bullets were fired at once)!
+        if (isInAir() && (wpn->getType() != Weapon::Type::Melee))
+        {
+            // for visual reason let non-auto wpn recoil push the player more because it looks nice,
+            // however full-automatics need to be limited otherwise they would just create too much push mid-air.
+            // And, higher firing rate shall result in less force change, otherwise too much push by UZI.
+            const float fWpnFiringRateConstrained = PFL::constrain(wpn->getFiringRate(), 5.f, 10.f);
+            const float fWpnRecoilAmplifiesImpactForceInAir = 
+                (wpn->getCurrentFiringMode() == Weapon::FiringMode::WPN_FM_AUTO) ?
+                wpn->getMaximumRecoilMultiplier() / (fWpnFiringRateConstrained / 3.f) :
+                wpn->getMaximumRecoilMultiplier() * 2.f;
+            
             assert(pLastCreatedBullet);
-            const float fBulletAngleZdeg = pLastCreatedBullet->getObject3D().getAngleVec().getZ();
-            const float fBulletAngleZrad = PFL::degToRad(fBulletAngleZdeg);
+            const float fBulletAngleZrad = PFL::degToRad(pLastCreatedBullet->getObject3D().getAngleVec().getZ());
             const float fImpactForceChangeX =
-                (cos(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * 2) *
-                ((pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ? 1 : -1);
-            const float fImpactForceChangeY = sin(fBulletAngleZrad) * wpn->getMaximumRecoilMultiplier() * 2;
-            //getConsole().EOLn("%s(): bullet angle z: %f, sin: %f, cos: %f", __func__, fBulletAngleZdeg, fImpactForceChangeY, fImpactForceChangeX);
+                (cos(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir) *
+                ((pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ? 1 : -1) * 
+                (hasAntiGravityActive() ? 1 : 0.5f);
+            
+            const float fImpactForceChangeY =
+                hasAntiGravityActive() ?
+                sin(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir :
+                0.f /* dont mess with possible jumping */;
+            
+            //getConsole().EOLn("%s(): force change y: %f, x: %f", __func__, fImpactForceChangeY, fImpactForceChangeX);
+            //getConsole().EOLn("%s(): current impactforce x: %f, y: %f", __func__, getImpactForce().getX(), getImpactForce().getY());
 
-            if (wpn->getType() != Weapon::Type::Melee)
-            {
-                getImpactForce().SetX(getImpactForce().getX() + fImpactForceChangeX);
-                getImpactForce().SetY(getImpactForce().getY() + fImpactForceChangeY);
-            }
+            //getImpactForce().SetX(getImpactForce().getX() + fImpactForceChangeX);
+            //getImpactForce().SetY(getImpactForce().getY() + fImpactForceChangeY);
+            getImpactForce().SetX(PFL::constrain(getImpactForce().getX() + fImpactForceChangeX, -5, 5));
+            getImpactForce().SetY(PFL::constrain(getImpactForce().getY() + fImpactForceChangeY, -5, 5));
         } // isInAir()
 
         if ((wpn->getType() != Weapon::Type::Melee) &&

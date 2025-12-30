@@ -361,8 +361,6 @@ void proofps_dd::Physics::serverGravity(
     const float GAME_GRAVITY_CONST = PFL::lerp(80.f /* 20 Hz */, 90.f /* 60 Hz */, GAME_PHYSICS_RATE_LERP_FACTOR);
     static constexpr float GAME_FALL_GRAVITY_MIN = -15.f;
 
-    const float GAME_IMPACT_FORCE_Y_CHANGE = PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
-
     //const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
     for (auto& playerPair : m_mapPlayers)
@@ -395,6 +393,10 @@ void proofps_dd::Physics::serverGravity(
         }
         //getConsole().EOLn("fTargetAntiGravityThrust Y: %f", fTargetAntiGravityThrust);
         serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, true /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
+
+        const float GAME_IMPACT_FORCE_Y_CHANGE =
+            player.hasAntiGravityActive() ?
+            PFL::lerp(12.f, 13.f, GAME_PHYSICS_RATE_LERP_FACTOR) : PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
 
         const float fPlayerImpactForceYChangePerTick = GAME_IMPACT_FORCE_Y_CHANGE / nPhysicsRate;
         if (player.getImpactForce().getY() > 0.f)
@@ -983,9 +985,11 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
    
     const float GAME_IMPACT_FORCE_X_CHANGE =
-        player.isInAir() ?
+        player.hasAntiGravityActive() ?
         PFL::lerp(12.f, 13.f, GAME_PHYSICS_RATE_LERP_FACTOR) :
-        PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR);
+        (player.isInAir() ?
+         PFL::lerp(18.f, 25.f, GAME_PHYSICS_RATE_LERP_FACTOR) :
+         PFL::lerp(36.f, 50.f, GAME_PHYSICS_RATE_LERP_FACTOR));
     const float fPlayerImpactForceXChangePerTick = GAME_IMPACT_FORCE_X_CHANGE / nPhysicsRate;
     if (player.getImpactForce().getX() > 0.f)
     {
