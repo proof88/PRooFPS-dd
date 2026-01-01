@@ -590,12 +590,21 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                         {
                             // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
                             player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
-
+                            
+                            // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
+                            /* TODO: put back const to wpnForType after we don't need to call getVars() below! */
+                            Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
+                            assert(wpnForType);  // null only if there are no players
+                            
+                            // similar to damage, non-explosive bullets push player here, other bullets push indirectly by explosion in createExplosionServer()
+                            // TODO: for this function, if bRecoil is passed as false, the attacker's (itShooter's) weapon shall be passed instead of any player's weapon,
+                            // since the weapon's current firing mode is also used within the function, however for now it is not a problem as of v0.7 as there is
+                            // no way to change firing mode of any weapon in the game. It will matter to auto firing mode weapons with switchable firing mode, but
+                            // that will be introduced much later in the future, even later than pistol's burst fire mode.
+                            player.updateImpactForceByBulletImpactOrRecoil(false /* bRecoil */, bullet, *wpnForType);
+                            
                             if (itShooter != m_mapPlayers.end())
                             {
-                                // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
-                                /* TODO: put back const to wpnForType after we don't need to call getVars() below! */
-                                Weapon* const wpnForType = getWeaponByIdFromAnyPlayersWeaponManager(bullet.getWeaponId());
                                 // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
                                 if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee) &&
                                     /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */

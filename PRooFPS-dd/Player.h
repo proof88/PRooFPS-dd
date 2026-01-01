@@ -338,6 +338,9 @@ namespace proofps_dd
         const Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType) const;
         Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType);
 
+        void updateImpactForceByBulletImpactOrRecoil(
+            bool bRecoil, Bullet& bullet, Weapon& wpn);
+
         void handleFallingFromHigh(int iServerScream);
         void handleLanded(
             const float& fFallHeight,

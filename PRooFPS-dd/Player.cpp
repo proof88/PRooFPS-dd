@@ -1807,38 +1807,9 @@ bool proofps_dd::Player::attack()
             return false;
         }
         
+        assert(pLastCreatedBullet);
         // we use the angle of the LAST created bullet for pushing the player (even if multiple bullets were fired at once)!
-        if (isInAir() && (wpn->getType() != Weapon::Type::Melee))
-        {
-            // for visual reason let non-auto wpn recoil push the player more because it looks nice,
-            // however full-automatics need to be limited otherwise they would just create too much push mid-air.
-            // And, higher firing rate shall result in less force change, otherwise too much push by UZI.
-            const float fWpnFiringRateConstrained = PFL::constrain(wpn->getFiringRate(), 5.f, 10.f);
-            const float fWpnRecoilAmplifiesImpactForceInAir = 
-                (wpn->getCurrentFiringMode() == Weapon::FiringMode::WPN_FM_AUTO) ?
-                wpn->getMaximumRecoilMultiplier() / (fWpnFiringRateConstrained / 3.f) :
-                wpn->getMaximumRecoilMultiplier() * 2.f;
-            
-            assert(pLastCreatedBullet);
-            const float fBulletAngleZrad = PFL::degToRad(pLastCreatedBullet->getObject3D().getAngleVec().getZ());
-            const float fImpactForceChangeX =
-                (cos(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir) *
-                ((pLastCreatedBullet->getObject3D().getAngleVec().getY() == 0.f) ? 1 : -1) * 
-                (hasAntiGravityActive() ? 1 : 0.5f);
-            
-            const float fImpactForceChangeY =
-                hasAntiGravityActive() ?
-                sin(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir :
-                0.f /* dont mess with possible jumping */;
-            
-            //getConsole().EOLn("%s(): force change y: %f, x: %f", __func__, fImpactForceChangeY, fImpactForceChangeX);
-            //getConsole().EOLn("%s(): current impactforce x: %f, y: %f", __func__, getImpactForce().getX(), getImpactForce().getY());
-
-            //getImpactForce().SetX(getImpactForce().getX() + fImpactForceChangeX);
-            //getImpactForce().SetY(getImpactForce().getY() + fImpactForceChangeY);
-            getImpactForce().SetX(PFL::constrain(getImpactForce().getX() + fImpactForceChangeX, -5, 5));
-            getImpactForce().SetY(PFL::constrain(getImpactForce().getY() + fImpactForceChangeY, -5, 5));
-        } // isInAir()
+        updateImpactForceByBulletImpactOrRecoil(true /* bRecoil */, *pLastCreatedBullet, *wpn);
 
         if ((wpn->getType() != Weapon::Type::Melee) &&
             /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
@@ -2060,6 +2031,58 @@ Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemType& ma
 {
     // simply invoke the const-version of the function above by const-casting:
     return const_cast<Weapon*>((const_cast<const Player* const>(this))->getWeaponInstanceByMapItemType(mapItemType));
+}
+
+/**
+* @param bRecoil True if the impact is due to this player firing a bullet,
+*                false otherwise (if impact is due to another player's bullet is hitting this player).
+* @param bullet  It is either the bullet fired by this player in case of bRecoil is true, or
+*                the attacker's fired bullet impacting this player if bRecoil is false.
+* @param wpn     It is either this player's current weapon in case of bRecoil is true, or
+*                the attacker's weapon if bRecoil is false.
+*/
+void proofps_dd::Player::updateImpactForceByBulletImpactOrRecoil(bool bRecoil, Bullet& bullet, Weapon& wpn)
+{
+    // neither the shooter nor the shot player changes impact force when being on the ground or hitting/got hit by melee weapon
+    if (!isInAir() || (wpn.getType() == Weapon::Type::Melee))
+    {
+        return;
+    }
+
+    // Basically we use the same code for both pushing the shooter (bRecoil: true) or the hit player (bRecoil: false).
+    // For visual reason let non-auto wpn recoil push the player more because it looks nice,
+    // however full-automatics need to be limited otherwise they would just create too much push mid-air.
+    // And, higher firing rate shall result in less force change, otherwise too much push by UZI.
+    const float fWpnFiringRateConstrained = PFL::constrain(wpn.getFiringRate(), 5.f, 10.f);
+    const float fWpnRecoilAmplifiesImpactForceInAir =
+        /* TODO: if bRecoil is false, we should not take current firing mode into account because the
+           shooter might have already changed the firing mode, however now it is ok because there is
+           no way to change firing mode as of v0.7. */
+        (wpn.getCurrentFiringMode() == Weapon::FiringMode::WPN_FM_AUTO) ?
+        wpn.getMaximumRecoilMultiplier() / (fWpnFiringRateConstrained / 3.f) :
+        wpn.getMaximumRecoilMultiplier() * 2.f;
+
+    // here is the main reason for argument bRecoil: to make force against or in the same direction of the bullet?
+    const float fBulletAngleZrad = 
+        PFL::degToRad( (bRecoil ? 0 : 180) + bullet.getObject3D().getAngleVec().getZ() );
+    
+    const float fImpactForceChangeX =
+        (cos(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir) *
+        ((bullet.getObject3D().getAngleVec().getY() == 0.f) ? 1 : -1) *
+        (hasAntiGravityActive() ? 1 : 0.5f);
+
+    const float fImpactForceChangeY =
+        hasAntiGravityActive() ?
+        sin(fBulletAngleZrad) * fWpnRecoilAmplifiesImpactForceInAir :
+        0.f /* dont mess with possible jumping */;
+
+    //getConsole().EOLn("%s(): force change y: %f, x: %f", __func__, fImpactForceChangeY, fImpactForceChangeX);
+    //getConsole().EOLn("%s(): current impactforce x: %f, y: %f", __func__, getImpactForce().getX(), getImpactForce().getY());
+
+    //getImpactForce().SetX(getImpactForce().getX() + fImpactForceChangeX);
+    //getImpactForce().SetY(getImpactForce().getY() + fImpactForceChangeY);
+    getImpactForce().SetX(PFL::constrain(getImpactForce().getX() + fImpactForceChangeX, -5, 5));
+    getImpactForce().SetY(PFL::constrain(getImpactForce().getY() + fImpactForceChangeY, -5, 5));
 }
 
 void proofps_dd::Player::handleFallingFromHigh(int iServerScream /* valid only in case of client, server just sets it within this func */)
