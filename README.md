@@ -18,7 +18,7 @@ It uses my open-source [game engine](https://github.com/proof88/PGE).
 This game is still **under development**.
 
 **[Version History](HISTORY.md)**  
-**[Kanban Board View for 2025](https://github.com/users/proof88/projects/10/views/1)**  
+**[Kanban Board View for 2025-2026](https://github.com/users/proof88/projects/10/views/1)**  
 **[Roadmap View for 2025](https://github.com/users/proof88/projects/10/views/4)**  
 **[Kanban Board View for 2024](https://github.com/users/proof88/projects/9/views/1)**  
 **[Roadmap View for 2024](https://github.com/users/proof88/projects/9/views/4)**  
