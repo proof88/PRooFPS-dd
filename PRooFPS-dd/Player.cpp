@@ -2695,7 +2695,7 @@ void proofps_dd::Player::emitParticles(
     {
         getParticleEmitPerNthPhysicsIterationCntr() = 0;
         PureVector vecFartPos = getPos().getNew();
-        vecFartPos.SetY(vecFartPos.getY() - getObject3D()->getSizeVec().getY() / 2.f);
+        vecFartPos.SetY(vecFartPos.getY() - getObject3D()->getScaledSizeVec().getY() / 2.f);
         // not the best targetVec to use here but I need to hurry up with the release :)
         PurePosUpTarget playerPut(vecFartPos, PureVector(), PureVector(0, 1, 0));
         smokes.create(
