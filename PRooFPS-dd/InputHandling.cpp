@@ -47,6 +47,7 @@ proofps_dd::InputHandling::InputHandling(
     m_bAttack(false),
     m_bPrevCrouch(false),
     m_bCrouch(false),
+    m_bDescent(false),
     m_bPrevJump(false),
     m_bJump(false),
     m_fLastPlayerAngleYSent(-1.f),
@@ -87,8 +88,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 {
     pge_network::PgePacket pkt;
     /* we always init the pkt with the current strafe state so it is correctly sent to server even if we are not setting it
-       in keyboard(), this is needed if only clientMouseWhenConnectedToServer() generates reason to send the pkt */
-    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_bJump, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
+       in the keyboard function, this is needed if only clientMouseWhenConnectedToServer() generates reason to send the pkt */
+    proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_bDescent, m_bJump, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
         clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin, wpnHandling);
@@ -138,7 +139,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     const std::string& sClientUserName = it->second.getName();
 
-    if ((!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bCrouch) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
+    if ((!pktUserCmdMove.m_bJumpAction) && (!pktUserCmdMove.m_bCrouch) && (!pktUserCmdMove.m_bDescent) && (!pktUserCmdMove.m_bSendSwitchToRunning) &&
         (pktUserCmdMove.m_fPlayerAngleY == -1.f) && (!pktUserCmdMove.m_bRequestReload) && (!pktUserCmdMove.m_bShouldSend))
     {
         getConsole().EOLn("InputHandling::%s(): user %s sent invalid cmdMove!", __func__, sClientUserName.c_str());
@@ -264,6 +265,11 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
         player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
     }
+
+    // in v0.6 crouch input was also used for descending with jetlax without actually crouching, however
+    // v0.7 allowed crouching with jetlax but looked bad whenever player pressed crouch for descending and it also crouched, so
+    // v0.7 has introduced separate msg field only for descending, so player can operate descent and crouch separately.
+    player.getDescentInput().set(pktUserCmdMove.m_bDescent);  /* antigravity descent is handled in serverGravity() */
 
     // since v0.6 jump is also continuous op to support antigravity movement (e.g. jetpack)
     player.getJumpInput().set(pktUserCmdMove.m_bJumpAction);
@@ -724,7 +730,10 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
     // For now we dont need rate limit for this, but in future if FPS limit can be disabled we probably will want to limit this!
-    m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
+    m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
+
+    // in v0.6 crouch also controlled jetlax descent, but v0.7 separated descent from crouch, both now can be done separately or together.
+    m_bDescent = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
 
     if (player.hasAntiGravityActive())
     {
@@ -944,7 +953,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         // strafe is a continuous operation: once started, server is strafing the player in every tick until client explicitly says so, thus
         // we need to send Strafe::NONE as well to server if user released the key. Other keyboard operations are non-continuous hence we handle them
         // as one-time actions.
-        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, m_bJump, bToggleRunWalk, m_bCrouch, bRequestReload, cWeaponSwitch, bToggleUseItem);
+        proofps_dd::MsgUserCmdFromClient::setKeybd(pkt, m_strafe, m_bJump, bToggleRunWalk, m_bCrouch, m_bDescent, bRequestReload, cWeaponSwitch, bToggleUseItem);
     }
     m_prevStrafe = m_strafe;
     m_bPrevCrouch = m_bCrouch;

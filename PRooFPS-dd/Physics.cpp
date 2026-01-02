@@ -386,7 +386,7 @@ void proofps_dd::Physics::serverGravity(
             {
                 fTargetAntiGravityThrust = 3.f;
             }
-            if (player.getCrouchInput() && (playerConst.getPos().getNew().getY() > m_maps.getBlockPosMin().getY()))
+            if (player.getDescentInput() && (playerConst.getPos().getNew().getY() > m_maps.getBlockPosMin().getY()))
             {
                 fTargetAntiGravityThrust = -5.f;
             }

@@ -1505,6 +1505,12 @@ void proofps_dd::Player::doStandupShared()
     //getWantToStandup() = true;
 }
 
+PgeOldNewValue<bool>& proofps_dd::Player::getDescentInput()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<bool>>(m_vecOldNewValues.at(OldNewValueName::OvDescentInput));
+}
+
 bool proofps_dd::Player::getWillSomersaultInNextTick() const
 {
     return m_bWillSomersault;

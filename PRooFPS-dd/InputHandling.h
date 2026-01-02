@@ -104,6 +104,7 @@ namespace proofps_dd
         bool m_bAttack;
         bool m_bPrevCrouch;
         bool m_bCrouch;
+        bool m_bDescent;
         bool m_bPrevJump;
         bool m_bJump;
         TPureFloat m_fLastPlayerAngleYSent;

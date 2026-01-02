@@ -487,6 +487,7 @@ namespace proofps_dd
             proofps_dd::Strafe strafe,
             bool bAttack,
             bool bCrouch,
+            bool bDescent,
             bool bJump,
             TPureFloat fPlayerAngleY,
             TPureFloat fWeaponAngleZ)
@@ -509,6 +510,7 @@ namespace proofps_dd
             msgUserCmdMove.m_strafe = strafe;
             msgUserCmdMove.m_bShootAction = bAttack;
             msgUserCmdMove.m_bCrouch = bCrouch;
+            msgUserCmdMove.m_bDescent = bDescent;
             msgUserCmdMove.m_bJumpAction = bJump;
             msgUserCmdMove.m_fPlayerAngleY = fPlayerAngleY;
             msgUserCmdMove.m_fWpnAngleZ = fWeaponAngleZ;
@@ -522,6 +524,7 @@ namespace proofps_dd
             bool bJump,
             bool bSwitchToRunning,
             bool bCrouch,
+            bool bDescent,
             bool bRequestReload,
             unsigned char cWeaponSwitch,
             bool bToggleUseItem)
@@ -533,6 +536,7 @@ namespace proofps_dd
             msgUserCmdMove.m_bJumpAction = bJump;
             msgUserCmdMove.m_bSendSwitchToRunning = bSwitchToRunning;
             msgUserCmdMove.m_bCrouch = bCrouch;
+            msgUserCmdMove.m_bDescent = bDescent;
             msgUserCmdMove.m_bRequestReload = bRequestReload;
             msgUserCmdMove.m_cWeaponSwitch = cWeaponSwitch;
             msgUserCmdMove.m_bToggleUseItem = bToggleUseItem;
@@ -606,6 +610,7 @@ namespace proofps_dd
         unsigned char m_cWeaponSwitch;
         bool m_bShootAction;             // continuous op
         bool m_bCrouch;                  // continuous op
+        bool m_bDescent;                 // continuous op
         TPureFloat m_fPlayerAngleY;
         TPureFloat m_fWpnAngleZ;
         bool m_bToggleUseItem;

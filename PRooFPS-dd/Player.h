@@ -294,6 +294,8 @@ namespace proofps_dd
         void doStandupServer();
         void doStandupShared();
 
+        PgeOldNewValue<bool>& getDescentInput();
+
         bool getWillSomersaultInNextTick() const;
         void setWillSomersaultInNextTick(bool flag);
         void startSomersaultServer(bool bJumpInduced);
@@ -382,6 +384,7 @@ namespace proofps_dd
             OvWpnAngle,
             OvWpnMomentaryAccuracy,
             OvCrouchInput,
+            OvDescentInput,
             OvActuallyRunningOnGround,
             OvInvulnerability,
             OvJumpInput,
@@ -453,6 +456,10 @@ namespace proofps_dd
                     Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvCrouchInput,             PgeOldNewValue<bool>(false)},
+                /** Current state of player descent input.
+                    Player is setting it as per input.
+                    Continuous op. */
+                {OldNewValueName::OvDescentInput,             PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,         PgeOldNewValue<bool>(true)},
                 /** Current state of player jump input, regardless of current jumping state.
