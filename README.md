@@ -49,8 +49,9 @@ From the main menu, you can either start a new server or join to an existing one
 
  - **A/D, LEFT/RIGHT:** strafe: move the player in either left or right direction;
  - **LSHIFT:** toggle move speed: walking or running;
- - **W/SPACE:** jump;
- - **S/LCTRL:** crouch/duck.
+ - **SPACE/W:** jump when on foot, ascent with flying device;
+ - **LCTRL:** crouch/duck;
+ - **S:** descent with flying device.
 
 **On-the-ground somersault**: hold crouch/duck key down, then press the appropriate strafe key twice (depending on in which direction you want to perform the somersault).
 
