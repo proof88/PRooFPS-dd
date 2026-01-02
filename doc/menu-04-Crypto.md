@@ -27,6 +27,8 @@ TODO:
  - Preparing for the last pump before recession, Jan 2025, from 4:06 to 33:31 (hungarian): https://www.youtube.com/live/4aZctf2Z5qM?si=kR8vnsKhh1k0aRWF&t=246
  - 2025. 10. 10. dip: tanulsag: mindig legyenek pofátlanul alacsony buy orderek spoton
  - 2025. 10. 10. dip: https://x.com/Nstr_tj/status/1976797928116437394?t=YJc5gItQcCloCwpUEGeQBg&s=19
+ - TODO: trading patterns: psychology or math? https://www.youtube.com/watch?v=oWheof70O9g
+ - TODO: Benner-cycle: https://www.youtube.com/watch?v=1dD9Yl5hw6I
  
 [TOC]
 
