@@ -33,21 +33,23 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 A compressed build for Windows is available for TODO.
 
 This version brings the following **new features**:
- - bullets can **ricochet** off the walls if colliding in flat angle (<= 10°).
- - **fragile bullet vs bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to the fragile bullet being destroyed.  
- In team deathmatch, this collision might be suppressed based on the friendly fire configuration.
+ - non-explosive bullets can **ricochet** off the walls if colliding in flat angle (<= 10°).
+ - **fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
+ In team deathmatch, this collision might be suppressed based on the friendly fire configuration so teammates might not be able to destroy each other's fragile bullets.
  - **fragile bullet vs explosion**: fragile bullets (rocket, grenade) are destroyed if they are within the damage radius of an explosion.  
- In team deathmatch, this behavior might be suppressed based on the friendly fire configuration.
+ In team deathmatch, this behavior might be suppressed based on the friendly fire configuration so explosions triggered by teammates might not be able to destroy each other's fragile bullets.
 
 This version brings the following **changes and enhancements**:
- - Grenade Launcher: grenade hitting a player also triggers explosion.  
- In team deathmatch, it is based on the friendly fire configuration.
- - JetLax: when activated but idle, randomized micro-forces push the player to give a bit more floating-like feeling.
- - GFX: smoke colors are a bit more randomized (nobody will notice it though).
+ - Grenade Launcher: **grenade hitting a player** also triggers explosion.  
+   In team deathmatch, it is based on the friendly fire configuration.
+ - JetLax: now **crouch is allowed together with using JetLax**, allowing flying into narrow tunnels.  
+   Key 'CTRL' is kept for crouching only. Key 'S' is for descending only.  
+   This way crouching and descending actions can be controlled independently when using JetLax.
+ - JetLax: when activated but idle, **randomized micro-forces** push the player to give a bit more floating-like feeling.
+ - GFX: **smoke colors** are a bit more **randomized** (nobody will notice it though).
 
 This version brings the following **bug fixes**:
-
-TBD
+ - **Team Deathmatch**: when friendly fire was disabled, the player was not taking damage from self-caused explosions.
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
