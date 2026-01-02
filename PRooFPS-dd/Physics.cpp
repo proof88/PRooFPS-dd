@@ -474,14 +474,13 @@ void proofps_dd::Physics::serverGravity(
                 // player gravity cannot go below GAME_FALL_GRAVITY_MIN
                 player.setGravity(std::max(player.getGravity(), GAME_FALL_GRAVITY_MIN));
             }
-
-            if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
-            {
-                // player just initiated crouching by input
-                player.doCrouchServer();
-            } // end handle crouch
-
         } // hasAntiGravityActive()
+
+        if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
+        {
+            // player just initiated crouching by input
+            player.doCrouchServer();
+        } // end handle crouch
 
         // PPPKKKGGGGGG
         player.getPos().set(

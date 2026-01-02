@@ -798,7 +798,7 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     getWantToStandup() = true;
     getImpactForce().SetZero();
     getAntiGravityForce().SetZero();
-    getJumpForce().Set(0.f, 0.f, 0.f);
+    getJumpForce().SetZero();
     setGravity(0.f);
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
@@ -2043,7 +2043,7 @@ Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemType& ma
 */
 void proofps_dd::Player::updateImpactForceByBulletImpactOrRecoil(bool bRecoil, Bullet& bullet, Weapon& wpn)
 {
-    // neither the shooter nor the shot player changes impact force when being on the ground or hitting/got hit by melee weapon
+    // neither the shooter nor the shot player changes impact force when being on the ground or hitting/being hit by melee weapon
     if (!isInAir() || (wpn.getType() == Weapon::Type::Melee))
     {
         return;
@@ -2377,8 +2377,7 @@ void proofps_dd::Player::handleToggleInventoryItem(
     bNewAntiGravityActive =
         !bOldAntiGravityActive &&
         hasJetLax() &&
-        (getCurrentInventoryItemPower() > 0.f) &&
-        !getCrouchStateCurrent();
+        (getCurrentInventoryItemPower() > 0.f);
 
     setHasAntiGravityActive(bNewAntiGravityActive);
     

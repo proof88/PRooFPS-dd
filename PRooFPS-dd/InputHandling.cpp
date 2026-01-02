@@ -253,24 +253,16 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     // crouching is also continuous op
     player.getCrouchInput().set(pktUserCmdMove.m_bCrouch);
-    if (!player.hasAntiGravityActive())
+    // crouch-induced player scaling and repositioning are handled in the physics class
+    if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
     {
-        // crouch-induced player scaling and repositioning are handled in the physics class
-        if (player.getCrouchInput().getOld() && !player.getCrouchInput().getNew())
-        {
-            player.getWantToStandup() = true;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
-            //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
-        }
-        else if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
-        {
-            //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
-            player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
-        }
+        player.getWantToStandup() = true;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
+        //getConsole().EOLn("%s player %s just signaled wanna stand up", __func__, sClientUserName.c_str());
     }
-    else
+    else if (!player.getCrouchInput().getOld() && player.getCrouchInput().getNew())
     {
-        /* antigravity descending is handled in serverGravity() */
-        player.getWantToStandup() = true;  // this stays permanent across frames
+        //getConsole().EOLn("%s player %s just signaled wanna go down crouch", __func__, sClientUserName.c_str());
+        player.getWantToStandup() = false;  // this stays permanent across frames, getCrouchInput() old and new is valid only this frame
     }
 
     // since v0.6 jump is also continuous op to support antigravity movement (e.g. jetpack)
@@ -731,7 +723,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     }
 
     // isKeyPressed() detects left SHIFT or CONTROL keys only, detecting the right-side stuff requires engine update.
-    // For now we dont need rate limit for this, but in future if FPS limit can be disable we probably will want to limit this!
+    // For now we dont need rate limit for this, but in future if FPS limit can be disabled we probably will want to limit this!
     m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
 
     if (player.hasAntiGravityActive())
