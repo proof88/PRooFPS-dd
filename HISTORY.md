@@ -38,6 +38,8 @@ This version brings the following **NEW FEATURES**:
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration, so teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
  - **fragile bullet vs explosion**: fragile bullets (rocket, grenade) are destroyed if they are within the damage radius of an explosion.  
  In team deathmatch, this behavior might be suppressed based on the friendly fire configuration, so explosions triggered by teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
+ - **recoil of fired weapons push the player** back a bit when being mid-air.
+ - **players in the air are pushed** a bit when being hit by bullets.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
  - Grenade Launcher: **grenade hitting a player** also triggers explosion.  
