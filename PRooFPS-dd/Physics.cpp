@@ -450,25 +450,31 @@ void proofps_dd::Physics::serverGravity(
             }
             else
             {
-                if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
+                if (player.getGravity() < 0.f)
                 {
-                    // This means that we managed to decrease player gravity in 2 consecutive ticks, so we really just started to fall down.
-                    // We won't come here in next tick.
-                    if (player.getHasJustStoppedJumpingInThisTick())
+                    // we might start falling here, but uncomfirmed since maybe we are standing on the ground, collision detection will find out and reset
+                    // gravity if so ...
+                    if ((player.getGravity() < fPlayerGravityChangePerTick) && (player.getGravity() > 3 * fPlayerGravityChangePerTick))
                     {
-                        player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
-                        //const auto nMillisecsJumpDuration =
-                        //    std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
-                        //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
-                        //    player.getGravity(),
-                        //    nMillisecsJumpDuration);
+                        // This means that we managed to decrease player gravity in exactly 2 consecutive ticks (not more), so we really just started to fall down.
+                        // We won't come here in next tick.
+                        
+                        if (player.getHasJustStoppedJumpingInThisTick())
+                        {
+                            player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
+                            //const auto nMillisecsJumpDuration =
+                            //    std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
+                            //getConsole().EOLn("Started falling after jumping stopped: %f, jumping up duration: %d millisecs",
+                            //    player.getGravity(),
+                            //    nMillisecsJumpDuration);
+                        }
+                        else
+                        {
+                            //getConsole().EOLn("Started falling naturally: %f", player.getGravity());
+                            player.setHasJustStartedFallingNaturallyInThisTick(true);
+                        }
+                        player.getHasJustStoppedJumpingInThisTick() = false;
                     }
-                    else
-                    {
-                        //getConsole().EOLn("Started falling naturally: %f", player.getGravity());
-                        player.setHasJustStartedFallingNaturallyInThisTick(true);
-                    }
-                    player.getHasJustStoppedJumpingInThisTick() = false;
                 }
                 player.setCanFall(true);
                 // player gravity cannot go below GAME_FALL_GRAVITY_MIN
@@ -491,6 +497,14 @@ void proofps_dd::Physics::serverGravity(
                 player.getAntiGravityForce().getY() / nPhysicsRate,
                 player.getPos().getNew().getZ()
             ));
+
+        // before v0.7 setJumpAllowed() was set in PRooFPSddPGE::onGameFrameBegin() based on if Y pos of player was changed in previous frame, however
+        // in v0.7 we have introduced this more sophisticated way here so player can still jump if falling in between stairsteps.
+        const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
+        player.setJumpAllowed(
+            !player.isJumping() && !player.hasAntiGravityActive() && (player.getGravity() < 0.f) &&
+            (!player.isFalling() ||  /* TODO: add checking a flag that is true only if latest collision was with a stairs object (maxheight) FROM ABOVE! */
+                ((fFallHeight >= 0.f) && (fFallHeight <= Maps::fStairstepHeight * 2))));
 
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 3.0f))
         {
@@ -949,7 +963,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
     if (player.getWillJumpYInNextTick() > 0.f)
     {
-        //getConsole().EOLn("start jumping");
+        getConsole().EOLn("start jumping");
         // now we can actually jump and have the correct forces be saved for the jump
         player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
     }

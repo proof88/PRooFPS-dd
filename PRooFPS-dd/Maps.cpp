@@ -1304,7 +1304,6 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
         return true;
     }
 
-    const float fStairstepHeight = proofps_dd::Maps::fMapBlockSizeHeight / static_cast<float>(nStairstepsCount);
     if (bCopyPreviousFgBlock)
     {
         // create descending stair blocks

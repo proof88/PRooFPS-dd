@@ -275,16 +275,16 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     player.getJumpInput().set(pktUserCmdMove.m_bJumpAction);
     if (pktUserCmdMove.m_bJumpAction && !player.hasAntiGravityActive() /* antigravity lifting is handled in serverGravity() */)
     {
-        //getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
+        getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
 
         // jump-induced actions can be initiated only if we cannot fall at the moment (I always forget though what does "cannot fall" mean)
-        if (!player.canFall())
+        if (player.jumpAllowed())
         {
             const auto nMillisecsSinceLastJump =
                 std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();
             if (player.isJumping())
             {
-                //getConsole().EOLn("jumping");
+                getConsole().EOLn("jumping");
         
                 // isJumping() is set to true by the Physics class when jumping is really initiated, and stays true until losing upwards jump force, so
                 // if we are here, we can be 100% sure that an actual ongoing jumping is happening now.
@@ -301,7 +301,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
             }
             else
             {
-                //getConsole().EOLn("not jumping");
+                getConsole().EOLn("not jumping");
                 if (nMillisecsSinceLastJump < m_nKeyPressOnceJumpMinumumWaitMilliseconds)
                 {
                     // should NOT had received this from client this early (actually could, see explanation below)

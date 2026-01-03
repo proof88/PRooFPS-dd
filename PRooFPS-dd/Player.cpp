@@ -911,11 +911,22 @@ bool proofps_dd::Player::isJumping() const
     return m_bJumping;
 }
 
+/**
+* @return True if player is NOT jumping upwards.
+*         True can have a lot of meaning, depending on where are we in the physics tick.
+*         Gravity sets it to true when jumping has finished.
+*         This means true might mean the player is on ground, or either floating in the air in this moment (just hit the ceiling) or actually falling down.
+*         False has more explicit meaning: the player is either jumping upwards or vertically hit something from above.
+*/
 bool proofps_dd::Player::canFall() const
 {
     return m_bCanFall;
 }
 
+/**
+* To be invoked by Physics class whenever it detects change in the status of falling.
+* See canFall() for details.
+*/
 void proofps_dd::Player::setCanFall(bool state) {
     m_bCanFall = state;
 
@@ -925,6 +936,11 @@ void proofps_dd::Player::setCanFall(bool state) {
     }
 }
 
+/**
+* @return True if player is in the air, false otherwise.
+*         Since it depends on isJumping() and canFall(), it is reliable only after the relevant physics calculations in the current physics tick have been finished
+*         since physics implementation controls both isJumping() and canFall().
+*/
 bool proofps_dd::Player::isInAir() const
 {
     return isJumping() || canFall();
@@ -1017,6 +1033,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
 
     if (isJumping() || !jumpAllowed() || isSomersaulting())
     {
+        getConsole().EOLn("%s(): jump not allowed or jumping or somersaulting!", __func__);
         return;
     }
 
@@ -1051,7 +1068,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
     //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
-    //getConsole().EOLn("jump x force: %f", m_vecJumpForce.getX());
+    getConsole().EOLn("%s(): jump x force: %f", __func__, m_vecJumpForce.getX());
 }
 
 void proofps_dd::Player::stopJumping()
@@ -1084,6 +1101,7 @@ void proofps_dd::Player::setWillJumpInNextTick(float factorY, float factorX)
 {
     if (!jumpAllowed())
     {
+        getConsole().EOLn("%s(): jump not allowed!", __func__);
         return;
     }
 

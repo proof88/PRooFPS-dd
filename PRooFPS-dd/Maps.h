@@ -41,6 +41,7 @@ namespace proofps_dd
         static constexpr float fMapBlockSizeDepth = 1.0f;
 
         static constexpr size_t nStairstepsCount = 4;
+        static constexpr float fStairstepHeight = fMapBlockSizeHeight / static_cast<float>(nStairstepsCount);
 
         static const char* getLoggerModuleName();
 

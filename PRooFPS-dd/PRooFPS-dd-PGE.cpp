@@ -262,14 +262,16 @@ void proofps_dd::PRooFPSddPGE::onGameFrameBegin()
         auto& player = playerPair.second;
         if (getNetwork().isServer())
         {
-            if (player.getPos().getNew().getY() != player.getPos().getOld().getY())
-            {   // still could fall in previous frame, so jumping is still disallowed ...
-                player.setJumpAllowed(false);
-            }
-            else
-            {
-                player.setJumpAllowed(true);
-            }
+            // before v0.7 this controlled setJumpAllowed(), however since v0.7 we have a more sophisticated way based on the
+            // physics calculations in Physics::serverGravity().
+            //if (player.getPos().getNew().getY() != player.getPos().getOld().getY())
+            //{   // still could fall in previous frame, so jumping is still disallowed ...
+            //    player.setJumpAllowed(false);
+            //}
+            //else
+            //{
+            //    player.setJumpAllowed(true);
+            //}
         }
     }
 }
