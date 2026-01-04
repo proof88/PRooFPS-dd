@@ -142,15 +142,32 @@ namespace proofps_dd
         void serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
             bool bVerticalCollisionOccured,
             Player& player,
-            const float& fCurrentFallHeight);
+            const float& fCurrentFallHeight,
+            bool bWillCollideVerticallyWithinLooseJumpAllowDistance);
 
-        float serverPlayerCollisionWithWalls_legacy_handleStandup(
+        float serverPlayerCollisionWithWalls_legacy_vertical_handleStandup(
             Player& player,
             const float& fPlayerOPos1XMinusHalf,
             const float& fPlayerOPos1XPlusHalf);
 
-        float serverPlayerCollisionWithWalls_bvh_handleStandup(
+        float serverPlayerCollisionWithWalls_bvh_vertical_handleStandup(
             Player& player);
+
+        bool serverPlayerCollisionWithWalls_legacy_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+            const float& fPlayerOPos1XMinusHalf,
+            const float& fPlayerOPos1XPlusHalf,
+            const float& fPlayerPosY,
+            const float& fVecPlayerScaledSizeY,
+            const float& fCurrentFallHeight,
+            const float& fThresholdVerticalDistanceForLooseAllowJump);
+
+        bool serverPlayerCollisionWithWalls_bvh_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+            Player& player,
+            const float& fVecPlayerScaledSizeX,
+            const float& fVecPlayerScaledSizeY,
+            const float& fVecPlayerScaledSizeZ,
+            const float& fCurrentFallHeight,
+            const float& fThresholdVerticalDistanceForLooseAllowJump);
 
         void serverPlayerCollisionWithWalls_common_strafe(
             XHair& xhair,

@@ -745,7 +745,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
 }
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
-    bool bVerticalCollisionOccured, Player& player, const float& fCurrentFallHeight)
+    bool bVerticalCollisionOccured, Player& player, const float& fCurrentFallHeight, bool bWillCollideVerticallyWithinLooseJumpAllowDistance)
 {
     if (!bVerticalCollisionOccured && player.isFalling() && (std::as_const(player).getHealth() > 0))
     {
@@ -761,13 +761,8 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisio
 
     player.setJumpAllowed(
         !player.isJumping() && !player.hasAntiGravityActive() && (player.getGravity() <= 0.f) &&
-        (
-            (!player.canFall() && !player.isFalling()) ||
-            (
-                (player.canFall() && player.isFalling()) && /* TODO: add checking a flag that is true only if latest collision was with a stairs object (maxheight) FROM ABOVE! */
-                ((fCurrentFallHeight >= 0.f) && (fCurrentFallHeight <= Maps::fStairstepHeight * 2))
-            )
-        ));
+        ( (!player.canFall() && !player.isFalling()) || bWillCollideVerticallyWithinLooseJumpAllowDistance)
+    );
 }
 
 /**
@@ -778,7 +773,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisio
 * 
 * @return The new Y-size of the player (it stays the same if the player cannot stand up, does not want to stand up, already standing, etc.).
 */
-float proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_handleStandup(Player& player, const float& fPlayerOPos1XMinusHalf, const float& fPlayerOPos1XPlusHalf)
+float proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical_handleStandup(Player& player, const float& fPlayerOPos1XMinusHalf, const float& fPlayerOPos1XPlusHalf)
 {
     assert(!player.isSomersaulting());
 
@@ -833,7 +828,7 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_handleStandup(P
 *
 * @return The new Y-size of the player (it stays the same if the player cannot stand up, does not want to stand up, already standing, etc.).
 */
-float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Player& player)
+float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical_handleStandup(Player& player)
 {
     assert(!player.isSomersaulting());
 
@@ -856,6 +851,77 @@ float proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_handleStandup(Play
     }
 
     return plobj->getScaledSizeVec().getY();
+}
+
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+    const float& fPlayerOPos1XMinusHalf,
+    const float& fPlayerOPos1XPlusHalf,
+    const float& fPlayerPosY,
+    const float& fVecPlayerScaledSizeY,
+    const float& fCurrentFallHeight,
+    const float& fThresholdVerticalDistanceForLooseAllowJump)
+{
+    if ((fCurrentFallHeight < 0.f) || (fCurrentFallHeight > fThresholdVerticalDistanceForLooseAllowJump))
+    {
+        return false;
+    }
+
+    const float fRemainingAllowedVerticalDistanceForJumpingWhileFalling = fThresholdVerticalDistanceForLooseAllowJump - fCurrentFallHeight;
+    assert(fRemainingAllowedVerticalDistanceForJumpingWhileFalling >= 0.f);
+
+    // we need to check if there is enough space to stand up
+    const float fPlayerHalfHeight = fVecPlayerScaledSizeY / 2.f;
+    const float fNewPlayerPosY = fPlayerPosY - fRemainingAllowedVerticalDistanceForJumpingWhileFalling;
+    const float fNewPlayerPos1YMinusHalf = fNewPlayerPosY - fPlayerHalfHeight;
+    const float fNewPlayerPos1YPlusHalf = fNewPlayerPosY + fPlayerHalfHeight;
+
+    for (int i = 0; i < m_maps.getForegroundBlockCount(); i++)
+    {
+        const PureObject3D* const obj = m_maps.getForegroundBlocks()[i];
+        assert(obj);  // we dont store nulls there
+
+        const float fRealBlockSizeXhalf = obj->getSizeVec().getX() / 2.f;
+        const float fRealBlockSizeYhalf = obj->getSizeVec().getY() / 2.f;
+        const PureVector& vecFgBlockPos = obj->getPosVec();
+
+        if ((vecFgBlockPos.getX() + fRealBlockSizeXhalf < fPlayerOPos1XMinusHalf) || (vecFgBlockPos.getX() - fRealBlockSizeXhalf > fPlayerOPos1XPlusHalf))
+        {
+            continue;
+        }
+
+        if ((vecFgBlockPos.getY() + fRealBlockSizeYhalf < fNewPlayerPos1YMinusHalf) || (vecFgBlockPos.getY() - fRealBlockSizeYhalf > fNewPlayerPos1YPlusHalf))
+        {
+            continue;
+        }
+
+        // collision
+        return true;
+    } // end for i
+
+    return false;
+}
+
+bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+    Player& player,
+    const float& fVecPlayerScaledSizeX,
+    const float& fVecPlayerScaledSizeY,
+    const float& fVecPlayerScaledSizeZ,
+    const float& fCurrentFallHeight,
+    const float& fThresholdVerticalDistanceForLooseAllowJump)
+{
+    if ((fCurrentFallHeight < 0.f) || (fCurrentFallHeight > fThresholdVerticalDistanceForLooseAllowJump))
+    {
+        return false;
+    }
+
+    const float fRemainingAllowedVerticalDistanceForJumpingWhileFalling = fThresholdVerticalDistanceForLooseAllowJump - fCurrentFallHeight;
+    assert(fRemainingAllowedVerticalDistanceForJumpingWhileFalling >= 0.f);
+    
+    const PureAxisAlignedBoundingBox aabbPlayer(
+        PureVector(player.getPos().getOld().getX(), player.getPos().getNew().getY() - fRemainingAllowedVerticalDistanceForJumpingWhileFalling, player.getPos().getNew().getZ()),
+        PureVector(fVecPlayerScaledSizeX, fVecPlayerScaledSizeY, fVecPlayerScaledSizeZ));
+
+    return (m_maps.getBVH().findOneColliderObject_startFromFirstNode(aabbPlayer, nullptr) != nullptr);
 }
 
 void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
@@ -1202,6 +1268,9 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
 {
     ScopeBenchmarker<std::chrono::microseconds> bm("legacy vertical collision");
 
+    // we use this const to make sure even if isFalling() is true, no other vertical force is pushing us upwards!
+    const bool bIsFallingReallyAtTheMoment = player.getPos().getOld().getY() > player.getPos().getNew().getY();
+
     bool bVerticalCollisionOccured = false;
 
     // At this point, player.getPos().getY() is already updated by Gravity().
@@ -1277,6 +1346,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
         } // end for i
     } // end if YPos changed
 
+    float fPlayerNewScaledSizeY = vecPlayerScaledSize.getY();
     if (player.isSomersaulting())
     {
         const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
@@ -1284,19 +1354,29 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
     }
     else
     {
-        // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
-        serverPlayerCollisionWithWalls_legacy_handleStandup(
+        fPlayerNewScaledSizeY = serverPlayerCollisionWithWalls_legacy_vertical_handleStandup(
             player,
             fPlayerOPos1XMinusHalf,
             fPlayerOPos1XPlusHalf);
     }
 
     const float fCurrentFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY(); /* valid only if player.isFalling() */
-    // TODO: check if vertical collision is expected within a specified threshold relative to getHeightStartedFalling()!
+    bool bWillCollideVerticallyWithinLooseJumpAllowDistance = false;
+    if (!bVerticalCollisionOccured)
+    {
+        if ((player.canFall() || player.isFalling()) && bIsFallingReallyAtTheMoment)
+        {
+            bWillCollideVerticallyWithinLooseJumpAllowDistance =
+                serverPlayerCollisionWithWalls_legacy_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+                    fPlayerOPos1XMinusHalf, fPlayerOPos1XPlusHalf, player.getPos().getNew().getY(), fPlayerNewScaledSizeY, fCurrentFallHeight, Maps::fStairstepHeight * 2);
+        }
+    }
+
     serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
         bVerticalCollisionOccured,
         player,
-        fCurrentFallHeight);
+        fCurrentFallHeight,
+        bWillCollideVerticallyWithinLooseJumpAllowDistance);
 
     return bVerticalCollisionOccured;
 } // serverPlayerCollisionWithWalls_legacy_vertical()
@@ -1401,6 +1481,9 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
 
     ScopeBenchmarker<std::chrono::microseconds> bm("bvh vertical collision");
     
+    // we use this const to make sure even if isFalling() is true, no other vertical force is pushing us upwards!
+    const bool bIsFallingReallyAtTheMoment = player.getPos().getOld().getY() > player.getPos().getNew().getY();
+
     bool bVerticalCollisionOccured = false;
     if (player.getPos().getOld().getY() != player.getPos().getNew().getY())
     {
@@ -1453,6 +1536,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
         } // end if bVerticalCollisionOccured
     } // end if YPos changed
 
+    float fPlayerNewScaledSizeY = vecPlayerScaledSize.getY();
     if (player.isSomersaulting())
     {
         const float GAME_PLAYER_SOMERSAULT_ROTATE_STEP = 360.f / nPhysicsRate * (1000.f / Player::nSomersaultTargetDurationMillisecs);
@@ -1460,16 +1544,26 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
     }
     else
     {
-        // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
-        serverPlayerCollisionWithWalls_bvh_handleStandup(player);
+        fPlayerNewScaledSizeY = serverPlayerCollisionWithWalls_bvh_vertical_handleStandup(player);
     }
 
     const float fCurrentFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY(); /* valid only if player.isFalling() */
-    // TODO: check if vertical collision is expected within a specified threshold relative to getHeightStartedFalling()!
+    bool bWillCollideVerticallyWithinLooseJumpAllowDistance = false;
+    if (!bVerticalCollisionOccured)
+    {
+        if ((player.canFall() || player.isFalling()) && bIsFallingReallyAtTheMoment)
+        {
+            bWillCollideVerticallyWithinLooseJumpAllowDistance =
+                serverPlayerCollisionWithWalls_bvh_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
+                    player, vecPlayerScaledSize.getX(), fPlayerNewScaledSizeY, vecPlayerScaledSize.getZ(), fCurrentFallHeight, Maps::fStairstepHeight * 2);
+        }
+    }
+
     serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
         bVerticalCollisionOccured,
         player,
-        fCurrentFallHeight);
+        fCurrentFallHeight,
+        bWillCollideVerticallyWithinLooseJumpAllowDistance);
 
     return bVerticalCollisionOccured;
 } // serverPlayerCollisionWithWalls_bvh_vertical()
