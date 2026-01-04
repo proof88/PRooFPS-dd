@@ -355,6 +355,8 @@ private:
             assertTrue(player.isFalling(), "is falling") &
             assertTrue(player.getHasJustStartedFallingNaturallyInThisTick(), "getHasJustStartedFallingNaturallyInThisTick") &
             assertFalse(player.getHasJustStartedFallingAfterJumpingStoppedInThisTick(), "getHasJustStartedFallingAfterJumpingStoppedInThisTick") &
+            assertTrue(player.isFallingNaturally(), "isFallingNaturally") &
+            assertFalse(player.isFallingAfterJumpingStopped(), "isFallingAfterJumpingStopped") &
             assertEquals(0, player.getTimeStartedFalling().time_since_epoch().count(), "time started falling") &
             assertEquals(0.f, player.getHeightStartedFalling(), "height started falling") &
             assertFalse(player.getHasJustStoppedJumpingInThisTick(), "getHasJustStoppedJumpingInThisTick") &
@@ -1302,14 +1304,24 @@ private:
         bool b = assertTrue(player.isFalling(), "is falling 1");
         
         player.setGravity(-1.f);
-        b &= assertTrue(player.isFalling(), "is falling 2");
+        b &= assertEquals(-1.f, player.getGravity(), "gravity 2");
+        b &= assertTrue(player.isFalling(), "is falling 2 a");
+        b &= assertTrue(player.isFallingNaturally(), "is falling 2 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 2 c");
         
         player.setGravity(0.f);
+        b &= assertEquals(0.f, player.getGravity(), "gravity 3");
         b &= assertFalse(player.isFalling(), "is falling 3");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 3 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 3 c");
 
         player.setGravity(5.f);
+        b &= assertEquals(5.f, player.getGravity(), "gravity 4");
+        b &= assertFalse(player.isFalling(), "is falling 4");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 4 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 4 c");
 
-        return (b & assertEquals(5.f, player.getGravity())) != 0;
+        return b;
     }
 
     bool test_set_has_just_started_falling()
@@ -1320,10 +1332,15 @@ private:
             PureVector(0.f, 5.f, 0.f)
         );
         player.setGravity(0.f);  // way to set isFalling to false
-        bool b = assertFalse(player.isFalling(), "is falling 1");
+        bool b = assertFalse(player.isFalling(), "is falling 1 a");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 1 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 1 c");
+
         const auto timeBeforeJustStartedFallingAfterJumpingStopped = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingAfterJumpingStoppedInThisTick(true);
         b &= assertTrue(player.isFalling(), "is falling 2");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 2 b");
+        b &= assertTrue(player.isFallingAfterJumpingStopped(), "is falling 2 c");
         b &= assertTrue(timeBeforeJustStartedFallingAfterJumpingStopped <= player.getTimeStartedFalling(), "time started falling after jumping stopped 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling after jumping stopped 1");
 
@@ -1333,10 +1350,15 @@ private:
         b &= assertEquals(5.f, player.getHeightStartedFalling(), 0.001f, "height falling 1");
 
         player.setGravity(0.f);  // way to set isFalling to false
-        b &= assertFalse(player.isFalling(), "is falling 3");
+        b &= assertFalse(player.isFalling(), "is falling 3 a");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 3 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 3 c");
+
         const auto timeBeforeJustStartedFallingNaturally = std::chrono::steady_clock::now();
         player.setHasJustStartedFallingNaturallyInThisTick(true);
-        b &= assertTrue(player.isFalling(), "is falling 4");
+        b &= assertTrue(player.isFalling(), "is falling 4 a");
+        b &= assertTrue(player.isFallingNaturally(), "is falling 4 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 4 c");
         b &= assertTrue(timeBeforeJustStartedFallingNaturally <= player.getTimeStartedFalling(), "time started falling naturally 1");
         b &= assertTrue(player.getTimeStartedFalling() <= std::chrono::steady_clock::now(), "time started falling naturally 2");
 
@@ -1352,15 +1374,22 @@ private:
     {
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
 
+        bool b = assertTrue(player.isFalling(), "is falling 1 a");
+        b &= assertTrue(player.isFallingNaturally(), "is falling 1 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 1 c");
+
         // we are on the ground now
         player.setCanFall(false);
         player.setJumpAllowed(true);
 
-        bool b = assertFalse(player.isInAir(), "1");
+        b &= assertFalse(player.isInAir(), "1");
 
         // jumping up
         player.jump();
         b &= assertTrue(player.isInAir(), "2");
+        b &= assertFalse(player.isFalling(), "is falling 2 a");
+        b &= assertFalse(player.isFallingNaturally(), "is falling 2 b");
+        b &= assertFalse(player.isFallingAfterJumpingStopped(), "is falling 2 c");
 
         // reached max Y pos
         player.stopJumping();
@@ -1371,6 +1400,7 @@ private:
         b &= assertTrue(player.isInAir(), "4");
 
         // TODO: canFall() and setCanFall() are a bit fishy. They have been around since the very beginning, but using isFalling() seems to be better.
+        // As of v0.7, isFalling*() are reliably set by Physics class in PRooFPS, but canFall() is less concrete, see API doc!
 
         return b;
     }

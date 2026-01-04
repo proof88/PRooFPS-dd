@@ -250,6 +250,8 @@ namespace proofps_dd
         bool getHasJustStartedFallingAfterJumpingStoppedInThisTick() const;
         void setHasJustStartedFallingAfterJumpingStoppedInThisTick(bool val);
         bool isFalling() const;
+        bool isFallingNaturally() const;
+        bool isFallingAfterJumpingStopped() const;
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeStartedFalling() const;
         const float getHeightStartedFalling() const;
         bool& getHasJustStoppedJumpingInThisTick();
@@ -522,9 +524,11 @@ namespace proofps_dd
         PureVector m_angleSavedForWallJump;
         std::chrono::time_point<std::chrono::steady_clock> m_timeLastWillJump;
         bool m_bCanFall = true;
-        bool m_bFalling = true;
+        bool m_bFalling = true;   // TODO: deprecated, redundant to (m_bHasJustStartedFallingNaturally && m_bHasJustStartedFallingAfterJumpingStopped)
         bool m_bHasJustStartedFallingNaturally = true;
         bool m_bHasJustStartedFallingAfterJumpingStopped = false;
+        bool m_bFallingNaturally = true;
+        bool m_bFallingAfterJumpingStopped = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedFalling;
         float m_fHeightStartedFalling = 0.f;
         bool m_bHasJustStoppedJumping = false;

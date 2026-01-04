@@ -266,6 +266,8 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bFalling(other.m_bFalling),
     m_bHasJustStartedFallingNaturally(other.m_bHasJustStartedFallingNaturally),
     m_bHasJustStartedFallingAfterJumpingStopped(other.m_bHasJustStartedFallingAfterJumpingStopped),
+    m_bFallingNaturally(other.m_bFallingNaturally),
+    m_bFallingAfterJumpingStopped(other.m_bFallingAfterJumpingStopped),
     m_fHeightStartedFalling(other.m_fHeightStartedFalling),
     m_bHasJustStoppedJumping(other.m_bHasJustStoppedJumping),
     m_bCrouchingStateCurrent(other.m_bCrouchingStateCurrent),
@@ -285,56 +287,6 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
 {
     BuildPlayerObject(true);
 }
-
-// TODO: delete?
-//proofps_dd::Player& proofps_dd::Player::operator=(const proofps_dd::Player& other)
-//{
-//    m_connHandleServerSide = other.m_connHandleServerSide;
-//    m_sIpAddress = other.m_sIpAddress;
-//    m_sName = other.m_sName;
-//    m_bExpectingAfterBootUpDelayedUpdate = other.m_bExpectingAfterBootUpDelayedUpdate;
-//    m_vecOldNewValues = other.m_vecOldNewValues;
-//    m_bNetDirty = other.m_bNetDirty;
-//    m_timeDied = other.m_timeDied;
-//    m_bRespawn = other.m_bRespawn;
-//    m_vecImpactForce = other.m_vecImpactForce;
-//    m_vecAntiGravityForce = other.m_vecAntiGravityForce;
-//    //m_audio = other.m_audio;  // deleted function
-//    //m_cfgProfiles = other.m_cfgProfiles;  // inaccessible
-//    //m_bullets = other.m_bullets;  // deleted
-//    //m_eventsItemPickup = other.m_eventsItemPickup;  // inaccessible
-//    //m_eventsInventoryChange = other.m_eventsInventoryChange;
-//    //m_eventsAmmoChange = other.m_eventsAmmoChange;  // inaccessible
-//    m_gfx = other.m_gfx;
-//    m_network = other.m_network;
-//    m_vecJumpForce = other.m_vecJumpForce;
-//    m_fGravity = other.m_fGravity;
-//    m_bJumping = other.m_bJumping;
-//    m_bAllowJump = other.m_bAllowJump;
-//    m_fWillJumpMultFactorX = other.m_fWillJumpMultFactorX;
-//    m_fWillJumpMultFactorY = other.m_fWillJumpMultFactorY;
-//    m_bCanFall = other.m_bCanFall;
-//    m_bFalling = other.m_bFalling;
-//    m_bHasJustStartedFallingNaturally = other.m_bHasJustStartedFallingNaturally;
-//    m_bHasJustStartedFallingAfterJumpingStopped = other.m_bHasJustStartedFallingAfterJumpingStopped;
-//    m_fHeightStartedFalling = other.m_fHeightStartedFalling;
-//    m_bHasJustStoppedJumping = other.m_bHasJustStoppedJumping;
-//    m_bCrouchingStateCurrent = other.m_bCrouchingStateCurrent;
-//    m_bCrouchingWasActiveWhenInitiatedJump = other.m_bCrouchingWasActiveWhenInitiatedJump;
-//    m_bJumpWasInitiatedByJumppad = other.m_bJumpWasInitiatedByJumppad;
-//    m_bWantToStandup = other.m_bWantToStandup;
-//    m_bWillSomersault = other.m_bWillSomersault;
-//    m_fSomersaultAngleZ = other.m_fSomersaultAngleZ;
-//    m_bRunning = other.m_bRunning;
-//    m_bJustCreatedAndExpectingStartPos = other.m_bJustCreatedAndExpectingStartPos;
-//    m_strafe = other.m_strafe;
-//    m_prevActualStrafe = other.m_prevActualStrafe;
-//    m_bAttack = other.m_bAttack;
-//
-//    BuildPlayerObject(true);
-//
-//    return *this;
-//}
 
 proofps_dd::Player::~Player()
 {
@@ -892,11 +844,20 @@ float proofps_dd::Player::getGravity() const
     return m_fGravity;
 }
 
+/**
+* Physics class is required to invoke this in every physics tick.
+* The gravity that is constantly pulling down objects in the game is constant but we maintain a momentary
+* value for each dynamic object, derived from the constant gravity. This momentary value is being
+* changed in each physics tick using this function.
+* Detecting "natural" or "post-jump" falling also depends on this.
+*/
 void proofps_dd::Player::setGravity(float value) {
     m_fGravity = value;
     if (value >= 0.f)
     {
         m_bFalling = false;
+        m_bFallingNaturally = false;
+        m_bFallingAfterJumpingStopped = false;
     }
 }
 
@@ -946,11 +907,19 @@ bool proofps_dd::Player::isInAir() const
     return isJumping() || canFall();
 }
 
+/**
+* @return True if the player has just started falling naturally in this tick i.e. in previous tick there was still ground under its feet but now
+*         in this tick the 
+*/
 bool proofps_dd::Player::getHasJustStartedFallingNaturallyInThisTick() const
 {
     return m_bHasJustStartedFallingNaturally;
 }
 
+/**
+* Physics class is required to invoke this whenever the gravity pulling force actually manages to decrease the altitude of the player in a physics tick,
+* after it was not yet possible in the previous tick.
+*/
 void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
 {
     m_bHasJustStartedFallingNaturally = val;
@@ -959,16 +928,23 @@ void proofps_dd::Player::setHasJustStartedFallingNaturallyInThisTick(bool val)
         m_timeStartedFalling = std::chrono::steady_clock::now();
         m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
-
+        m_bFallingNaturally = true;
+        m_bFallingAfterJumpingStopped = false;
         //getConsole().EOLn("Player::%s(): m_fHeightStartedFalling: %f!", __func__, m_fHeightStartedFalling);
     }
 }
 
+/**
+* @return True if the player is falling now due to the jump-induced upward movement has just stopped, false otherwise.
+*/
 bool proofps_dd::Player::getHasJustStartedFallingAfterJumpingStoppedInThisTick() const
 {
     return m_bHasJustStartedFallingAfterJumpingStopped;
 }
 
+/**
+* Physics class is required to invoke this whenever a player-induced jump has just been finished its upward movement.
+*/
 void proofps_dd::Player::setHasJustStartedFallingAfterJumpingStoppedInThisTick(bool val)
 {
     m_bHasJustStartedFallingAfterJumpingStopped = val;
@@ -977,34 +953,83 @@ void proofps_dd::Player::setHasJustStartedFallingAfterJumpingStoppedInThisTick(b
         m_timeStartedFalling = std::chrono::steady_clock::now();
         m_fHeightStartedFalling = getPos().getNew().getY();
         m_bFalling = true;
+        m_bFallingNaturally = false;
+        m_bFallingAfterJumpingStopped = true;
     }
 }
 
+/**
+* Unlike canFall(), this returns a more useful value about falling actually confirmed by the physics engine.
+* The falling can be "natural" or when the last jump-induced upward movement has stopped.
+* See:
+*  - getHasJustStartedFallingNaturallyInThisTick(),
+*  - isFallingNaturally(),
+*  - getHasJustStartedFallingAfterJumpingStoppedInThisTick(),
+*  - isFallingAfterJumpingStopped().
+* 
+* @return True if the player is actually falling now, false otherwise.
+*/
 bool proofps_dd::Player::isFalling() const
 {
-    return m_bFalling;
+    return m_bFalling; // TODO: deprecated, redundant to (m_bHasJustStartedFallingNaturally && m_bHasJustStartedFallingAfterJumpingStopped)
 }
 
+/**
+* @return True if the player is falling now "naturally" i.e. the ground has disappeared from below its feet a few ticks ago and we still not yet hit ground, false otherwise.
+*/
+bool proofps_dd::Player::isFallingNaturally() const
+{
+    return m_bFallingNaturally;
+}
+
+/**
+* @return True if the player is falling now due to the jump-induced upward movement stopped some ticks ago and we still not yet hit ground, false otherwise.
+*/
+bool proofps_dd::Player::isFallingAfterJumpingStopped() const
+{
+    return m_bFallingAfterJumpingStopped;
+}
+
+/**
+* The timestamp of the moment Physics class invoked:
+*  - either setHasJustStartedFallingNaturallyInThisTick(),
+*  - or setHasJustStartedFallingAfterJumpingStoppedInThisTick().
+*/
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeStartedFalling() const
 {
     return m_timeStartedFalling;
 }
 
+/**
+* The vertical position of the player in the moment of Physics class invoked:
+*  - either setHasJustStartedFallingNaturallyInThisTick(),
+*  - or setHasJustStartedFallingAfterJumpingStoppedInThisTick().
+*/
 const float proofps_dd::Player::getHeightStartedFalling() const
 {
     return m_fHeightStartedFalling;
 }
 
+/**
+* @return True if the upward movement due to a player-induced jump has just ended in the current physics tick i.e. we are floating in this moment but
+*         will start to fall in the next physics tick. False in any other moment.
+*/
 bool& proofps_dd::Player::getHasJustStoppedJumpingInThisTick()
 {
     return m_bHasJustStoppedJumping;
 }
 
+/**
+* @return True if jump is allowed for the player in the current physics tick, false otherwise.
+*/
 bool proofps_dd::Player::jumpAllowed() const
 {
     return m_bAllowJump;
 }
 
+/**
+* Physics class is required to invoke this in every physics tick based on different conditions.
+*/
 void proofps_dd::Player::setJumpAllowed(bool b)
 {
     m_bAllowJump = b;
@@ -1041,6 +1066,8 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     m_bWillWallJump = false;
     m_bJumping = true;
     m_bFalling = false;
+    m_bFallingNaturally = false;
+    m_bFallingAfterJumpingStopped = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
 
     if (fOriginalWillJumpMultFactorY == 1.f)
