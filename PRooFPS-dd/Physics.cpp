@@ -498,14 +498,6 @@ void proofps_dd::Physics::serverGravity(
                 player.getPos().getNew().getZ()
             ));
 
-        // before v0.7 setJumpAllowed() was set in PRooFPSddPGE::onGameFrameBegin() based on if Y pos of player was changed in previous frame, however
-        // in v0.7 we have introduced this more sophisticated way here so player can still jump if falling in between stairsteps.
-        const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-        player.setJumpAllowed(
-            !player.isJumping() && !player.hasAntiGravityActive() && (player.getGravity() < 0.f) &&
-            (!player.isFalling() ||  /* TODO: add checking a flag that is true only if latest collision was with a stairs object (maxheight) FROM ABOVE! */
-                ((fFallHeight >= 0.f) && (fFallHeight <= Maps::fStairstepHeight * 2))));
-
         if ((playerConst.getHealth() > 0) && (playerConst.getPos().getNew().getY() < m_maps.getBlockPosMin().getY() - 3.0f))
         {
             // need to die, out of map lower bound ... and this applies also when we player has invulnerability!
@@ -752,18 +744,30 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_LoopKernelVertical(
     return true;
 }
 
-void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_fallingDown(bool bVerticalCollisionOccured, Player& player)
+void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
+    bool bVerticalCollisionOccured, Player& player, const float& fCurrentFallHeight)
 {
     if (!bVerticalCollisionOccured && player.isFalling() && (std::as_const(player).getHealth() > 0))
     {
         // we have been in the air for a while now
-
-        const float fFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY();
-        if (fFallHeight >= 6.f)
+        if (fCurrentFallHeight >= 6.f)
         {
             player.handleFallingFromHigh(0 /* relevant for clients, but for server it is unused as input, server will update this parameter within function */);
         }
     }
+
+    // before v0.7 setJumpAllowed() was set in PRooFPSddPGE::onGameFrameBegin() based on if Y pos of player was changed in previous frame, however
+    // in v0.7 we have introduced this more sophisticated way here so player can still jump if falling in between stairsteps.
+
+    player.setJumpAllowed(
+        !player.isJumping() && !player.hasAntiGravityActive() && (player.getGravity() <= 0.f) &&
+        (
+            (!player.canFall() && !player.isFalling()) ||
+            (
+                (player.canFall() && player.isFalling()) && /* TODO: add checking a flag that is true only if latest collision was with a stairs object (maxheight) FROM ABOVE! */
+                ((fCurrentFallHeight >= 0.f) && (fCurrentFallHeight <= Maps::fStairstepHeight * 2))
+            )
+        ));
 }
 
 /**
@@ -1271,10 +1275,6 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
                 xhair,
                 vecCamShakeForce);
         } // end for i
-
-        serverPlayerCollisionWithWalls_common_fallingDown(
-            bVerticalCollisionOccured,
-            player);
     } // end if YPos changed
 
     if (player.isSomersaulting())
@@ -1290,6 +1290,13 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
             fPlayerOPos1XMinusHalf,
             fPlayerOPos1XPlusHalf);
     }
+
+    const float fCurrentFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY(); /* valid only if player.isFalling() */
+    // TODO: check if vertical collision is expected within a specified threshold relative to getHeightStartedFalling()!
+    serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
+        bVerticalCollisionOccured,
+        player,
+        fCurrentFallHeight);
 
     return bVerticalCollisionOccured;
 } // serverPlayerCollisionWithWalls_legacy_vertical()
@@ -1443,11 +1450,7 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
                 pObj->getSizeVec().getY() / 2.f,
                 xhair,
                 vecCamShakeForce);
-        } // endif bVerticalCollisionOccured
-
-        serverPlayerCollisionWithWalls_common_fallingDown(
-            bVerticalCollisionOccured,
-            player);
+        } // end if bVerticalCollisionOccured
     } // end if YPos changed
 
     if (player.isSomersaulting())
@@ -1460,6 +1463,13 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
         // TODO: this returns the final selected Y size of the player but we are not yet using it, see comment later!
         serverPlayerCollisionWithWalls_bvh_handleStandup(player);
     }
+
+    const float fCurrentFallHeight = player.getHeightStartedFalling() - player.getPos().getNew().getY(); /* valid only if player.isFalling() */
+    // TODO: check if vertical collision is expected within a specified threshold relative to getHeightStartedFalling()!
+    serverPlayerCollisionWithWalls_common_verticalCollisionAlreadyHandled(
+        bVerticalCollisionOccured,
+        player,
+        fCurrentFallHeight);
 
     return bVerticalCollisionOccured;
 } // serverPlayerCollisionWithWalls_bvh_vertical()
