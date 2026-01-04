@@ -33,7 +33,7 @@ Meaning of "Latest ALP":  that is the latest "Approofed für Lan Party" version 
 A compressed build for Windows is available for TODO.
 
 This version brings the following **NEW FEATURES**:
- - Physics: non-explosive bullets can **ricochet** off the walls if colliding in flat angle (<= 10°).
+ - Physics: non-explosive bullets can **ricochet** off the walls if colliding them in small angle (<= 10°).
  - Physics: **fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration, so teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
  - Physics: **fragile bullet vs explosion**: fragile bullets (rocket, grenade) are destroyed if they are within the damage radius of an explosion.  
@@ -49,6 +49,7 @@ This version brings the following **CHANGES AND ENHANCEMENTS**:
    Key 'CTRL' is kept for crouching only. Key 'S' is for descending only.  
    This way crouching and descending actions can be controlled independently when using JetLax.
  - Physics: JetLax: when activated but idle, **randomized micro-forces** push the player to give a bit more floating-like feeling.
+ - Physics: **impact force** on players has been tweaked a bit, in particular the explosions now throw players over a more visually appealing 2D-curve.
  - GFX: **smoke colors** are a bit more **randomized** (nobody will notice it though).
 
 This version brings the following **BUG FIXES**:
