@@ -278,7 +278,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
 
         // jump-induced actions can be initiated only if we cannot fall at the moment (I always forget though what does "cannot fall" mean)
-        if (!player.canFall() /* to allow somersault during jump */ || player.jumpAllowed())
+        //if (!player.canFall() /* to allow somersault during jump */ || player.jumpAllowed())
         {
             const auto nMillisecsSinceLastJump =
                 std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastSetWillJump()).count();

@@ -72,6 +72,8 @@ namespace proofps_dd
         static constexpr float fObjHeightStanding = 1.88f;
         static constexpr float fObjHeightCrouchScaling = 0.48f;
 
+        static constexpr float fHeightLastJumpWhenPlayerIsOnGround = 999999.f;
+
         // Physics modifies these as per nPhysicsRate
         static constexpr float fBaseSpeedWalk = 2.f;
         static constexpr float fBaseSpeedRun = 4.f;
@@ -263,6 +265,7 @@ namespace proofps_dd
         float getWillJumpYInNextTick() const;
         void setWillJumpInNextTick(float factorY, float factorX);
         const std::chrono::time_point<std::chrono::steady_clock>& getTimeLastSetWillJump() const;
+        float getHeightJumpInitiated() const;
         PureVector& getJumpForce();
         bool getWillWallJumpInNextTick() const;
         //bool getConsecutiveWallJump() const;
@@ -518,6 +521,7 @@ namespace proofps_dd
         * Also I added Y to the end of the name because now we also record FactorX in separate var.
         */
         float m_fWillJumpMultFactorY = 0.f;
+        float m_fJumpInitiatedHeight = fHeightLastJumpWhenPlayerIsOnGround;
         bool m_bWillWallJump = false;
         int m_nConsecutiveWallJump = 0;
         int m_nTicksSinceLastHorizontalCollision = 0;

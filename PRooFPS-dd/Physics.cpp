@@ -759,10 +759,40 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisio
     // before v0.7 setJumpAllowed() was set in PRooFPSddPGE::onGameFrameBegin() based on if Y pos of player was changed in previous frame, however
     // in v0.7 we have introduced this more sophisticated way here so player can still jump if falling in between stairsteps.
 
+    static bool bPrevJumpAllowed = false;
+
     player.setJumpAllowed(
-        !player.isJumping() && !player.hasAntiGravityActive() && (player.getGravity() <= 0.f) &&
-        ( (!player.canFall() && !player.isFalling()) || bWillCollideVerticallyWithinLooseJumpAllowDistance)
+        !player.isJumping() && !player.hasAntiGravityActive() &&
+        (
+            /* on ground */
+            (!player.canFall() && !player.isFalling()) ||
+            /* 1 tick moment when gravity started to pull the player but successful pull is not yet confirmed as isFalling() in serverGravity() */
+            (player.canFall() && !player.isFalling() &&
+                // this strange height check is to deny double jumping: it is not the 1 tick moment explained above but
+                // when a jump has just stopped and we just start falling.
+                (player.getHeightJumpInitiated() > player.getPos().getNew().getY())
+            ) ||
+            /* confirmed falling */
+            (player.isFalling() && bWillCollideVerticallyWithinLooseJumpAllowDistance))
     );
+
+    //if (player.jumpAllowed() != bPrevJumpAllowed)
+    //{
+    //    getConsole().EOLn("jumpAllowed changed: %d", player.jumpAllowed());
+    //
+    //    //if (!player.jumpAllowed())
+    //    //{
+    //    //    getConsole().EOLn("!player.isJumping(): %d", !player.isJumping());
+    //    //    getConsole().EOLn("!player.hasAntiGravityActive(): %d", !player.hasAntiGravityActive());
+    //    //    getConsole().EOLn("!player.canFall(): %d", !player.canFall());
+    //    //    getConsole().EOLn("!player.isFalling(): %d", !player.isFalling());
+    //    //    getConsole().EOLn("player.getHeightJumpInitiated(): %f", player.getHeightJumpInitiated());
+    //    //    getConsole().EOLn("player.getPos().getNew().getY(): %f", player.getPos().getNew().getY());
+    //    //    getConsole().EOLn("bWillCollideVerticallyWithinLooseJumpAllowDistance: %d", bWillCollideVerticallyWithinLooseJumpAllowDistance);
+    //    //}
+    //}
+    
+    bPrevJumpAllowed = player.jumpAllowed();
 }
 
 /**
@@ -1368,7 +1398,14 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy_vertical(
         {
             bWillCollideVerticallyWithinLooseJumpAllowDistance =
                 serverPlayerCollisionWithWalls_legacy_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
-                    fPlayerOPos1XMinusHalf, fPlayerOPos1XPlusHalf, player.getPos().getNew().getY(), fPlayerNewScaledSizeY, fCurrentFallHeight, Maps::fStairstepHeight * 2);
+                    fPlayerOPos1XMinusHalf,
+                    fPlayerOPos1XPlusHalf,
+                    player.getPos().getNew().getY(),
+                    fPlayerNewScaledSizeY,
+                    fCurrentFallHeight,
+                    /* x2 because when we are running down, we might strafing horizontally so fast that we might miss touching
+                       the next lower stairstep during falling. */
+                    Maps::fStairstepHeight * 2);
         }
     }
 
@@ -1555,7 +1592,14 @@ bool proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh_vertical(
         {
             bWillCollideVerticallyWithinLooseJumpAllowDistance =
                 serverPlayerCollisionWithWalls_bvh_vertical_checkForSoonPossibleVerticalCollisionWithinLooseJumpAllowDistance(
-                    player, vecPlayerScaledSize.getX(), fPlayerNewScaledSizeY, vecPlayerScaledSize.getZ(), fCurrentFallHeight, Maps::fStairstepHeight * 2);
+                    player,
+                    vecPlayerScaledSize.getX(),
+                    fPlayerNewScaledSizeY,
+                    vecPlayerScaledSize.getZ(),
+                    fCurrentFallHeight,
+                    /* x2 because when we are running down, we might strafing horizontally so fast that we might miss touching
+                       the next lower stairstep during falling. */
+                    Maps::fStairstepHeight * 2);
         }
     }
 

@@ -260,6 +260,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bAllowJump(other.m_bAllowJump),
     m_fWillJumpMultFactorX(other.m_fWillJumpMultFactorX),
     m_fWillJumpMultFactorY(other.m_fWillJumpMultFactorY),
+    m_fJumpInitiatedHeight(other.m_fJumpInitiatedHeight),
     m_bWillWallJump(other.m_bWillWallJump),
     m_nConsecutiveWallJump(other.m_nConsecutiveWallJump),
     m_bCanFall(other.m_bCanFall),
@@ -894,6 +895,7 @@ void proofps_dd::Player::setCanFall(bool state) {
     if (!state)
     {
         m_bFallingHighTriggered = false;
+        m_fJumpInitiatedHeight = fHeightLastJumpWhenPlayerIsOnGround;
     }
 }
 
@@ -1056,7 +1058,9 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     m_fWillJumpMultFactorX = 0.f;
     m_fWillJumpMultFactorY = 0.f;
 
-    if (isJumping() || !jumpAllowed() || isSomersaulting())
+    if (isJumping() ||
+        /* !jumpAllowed() commented out: since setWillJumpInNextTick() does the check, dont do it here, as conditions might change until we get here ||*/
+        isSomersaulting())
     {
         getConsole().EOLn("%s(): jump not allowed or jumping or somersaulting!", __func__);
         return;
@@ -1069,6 +1073,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     m_bFallingNaturally = false;
     m_bFallingAfterJumpingStopped = false;
     m_bCrouchingWasActiveWhenInitiatedJump = getCrouchInput().getNew();
+    m_fJumpInitiatedHeight = getPos().getNew().getY();
 
     if (fOriginalWillJumpMultFactorY == 1.f)
     {
@@ -1140,6 +1145,11 @@ void proofps_dd::Player::setWillJumpInNextTick(float factorY, float factorX)
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::getTimeLastSetWillJump() const
 {
     return m_timeLastWillJump;
+}
+
+float proofps_dd::Player::getHeightJumpInitiated() const
+{
+    return m_fJumpInitiatedHeight;
 }
 
 PureVector& proofps_dd::Player::getJumpForce()
