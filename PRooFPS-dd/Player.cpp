@@ -1062,7 +1062,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
         /* !jumpAllowed() commented out: since setWillJumpInNextTick() does the check, dont do it here, as conditions might change until we get here ||*/
         isSomersaulting())
     {
-        getConsole().EOLn("%s(): jump not allowed or jumping or somersaulting!", __func__);
+        //getConsole().EOLn("%s(): jump not allowed or jumping or somersaulting!", __func__);
         return;
     }
 
@@ -1100,7 +1100,7 @@ void proofps_dd::Player::jump(const float& fRunSpeedPerTickForJumppadHorizontalF
     // we dont use other components of jumpForce vec, since Z-axis is "unused", Y-axis jump force is controlled by m_fGravity 
     //m_vecJumpForce.SetY(getPos().getNew().getY() - getPos().getOld().getY());
     //m_vecJumpForce.SetZ(getPos().getNew().getZ() - getPos().getOld().getZ());
-    getConsole().EOLn("%s(): jump x force: %f", __func__, m_vecJumpForce.getX());
+    //getConsole().EOLn("%s(): jump x force: %f", __func__, m_vecJumpForce.getX());
 }
 
 void proofps_dd::Player::stopJumping()
@@ -1133,7 +1133,7 @@ void proofps_dd::Player::setWillJumpInNextTick(float factorY, float factorX)
 {
     if (!jumpAllowed())
     {
-        getConsole().EOLn("%s(): jump not allowed!", __func__);
+        //getConsole().EOLn("%s(): jump not allowed!", __func__);
         return;
     }
 

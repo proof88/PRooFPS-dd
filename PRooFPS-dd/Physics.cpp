@@ -780,16 +780,16 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisio
     //{
     //    getConsole().EOLn("jumpAllowed changed: %d", player.jumpAllowed());
     //
-    //    //if (!player.jumpAllowed())
-    //    //{
-    //    //    getConsole().EOLn("!player.isJumping(): %d", !player.isJumping());
-    //    //    getConsole().EOLn("!player.hasAntiGravityActive(): %d", !player.hasAntiGravityActive());
-    //    //    getConsole().EOLn("!player.canFall(): %d", !player.canFall());
-    //    //    getConsole().EOLn("!player.isFalling(): %d", !player.isFalling());
-    //    //    getConsole().EOLn("player.getHeightJumpInitiated(): %f", player.getHeightJumpInitiated());
-    //    //    getConsole().EOLn("player.getPos().getNew().getY(): %f", player.getPos().getNew().getY());
-    //    //    getConsole().EOLn("bWillCollideVerticallyWithinLooseJumpAllowDistance: %d", bWillCollideVerticallyWithinLooseJumpAllowDistance);
-    //    //}
+    //    if (!player.jumpAllowed())
+    //    {
+    //        getConsole().EOLn("!player.isJumping(): %d", !player.isJumping());
+    //        getConsole().EOLn("!player.hasAntiGravityActive(): %d", !player.hasAntiGravityActive());
+    //        getConsole().EOLn("!player.canFall(): %d", !player.canFall());
+    //        getConsole().EOLn("!player.isFalling(): %d", !player.isFalling());
+    //        getConsole().EOLn("player.getHeightJumpInitiated(): %f", player.getHeightJumpInitiated());
+    //        getConsole().EOLn("player.getPos().getNew().getY(): %f", player.getPos().getNew().getY());
+    //        getConsole().EOLn("bWillCollideVerticallyWithinLooseJumpAllowDistance: %d", bWillCollideVerticallyWithinLooseJumpAllowDistance);
+    //    }
     //}
     
     bPrevJumpAllowed = player.jumpAllowed();
@@ -1063,7 +1063,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
     if (player.getWillJumpYInNextTick() > 0.f)
     {
-        getConsole().EOLn("start jumping");
+        //getConsole().EOLn("start jumping");
         // now we can actually jump and have the correct forces be saved for the jump
         player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
     }
