@@ -370,6 +370,7 @@ private:
             assertEquals(0.f, player.getWillJumpXInNextTick(), "will jump X") &
             assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y") &
             assertEquals(0, player.getTimeLastSetWillJump().time_since_epoch().count(), "time last setwilljump") &
+            assertEquals(proofps_dd::Player::fHeightLastJumpWhenPlayerIsOnGround, player.getHeightJumpInitiated(), "height jump initiated") &
             assertFalse(player.getWillSomersaultInNextTick(), "will somersault") &
             assertFalse(player.isSomersaulting(), "isSomersaulting") &
             assertEquals(0.f, player.getSomersaultAngle(), "getSomersaultAngle") &
@@ -1189,7 +1190,8 @@ private:
                 assertEquals(0.f, player.getGravity(), "gravity a 1") &
                 assertEquals(PureVector(), player.getJumpForce(), "jump force a 1") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent a 1") &
-                assertTrue(player.getWantToStandup(), "wantstandup a 1");
+                assertTrue(player.getWantToStandup(), "wantstandup a 1") &
+                assertEquals(proofps_dd::Player::fHeightLastJumpWhenPlayerIsOnGround, player.getHeightJumpInitiated(), "height jump initiated a 1");
 
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump_a1 = std::chrono::steady_clock::now();
             player.setWillJumpInNextTick(1.f, 0.f); // any positive Y value means jumping
@@ -1204,7 +1206,8 @@ private:
                 assertEquals(vecExpectedForceForRegularJump, player.getJumpForce(), "jump force a 2") &
                 assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y a 2") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent a 2") &
-                assertTrue(player.getWantToStandup(), "wantstandup a 2");
+                assertTrue(player.getWantToStandup(), "wantstandup a 2") &
+                assertEquals(player.getPos().getNew().getY(), player.getHeightJumpInitiated(), "height jump initiated a 2");
 
             player.stopJumping();
             b &= assertFalse(player.jumpAllowed(), "allowed a 3") &
@@ -1225,7 +1228,8 @@ private:
                 assertEquals(fExpectedInitialGravity_a1, player.getGravity(), "gravity b 1") &
                 assertEquals(vecExpectedForceForRegularJump, player.getJumpForce(), "jump force b 1") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent b 1") &
-                assertTrue(player.getWantToStandup(), "wantstandup b 1");
+                assertTrue(player.getWantToStandup(), "wantstandup b 1") &
+                assertEquals(player.getPos().getNew().getY(), player.getHeightJumpInitiated(), "height jump initiated b 1");
 
             const std::chrono::time_point<std::chrono::steady_clock> timeBeforeSetWillJump_b1 = std::chrono::steady_clock::now();
             player.setWillJumpInNextTick(fJumppadJumpForceMultiplier, 0.f); // any positive Y value means jumping
@@ -1240,7 +1244,8 @@ private:
                 assertEquals(vecExpectedForceForJumppadJump, player.getJumpForce(), "jump force b 2") &
                 assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y b 2") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent b 2") &
-                assertTrue(player.getWantToStandup(), "wantstandup b 2");
+                assertTrue(player.getWantToStandup(), "wantstandup b 2") &
+                assertEquals(player.getPos().getNew().getY(), player.getHeightJumpInitiated(), "height jump initiated b 2");
 
             player.stopJumping();
             b &= assertFalse(player.jumpAllowed(), "allowed b 3") &
@@ -1248,7 +1253,8 @@ private:
                 assertEquals(fExpectedInitialGravity_b1, player.getGravity(), (std::string("gravity b 3 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForceForJumppadJump, player.getJumpForce(), "jump force b 3") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent b 3") &
-                assertTrue(player.getWantToStandup(), "wantstandup b 3");
+                assertTrue(player.getWantToStandup(), "wantstandup b 3") &
+                assertEquals(player.getPos().getNew().getY(), player.getHeightJumpInitiated(), "height jump initiated b 3");
 
             // negative test
             player.setJumpAllowed(false);
@@ -1258,13 +1264,15 @@ private:
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 4") &
                 assertTrue(player.getWantToStandup(), "wantstandup 4");
 
+            // note that since v0.7 jump() does not care about jumpAllowed() so it does execute the jump
             player.jump();
             b &= assertFalse(player.jumpAllowed(), "allowed 4") &
-                assertFalse(player.isJumping(), "jumping 4") &
-                assertEquals(fExpectedInitialGravity_b1, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
+                assertTrue(player.isJumping(), "jumping 4") &
+                assertEquals(0.f /*fExpectedInitialGravity_b1*/, player.getGravity(), (std::string("gravity 4 crouch: ") + std::to_string(player.getCrouchInput())).c_str()) &
                 assertEquals(vecExpectedForceForJumppadJump, player.getJumpForce(), "jump force 4") &
                 assertTrue(player.getCrouchStateCurrent(), "getCrouchStateCurrent 5") &
-                assertTrue(player.getWantToStandup(), "wantstandup 5");
+                assertTrue(player.getWantToStandup(), "wantstandup 5") &
+                assertEquals(player.getPos().getNew().getY(), player.getHeightJumpInitiated(), "height jump initiated 4");
 
             // negative test: we are already somersaulting on-ground
             player.stopJumping();
@@ -1277,7 +1285,8 @@ private:
             b &= assertTrue(player.isSomersaulting(), "somersaulting 1") &
                 assertFalse(player.isJumping(), "jumping 5") &
                 assertEquals(vecExpectedForceForJumppadJump, player.getJumpForce(), "jump force 5") &
-                assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y 5");
+                assertEquals(0.f, player.getWillJumpYInNextTick(), "will jump Y 5") &
+                assertEquals(proofps_dd::Player::fHeightLastJumpWhenPlayerIsOnGround, player.getHeightJumpInitiated(), "height jump initiated 5");
 
         } // end for i
 
