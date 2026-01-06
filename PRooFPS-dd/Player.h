@@ -118,7 +118,7 @@ namespace proofps_dd
             fSomersaultMidAirJumpForceMultiplierDef <= fSomersaultMidAirJumpForceMultiplierMax,
             "Max somersault mid-air jump force multiplier should not be smaller than default somersault mid-air jump force multiplier.");
 
-        static constexpr float fSomersaultGroundImpactForceX = 10.f;
+        static constexpr float fSomersaultGroundImpactForceX = 15.f;
 
         static constexpr unsigned int nSvDmRespawnDelaySecsDef = 3;
         static constexpr char* szCVarSvDmRespawnDelaySecs = "sv_dm_respawn_delay";
