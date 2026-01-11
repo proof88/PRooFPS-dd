@@ -971,8 +971,12 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     static unsigned int nContinuousStrafeCountForDebugServerPlayerMovement = 0;
 
     const auto& playerConst = player;
+    bool bStrafeMayHappen1 = false;
+    bool bStrafeMayHappen2 = false;
+    bool bStrafeMayHappen3 = false;
     if ((playerConst.getHealth() > 0) && (player.getStrafe() != proofps_dd::Strafe::NONE) && !player.hasAntiGravityActive())
     {
+        bStrafeMayHappen1 = true;
         float fTargetStrafeSpeed =
             player.getCrouchStateCurrent() ?
             (player.isSomersaulting() ? GAME_PLAYER_SPEED_RUN : GAME_PLAYER_SPEED_CROUCH) :
@@ -1033,7 +1037,10 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
                 // cancel the saved horizontal force, let the player have full control over mid-air strafe
                 player.getJumpForce().SetX(0.f);
                 vecOriginalJumpForceBeforeVerticalCollisionHandled = player.getJumpForce();
+                bStrafeMayHappen2 = true;
             }
+
+            bStrafeMayHappen3 = true;
 
             // PPPKKKGGGGGG
             player.getPos().set(
@@ -1063,7 +1070,27 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
     // For now this 1 frame latency is not critical so I'm not planning to change that. Might be addressed in the future though.
     if (player.getWillJumpYInNextTick() > 0.f)
     {
-        //getConsole().EOLn("start jumping");
+        //getConsole().EOLn("player.isInAir(): %d", player.isInAir());
+        //getConsole().EOLn("start jumping with bStrafeMayHappen1: %d, bStrafeMayHappen2: %d, bStrafeMayHappen3: %d, x diff: %f",
+        //    bStrafeMayHappen1, bStrafeMayHappen2, bStrafeMayHappen3, player.getPos().getNew().getX() - player.getPos().getOld().getX());
+        
+        if (bStrafeMayHappen1 &&
+            player.isInAir() &&
+            ((player.getPos().getNew().getX() - player.getPos().getOld().getX()) == 0.f))
+        {
+            // this is a jump most probably triggered by player when falling in between stairsteps, and from v0.7 it is allowed.
+            // In such case it can happen the above strafe code won't actually strafe the player due to some conditions but here we
+            // forcefully strafe the player so jump() can carry on the strafe speed.
+            
+            // PPPKKKGGGGGG
+            player.getPos().set(
+                PureVector(
+                    player.getPos().getNew().getX() + player.getStrafeSpeed(),
+                    player.getPos().getNew().getY(),
+                    player.getPos().getNew().getZ()
+                ));
+        }
+        
         // now we can actually jump and have the correct forces be saved for the jump
         player.jump(GAME_PLAYER_SPEED_RUN); // resets setWillJumpInNextTick()
     }
