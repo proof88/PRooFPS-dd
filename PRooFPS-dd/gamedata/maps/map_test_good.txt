@@ -273,6 +273,8 @@ spawngroup_1 = 0
 # It is important to understand that this changes the INITIAL value of the created jump force, e.g. setting 2.0 might result in a jump which is NOT exactly
 # launching the player 2 times higher up in the air, you should experiment with different values to see how it works.
 # Vertical multiplier must be positive.
+# NOTICE: setting exactly 1.0 for vertical multiplier will cause the horizontal multiplier to be IGNORED due to a limitation in the game physics code.
+# If you still want to use 1.0, you can work around this limitation by setting a very close but different value such as 1.001.
 #
 # The horizontal multiplier is a multiplier of the INITIAL value of a regular player-induced horizontal jump force which is usually
 # created when the player initiates the jump while also running, in such case the horizontal jump force continues to carry the player horizontally in the air.
@@ -282,8 +284,6 @@ spawngroup_1 = 0
 #
 # For example, to define the jump force for jump pad 0, to be a vertical force, with magnitude being the same as a regular jump:
 # jumppad_0 = 1.0
-#
-# Note that setting exactly 1.0 for vertical is not recommended as it won't be completely handled as a jumppad-induced jump due to limitations in the code.
 #
 # To define a vertical jump force that is _initially_ 30% bigger than regular jump (might not be exactly result in a 30% higher jump):
 # jumppad_0 = 1.3
