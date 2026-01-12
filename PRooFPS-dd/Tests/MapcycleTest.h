@@ -148,6 +148,7 @@ private:
         }
 
         std::set<std::string> vExpectedAvailableMaps = {
+            "map_concept01.txt",
             "map_test_bad_assignment.txt",
             "map_test_bad_jumppad_count.txt",
             "map_test_bad_jumppad_force_value.txt",
@@ -196,6 +197,7 @@ private:
         mapcycle.availableMapsRefresh();
 
         std::set<std::string> vExpectedAvailableMaps = {
+            "map_concept01.txt",
             "map_mutans.txt",
             "map_test_bad_assignment.txt",
             "map_test_bad_jumppad_count.txt",
