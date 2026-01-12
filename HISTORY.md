@@ -53,6 +53,7 @@ This version brings the following **CHANGES AND ENHANCEMENTS**:
  - GFX: **smoke colors** are a bit more **randomized** (nobody will notice it though).
 
 This version brings the following **BUG FIXES**:
+ - Physics: **Jumping when Running Down Stairs** is now working properly, previously it was not possible most of the time.
  - Physics: **Team Deathmatch**: when friendly fire was disabled, the player was not **taking damage from self-caused explosions**.
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
