@@ -7,9 +7,11 @@
   ###################################################################################
 */
 
- - update game version number in Consts.h (GAME_VERSION);
+ - update game version number in Consts.h (GAME_VERSION)
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
- - make sure any recently added licensed stuff is mentioned in the About menu;
+ - make sure any recently added licensed stuff is mentioned in the About menu
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
  - delete all previous reg test dumps ("RegTestDump*.txt") from the main PRooFPS-dd directory;
 
@@ -18,11 +20,14 @@
    map switching tests, so we will have a saved reference later for packet numbers later, these
    are also (should be) version-controlled;
 
- - run ALL auto tests as explained in _how-to-auto-test.txt;
+ - run ALL auto tests as explained in _how-to-auto-test.txt
+   (shall all pass if _how-to-add-feature.txt was always properly followed);
 
- - run manual tests as explained in _how-to-manual-test.txt;
+ - run manual tests as explained in _how-to-manual-test.txt
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
- - update the packet rate and packet data rate calculations in PRooFPS-dd/doc/PRooFPS-dd-Packet-Rates.xlsx ;
+ - update the packet rate and packet data rate calculations in PRooFPS-dd/doc/PRooFPS-dd-Packet-Rates.xlsx
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
  - if this is a bigger version number increment, it would be nice also to create a new benchmark measurement
    stored in OldPerfMeasurements directory, to understand if we have improvement or regression wrt performance;
@@ -43,9 +48,11 @@
 
  - check if game is able to start up on a separate machine after downloading;
 
- - update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections;
+ - update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
- - update the version changes page "History" (HISTORY.md);
+ - update the version changes page "History" (HISTORY.md)
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
  - make sure you pull the updated README.md, and then push a new commit including the changes regarding the
    RegTestDump files described above;

@@ -7,6 +7,12 @@
   ###################################################################################
 */
 
+ - make sure the game version number in Consts.h (GAME_VERSION) is already incremented since
+   the previous private or public release.
+   No need to increment it for each feature, this is just a reminder to make sure that at the
+   end of this instruction file we won't add a new git tag with the version number of the
+   previous game release version number!
+ 
  - Most important: update HISTORY.md.
    It will be much easier to release the next version if the history of changes is continuously updated.
 
@@ -18,6 +24,9 @@
    with special attention on the controls (keyboard + mouse).
 
  - Update the manual tests.
+
+ - Execute at least the recently added manual tests and any older manual tests that might have any relation to
+   this feature.
 
  - Run auto tests (unit- and E2E-tests) in full range to detect any regression much earlier than the release date.
    Fix if any fails.
