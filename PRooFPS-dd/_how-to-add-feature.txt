@@ -14,8 +14,19 @@
 
  - Add info to the About menu text if there is any new used 3rd-party content.
 
- - Update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections if needed.
+ - Update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections if needed,
+   with special attention on the controls (keyboard + mouse).
 
  - Update the manual tests.
 
  - Run auto tests (unit- and E2E-tests) in full range to detect any regression much earlier than the release date.
+   Fix if any fails.
+
+ - If all the above is fine and overall the game looks fine, make a git tag with the development version number and
+   "RC#" label where RC stands for "Release Candidate" and the hashtag should be a 1-based number that is increased
+   with every new RC version within the current version.
+   For example, if current development version is v0.7.0, then the first RC git tag shall be: "v0.7.0-RC1", then the
+   next one shall be: "v0.7.0-RC2", etc.
+
+ - If we fail to make a private or public release in time, we can still demo an RC version, but for this to work,
+   the same quality assurance must be strictly applied as for private/public releases.
