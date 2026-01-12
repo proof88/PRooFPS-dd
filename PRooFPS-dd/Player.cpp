@@ -1311,6 +1311,12 @@ bool proofps_dd::Player::hasAntiGravityActive() const
 void proofps_dd::Player::setHasAntiGravityActive(bool state)
 {
     m_bHasAntiGravityActive = state && hasJetLax();
+    if (!m_bHasAntiGravityActive)
+    {
+        // trick to work around that 1 physics tick in which jump would be allowed upon deactivating antigravity.
+        // As soon as we hit the ground, setCanFall(false) will reset it.
+        m_fJumpInitiatedHeight = -fHeightLastJumpWhenPlayerIsOnGround;
+    }
     m_timeLastToggleUseItem = std::chrono::steady_clock::now();
 }
 

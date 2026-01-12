@@ -780,7 +780,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_verticalCollisio
     //{
     //    getConsole().EOLn("jumpAllowed changed: %d", player.jumpAllowed());
     //
-    //    if (!player.jumpAllowed())
+    //    if (player.jumpAllowed())
     //    {
     //        getConsole().EOLn("!player.isJumping(): %d", !player.isJumping());
     //        getConsole().EOLn("!player.hasAntiGravityActive(): %d", !player.hasAntiGravityActive());
