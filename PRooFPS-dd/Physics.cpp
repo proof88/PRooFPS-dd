@@ -264,9 +264,12 @@ static void serverUpdateAntiGravityForce(
     const float fInAntiGravityForceXorY = bVertical ? player.getAntiGravityForce().getY() : player.getAntiGravityForce().getX();
 
     float fPlayerAntiGravityThrustChangePerTick = 0.f;
-    const float fRandomizer = bVertical ?
-        (PFL::random(-5, 5) / 2.f) :
-        ((player.getObject3D()->getAngleVec().getY() == 0.f) ? (PFL::random(-5, 2) / 5.f) : (PFL::random(-2, 5) / 5.f));
+    const float fRandomizer = player.hasAntiGravityActive() ?
+        (
+            bVertical ?
+            (PFL::random(-5, 5) / 2.f) :
+            ((player.getObject3D()->getAngleVec().getY() == 0.f) ? (PFL::random(-5, 2) / 5.f) : (PFL::random(-2, 5) / 5.f))
+        ) : 0.f /* !player.hasAntiGravityActive() */;
 
     if (fTargetAntiGravityThrust != 0.f)
     {
@@ -1123,7 +1126,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_common_strafe(
         }
     }
     serverUpdateAntiGravityForce(fTargetAntiGravityThrust, player, false /* bVertical */, GAME_PHYSICS_RATE_LERP_FACTOR);
-   
+  
     const float GAME_IMPACT_FORCE_X_CHANGE =
         player.hasAntiGravityActive() ?
         PFL::lerp(12.f, 13.f, GAME_PHYSICS_RATE_LERP_FACTOR) :
