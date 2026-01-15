@@ -367,6 +367,16 @@ void proofps_dd::Player::setName(const std::string& sName)
     m_sName = sName;
 }
 
+bool& proofps_dd::Player::isInSpectatorMode()
+{
+    return m_bSpectatorMode;
+}
+
+proofps_dd::Player::CameraSpectatingMode& proofps_dd::Player::getCameraSpectatingMode()
+{
+    return m_cameraSpectatingMode;
+}
+
 const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
@@ -2783,4 +2793,23 @@ PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy()
 {
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvWpnMomentaryAccuracy));
+}
+
+std::ostream& proofps_dd::operator<<(std::ostream& s, const proofps_dd::Player::CameraSpectatingMode& csm)
+{
+    switch (csm)
+    {
+    case proofps_dd::Player::CameraSpectatingMode::Free:
+        s << "CameraSpectatingMode::Free (";
+        break;
+    case proofps_dd::Player::CameraSpectatingMode::PlayerFollow:
+        s << "CameraSpectatingMode::PlayerFollow (";
+        break;
+    default:
+        s << "Unknown CameraSpectatingMode (";
+    }
+
+    s << std::to_string(static_cast<int>(csm)) << ")";
+
+    return s;
 }

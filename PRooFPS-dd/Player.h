@@ -46,6 +46,12 @@ namespace proofps_dd
     {
     public:
 
+        enum class CameraSpectatingMode
+        {
+            Free = 0,
+            PlayerFollow
+        };
+
         /**
         * See explanation of this at Smoke::smokeEmitOperValues.
         */
@@ -174,6 +180,9 @@ namespace proofps_dd
         const std::string& getIpAddress() const;
         const std::string& getName() const;
         void setName(const std::string& sName);
+
+        bool& isInSpectatorMode();
+        CameraSpectatingMode& getCameraSpectatingMode();
 
         void updateAudioVisuals(
             const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay);
@@ -437,6 +446,9 @@ namespace proofps_dd
 
         bool m_bExpectingAfterBootUpDelayedUpdate = true;
 
+        bool m_bSpectatorMode = true;
+        CameraSpectatingMode m_cameraSpectatingMode{ CameraSpectatingMode::PlayerFollow };
+
         std::map<OldNewValueName,
             std::variant<
             PgeOldNewValue<int>,
@@ -624,5 +636,7 @@ namespace proofps_dd
         PgeOldNewValue<float>& getWeaponMomentaryAccuracy();
 
     }; // class Player
+
+    std::ostream& operator<< (std::ostream& s, const Player::CameraSpectatingMode& csm);  /**< Write to stream. */
 
 } // namespace proofps_dd
