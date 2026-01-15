@@ -53,7 +53,7 @@ namespace proofps_dd
         enum class InGameMenuState
         {
             None,
-            TeamSelect,
+            TeamSelect_SelectedTeamAction,
             ServerAdmin
         };
 

@@ -603,11 +603,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     {
         // avoid key function if we are in a differen in-game menu!
         if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
-            (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect))
+            (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect_SelectedTeamAction))
         {
             if (playerConst.getTeamId() == 0u)
             {
-                if (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect)
+                if (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect_SelectedTeamAction)
                 {
                     // we dont have spectator mode, so if unassigned player hides team selection menu, frag table shall be automatically visible
                     m_gui.showGameObjectives();

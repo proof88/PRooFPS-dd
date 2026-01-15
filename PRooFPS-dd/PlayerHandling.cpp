@@ -1243,7 +1243,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     // GUI::InGameMenuState
     switch (msg.m_iInGameMenu)
     {
-    case static_cast<int>(GUI::InGameMenuState::TeamSelect):
+    case static_cast<int>(GUI::InGameMenuState::TeamSelect_SelectedTeamAction):
         handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
         break;
     default:
