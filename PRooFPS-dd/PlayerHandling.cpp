@@ -167,6 +167,14 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     if (restartGame)
     {
+        if (GameMode::getGameMode()->isTeamBasedGame())
+        {
+            player.handleTeamIdChanged(0); // changing to 0 won't trigger implicit exit from spectator mode
+        }
+        if (!player.isInSpectatorMode())
+        {
+            player.handleToggleSpectatorMode();
+        }
         player.getFrags() = 0;
         player.getDeaths() = 0;
         player.getSuicides() = 0;
@@ -273,28 +281,29 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
         return;
     }
 
-    // message shall contain valid team id if we are in team-based game and not entering spectator mode
-    assert(iTeamId != 0);
+    // message might contain invalid team id even in team-based game because at server restart the team id is also reset for all players
     if (iTeamId == 0)
     {
+        // server does not come here in such case, but all clients do come here at server restart since server sends out PlayerEventId::TeamIdChanged message
         getConsole().EOLn(
-            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, team-based game, not toggling spectator mode, no valid team id received!",
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, team-based game, not toggling spectator mode, no valid team id received: must be server restart!",
             __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-        return;
     }
 
-    // in team game, selecting a team implicitly exits spectator mode
-    player.isInSpectatorMode() = false;
+    // in team game, selecting a VALID team implicitly exits spectator mode
+    if (iTeamId != 0)
+    {
+        player.isInSpectatorMode() = false;
+        getConsole().EOLn(
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, exited spectator mode by selecting team %u!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iTeamId);
+    }
 
     const auto iPrevTeamId = player.getTeamId();
 
     // need to trigger updating player teamId here because that is needed for serverRespawnPlayer() to work properly
     player.handleTeamIdChanged(iTeamId);
     player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
-
-    getConsole().EOLn(
-        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, exited spectator mode by selecting team %u!",
-        __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iTeamId);
 
     if (m_pge.getNetwork().isServer())
     {
@@ -318,7 +327,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
     }
 
     // suppress such events if we are still not fully loaded and connected
-    if (hasPlayerBootedUp(getMyServerSideConnectionHandle()))
+    if ((iTeamId != 0) && hasPlayerBootedUp(getMyServerSideConnectionHandle()))
     {
         m_gui.getServerEvents()->addTeamChangedEvent(
             player.getName(),

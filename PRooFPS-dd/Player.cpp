@@ -2657,6 +2657,9 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
         getConsole().EOLn("Player::%s(%u): is invalid team id for player with connHandleServerSide: %u!", __func__, iTeamId, getServerSideConnectionHandle());
         return;
     }
+
+    // teamId 0 is allowed since that is the default, it is the only valid value in non-team game modes, and
+    // it is set also at server restart in team-based game modes!
     
     m_iTeamId = iTeamId;
 
