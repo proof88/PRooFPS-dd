@@ -34,7 +34,7 @@ A compressed build for Windows is available for TODO.
 
 This version brings the following **NEW FEATURES**:
  - Gameplay: **Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera control" or "player follow camera" mode.
-   Spectator Mode is always available during gameplay.
+   Entering Spectator Mode is always available during gameplay by pressing 'M'.
  - Physics: non-explosive bullets can **ricochet** off the walls if colliding them in small angle (<= 10°).
  - Physics: **fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration, so teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
