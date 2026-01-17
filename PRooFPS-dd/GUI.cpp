@@ -2053,8 +2053,8 @@ void proofps_dd::GUI::drawWindowForMainMenu()
     constexpr float fMenuWndWidth = 500.f; // just put here the widest submenu's required width
     constexpr float fWAforV28TooTallSettingsMenu = 50.f;
     const float fMenuWndHeight = main_viewport->WorkSize.y - fLogoImgHeight + fWAforV28TooTallSettingsMenu;
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight - fWAforV28TooTallSettingsMenu), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkSize.x / 2 - fMenuWndWidth / 2, fLogoImgHeight - fWAforV28TooTallSettingsMenu), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ImVec2(fMenuWndWidth, fMenuWndHeight), ImGuiCond_Appearing);
 
     ImGui::Begin("WndMainMenu", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
@@ -2117,7 +2117,9 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
 
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(
+        ImVec2(fWindowWidth, fWindowHeight),
+        ImGuiCond_Appearing /* set size upon opening window (instead of ImGuiCond_FirstUseEver or ImGuiCond_Once) since we are changing height per game mode */);
 
     // for now we decide in-game menu transparency based on minimap transparency setting
     const float fPopupBgAlpha =
@@ -2336,7 +2338,7 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
 
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_Appearing);
 
     // for now we decide in-game menu transparency based on minimap transparency setting
     const float fPopupBgAlpha =
