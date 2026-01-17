@@ -12,7 +12,12 @@
    - with the default 1.5x jump-force multiplier setting, player should not take fall damage after a normal mid-air salto;
    - player shall be able to jump during running down or up stairs.
 
- Start 2 client instances and connect them to server, then:
+ Start 1 client instance and connect it to server, then:
+   - Check if Server Admin menu actions such as Restart Game and Next Map are working properly (with client still connected to server).
+     - Not only player stats need to be reset for all players but everybody must be in spectator mode again.
+     - Check these also when a game is already won and we are waiting for the game to restart (with client still connected to server).
+ 
+ Start 1 more client instance and connect it to server (so now there shall be 2 connected client instances), then:
    - make sure the weapon switch for the server player and 1st client player is correctly visible in the 2nd client instance, and vice versa;
    
    - 3D sound check:
@@ -22,3 +27,11 @@
 
    - check if bouncing bullet is actually bouncing properly between foreground objects (grenade launcher);
    - check if non-bouncing bullets are actually able to ricochet off the wall (hit angle <= 10 degrees).
+
+   - Spectator Mode:
+     - check if all players can correctly enter into Spectator Mode:
+       - right after connecting to server,
+       - later back from active gameplay.
+     - check if all spectating camera modes are working properly:
+       - free camera control spectating mode,
+       - player follow camera spectating mode.

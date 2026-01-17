@@ -32,4 +32,5 @@
    repeat the above tests.
 
  - Check if Server Admin menu actions such as Restart Game and Next Map are working properly (with client still connected to server).
+   - Not only player stats but team id also need to be reset for all players and everybody must be in spectator mode again.
    - Check these also when a game is already won and we are waiting for the game to restart (with client still connected to server).
