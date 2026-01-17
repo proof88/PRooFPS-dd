@@ -298,7 +298,9 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
 
     if (m_pge.getNetwork().isServer())
     {
-        if (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */)
+        if ( (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */) ||
+             (iPrevTeamId == player.getTeamId() /* i.e. no actual team change happened, just exited spectator mode this way */)
+            )
         {
             // even tho player is already on a random global spawn point selected in handleUserConnected(), now
             // with proper team id respawn is needed to deal with team spawn groups;
