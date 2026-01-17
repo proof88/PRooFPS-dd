@@ -426,16 +426,13 @@ void proofps_dd::GUI::showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfi
 {
     assert(GameMode::getGameMode());
 
-    if (GameMode::getGameMode()->isTeamBasedGame())
+    assert(m_pMapPlayers);
+    const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
+    if (it != m_pMapPlayers->end())
     {
-        assert(m_pMapPlayers);
-        const auto it = m_pMapPlayers->find(m_pNetworking->getMyServerSideConnectionHandle());
-        if (it != m_pMapPlayers->end())
+        if (!GameMode::getGameMode()->isPlayerAllowedForGameplay(it->second))
         {
-            if (!GameMode::getGameMode()->isPlayerAllowedForGameplay(it->second))
-            {
-                showInGameTeamSelectMenu();
-            }
+            showInGameTeamSelectMenu();
         }
     }
 }
