@@ -403,9 +403,9 @@ void proofps_dd::GUI::showHideInGameTeamSelectMenu()
     // reason of these complicated conditions is explained in showHideInGameServerAdminMenu()
     if (m_currentMenuInInGameMenu == InGameMenuState::None)
     {
-        m_currentMenuInInGameMenu = InGameMenuState::TeamSelect_SelectedTeamAction;
+        m_currentMenuInInGameMenu = InGameMenuState::Welcome_TeamSelect_Spectator;
     }
-    else if (m_currentMenuInInGameMenu == InGameMenuState::TeamSelect_SelectedTeamAction)
+    else if (m_currentMenuInInGameMenu == InGameMenuState::Welcome_TeamSelect_Spectator)
     {
         m_currentMenuInInGameMenu = InGameMenuState::None;
     }
@@ -413,7 +413,7 @@ void proofps_dd::GUI::showHideInGameTeamSelectMenu()
 
 void proofps_dd::GUI::showInGameTeamSelectMenu()
 {
-    m_currentMenuInInGameMenu = InGameMenuState::TeamSelect_SelectedTeamAction;
+    m_currentMenuInInGameMenu = InGameMenuState::Welcome_TeamSelect_Spectator;
 }
 
 void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
@@ -2244,7 +2244,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
 
                 pge_network::PgePacket pktUserInGameMenuCmd;
                 // it is easier to early return here in case of initPkt() failure so we do it here!
-                if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::TeamSelect_SelectedTeamAction)))
+                if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::Welcome_TeamSelect_Spectator)))
                 {
                     getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
@@ -2419,7 +2419,7 @@ void proofps_dd::GUI::drawInGameMenu(
 
     switch (m_currentMenuInInGameMenu)
     {
-    case InGameMenuState::TeamSelect_SelectedTeamAction:
+    case InGameMenuState::Welcome_TeamSelect_Spectator:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
         drawInGameTeamSelectMenu(itCurrentPlayer);
         ImGui::PopFont();

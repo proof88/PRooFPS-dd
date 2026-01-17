@@ -598,7 +598,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     {
         // avoid key function if we are in a differen in-game menu!
         if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
-            (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect_SelectedTeamAction))
+            (m_gui.getInGameMenuState() == GUI::InGameMenuState::Welcome_TeamSelect_Spectator))
         {
             m_gui.showHideInGameTeamSelectMenu();
         }
