@@ -73,9 +73,10 @@ namespace proofps_dd
             const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode,
             proofps_dd::Durations& durations);
-        void handlePlayerTeamIdChanged(
+        void handlePlayerTeamIdChangedOrToggledSpectatorMode(
             Player& player,
             const unsigned int& iTeamId,
+            const bool& bToggledSpectatorMode,
             const proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles);
         void handleExplosionMultiKill(

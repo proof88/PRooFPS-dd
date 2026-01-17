@@ -419,10 +419,7 @@ void proofps_dd::GUI::showInGameTeamSelectMenu()
 void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
 {
     assert(GameMode::getGameMode());
-    if (GameMode::getGameMode()->isTeamBasedGame())
-    {
-        showInGameTeamSelectMenu();
-    }
+    showInGameTeamSelectMenu();
 }
 
 void proofps_dd::GUI::showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer()
@@ -2095,25 +2092,14 @@ void proofps_dd::GUI::drawWindowForMainMenu()
 void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
-    assert(GameMode::getGameMode()->isTeamBasedGame());
     assert(m_pPge);
 
-    pge_network::PgePacket pktUserInGameMenuCmd;
-    // it is easier to early return here in case of initPkt() failure so we do it here!
-    if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::TeamSelect_SelectedTeamAction)))
-    {
-        getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-        assert(false);
-        return;
-    }
-
     m_pPge->getPure().getWindow().SetCursorVisible(true);
-
-    constexpr char* const szWindowTitle = "Team Selection";
 
     constexpr float fWindowWidthDesired = 300.f;
     // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
     const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
+    const char* const szWindowTitle = GameMode::getGameMode()->isTeamBasedGame() ? "Team Selection" : "Welcome!";
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
     const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
     
@@ -2123,7 +2109,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
     constexpr int nTextRows = 6;  /* 2 x (window title on top + extra text above buttons + notice text at bottom) */
-    constexpr int nButtonRows = 3;
+    const int nButtonRows = GameMode::getGameMode()->isTeamBasedGame() ? 4 : 3;
     const float fContentHeight =
         m_fFontSizePxHudGeneralScaled * nTextRows +
         nButtonRows * fBtnHeight +
@@ -2164,62 +2150,130 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
         else
         {
             Player& currentPlayer = itCurrentPlayer->second;
-            if (currentPlayer.getTeamId() == 0u)
+            if (GameMode::getGameMode()->isTeamBasedGame())
             {
-                drawText(
-                    ImGui::GetCursorPosX(),
-                    ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
-                    "You are not in any team.");
+                if (currentPlayer.getTeamId() == 0u)
+                {
+                    drawText(
+                        ImGui::GetCursorPosX(),
+                        ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                        "You are not in any team.");
+                }
+                else
+                {
+                    drawText(
+                        ImGui::GetCursorPosX(),
+                        ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                        "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+                }
             }
             else
             {
                 drawText(
                     ImGui::GetCursorPosX(),
                     ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
-                    "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+                    "No team selection in this session.");
             }
-
-            bool bSendPkt = false;
-
-            ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(1) ));
-            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
-            const char* const szTeam1BtnCaption =
-                (currentPlayer.getTeamId() == 1u) ?
-                "KEEP TEAM (1)" : "JOIN TEAM (1)";
-            // In case of buttons, remove size argument (ImVec2) to auto-resize.
-            if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
-                ImGui::IsKeyPressed(ImGuiKey_1))
-            {
-                proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 1u);
-                bSendPkt = true;
-            }
-            ImGui::PopStyleColor();
-
-            ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(2)));
-            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
-            const char* const szTeam2BtnCaption =
-                (currentPlayer.getTeamId() == 2u) ?
-                "KEEP TEAM (2)" : "JOIN TEAM (2)";
-            if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
-                ImGui::IsKeyPressed(ImGuiKey_2))
-            {
-                proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, 2u);
-                bSendPkt = true;
-            }
-            ImGui::PopStyleColor();
 
             bool bCloseThisPopup = false;
-            if (bSendPkt)
+            bool bToggleSpectatorMode = false;
+            unsigned int iTeamSelected = 0;
+            
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
+            if (GameMode::getGameMode()->isTeamBasedGame())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(1)));
+                const char* const szTeam1BtnCaption =
+                    (currentPlayer.getTeamId() == 1u) ?
+                    "KEEP TEAM (1)" : "JOIN TEAM (1)";
+                // In case of buttons, remove size argument (ImVec2) to auto-resize.
+                if (ImGui::Button(szTeam1BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
+                    ImGui::IsKeyPressed(ImGuiKey_1))
+                {
+                    iTeamSelected = 1;  // implicit bToggleSpectatorMode
+                }
+                ImGui::PopStyleColor();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, GUI::getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(2)));
+                ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+                const char* const szTeam2BtnCaption =
+                    (currentPlayer.getTeamId() == 2u) ?
+                    "KEEP TEAM (2)" : "JOIN TEAM (2)";
+                if (ImGui::Button(szTeam2BtnCaption, ImVec2(fBtnWidth, fBtnHeight)) ||
+                    ImGui::IsKeyPressed(ImGuiKey_2))
+                {
+                    iTeamSelected = 2;  // implicit bToggleSpectatorMode
+                }
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                if (currentPlayer.isInSpectatorMode())
+                {
+                    if (ImGui::Button("(J)OIN GAME", ImVec2(fBtnWidth, fBtnHeight)) ||
+                        ImGui::IsKeyPressed(ImGuiKey_J))
+                    {
+                        bToggleSpectatorMode = true;
+                    }
+                }
+                else
+                {
+                    if (ImGui::Button("(C)ONTINUE", ImVec2(fBtnWidth, fBtnHeight)) ||
+                        ImGui::IsKeyPressed(ImGuiKey_C))
+                    {
+                        bCloseThisPopup = true;
+                    }
+                }
+            } // end join/continue buttons
+            
+            ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+            if (ImGui::Button("(S)PECTATOR", ImVec2(fBtnWidth, fBtnHeight)) ||
+                ImGui::IsKeyPressed(ImGuiKey_S))
+            {
+                bCloseThisPopup = true;
+                hideGameObjectives();
+                if (!currentPlayer.isInSpectatorMode())
+                {
+                    bToggleSpectatorMode = true;
+                }
+            }
+            
+            if ((iTeamSelected != 0) || bToggleSpectatorMode)
             {
                 bCloseThisPopup = true;
 
-                // send pkt only if selected team is really different than what player already belongs to
-                if (currentPlayer.getTeamId() != proofps_dd::MsgUserInGameMenuCmd::getSelectedTeamId(pktUserInGameMenuCmd))
+                pge_network::PgePacket pktUserInGameMenuCmd;
+                // it is easier to early return here in case of initPkt() failure so we do it here!
+                if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::TeamSelect_SelectedTeamAction)))
                 {
-                    // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
-                    // their common interface which always points to the initialized instance, which is either client or server.
-                    // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023 (and Jan 2025 :)).
-                    m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
+                    getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                    assert(false);
+                    // remember: do not return, let the entire function finish as planned with EndPopup() and prev color reset stuff!
+                }
+                else
+                {
+                    if (iTeamSelected != 0)
+                    {
+                        // send team change pkt only if selected team is really different than what player already belongs to, or
+                        // if we are spectating because exiting spectator mode can be done only by selecting a team explicitly, and
+                        // in spectator mode it can obviously happen we select the same team we have already been in.
+                        if (currentPlayer.isInSpectatorMode() || (currentPlayer.getTeamId() != iTeamSelected))
+                        {
+                            // sending selected team id to server automatically exits spectator mode for this player
+                            proofps_dd::MsgUserInGameMenuCmd::setSelectedTeamId(pktUserInGameMenuCmd, iTeamSelected);
+                            // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
+                            // their common interface which always points to the initialized instance, which is either client or server.
+                            // Btw send() in case of server instance and server as target is implemented as an inject() as of May 2023 (and Jan 2025 :)).
+                            m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
+                        }
+                    }
+                    else /* bToggleSpectatorMode is true */
+                    {
+                        // entering spectator mode automatically makes this player exit from any team,
+                        // exiting spectator mode can be done with team selection only in team-based games, and anytime in non-team-based games.
+                        proofps_dd::MsgUserInGameMenuCmd::toggleSpectatorMode(pktUserInGameMenuCmd);
+                        m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
+                    }
                 }
                 hideGameObjectives();
             }

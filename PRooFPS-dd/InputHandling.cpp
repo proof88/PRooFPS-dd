@@ -576,18 +576,14 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_TAB))
+    {
+        m_gui.showAndLoopGameInfoPages();
+    }
+
     if (gameMode.isGameWon())
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-    }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_TAB))
-    {
-        // dont allow unassigned players to move away from frag table, simply because I want only frag table to be shown to them
-        if (!gameMode.isTeamBasedGame() || (player.getTeamId() != 0u))
-        {
-            m_gui.showAndLoopGameInfoPages();
-        }
     }
 
     const auto& playerConst = player;
@@ -598,21 +594,12 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     }
 
     // put this here so dead player i.e. waiting to respawn cannot change team during respawn countdown!
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_TEAMSELECTION))) &&
-        gameMode.isTeamBasedGame())
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_TEAMSELECTION))))
     {
         // avoid key function if we are in a differen in-game menu!
         if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
             (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect_SelectedTeamAction))
         {
-            if (playerConst.getTeamId() == 0u)
-            {
-                if (m_gui.getInGameMenuState() == GUI::InGameMenuState::TeamSelect_SelectedTeamAction)
-                {
-                    // we dont have spectator mode, so if unassigned player hides team selection menu, frag table shall be automatically visible
-                    m_gui.showGameObjectives();
-                }
-            }
             m_gui.showHideInGameTeamSelectMenu();
         }
     }

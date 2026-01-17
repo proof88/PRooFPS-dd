@@ -359,6 +359,11 @@ bool proofps_dd::GameMode::renamePlayer(const std::string& sOldName, const std::
     return false;
 }
 
+bool proofps_dd::GameMode::isPlayerAllowedForGameplay(const Player& player) const
+{
+    return !player.isInSpectatorMode();
+}
+
 void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
     pure.getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
@@ -612,9 +617,9 @@ bool proofps_dd::DeathMatchMode::isTeamBasedGame() const
     return false;
 }
 
-bool proofps_dd::DeathMatchMode::isPlayerAllowedForGameplay(const Player& /*player*/) const
+bool proofps_dd::DeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
 {
-    return true;
+    return GameMode::isPlayerAllowedForGameplay(player);
 }
 
 int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1deaths, int p2deaths)
@@ -725,7 +730,8 @@ bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
 
 bool proofps_dd::TeamDeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
 {
-    return player.getTeamId() != 0u;
+    return DeathMatchMode::isPlayerAllowedForGameplay(player) &&
+        (player.getTeamId() != 0u);
 }
 
 int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const

@@ -1337,13 +1337,20 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     getNetwork().getServer().send(newPktUserNameChange, connHandleServerSide);
                 }
 
-                pge_network::PgePacket pktPlayerEvent;
-                proofps_dd::MsgPlayerEventFromServer::initPkt(
-                    pktPlayerEvent,
-                    it.second.getServerSideConnectionHandle(),
-                    PlayerEventId::TeamIdChanged,
-                    static_cast<int>(it.second.getTeamId()));
-                getNetwork().getServer().send(pktPlayerEvent, connHandleServerSide);
+                bool bSentImplicitExitSpectatorMode = false;
+                if (GameMode::getGameMode()->isTeamBasedGame() &&
+                    /* do not send team id if spectating because it would implicitly toggle spectator mode */
+                    !it.second.isInSpectatorMode())
+                {
+                    bSentImplicitExitSpectatorMode = true;
+                    pge_network::PgePacket pktPlayerEventTeamSelect;
+                    proofps_dd::MsgPlayerEventFromServer::initPkt(
+                        pktPlayerEventTeamSelect,
+                        it.second.getServerSideConnectionHandle(),
+                        PlayerEventId::TeamIdChanged,
+                        static_cast<int>(it.second.getTeamId()));
+                    getNetwork().getServer().send(pktPlayerEventTeamSelect, connHandleServerSide);
+                }
 
                 // send item availability BEFORE MsgUserUpdateFromServer because latter has the up-to-date getCurrentInventoryItemPower()
                 if (it.second.hasJetLax())
@@ -1422,6 +1429,19 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     continue;
                 }
                 getNetwork().getServer().send(pktWpnUpdateCurrent, connHandleServerSide);
+
+                // by default spectator mode is enabled for players, send packet to toggle it
+                // if a player is not spectating
+                if (!it.second.isInSpectatorMode() && !bSentImplicitExitSpectatorMode)
+                {
+                    bSentImplicitExitSpectatorMode = true;
+                    pge_network::PgePacket pktPlayerEventToggleSpectator;
+                    proofps_dd::MsgPlayerEventFromServer::initPkt(
+                        pktPlayerEventToggleSpectator,
+                        it.second.getServerSideConnectionHandle(),
+                        PlayerEventId::ToggledSpectatorMode);
+                    getNetwork().getServer().sendToAllClientsExcept(pktPlayerEventToggleSpectator);
+                }
             }
 
             // we also send the state of all map items

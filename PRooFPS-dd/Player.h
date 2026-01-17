@@ -39,6 +39,7 @@ namespace proofps_dd
         InventoryItemToggle,
         JumppadActivated,
         TeamIdChanged,
+        ToggledSpectatorMode,
         ExplosionMultiKill /* not for a specific player, but felt convenient to put here */
     };
 
@@ -182,6 +183,7 @@ namespace proofps_dd
         void setName(const std::string& sName);
 
         bool& isInSpectatorMode();
+        const bool& isInSpectatorMode() const;
         CameraSpectatingMode& getCameraSpectatingMode();
 
         void updateAudioVisuals(
@@ -380,6 +382,7 @@ namespace proofps_dd
             const int& nAmmoIncrease);
         void handleJumppadActivated();
         void handleTeamIdChanged(const unsigned int& iTeamId);
+        void handleToggleSpectatorMode();
 
     private:
 

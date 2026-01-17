@@ -372,6 +372,11 @@ bool& proofps_dd::Player::isInSpectatorMode()
     return m_bSpectatorMode;
 }
 
+const bool& proofps_dd::Player::isInSpectatorMode() const
+{
+    return m_bSpectatorMode;
+}
+
 proofps_dd::Player::CameraSpectatingMode& proofps_dd::Player::getCameraSpectatingMode()
 {
     return m_cameraSpectatingMode;
@@ -2666,6 +2671,33 @@ void proofps_dd::Player::handleTeamIdChanged(const unsigned int& iTeamId)
         getServerSideConnectionHandle(),
         PlayerEventId::TeamIdChanged,
         static_cast<int>(iTeamId));
+    m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
+}
+
+void proofps_dd::Player::handleToggleSpectatorMode()
+{
+    // both server and client execute this function, so be careful with conditions here
+
+    // server invoked this func from PlayerHandling::serverHandleUserInGameMenuCmd(),
+    // clients will invoke it from PlayerHandling::handlePlayerEventFromServer() which is sent by server at the end of this function!
+
+    // entering spectator mode shall not ditch already selected team, we keep that info, so that
+    // when player already has a team and exits spectator mode, it won't be detected as a team change in game logic.
+
+    isInSpectatorMode() = !isInSpectatorMode();
+
+    getConsole().EOLn("Player::%s(): connHandleServerSide: %u, prev: %d, new: %d!", __func__, getServerSideConnectionHandle(), !isInSpectatorMode(), isInSpectatorMode());
+
+    if (!m_network.isServer())
+    {
+        return;
+    }
+
+    pge_network::PgePacket pktPlayerEvent;
+    proofps_dd::MsgPlayerEventFromServer::initPkt(
+        pktPlayerEvent,
+        getServerSideConnectionHandle(),
+        PlayerEventId::ToggledSpectatorMode);
     m_network.getServer().sendToAllClientsExcept(pktPlayerEvent);
 }
 

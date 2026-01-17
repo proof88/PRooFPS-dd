@@ -210,9 +210,10 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     durations.m_nUpdateRespawnTimersDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 } // serverUpdateRespawnTimers()
 
-void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
+void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode(
     Player& player,
     const unsigned int& iTeamId,
+    const bool& bToggledSpectatorMode,
     const proofps_dd::Config& config,
     PGEcfgProfiles& cfgProfiles)
 {
@@ -220,11 +221,80 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChanged(
 
     assert(m_gui.getXHair());
 
+    if (bToggledSpectatorMode)
+    {
+        assert(iTeamId == 0); // toggling spectator mode can never come with valid team id
+        if (iTeamId != 0)
+        {
+            getConsole().EOLn(
+                "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, toggled spectator mode but with sent valid team id: %u!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iTeamId);
+            return;
+        }
+
+        player.handleToggleSpectatorMode();
+
+        getConsole().EOLn(
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, %s spectator mode by explicit toggling.",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), (player.isInSpectatorMode() ? "entered" : "exited"));
+        
+        if (!player.isInSpectatorMode())
+        {
+            // exiting spectator mode in team based game is possible only by explicit team selection!
+            assert(!GameMode::getGameMode()->isTeamBasedGame());
+            if (GameMode::getGameMode()->isTeamBasedGame())
+            {
+                getConsole().EOLn(
+                    "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, trying exiting spectator mode without sent team id in a team-based game!",
+                    __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+                return;
+            }
+
+            if (m_pge.getNetwork().isServer())
+            {
+                getConsole().EOLn(
+                    "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, respawning player due to exited spectator mode.",
+                    __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+                if (!cfgProfiles.getVars()["testing"].getAsBool())
+                {
+                    serverRespawnPlayer(player, false, config);
+                }
+            }
+        }
+        return;
+    }
+    
+    assert(GameMode::getGameMode()->isTeamBasedGame());
+    if (!GameMode::getGameMode()->isTeamBasedGame())
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, no-toggle spectator mode in a non-team-based game!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+        return;
+    }
+
+    // message shall contain valid team id if we are in team-based game and not entering spectator mode
+    assert(iTeamId != 0);
+    if (iTeamId == 0)
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, team-based game, not toggling spectator mode, no valid team id received!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+        return;
+    }
+
+    // in team game, selecting a team implicitly exits spectator mode
+    player.isInSpectatorMode() = false;
+
     const auto iPrevTeamId = player.getTeamId();
 
     // need to trigger updating player teamId here because that is needed for serverRespawnPlayer() to work properly
     player.handleTeamIdChanged(iTeamId);
     player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
+
+    getConsole().EOLn(
+        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, exited spectator mode by selecting team %u!",
+        __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iTeamId);
 
     if (m_pge.getNetwork().isServer())
     {
@@ -1208,7 +1278,12 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         player.handleJumppadActivated();
         break;
     case PlayerEventId::TeamIdChanged:
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
+        handlePlayerTeamIdChangedOrToggledSpectatorMode(
+            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles);
+        break;
+    case PlayerEventId::ToggledSpectatorMode:
+        handlePlayerTeamIdChangedOrToggledSpectatorMode(
+            player, 0u /* iTeamId, dontcare */, true /* bToggledSpectatorMode */, config, cfgProfiles);
         break;
     case PlayerEventId::ExplosionMultiKill:
         handleExplosionMultiKill(msg.m_optData1.m_nValue);
@@ -1244,7 +1319,8 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     switch (msg.m_iInGameMenu)
     {
     case static_cast<int>(GUI::InGameMenuState::TeamSelect_SelectedTeamAction):
-        handlePlayerTeamIdChanged(player, static_cast<unsigned int>(msg.m_optData1.m_nValue), config, cfgProfiles);
+        handlePlayerTeamIdChangedOrToggledSpectatorMode(
+            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
@@ -1277,7 +1353,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
 
         if (GameMode::getGameMode()->isGameWon())
         {
-            player.getObject3D()->Hide();
+            player.getObject3D()->Hide();  // TODO: why not player.hide() ? weapon stays visible???
             player.forceDeactivateCurrentInventoryItem();
             continue;
         }

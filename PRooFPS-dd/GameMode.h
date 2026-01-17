@@ -292,7 +292,7 @@ namespace proofps_dd
         * 
         * @return True if player is ready for gameplay in the current game mode, false otherwise.
         */
-        virtual bool isPlayerAllowedForGameplay(const Player& player) const = 0;
+        virtual bool isPlayerAllowedForGameplay(const Player& player) const;
 
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 

@@ -1123,12 +1123,26 @@ namespace proofps_dd
             msgUserInGameMenuCmd.m_optData1 = static_cast<int>(iTeamId);
         }
 
+        static bool isTogglingSpectatorMode(const pge_network::PgePacket& pkt)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            const proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<const proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            return msgUserInGameMenuCmd.m_optData2.m_bValue;
+        }
+
+        static void toggleSpectatorMode(pge_network::PgePacket& pkt)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            msgUserInGameMenuCmd.m_optData2 = static_cast<bool>(true);
+        }
+
         // idea is similar to as how MsgPlayerEventFromServer works
         int m_iInGameMenu; // see GUI::InGameMenuState
 
         // meaning of these members is determined by m_iInGameMenu
-        MsgPlayerEventFromServer::UOptionalData m_optData1;
-        MsgPlayerEventFromServer::UOptionalData m_optData2;
+        MsgPlayerEventFromServer::UOptionalData m_optData1; // TeamSelect: team id
+        MsgPlayerEventFromServer::UOptionalData m_optData2; // TeamSelect: toggle spectator mode
         MsgPlayerEventFromServer::UOptionalData m_optData3;
     }; // MsgUserInGameMenuCmd
     static_assert(std::is_trivial_v<MsgUserInGameMenuCmd>);
