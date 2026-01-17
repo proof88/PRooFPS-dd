@@ -82,7 +82,7 @@ Using this technique you can even continuously bounce yourself upwards between 2
 
  - **E:** toggle/use current inventory item;
  - **TAB:** show frag table, server config, client live network data;
- - **M:** select team (only in team-based game modes);
+ - **M:** enter spectator mode or select team;
  - **H:** server admin menu (restart game, switch to next map based on mapcycle.txt, etc.);
  - **ENTER/RETURN:** if `testing=true` CVAR is defined, it makes a dump of testing data into `RegTestDumpServer.txt` or `RegTestDumpClient.txt`;
  - **T**: if instance is server, it respawns the player to a random spawnpoint and dumps debug data to console window.
