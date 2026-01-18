@@ -371,6 +371,7 @@ private:
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
+        b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
 
@@ -389,6 +390,7 @@ private:
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
         b &= assertEquals(0, gm->getWinTime().time_since_epoch().count(), "win time is epoch");
         b &= assertFalse(gm->isGameWon(), "game not won");
+        b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
     
@@ -647,10 +649,17 @@ private:
 
         std::set<unsigned int> setRemainingSecs = { 0, 1 };
         int iSleep = 0;
+        bool bPrevWonState = false;
         while ((iSleep++ < 5) && !sgm.serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             setRemainingSecs.erase(static_cast<unsigned int>(std::floor(sgm.getTimeRemainingMillisecs() / 1000.f)));
+
+            if (!bPrevWonState && sgm.isGameWon())
+            {
+                b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
+            }
+            bPrevWonState = sgm.isGameWon();
         }
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - sgm.getResetTime());
         b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time");
@@ -680,16 +689,19 @@ private:
 
         bool b = assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertFalse(sgm.isGameWon(), "winning state 1");
+        b &= assertFalse(sgm.wasGameWonAlreadyInPreviousTick(), "game not won previous tick 1");
 
         sgm.clientReceiveAndUpdateWinningConditions(m_network, true);
 
         b &= assertLess(0, sgm.getWinTime().time_since_epoch().count(), "win time 2");
         b &= assertTrue(sgm.isGameWon(), "winning state 2");
+        b &= assertFalse(sgm.wasGameWonAlreadyInPreviousTick(), "game not won previous tick 2");
 
         sgm.clientReceiveAndUpdateWinningConditions(m_network, false);
 
         b &= assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 3");
         b &= assertFalse(sgm.isGameWon(), "winning state 3");
+        b &= assertFalse(sgm.wasGameWonAlreadyInPreviousTick(), "game not won previous tick 3");
 
         return b;
     }
@@ -1289,6 +1301,7 @@ private:
                 // game won, win time is already updated by updatePlayer() even before explicit call to serverCheckAndUpdateWinningConditions();
                 // this is known only by server, client needs to be informed by server
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time fail");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning server");
                 b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
@@ -1362,6 +1375,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game not won");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick");
                 b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning");
                 b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
             }
@@ -1466,6 +1480,7 @@ private:
             {
                 // even though winner player is removed, winning condition stays true, win time is still valid, an explicit reset() would be needed to clear them!
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning");
             }
@@ -1536,6 +1551,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
                 b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
@@ -1577,6 +1593,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
+                b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
                 b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
                 b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
@@ -1671,6 +1688,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
                 b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
@@ -1712,6 +1730,7 @@ private:
             if (bTestingAsServer)
             {
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
+                b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
                 b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
                 b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
@@ -1857,11 +1876,18 @@ private:
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
 
+        bool bPrevWonState = false;
         unsigned int i = 0;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
+
+            if (!bPrevWonState && gm->isGameWon())
+            {
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
+            }
+            bPrevWonState = gm->isGameWon();
         }
 
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
@@ -1977,10 +2003,17 @@ private:
         // time limit elapse also means winning even if frag limit not reached
         std::set<unsigned int> setRemainingSecs = { 0, 1 };
         int iSleep = 0;
+        bool bPrevWonState = false;
         while ((iSleep++ < 5) && !gm->serverCheckAndUpdateWinningConditions(m_network))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             setRemainingSecs.erase(static_cast<unsigned int>(std::floor(gm->getTimeRemainingMillisecs() / 1000.f)));
+
+            if (!bPrevWonState && gm->isGameWon())
+            {
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
+            }
+            bPrevWonState = gm->isGameWon();
         }
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 1");
         const auto durationSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - gm->getResetTime());
@@ -2020,16 +2053,24 @@ private:
         }
 
         b &= assertFalseEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
+        b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
         b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 2");
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
 
         unsigned int i = 0;
+        bPrevWonState = false;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
+
+            if (!bPrevWonState && gm->isGameWon())
+            {
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 3");
+            }
+            bPrevWonState = gm->isGameWon();
         }
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 3");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time 3");
@@ -2094,6 +2135,10 @@ private:
 
         bool b = true;
 
+        // spectating not allowed
+        b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 0");
+        player1.isInSpectatorMode() = false;
+        
         // DM mode just dont care about team id
         b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 1");
 
@@ -2191,10 +2236,17 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 2");
 
         unsigned int i = 0;
+        bool bPrevWonState = false;
         while (!gm->serverCheckAndUpdateWinningConditions(m_network) && (i++ < 5))
         {
             player1.getFrags()++;
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player");
+
+            if (!bPrevWonState && gm->isGameWon())
+            {
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick");
+            }
+            bPrevWonState = gm->isGameWon();
         }
 
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 3");  // team 0 always 0 summed frags
@@ -2321,6 +2373,9 @@ private:
         player1.getTeamId() = 0;
 
         bool b = true;
+
+        b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 0");
+        player1.isInSpectatorMode() = false;
 
         b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 1");
 

@@ -784,12 +784,15 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedClientOnlyOneTick(
     * This function is executed every tick.
     * Since this is executed by client, we dont care about physics-related concerns explained in comments in mainLoopConnectedServerOnlyOneTick(). 
     */
+    GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
+
     const unsigned int nPhysicsIterationsPerTick = std::max(1u, m_config.getPhysicsRate() / m_config.getTickRate());
     for (unsigned int iPhyIter = 1; iPhyIter <= nPhysicsIterationsPerTick; iPhyIter++)
     {
         clientUpdateBullets(m_config.getPhysicsRate());
-        clientUpdateExplosions(*GameMode::getGameMode(), m_config.getPhysicsRate());
-        updateSmokes(*GameMode::getGameMode(), m_config.getPhysicsRate());
+        clientUpdateExplosions(*gm, m_config.getPhysicsRate());
+        updateSmokes(*gm, m_config.getPhysicsRate());
     }
 }
 
@@ -861,6 +864,13 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     updateAudioVisualsForGameModeShared();
     m_maps.update(m_fps, *player.getObject3D());
     m_maps.updateVisibilitiesForRenderer();
+
+    GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
+    if (!getNetwork().isServer())
+    {
+        gm->clientTickUpdateWinningConditions();
+    }
 }
 
 /**
@@ -984,10 +994,14 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
     // both server and client instances execute this
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    static bool bGameWonStateInPrevFrame = false;
-    const bool bGameWonStateThisFrame = GameMode::getGameMode()->isGameWon();
-    if (!bGameWonStateInPrevFrame && bGameWonStateThisFrame)
+    GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
+
+    if (GameMode::getGameMode()->hasJustBeenWonThisTick())
     {
+        // come here only once
+        //getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
+
         if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndEndgameMusicHandle))
         {
             m_sounds.m_sndEndgameMusicHandle = getAudio().playSound(m_sounds.m_sndEndgameMusic);
@@ -1003,7 +1017,7 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
         }
     }
 
-    if (bGameWonStateThisFrame)
+    if (gm->isGameWon())
     {
         if (getNetwork().isServer())
         {
@@ -1014,8 +1028,6 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
             }
         }
     }
-
-    bGameWonStateInPrevFrame = bGameWonStateThisFrame;
 
     m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }

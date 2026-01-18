@@ -277,6 +277,7 @@ bool proofps_dd::GameMode::serverCheckAndUpdateWinningConditions(pge_network::Pg
 {
     assert(network.isServer());
 
+    m_bWonPrevious = m_bWon;
     if (m_bWon)
     {
         // once it is won, it stays won until next restart()
@@ -301,6 +302,11 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
 
     //getConsole().EOLn("GameMode::%s(): client received new win state: %b!", __func__, bGameSessionWon);
 
+    if (bGameSessionWon)
+    {
+        // this way hasJustBeenWonThisTick() will correctly work for clients connecting to an already won game
+        m_bWonPrevious = false;
+    }
     m_bWon = bGameSessionWon;
     if (m_bWon)
     {
@@ -312,9 +318,24 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
     }
 }
 
+void proofps_dd::GameMode::clientTickUpdateWinningConditions()
+{
+    m_bWonPrevious = m_bWon;
+}
+
 bool proofps_dd::GameMode::isGameWon() const
 {
     return m_bWon;
+}
+
+bool proofps_dd::GameMode::wasGameWonAlreadyInPreviousTick() const
+{
+    return m_bWonPrevious;
+}
+
+bool proofps_dd::GameMode::hasJustBeenWonThisTick() const
+{
+    return !m_bWonPrevious && m_bWon;
 }
 
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::GameMode::getWinTime() const

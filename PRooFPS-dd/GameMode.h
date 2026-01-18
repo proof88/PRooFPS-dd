@@ -188,12 +188,15 @@ namespace proofps_dd
 
         /**
         * Evaluates conditions to see if game is won or not.
+        * Shall be invoked regularly (per tick or per frame) at the beginning of server tick or frame loop
+        * so hasJustBeenWonThisTick() can work properly.
         * 
         * This class checks elapsed game session time against time limit, if any set.
         * Derived class shall extend this function by overriding and calling this parent implementation from the specialized implementation.
         * 
         * A game shall not be won without any players, so at least 1 player needs to be present to win any game.
-        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart().
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart() or
+        * restartWithoutRemovingPlayers().
         * 
         * This function is for server instance only.
         * It also sends out MsgGameSessionStateFromServer to all clients in case game session state is changed as a result of the call.
@@ -214,11 +217,47 @@ namespace proofps_dd
         void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon);
 
         /**
+        * Shall be invoked regularly (per tick or per frame) at the end of client tick or frame loop so
+        * hasJustBeenWonThisTick() can work properly.
+        * 
+        * This function is for client instance only.
+        * 
+        */
+        void clientTickUpdateWinningConditions();
+
+        /**
         * Returns the current game session win state i.e. game goal is reached or not.
+        * 
+        * Note that once a game is won, it stays won even if all players are removed, until explicit call to restart() or
+        * restartWithoutRemovingPlayers(). 
         * 
         * @return True if current game session is won (goal reached), false otherwise.
         */
         bool isGameWon() const;
+
+        /**
+        * Returns if the current game session was already won in the previous tick.
+        * The idea is the following:
+        *  - server shall invoke serverCheckAndUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientTickUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientReceiveAndUpdateWinningConditions() when it receives MsgGameSessionStateFromServer
+        *    from the server.
+        *
+        * @return True if current game session was won (goal reached) in the previous tick, false otherwise.
+        */
+        bool wasGameWonAlreadyInPreviousTick() const;
+
+        /**
+        * Returns if the current game session has been just detected as won in this tick i.e. it was not yet won in
+        * the previous tick (wasGameWonAlreadyInPreviousTick() returns false) but now is won in the current tick (isGameWon() returns true).
+        * 
+        * This function is the recommended way for both server and client instances to check for and handle the change
+        * of winning state.
+        * 
+        * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
+        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientUpdateWinningConditions().
+        */
+        bool hasJustBeenWonThisTick() const;
         
         /**
         * @return Timestamp of moment when current game was won by a player. It is Epoch time 0 if the game is not yet won.
@@ -301,6 +340,7 @@ namespace proofps_dd
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<PlayersTableRow> m_players;
         bool m_bWon{ false };
+        bool m_bWonPrevious{ false };
         GameModeType m_gameModeType;
 
         GameMode(GameModeType gm);
