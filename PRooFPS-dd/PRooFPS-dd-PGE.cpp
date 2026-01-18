@@ -1148,9 +1148,15 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
     assert(GameMode::getGameMode());
     GameMode::getGameMode()->clientReceiveAndUpdateWinningConditions(getNetwork(), msg.m_bGameSessionEnd);
 
-    // Note: although clients stop endgame music here, starting the music is in common code in updateAudioVisualsForGameModeShared()
-    if (!msg.m_bGameSessionEnd)
+    if (msg.m_bGameSessionEnd)
     {
+        // just in case a client has just joined the server where game is already ended, do not show team selection even
+        // if it was shown automatically in some previous frames as supposed to be by default
+        m_gui.hideInGameMenu();
+    }
+    else
+    {
+        // Note: although clients stop endgame music here, starting the music is in common code in updateAudioVisualsForGameModeShared()
         getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle);
         // !!! BADDESIGN !!!
         // GUI should be invoked in GameMode's restartWithoutRemovingPlayers(), however I cannot include GUI.h in GameMode now ...
@@ -1286,7 +1292,10 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         m_gui.getXHair()->showInCenter();
         m_gui.getMinimap()->show();
         m_gui.hideGameObjectives(); // just in case it would had stuck from a previous game session
-        m_gui.showMandatoryGameModeConfigMenu();
+        if (!GameMode::getGameMode()->isGameWon())
+        {
+            m_gui.showMandatoryGameModeConfigMenu();
+        }
         
         getAudio().playSound(m_sounds.m_sndLetsgo);
     }

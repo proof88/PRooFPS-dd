@@ -418,7 +418,6 @@ void proofps_dd::GUI::showInGameTeamSelectMenu()
 
 void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
 {
-    assert(GameMode::getGameMode());
     showInGameTeamSelectMenu();
 }
 
