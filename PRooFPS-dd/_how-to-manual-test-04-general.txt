@@ -35,3 +35,11 @@
      - check if all spectating camera modes are working properly:
        - free camera control spectating mode,
        - player follow camera spectating mode.
+
+ 
+   - Make the game won somehow (e.g. 10 sec time limit) while the 2 clients are also connected, so for all 3 instances the end-game results are shown.
+     Disconnect the 2 clients, then reconnect them to the server while still the end-game results are shown.
+     Expectation: again the end-game results are shown for the reconnected clients.
+
+   - Now disconnect the 2 clients, stop the server session and start a new server with a different game mode.
+     Repeat the previous test, expectation is the same.
