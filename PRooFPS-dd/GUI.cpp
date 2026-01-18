@@ -1419,6 +1419,8 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
 
         assert(GameMode::getGameMode());
         GameMode::getGameMode()->fetchConfig(m_pPge->getConfigProfiles(), m_pPge->getNetwork());
+        // we do a restart now to clear any possible remaining stuff from a previous session
+        GameMode::getGameMode()->restart(m_pPge->getNetwork());
 
         if (m_pMaps->serverDecideFirstMapAndUpdateNextMapToBeLoaded().empty())
         {            
