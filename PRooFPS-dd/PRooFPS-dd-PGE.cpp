@@ -998,8 +998,7 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
         m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)
         {
-            playerPair.second.getObject3D()->Hide();
-            playerPair.second.getWeaponManager().getCurrentWeapon()->getObject3D().Hide();
+            playerPair.second.hide();
             playerPair.second.forceDeactivateCurrentInventoryItem();
         }
     }

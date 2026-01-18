@@ -1364,7 +1364,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
 
         if (GameMode::getGameMode()->isGameWon())
         {
-            player.getObject3D()->Hide();  // TODO: why not player.hide() ? weapon stays visible???
+            player.hide();
             player.forceDeactivateCurrentInventoryItem();
             continue;
         }
