@@ -327,7 +327,7 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
-        static void drawInGameTeamSelectMenu(
+        static void drawInGameWelcomeTeamSelectSpectatorMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
         static void drawInGameServerAdminMenu();
         static void drawInGameMenu(

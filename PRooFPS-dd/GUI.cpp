@@ -2087,7 +2087,7 @@ void proofps_dd::GUI::drawWindowForMainMenu()
 * @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
 *                        For example, when we have just connected to the server and it not yet sent all player bringup messages to us.
 */
-void proofps_dd::GUI::drawInGameTeamSelectMenu(
+void proofps_dd::GUI::drawInGameWelcomeTeamSelectSpectatorMenu(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
     assert(m_pPge);
@@ -2305,7 +2305,7 @@ void proofps_dd::GUI::drawInGameTeamSelectMenu(
     } // BeginPopupModal()
 
     style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
-} // drawInGameTeamSelectMenu()
+} // drawInGameWelcomeTeamSelectSpectatorMenu()
 
 void proofps_dd::GUI::drawInGameServerAdminMenu()
 {
@@ -2421,7 +2421,7 @@ void proofps_dd::GUI::drawInGameMenu(
     {
     case InGameMenuState::Welcome_TeamSelect_Spectator:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
-        drawInGameTeamSelectMenu(itCurrentPlayer);
+        drawInGameWelcomeTeamSelectSpectatorMenu(itCurrentPlayer);
         ImGui::PopFont();
         break;
     case InGameMenuState::ServerAdmin:
