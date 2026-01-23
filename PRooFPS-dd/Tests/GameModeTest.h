@@ -48,7 +48,7 @@ public:
         // this is just a very dumb implementation to have minimal add behavior for test_rename_player()
         m_players.push_back(
             proofps_dd::PlayersTableRow{
-                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.getFrags(), player.getDeaths() });
+                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.isInSpectatorMode(), player.getFrags(), player.getDeaths() });
 
         return true;
     }
@@ -142,10 +142,13 @@ protected:
         addSubTest("test_deathmatch_restart_without_removing_players", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_restart_without_removing_players));
         addSubTest("test_deathmatch_winning_cond_defaults_to_false", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_defaults_to_false));
         addSubTest("test_deathmatch_winning_cond_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_frag_limit));
+        addSubTest("test_deathmatch_does_count_frags_with_spectating", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_does_count_frags_with_spectating));
         addSubTest("test_deathmatch_winning_cond_time_and_frag_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_winning_cond_time_and_frag_limit));
         addSubTest("test_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_is_player_allowed_for_gameplay));
         addSubTest("test_team_deathmatch_get_team_color", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_get_team_color));
-        addSubTest("test_team_deathmatch_does_not_count_frags_with_zero_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id));
+        addSubTest(
+            "test_team_deathmatch_does_not_count_frags_with_zero_team_id_or_spectating",
+            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_count_frags_with_zero_team_id_or_spectating));
         addSubTest("test_team_deathmatch_does_not_allow_any_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_does_not_allow_any_team_id));
         addSubTest("test_team_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_is_player_allowed_for_gameplay));
     }
@@ -244,6 +247,7 @@ private:
                 b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Name in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_connHandle, itFragTable->m_connHandle, ("ConnHandle in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_iTeamId, itFragTable->m_iTeamId, ("Team in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_bSpectating, itFragTable->m_bSpectating, ("Spectating in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nFrags, itFragTable->m_nFrags, ("Frags in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Deaths in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nSuicides, itFragTable->m_nSuicides, ("Suicides in row " + std::to_string(i) + " " + sLogText).c_str());
@@ -373,6 +377,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
+        b &= assertEquals(0u, gm->getSpectatingPlayersCount(), "spectating players count");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
 
         return b;
@@ -392,6 +397,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
+        b &= assertEquals(0u, gm->getSpectatingPlayersCount(), "spectating players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
     
         return b;
@@ -463,6 +469,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 2;
             player1.getDeaths() = 0;
+            //player1.isInSpectatorMode() = false; // we keep Adam in spectating, as spectating shall not influence rename (and grouping is not task of GameMode)!
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -471,6 +478,7 @@ private:
             player2.setName("Apple");
             player2.getFrags() = 1;
             player2.getDeaths() = 0;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -479,6 +487,7 @@ private:
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -487,6 +496,7 @@ private:
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             // because SpecialGameMode::addPlayer() is DUMB, do not modify the order of adding players in this test!
             b &= assertTrue(sgm.addPlayer(player1, m_network), (std::string("add player 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
@@ -505,10 +515,10 @@ private:
 
             // because SpecialGameMode::addPlayer() is DUMB, do not modify the order of adding players in this test!
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, 2, 0},
-                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, 1, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, 0, 0 }
+                { /*"Adam"*/ "Peter", player1.getServerSideConnectionHandle(), 0 /* iTeamId*/, player1.isInSpectatorMode(), 2, 0},
+                { "Apple", player2.getServerSideConnectionHandle(), 0 /* iTeamId*/, player2.isInSpectatorMode(), 1, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 0 /* iTeamId*/, player3.isInSpectatorMode(), 0, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 0 /* iTeamId*/, player4.isInSpectatorMode(), 0, 0 }
             };
 
             b &= assertFragTableEquals(expectedPlayers, sgm.getPlayersTable(), std::string("table fail, testing as ") + (bTestingAsServer ? "server" : "client"));
@@ -839,6 +849,7 @@ private:
             player1.getFrags() = 0;
             player1.getDeaths() = 0;
             player1.getTeamId() = 1;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -848,6 +859,7 @@ private:
             player2.getFrags() = 0;
             player2.getDeaths() = 0;
             player2.getTeamId() = 2;
+            //player2.isInSpectatorMode() = false; // we keep Apple in spectating, as spectating shall not influence order (and grouping is not task of GameMode)!
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -857,6 +869,7 @@ private:
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
             player3.getTeamId() = 1;
+            player3.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -866,6 +879,7 @@ private:
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
             player4.getTeamId() = 2;
+            player4.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
@@ -873,10 +887,10 @@ private:
             b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 },
-                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, player1.isInSpectatorMode(), 0, 0},
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, player2.isInSpectatorMode(), 0, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, player3.isInSpectatorMode(), 0, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, player4.isInSpectatorMode(), 0, 0 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -932,6 +946,7 @@ private:
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
             player1.getTeamId() = 1;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -941,6 +956,7 @@ private:
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
             player2.getTeamId() = 2;
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -950,6 +966,7 @@ private:
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
             player3.getTeamId() = 1;
+            //player3.isInSpectatorMode() = false; // we keep Joe in spectating, as spectating shall not influence order (and grouping is not task of GameMode)!
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -959,6 +976,7 @@ private:
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
             player4.getTeamId() = 2;
+            player4.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail");
@@ -966,10 +984,10 @@ private:
             b &= assertTrueEz(gm->addPlayer(player4, m_network), gamemode, bTestingAsServer, "add player 4 fail");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, player1.isInSpectatorMode(), 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, player2.isInSpectatorMode(), 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, player3.isInSpectatorMode(), 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, player4.isInSpectatorMode(), 5, 2 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -1025,6 +1043,7 @@ private:
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
             player1.getTeamId() = 1;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1034,6 +1053,7 @@ private:
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
             player2.getTeamId() = 2;
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1043,6 +1063,7 @@ private:
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
             player3.getTeamId() = 1;
+            player3.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1052,6 +1073,7 @@ private:
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
             player4.getTeamId() = 2;
+            player4.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1");
             b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2");
@@ -1064,13 +1086,19 @@ private:
             b &= assertFalseEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 again");
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers = {
-                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
-                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, 8, 0 },
-                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, 8, 2 },
-                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 }
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, player1.isInSpectatorMode(), 10, 0 },
+                { "Banana", player4.getServerSideConnectionHandle(), 2 /* iTeamId*/, player2.isInSpectatorMode(), 8, 0 },
+                { "Joe", player3.getServerSideConnectionHandle(), 1 /* iTeamId*/, player3.isInSpectatorMode(), 8, 2 },
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, player4.isInSpectatorMode(), 5, 2 }
             };
 
             b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
+
+            // spectator mode shall not have influence on this either
+            player3.isInSpectatorMode() = !player3.isInSpectatorMode();
+            b &= assertFalseEz(gm->addPlayer(player3, m_network), gamemode, bTestingAsServer, "add player 3 again 2");
+
+            b &= assertFragTableEqualsEz(expectedPlayers, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail 2");
         }
 
         return b;
@@ -1116,6 +1144,7 @@ private:
         player1.getFrags() = 10;
         player1.getDeaths() = 0;
         player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1125,6 +1154,7 @@ private:
         player2.getFrags() = 5;
         player2.getDeaths() = 2;
         player1.getTeamId() = 2; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 fail");
 
@@ -1239,6 +1269,7 @@ private:
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
             playerAdam.getTeamId() = 1;
+            playerAdam.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player playerApple(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1248,6 +1279,7 @@ private:
             playerApple.getFrags() = 5;
             playerApple.getDeaths() = 2;
             playerApple.getTeamId() = 2;
+            playerApple.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player playerJoe(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1257,6 +1289,7 @@ private:
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
             playerJoe.getTeamId() = 1;
+            playerJoe.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail");
             b &= assertTrueEz(gm->addPlayer(playerApple, m_network), gamemode, bTestingAsServer, "add player Apple fail");
@@ -1266,9 +1299,9 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 1 fail");
             // since Joe got same number of frags _later_ than Apple, Joe must stay behind Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers1 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 2 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 2 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, playerApple.isInSpectatorMode(), 5, 2 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerJoe.isInSpectatorMode(), 5, 2 }
             };
             assertFragTableEqualsEz(expectedPlayers1, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 1 fail");
 
@@ -1276,9 +1309,9 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerApple, m_network), gamemode, bTestingAsServer, "update player Apple 1 fail");
             // since Apple now has more deaths than Joe, it must goe behind Joe
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 2 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerJoe.isInSpectatorMode(), 5, 2 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, playerApple.isInSpectatorMode(), 5, 3 }
             };
             assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
@@ -1286,9 +1319,9 @@ private:
             b &= assertTrueEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 2 fail");
             // since Joe got same number of frags _earlier_ than Apple, and got same number for deaths _later_ than Apple, it must stay in front of Apple
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 },
-                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, 5, 3 },
-                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, 5, 3 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 },
+                { "Joe", playerJoe.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerJoe.isInSpectatorMode(), 5, 3 },
+                { "Apple", playerApple.getServerSideConnectionHandle(), 2 /* iTeamId*/, playerApple.isInSpectatorMode(), 5, 3 }
             };
             assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 3 fail");
 
@@ -1369,6 +1402,7 @@ private:
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
+            playerAdam.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertFalse(dm->updatePlayer(playerAdam, m_network), "update player Adam 1 fail");
 
@@ -1392,9 +1426,10 @@ private:
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
+            playerJoe.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
             b &= assertFalseEz(gm->updatePlayer(playerJoe, m_network), gamemode, bTestingAsServer, "update player Joe 1 fail");
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, 10, 0 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 0 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 }
             };
             b &= assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
@@ -1450,6 +1485,7 @@ private:
             playerAdam.getFrags() = dm->getFragLimit();
             playerAdam.getDeaths() = 0;
             playerAdam.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            playerAdam.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertFalseEz(gm->removePlayer(playerAdam), gamemode, bTestingAsServer, "removep player Adam 1 fail");
 
@@ -1467,9 +1503,10 @@ private:
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
             playerJoe.getTeamId() = 2; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            playerJoe.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
             b &= assertFalseEz(gm->removePlayer(playerJoe), gamemode, bTestingAsServer, "remove player Joe 1 fail");
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, 10, 0 }
+                { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 }
             };
             b &= assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 2 fail");
 
@@ -1537,6 +1574,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1545,6 +1583,7 @@ private:
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail");
 
@@ -1665,6 +1704,7 @@ private:
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
             player1.setName("Adam");
             player1.getTeamId() = 1;
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
             player1.getSuicides() = 0;
@@ -1677,6 +1717,7 @@ private:
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
             player2.setName("Apple");
             player2.getTeamId() = 2;
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
             player2.getSuicides() = 1;
@@ -1751,8 +1792,8 @@ private:
             }
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayersStillThereWithResetStats = {
-                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 /* and rest are zeroed too */},
-                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 /* and rest are zeroed too */}
+                { "Adam", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, true /* must spectate after restart */, 0, 0 /* and rest are zeroed too */},
+                { "Apple", player2.getServerSideConnectionHandle(), 2 /* iTeamId*/, true /* must spectate after restart */, 0, 0 /* and rest are zeroed too */}
             };
 
             b &= assertFragTableEqualsEz(expectedPlayersStillThereWithResetStats, gm->getPlayersTable(), gamemode, bTestingAsServer, "table fail");
@@ -1806,7 +1847,7 @@ private:
         return b;
     }
 
-    bool test_deathmatch_winning_cond_frag_limit(const proofps_dd::GameModeType& gamemode)
+    bool test_deathmatch_winning_cond_frag_limit(const proofps_dd::GameModeType& gamemode, bool playersSpectating)
     {
         // server-only test
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
@@ -1863,6 +1904,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 1;
+        player1.isInSpectatorMode() = playersSpectating;
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1872,6 +1914,7 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
         player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+        player2.isInSpectatorMode() = playersSpectating;
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -1918,12 +1961,32 @@ private:
         for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
             b &= assertTrue(
-                test_deathmatch_winning_cond_frag_limit(gamemode),
+                test_deathmatch_winning_cond_frag_limit(gamemode, false /* players spectating state */),
                 proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
             // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
             tearDown();
         }
+        return b;
+    }
+
+    bool test_deathmatch_does_count_frags_with_spectating()
+    {
+        // serverCheckAndUpdateWinningConditions() will detect win even when all players are spectating, because GameMode does not care if
+        // the player's frag count is increased in spectator mode!
+        // It is the game's responsibility not to let increase frags of a spectator player!
+        // This test case basically demonstrates this behavior.
+
+        // Note that unlike in test_deathmatch_winning_cond_frag_limit(), here we are not testing different game modes in loop.
+        // Reason: DM will behave as expected. However, in TDM the game state will stay not yet won. Because in TDM, the team summed frags
+        // are checked, but team summed frags automatically exclude spectators. In DM though, blindly the topmost player's frags is checked,
+        // which can be increased anytime in GameMode even for a spectating player.
+
+        bool b = true;
+        b &= assertTrue(
+            test_deathmatch_winning_cond_frag_limit(proofps_dd::GameModeType::DeathMatch, true /* players spectating state */),
+            proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::DeathMatch));
+
         return b;
     }
 
@@ -1949,6 +2012,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -1958,6 +2022,7 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
         player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         // dm is DeathMatchMode class instance when gamemode is DeathMatch, and
         // both DeathMatchMode and TeamDeathMatchMode class instance when gamemode is TeamDeathMatch.
@@ -2162,7 +2227,7 @@ private:
             assertEquals(expectedPureColor2, resultPureColor2, "2")) != 0;
     }
 
-    bool test_team_deathmatch_does_not_count_frags_with_zero_team_id()
+    bool test_team_deathmatch_does_not_count_frags_with_zero_team_id_or_spectating()
     {
         // in this TDM test we also test getTeamFrags() and getTeamPlayersCount()
 
@@ -2198,6 +2263,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 1;
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -2207,33 +2273,49 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
         player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
-        proofps_dd::Player player3(
+        // we do not test with player who is not spectating but has no team because it cannot happen since spectating is default mode, exiting from it
+        // in TDM can be done only be selecting team!
+
+        proofps_dd::Player player3_spectate_and_team_unassigned(
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
-        player3.setName("Joe");
-        player3.getFrags() = dm->getFragLimit();  // game would be already won if this player had a valid teamId!
-        player3.getDeaths() = 0;
-        player3.getTeamId() = 0; // intentionally zero, meaning no team selected!
+        player3_spectate_and_team_unassigned.setName("Joe");
+        player3_spectate_and_team_unassigned.getFrags() = dm->getFragLimit();  // game would be already won if this player had a valid teamId!
+        player3_spectate_and_team_unassigned.getDeaths() = 0;
+        player3_spectate_and_team_unassigned.getTeamId() = 0; // intentionally zero, meaning no team selected!
+
+        proofps_dd::Player player4_team_assigned_but_spectating(
+            m_audio, m_cfgProfiles, m_bullets,
+            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.4");
+        player4_team_assigned_but_spectating.setName("Banana");
+        player4_team_assigned_but_spectating.getFrags() = dm->getFragLimit();  // game would be already won if this player was not spectating!
+        player4_team_assigned_but_spectating.getDeaths() = 0;
+        player4_team_assigned_but_spectating.getTeamId() = 2;
 
         bool b = true;
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 1");  // team 0 always 0 summed frags
         b &= assertEquals(0, tdm->getTeamFrags(1), "team 1 frags 1");
         b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 1");
-        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 1");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 1"); // team 0 always has 0 players
         b &= assertEquals(0u, tdm->getTeamPlayersCount(1), "team 1 players count 1");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 1");
+        b &= assertEquals(0u, tdm->getSpectatingPlayersCount(), "spectating players count 1");
         
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
-        b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, true/*server*/, "add player 3");
+        b &= assertTrueEz(gm->addPlayer(player3_spectate_and_team_unassigned, m_network), gamemode, true/*server*/, "add player 3");
+        b &= assertTrueEz(gm->addPlayer(player4_team_assigned_but_spectating, m_network), gamemode, true/*server*/, "add player 4");
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
         b &= assertEquals(2, tdm->getTeamFrags(1), "team 1 frags 2");
         b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 2");
-        b &= assertEquals(1u, tdm->getTeamPlayersCount(0), "team 0 players count 2");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 2"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 2");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 2");
+        b &= assertEquals(2u, tdm->getSpectatingPlayersCount(), "spectating players count 2");
 
         unsigned int i = 0;
         bool bPrevWonState = false;
@@ -2252,9 +2334,10 @@ private:
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 3");  // team 0 always 0 summed frags
         b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 3");
         b &= assertEquals(0, tdm->getTeamFrags(2), "team 2 frags 3");
-        b &= assertEquals(1u, tdm->getTeamPlayersCount(0), "team 0 players count 3");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 3"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 3");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 3");
+        b &= assertEquals(2u, tdm->getSpectatingPlayersCount(), "spectating players count 3");
 
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
@@ -2274,15 +2357,29 @@ private:
             b &= assertFalseEz(true, gamemode, true/*server*/, "tx msg count");
         }
 
-        player3.getTeamId() = 2;
-        player3.getFrags() = 4;
-        b &= assertTrueEz(gm->updatePlayer(player3, m_network), gamemode, true/*server*/, "update player 2");
+        // now assign the previously unassigned player to empty team 2 and toggle spectator mode!
+        player3_spectate_and_team_unassigned.getTeamId() = 2;
+        player3_spectate_and_team_unassigned.isInSpectatorMode() = false;
+        player3_spectate_and_team_unassigned.getFrags() = 4;
+        b &= assertTrueEz(gm->updatePlayer(player3_spectate_and_team_unassigned, m_network), gamemode, true/*server*/, "update player 2");
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 4");  // team 0 always 0 summed frags
         b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 4");
         b &= assertEquals(4, tdm->getTeamFrags(2), "team 2 frags 4");
-        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 4");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 4"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 4");
         b &= assertEquals(1u, tdm->getTeamPlayersCount(2), "team 2 players count 4");
+        b &= assertEquals(1u, tdm->getSpectatingPlayersCount(), "spectating players count 4");
+
+        // now toggle the spectating state of the last player who was already assigned to team 2 but were spectating for the whole time!
+        player4_team_assigned_but_spectating.isInSpectatorMode() = false;
+        b &= assertTrueEz(gm->updatePlayer(player4_team_assigned_but_spectating, m_network), gamemode, true/*server*/, "update player 3");
+        b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 5");  // team 0 always 0 summed frags
+        b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 5");
+        b &= assertEquals(11, tdm->getTeamFrags(2), "team 2 frags 5");
+        b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 5"); // team 0 always has 0 players
+        b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 5");
+        b &= assertEquals(2u, tdm->getTeamPlayersCount(2), "team 2 players count 5");
+        b &= assertEquals(0u, tdm->getSpectatingPlayersCount(), "spectating players count 5");
 
         return b;
     }
@@ -2321,6 +2418,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 3;
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         bool b = true;
         b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
@@ -2330,7 +2428,7 @@ private:
         player1.getTeamId() = 2;
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 2");
         const std::vector<proofps_dd::PlayersTableRow> expectedPlayers2 = {
-                { "Apple", player1.getServerSideConnectionHandle(), 2 /* iTeamId*/, 0, 0 }
+                { "Apple", player1.getServerSideConnectionHandle(), 2 /* iTeamId*/, player1.isInSpectatorMode(), 0, 0 }
         };
         assertFragTableEqualsEz(expectedPlayers2, gm->getPlayersTable(), gamemode, true /*server*/, "table 2 fail");
 
@@ -2341,7 +2439,7 @@ private:
         player1.getTeamId() = 1;
         b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 2");
         const std::vector<proofps_dd::PlayersTableRow> expectedPlayers3 = {
-                { "Apple", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, 0, 0 }
+                { "Apple", player1.getServerSideConnectionHandle(), 1 /* iTeamId*/, player1.isInSpectatorMode(), 0, 0 }
         };
         assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, true /*server*/, "table 4 fail");
 
@@ -2371,6 +2469,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 0;
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
         bool b = true;
 

@@ -246,6 +246,17 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, %s spectator mode by explicit toggling.",
             __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), (player.isInSpectatorMode() ? "entered" : "exited"));
         
+        // dont remember why I need to check for empty name but I'm copying this from handleUserUpdateFromServer()
+        if (!player.getName().empty())
+        {
+            // write team id and spectator mode in frag table;
+            // fun fact: before v0.7 team id was implicitly updated in handleUserUpdateFromServer() due to coincidence of team change with other player data updates :)
+            if (!GameMode::getGameMode()->updatePlayer(player, m_pge.getNetwork()))
+            {
+                getConsole().EOLn("PlayerHandling::%s(): ERROR: failed to update player %s in GameMode!", __func__, player.getName().c_str());
+            }
+        }
+        
         if (!player.isInSpectatorMode())
         {
             // exiting spectator mode in team based game is possible only by explicit team selection!
@@ -304,6 +315,17 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
     // need to trigger updating player teamId here because that is needed for serverRespawnPlayer() to work properly
     player.handleTeamIdChanged(iTeamId);
     player.getObject3D()->getMaterial(false).getTextureEnvColor() = TeamDeathMatchMode::getTeamColor(iTeamId);
+
+    // dont remember why I need to check for empty name but I'm copying this from handleUserUpdateFromServer()
+    if (!player.getName().empty())
+    {
+        // write team id and spectator mode in frag table;
+        // fun fact: before v0.7 team id was implicitly updated in handleUserUpdateFromServer() due to coincidence of team change with other player data updates :)
+        if (!GameMode::getGameMode()->updatePlayer(player, m_pge.getNetwork()))
+        {
+            getConsole().EOLn("PlayerHandling::%s(): ERROR: failed to update player %s in GameMode!", __func__, player.getName().c_str());
+        }
+    }
 
     if (m_pge.getNetwork().isServer())
     {

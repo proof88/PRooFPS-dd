@@ -173,6 +173,11 @@ protected:
                 // server player selects team 1
                 input_sim_test::keybdPress((unsigned char)VkKeyScan('1'), 100);
             }
+            else
+            {
+                // server player selects "join game"
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('j'), 100);
+            }
 
             // need a bit sleep after team selection in-game menu closes, otherwise
             // player control inputs will be ignored
@@ -200,8 +205,13 @@ protected:
 
             if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
             {
-                // server player selects team 2
+                // client player selects team 2
                 input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100);
+            }
+            else
+            {
+                // client player selects "join game"
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('j'), 100);
             }
 
             // need a bit sleep after team selection in-game menu closes, otherwise

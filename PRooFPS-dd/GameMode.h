@@ -39,6 +39,7 @@ namespace proofps_dd
         std::string m_sName;
         pge_network::PgeNetworkConnectionHandle m_connHandle{};
         unsigned int m_iTeamId{ 0 };  // 0 means no team selected
+        bool m_bSpectating{ true };
         int m_nFrags{ 0 };    // frags allowed to be negative due to player doing suicides decreases fragcount
         int m_nDeaths{ 0 };   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
         unsigned int m_nSuicides{ 0 };
@@ -276,6 +277,11 @@ namespace proofps_dd
         * In case of server instance, it SHALL automatically evaluate winning condition using serverCheckAndUpdateWinningConditions() after adding the player.
         * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
         * 
+        * Note that GameMode does not ensure that a spectating player cannot win a game.
+        * The game shall ensure that the player does not gain any frags while in spectator mode!
+        * Therefore, if the added player already has enough frags to flip game won state, the game will go into won state, regardless of the player's spectating
+        * state!
+        * 
         * Fails if a player with same name is already added.
         * 
         * @return True if added the new player, false otherwise.
@@ -288,6 +294,11 @@ namespace proofps_dd
         * Updates data for the specified player.
         * In case of server instance, it SHALL automatically evaluate winning condition using serverCheckAndUpdateWinningConditions() after updating the player.
         * Note that once a game is won, it stays won even if players are updated to fail the winning conditions, until explicit call to restart().
+        * 
+        * Note that GameMode does not ensure that a spectating player cannot win a game.
+        * The game shall ensure that the player does not gain any frags while in spectator mode!
+        * Therefore, if the added player already has enough frags to flip game won state, the game will go into won state, regardless of the player's spectating
+        * state!
         * 
         * Fails if player with same cannot be found.
         *
@@ -332,6 +343,11 @@ namespace proofps_dd
         * @return True if player is ready for gameplay in the current game mode, false otherwise.
         */
         virtual bool isPlayerAllowedForGameplay(const Player& player) const;
+
+        /**
+        * @return Number of players in spectator mode (team id is irrelevant).
+        */
+        unsigned int getSpectatingPlayersCount() const;
 
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
@@ -410,7 +426,10 @@ namespace proofps_dd
         /**
         * Set the frag limit for the game.
         * If the frag limit is reached, the winner is with the most frags, even if time limit is not yet reached or there is no time limit set.
+        * 
         * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
+        * In general it is not recommended to change this value on-the-fly during a game because it might put the game into won state
+        * if there is a spectating player having equal or more frags than the new frag limit!
         * 
         * @param limit The frag limit. If 0, there is no frag limit.
         */
@@ -498,12 +517,15 @@ namespace proofps_dd
 
         virtual bool isTeamBasedGame() const override;
 
+        /**
+        * Extending parent class implementation by rejecting player if team id is 0.
+        */
         virtual bool isPlayerAllowedForGameplay(const Player& player) const override;
 
         /**
         * @param iTeamId Team ID for which team we want to get the sum of frags.
         * 
-        * @return Sum of player frags in the specified team.
+        * @return Sum of non-spectating player frags in the specified team.
         *         Always 0 when iTeamId is 0.
         */
         int getTeamFrags(unsigned int iTeamId) const;
@@ -511,7 +533,8 @@ namespace proofps_dd
         /**
         * @param iTeamId Team ID for which team we want to get the count of players.
         *
-        * @return Number of players in the specified team.
+        * @return Number of non-spectating players in the specified team.
+        *         Always 0 when iTeamId is 0, so for counting spectators use getSpectatingPlayersCount() instead!
         */
         unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
 

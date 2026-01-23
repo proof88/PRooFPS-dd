@@ -3473,87 +3473,126 @@ void proofps_dd::GUI::drawFragTable(
 
     const int nTablesCount =
         GameMode::getGameMode()->isTeamBasedGame() ?
-        3 :
-        1;
+        3 /* 2 for teams + 1 for spectators */ :
+        2 /* 1 for playing + 1 for spectators */;
 
     // in DM, everybody is in team 0, but in TDM, only players without team are in team 0, however
     // I want those no-team players to be listed in the last table.
-    // Therefore, within the loop, for team-based gamemodes, team order shall be 1,2,0 instead of 0,1,2.
+    // Therefore, within the loop below, team order shall be 1,2 for TDM and only 0 for DM.
     unsigned int iTeam =
-        nTablesCount > 1 ?
+        nTablesCount > 2 ?
         iTeam = 1 :
         iTeam = 0;
 
     // might become null at this point, so check before using it!
     const proofps_dd::TeamDeathMatchMode* const tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(GameMode::getGameMode());
 
-    // we do not want to draw an empty table for unassigned players in team-based games (but it is ok to draw empty team tables tho)
-    const unsigned int nUnassignedPlayersCountInTeamBasedGame =
-        tdm ?
-        tdm->getTeamPlayersCount(0) :
-        0;
-    const bool bDrawUnassignedPlayersTableInTeamBasedGame = tdm && (nUnassignedPlayersCountInTeamBasedGame > 0u);
-
-    for (int i = 0; i < nTablesCount; i++)
+    // first draw tables for non-spectating players
+    for (int i = 1; i <= nTablesCount-1; i++)
     {
-
+        // optional team table caption/header
         if (GameMode::getGameMode()->isTeamBasedGame())
         {
-            assert(nTablesCount == 3); // serious check based on above logic, but might be changed in future for arbitrary number of teams
             assert(tdm);
+            assert(iTeam != 0);
 
-            static std::string sTableCaption; // hopefully fast enough with being static
-
-            // this overcomplicated condition is just for the sake of aesthetics: see comment for bDrawUnassignedPlayersTableInTeamBasedGame
-            if ((iTeam != 0) || bDrawUnassignedPlayersTableInTeamBasedGame)
+            static std::string sTeamTableCaption; // hopefully fast enough with being static
+            
+            const unsigned int nPlayersCount = tdm->getTeamPlayersCount(iTeam);
+            sTeamTableCaption =
+                "Team " + std::to_string(iTeam) + " has " +
+                std::to_string(nPlayersCount) + " player";
+            
+            if ((nPlayersCount == 0) || (nPlayersCount > 1))
             {
-                sTableCaption =
-                    iTeam == 0 ?
-                    (std::string("Unassigned Player(s): ") + std::to_string(nUnassignedPlayersCountInTeamBasedGame)) :
-                    ("Team " + std::to_string(iTeam) + ": " +
-                        std::to_string(tdm->getTeamPlayersCount(iTeam)) + " player(s) with total frag(s) : " + std::to_string(tdm->getTeamFrags(iTeam)));
-
-                drawTableCaptionColored(
-                    sTableCaption,
-                    ImGui::GetCursorPosY(),
-                    fTableStartPosX,
-                    fTableWidthPixels,
-                    getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeam))
-                );
-
-                // this will bring the table vertically closer to its caption, we dont need the item spacing gap here
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
+                sTeamTableCaption += "s";
             }
-        }
+            
+            const unsigned int nTeamFragsCount = tdm->getTeamFrags(iTeam);
+            sTeamTableCaption += " with " + std::to_string(nTeamFragsCount) + " total frag";
+            if ((nTeamFragsCount == 0) || (nTeamFragsCount > 1))
+            {
+                sTeamTableCaption += "s";
+            }
 
-        // this overcomplicated condition is just for the sake of aesthetics: see comment for bDrawUnassignedPlayersTableInTeamBasedGame
-        if (!GameMode::getGameMode()->isTeamBasedGame() || (iTeam != 0) || bDrawUnassignedPlayersTableInTeamBasedGame)
-        {
-            drawPlayersTable(
-                vecHeaderLabels,
-                fTableColIndentPixels,
-                vecColumnWidthsPixels,
+            drawTableCaptionColored(
+                sTeamTableCaption,
+                ImGui::GetCursorPosY(),
                 fTableStartPosX,
                 fTableWidthPixels,
-                fPlayerNameColWidthPixels,
-                fTableHeightPixels,
-                iColNetworkDataStart,
-                [iTeam](const proofps_dd::PlayersTableRow& player) { return player.m_iTeamId == iTeam; },
-                drawFragTable_columnLoopForPlayer
+                getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(iTeam))
             );
+
+            // this will bring the table vertically closer to its caption, we dont need the item spacing gap here
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
         }
 
-        // comment explains above, this logic is for team-based gamemodes:
-        if (++iTeam > 2)
+        // draw table content
+        drawPlayersTable(
+            vecHeaderLabels,
+            fTableColIndentPixels,
+            vecColumnWidthsPixels,
+            fTableStartPosX,
+            fTableWidthPixels,
+            fPlayerNameColWidthPixels,
+            fTableHeightPixels,
+            iColNetworkDataStart,
+            [iTeam](const proofps_dd::PlayersTableRow& player) {
+                return !player.m_bSpectating && (player.m_iTeamId == iTeam); },
+            drawFragTable_columnLoopForPlayer
+        );
+
+        ++iTeam;
+    } // end non-spectating players
+
+    // From v0.7, spectator mode is added, and players having team assigned can be also spectators, they also go into the bottom table.
+    // In TDM, players with team id 0 is possible only in spectator mode, therefore we dont need to check for team id == 0 here.
+    // We do not want to draw an empty table for unassigned players in ANY game mode.
+    const unsigned int nUnassignedPlayersCount = GameMode::getGameMode()->getSpectatingPlayersCount();
+    const bool bDrawUnassignedPlayersTable = (nUnassignedPlayersCount > 0u);
+
+    // then draw table for spectating players (only if there is any)
+    if ( bDrawUnassignedPlayersTable )
+    {
+        static std::string sSpectatorTableCaption; // hopefully fast enough with being static
+        sSpectatorTableCaption =
+            std::to_string(nUnassignedPlayersCount) +
+            std::string(" Spectator");
+        if ((nUnassignedPlayersCount == 0) || (nUnassignedPlayersCount > 1))
         {
-            iTeam = 0;
-        }
-    }
+            sSpectatorTableCaption += "s";
+        };
 
-    if (GameMode::getGameMode()->isTeamBasedGame() && !GameMode::getGameMode()->isGameWon())
+        drawTableCaptionColored(
+            sSpectatorTableCaption,
+            ImGui::GetCursorPosY(),
+            fTableStartPosX,
+            fTableWidthPixels,
+            getImVec4fromPureColor(TeamDeathMatchMode::getTeamColor(0))
+        );
+
+        // this will bring the table vertically closer to its caption, we dont need the item spacing gap here
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y);
+
+        // draw table content
+        drawPlayersTable(
+            vecHeaderLabels,
+            fTableColIndentPixels,
+            vecColumnWidthsPixels,
+            fTableStartPosX,
+            fTableWidthPixels,
+            fPlayerNameColWidthPixels,
+            fTableHeightPixels,
+            iColNetworkDataStart,
+            [](const proofps_dd::PlayersTableRow& player) { return player.m_bSpectating; },
+            drawFragTable_columnLoopForPlayer
+        );
+    } // end spectating players
+
+    if (!GameMode::getGameMode()->isGameWon())
     {
         static const std::string sTeamSelectNotice =
-            std::string("Players can use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to select team.";
+            std::string("Use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to join or spectate.";
         drawTableCaption(
             sTeamSelectNotice,
             ImGui::GetCursorPosY(),
@@ -3576,7 +3615,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sCaption, cons
 
     // keep this in sync with drawGameObjectivesClient()
     static const std::vector<const char*> vecHeaderLabels = {
-        "Player Name",
+        "Name",
         "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",
@@ -3602,7 +3641,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sCaption, cons
 
     // keep this in sync with drawGameObjectivesServer()
     static const std::vector<const char*> vecHeaderLabels = {
-        "Player Name",
+        "Name",
         "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",

@@ -259,6 +259,7 @@ void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwor
     m_bWon = false;
     for (auto& player : m_players)
     {
+        player.m_bSpectating = true;
         player.m_nFrags = 0;
         player.m_nDeaths = 0;
         player.m_nSuicides = 0;
@@ -385,6 +386,19 @@ bool proofps_dd::GameMode::isPlayerAllowedForGameplay(const Player& player) cons
     return !player.isInSpectatorMode();
 }
 
+unsigned int proofps_dd::GameMode::getSpectatingPlayersCount() const
+{
+    unsigned int nCount = 0;
+    for (const auto& player : m_players)
+    {
+        if (player.m_bSpectating)
+        {
+            ++nCount;
+        }
+    }
+    return nCount;
+}
+
 void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const
 {
     pure.getUImanager().textTemporalLegacy(s, x, y)->SetDropShadow(true);
@@ -486,7 +500,13 @@ bool proofps_dd::DeathMatchMode::serverCheckAndUpdateWinningConditions(pge_netwo
 
     if ((getFragLimit() > 0) && !m_players.empty())
     {
-        // assume m_players is sorted, since add/updatePlayer() use insertion sort
+        // assume m_players is sorted, since add/updatePlayer() use insertion sort;
+        // note that we don't need to check for spectating state since:
+        // - spectators cannot gain frags (and this shall be ensured by the game as well: if someone shoots a bullet and
+        //   then quickly goes to spectator mode, the bullet killing anyone shall not increase the frags of the now spectating player!),
+        // - whoever is gaining frag, is not spectating,
+        // - a spectator cannot have more frag than the non-zero frag limit without
+        //   GameMode detecting game won state BEFORE the player would go into spectating mode.
         if (m_players.begin()->m_nFrags >= static_cast<int>(getFragLimit()))
         {
             handleEventGameWon(network);
@@ -533,7 +553,13 @@ bool proofps_dd::DeathMatchMode::addPlayer(const Player& player, pge_network::Pg
         m_players.insert(
             it,
             proofps_dd::PlayersTableRow{
-                player.getName(), player.getServerSideConnectionHandle(), player.getTeamId(), player.getFrags(), player.getDeaths()  /* rest are default 0 */});
+                player.getName(),
+                player.getServerSideConnectionHandle(),
+                player.getTeamId(),
+                player.isInSpectatorMode(),
+                player.getFrags(),
+                player.getDeaths()
+                /* rest are default 0 */});
 
         if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
         {
@@ -567,6 +593,7 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
 
     // quickly update some data (even if no change because it shall be fast enough) which do not contribute to ordering
     itFound->m_iTeamId = player.getTeamId();
+    itFound->m_bSpectating = player.isInSpectatorMode();
     itFound->m_nSuicides = player.getSuicides();
     itFound->m_fFiringAcc = player.getFiringAccuracy();
     itFound->m_nShotsFired = player.getShotsFiredCount();
@@ -765,7 +792,7 @@ int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const
     int nTeamTotalFrags = 0;
     for (const auto& player : m_players)
     {
-        if (player.m_iTeamId == iTeamId)
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating)
         {
             nTeamTotalFrags += player.m_nFrags;
         }
@@ -775,10 +802,15 @@ int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const
 
 unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iTeamId) const
 {
+    if (iTeamId == 0)
+    {
+        return 0;
+    }
+
     unsigned int nTeamTotalPlayers = 0;
     for (const auto& player : m_players)
     {
-        if (player.m_iTeamId == iTeamId)
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating)
         {
             ++nTeamTotalPlayers;
         }
