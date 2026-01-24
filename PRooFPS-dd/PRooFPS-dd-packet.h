@@ -724,9 +724,10 @@ namespace proofps_dd
         enum class BulletDelete : pge_network::TByte
         {
             No = 0,
-            Yes,
+            Yes /* maybe reached map bounds */,
             YesHitWall,
-            YesHitPlayer
+            YesHitPlayer,
+            YesForcedDisappear /* shall get rid of bullet without any consequence (e.g. explosion) ASAP, e.g. shooter got disconnected */
         };
 
         static bool initPkt(

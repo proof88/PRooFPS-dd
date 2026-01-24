@@ -573,9 +573,16 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                         continue;
                     }
 
+                    const auto itShooter = m_mapPlayers.find(bullet.getOwner());
+                    if ((itShooter == m_mapPlayers.end()) || !gameMode.isPlayerAllowedForGameplay(itShooter->second))
+                    {
+                        // shooter either disconnected or not allowed to play anymore (e.g. spectating now)
+                        bullet.markForDeletion();
+                        continue;
+                    }
+
                     const auto& playerConst = player;
                     const auto playerScaledSizeVec = player.getObject3D()->getScaledSizeVec();
-                    const auto itShooter = m_mapPlayers.find(bullet.getOwner());
                     if ((playerConst.getHealth() > 0) &&
                         canBulletHitPerFriendlyFireConfig(playerConst, itShooter) &&
                         colliding2_NoZ(
@@ -603,49 +610,34 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                             // that will be introduced much later in the future, even later than pistol's burst fire mode.
                             player.updateImpactForceByBulletImpactOrRecoil(false /* bRecoil */, bullet, *wpnForType);
                             
-                            if (itShooter != m_mapPlayers.end())
+                            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
+                            if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee) &&
+                                /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
+                               (wpnForType->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
                             {
-                                // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
-                                if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee) &&
-                                    /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
-                                   (wpnForType->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
-                                {
-                                    ++itShooter->second.getShotsHitTarget();
-                                    assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
-                                    itShooter->second.getFiringAccuracy() =
-                                        (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
-                                        0.f :
-                                        (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
-                                }
-                            } // otherwise shooter got disconnected before hitting the player
+                                ++itShooter->second.getShotsHitTarget();
+                                assert(itShooter->second.getShotsFiredCount()); // shall be non-zero if getShotsHitTarget() is non-zero; debug shall crash cause then it is logic error!
+                                itShooter->second.getFiringAccuracy() =
+                                    (itShooter->second.getShotsFiredCount() == 0u) ? /* just in case of overflow which will most probably never happen */
+                                    0.f :
+                                    (itShooter->second.getShotsHitTarget() / static_cast<float>(itShooter->second.getShotsFiredCount()));
+                            }
 
                             if (playerConst.getHealth() == 0)
                             {
-                                pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide;
-                                if (itShooter == m_mapPlayers.end())
+                                const pge_network::PgeNetworkConnectionHandle nKillerConnHandleServerSide = itShooter->first;
+                                if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
                                 {
-                                    // if killer got disconnected before the kill, we can say the killer is the player itself, since
-                                    // we still want to display the death notification without the killer's name, but we won't decrease
-                                    // frag count for the player because HandlePlayerDied() is not doing that.
-                                    nKillerConnHandleServerSide = player.getServerSideConnectionHandle();
-                                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by a player already left!",
-                                    //    __func__, playerPair.first.c_str());
+                                    --itShooter->second.getFrags();
                                 }
                                 else
                                 {
-                                    nKillerConnHandleServerSide = itShooter->first;
-                                    if (shallShooterFragsDecreasedDueToFriendlyFireIfItIsFriendlyFire(playerConst, itShooter->second))
-                                    {
-                                        --itShooter->second.getFrags();
-                                    }
-                                    else
-                                    {
-                                        ++itShooter->second.getFrags();
-                                    }
-                                    bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
-                                    //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
-                                    //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
+                                    ++itShooter->second.getFrags();
                                 }
+                                bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
+                                //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
+                                //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
+                                
                                 // server handles death here, clients will handle it when they receive MsgUserUpdateFromServer
                                 handlePlayerDied(player, xhair, nKillerConnHandleServerSide);
                             }
@@ -759,6 +751,10 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
     m_durations.m_nUpdateBulletsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
+/**
+* This function does not update bullet positions, it expects up-to-date bullet positions.
+* Therefore, this shall be invoked AFTER serverUpdateBulletsAndHandleHittingWallsAndPlayers() !
+*/
 void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(
     proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& /*nPhysicsRate*/, PureVector& vecCamShakeForce)
 {
@@ -768,6 +764,9 @@ void proofps_dd::WeaponHandling::serverHandleBulletsVsBullets(
     {
         return;
     }
+
+    // since serverUpdateBulletsAndHandleHittingWallsAndPlayers() takes care of deleting any bullet which was shooted by a now invalid player,
+    // and that function is expected to be invoked earlier than this, we dont need to check shooter validity in this function.
 
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
@@ -1034,7 +1033,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
 
     if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::No)
     {
-        if (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes)
+        if ((msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::Yes) &&
+             (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesForcedDisappear))
         {
             play3dMeleeWeaponHitSound(msg.m_weaponId, msg.m_pos.x, msg.m_pos.y, msg.m_pos.z, msg.m_delete);
         }
@@ -1048,7 +1048,8 @@ bool proofps_dd::WeaponHandling::handleBulletUpdateFromServer(
         // Also, we actually require other bullet parameters as well for making the explosion, because we might not have the bullet in getBullets() on
         // our side: when 2 players are almost at the same position (partially overlapping), one fires the weapon, then bullet will immediately hit
         // the other player on server-side, we will receive a bullet delete request only from server in that case without any bullet create request prior to it!
-        if (msg.m_fDamageAreaSize > 0.f)
+        if ((msg.m_fDamageAreaSize > 0.f) &&
+            (msg.m_delete != proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesForcedDisappear))
         {
             // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we need explosion data!
             Weapon* const wpnForExplosionData = getWeaponByIdFromAnyPlayersWeaponManager(msg.m_weaponId);
@@ -1570,10 +1571,18 @@ blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator proofps_dd::WeaponHandl
         getConsole().EOLn("%s ERROR: bullet is NOT marked for deletion!", __func__);
     }
 
+    bool bInvalidShooter = false;
+    const auto itShooter = m_mapPlayers.find(bullet.getOwner());
+    if ((itShooter == m_mapPlayers.end()) || !gameMode.isPlayerAllowedForGameplay(itShooter->second))
+    {
+        // shooter either disconnected or not allowed to play anymore (e.g. spectating now)
+        bInvalidShooter = true;
+    }
+
     // make explosion first if required;
     // server does not send specific message to client about creating explosion, it is client's responsibility to create explosion
     // when it receives MsgBulletUpdateFromServer with bDelete flag set, if bullet has area damage!
-    if (!bEndGame)
+    if (!bEndGame && !bInvalidShooter)
     {
         if (bullet.getAreaDamageSize() > 0.f)
         {
@@ -1625,8 +1634,13 @@ blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator proofps_dd::WeaponHandl
         bullet.getAreaDamageEffect(),
         bullet.getAreaDamagePulse()
     );
+    
     // clients will also delete this bullet on their side because we set pkt's delete flag here
-    if (bPlayerHit)
+    if (bInvalidShooter)
+    {
+        proofps_dd::MsgBulletUpdateFromServer::getDelete(pktBulletDelete) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesForcedDisappear;
+    }
+    else if (bPlayerHit)
     {
         proofps_dd::MsgBulletUpdateFromServer::getDelete(pktBulletDelete) = proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer;
         play3dMeleeWeaponHitSound(bullet, proofps_dd::MsgBulletUpdateFromServer::BulletDelete::YesHitPlayer);
