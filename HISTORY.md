@@ -61,7 +61,7 @@ This version brings the following **CHANGES AND ENHANCEMENTS**:
 This version brings the following **BUG FIXES**:
  - Physics: **Jumping when Running Down Stairs** is now working properly, previously it was not possible most of the time.
  - Physics: **Team Deathmatch**: when friendly fire was disabled, the player was not **taking damage from self-caused explosions**.
- - Gameplay: when the current game session was already won and showing the results, if a client disconnected then reconnected from/to the server while the server was still waiting for the restart, the results were not shown automatically to the client as expected. Even worse, in Team DeathMatch mode, the Team Select menu was shown to the client, and the client could still join any team. Now in both game modes the results are shown automatically after reconnecting as expected.
+ - Gameplay: when the current game session was already won and showing the results, if a client disconnected then reconnected from/to the server while the server was still waiting for the restart, the results were not shown automatically to the client as expected. Even worse, in Team DeathMatch mode, the Team Select menu was shown to the client, and the client could still join any team. Now in both game modes the results are shown automatically after reconnecting as expected, and joining a team is not possible when the game has already ended.
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
