@@ -45,6 +45,10 @@ This version brings the following **NEW FEATURES**:
    - players mid-air are pushed a bit when being hit by bullets.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
+ - Gameplay: in previous versions, as a design choice, player disconnecting from the server did not result in immediate delete of their bullets, and those bullets were still able to travel until hitting something.  
+   But now as spectator mode has been introduced, to simplify game code, **bullets shot by a player entering spectator mode are handled in the same way as bullets from a disconnecting player: immediately deleted**.  
+   In such case, explosive bullets are deleted without causing explosion, to make sure such players cause minimum consequence to gameplay.
+   This also means that when a bullet is hitting someone or something, the shooter is still considered an active player, no need to decide how to handle the given situation if the shooter is not active or present anymore.
  - Physics: Grenade Launcher: **grenade hitting a player** also triggers explosion.  
    In team deathmatch, it is based on the friendly fire configuration, so teammates cannot hit each other with grenade when friendly fire is disabled.
  - Physics: JetLax: now **crouch is allowed together with using JetLax**, allowing flying into narrow tunnels.  
