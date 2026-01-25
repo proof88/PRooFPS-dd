@@ -37,7 +37,7 @@ NOT all versions have the ALP label, be careful!
 A compressed build for Windows is available for TODO.
 
 This version brings the following **NEW FEATURES**:
- - Gameplay: **Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera control" or "player follow camera" mode.
+ - Gameplay: **Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
    Entering Spectator Mode is always available during gameplay by pressing 'M'.
  - Physics: non-explosive bullets can **ricochet** off the walls if colliding them in small angle (<= 10°).
  - Physics: **fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
