@@ -64,6 +64,19 @@ namespace proofps_dd
 
         void cameraSmoothShakeForceTowardsZero(const float& fFps);
         void cameraUpdateShakeFactorXY(const float& fFps);
+        void cameraUpdatePosAndAngleToFollowPos(
+            PureCamera& cam,
+            const PureVector& vecFollowPos,
+            const XHair& xhair,
+            const float& fFps,
+            bool bCamFollowsXHair,
+            bool bCamTiltingAllowed);
+        void cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
+            PureCamera& cam,
+            const XHair& xhair,
+            const float& fFps,
+            bool bCamFollowsXHair,
+            bool bCamTiltingAllowed);
         void cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(
             PureCamera& cam,
             const Player& player);

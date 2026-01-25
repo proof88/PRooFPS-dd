@@ -84,13 +84,20 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
 
     auto& cam = m_pge.getPure().getCamera();
 
-    if (bCamRollAllowed && player.isSomersaulting())
+    if (player.isInSpectatorMode())
     {
-        cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(cam, player);
+        cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
     }
     else
     {
-        cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+        if (bCamRollAllowed && player.isSomersaulting())
+        {
+            cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(cam, player);
+        }
+        else
+        {
+            cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+        }
     }
 
     /*
@@ -162,28 +169,9 @@ void proofps_dd::CameraHandling::cameraUpdateShakeFactorXY(const float& fFps)
     m_fShakeFactorY = fShakeSine * m_vecCamShakeForce.getY() / fFps;
 }
 
-void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(PureCamera& cam, const Player& player)
-{
-    cam.getPosVec().Set(
-        player.getObject3D()->getPosVec().getX() + m_fShakeFactorX,
-        player.getObject3D()->getPosVec().getY() + m_fShakeFactorY,
-        GAME_CAM_Z);
-    cam.getTargetVec().Set(
-        player.getObject3D()->getPosVec().getX() + m_fShakeFactorX,
-        player.getObject3D()->getPosVec().getY() + m_fShakeFactorY,
-        player.getObject3D()->getPosVec().getZ()
-    );
-
-    PureVector vecNewUp(0.f, 1.f, 0.f);
-    PureTransformMatrix matRotZ;
-    matRotZ.SetRotationZ((player.getObject3D()->getAngleVec().getY() == 0.f) ? -player.getSomersaultAngle() : player.getSomersaultAngle());
-    vecNewUp *= matRotZ;
-    cam.getUpVec() = vecNewUp;
-}
-
-void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngleToFollowPos(
     PureCamera& cam,
-    const Player& player,
+    const PureVector& vecFollowPos,
     const XHair& xhair,
     const float& fFps,
     bool bCamFollowsXHair,
@@ -218,22 +206,22 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
     if (bCamFollowsXHair)
     {
         const float fPosXBetweenPlayerAndCamera =
-            (xhair.getUnprojectedCoords().getX() >= player.getObject3D()->getPosVec().getX()) ?
+            (xhair.getUnprojectedCoords().getX() >= vecFollowPos.getX()) ?
             (std::min(
-                player.getObject3D()->getPosVec().getX() + player.getObject3D()->getPosVec().getX() + fCamMaxXDistanceFromPlayer,
-                player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2.f) :
+                vecFollowPos.getX() + vecFollowPos.getX() + fCamMaxXDistanceFromPlayer,
+                vecFollowPos.getX() + xhair.getUnprojectedCoords().getX()) / 2.f) :
             (std::max(
-                player.getObject3D()->getPosVec().getX() + player.getObject3D()->getPosVec().getX() - fCamMaxXDistanceFromPlayer,
-                player.getObject3D()->getPosVec().getX() + xhair.getUnprojectedCoords().getX()) / 2.f);
+                vecFollowPos.getX() + vecFollowPos.getX() - fCamMaxXDistanceFromPlayer,
+                vecFollowPos.getX() + xhair.getUnprojectedCoords().getX()) / 2.f);
 
         const float fPosYBetweenPlayerAndCamera =
-            (xhair.getUnprojectedCoords().getY() >= player.getObject3D()->getPosVec().getY()) ?
+            (xhair.getUnprojectedCoords().getY() >= vecFollowPos.getY()) ?
             (std::min(
-                player.getObject3D()->getPosVec().getY() + player.getObject3D()->getPosVec().getY() + fCamMaxYDistanceFromPlayer,
-                player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2.f) :
+                vecFollowPos.getY() + vecFollowPos.getY() + fCamMaxYDistanceFromPlayer,
+                vecFollowPos.getY() + xhair.getUnprojectedCoords().getY()) / 2.f) :
             (std::max(
-                player.getObject3D()->getPosVec().getY() + player.getObject3D()->getPosVec().getY() - fCamMaxYDistanceFromPlayer,
-                player.getObject3D()->getPosVec().getY() + xhair.getUnprojectedCoords().getY()) / 2.f);
+                vecFollowPos.getY() + vecFollowPos.getY() - fCamMaxYDistanceFromPlayer,
+                vecFollowPos.getY() + xhair.getUnprojectedCoords().getY()) / 2.f);
 
         fCamPosXTarget = std::min(
             fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
@@ -247,11 +235,11 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
     {
         fCamPosXTarget = std::min(
             fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
-            std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, player.getObject3D()->getPosVec().getX()));
+            std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, vecFollowPos.getX()));
 
         fCamPosYTarget = std::min(
             fCamMaxAllowedPosYtoKeepAwayFromMapVerticalBounds,
-            std::max(fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds, player.getObject3D()->getPosVec().getY()));
+            std::max(fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds, vecFollowPos.getY()));
     }
 
     fCamPosXTarget += m_fShakeFactorX;
@@ -272,9 +260,64 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSitu
     cam.getTargetVec().Set(
         bCamTiltingAllowed ? ((vecCamPos.getX() + fCamPosXTarget) / 2.f) : vecCamPos.getX(),
         bCamTiltingAllowed ? ((vecCamPos.getY() + fCamPosYTarget) / 2.f) : vecCamPos.getY(),
-        player.getObject3D()->getPosVec().getZ()
+        vecFollowPos.getZ()
     );
 
     // we can always reset Up like this, since Up vector doesn't have effect on camera pitch/yaw, only on roll!
     cam.getUpVec().Set(0.f, 1.f, 0.f);
+}
+
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
+    PureCamera& cam,
+    const XHair& xhair,
+    const float& fFps,
+    bool bCamFollowsXHair,
+    bool bCamTiltingAllowed)
+{
+    // TODO:
+    // - find out what position (vecPosSpectatorFollow) the camera shall follow (maybe a separate member in CameraHandling),
+    // - find out how to control vecPosSpectatorFollow based on InputHandling::m_strafe and other members,
+    // - invoke: cameraUpdatePosAndAngleToFollowPos(
+    //              cam,
+    //              vecPosSpectatorFollow,
+    //              xhair,
+    //              fFps,
+    //              bCamFollowsXHair,
+    //              bCamTiltingAllowed);
+}
+
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(PureCamera& cam, const Player& player)
+{
+    cam.getPosVec().Set(
+        player.getObject3D()->getPosVec().getX() + m_fShakeFactorX,
+        player.getObject3D()->getPosVec().getY() + m_fShakeFactorY,
+        GAME_CAM_Z);
+    cam.getTargetVec().Set(
+        player.getObject3D()->getPosVec().getX() + m_fShakeFactorX,
+        player.getObject3D()->getPosVec().getY() + m_fShakeFactorY,
+        player.getObject3D()->getPosVec().getZ()
+    );
+
+    PureVector vecNewUp(0.f, 1.f, 0.f);
+    PureTransformMatrix matRotZ;
+    matRotZ.SetRotationZ((player.getObject3D()->getAngleVec().getY() == 0.f) ? -player.getSomersaultAngle() : player.getSomersaultAngle());
+    vecNewUp *= matRotZ;
+    cam.getUpVec() = vecNewUp;
+}
+
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(
+    PureCamera& cam,
+    const Player& player,
+    const XHair& xhair,
+    const float& fFps,
+    bool bCamFollowsXHair,
+    bool bCamTiltingAllowed)
+{
+    cameraUpdatePosAndAngleToFollowPos(
+        cam,
+        player.getObject3D()->getPosVec(),
+        xhair,
+        fFps,
+        bCamFollowsXHair,
+        bCamTiltingAllowed);
 }

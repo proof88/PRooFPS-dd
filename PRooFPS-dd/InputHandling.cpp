@@ -536,6 +536,39 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 // ############################### PRIVATE ###############################
 
 
+void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
+    proofps_dd::GameMode& gameMode,
+    const proofps_dd::Player& player)
+{
+    assert(!gameMode.isGameWon());
+    assert(player.isInSpectatorMode());
+    // in this function, m_strafe and other members are re-used for controlling the spectating view in spectator mode
+
+    // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
+    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+    {
+        m_strafe = proofps_dd::Strafe::LEFT;
+    }
+    else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+    {
+        m_strafe = proofps_dd::Strafe::RIGHT;
+    }
+    else
+    {
+        m_strafe = proofps_dd::Strafe::NONE;
+    }
+
+    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'));
+    m_bDescent = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
+
+    //m_bAttack = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE);
+    //if (m_bAttack)
+    //{
+    //    // TODO: toggle spectating view
+    //}
+    
+} // clientKeyboardWhenConnectedToServer_Spectating()
+
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
     pge_network::PgePacket& pkt,
@@ -631,6 +664,12 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     if (bRequireKeyUpBeforeAcceptingPlayerInput ||
         (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
     {
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+    }
+
+    if (playerConst.isInSpectatorMode())
+    {
+        clientKeyboardWhenConnectedToServer_Spectating(gameMode, playerConst);
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
@@ -961,6 +1000,83 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 /**
     @return True in case there was mouse (xhair) movement, false otherwise.
 */
+bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_mouseMovesXHair(PureObject3D& objXHair)
+{
+    const int oldmx = m_pge.getInput().getMouse().getCursorPosX();
+    const int oldmy = m_pge.getInput().getMouse().getCursorPosY();
+
+    auto& window = m_pge.getPure().getWindow();
+    m_pge.getInput().getMouse().SetCursorPos(
+        window.getX() + window.getWidth() / 2,
+        window.getY() + window.getHeight() / 2);
+
+    const int dx = oldmx - m_pge.getInput().getMouse().getCursorPosX();
+    const int dy = oldmy - m_pge.getInput().getMouse().getCursorPosY();
+
+    static bool bInitialXHairPosForTestingApplied = false;
+    static std::chrono::time_point<std::chrono::steady_clock> timeInitialXHairPosForTestingApplied;
+    if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
+    {
+        const auto nSecsSinceInitialXHairPosForTestingApplied =
+            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeInitialXHairPosForTestingApplied).count();
+        // if we immediately apply cursor pos, it might be changed to center a few moments later at startup so we need to wait a bit
+        if (nSecsSinceInitialXHairPosForTestingApplied >= 2)
+        {
+            getConsole().EOLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
+            bInitialXHairPosForTestingApplied = true;
+            timeInitialXHairPosForTestingApplied = std::chrono::steady_clock::now();
+            if (m_pge.getNetwork().isServer())
+            {
+                objXHair.getPosVec().Set(100.f, -100.f, objXHair.getPosVec().getZ());
+            }
+            else
+            {
+                objXHair.getPosVec().Set(-100.f, -100.f, objXHair.getPosVec().getZ());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    if ((dx == 0) && (dy == 0))
+    {
+        return false;
+    }
+
+    // I'm thinking we should not come here at all if testing CVAR is set.
+
+    // at this point, we are not under testing, there was real mouse move we need to apply to xhair
+    const float fCursorNewX = std::min(
+        static_cast<float>(window.getClientWidth() / 2),
+        std::max(-static_cast<float>(window.getClientWidth() / 2), objXHair.getPosVec().getX() + dx));
+
+    const float fCursorNewY = std::min(
+        static_cast<float>(window.getClientHeight() / 2),
+        std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
+
+    //getConsole().EOLn("InputHandling::%s(): objXHair x: %f, y: %f!", __func__, fCursorNewX, fCursorNewY);
+    objXHair.getPosVec().Set(fCursorNewX, fCursorNewY, 0.f);
+
+    return true;
+}
+
+/**
+    @return True in case there was mouse (xhair) movement, false otherwise.
+*/
+bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
+    proofps_dd::GameMode& /*gameMode*/,
+    const proofps_dd::Player& /*player*/,
+    PureObject3D& objXHair)
+{
+    assert(!gameMode.isGameWon());
+    assert(player.isInSpectatorMode());
+
+    return clientMouseWhenConnectedToServer_mouseMovesXHair(objXHair);
+}
+
+/**
+    @return True in case there was mouse (xhair) movement, false otherwise.
+*/
 bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
     pge_network::PgePacket& pkt,
@@ -990,14 +1106,19 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
-    if (!gameMode.isPlayerAllowedForGameplay(player))
+    if (gameMode.isGameWon())
     {
-        // not error, valid state, maybe player not selected team yet
         return false;
     }
 
-    if (gameMode.isGameWon())
+    if (player.isInSpectatorMode())
     {
+        return clientMouseWhenConnectedToServer_Spectating(gameMode, player, objXHair);
+    }
+
+    if (!gameMode.isPlayerAllowedForGameplay(player))
+    {
+        // not error, valid state, maybe player not selected team yet
         return false;
     }
 
@@ -1071,62 +1192,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         }
     }
 
-    const int oldmx = m_pge.getInput().getMouse().getCursorPosX();
-    const int oldmy = m_pge.getInput().getMouse().getCursorPosY();
-
-    auto& window = m_pge.getPure().getWindow();
-    m_pge.getInput().getMouse().SetCursorPos(
-        window.getX() + window.getWidth() / 2,
-        window.getY() + window.getHeight() / 2);
-
-    const int dx = oldmx - m_pge.getInput().getMouse().getCursorPosX();
-    const int dy = oldmy - m_pge.getInput().getMouse().getCursorPosY();
-
-    static bool bInitialXHairPosForTestingApplied = false;
-    static std::chrono::time_point<std::chrono::steady_clock> timeInitialXHairPosForTestingApplied;
-    if (!bInitialXHairPosForTestingApplied && m_pge.getConfigProfiles().getVars()["testing"].getAsBool())
-    {
-        const auto nSecsSinceInitialXHairPosForTestingApplied =
-            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeInitialXHairPosForTestingApplied).count();
-        // if we immediately apply cursor pos, it might be changed to center a few moments later at startup so we need to wait a bit
-        if (nSecsSinceInitialXHairPosForTestingApplied >= 2)
-        {
-            getConsole().EOLn("InputHandling::%s(): Testing: Initial Mouse Cursor pos applied!", __func__);
-            bInitialXHairPosForTestingApplied = true;
-            timeInitialXHairPosForTestingApplied = std::chrono::steady_clock::now();
-            if (m_pge.getNetwork().isServer())
-            {
-                objXHair.getPosVec().Set(100.f, -100.f, objXHair.getPosVec().getZ());
-            }
-            else
-            {
-                objXHair.getPosVec().Set(-100.f, -100.f, objXHair.getPosVec().getZ());
-            }
-            return true;
-        }
-        return false;
-    }
-
-    if ((dx == 0) && (dy == 0))
-    {
-        return false;
-    }
-
-    // I'm thinking we should not come here at all if testing CVAR is set.
-
-    // at this point, we are not under testing, there was real mouse move we need to apply to xhair
-    const float fCursorNewX = std::min(
-        static_cast<float>(window.getClientWidth() / 2),
-        std::max(-static_cast<float>(window.getClientWidth() / 2), objXHair.getPosVec().getX() + dx));
-
-    const float fCursorNewY = std::min(
-        static_cast<float>(window.getClientHeight() / 2),
-        std::max(-static_cast<float>(window.getClientHeight() / 2), objXHair.getPosVec().getY() - dy));
-
-    //getConsole().EOLn("InputHandling::%s(): objXHair x: %f, y: %f!", __func__, fCursorNewX, fCursorNewY);
-    objXHair.getPosVec().Set(fCursorNewX, fCursorNewY, 0.f);
-
-    return true;
+    return clientMouseWhenConnectedToServer_mouseMovesXHair(objXHair);
 }
 
 void proofps_dd::InputHandling::clientUpdatePlayerAsPerInputAndSendUserCmdMoveToServer(

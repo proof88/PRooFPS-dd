@@ -111,6 +111,9 @@ namespace proofps_dd
         TPureFloat m_fLastWeaponAngleZSent;
 
         
+        void clientKeyboardWhenConnectedToServer_Spectating(
+            proofps_dd::GameMode& gameMode,
+            const proofps_dd::Player& player);
         PlayerAppActionRequest clientKeyboardWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
@@ -121,6 +124,11 @@ namespace proofps_dd
 
         PlayerAppActionRequest clientKeyboardWhenDisconnectedFromServer();
 
+        bool clientMouseWhenConnectedToServer_mouseMovesXHair(PureObject3D& objXHair);
+        bool clientMouseWhenConnectedToServer_Spectating(
+            proofps_dd::GameMode& gameMode,
+            const proofps_dd::Player& player,
+            PureObject3D& objXHair);
         bool clientMouseWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
             pge_network::PgePacket& pkt,
