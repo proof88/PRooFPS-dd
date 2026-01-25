@@ -95,7 +95,7 @@ This version brings the following **features**:
  - Shotgun does not contribute to player aim accuracy stats;
  - JetLax cannot be used while crouching.
 
-## v0.5.1 Private Beta (July 20, 2025)
+## v0.5.1 Private Beta (July 20, 2025, ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1JUiqWUTJKve-xOOZnN4rkNGRUu0_KuPI/view?usp=sharing).
 
@@ -108,7 +108,7 @@ With this being introduced, the **machine pistol's fire rate is set to 20 bullet
 Also, **a fix is delivered**: in the previous release we introduced stairs, but the physics code did not check if there was enough space for the player to step onto a stairstep.  
 This could lead to a visual glitch or even to get stuck in wall elements on the mutans map, but the fix takes care of this.
 
-## v0.5.0 Private Beta (March 07, 2025)
+## v0.5.0 Private Beta (March 07, 2025, ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1DJGDVqWaAaNDSENsDF7ofiL028kTMzCB/view?usp=drive_link).
 
@@ -130,7 +130,7 @@ This version brings the following bug fixes:
 This version brings the following behavior changes:
  - auto-crouching for mid-air somersault is now enabled by default in the server settings. The reason is because the jump-crouch-jump combo is too difficult to be pressed on notebook keyboards.
 
-## v0.4.3 Private Beta (Dec 07, 2024)
+## v0.4.3 Private Beta (Dec 07, 2024, ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1T5d9ksZYaB6SNq0FGmOuKkerI0h_QFiY/view?usp=drive_link).
 
