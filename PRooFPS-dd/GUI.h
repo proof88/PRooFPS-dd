@@ -325,6 +325,11 @@ namespace proofps_dd
         static void drawGameServerConfig();
         static void drawGameInfoPages();
 
+        static void drawSpectatorMode(const proofps_dd::Player& player);
+        static void handleEnterSpectatorMode(const proofps_dd::Player& player);
+        static void handleExitSpectatorMode(const proofps_dd::Player& player);
+        static void handleSpectatorMode(const proofps_dd::Player& player);
+
         /* In-Game Menu Handling */
 
         static void drawInGameWelcomeTeamSelectSpectatorMenu(

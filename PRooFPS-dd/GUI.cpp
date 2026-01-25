@@ -2479,6 +2479,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
             if (it != m_pMapPlayers->end())
             {
                 drawCurrentPlayerInfo(it->second);
+                handleSpectatorMode(it->second);
             }
 
             ImGui::PopFont();
@@ -2619,7 +2620,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         drawTextHighlighted(
             10,
             fStartY,
-            "Server, User name: " + player.getName() +
+            "You are Server, Name: " + player.getName() +
             (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
     }
     else
@@ -2627,9 +2628,14 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         drawTextHighlighted(
             10,
             fStartY,
-            "Client, User name: " + player.getName() +
+            "You are Client, Name: " + player.getName() +
             "; IP: " + player.getIpAddress() +
             (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
+    }
+
+    if (player.isInSpectatorMode())
+    {
+        return;
     }
 
     const float fYdiffBetweenRows = ImGui::GetCursorPos().y - fStartY; // now we know the vertical distance between each row as Dear ImGui calculated
@@ -4020,6 +4026,59 @@ void proofps_dd::GUI::drawGameInfoPages()
     default:
         break;
     }
+}
+
+void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
+{
+    if (!player.isInSpectatorMode())
+    {
+        return;
+    }
+
+    static constexpr char* const szFreeCamViewCaption = "Spectating in Free Camera View";
+    drawTextHighlighted(
+        getDearImGui2DposXforWindowCenteredText(szFreeCamViewCaption),
+        0,
+        szFreeCamViewCaption);
+
+    static const std::string szFreeCamViewText2 =
+        std::string("Toggle View: SPACE key, Join Game: '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key";
+    drawTextHighlighted(
+        getDearImGui2DposXforWindowCenteredText(szFreeCamViewText2),
+        ImGui::GetCursorPos().y,
+        szFreeCamViewText2);
+}
+
+void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& player)
+{
+}
+
+void proofps_dd::GUI::handleExitSpectatorMode(const proofps_dd::Player& player)
+{
+}
+
+void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
+{
+    static bool bPrevFrameSpectator = false;
+
+    if (player.isInSpectatorMode() && !bPrevFrameSpectator)
+    {
+        handleEnterSpectatorMode(player);
+    }
+    else if (!player.isInSpectatorMode() && bPrevFrameSpectator)
+    {
+        handleExitSpectatorMode(player);
+    }
+
+    assert(GameMode::getGameMode());
+    if (GameMode::getGameMode()->isGameWon())
+    {
+        return;
+    }
+
+    drawSpectatorMode(player);
+
+    bPrevFrameSpectator = player.isInSpectatorMode();
 }
 
 /**
