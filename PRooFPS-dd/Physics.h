@@ -15,6 +15,7 @@
 
 #include "PGE.h"
 
+#include "CameraHandling.h"
 #include "Durations.h"
 #include "GameMode.h"  /* TODO: get rid of GameMode, Physics should not have it */
 #include "GUI.h"
@@ -43,7 +44,8 @@ namespace proofps_dd
             proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
-            proofps_dd::Sounds& sounds);
+            proofps_dd::Sounds& sounds,
+            proofps_dd::CameraHandling& camera);
 
         Physics(const Physics&) = delete;
         Physics& operator=(const Physics&) = delete;

@@ -36,6 +36,8 @@ namespace proofps_dd
         CameraHandling(CameraHandling&&) = delete;
         CameraHandling&& operator=(CameraHandling&&) = delete;
 
+        PureVector& cameraGetPosToFollowInFreeView();
+
     protected:
         void cameraInitForGameStart();
 
@@ -61,6 +63,7 @@ namespace proofps_dd
         float m_fShakeFactorX = 0.f;
         float m_fShakeFactorY = 0.f;
         float m_fShakeDegree = 0.f;
+        PureVector m_vecPosToFollowInFreeCameraView{};  /**< Arbitrary purpose e.g. this is controlled by the user in free camera spectating view as a point to follow. */
 
         void cameraSmoothShakeForceTowardsZero(const float& fFps);
         void cameraUpdateShakeFactorXY(const float& fFps);

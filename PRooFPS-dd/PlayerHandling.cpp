@@ -28,13 +28,15 @@ proofps_dd::PlayerHandling::PlayerHandling(
     proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
-    proofps_dd::Sounds& sounds) :
+    proofps_dd::Sounds& sounds,
+    proofps_dd::CameraHandling& camera) :
     proofps_dd::Networking(pge, durations),
     m_pge(pge),
     m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
-    m_sounds(sounds)
+    m_sounds(sounds),
+    m_camera(camera)
 {
     // note that the following should not be touched here as they are not fully constructed when we are here:
     // pge, durations, gui, maps, sounds
@@ -257,7 +259,16 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             }
         }
         
-        if (!player.isInSpectatorMode())
+        if (player.isInSpectatorMode())
+        {
+            const bool bCurrentClient = isMyConnection(player.getServerSideConnectionHandle());
+            if (bCurrentClient)
+            {
+                m_camera.cameraGetPosToFollowInFreeView().SetX(player.getObject3D()->getPosVec().getX());
+                m_camera.cameraGetPosToFollowInFreeView().SetY(player.getObject3D()->getPosVec().getY());
+            }
+        }
+        else
         {
             // exiting spectator mode in team based game is possible only by explicit team selection!
             assert(!GameMode::getGameMode()->isTeamBasedGame());

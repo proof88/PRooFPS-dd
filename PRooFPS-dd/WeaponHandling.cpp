@@ -36,15 +36,17 @@ proofps_dd::WeaponHandling::WeaponHandling(
     proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
-    proofps_dd::Sounds& sounds) :
+    proofps_dd::Sounds& sounds,
+    proofps_dd::CameraHandling& camera) :
     proofps_dd::Physics(
         pge,
         m_durations,
         gui,
         m_mapPlayers,
         m_maps,
-        m_sounds),
-    proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds),
+        m_sounds,
+        camera),
+    proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds, camera),
     m_pge(pge),
     m_config(config),
     m_durations(durations),

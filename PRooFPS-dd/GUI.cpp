@@ -4049,11 +4049,11 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         szFreeCamViewText2);
 }
 
-void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& player)
+void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& /*player*/)
 {
 }
 
-void proofps_dd::GUI::handleExitSpectatorMode(const proofps_dd::Player& player)
+void proofps_dd::GUI::handleExitSpectatorMode(const proofps_dd::Player& /*player*/)
 {
 }
 

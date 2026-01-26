@@ -13,6 +13,7 @@
 
 #include "PGE.h"
 
+#include "CameraHandling.h"
 #include "Config.h"
 #include "Durations.h"
 #include "Explosion.h"
@@ -58,7 +59,8 @@ namespace proofps_dd
             proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
-            proofps_dd::Sounds& sounds);
+            proofps_dd::Sounds& sounds,
+            proofps_dd::CameraHandling& camera);
 
         WeaponHandling(const WeaponHandling&) = delete;
         WeaponHandling& operator=(const WeaponHandling&) = delete;

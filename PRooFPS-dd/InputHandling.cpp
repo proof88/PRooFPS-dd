@@ -34,13 +34,15 @@ proofps_dd::InputHandling::InputHandling(
     proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
-    proofps_dd::Sounds& sounds) :
+    proofps_dd::Sounds& sounds,
+    proofps_dd::CameraHandling& camera) :
     m_pge(pge),
     m_durations(durations),
     m_gui(gui),
     m_mapPlayers(mapPlayers),
     m_maps(maps),
     m_sounds(sounds),
+    m_camera(camera),
     m_prevStrafe(proofps_dd::Strafe::NONE),
     m_strafe(proofps_dd::Strafe::NONE),
     m_bPrevAttack(false),
@@ -547,19 +549,23 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
     // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
     if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
     {
-        m_strafe = proofps_dd::Strafe::LEFT;
+        m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() - 0.1f);
     }
-    else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+    
+    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
     {
-        m_strafe = proofps_dd::Strafe::RIGHT;
-    }
-    else
-    {
-        m_strafe = proofps_dd::Strafe::NONE;
+        m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() + 0.1f);
     }
 
-    m_bJump = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w'));
-    m_bDescent = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
+    if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
+    {
+        m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() + 0.1f);
+    }
+
+    if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
+    {
+        m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() - 0.1f);
+    }
 
     //m_bAttack = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE);
     //if (m_bAttack)
@@ -1064,8 +1070,8 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_mouseMovesXHair
     @return True in case there was mouse (xhair) movement, false otherwise.
 */
 bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
-    proofps_dd::GameMode& /*gameMode*/,
-    const proofps_dd::Player& /*player*/,
+    proofps_dd::GameMode& gameMode,
+    const proofps_dd::Player& player,
     PureObject3D& objXHair)
 {
     assert(!gameMode.isGameWon());

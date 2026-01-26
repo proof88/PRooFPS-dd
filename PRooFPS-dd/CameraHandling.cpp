@@ -46,6 +46,11 @@ proofps_dd::CameraHandling::CameraHandling(
 // ############################## PROTECTED ##############################
 
 
+PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowInFreeView()
+{
+    return m_vecPosToFollowInFreeCameraView;
+}
+
 void proofps_dd::CameraHandling::cameraInitForGameStart()
 {
     // we cannot set these in ctor because at that point PURE is not yet initialized
@@ -67,6 +72,11 @@ void proofps_dd::CameraHandling::cameraPositionToMapCenter()
         cam.getPosVec().getX(),
         cam.getPosVec().getY(),
         -proofps_dd::Maps::fMapBlockSizeDepth);
+
+    m_vecPosToFollowInFreeCameraView.Set(
+        cam.getPosVec().getX(),
+        cam.getPosVec().getY(),
+        proofps_dd::Maps::GAME_PLAYERS_POS_Z);
 }
 
 void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
@@ -199,6 +209,16 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleToFollowPos(
         m_maps.getBlocksVertexPosMax().getY() :
         m_maps.getBlocksVertexPosMin().getY() + (proofps_dd::Maps::fMapBlockSizeHeight * (m_maps.height() - nBlocksToKeepCameraWithinMapTop + 1));
 
+    m_vecPosToFollowInFreeCameraView.SetX(
+        std::min(
+            fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
+            std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, m_vecPosToFollowInFreeCameraView.getX())));
+    
+    m_vecPosToFollowInFreeCameraView.SetY(
+        std::min(
+            fCamMaxAllowedPosYtoKeepAwayFromMapVerticalBounds,
+            std::max(fCamMinAllowedPosYtoKeepAwayFromMapVerticalBounds, m_vecPosToFollowInFreeCameraView.getY())));
+
     // TODO: multipliers 6 and 4 are roughly okay for 1024x768 and 1080p, but later ratio should be introduced based on actual screen width and height
     constexpr float fCamMaxXDistanceFromPlayer = Maps::fMapBlockSizeWidth * 6;
     constexpr float fCamMaxYDistanceFromPlayer = Maps::fMapBlockSizeHeight * 4;
@@ -222,7 +242,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleToFollowPos(
             (std::max(
                 vecFollowPos.getY() + vecFollowPos.getY() - fCamMaxYDistanceFromPlayer,
                 vecFollowPos.getY() + xhair.getUnprojectedCoords().getY()) / 2.f);
-
+       
         fCamPosXTarget = std::min(
             fCamMaxAllowedPosXtoKeepAwayFromMapHorizontalBounds,
             std::max(fCamMinAllowedPosXtoKeepAwayFromMapHorizontalBounds, fPosXBetweenPlayerAndCamera));
@@ -274,16 +294,13 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorM
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed)
 {
-    // TODO:
-    // - find out what position (vecPosSpectatorFollow) the camera shall follow (maybe a separate member in CameraHandling),
-    // - find out how to control vecPosSpectatorFollow based on InputHandling::m_strafe and other members,
-    // - invoke: cameraUpdatePosAndAngleToFollowPos(
-    //              cam,
-    //              vecPosSpectatorFollow,
-    //              xhair,
-    //              fFps,
-    //              bCamFollowsXHair,
-    //              bCamTiltingAllowed);
+    cameraUpdatePosAndAngleToFollowPos(
+        cam,
+        m_vecPosToFollowInFreeCameraView,
+        xhair,
+        fFps,
+        bCamFollowsXHair,
+        bCamTiltingAllowed);
 }
 
 void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(PureCamera& cam, const Player& player)

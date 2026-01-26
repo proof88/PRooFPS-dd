@@ -14,6 +14,7 @@
 
 #include "PGE.h"
 
+#include "CameraHandling.h"
 #include "Durations.h"
 #include "GameMode.h"
 #include "GUI.h"
@@ -58,7 +59,8 @@ namespace proofps_dd
             proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
-            proofps_dd::Sounds& sounds);
+            proofps_dd::Sounds& sounds,
+            proofps_dd::CameraHandling& camera);
 
         InputHandling(const InputHandling&) = delete;
         InputHandling& operator=(const InputHandling&) = delete;
@@ -97,6 +99,7 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         Maps& m_maps;
         Sounds& m_sounds;
+        proofps_dd::CameraHandling& m_camera;
 
         Strafe m_prevStrafe;
         Strafe m_strafe;

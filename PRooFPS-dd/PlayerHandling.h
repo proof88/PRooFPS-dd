@@ -20,6 +20,7 @@
 #include "PGE.h"
 #include "Config/PgeOldNewValue.h"
 
+#include "CameraHandling.h"
 #include "Config.h"
 #include "Consts.h"
 #include "Durations.h"
@@ -52,7 +53,8 @@ namespace proofps_dd
             proofps_dd::GUI& gui,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             proofps_dd::Maps& maps,
-            proofps_dd::Sounds& sounds);
+            proofps_dd::Sounds& sounds,
+            proofps_dd::CameraHandling& camera);
 
         PlayerHandling(const PlayerHandling&) = delete;
         PlayerHandling& operator=(const PlayerHandling&) = delete;
@@ -140,6 +142,7 @@ namespace proofps_dd
         std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers;
         proofps_dd::Maps& m_maps;
         proofps_dd::Sounds& m_sounds;
+        proofps_dd::CameraHandling& m_camera;
 
         unsigned int m_nSendClientUpdatesInEveryNthTick = 1;
         unsigned int m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;

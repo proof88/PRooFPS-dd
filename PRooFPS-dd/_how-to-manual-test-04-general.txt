@@ -29,11 +29,20 @@
    - check if non-bouncing bullets are actually able to ricochet off the wall (hit angle <= 10 degrees).
 
    - Spectator Mode:
+     - negative test: check if neither server nor client instance can enter into Spectator mode when the game is already won
+       (during showing end-game results).
+       - further check if welcome/team select menu is NOT shown to a new client who joins the server when the game is already won
+         (during showing end-game results).
+
      - check if all players can correctly enter into Spectator Mode:
        - right after connecting to server,
        - later back from active gameplay.
+
      - check if all spectating camera modes are working properly:
-       - free camera control spectating mode,
+       - free camera control spectating mode, both on server- and client-sides.
+         - check not only with the default "XHair and Player" value of the "Camera Follows" setting but also with the "Player only" value setting.
+         - check with and without "Camera Tilting" setting,
+         - check with and without "Camera Rolling" setting.
        - player follow camera spectating mode.
 
  

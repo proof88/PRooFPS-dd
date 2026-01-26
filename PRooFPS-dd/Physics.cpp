@@ -26,8 +26,9 @@ proofps_dd::Physics::Physics(
     proofps_dd::GUI& gui,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     proofps_dd::Maps& maps,
-    proofps_dd::Sounds& sounds) :
-    proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds),
+    proofps_dd::Sounds& sounds,
+    proofps_dd::CameraHandling& camera) :
+    proofps_dd::PlayerHandling(pge, durations, gui, mapPlayers, maps, sounds, camera),
     m_pge(pge),
     m_durations(durations),
     m_mapPlayers(mapPlayers),

@@ -43,6 +43,8 @@ namespace proofps_dd
         static constexpr size_t nStairstepsCount = 4;
         static constexpr float fStairstepHeight = fMapBlockSizeHeight / static_cast<float>(nStairstepsCount);
 
+        static constexpr float GAME_PLAYERS_POS_Z = -1.2f;
+
         static const char* getLoggerModuleName();
 
         // ---------------------------------------------------------------------------
@@ -119,7 +121,6 @@ namespace proofps_dd
 
     private:
 
-        static constexpr float GAME_PLAYERS_POS_Z = -1.2f;
         static constexpr float GAME_ITEMS_POS_Z = GAME_PLAYERS_POS_Z + 0.1f;  // avoid Z-fighting with items the player cannot take
         static constexpr float GAME_DECAL_POS_Z = fMapBlockSizeDepth / -2.f;
         static constexpr float GAME_DECOR_POS_Z = fMapBlockSizeDepth / -2.f - 0.1f;  // decors are close to the wall surfaces TODO: rename because this is just for jumppads only
