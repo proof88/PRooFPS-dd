@@ -562,6 +562,7 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
         {
             m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() + 0.1f);
+        }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
         {
