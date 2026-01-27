@@ -64,6 +64,7 @@ static void browseToUrl(const char* url)
 
 proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     PGE& pge,
+    proofps_dd::CameraHandling& camera,
     proofps_dd::Config& config,
     proofps_dd::Maps& maps,
     proofps_dd::Networking& networking,
@@ -75,6 +76,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     // config, maps, networking, pge
     // But they can be used in other functions.
     static GUI m_guiInstance;
+    m_pCamera = &camera;
     m_pPge = &pge;
     m_pConfig = &config;
     m_pMaps = &maps;
@@ -682,6 +684,7 @@ proofps_dd::PureObject3dInOutSlider& proofps_dd::GUI::getSlidingProof88Laugh()
 
 
 PGE* proofps_dd::GUI::m_pPge = nullptr;
+proofps_dd::CameraHandling* proofps_dd::GUI::m_pCamera = nullptr;
 proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
@@ -4028,6 +4031,18 @@ void proofps_dd::GUI::drawGameInfoPages()
     }
 }
 
+static std::string getPlayerNameByConnHandle(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+    const pge_network::PgeNetworkConnectionHandle& connHandle)
+{
+    const auto playerIt = mapPlayers.find(connHandle);
+    if (mapPlayers.end() != playerIt)
+    {
+        return playerIt->second.getName();
+    }
+    return "Unknown Player";
+}
+
 void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
 {
     if (!player.isInSpectatorMode())
@@ -4035,18 +4050,39 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         return;
     }
 
-    static constexpr char* const szFreeCamViewCaption = "Spectating in Free Camera View";
-    drawTextHighlighted(
-        getDearImGui2DposXforWindowCenteredText(szFreeCamViewCaption),
-        0,
-        szFreeCamViewCaption);
+    assert(m_pCamera);
 
-    static const std::string szFreeCamViewText2 =
+    if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
+    {
+        static constexpr char* const szFreeCamViewCaption = "Spectating in Free Camera View";
+        drawTextHighlighted(
+            getDearImGui2DposXforWindowCenteredText(szFreeCamViewCaption),
+            0,
+            szFreeCamViewCaption);
+    }
+    else
+    {
+        // players are added/deleted before each frame, and GUI as drawn at the end of each frame, so
+        // in theory cameraGetPlayerConnectionHandleToFollowInSpectatingView() always returns a valid
+        // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
+        // still checking its validity with getPlayerNameByConnHandle().
+        assert(m_pMapPlayers);
+        const std::string sPlayerFollowViewCaption =
+            std::string("Spectating ") +
+            getPlayerNameByConnHandle(*m_pMapPlayers, m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+
+        drawTextHighlighted(
+            getDearImGui2DposXforWindowCenteredText(sPlayerFollowViewCaption),
+            0,
+            sPlayerFollowViewCaption);
+    }
+
+    static const std::string szText2 =
         std::string("Toggle View: SPACE key, Join Game: '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key";
     drawTextHighlighted(
-        getDearImGui2DposXforWindowCenteredText(szFreeCamViewText2),
+        getDearImGui2DposXforWindowCenteredText(szText2),
         ImGui::GetCursorPos().y,
-        szFreeCamViewText2);
+        szText2);
 }
 
 void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& /*player*/)

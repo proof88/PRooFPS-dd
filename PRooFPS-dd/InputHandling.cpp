@@ -546,32 +546,37 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
     assert(player.isInSpectatorMode());
     // in this function, m_strafe and other members are re-used for controlling the spectating view in spectator mode
 
-    // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
-    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+    if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
     {
-        m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() - 0.1f);
+        // in future if FPS limit can be disable we probably will want to divide here by fps
+        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+        {
+            m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() - 0.1f);
+        }
+
+        if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+        {
+            m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() + 0.1f);
+        }
+
+        if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
+        {
+            m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() + 0.1f);
+
+        if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
+        {
+            m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() - 0.1f);
+        }
     }
-    
-    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+    else
     {
-        m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() + 0.1f);
+        // TODO: add iterating forward/backward in between valid players using strafe keys
     }
 
-    if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))
     {
-        m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() + 0.1f);
+        m_camera.cameraToggleSpectatingView();
     }
-
-    if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
-    {
-        m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() - 0.1f);
-    }
-
-    //m_bAttack = m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE);
-    //if (m_bAttack)
-    //{
-    //    // TODO: toggle spectating view
-    //}
     
 } // clientKeyboardWhenConnectedToServer_Spectating()
 
@@ -1076,6 +1081,11 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
 {
     assert(!gameMode.isGameWon());
     assert(player.isInSpectatorMode());
+
+    if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
+    {
+        // TODO: add iterating forward/backward in between valid players using LCLICK/RCLICK
+    }
 
     return clientMouseWhenConnectedToServer_mouseMovesXHair(objXHair);
 }

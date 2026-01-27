@@ -15,6 +15,7 @@
 #include "PGE.h"
 
 #include "Durations.h"
+#include "GameMode.h"
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -26,6 +27,13 @@ namespace proofps_dd
     class CameraHandling
     {
     public:
+
+        enum class SpectatingView
+        {
+            Free,
+            PlayerFollow
+        };
+
         CameraHandling(
             PGE& pge,
             Durations& durations,
@@ -36,7 +44,10 @@ namespace proofps_dd
         CameraHandling(CameraHandling&&) = delete;
         CameraHandling&& operator=(CameraHandling&&) = delete;
 
+        SpectatingView& cameraGetSpectatingView();
+        void cameraToggleSpectatingView();
         PureVector& cameraGetPosToFollowInFreeView();
+        const pge_network::PgeNetworkConnectionHandle& cameraGetPlayerConnectionHandleToFollowInSpectatingView() const;
 
     protected:
         void cameraInitForGameStart();
@@ -44,6 +55,7 @@ namespace proofps_dd
         void cameraPositionToMapCenter();
         
         void cameraUpdatePosAndAngle(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             const Player& player,
             const XHair& xhair,
             const float& fFps,
@@ -63,7 +75,13 @@ namespace proofps_dd
         float m_fShakeFactorX = 0.f;
         float m_fShakeFactorY = 0.f;
         float m_fShakeDegree = 0.f;
-        PureVector m_vecPosToFollowInFreeCameraView{};  /**< Arbitrary purpose e.g. this is controlled by the user in free camera spectating view as a point to follow. */
+        PureVector m_vecPosToFollowInFreeCameraView{};
+        SpectatingView m_eSpectatingView{ SpectatingView::Free };
+        pge_network::PgeNetworkConnectionHandle m_connHandlePlayerToFollowInSpectatingView{ pge_network::ServerConnHandle };
+
+        bool findAnyValidPlayerToFollowInSpectatingView(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+            PureVector& posPlayerToFollow);
 
         void cameraSmoothShakeForceTowardsZero(const float& fFps);
         void cameraUpdateShakeFactorXY(const float& fFps);
@@ -75,6 +93,7 @@ namespace proofps_dd
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed);
         void cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             PureCamera& cam,
             const XHair& xhair,
             const float& fFps,

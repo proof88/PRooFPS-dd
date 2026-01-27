@@ -17,6 +17,7 @@
 #include "PGE.h"
 
 #include "Config.h"
+#include "CameraHandling.h"
 #include "DeathKillEventLister.h"
 #include "GameMode.h"
 #include "Maps.h"
@@ -71,6 +72,7 @@ namespace proofps_dd
 
         static GUI& getGuiInstance(
             PGE& pge,
+            proofps_dd::CameraHandling& camera,
             proofps_dd::Config& config,
             proofps_dd::Maps& maps,
             proofps_dd::Networking& networking,
@@ -165,6 +167,7 @@ namespace proofps_dd
     private:
 
         static PGE* m_pPge;
+        static CameraHandling* m_pCamera;
         static Config* m_pConfig;
         static Maps* m_pMaps;
         static Networking* m_pNetworking;

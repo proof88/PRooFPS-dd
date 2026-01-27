@@ -337,10 +337,14 @@ namespace proofps_dd
 
         /**
         * Checks if given player is allowed for gameplay.
-        * Primarily this is for server instance.
         * For example, in a team-based game mode, server can freeze player actions when no team is assigned to the player.
+        * But it also checks for spectator mode.
+        *
+        * Can be used by both server and client instances.
+        * Must also work properly on client-side, since in player-follow spectating view, this function is used to determine
+        * which players can be spectated.
         * 
-        * @return True if player is ready for gameplay in the current game mode, false otherwise.
+        * @return True if player is ready and active for gameplay in the current game mode, false otherwise.
         */
         virtual bool isPlayerAllowedForGameplay(const Player& player) const;
 
