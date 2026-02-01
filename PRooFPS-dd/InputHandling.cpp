@@ -551,27 +551,37 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
         // in future if FPS limit can be disable we probably will want to divide here by fps
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
-            m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() - 0.1f);
+            m_camera.cameraGetPosToFollowInSpectatorMode().SetX(m_camera.cameraGetPosToFollowInSpectatorMode().getX() - 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
         {
-            m_camera.cameraGetPosToFollowInFreeView().SetX(m_camera.cameraGetPosToFollowInFreeView().getX() + 0.1f);
+            m_camera.cameraGetPosToFollowInSpectatorMode().SetX(m_camera.cameraGetPosToFollowInSpectatorMode().getX() + 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
         {
-            m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() + 0.1f);
+            m_camera.cameraGetPosToFollowInSpectatorMode().SetY(m_camera.cameraGetPosToFollowInSpectatorMode().getY() + 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
         {
-            m_camera.cameraGetPosToFollowInFreeView().SetY(m_camera.cameraGetPosToFollowInFreeView().getY() - 0.1f);
+            m_camera.cameraGetPosToFollowInSpectatorMode().SetY(m_camera.cameraGetPosToFollowInSpectatorMode().getY() - 0.1f);
         }
     }
-    else
+    else /* SpectatingView::PlayerFollow */
     {
-        // TODO: add iterating forward/backward in between valid players using strafe keys
+        if (m_pge.getInput().getKeyboard().areKeysPressedOnce(VK_LEFT, (unsigned char)VkKeyScan('a')))
+        {
+            // dont need to check result, CameraHandling::cameraUpdatePosAndAngle() will take care of the rest
+            m_camera.findPrevValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers);
+        }
+
+        if (m_pge.getInput().getKeyboard().areKeysPressedOnce(VK_RIGHT, (unsigned char)VkKeyScan('d')))
+        {
+            // dont need to check result, CameraHandling::cameraUpdatePosAndAngle() will take care of the rest
+            m_camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers);
+        }
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(VK_SPACE))

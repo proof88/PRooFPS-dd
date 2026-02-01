@@ -264,8 +264,8 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             const bool bCurrentClient = isMyConnection(player.getServerSideConnectionHandle());
             if (bCurrentClient)
             {
-                m_camera.cameraGetPosToFollowInFreeView().SetX(player.getObject3D()->getPosVec().getX());
-                m_camera.cameraGetPosToFollowInFreeView().SetY(player.getObject3D()->getPosVec().getY());
+                m_camera.cameraGetPosToFollowInSpectatorMode().SetX(player.getObject3D()->getPosVec().getX());
+                m_camera.cameraGetPosToFollowInSpectatorMode().SetY(player.getObject3D()->getPosVec().getY());
             }
         }
         else

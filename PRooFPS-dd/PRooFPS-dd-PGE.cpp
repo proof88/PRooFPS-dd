@@ -58,11 +58,11 @@ const char* proofps_dd::PRooFPSddPGE::getLoggerModuleName()
 proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
     PGE(gameTitle),
     proofps_dd::CameraHandling(
-        *this, /* Hint: for 1-param ctors, use: static_cast<PGE&>(*this) so it will call the only ctor, not the deleted copy ctor. */
+        this->getPure() /* cannot be null since PGE is initialized in above line */,
         m_durations,
         m_maps),
     proofps_dd::InputHandling(
-        *this,
+        *this, /* Hint: for 1-param ctors, use: static_cast<PGE&>(*this) so it will call the only ctor, not the deleted copy ctor. */
         m_durations,
         m_gui,
         m_mapPlayers,
@@ -857,6 +857,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     //}
     
     cameraUpdatePosAndAngle(
+        getAudio(),
         m_mapPlayers,
         player,
         *m_gui.getXHair(),

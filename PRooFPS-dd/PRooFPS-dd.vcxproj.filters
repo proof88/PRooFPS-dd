@@ -399,6 +399,9 @@
     <ClInclude Include="PureObject3dInOutSlider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tests\CameraHandlingTest.h">
+      <Filter>Header Files\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

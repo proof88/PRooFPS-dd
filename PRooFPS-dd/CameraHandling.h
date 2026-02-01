@@ -15,7 +15,6 @@
 #include "PGE.h"
 
 #include "Durations.h"
-#include "GameMode.h"
 #include "Maps.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -34,8 +33,14 @@ namespace proofps_dd
             PlayerFollow
         };
 
+        static const char* getLoggerModuleName();
+
+        // ---------------------------------------------------------------------------
+
+        CConsole& getConsole() const;
+
         CameraHandling(
-            PGE& pge,
+            PR00FsUltimateRenderingEngine& pure,
             Durations& durations,
             Maps& maps);
 
@@ -46,8 +51,17 @@ namespace proofps_dd
 
         SpectatingView& cameraGetSpectatingView();
         void cameraToggleSpectatingView();
-        PureVector& cameraGetPosToFollowInFreeView();
+
+        PureVector& cameraGetPosToFollowInSpectatorMode();
         const pge_network::PgeNetworkConnectionHandle& cameraGetPlayerConnectionHandleToFollowInSpectatingView() const;
+
+        bool findNextValidPlayerToFollowInPlayerSpectatingView(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
+        bool findPrevValidPlayerToFollowInPlayerSpectatingView(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
+        bool findAnyValidPlayerToFollowInPlayerSpectatingView(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+            PureVector& posPlayerToFollow);
 
     protected:
         void cameraInitForGameStart();
@@ -55,6 +69,7 @@ namespace proofps_dd
         void cameraPositionToMapCenter();
         
         void cameraUpdatePosAndAngle(
+            pge_audio::PgeAudio& audio,
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             const Player& player,
             const XHair& xhair,
@@ -66,7 +81,7 @@ namespace proofps_dd
         PureVector& cameraGetShakeForce();
     
     private:
-        PGE& m_pge;
+        PR00FsUltimateRenderingEngine& m_pure;
         Durations& m_durations;
         Maps& m_maps;
 
@@ -78,10 +93,6 @@ namespace proofps_dd
         PureVector m_vecPosToFollowInFreeCameraView{};
         SpectatingView m_eSpectatingView{ SpectatingView::Free };
         pge_network::PgeNetworkConnectionHandle m_connHandlePlayerToFollowInSpectatingView{ pge_network::ServerConnHandle };
-
-        bool findAnyValidPlayerToFollowInSpectatingView(
-            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-            PureVector& posPlayerToFollow);
 
         void cameraSmoothShakeForceTowardsZero(const float& fFps);
         void cameraUpdateShakeFactorXY(const float& fFps);

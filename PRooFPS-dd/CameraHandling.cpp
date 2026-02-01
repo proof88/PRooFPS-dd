@@ -15,6 +15,7 @@
 #include "PURE/include/external/Math/PureTransformMatrix.h"
 
 #include "CameraHandling.h"
+#include "GameMode.h"
 
 static constexpr float GAME_CAM_Z = -5.0f;
 static constexpr float GAME_CAM_SPEED_X = 0.1f;
@@ -24,11 +25,21 @@ static constexpr float GAME_CAM_SPEED_Y = 0.3f;
 // ############################### PUBLIC ################################
 
 
+const char* proofps_dd::CameraHandling::getLoggerModuleName()
+{
+    return "CameraHandling";
+}
+
+CConsole& proofps_dd::CameraHandling::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
 proofps_dd::CameraHandling::CameraHandling(
-    PGE& pge,
+    PR00FsUltimateRenderingEngine& pure,
     proofps_dd::Durations& durations,
     proofps_dd::Maps& maps) :
-    m_pge(pge),
+    m_pure(pure),
     m_durations(durations),
     m_maps(maps)
 {
@@ -39,11 +50,8 @@ proofps_dd::CameraHandling::CameraHandling(
     // Since this class is used to build up the PRooFPSddPGE class which is derived from PGE class, PGE is not yet initialized
     // when this ctor is invoked. PRooFPSddPGE initializes PGE later. Furthermore, even the pimpl object inside PGE might not
     // be existing at this point, only isGameRunning() is safe to call. The following assertion is reminding me of that:
-    assert(!pge.isGameRunning());
+    assert(!m_pure.isInitialized());
 }
-
-
-// ############################## PROTECTED ##############################
 
 
 proofps_dd::CameraHandling::SpectatingView& proofps_dd::CameraHandling::cameraGetSpectatingView()
@@ -67,7 +75,11 @@ void proofps_dd::CameraHandling::cameraToggleSpectatingView()
     // cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode() does that anyway in every frame!
 }
 
-PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowInFreeView()
+/**
+* This is essentially controlled by cameraUpdatePosAndAngle() when we are in spectator mode, however
+* it is allowed to be accessed by the user to update it in "free camera spectating view".
+*/
+PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowInSpectatorMode()
 {
     return m_vecPosToFollowInFreeCameraView;
 }
@@ -81,103 +93,240 @@ const pge_network::PgeNetworkConnectionHandle& proofps_dd::CameraHandling::camer
     return m_connHandlePlayerToFollowInSpectatingView;
 }
 
-void proofps_dd::CameraHandling::cameraInitForGameStart()
+/**
+* Useful when we want to iterate to the next spectatable player in "player follow spectating view".
+* 
+* If the function returns true, the following function returns valid data:
+*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*
+* @param mapPlayers List of all connected players where we are searching for a player to be spectated.
+*
+* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now been updated,
+*         false otherwise.
+*         False means we cannot follow anyone, need to switch back to "free camera spectating view".
+*/
+bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingView(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
-    // we cannot set these in ctor because at that point PURE is not yet initialized
-    m_pge.getPure().getCamera().SetNearPlane(0.1f);
-    m_pge.getPure().getCamera().SetFarPlane(100.0f);
-    m_pge.getPure().getCamera().getPosVec().Set(0, 0, GAME_CAM_Z);
-    m_pge.getPure().getCamera().getTargetVec().Set(0, 0, -proofps_dd::Maps::fMapBlockSizeDepth);
-}
-
-void proofps_dd::CameraHandling::cameraPositionToMapCenter()
-{
-    auto& cam = m_pge.getPure().getCamera();
-
-    cam.getPosVec().Set(
-        (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
-        (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
-        GAME_CAM_Z);
-    cam.getTargetVec().Set(
-        cam.getPosVec().getX(),
-        cam.getPosVec().getY(),
-        -proofps_dd::Maps::fMapBlockSizeDepth);
-
-    m_vecPosToFollowInFreeCameraView.Set(
-        cam.getPosVec().getX(),
-        cam.getPosVec().getY(),
-        proofps_dd::Maps::GAME_PLAYERS_POS_Z);
-}
-
-void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
-    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-    const Player& player,
-    const XHair& xhair,
-    const float& fFps,
-    bool bCamFollowsXHair,
-    bool bCamTiltingAllowed,
-    bool bCamRollAllowed)
-{
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    cameraSmoothShakeForceTowardsZero(fFps);
-    cameraUpdateShakeFactorXY(fFps);
-
-    auto& cam = m_pge.getPure().getCamera();
-
-    if (player.isInSpectatorMode())
+    if (mapPlayers.empty())
     {
-        cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(mapPlayers, cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        return false;
+    }
+
+    const GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
+
+    // first find the player currently being spectated
+    auto it = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
+    const auto currentSpectatedPlayerIt = it;
+
+    if (currentSpectatedPlayerIt == mapPlayers.end())
+    {
+        // invalid current spectated player, just find another one
+        it = mapPlayers.begin();
     }
     else
     {
-        if (bCamRollAllowed && player.isSomersaulting())
+        // valid current spectated player, first we are searching new one until end of container, then
+        // from beginning of container until the current spectated player is found again
+        ++it;
+    }
+
+    // try find a next one
+    while (it != mapPlayers.end())
+    {
+        if (gm->isPlayerAllowedForGameplay(it->second))
         {
-            cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(cam, player);
+            m_connHandlePlayerToFollowInSpectatingView = it->first;
+            CConsole::getConsoleInstance().EOLn(
+                "%s(): found a player: %u, name: %s",
+                __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+            return true;
         }
-        else
+        ++it;
+    }
+
+    if (currentSpectatedPlayerIt == mapPlayers.end())
+    {
+        // reached end of container without finding a next spectatable player, from beginning of container
+        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        return false;
+    }
+    else
+    {
+        // reached end of container without finding a next spectatable player BUT we didnt search from
+        // the beginning of container so try that until the current spectated player is found again
+        it = mapPlayers.begin();
+        while (it != currentSpectatedPlayerIt)
         {
-            cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+            if (gm->isPlayerAllowedForGameplay(it->second))
+            {
+                m_connHandlePlayerToFollowInSpectatingView = it->first;
+                CConsole::getConsoleInstance().EOLn(
+                    "%s(): found a player: %u, name: %s",
+                    __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+                return true;
+            }
+            ++it;
+        }
+
+        // didn't find anyone, last-resort is the current spectated player
+        if (gm->isPlayerAllowedForGameplay(currentSpectatedPlayerIt->second))
+        {
+            // current m_connHandlePlayerToFollowInSpectatingView is valid
+            CConsole::getConsoleInstance().EOLn(
+                "%s(): found the currently spectated player only: %u, name: %s",
+                __func__, m_connHandlePlayerToFollowInSpectatingView, currentSpectatedPlayerIt->second.getName().c_str());
+            return true;
         }
     }
 
-    /*
-    * Looks like it is enough if I pass (0,0,1) as At vector.
-    * Anyway, in the future if there is any fishy 3D audio issue related to orientation, remember these tickets:
-    *  - https://github.com/jarikomppa/soloud/issues/94
-    *  - https://github.com/jarikomppa/soloud/issues/105
-    */
-    m_pge.getAudio().getAudioEngineCore().set3dListenerParameters(
-        cam.getPosVec().getX(), cam.getPosVec().getY(), cam.getPosVec().getZ(),
-        0, 0, 1 /*cam.getTargetVec().getX(), cam.getTargetVec().getY(), cam.getTargetVec().getZ()*/,
-        cam.getUpVec().getX(), cam.getUpVec().getY(), cam.getUpVec().getZ());
-    m_pge.getAudio().getAudioEngineCore().update3dAudio();
+    CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+    return false;
+} // findNextValidPlayerToFollowInPlayerSpectatingView()
 
-    m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-}
 
-PureVector& proofps_dd::CameraHandling::cameraGetShakeForce()
+/**
+* Useful when we want to iterate to the previous spectatable player in "player follow spectating view".
+* 
+* If the function returns true, the following function returns valid data:
+*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*
+* @param mapPlayers List of all connected players where we are searching for a player to be spectated.
+*
+* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now been updated,
+*         false otherwise.
+*         False means we cannot follow anyone, need to switch back to "free camera spectating view".
+*/
+bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingView(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
-    return m_vecCamShakeForce;
-}
+    if (mapPlayers.empty())
+    {
+        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        return false;
+    }
 
+    const GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
 
-// ############################### PRIVATE ###############################
+    // first find the player currently being spectated
+    auto it = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
+    const auto currentSpectatedPlayerIt = it;
 
+    if (currentSpectatedPlayerIt == mapPlayers.end())
+    {
+        // invalid current spectated player, just find another one
+        --it; // cannot fail since container is not empty
+    }
+    else
+    {
+        // valid current spectated player, first we are searching new one until beginning of container, then
+        // from end of container until the current spectated player is found again
+        if (mapPlayers.size() > 1)
+        {
+            --it;
+        }
+        else
+        {
+            // only the currently spectated player is in the container
+            if (gm->isPlayerAllowedForGameplay(it->second))
+            {
+                // current m_connHandlePlayerToFollowInSpectatingView is valid
+                CConsole::getConsoleInstance().EOLn(
+                    "%s(): found the currently spectated player only: %u, name: %s",
+                    __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+                return true;
+            }
+            CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+            return false;
+        }
+    }
+
+    // try find a next one
+    while (it != mapPlayers.begin())
+    {
+        if (gm->isPlayerAllowedForGameplay(it->second))
+        {
+            m_connHandlePlayerToFollowInSpectatingView = it->first;
+            CConsole::getConsoleInstance().EOLn(
+                "%s(): found a player: %u, name: %s",
+                __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+            return true;
+        }
+        --it;
+    } 
+
+    // it == mapPlayers.begin()
+    if (gm->isPlayerAllowedForGameplay(it->second))
+    {
+        m_connHandlePlayerToFollowInSpectatingView = it->first;
+        CConsole::getConsoleInstance().EOLn(
+            "%s(): found a player: %u, name: %s",
+            __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+        return true;
+    }
+
+    if (currentSpectatedPlayerIt == mapPlayers.end())
+    {
+        // reached beginning of container without finding a next spectatable player, from end of container
+        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        return false;
+    }
+    else
+    {
+        // reached beginning of container without finding a next spectatable player BUT we didnt search from
+        // the end of container so try that until the current spectated player is found again
+        it = mapPlayers.end();
+        --it; // cannot fail since container is not empty
+        while (it != currentSpectatedPlayerIt)
+        {
+            if (gm->isPlayerAllowedForGameplay(it->second))
+            {
+                m_connHandlePlayerToFollowInSpectatingView = it->first;
+                CConsole::getConsoleInstance().EOLn(
+                    "%s(): found a player: %u, name: %s",
+                    __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
+                return true;
+            }
+            --it;
+        }
+
+        // didn't find anyone, last-resort is the current spectated player
+        if (gm->isPlayerAllowedForGameplay(currentSpectatedPlayerIt->second))
+        {
+            // current m_connHandlePlayerToFollowInSpectatingView is valid
+            CConsole::getConsoleInstance().EOLn(
+                "%s(): found the currently spectated player only: %u, name: %s",
+                __func__, m_connHandlePlayerToFollowInSpectatingView, currentSpectatedPlayerIt->second.getName().c_str());
+            return true;
+        }
+    }
+
+    CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+    return false;
+} // findPrevValidPlayerToFollowInPlayerSpectatingView()
 
 /**
 * Useful when we are toggling spectating view to player follow view, or in each frame to check if followed player is still valid in player follow view.
 * First checks validity of already saved player to follow (who we have been following), and finds different player only if that player is not valid anymore.
 * 
+* If the function returns true, the following function returns valid data:
+*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*
 * @param mapPlayers        List of all connected players where we are searching for a player to be spectated.
 * @param posPlayerToFollow A valid position of the player selected to be spectated.
 *                          Valid only if the function returns true.
-* 
-* @return True if m_connHandlePlayerToFollowInSpectatingView is still valid or another valid player has been found and m_connHandlePlayerToFollowInSpectatingView is updated,
+*
+* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now become valid again,
 *         false otherwise.
 *         False means we cannot follow anyone, need to switch back to free camera spectating view.
 */
-bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInSpectatingView(
+bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingView(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     PureVector& posPlayerToFollow)
 {
@@ -213,7 +362,96 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInSpectatingView(
     }
 
     return false;
+} // findAnyValidPlayerToFollowInPlayerSpectatingView()
+
+
+// ############################## PROTECTED ##############################
+
+
+void proofps_dd::CameraHandling::cameraInitForGameStart()
+{
+    // we cannot set these in ctor because at that point PURE is not yet initialized
+    m_pure.getCamera().SetNearPlane(0.1f);
+    m_pure.getCamera().SetFarPlane(100.0f);
+    m_pure.getCamera().getPosVec().Set(0, 0, GAME_CAM_Z);
+    m_pure.getCamera().getTargetVec().Set(0, 0, -proofps_dd::Maps::fMapBlockSizeDepth);
 }
+
+void proofps_dd::CameraHandling::cameraPositionToMapCenter()
+{
+    auto& cam = m_pure.getCamera();
+
+    cam.getPosVec().Set(
+        (m_maps.getBlockPosMin().getX() + m_maps.getBlockPosMax().getX()) / 2.f,
+        (m_maps.getBlockPosMin().getY() + m_maps.getBlockPosMax().getY()) / 2.f,
+        GAME_CAM_Z);
+    cam.getTargetVec().Set(
+        cam.getPosVec().getX(),
+        cam.getPosVec().getY(),
+        -proofps_dd::Maps::fMapBlockSizeDepth);
+
+    m_vecPosToFollowInFreeCameraView.Set(
+        cam.getPosVec().getX(),
+        cam.getPosVec().getY(),
+        proofps_dd::Maps::GAME_PLAYERS_POS_Z);
+}
+
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
+    pge_audio::PgeAudio& audio,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+    const Player& player,
+    const XHair& xhair,
+    const float& fFps,
+    bool bCamFollowsXHair,
+    bool bCamTiltingAllowed,
+    bool bCamRollAllowed)
+{
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    cameraSmoothShakeForceTowardsZero(fFps);
+    cameraUpdateShakeFactorXY(fFps);
+
+    auto& cam = m_pure.getCamera();
+
+    if (player.isInSpectatorMode())
+    {
+        cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(mapPlayers, cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+    }
+    else
+    {
+        if (bCamRollAllowed && player.isSomersaulting())
+        {
+            cameraUpdatePosAndAngleWhenPlayerIsSomersaulting(cam, player);
+        }
+        else
+        {
+            cameraUpdatePosAndAngleWhenPlayerIsInNormalSituation(cam, player, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+        }
+    }
+
+    /*
+    * Looks like it is enough if I pass (0,0,1) as At vector.
+    * Anyway, in the future if there is any fishy 3D audio issue related to orientation, remember these tickets:
+    *  - https://github.com/jarikomppa/soloud/issues/94
+    *  - https://github.com/jarikomppa/soloud/issues/105
+    */
+    audio.getAudioEngineCore().set3dListenerParameters(
+        cam.getPosVec().getX(), cam.getPosVec().getY(), cam.getPosVec().getZ(),
+        0, 0, 1 /*cam.getTargetVec().getX(), cam.getTargetVec().getY(), cam.getTargetVec().getZ()*/,
+        cam.getUpVec().getX(), cam.getUpVec().getY(), cam.getUpVec().getZ());
+    audio.getAudioEngineCore().update3dAudio();
+
+    m_durations.m_nCameraMovementDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+PureVector& proofps_dd::CameraHandling::cameraGetShakeForce()
+{
+    return m_vecCamShakeForce;
+}
+
+
+// ############################### PRIVATE ###############################
+
 
 void proofps_dd::CameraHandling::cameraSmoothShakeForceTowardsZero(const float& fFps)
 {
@@ -380,7 +618,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorM
     {
         // even we have already selected the player to be spectated, we need to check if this player
         // is still valid in every frame since they might disconnect, go spectate, etc.
-        if (!findAnyValidPlayerToFollowInSpectatingView(mapPlayers, m_vecPosToFollowInFreeCameraView))
+        if (!findAnyValidPlayerToFollowInPlayerSpectatingView(mapPlayers, m_vecPosToFollowInFreeCameraView))
         {
             // no player found to be spectated
             m_eSpectatingView = SpectatingView::Free;
