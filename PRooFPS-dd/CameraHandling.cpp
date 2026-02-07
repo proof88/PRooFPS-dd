@@ -229,6 +229,10 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
         if (mapPlayers.size() > 1)
         {
             --it;
+            if (it == mapPlayers.end())
+            {
+                --it;  // cannot fail since container is not empty
+            }
         }
         else
         {
