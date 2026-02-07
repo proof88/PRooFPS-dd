@@ -1095,7 +1095,20 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
 
     if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
     {
-        // TODO: add iterating forward/backward in between valid players using LCLICK/RCLICK
+        const bool bFireButtonClicked = m_pge.getInput().getMouse().isButtonPressedOnce(PGEInputMouse::MouseButton::MBTN_LEFT);
+        const bool bAltFireButtonClicked = m_pge.getInput().getMouse().isButtonPressedOnce(PGEInputMouse::MouseButton::MBTN_RIGHT);
+        
+        if (bFireButtonClicked)
+        {
+            // dont need to check result, CameraHandling::cameraUpdatePosAndAngle() will take care of the rest
+            m_camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers);
+        }
+
+        if (bAltFireButtonClicked)
+        {
+            // dont need to check result, CameraHandling::cameraUpdatePosAndAngle() will take care of the rest
+            m_camera.findPrevValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers);
+        }
     }
 
     return clientMouseWhenConnectedToServer_mouseMovesXHair(objXHair);
