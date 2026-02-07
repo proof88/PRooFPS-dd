@@ -1466,7 +1466,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                         pktPlayerEventToggleSpectator,
                         it.second.getServerSideConnectionHandle(),
                         PlayerEventId::ToggledSpectatorMode);
-                    getNetwork().getServer().sendToAllClientsExcept(pktPlayerEventToggleSpectator);
+                    getNetwork().getServer().send(pktPlayerEventToggleSpectator, connHandleServerSide);
                 }
             }
 
