@@ -72,7 +72,7 @@ namespace proofps_dd
             pge_audio::PgeAudio& audio,
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             const Player& player,
-            const XHair& xhair,
+            XHair& xhair,
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed,
@@ -106,7 +106,7 @@ namespace proofps_dd
         void cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             PureCamera& cam,
-            const XHair& xhair,
+            XHair& xhair,
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed);

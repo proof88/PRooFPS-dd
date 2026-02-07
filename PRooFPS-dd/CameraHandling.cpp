@@ -404,7 +404,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
     pge_audio::PgeAudio& audio,
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     const Player& player,
-    const XHair& xhair,
+    XHair& xhair,
     const float& fFps,
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed,
@@ -613,13 +613,17 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleToFollowPos(
 void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     PureCamera& cam,
-    const XHair& xhair,
+    XHair& xhair,
     const float& fFps,
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed)
 {
+    static SpectatingView prevSpectatingView = SpectatingView::Free;
+    
     if (m_eSpectatingView == SpectatingView::PlayerFollow)
     {
+        static pge_network::PgeNetworkConnectionHandle prevSpectatedPlayerConnHandleForXHairReposition = pge_network::ServerConnHandle;
+        
         // even we have already selected the player to be spectated, we need to check if this player
         // is still valid in every frame since they might disconnect, go spectate, etc.
         if (!findAnyValidPlayerToFollowInPlayerSpectatingView(mapPlayers, m_vecPosToFollowInFreeCameraView))
@@ -628,7 +632,19 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorM
             m_eSpectatingView = SpectatingView::Free;
             CConsole::getConsoleInstance().EOLn("%s(): toggled spectating view from PlayerFollow back to Free due to no spectatable players!", __func__);
         }
+        else
+        {
+            // player spectating view is still good, there is a valid spectatable player
+            if ((prevSpectatedPlayerConnHandleForXHairReposition != cameraGetPlayerConnectionHandleToFollowInSpectatingView()) ||
+                (prevSpectatingView != m_eSpectatingView))
+            {
+                prevSpectatedPlayerConnHandleForXHairReposition = cameraGetPlayerConnectionHandleToFollowInSpectatingView();
+                // we just changed to this player so move xhair to screen center
+                xhair.getObject3D().getPosVec().Set(0.f, 0.f, xhair.getObject3D().getPosVec().getZ());
+            }
+        }
     }
+    prevSpectatingView = m_eSpectatingView;
 
     // both free- and spectating camera views boil down to here, the difference between their path is:
     // - in free camera view, m_vecPosToFollowInFreeCameraView is controlled by the user,
