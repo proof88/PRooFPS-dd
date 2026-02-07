@@ -73,6 +73,8 @@ protected:
         addSubTest("test_cameraToggleSpectatingView", static_cast<PFNUNITSUBTEST>(&CameraHandlingTest::test_cameraToggleSpectatingView));
         addSubTest("test_findNextValidPlayerToFollowInPlayerSpectatingView",
             static_cast<PFNUNITSUBTEST>(&CameraHandlingTest::test_findNextValidPlayerToFollowInPlayerSpectatingView));
+        addSubTest("test_findNextValidPlayerToFollowInPlayerSpectatingView_aux",
+            static_cast<PFNUNITSUBTEST>(&CameraHandlingTest::test_findNextValidPlayerToFollowInPlayerSpectatingView_aux));
         addSubTest("test_findPrevValidPlayerToFollowInPlayerSpectatingView",
             static_cast<PFNUNITSUBTEST>(&CameraHandlingTest::test_findPrevValidPlayerToFollowInPlayerSpectatingView));
         addSubTest("test_findPrevValidPlayerToFollowInPlayerSpectatingView_aux",
@@ -287,7 +289,7 @@ private:
         proofps_dd::Player& player1 = m_mapPlayers.at(1);
         proofps_dd::Player& player2 = m_mapPlayers.at(2);
         proofps_dd::Player& player3 = m_mapPlayers.at(3);
-        
+
         // initially everyone is in spectator mode
         b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 1");
 
@@ -299,7 +301,9 @@ private:
         // first player goes spectating again
         player0.isInSpectatorMode() = true;
         b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 3");
-        
+        // try again, should be same
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 4");
+
         // all players join the game
         player0.isInSpectatorMode() = false;
         player1.isInSpectatorMode() = false;
@@ -307,59 +311,131 @@ private:
         player3.isInSpectatorMode() = false;
 
         // since we have already saved connHandle of player0, we should find player1 now
-        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 4");
-        b &= assertEquals(player1.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 4");
-
         b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 5");
-        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 5");
+        b &= assertEquals(player1.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 5");
 
         b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 6");
-        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 6");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 6");
+
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 7");
+        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 7");
 
         // and now go back to beginning of container
-        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 7");
-        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 7");
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 8");
+        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 8");
 
-        // disconnect 2 players
+        // now spectate 1 again and remove it then try find again
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 9");
+        b &= assertEquals(player1.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 9");
+
         b &= assertTrue(m_gm->removePlayer(player1), "remove player 1 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player1.getServerSideConnectionHandle()), "remove player 1 from m_mapPlayers");
-        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
-        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
+
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 10");
+        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 10");
+
+        // disconnect player0 too
+        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
+        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 2, m_mapPlayers.size(), "m_mapPlayers size 1");
         b &= assertEquals(nPlayersExpected - 2, m_gm->getPlayersTable().size(), "gamemode size 1");
         if (!b)
         {
             return false;
         }
-        // player1 and player2 references are now invalid, only player0 and player3 are still valid
+        // player0 and player1 references are now invalid, only player2 and player3 are still valid
 
-        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 8");
-        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 8");
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 11");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 11");
 
-        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 9");
-        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 9");
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 12");
+        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 12");
 
-        // now spectating player0, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
-        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
+        // now spectating player3, send to spectate
+        player3.isInSpectatorMode() = true;
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 13");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 13");
+
+        // try again but should be same
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 14");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 14");
+
+        // send player 2 to spectate too
+        player2.isInSpectatorMode() = true;
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 15");
+
+        // should fail again
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 16");
+
+        // find player3 again
+        player3.isInSpectatorMode() = false;
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 17");
+        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 17");
+
+        b &= assertTrue(m_gm->removePlayer(player3), "remove player 3 from gamemode");
+        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player3.getServerSideConnectionHandle()), "remove player 3 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 3, m_mapPlayers.size(), "m_mapPlayers size 2");
         b &= assertEquals(nPlayersExpected - 3, m_gm->getPlayersTable().size(), "gamemode size 2");
         if (!b)
         {
             return false;
         }
-        // player0, player1 and player2 references are now invalid, only player3 is still valid
+        // player0, player1 and player3 references are now invalid, only player2 is still valid
 
-        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 10");
-        b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 10");
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 18");
 
-        // now spectating player3, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player3), "remove player 3 from gamemode");
-        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player3.getServerSideConnectionHandle()), "remove player 3 from m_mapPlayers");
+        // comes back to play
+        player2.isInSpectatorMode() = false;
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 19");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 19");
+
+        // try find again
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 20");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 20");
+
+        // now spectating player2, disconnect it
+        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
+        b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_mapPlayers.size(), "m_mapPlayers size 3");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_gm->getPlayersTable().size(), "gamemode size 3");
 
-        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 11");
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 21");
+
+        return b;
+    }
+
+    bool test_findNextValidPlayerToFollowInPlayerSpectatingView_aux()
+    {
+        assert(m_camera);
+        proofps_dd::CameraHandling& camera = *m_camera;
+        bool b = true;
+
+        b &= assertTrue(test_addPlayers(), "add players");
+        if (!b)
+        {
+            // test_addPlayers() ensures map.at(key) does not fail when key is in [0..nPlayersExpected-1] range, and
+            // order of players is same in both containers: map and gamemode.
+            return false;
+        }
+
+        //proofps_dd::Player& player0 = m_mapPlayers.at(0);
+        //proofps_dd::Player& player1 = m_mapPlayers.at(1);
+        proofps_dd::Player& player2 = m_mapPlayers.at(2);
+        //proofps_dd::Player& player3 = m_mapPlayers.at(3);
+
+        // initially everyone is in spectator mode
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 1");
+
+        // player2 joins the game
+        player2.isInSpectatorMode() = false;
+        b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 2");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 2");
+
+        // player2 goes spectating again
+        player2.isInSpectatorMode() = true;
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 3");
+        // try again, should be same
+        b &= assertFalse(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 4");
 
         return b;
     }
