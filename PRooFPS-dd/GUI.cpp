@@ -4031,15 +4031,18 @@ void proofps_dd::GUI::drawGameInfoPages()
     }
 }
 
-static std::string getPlayerNameByConnHandle(
+static std::string getPlayerNameAndTeamColorByConnHandle(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-    const pge_network::PgeNetworkConnectionHandle& connHandle)
+    const pge_network::PgeNetworkConnectionHandle& connHandle,
+    PureColor& teamColor)
 {
     const auto playerIt = mapPlayers.find(connHandle);
     if (mapPlayers.end() != playerIt)
     {
+        teamColor = proofps_dd::TeamDeathMatchMode::getTeamColor(playerIt->second.getTeamId());
         return playerIt->second.getName();
     }
+    teamColor = proofps_dd::TeamDeathMatchMode::getTeamColor(0);
     return "Unknown Player";
 }
 
@@ -4059,30 +4062,49 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
             getDearImGui2DposXforWindowCenteredText(szFreeCamViewCaption),
             0,
             szFreeCamViewCaption);
+
+        static const std::string szText2Free = std::string("Move Camera: 'WASD' keys");
+        drawTextHighlighted(
+            getDearImGui2DposXforWindowCenteredText(szText2Free),
+            ImGui::GetCursorPos().y,
+            szText2Free);
     }
     else
     {
         // players are added/deleted before each frame, and GUI as drawn at the end of each frame, so
         // in theory cameraGetPlayerConnectionHandleToFollowInSpectatingView() always returns a valid
         // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
-        // still checking its validity with getPlayerNameByConnHandle().
+        // still checking its validity with getPlayerNameAndTeamColorByConnHandle().
         assert(m_pMapPlayers);
-        const std::string sPlayerFollowViewCaption =
-            std::string("Spectating ") +
-            getPlayerNameByConnHandle(*m_pMapPlayers, m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+        static PureColor teamColor;
+        static std::string sFollowedPlayerName;
+        sFollowedPlayerName =
+            getPlayerNameAndTeamColorByConnHandle(
+                *m_pMapPlayers,
+                m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView(),
+                teamColor);
+        static std::string sPlayerFollowViewCaption;
+        sPlayerFollowViewCaption = std::string("Spectating: ") + sFollowedPlayerName;
 
+        drawTextHighlighted(getDearImGui2DposXforWindowCenteredText(sPlayerFollowViewCaption), 0, "Spectating: ");
+        ImGui::SameLine(0.f, 0.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, getImVec4fromPureColor(teamColor));
+        drawTextHighlighted(ImGui::GetCursorPos().x, ImGui::GetCursorPos().y, sFollowedPlayerName);
+        ImGui::PopStyleColor();
+
+        static const std::string szText2PlayerFollow = std::string("Cycle Players: 'Strafe' keys, Mouse Left/Right Buttons");
         drawTextHighlighted(
-            getDearImGui2DposXforWindowCenteredText(sPlayerFollowViewCaption),
-            0,
-            sPlayerFollowViewCaption);
+            getDearImGui2DposXforWindowCenteredText(szText2PlayerFollow),
+            ImGui::GetCursorPos().y,
+            szText2PlayerFollow);
     }
 
-    static const std::string szText2 =
-        std::string("Toggle View: SPACE key, Join Game: '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key";
+    static const std::string szText3 =
+        std::string("Toggle View: 'SPACE' key, Join Game: '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key";
     drawTextHighlighted(
-        getDearImGui2DposXforWindowCenteredText(szText2),
+        getDearImGui2DposXforWindowCenteredText(szText3),
         ImGui::GetCursorPos().y,
-        szText2);
+        szText3);
 }
 
 void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& /*player*/)
