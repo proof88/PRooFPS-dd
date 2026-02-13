@@ -266,6 +266,12 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             {
                 m_camera.cameraGetPosToFollowInSpectatorMode().SetX(player.getObject3D()->getPosVec().getX());
                 m_camera.cameraGetPosToFollowInSpectatorMode().SetY(player.getObject3D()->getPosVec().getY());
+
+                if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
+                {
+                    // default should be player-follow mode
+                    m_camera.cameraToggleSpectatingView();
+                }
             }
         }
         else
@@ -829,6 +835,12 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         if (msg.m_bCurrentClient)
         {
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
+
+            // since now I also have knowledge of other players on this server, set camera to player follow mode by default
+            if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
+            {
+                m_camera.cameraToggleSpectatingView();
+            }
 
             // due to difficulties caused by m_gui.textPermanent() it is easier to use it here than in handleUserSetupFromServer()
             // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future

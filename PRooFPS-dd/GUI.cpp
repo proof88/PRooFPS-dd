@@ -2636,14 +2636,34 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
             (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
     }
 
-    if (player.isInSpectatorMode())
+    const Player* pPlayer = &player;
+    const bool bWeAreSpectatingNow = player.isInSpectatorMode();
+    if (bWeAreSpectatingNow)
     {
-        return;
+        if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
+        {
+            return;
+        }
+        
+        // Players are added/deleted before each frame, and GUI as drawn at the end of each frame, so
+        // in theory cameraGetPlayerConnectionHandleToFollowInSpectatingView() always returns a valid
+        // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
+        // still checking its validity.
+        const auto itSpectatedPlayer = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+        if (itSpectatedPlayer == m_pMapPlayers->end())
+        {
+            return;
+        }
+
+        // From this point player ref will be the spectated player, not us!
+        pPlayer = &(itSpectatedPlayer->second);
     }
+
+    assert(pPlayer);
 
     const float fYdiffBetweenRows = ImGui::GetCursorPos().y - fStartY; // now we know the vertical distance between each row as Dear ImGui calculated
 
-    const Weapon* wpnCurrent = player.getWeaponManager().getCurrentWeapon();
+    const Weapon* wpnCurrent = pPlayer->getWeaponManager().getCurrentWeapon();
     if (wpnCurrent)
     {
         const auto itCVarWpnName = wpnCurrent->getVars().find("name");
@@ -2659,29 +2679,49 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
             }
             else
             {
-                drawTextHighlighted(
-                    10,
-                    ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
-                    itCVarWpnName->second.getAsString() + ": " +
-                    std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
-                    std::to_string(wpnCurrent->getUnmagBulletCount()));
+                if (bWeAreSpectatingNow)
+                {
+                    // other players' weapon mag and unmag is not synchronized across clients, therefore we can print current weapon name only
+                    drawTextHighlighted(
+                        10,
+                        ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+                        itCVarWpnName->second.getAsString());
+                }
+                else
+                {
+                    drawTextHighlighted(
+                        10,
+                        ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
+                        itCVarWpnName->second.getAsString() + ": " +
+                        std::to_string(wpnCurrent->getMagBulletCount()) + " / " +
+                        std::to_string(wpnCurrent->getUnmagBulletCount()));
+                }
             }
             
-            // obviously we don't know if these events are for this weapon because player might had already changed the weapon since ammo pickup,
-            // so in case of weapon change, we definitely need to clear these ammo change events
-            updatePlayerAmmoChangeEvents();
+            if (!bWeAreSpectatingNow)
+            {
+                // obviously we don't know if these events are for this weapon because player might had already changed the weapon since ammo pickup,
+                // so in case of weapon change, we definitely need to clear these ammo change events
+                updatePlayerAmmoChangeEvents();
+            }
         }
     }
     
-    drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: " + std::to_string(player.getArmor()) + " %");
-    updatePlayerApChangeEvents();
-
-    drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(player.getHealth()) + " %");
-    updatePlayerHpChangeEvents();
-
-    if (player.hasJetLax())
+    drawTextHighlighted(10, ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows, "Armor: " + std::to_string(pPlayer->getArmor()) + " %");
+    if (!bWeAreSpectatingNow)  /* we are not aware of change events for other players, only ours */
     {
-        if (player.hasAntiGravityActive())
+        updatePlayerApChangeEvents();
+    }
+
+    drawTextHighlighted(10, ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows, "Health: " + std::to_string(pPlayer->getHealth()) + " %");
+    if (!bWeAreSpectatingNow)  /* we are not aware of change events for other players, only ours */
+    {
+        updatePlayerHpChangeEvents();
+    }
+
+    if (pPlayer->hasJetLax())
+    {
+        if (pPlayer->hasAntiGravityActive())
         {
             ImGui::PushStyleColor(
                 ImGuiCol_Text,
@@ -2691,13 +2731,16 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         drawTextHighlighted(
             10,
             ImGui::GetCursorPos().y - 3 * fYdiffBetweenRows,
-            "Inventory: JetLax: " + std::to_string(static_cast<int>(std::lroundf(player.getCurrentInventoryItemPower()))) + " %");
-        if (player.hasAntiGravityActive())
+            "Inventory: JetLax: " + std::to_string(static_cast<int>(std::lroundf(pPlayer->getCurrentInventoryItemPower()))) + " %");
+        if (pPlayer->hasAntiGravityActive())
         {
             ImGui::PopStyleColor();
         }
 
-        updatePlayerInventoryChangeEvents();
+        if (!bWeAreSpectatingNow) /* we are not aware of change events for other players, only ours */
+        {
+            updatePlayerInventoryChangeEvents();
+        }
     }
 }
 

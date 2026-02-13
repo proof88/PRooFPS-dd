@@ -91,7 +91,7 @@ namespace proofps_dd
         float m_fShakeFactorY = 0.f;
         float m_fShakeDegree = 0.f;
         PureVector m_vecPosToFollowInFreeCameraView{};
-        SpectatingView m_eSpectatingView{ SpectatingView::Free };
+        SpectatingView m_eSpectatingView{ SpectatingView::PlayerFollow };
         pge_network::PgeNetworkConnectionHandle m_connHandlePlayerToFollowInSpectatingView{ pge_network::ServerConnHandle };
 
         void cameraSmoothShakeForceTowardsZero(const float& fFps);

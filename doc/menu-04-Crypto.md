@@ -19,7 +19,8 @@ TODO:
  - https://www.coinglass.com/pro/futures/LiquidationCountHeatMap
  - Add btc-monthly-returns.png
  - Add to When Buy section: token unlocks (e.g. TIA Oct 31) and halving dates (e.g. BTC) should be also considered! Add link where to check these!
- - Chart Analysis: OBV (On-Balance Volume) as some call as Relative Volume; Ichimoku
+ - Chart Analysis: OBV (On-Balance Volume) / as some call as Relative Volume: https://www.youtube.com/watch?v=NeLHqHW5d7c;
+ - Ichimoku;
  - https://www.youtube.com/watch?v=oVl2Ag5W2S0&ab_channel=BenjaminCowen
  - BTC dominance, BTC vs alts ratio, when is the altseason starting, etc: https://www.youtube.com/watch?v=jV0rKelRG9k
  - https://x.com/CryptoRugMunch/status/1848812359730794624
@@ -29,6 +30,7 @@ TODO:
  - 2025. 10. 10. dip: https://x.com/Nstr_tj/status/1976797928116437394?t=YJc5gItQcCloCwpUEGeQBg&s=19
  - TODO: trading patterns: psychology or math? https://www.youtube.com/watch?v=oWheof70O9g
  - TODO: Benner-cycle: https://www.youtube.com/watch?v=1dD9Yl5hw6I
+ - Ben: ETH regression band; going home; ETH/BTC double bottom, 2. bottomja mikor: https://www.youtube.com/watch?v=ZZNFVcbzUE4
  
 [TOC]
 
