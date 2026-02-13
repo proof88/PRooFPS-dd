@@ -2696,6 +2696,14 @@ void proofps_dd::Player::handleToggleSpectatorMode()
         return;
     }
 
+    if (isInSpectatorMode())
+    {
+        // still there is that bug with unknown root cause when a player is respawned without dieing before (i.e. teleporting) some
+        // oldnew values stay unchanged, e.g. if have armor, it is not zeroed even though Player::respawn() clearly zeroes it out,
+        // so as a workaround for players who enter and exit spectator mode, zero these stuff right when entering spectator mode!
+        setArmor(0);
+    }
+
     pge_network::PgePacket pktPlayerEvent;
     proofps_dd::MsgPlayerEventFromServer::initPkt(
         pktPlayerEvent,

@@ -1133,6 +1133,19 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         static int nPrevHP = 100;
         static int nPrevAP = 0;
 
+        assert(m_gui.getPlayerHpChangeEvents());
+        assert(m_gui.getPlayerApChangeEvents());
+        assert(m_gui.getPlayerAmmoChangeEvents());
+        assert(m_gui.getPlayerInventoryChangeEvents());
+        if (msg.m_bRespawn)
+        {
+            // clear out events happened BEFORE respawn
+            m_gui.getPlayerHpChangeEvents()->clear();
+            m_gui.getPlayerApChangeEvents()->clear();
+            m_gui.getPlayerAmmoChangeEvents()->clear();
+            m_gui.getPlayerInventoryChangeEvents()->clear();
+        }
+
         if (bOriginalExpectingStartPos || msg.m_bRespawn)
         {
             // We might be after map change, do not show any HP change for refilled HP!
@@ -1144,7 +1157,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         {
             if (std::as_const(player).getHealth() != nPrevHP)
             {
-                assert(m_gui.getPlayerHpChangeEvents());
                 const int nHpChange = std::as_const(player).getHealth() - nPrevHP;
 
                 // As of v0.2.8 the max HP is 100, and we should not list +100% as HP change because that is basically respawn, and
@@ -1158,7 +1170,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             }
             if (std::as_const(player).getArmor() != nPrevAP)
             {
-                assert(m_gui.getPlayerApChangeEvents());
                 const int nApChange = std::as_const(player).getArmor() - nPrevAP;
 
                 m_gui.getPlayerApChangeEvents()->addEvent(std::to_string(nApChange));
