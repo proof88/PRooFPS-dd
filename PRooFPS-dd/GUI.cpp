@@ -3562,7 +3562,7 @@ void proofps_dd::GUI::drawFragTable(
             
             const int nTeamFragsCount = tdm->getTeamFrags(iTeam);
             sTeamTableCaption += " with " + std::to_string(nTeamFragsCount) + " total frag";
-            if ((nTeamFragsCount == 0) || (nTeamFragsCount > 1))
+            if ((nTeamFragsCount == 0) || (abs(nTeamFragsCount) > 1))
             {
                 sTeamTableCaption += "s";
             }
