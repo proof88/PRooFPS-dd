@@ -507,6 +507,15 @@ void proofps_dd::GUI::hideLoadingScreen()
     hideBgWithLogo();
 }
 
+bool proofps_dd::GUI::isLoadingScreenVisible()
+{
+    if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
+    {
+        return (m_pObjLoadingScreenBg->isRenderingAllowed() && m_pObjLoadingScreenLogoImg->isRenderingAllowed());
+    }
+    return false;
+}
+
 bool proofps_dd::GUI::showBgWithLogo()
 {
     if (m_pObjLoadingScreenBg && m_pObjLoadingScreenLogoImg)
@@ -604,12 +613,12 @@ void proofps_dd::GUI::showAndLoopGameInfoPages()
     }
 }
 
-void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY) const
+void proofps_dd::GUI::textForNextFrame(const std::string& s, int nPureX, int nPureY)
 {
     m_pPge->getPure().getUImanager().textTemporalLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
 
-void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY) const
+void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY)
 {
     m_pPge->getPure().getUImanager().textPermanentLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
@@ -4092,6 +4101,18 @@ static std::string getPlayerNameAndTeamColorByConnHandle(
 
 void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
 {
+    if (isLoadingScreenVisible())
+    {
+        /* must be loading screen */
+        return;
+    }
+
+    assert(GameMode::getGameMode());
+    if (GameMode::getGameMode()->isGameWon())
+    {
+        return;
+    }
+
     if (!player.isInSpectatorMode())
     {
         return;
@@ -4170,12 +4191,6 @@ void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
     else if (!player.isInSpectatorMode() && bPrevFrameSpectator)
     {
         handleExitSpectatorMode(player);
-    }
-
-    assert(GameMode::getGameMode());
-    if (GameMode::getGameMode()->isGameWon())
-    {
-        return;
     }
 
     drawSpectatorMode(player);

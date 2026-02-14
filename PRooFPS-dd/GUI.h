@@ -131,12 +131,13 @@ namespace proofps_dd
 
         /* Misc */
 
-        void showLoadingScreen(
+        static void showLoadingScreen(
             int nProgress,
             const std::string& sMapFilename);
-        void hideLoadingScreen();
-        bool showBgWithLogo();
-        bool hideBgWithLogo();
+        static void hideLoadingScreen();
+        static bool isLoadingScreenVisible();
+        static bool showBgWithLogo();
+        static bool hideBgWithLogo();
         XHair* getXHair();
         Minimap* getMinimap();
         DeathKillEventLister* getDeathKillEvents();
@@ -150,8 +151,8 @@ namespace proofps_dd
         static void hideGameObjectives();
         static void showAndLoopGameInfoPages();
 
-        void textForNextFrame(const std::string& s, int nPureX, int nPureY) const;
-        void textPermanent(const std::string& s, int nPureX, int nPureY) const;
+        static void textForNextFrame(const std::string& s, int nPureX, int nPureY);
+        static void textPermanent(const std::string& s, int nPureX, int nPureY);
 
         void showRespawnTimer(
             const Player* const pKillerPlayer);
