@@ -321,11 +321,11 @@ namespace proofps_dd
             const proofps_dd::PlayersTableRow& player,
             const std::vector<const char*>& vecHeaderLabels,
             const int& iColNetworkDataStart);
-        static void drawAllPlayersDebugDataServer();
+        static void drawAllPlayersDebugDataServer(const int& nYPosBiasToMinimapBottom);
         
-        static void drawGameObjectives();
+        static void drawGameObjectives(const int& nYPosBiasToMinimapBottom);
         static float drawClientConnectionDebugInfo(float fThisRowY);
-        static void drawGameServerConfig();
+        static void drawGameServerConfig(const int& nYPosBiasToMinimapBottom);
         static void drawGameInfoPages();
 
         static void drawSpectatorMode(const proofps_dd::Player& player);

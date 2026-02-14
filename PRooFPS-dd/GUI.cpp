@@ -3785,7 +3785,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataTableServer_columnLoopForPlayer(
 * Players are fetched from GameMode::getPlayersTable().
 * Server-side only.
 */
-void proofps_dd::GUI::drawAllPlayersDebugDataServer()
+void proofps_dd::GUI::drawAllPlayersDebugDataServer(const int& nYPosBiasToMinimapBottom)
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::AllPlayersDebugDataServer);
 
@@ -3822,7 +3822,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
 
     drawTableCaption(
         "Players Debug Data",
-        std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f /* Vertical 2D-position where sTableCaption will be placed */,
+        std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + nYPosBiasToMinimapBottom /* Vertical 2D-position where sTableCaption will be placed */,
         fTableStartPosX,
         fTableWidthPixels
     );
@@ -3856,7 +3856,7 @@ void proofps_dd::GUI::drawAllPlayersDebugDataServer()
 * Players are fetched from GameMode::getPlayersTable().
 * Server and client.
 */
-void proofps_dd::GUI::drawGameObjectives()
+void proofps_dd::GUI::drawGameObjectives(const int& nYPosBiasToMinimapBottom)
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::FragTable);
 
@@ -3898,11 +3898,11 @@ void proofps_dd::GUI::drawGameObjectives()
 
     if (m_pNetworking->isServer())
     {
-        drawGameObjectivesServer(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+        drawGameObjectivesServer(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + nYPosBiasToMinimapBottom);
     }
     else
     {
-        drawGameObjectivesClient(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + 20.f);
+        drawGameObjectivesClient(sCaption, std::min(72.f, m_pMinimap->getMinimapSizeInPixels().y) + nYPosBiasToMinimapBottom);
     }
 } // drawGameObjectives()
 
@@ -3962,13 +3962,13 @@ float proofps_dd::GUI::drawClientConnectionDebugInfo(float fThisRowY)
 *
 * Shows server configuration relevant for both client and server.
 */
-void proofps_dd::GUI::drawGameServerConfig()
+void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
 {
     assert(m_gameInfoPageCurrent == GameInfoPage::ServerConfig);
     assert(m_pConfig);
     assert(m_pNetworking);
 
-    const float fStartRowY = m_pMinimap->getMinimapSizeInPixels().y + 20.f;
+    const float fStartRowY = m_pMinimap->getMinimapSizeInPixels().y + nYPosBiasToMinimapBottom;
     float fThisRowY = fStartRowY;
     drawTextHighlighted(fGameInfoPagesStartX, fThisRowY, "Server Config");
 
@@ -4048,21 +4048,22 @@ void proofps_dd::GUI::drawGameServerConfig()
 
 void proofps_dd::GUI::drawGameInfoPages()
 {
+    static const int nYPosBiasToMinimapBottom = 40; /* we need this much extra vertical padding due to the spectator mode texts on the top */
     switch (m_gameInfoPageCurrent)
     {
     case proofps_dd::GUI::GameInfoPage::FragTable:
         ImGui::PushFont(m_pImFontFragTableNonScaled);
-        drawGameObjectives();
+        drawGameObjectives(nYPosBiasToMinimapBottom);
         ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::AllPlayersDebugDataServer:
         ImGui::PushFont(m_pImFontFragTableNonScaled);
-        drawAllPlayersDebugDataServer();
+        drawAllPlayersDebugDataServer(nYPosBiasToMinimapBottom);
         ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::ServerConfig:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
-        drawGameServerConfig();
+        drawGameServerConfig(nYPosBiasToMinimapBottom);
         ImGui::PopFont();
         break;
     case proofps_dd::GUI::GameInfoPage::None:
