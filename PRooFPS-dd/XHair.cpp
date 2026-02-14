@@ -330,6 +330,11 @@ void proofps_dd::XHair::setRelativeScaling(float relativeScaleFactor)
 {
     assert(relativeScaleFactor >= 0.f);
 
+    //if (relativeScaleFactor != m_fRelativeScaleFactor)
+    //{
+    //    getConsole().EOLn("XHair::%s(%f)", __func__, relativeScaleFactor);
+    //}
+
     m_fRelativeScaleFactor = relativeScaleFactor;
     getObject3D().SetScaling(m_fBaseScaling * relativeScaleFactor);
 }

@@ -1086,7 +1086,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     player.setWeaponMomentaryAccuracy(msg.m_fWpnMomentaryAccuracy);
-    if (bCurrentClient)
+    if (bCurrentClient && !player.isInSpectatorMode())
     {
         // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
         m_gui.getXHair()->setRelativeScaling(

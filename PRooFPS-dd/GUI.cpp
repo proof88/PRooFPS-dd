@@ -4172,19 +4172,41 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         szText3);
 }
 
+// GUI draw callback is invoked before GUI::initialize() loads stuff like XHair, so make sure
+// handleSpectatorMode() invokes us even if we have already entered spectator mode earlier,
+// until we actually set everything properly in this function.
+static bool bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements = true;
+
 void proofps_dd::GUI::handleEnterSpectatorMode(const proofps_dd::Player& /*player*/)
 {
+    getConsole().EOLn("GUI::%s()", __func__);
+
+    if (m_pXHair)
+    {
+        m_pXHair->setRelativeScaling(0.5f);
+        bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements = false;
+    }
+
+    //if (bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements)
+    //{
+    //    getConsole().EOLn("GUI::%s(): will need to be invoked later again due to uninitialized elements!", __func__);
+    //}
+    //else
+    //{
+    //    getConsole().EOLn("GUI::%s(): finally no need to be invoked later again!", __func__);
+    //}
 }
 
 void proofps_dd::GUI::handleExitSpectatorMode(const proofps_dd::Player& /*player*/)
 {
+    getConsole().EOLn("GUI::%s()", __func__);
 }
 
 void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
 {
     static bool bPrevFrameSpectator = false;
 
-    if (player.isInSpectatorMode() && !bPrevFrameSpectator)
+    if (player.isInSpectatorMode() && (!bPrevFrameSpectator || bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements))
     {
         handleEnterSpectatorMode(player);
     }
