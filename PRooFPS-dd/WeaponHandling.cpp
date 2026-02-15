@@ -636,7 +636,11 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                                 {
                                     ++itShooter->second.getFrags();
                                 }
-                                bEndGame = gameMode.serverCheckAndUpdateWinningConditions(m_pge.getNetwork());
+                                if (!gameMode.updatePlayer(itShooter->second, m_pge.getNetwork()))
+                                {
+                                    getConsole().EOLn("%s: failed to update player %s in GameMode!", __func__, itShooter->second.getName().c_str());
+                                }
+                                bEndGame = gameMode.isGameWon();
                                 //getConsole().OLn("WeaponHandling::%s(): Player %s has been killed by %s, who now has %d frags!",
                                 //    __func__, playerPair.first.c_str(), itShooter->first.c_str(), itShooter->second.getFrags());
                                 

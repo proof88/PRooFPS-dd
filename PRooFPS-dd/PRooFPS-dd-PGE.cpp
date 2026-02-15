@@ -1006,7 +1006,7 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
     if (GameMode::getGameMode()->hasJustBeenWonThisTick())
     {
         // come here only once
-        //getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
+        getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
 
         if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndEndgameMusicHandle))
         {
