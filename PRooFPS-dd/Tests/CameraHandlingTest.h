@@ -241,7 +241,7 @@ private:
         bool b = true;
 
         b &= assertEquals(
-            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::Free),
+            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::PlayerFollow),
             static_cast<int>(camera.cameraGetSpectatingView()),
             "spectating view");
         // b &= assertEquals(PureVector(), camera.cameraGetPosToFollowInSpectatorMode(), "pos to follow");  // not public function
@@ -258,13 +258,13 @@ private:
 
         camera.cameraToggleSpectatingView();
         b &= assertEquals(
-            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::PlayerFollow),
+            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::Free),
             static_cast<int>(camera.cameraGetSpectatingView()),
             "spectating view 1");
         
         camera.cameraToggleSpectatingView();
         b &= assertEquals(
-            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::Free),
+            static_cast<int>(proofps_dd::CameraHandling::SpectatingView::PlayerFollow),
             static_cast<int>(camera.cameraGetSpectatingView()),
             "spectating view 2");
 
