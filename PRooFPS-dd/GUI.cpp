@@ -4170,6 +4170,28 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         getDearImGui2DposXforWindowCenteredText(szText3),
         ImGui::GetCursorPos().y,
         szText3);
+
+    if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
+    {
+        // RFR: OPT: getPlayerNameAndTeamColorByConnHandle() should be refactored so we would not need to find player again here
+        const auto playerSpectatedIt = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+        if (m_pMapPlayers->end() != playerSpectatedIt)
+        {
+            const Player& playerSpectated = playerSpectatedIt->second;
+            if (playerSpectated.getHealth() <= 0)
+            {
+                static constexpr char* szDeadRespawnWaitText = "... Player is dead, respawning ...";
+
+                // if we make pos variables static, they will be wrong upon changing screen resolution!
+
+                assert(m_pPge);
+                drawTextShadowed(
+                    getDearImGui2DposXforWindowCenteredText(szDeadRespawnWaitText),
+                    (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled * 2,
+                    szDeadRespawnWaitText);
+            }
+        }
+    }
 }
 
 // GUI draw callback is invoked before GUI::initialize() loads stuff like XHair, so make sure
