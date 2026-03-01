@@ -92,6 +92,11 @@ bool proofps_dd::GameMode::isTeamBasedGame(GameModeType gm)
     }
 }
 
+bool proofps_dd::GameMode::isRoundBased(GameModeType /*gm*/)
+{
+    return false;
+}
+
 const char* proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType gm)
 {
     switch (gm)
@@ -665,6 +670,11 @@ bool proofps_dd::DeathMatchMode::isTeamBasedGame() const
     return false;
 }
 
+bool proofps_dd::DeathMatchMode::isRoundBased() const
+{
+    return false;
+}
+
 bool proofps_dd::DeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
 {
     return GameMode::isPlayerAllowedForGameplay(player);
@@ -774,6 +784,11 @@ bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_netw
 bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
 {
     return true;
+}
+
+bool proofps_dd::TeamDeathMatchMode::isRoundBased() const
+{
+    return false;
 }
 
 bool proofps_dd::TeamDeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const

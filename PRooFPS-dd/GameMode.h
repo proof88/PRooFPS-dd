@@ -23,6 +23,9 @@
 namespace proofps_dd
 {
 
+    // TODO: on the long run, this should be deleted.
+    // Derived classes shall implement stuff like isRoundBasedGame() etc ... and game logic should
+    // depend on those instead of checking gamemodetype.
     enum class GameModeType
     {
         DeathMatch,
@@ -107,6 +110,8 @@ namespace proofps_dd
         static GameMode* getGameMode();
 
         static bool isTeamBasedGame(GameModeType gm);
+
+        static bool isRoundBased(GameModeType gm);
 
         static const char* getGameModeTypeName(GameModeType gm);
 
@@ -335,6 +340,11 @@ namespace proofps_dd
         */
         virtual bool isTeamBasedGame() const = 0;
 
+        /*
+        * Derived class shall return false if it is non-round-based game, otherwise true.
+        */
+        virtual bool isRoundBased() const = 0;
+
         /**
         * Checks if given player is allowed for gameplay.
         * For example, in a team-based game mode, server can freeze player actions when no team is assigned to the player.
@@ -448,6 +458,7 @@ namespace proofps_dd
         virtual bool removePlayer(const Player& player) override;
 
         virtual bool isTeamBasedGame() const override;
+        virtual bool isRoundBased() const override;
 
         virtual bool isPlayerAllowedForGameplay(const Player& player) const override;
 
@@ -520,6 +531,7 @@ namespace proofps_dd
             pge_network::PgeINetwork& network) override;
 
         virtual bool isTeamBasedGame() const override;
+        virtual bool isRoundBased() const override;
 
         /**
         * Extending parent class implementation by rejecting player if team id is 0.

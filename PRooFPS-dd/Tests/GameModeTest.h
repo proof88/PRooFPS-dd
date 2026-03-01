@@ -70,6 +70,11 @@ public:
         return false;
     }
 
+    virtual bool isRoundBased() const override
+    {
+        return false;
+    }
+
     virtual bool isPlayerAllowedForGameplay(const proofps_dd::Player&) const override
     {
         return true;
