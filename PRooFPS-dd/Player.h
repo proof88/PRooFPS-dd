@@ -184,7 +184,8 @@ namespace proofps_dd
 
         bool& isInSpectatorMode();
         const bool& isInSpectatorMode() const;
-        CameraSpectatingMode& getCameraSpectatingMode();
+        bool& isForcedSpectating();
+        const bool& isForcedSpectating() const;
 
         void updateAudioVisuals(
             const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay);
@@ -450,7 +451,7 @@ namespace proofps_dd
         bool m_bExpectingAfterBootUpDelayedUpdate = true;
 
         bool m_bSpectatorMode = true;
-        CameraSpectatingMode m_cameraSpectatingMode{ CameraSpectatingMode::PlayerFollow };
+        bool m_bForcedSpectating = false;
 
         std::map<OldNewValueName,
             std::variant<

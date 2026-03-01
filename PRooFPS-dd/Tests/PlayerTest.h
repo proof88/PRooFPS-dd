@@ -331,7 +331,7 @@ private:
             assertNotNull(player.getObject3D(), "object3d") &
             assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertTrue(player.isInSpectatorMode(), "spectator mode") &
-            assertEquals(proofps_dd::Player::CameraSpectatingMode::PlayerFollow, player.getCameraSpectatingMode(), "cam spectating mode") &
+            assertFalse(player.isForcedSpectating(), "forced spectating") &
             assertFalse(player.isDirty(), "isDirty") &
             assertFalse(player.isNetDirty(), "isNetDirty") &
             assertFalse(playerConst.getArmor().isDirty(), "old armor") &

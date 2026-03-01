@@ -377,9 +377,14 @@ const bool& proofps_dd::Player::isInSpectatorMode() const
     return m_bSpectatorMode;
 }
 
-proofps_dd::Player::CameraSpectatingMode& proofps_dd::Player::getCameraSpectatingMode()
+bool& proofps_dd::Player::isForcedSpectating()
 {
-    return m_cameraSpectatingMode;
+    return m_bForcedSpectating;
+}
+
+const bool& proofps_dd::Player::isForcedSpectating() const
+{
+    return m_bForcedSpectating;
 }
 
 const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const

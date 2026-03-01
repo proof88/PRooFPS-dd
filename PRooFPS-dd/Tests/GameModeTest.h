@@ -384,6 +384,7 @@ private:
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
         b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
+        b &= assertFalse(gm->isRoundBased(), "round based");
 
         return b;
     }
@@ -404,6 +405,7 @@ private:
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
         b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
+        b &= assertFalse(gm->isRoundBased(), "round based");
     
         return b;
     }
