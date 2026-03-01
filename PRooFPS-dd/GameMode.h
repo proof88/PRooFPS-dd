@@ -351,7 +351,7 @@ namespace proofps_dd
         /**
         * @return Number of players in spectator mode (team id is irrelevant).
         */
-        unsigned int getSpectatingPlayersCount() const;
+        unsigned int getSpectatorModePlayersCount() const;
 
         void text(PR00FsUltimateRenderingEngine& pure, const std::string& s, int x, int y) const;
 
@@ -538,7 +538,7 @@ namespace proofps_dd
         * @param iTeamId Team ID for which team we want to get the count of players.
         *
         * @return Number of non-spectating players in the specified team.
-        *         Always 0 when iTeamId is 0, so for counting spectators use getSpectatingPlayersCount() instead!
+        *         Always 0 when iTeamId is 0, so for counting spectators use getSpectatorModePlayersCount() instead!
         */
         unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
 

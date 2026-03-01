@@ -377,7 +377,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-        b &= assertEquals(0u, gm->getSpectatingPlayersCount(), "spectating players count");
+        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
 
         return b;
@@ -397,7 +397,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-        b &= assertEquals(0u, gm->getSpectatingPlayersCount(), "spectating players count");
+        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
     
         return b;
@@ -2303,7 +2303,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 1"); // team 0 always has 0 players
         b &= assertEquals(0u, tdm->getTeamPlayersCount(1), "team 1 players count 1");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 1");
-        b &= assertEquals(0u, tdm->getSpectatingPlayersCount(), "spectating players count 1");
+        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectating players count 1");
         
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -2315,7 +2315,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 2"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 2");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 2");
-        b &= assertEquals(2u, tdm->getSpectatingPlayersCount(), "spectating players count 2");
+        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectating players count 2");
 
         unsigned int i = 0;
         bool bPrevWonState = false;
@@ -2337,7 +2337,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 3"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 3");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 3");
-        b &= assertEquals(2u, tdm->getSpectatingPlayersCount(), "spectating players count 3");
+        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectating players count 3");
 
         b &= assertTrueEz(gm->isGameWon(), gamemode, true/*server*/, "game won 2");
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
@@ -2368,7 +2368,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 4"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 4");
         b &= assertEquals(1u, tdm->getTeamPlayersCount(2), "team 2 players count 4");
-        b &= assertEquals(1u, tdm->getSpectatingPlayersCount(), "spectating players count 4");
+        b &= assertEquals(1u, tdm->getSpectatorModePlayersCount(), "spectating players count 4");
 
         // now toggle the spectating state of the last player who was already assigned to team 2 but were spectating for the whole time!
         player4_team_assigned_but_spectating.isInSpectatorMode() = false;
@@ -2379,7 +2379,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 5"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 5");
         b &= assertEquals(2u, tdm->getTeamPlayersCount(2), "team 2 players count 5");
-        b &= assertEquals(0u, tdm->getSpectatingPlayersCount(), "spectating players count 5");
+        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectating players count 5");
 
         return b;
     }

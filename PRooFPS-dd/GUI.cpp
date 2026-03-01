@@ -3609,7 +3609,7 @@ void proofps_dd::GUI::drawFragTable(
     // From v0.7, spectator mode is added, and players having team assigned can be also spectators, they also go into the bottom table.
     // In TDM, players with team id 0 is possible only in spectator mode, therefore we dont need to check for team id == 0 here.
     // We do not want to draw an empty table for unassigned players in ANY game mode.
-    const unsigned int nUnassignedPlayersCount = GameMode::getGameMode()->getSpectatingPlayersCount();
+    const unsigned int nUnassignedPlayersCount = GameMode::getGameMode()->getSpectatorModePlayersCount();
     const bool bDrawUnassignedPlayersTable = (nUnassignedPlayersCount > 0u);
 
     // then draw table for spectating players (only if there is any)

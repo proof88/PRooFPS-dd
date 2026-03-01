@@ -386,7 +386,7 @@ bool proofps_dd::GameMode::isPlayerAllowedForGameplay(const Player& player) cons
     return !player.isInSpectatorMode();
 }
 
-unsigned int proofps_dd::GameMode::getSpectatingPlayersCount() const
+unsigned int proofps_dd::GameMode::getSpectatorModePlayersCount() const
 {
     unsigned int nCount = 0;
     for (const auto& player : m_players)
