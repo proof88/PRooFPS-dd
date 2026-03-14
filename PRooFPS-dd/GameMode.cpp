@@ -614,42 +614,40 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
     itFound->m_fFiringAcc = player.getFiringAccuracy();
     itFound->m_nShotsFired = player.getShotsFiredCount();
 
-    if ((player.getFrags() == itFound->m_nFrags) && (player.getDeaths() == itFound->m_nDeaths))
+    if ((player.getFrags() != itFound->m_nFrags) || (player.getDeaths() != itFound->m_nDeaths))
     {
-        // nothing to update
-        return true;
-    }
 
-    // In case of players having equal nFrags and nDeaths, we need to apply different rules based on how values are being updated:
-    // - if new nFrags > old nFrags, player has to be placed behind other players having equal nFrags, since they had it earlier;
-    // - if new nFrags < old nFrags, player has to be placed in front of other players having equals nFrags, since player had more earlier.
+        // In case of players having equal nFrags and nDeaths, we need to apply different rules based on how values are being updated:
+        // - if new nFrags > old nFrags, player has to be placed behind other players having equal nFrags, since they had it earlier;
+        // - if new nFrags < old nFrags, player has to be placed in front of other players having equals nFrags, since player had more earlier.
 
-    const bool bPutBehindEquals = player.getFrags() > itFound->m_nFrags;
-    auto it = m_players.begin();
-    if (bPutBehindEquals)
-    {
-        while ((it != m_players.end())
-            && (comparePlayers(it->m_nFrags, player.getFrags(), it->m_nDeaths, player.getDeaths()) <= 0))
+        const bool bPutBehindEquals = player.getFrags() > itFound->m_nFrags;
+        auto it = m_players.begin();
+        if (bPutBehindEquals)
         {
-            ++it;
+            while ((it != m_players.end())
+                && (comparePlayers(it->m_nFrags, player.getFrags(), it->m_nDeaths, player.getDeaths()) <= 0))
+            {
+                ++it;
+            }
         }
-    }
-    else
-    {
-        while ((it != m_players.end())
-            && (comparePlayers(it->m_nFrags, player.getFrags(), it->m_nDeaths, player.getDeaths()) < 0))
+        else
         {
-            ++it;
+            while ((it != m_players.end())
+                && (comparePlayers(it->m_nFrags, player.getFrags(), it->m_nDeaths, player.getDeaths()) < 0))
+            {
+                ++it;
+            }
         }
-    }
 
-    if (itFound != it)
-    {
-        // move 'itFound' before 'it' (proofps_dd::PlayersTableRow is not copied, only internal pointers are updated)
-        m_players.splice(it, m_players, itFound);
+        if (itFound != it)
+        {
+            // move 'itFound' before 'it' (proofps_dd::PlayersTableRow is not copied, only internal pointers are updated)
+            m_players.splice(it, m_players, itFound);
+        }
+        itFound->m_nFrags = player.getFrags();
+        itFound->m_nDeaths = player.getDeaths();
     }
-    itFound->m_nFrags = player.getFrags();
-    itFound->m_nDeaths = player.getDeaths();
 
     if (network.isServer())
     {

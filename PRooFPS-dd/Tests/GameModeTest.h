@@ -1347,9 +1347,7 @@ private:
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
-            gm->serverCheckAndUpdateWinningConditions(m_network);
-            //TODO: maybe do this instead if updatePlayer also needs to ALWAYS evaluate anyway:
-            //b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 2");
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 2");
 
             // we only have 1 virtual client connected in network stub, regardless of how many players are now in GameMode,
             // that is why only 1 pkt was sent out
@@ -1533,9 +1531,7 @@ private:
                 trg->setTeamRoundWins(1, 1);
 
                 // try winning the game again
-                gm->serverCheckAndUpdateWinningConditions(m_network);
-                //TODO: maybe do this instead if updatePlayer also needs to ALWAYS evaluate anyway:
-                //b &= assertTrueEz(gm->updatePlayer(playerAdam, m_network), gamemode, bTestingAsServer, "update player Adam 2 fail");
+                b &= assertTrueEz(gm->updatePlayer(playerAdam, m_network), gamemode, bTestingAsServer, "update player Adam 2 fail");
             }
 
             if (bTestingAsServer)
