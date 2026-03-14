@@ -631,7 +631,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
             GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(playerIt->second.getTeamId()) ));
     }
 
-    gameMode.removePlayer(playerIt->second);
+    gameMode.removePlayer(playerIt->second, m_pge.getNetwork());
     m_mapPlayers.erase(playerIt);
 
     if (bClientShouldRemoveAllPlayers)

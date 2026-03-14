@@ -20,6 +20,8 @@
 #include "Network/PgeNetwork.h"
 #include "PURE/include/external/PR00FsUltimateRenderingEngine.h"
 
+class GameModeTest;
+
 namespace proofps_dd
 {
 
@@ -30,8 +32,8 @@ namespace proofps_dd
     {
         DeathMatch,
         TeamDeathMatch,
-        Max,            /* last value prefix increment operator allows reaching */
-        TeamRoundGame   /* no support yet */
+        TeamRoundGame,
+        Max            /* last value prefix increment operator allows reaching */
     };
 
     /** Prefix increment, useful in iterating over different game modes in unit test. */
@@ -75,6 +77,7 @@ namespace proofps_dd
         static constexpr char* szCvarSvGmTimeLimit = "sv_gm_timelimit_secs";
         
         static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
+        static constexpr char* szCvarSvRgmRoundWinLimit = "sv_rgm_roundwinlimit";
 
         static constexpr int nSvGmTimeLimitSecsDef = 0;
         static constexpr int nSvGmTimeLimitSecsMin = 0;
@@ -89,6 +92,13 @@ namespace proofps_dd
         static_assert(nSvDmFragLimitMin < nSvDmFragLimitMax,  "Min fraglimit should be smaller than max fraglimit.");
         static_assert(nSvDmFragLimitMin <= nSvDmFragLimitDef, "Min fraglimit should not be greater than default fraglimit.");
         static_assert(nSvDmFragLimitDef <= nSvDmFragLimitMax, "Max fraglimit should not be smaller than default fraglimit.");
+
+        static constexpr int nSvRgmRoundWinLimitDef = 5;
+        static constexpr int nSvRgmRoundWinLimitMin = 1;
+        static constexpr int nSvRgmRoundWinLimitMax = 999;
+        static_assert(nSvRgmRoundWinLimitMin < nSvRgmRoundWinLimitMax, "Min round win limit should be smaller than max round win limit.");
+        static_assert(nSvRgmRoundWinLimitMin <= nSvRgmRoundWinLimitDef, "Min round win limit should not be greater than default round win limit.");
+        static_assert(nSvRgmRoundWinLimitDef <= nSvRgmRoundWinLimitMax, "Max round win limit should not be smaller than default round win limit.");
 
         static const char* getLoggerModuleName();
 
@@ -321,7 +331,9 @@ namespace proofps_dd
         *
         * @return True if removed the existing player, false otherwise.
         */
-        virtual bool removePlayer(const Player& player) = 0;
+        virtual bool removePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) = 0;
 
         /**
         * Renames the player.
@@ -411,8 +423,7 @@ namespace proofps_dd
         * The previous GameMode instance is destroyed automatically.
         * See GameMode::createGameMode() for more details.
         * 
-        * @return Raw pointer to the created DeathMatchMode instance.
-        *         Shall not be stored by anyone but always queried using GameMode::getGameMode().
+        * @return Smart pointer to the created TeamRoundGameMode instance.
         */
         static std::unique_ptr<DeathMatchMode> createGameMode();
 
@@ -455,7 +466,9 @@ namespace proofps_dd
         virtual bool updatePlayer(
             const Player& player,
             pge_network::PgeINetwork& network) override;
-        virtual bool removePlayer(const Player& player) override;
+        virtual bool removePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
 
         virtual bool isTeamBasedGame() const override;
         virtual bool isRoundBased() const override;
@@ -497,8 +510,7 @@ namespace proofps_dd
         * The previous GameMode instance is destroyed automatically.
         * See GameMode::createGameMode() for more details.
         * 
-        * @return Raw pointer to the created TeamDeathMatchMode instance.
-        *         Shall not be stored by anyone but always queried using GameMode::getGameMode().
+        * @return Smart pointer to the created TeamRoundGameMode instance.
         */
         static std::unique_ptr<TeamDeathMatchMode> createGameMode();
 
@@ -541,7 +553,9 @@ namespace proofps_dd
         /**
         * @param iTeamId Team ID for which team we want to get the sum of frags.
         * 
-        * @return Sum of non-spectating player frags in the specified team.
+        * @return Sum of assigned player frags in the specified team.
+        *         A dead player who is currently forced-spectating in a round-based game mode is also considered since
+        *         force-spectating is NOT spectator mode, the player still has assigned team.
         *         Always 0 when iTeamId is 0.
         */
         int getTeamFrags(unsigned int iTeamId) const;
@@ -549,7 +563,9 @@ namespace proofps_dd
         /**
         * @param iTeamId Team ID for which team we want to get the count of players.
         *
-        * @return Number of non-spectating players in the specified team.
+        * @return Number of assigned players (not in spectator mode) in the specified team.
+        *         A dead player who is currently forced-spectating in a round-based game mode is also considered since
+        *         force-spectating is NOT spectator mode, the player still has assigned team.
         *         Always 0 when iTeamId is 0, so for counting spectators use getSpectatorModePlayersCount() instead!
         */
         unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
@@ -563,5 +579,100 @@ namespace proofps_dd
         // ---------------------------------------------------------------------------
 
     }; // class TeamDeathMatchMode
+
+    /**
+    * In Team Round Game mode, players are grouped into teams, same way as in Team DeathMatch.
+    * However, the game mode features rounds.
+    * Unlike in deathmatch-style game modes, here players cannot respawn immediately after being killed.
+    * Instead, they have to wait for the next round to start.
+    * Each round ends when any of the teams loses all its players.
+    * The number of rounds is configured by the server.
+    * The team reaching the predefined round win limit earlier wins the game, or the team with the most
+    * round wins if time limit is reached.
+    */
+    class TeamRoundGameMode : public TeamDeathMatchMode
+    {
+    public:
+
+        /**
+        * Used by GameMode::createGameMode(), this way we don't need to be friend with GameMode.
+        * The previous GameMode instance is destroyed automatically.
+        * See GameMode::createGameMode() for more details.
+        *
+        * @return Smart pointer to the created TeamRoundGameMode instance.
+        */
+        static std::unique_ptr<TeamRoundGameMode> createGameMode();
+
+        // ---------------------------------------------------------------------------
+
+        virtual ~TeamRoundGameMode();
+
+        TeamRoundGameMode(const TeamRoundGameMode&) = delete;
+        TeamRoundGameMode& operator=(const TeamRoundGameMode&) = delete;
+        TeamRoundGameMode(TeamRoundGameMode&&) = delete;
+        TeamRoundGameMode&& operator=(TeamRoundGameMode&&) = delete;
+
+        virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) override;
+
+        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network);
+
+        /**
+        * Altering parent class implementation by checking won rounds per team, instead of frag limit.
+        * Frag limit is not considered at all.
+        * Time limit is still considered.
+        */
+        virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+
+        /*
+        * Extending parent class implementation by forcing check for round- or game winning conditions, since
+        * the other team might win if this team does not have anymore players alive after removing this player.
+        */
+        virtual bool removePlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
+
+        virtual bool isRoundBased() const override;
+
+        /**
+        * @return Configured round win limit previously set by setRoundWinLimit().
+        */
+        unsigned int getRoundWinLimit() const;
+
+        /**
+        * Set the round win limit for the game.
+        * If the round win limit is reached, the winner is the team which reached it, even if
+        * time limit is not yet reached or there is no time limit set.
+        *
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
+        *
+        * @param limit The round win limit. Must be positive value.
+        */
+        void setRoundWinLimit(unsigned int limit);
+
+        /**
+        * @param iTeamId Team ID for which team we want to get the total number of won rounds.
+        *
+        * @return Total number of won rounds for the given team.
+        *         Always 0 when iTeamId is 0.
+        */
+        unsigned int getTeamRoundWins(unsigned int iTeamId) const;
+
+    protected:
+
+        TeamRoundGameMode();
+
+        void setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins);
+
+        friend class GameModeTest;
+
+    private:
+
+        // ---------------------------------------------------------------------------
+
+        unsigned int m_nRoundWinLimit{ GameMode::nSvRgmRoundWinLimitDef };
+        unsigned int m_nTeam1RoundWins{ 0 };
+        unsigned int m_nTeam2RoundWins{ 0 };
+
+    }; // class TeamRoundGameMode
 
 } // namespace proofps_dd

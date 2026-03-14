@@ -328,14 +328,14 @@ private:
         b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 9");
         b &= assertEquals(player1.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 9");
 
-        b &= assertTrue(m_gm->removePlayer(player1), "remove player 1 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player1, m_network), "remove player 1 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player1.getServerSideConnectionHandle()), "remove player 1 from m_mapPlayers");
 
         b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 10");
         b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 10");
 
         // disconnect player0 too
-        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player0, m_network), "remove player 0 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 2, m_mapPlayers.size(), "m_mapPlayers size 1");
         b &= assertEquals(nPlayersExpected - 2, m_gm->getPlayersTable().size(), "gamemode size 1");
@@ -372,7 +372,7 @@ private:
         b &= assertTrue(camera.findNextValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 17");
         b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 17");
 
-        b &= assertTrue(m_gm->removePlayer(player3), "remove player 3 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player3, m_network), "remove player 3 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player3.getServerSideConnectionHandle()), "remove player 3 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 3, m_mapPlayers.size(), "m_mapPlayers size 2");
         b &= assertEquals(nPlayersExpected - 3, m_gm->getPlayersTable().size(), "gamemode size 2");
@@ -394,7 +394,7 @@ private:
         b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 20");
 
         // now spectating player2, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player2, m_network), "remove player 2 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_mapPlayers.size(), "m_mapPlayers size 3");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_gm->getPlayersTable().size(), "gamemode size 3");
@@ -497,14 +497,14 @@ private:
         b &= assertTrue(camera.findPrevValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 9");
         b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 9");
         
-        b &= assertTrue(m_gm->removePlayer(player3), "remove player 3 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player3, m_network), "remove player 3 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player3.getServerSideConnectionHandle()), "remove player 3 from m_mapPlayers");
         
         b &= assertTrue(camera.findPrevValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 10");
         b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 10");
 
         // disconnect player2 too
-        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player2, m_network), "remove player 2 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 2, m_mapPlayers.size(), "m_mapPlayers size 1");
         b &= assertEquals(nPlayersExpected - 2, m_gm->getPlayersTable().size(), "gamemode size 1");
@@ -541,7 +541,7 @@ private:
         b &= assertTrue(camera.findPrevValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers), "find 17");
         b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 17");
 
-        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player0, m_network), "remove player 0 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 3, m_mapPlayers.size(), "m_mapPlayers size 2");
         b &= assertEquals(nPlayersExpected - 3, m_gm->getPlayersTable().size(), "gamemode size 2");
@@ -563,7 +563,7 @@ private:
         b &= assertEquals(player1.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 20");
 
         // now spectating player1, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player1), "remove player 1 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player1, m_network), "remove player 1 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player1.getServerSideConnectionHandle()), "remove player 1 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_mapPlayers.size(), "m_mapPlayers size 3");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_gm->getPlayersTable().size(), "gamemode size 3");
@@ -607,11 +607,11 @@ private:
         b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowInSpectatingView(), "connhandle 3");
 
         // disconnect all but player3
-        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player0, m_network), "remove player 0 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
-        b &= assertTrue(m_gm->removePlayer(player1), "remove player 1 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player1, m_network), "remove player 1 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player1.getServerSideConnectionHandle()), "remove player 1 from m_mapPlayers");
-        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player2, m_network), "remove player 2 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 3, m_mapPlayers.size(), "m_mapPlayers size 1");
         b &= assertEquals(nPlayersExpected - 3, m_gm->getPlayersTable().size(), "gamemode size 1");
@@ -678,9 +678,9 @@ private:
         b &= assertEquals(player0.getObject3D()->getPosVec(), vecPosToFollow, "pos 5");
 
         // disconnect 2 players
-        b &= assertTrue(m_gm->removePlayer(player0), "remove player 0 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player0, m_network), "remove player 0 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player0.getServerSideConnectionHandle()), "remove player 0 from m_mapPlayers");
-        b &= assertTrue(m_gm->removePlayer(player1), "remove player 1 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player1, m_network), "remove player 1 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player1.getServerSideConnectionHandle()), "remove player 1 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 2, m_mapPlayers.size(), "m_mapPlayers size 1");
         b &= assertEquals(nPlayersExpected - 2, m_gm->getPlayersTable().size(), "gamemode size 1");
@@ -700,7 +700,7 @@ private:
         b &= assertEquals(player2.getObject3D()->getPosVec(), vecPosToFollow, "pos 9");
 
         // now spectating player2, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player2), "remove player 2 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player2, m_network), "remove player 2 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player2.getServerSideConnectionHandle()), "remove player 2 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 3, m_mapPlayers.size(), "m_mapPlayers size 2");
         b &= assertEquals(nPlayersExpected - 3, m_gm->getPlayersTable().size(), "gamemode size 2");
@@ -715,7 +715,7 @@ private:
         b &= assertEquals(player3.getObject3D()->getPosVec(), vecPosToFollow, "pos 10");
 
         // now spectating player3, disconnect it
-        b &= assertTrue(m_gm->removePlayer(player3), "remove player 3 from gamemode");
+        b &= assertTrue(m_gm->removePlayer(player3, m_network), "remove player 3 from gamemode");
         b &= assertEquals(1u /* number of deleted elements */, m_mapPlayers.erase(player3.getServerSideConnectionHandle()), "remove player 3 from m_mapPlayers");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_mapPlayers.size(), "m_mapPlayers size 3");
         b &= assertEquals(nPlayersExpected - 4 /* shall be 0 */, m_gm->getPlayersTable().size(), "gamemode size 3");

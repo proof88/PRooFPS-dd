@@ -67,6 +67,9 @@ proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeT
     case proofps_dd::GameModeType::TeamDeathMatch:
         m_gamemode = std::move(proofps_dd::TeamDeathMatchMode::createGameMode());
         break;
+    case proofps_dd::GameModeType::TeamRoundGame:
+        m_gamemode = std::move(proofps_dd::TeamRoundGameMode::createGameMode());
+        break;
     default:
         m_gamemode = nullptr;
     }
@@ -92,9 +95,15 @@ bool proofps_dd::GameMode::isTeamBasedGame(GameModeType gm)
     }
 }
 
-bool proofps_dd::GameMode::isRoundBased(GameModeType /*gm*/)
+bool proofps_dd::GameMode::isRoundBased(GameModeType gm)
 {
-    return false;
+    switch (gm)
+    {
+    case proofps_dd::GameModeType::TeamRoundGame:
+        return true;
+    default:
+        return false;
+    }
 }
 
 const char* proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType gm)
@@ -185,6 +194,7 @@ proofps_dd::GameMode::~GameMode()
 void proofps_dd::GameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& /*network*/)
 {
     // assuming config is correct, because Config instance invokes us after its own validation is done
+    // (Config instance validates data in cfgProfiles instance)
     setTimeLimitSecs(cfgProfiles.getVars()[GameMode::szCvarSvGmTimeLimit].getAsUInt());
 }
 
@@ -493,6 +503,7 @@ void proofps_dd::DeathMatchMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_ne
 {
     GameMode::fetchConfig(cfgProfiles, network);
     // assuming config is correct, because Config instance invokes us after its own validation is done
+    // (Config instance validates data in cfgProfiles instance)
     setFragLimit( cfgProfiles.getVars()[GameMode::szCvarSvDmFragLimit].getAsUInt() );
 }
 
@@ -648,7 +659,7 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
     return true;
 }
 
-bool proofps_dd::DeathMatchMode::removePlayer(const Player& player)
+bool proofps_dd::DeathMatchMode::removePlayer(const Player& player, pge_network::PgeINetwork& /*network*/)
 {
     const auto itFound = std::find_if(
         std::begin(m_players),
@@ -840,6 +851,132 @@ unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iT
 proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
 {
     m_gameModeType = proofps_dd::GameModeType::TeamDeathMatch;
+}
+
+
+// ############################### PRIVATE ###############################
+
+
+/*
+   ###########################################################################
+   proofps_dd::TeamRoundGameMode
+   ###########################################################################
+*/
+
+
+// ############################### PUBLIC ################################
+
+
+std::unique_ptr<proofps_dd::TeamRoundGameMode> proofps_dd::TeamRoundGameMode::createGameMode()
+{
+    // instead of std::make_unique, because that cannot access protected TeamRoundGameMode() ctor
+    return std::unique_ptr<proofps_dd::TeamRoundGameMode>(new proofps_dd::TeamRoundGameMode());
+}
+
+proofps_dd::TeamRoundGameMode::~TeamRoundGameMode()
+{
+}
+
+void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network)
+{
+    TeamDeathMatchMode::fetchConfig(cfgProfiles, network);
+    // assuming config is correct, because Config instance invokes us after its own validation is done
+    // (Config instance validates data in cfgProfiles instance)
+    setRoundWinLimit(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsUInt());
+}
+
+void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network)
+{
+    m_nTeam1RoundWins = 0;
+    m_nTeam2RoundWins = 0;
+    TeamDeathMatchMode::restartWithoutRemovingPlayers(network);
+}
+
+bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
+{
+    if (GameMode::serverCheckAndUpdateWinningConditions(network))
+    {
+        return true;
+    }
+
+    // if time limit is hit then game is won, but don't check round wins if any team has 0 players!
+    if ((getTeamPlayersCount(1) == 0) || (getTeamPlayersCount(2) == 0))
+    {
+        return false;
+    }
+
+    if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
+    {
+        handleEventGameWon(network);
+        return true;
+    }
+
+    return false;
+}
+
+bool proofps_dd::TeamRoundGameMode::removePlayer(const Player& player, pge_network::PgeINetwork& network)
+{
+    const bool bRet = TeamDeathMatchMode::removePlayer(player, network);
+
+    // deathmatch modes don't check automatically when removePlayer() is invoked but we have to
+    if (network.isServer())
+    {
+        serverCheckAndUpdateWinningConditions(network);
+    }
+
+    return bRet;
+}
+
+bool proofps_dd::TeamRoundGameMode::isRoundBased() const
+{
+    return true;
+}
+
+unsigned int proofps_dd::TeamRoundGameMode::getRoundWinLimit() const
+{
+    return m_nRoundWinLimit;
+}
+
+void proofps_dd::TeamRoundGameMode::setRoundWinLimit(unsigned int limit)
+{
+    if (limit > 0)
+    {
+        m_nRoundWinLimit = limit;
+        //getConsole().EOLn("TeamRoundGameMode::%s(): changed to: %u!", __func__, m_nRoundWinLimit);
+    }
+    //else
+    //{
+    //    getConsole().EOLn("TeamRoundGameMode::%s(): invalid limit: %u, stays: %u!", __func__, limit, m_nRoundWinLimit);
+    //}
+}
+
+unsigned int proofps_dd::TeamRoundGameMode::getTeamRoundWins(unsigned int iTeamId) const
+{
+    assert((iTeamId == 1) || (iTeamId == 2));
+    return (iTeamId == 1) ? m_nTeam1RoundWins : m_nTeam2RoundWins;
+}
+
+
+// ############################## PROTECTED ##############################
+
+
+proofps_dd::TeamRoundGameMode::TeamRoundGameMode()
+{
+    m_gameModeType = proofps_dd::GameModeType::TeamRoundGame;
+}
+
+void proofps_dd::TeamRoundGameMode::setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins)
+{
+    assert((iTeamId == 1) || (iTeamId == 2));
+    
+    if (iTeamId == 1)
+    {
+        m_nTeam1RoundWins = nRoundWins;
+    }
+    else
+    {
+        m_nTeam2RoundWins = nRoundWins;
+    }
 }
 
 
