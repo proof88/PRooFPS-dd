@@ -149,6 +149,7 @@ namespace proofps_dd
 
         int m_nFragLimit = GameMode::nSvDmFragLimitDef;
         int m_nTimeLimitSecs = GameMode::nSvGmTimeLimitSecsDef;
+        int m_nRoundWinLimit = GameMode::nSvRgmRoundWinLimitDef;
 
         unsigned int m_nSecondsReconnectDelay = GAME_NETWORK_RECONNECT_SECONDS;
 

@@ -185,6 +185,30 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Fraglimit in config, forcing to: %d", m_nFragLimit);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsInt() >= GameMode::nSvRgmRoundWinLimitMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsInt() <= GameMode::nSvRgmRoundWinLimitMax))
+        {
+            m_nRoundWinLimit = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsInt();
+            getConsole().OLn("Round Win Limit from config: %d", m_nRoundWinLimit);
+        }
+        else
+        {
+            m_nRoundWinLimit = GameMode::nSvRgmRoundWinLimitDef;
+            getConsole().EOLn("ERROR: Invalid Round Win Limit in config: %s, forcing to: %d",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsString().c_str(),
+                m_nRoundWinLimit);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].Set(GameMode::nSvRgmRoundWinLimitDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit].Set(GameMode::nSvRgmRoundWinLimitDef);
+        m_nRoundWinLimit = GameMode::nSvRgmRoundWinLimitDef;
+        getConsole().OLn("Missing Round Win Limit in config, forcing to: %d", m_nRoundWinLimit);
+    }
+
     if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsString().empty())
     {
         if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsInt() >= static_cast<int>(GameModeType::DeathMatch)) &&

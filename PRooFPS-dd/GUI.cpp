@@ -1094,6 +1094,11 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
                 GameMode::createGameMode(GameModeType::TeamDeathMatch);
             }
+            if (ImGui::RadioButton("Team Round Game##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamRoundGame)))
+            {
+                cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamRoundGame));
+                GameMode::createGameMode(GameModeType::TeamRoundGame);
+            }
 
             if (!GameMode::getGameMode()->isTeamBasedGame())
             {
@@ -1138,20 +1143,40 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
     ImGui::TextUnformatted("[ Game Goal ]");
     ImGui::Indent();
     {
-        PGEcfgVariable& cvarSvDmFragLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit];
-        ImGui::AlignTextToFramePadding();
-        static std::string sHintSvDmFragLimit; // static so it is built up by addHintToItemByCVar() only once
-        addHintToItemByCVar(sHintSvDmFragLimit, cvarSvDmFragLimit);
-        ImGui::TextUnformatted("Frag Limit:");
-        ImGui::SameLine();
-        int nCvarSvDmFragLimit = cvarSvDmFragLimit.getAsInt();
-        ImGui::PushItemWidth(100);
-        if (ImGui::InputInt("##inputSvDmFragLimit", &nCvarSvDmFragLimit, 1, 10))
+        if (!GameMode::getGameMode()->isRoundBased())
         {
-            nCvarSvDmFragLimit = std::max(GameMode::nSvDmFragLimitMin, std::min(GameMode::nSvDmFragLimitMax, nCvarSvDmFragLimit));
-            cvarSvDmFragLimit.Set(nCvarSvDmFragLimit);
+            PGEcfgVariable& cvarSvDmFragLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvDmFragLimit];
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvDmFragLimit; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvDmFragLimit, cvarSvDmFragLimit);
+            ImGui::TextUnformatted("Frag Limit:");
+            ImGui::SameLine();
+            int nCvarSvDmFragLimit = cvarSvDmFragLimit.getAsInt();
+            ImGui::PushItemWidth(100);
+            if (ImGui::InputInt("##inputSvDmFragLimit", &nCvarSvDmFragLimit, 1, 10))
+            {
+                nCvarSvDmFragLimit = std::max(GameMode::nSvDmFragLimitMin, std::min(GameMode::nSvDmFragLimitMax, nCvarSvDmFragLimit));
+                cvarSvDmFragLimit.Set(nCvarSvDmFragLimit);
+            }
+            ImGui::PopItemWidth();
         }
-        ImGui::PopItemWidth();
+        else
+        {
+            PGEcfgVariable& cvarSvRgmRoundWinLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundWinLimit];
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvRgmRoundWinLimit; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvRgmRoundWinLimit, cvarSvRgmRoundWinLimit);
+            ImGui::TextUnformatted("Win Limit :");
+            ImGui::SameLine();
+            int nCvarSvRgmRoundWinLimit = cvarSvRgmRoundWinLimit.getAsInt();
+            ImGui::PushItemWidth(100);
+            if (ImGui::InputInt("##inputSvRgmRoundWinLimit", &nCvarSvRgmRoundWinLimit, 1, 10))
+            {
+                nCvarSvRgmRoundWinLimit = std::max(GameMode::nSvRgmRoundWinLimitMin, std::min(GameMode::nSvRgmRoundWinLimitMax, nCvarSvRgmRoundWinLimit));
+                cvarSvRgmRoundWinLimit.Set(nCvarSvRgmRoundWinLimit);
+            }
+            ImGui::PopItemWidth();
+        }
 
         PGEcfgVariable& cvarSvDmTimeLimit = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit];
         ImGui::AlignTextToFramePadding();
