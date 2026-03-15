@@ -184,8 +184,8 @@ namespace proofps_dd
 
         bool& isInSpectatorMode();
         const bool& isInSpectatorMode() const;
-        bool& isForcedSpectating();
         const bool& isForcedSpectating() const;
+        void setForcedSpectating(bool value);
 
         void updateAudioVisuals(
             const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay);

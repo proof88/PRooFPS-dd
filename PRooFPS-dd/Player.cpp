@@ -377,14 +377,18 @@ const bool& proofps_dd::Player::isInSpectatorMode() const
     return m_bSpectatorMode;
 }
 
-bool& proofps_dd::Player::isForcedSpectating()
+const bool& proofps_dd::Player::isForcedSpectating() const
 {
     return m_bForcedSpectating;
 }
 
-const bool& proofps_dd::Player::isForcedSpectating() const
+void proofps_dd::Player::setForcedSpectating(bool value)
 {
-    return m_bForcedSpectating;
+    if (value != m_bForcedSpectating)
+    {
+        getConsole().EOLn("%s(): change from %d to %d", __func__, m_bForcedSpectating, value);
+        m_bForcedSpectating = value;
+    }
 }
 
 const PgeOldNewValue<bool>& proofps_dd::Player::getInvulnerability() const
