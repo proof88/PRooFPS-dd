@@ -35,6 +35,15 @@ namespace proofps_dd
 
         static const char* getLoggerModuleName();
 
+        /**
+        * Use this function when iterating over players, to decide if we can spectate this player.
+        * Requires the only one existing GameMode instance.
+        * 
+        * @return True if the given player can be spectated in PlayerFollow spectating view, false otherwise.
+        *         False if there is no existing GameMode instance.
+        */
+        static bool canSpectatePlayer(const Player& player);
+
         // ---------------------------------------------------------------------------
 
         CConsole& getConsole() const;

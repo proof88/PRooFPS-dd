@@ -30,6 +30,19 @@ const char* proofps_dd::CameraHandling::getLoggerModuleName()
     return "CameraHandling";
 }
 
+bool proofps_dd::CameraHandling::canSpectatePlayer(const Player& player)
+{
+    const GameMode* const gm = GameMode::getGameMode();
+    if (!gm)
+    {
+        CConsole::getConsoleInstance(getLoggerModuleName()).EOLn("%s(): ERROR: no gamemode instance, no player can be spectated!", __func__);
+        assert(false);  // crash in debug
+        return false;
+    }
+
+    return !player.isForcedSpectating() && gm->isPlayerAllowedForGameplay(player);
+}
+
 CConsole& proofps_dd::CameraHandling::getConsole() const
 {
     return CConsole::getConsoleInstance(getLoggerModuleName());
@@ -70,7 +83,7 @@ void proofps_dd::CameraHandling::cameraToggleSpectatingView()
         ((m_eSpectatingView == SpectatingView::Free) ?
           SpectatingView::PlayerFollow : SpectatingView::Free);
 
-    CConsole::getConsoleInstance().EOLn("%s(): toggled spectating view to: %d", __func__, m_eSpectatingView);
+    getConsole().EOLn("%s(): toggled spectating view to: %d", __func__, m_eSpectatingView);
     // no need to invoke findAnyValidPlayerToFollowInSpectatingView() in case we just toggled to PlayerFollow mode, since
     // cameraUpdatePosAndAngleWhenSpectating() does that anyway in every frame!
 }
@@ -111,12 +124,9 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
 {
     if (mapPlayers.empty())
     {
-        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        getConsole().EOLn("%s(): no player can be spectated", __func__);
         return false;
     }
-
-    const GameMode* const gm = GameMode::getGameMode();
-    assert(gm);
 
     // first find the player currently being spectated
     auto it = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
@@ -137,10 +147,10 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
     // try find a next one
     while (it != mapPlayers.end())
     {
-        if (gm->isPlayerAllowedForGameplay(it->second))
+        if (canSpectatePlayer(it->second))
         {
             m_connHandlePlayerToFollowInSpectatingView = it->first;
-            CConsole::getConsoleInstance().EOLn(
+            getConsole().EOLn(
                 "%s(): found a player: %u, name: %s",
                 __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
             return true;
@@ -151,7 +161,7 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
     if (currentSpectatedPlayerIt == mapPlayers.end())
     {
         // reached end of container without finding a next spectatable player, from beginning of container
-        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        getConsole().EOLn("%s(): no player can be spectated", __func__);
         return false;
     }
     else
@@ -161,10 +171,10 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
         it = mapPlayers.begin();
         while (it != currentSpectatedPlayerIt)
         {
-            if (gm->isPlayerAllowedForGameplay(it->second))
+            if (canSpectatePlayer(it->second))
             {
                 m_connHandlePlayerToFollowInSpectatingView = it->first;
-                CConsole::getConsoleInstance().EOLn(
+                getConsole().EOLn(
                     "%s(): found a player: %u, name: %s",
                     __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
                 return true;
@@ -173,17 +183,17 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
         }
 
         // didn't find anyone, last-resort is the current spectated player
-        if (gm->isPlayerAllowedForGameplay(currentSpectatedPlayerIt->second))
+        if (canSpectatePlayer(currentSpectatedPlayerIt->second))
         {
             // current m_connHandlePlayerToFollowInSpectatingView is valid
-            CConsole::getConsoleInstance().EOLn(
+            getConsole().EOLn(
                 "%s(): found the currently spectated player only: %u, name: %s",
                 __func__, m_connHandlePlayerToFollowInSpectatingView, currentSpectatedPlayerIt->second.getName().c_str());
             return true;
         }
     }
 
-    CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+    getConsole().EOLn("%s(): no player can be spectated", __func__);
     return false;
 } // findNextValidPlayerToFollowInPlayerSpectatingView()
 
@@ -206,12 +216,9 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
 {
     if (mapPlayers.empty())
     {
-        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        getConsole().EOLn("%s(): no player can be spectated", __func__);
         return false;
     }
-
-    const GameMode* const gm = GameMode::getGameMode();
-    assert(gm);
 
     // first find the player currently being spectated
     auto it = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
@@ -237,15 +244,15 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
         else
         {
             // only the currently spectated player is in the container
-            if (gm->isPlayerAllowedForGameplay(it->second))
+            if (canSpectatePlayer(it->second))
             {
                 // current m_connHandlePlayerToFollowInSpectatingView is valid
-                CConsole::getConsoleInstance().EOLn(
+                getConsole().EOLn(
                     "%s(): found the currently spectated player only: %u, name: %s",
                     __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
                 return true;
             }
-            CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+            getConsole().EOLn("%s(): no player can be spectated", __func__);
             return false;
         }
     }
@@ -253,10 +260,10 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
     // try find a next one
     while (it != mapPlayers.begin())
     {
-        if (gm->isPlayerAllowedForGameplay(it->second))
+        if (canSpectatePlayer(it->second))
         {
             m_connHandlePlayerToFollowInSpectatingView = it->first;
-            CConsole::getConsoleInstance().EOLn(
+            getConsole().EOLn(
                 "%s(): found a player: %u, name: %s",
                 __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
             return true;
@@ -265,10 +272,10 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
     } 
 
     // it == mapPlayers.begin()
-    if (gm->isPlayerAllowedForGameplay(it->second))
+    if (canSpectatePlayer(it->second))
     {
         m_connHandlePlayerToFollowInSpectatingView = it->first;
-        CConsole::getConsoleInstance().EOLn(
+        getConsole().EOLn(
             "%s(): found a player: %u, name: %s",
             __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
         return true;
@@ -277,7 +284,7 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
     if (currentSpectatedPlayerIt == mapPlayers.end())
     {
         // reached beginning of container without finding a next spectatable player, from end of container
-        CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+        getConsole().EOLn("%s(): no player can be spectated", __func__);
         return false;
     }
     else
@@ -288,10 +295,10 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
         --it; // cannot fail since container is not empty
         while (it != currentSpectatedPlayerIt)
         {
-            if (gm->isPlayerAllowedForGameplay(it->second))
+            if (canSpectatePlayer(it->second))
             {
                 m_connHandlePlayerToFollowInSpectatingView = it->first;
-                CConsole::getConsoleInstance().EOLn(
+                getConsole().EOLn(
                     "%s(): found a player: %u, name: %s",
                     __func__, m_connHandlePlayerToFollowInSpectatingView, it->second.getName().c_str());
                 return true;
@@ -300,17 +307,17 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
         }
 
         // didn't find anyone, last-resort is the current spectated player
-        if (gm->isPlayerAllowedForGameplay(currentSpectatedPlayerIt->second))
+        if (canSpectatePlayer(currentSpectatedPlayerIt->second))
         {
             // current m_connHandlePlayerToFollowInSpectatingView is valid
-            CConsole::getConsoleInstance().EOLn(
+            getConsole().EOLn(
                 "%s(): found the currently spectated player only: %u, name: %s",
                 __func__, m_connHandlePlayerToFollowInSpectatingView, currentSpectatedPlayerIt->second.getName().c_str());
             return true;
         }
     }
 
-    CConsole::getConsoleInstance().EOLn("%s(): no player can be spectated", __func__);
+    getConsole().EOLn("%s(): no player can be spectated", __func__);
     return false;
 } // findPrevValidPlayerToFollowInPlayerSpectatingView()
 
@@ -334,14 +341,11 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingVie
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     PureVector& posPlayerToFollow)
 {
-    const GameMode* const gm = GameMode::getGameMode();
-    assert(gm);
-
     // first try to spectate the same player who we were spectating previously
     const auto playerIt = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
     if (mapPlayers.end() != playerIt)
     {
-        if (gm->isPlayerAllowedForGameplay(playerIt->second))
+        if (canSpectatePlayer(playerIt->second))
         {
             // current m_connHandlePlayerToFollowInSpectatingView is valid
             posPlayerToFollow = playerIt->second.getObject3D()->getPosVec();
@@ -352,11 +356,11 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingVie
     // try to find another player
     for (const auto& pairConnHandlePlayer : mapPlayers)
     {
-        if (gm->isPlayerAllowedForGameplay(pairConnHandlePlayer.second))
+        if (canSpectatePlayer(pairConnHandlePlayer.second))
         {
             m_connHandlePlayerToFollowInSpectatingView = pairConnHandlePlayer.first;
             posPlayerToFollow = pairConnHandlePlayer.second.getObject3D()->getPosVec();
-            CConsole::getConsoleInstance().EOLn(
+            getConsole().EOLn(
                 "%s(): found a player: %u, name: %s",
                 __func__,
                 m_connHandlePlayerToFollowInSpectatingView,
@@ -630,7 +634,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenSpectating(
         {
             // no player found to be spectated
             m_eSpectatingView = SpectatingView::Free;
-            CConsole::getConsoleInstance().EOLn("%s(): toggled spectating view from PlayerFollow back to Free due to no spectatable players!", __func__);
+            getConsole().EOLn("%s(): toggled spectating view from PlayerFollow back to Free due to no spectatable players!", __func__);
         }
         else
         {
