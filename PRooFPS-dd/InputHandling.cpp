@@ -543,7 +543,7 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
     const proofps_dd::Player& player)
 {
     assert(!gameMode.isGameWon());
-    assert(player.isInSpectatorMode());
+    assert(player.isInSpectatorMode() || player.isForcedSpectating());
     // in this function, m_strafe and other members are re-used for controlling the spectating view in spectator mode
 
     if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
@@ -551,22 +551,22 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
         // in future if FPS limit can be disable we probably will want to divide here by fps
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
         {
-            m_camera.cameraGetPosToFollowInSpectatorMode().SetX(m_camera.cameraGetPosToFollowInSpectatorMode().getX() - 0.1f);
+            m_camera.cameraGetPosToFollowWhenSpectating().SetX(m_camera.cameraGetPosToFollowWhenSpectating().getX() - 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
         {
-            m_camera.cameraGetPosToFollowInSpectatorMode().SetX(m_camera.cameraGetPosToFollowInSpectatorMode().getX() + 0.1f);
+            m_camera.cameraGetPosToFollowWhenSpectating().SetX(m_camera.cameraGetPosToFollowWhenSpectating().getX() + 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('w')))
         {
-            m_camera.cameraGetPosToFollowInSpectatorMode().SetY(m_camera.cameraGetPosToFollowInSpectatorMode().getY() + 0.1f);
+            m_camera.cameraGetPosToFollowWhenSpectating().SetY(m_camera.cameraGetPosToFollowWhenSpectating().getY() + 0.1f);
         }
 
         if (m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s')))
         {
-            m_camera.cameraGetPosToFollowInSpectatorMode().SetY(m_camera.cameraGetPosToFollowInSpectatorMode().getY() - 0.1f);
+            m_camera.cameraGetPosToFollowWhenSpectating().SetY(m_camera.cameraGetPosToFollowWhenSpectating().getY() - 0.1f);
         }
     }
     else /* SpectatingView::PlayerFollow */
@@ -689,7 +689,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
-    if (playerConst.isInSpectatorMode())
+    if (playerConst.isInSpectatorMode() || playerConst.isForcedSpectating())
     {
         clientKeyboardWhenConnectedToServer_Spectating(gameMode, playerConst);
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
@@ -1091,7 +1091,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
     PureObject3D& objXHair)
 {
     assert(!gameMode.isGameWon());
-    assert(player.isInSpectatorMode());
+    assert(player.isInSpectatorMode() || player.isForcedSpectating());
 
     if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
     {
@@ -1151,7 +1151,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
-    if (player.isInSpectatorMode())
+    if (player.isInSpectatorMode() || player.isForcedSpectating())
     {
         return clientMouseWhenConnectedToServer_Spectating(gameMode, player, objXHair);
     }

@@ -61,7 +61,7 @@ proofps_dd::CameraHandling::SpectatingView& proofps_dd::CameraHandling::cameraGe
 
 /**
 * Toggles between different camera spectating views.
-* Note: even if it toggles to SpectatingView::PlayerFollow view, later cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode() might toggle it
+* Note: even if it toggles to SpectatingView::PlayerFollow view, later cameraUpdatePosAndAngleWhenSpectating() might toggle it
 *       back to SpectatingView::Free view.
 */
 void proofps_dd::CameraHandling::cameraToggleSpectatingView()
@@ -72,14 +72,14 @@ void proofps_dd::CameraHandling::cameraToggleSpectatingView()
 
     CConsole::getConsoleInstance().EOLn("%s(): toggled spectating view to: %d", __func__, m_eSpectatingView);
     // no need to invoke findAnyValidPlayerToFollowInSpectatingView() in case we just toggled to PlayerFollow mode, since
-    // cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode() does that anyway in every frame!
+    // cameraUpdatePosAndAngleWhenSpectating() does that anyway in every frame!
 }
 
 /**
 * This is essentially controlled by cameraUpdatePosAndAngle() when we are in spectator mode, however
 * it is allowed to be accessed by the user to update it in "free camera spectating view".
 */
-PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowInSpectatorMode()
+PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowWhenSpectating()
 {
     return m_vecPosToFollowInFreeCameraView;
 }
@@ -88,7 +88,7 @@ PureVector& proofps_dd::CameraHandling::cameraGetPosToFollowInSpectatorMode()
 * @return Connection handle of the player who was most recently found to be spectated.
 *         Might not be valid anymore, therefore it is advised to do a sanity check with the returned value.
 */
-const pge_network::PgeNetworkConnectionHandle& proofps_dd::CameraHandling::cameraGetPlayerConnectionHandleToFollowInSpectatingView() const
+const pge_network::PgeNetworkConnectionHandle& proofps_dd::CameraHandling::cameraGetPlayerConnectionHandleToFollowWhenSpectating() const
 {
     return m_connHandlePlayerToFollowInSpectatingView;
 }
@@ -97,12 +97,12 @@ const pge_network::PgeNetworkConnectionHandle& proofps_dd::CameraHandling::camer
 * Useful when we want to iterate to the next spectatable player in "player follow spectating view".
 * 
 * If the function returns true, the following function returns valid data:
-*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*  - cameraGetPlayerConnectionHandleToFollowWhenSpectating().
 *
 * @param mapPlayers List of all connected players where we are searching for a player to be spectated.
 *
-* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
-*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now been updated,
+* @return True if cameraGetPlayerConnectionHandleToFollowWhenSpectating() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowWhenSpectating() has now been updated,
 *         false otherwise.
 *         False means we cannot follow anyone, need to switch back to "free camera spectating view".
 */
@@ -192,12 +192,12 @@ bool proofps_dd::CameraHandling::findNextValidPlayerToFollowInPlayerSpectatingVi
 * Useful when we want to iterate to the previous spectatable player in "player follow spectating view".
 * 
 * If the function returns true, the following function returns valid data:
-*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*  - cameraGetPlayerConnectionHandleToFollowWhenSpectating().
 *
 * @param mapPlayers List of all connected players where we are searching for a player to be spectated.
 *
-* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
-*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now been updated,
+* @return True if cameraGetPlayerConnectionHandleToFollowWhenSpectating() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowWhenSpectating() has now been updated,
 *         false otherwise.
 *         False means we cannot follow anyone, need to switch back to "free camera spectating view".
 */
@@ -319,14 +319,14 @@ bool proofps_dd::CameraHandling::findPrevValidPlayerToFollowInPlayerSpectatingVi
 * First checks validity of already saved player to follow (who we have been following), and finds different player only if that player is not valid anymore.
 * 
 * If the function returns true, the following function returns valid data:
-*  - cameraGetPlayerConnectionHandleToFollowInSpectatingView().
+*  - cameraGetPlayerConnectionHandleToFollowWhenSpectating().
 *
 * @param mapPlayers        List of all connected players where we are searching for a player to be spectated.
 * @param posPlayerToFollow A valid position of the player selected to be spectated.
 *                          Valid only if the function returns true.
 *
-* @return True if cameraGetPlayerConnectionHandleToFollowInSpectatingView() is still valid or
-*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowInSpectatingView() has now become valid again,
+* @return True if cameraGetPlayerConnectionHandleToFollowWhenSpectating() is still valid or
+*         another valid player has been found and cameraGetPlayerConnectionHandleToFollowWhenSpectating() has now become valid again,
 *         false otherwise.
 *         False means we cannot follow anyone, need to switch back to free camera spectating view.
 */
@@ -417,9 +417,9 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
 
     auto& cam = m_pure.getCamera();
 
-    if (player.isInSpectatorMode())
+    if (player.isInSpectatorMode() || player.isForcedSpectating())
     {
-        cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(mapPlayers, cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
+        cameraUpdatePosAndAngleWhenSpectating(mapPlayers, cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
     }
     else
     {
@@ -610,7 +610,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleToFollowPos(
     cam.getUpVec().Set(0.f, 1.f, 0.f);
 }
 
-void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
+void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenSpectating(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     PureCamera& cam,
     XHair& xhair,
@@ -635,10 +635,10 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngleWhenPlayerIsInSpectatorM
         else
         {
             // player spectating view is still good, there is a valid spectatable player
-            if ((prevSpectatedPlayerConnHandleForXHairReposition != cameraGetPlayerConnectionHandleToFollowInSpectatingView()) ||
+            if ((prevSpectatedPlayerConnHandleForXHairReposition != cameraGetPlayerConnectionHandleToFollowWhenSpectating()) ||
                 (prevSpectatingView != m_eSpectatingView))
             {
-                prevSpectatedPlayerConnHandleForXHairReposition = cameraGetPlayerConnectionHandleToFollowInSpectatingView();
+                prevSpectatedPlayerConnHandleForXHairReposition = cameraGetPlayerConnectionHandleToFollowWhenSpectating();
                 // we just changed to this player so move xhair to screen center
                 xhair.getObject3D().getPosVec().Set(0.f, 0.f, xhair.getObject3D().getPosVec().getZ());
             }

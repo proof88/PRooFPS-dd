@@ -52,8 +52,8 @@ namespace proofps_dd
         SpectatingView& cameraGetSpectatingView();
         void cameraToggleSpectatingView();
 
-        PureVector& cameraGetPosToFollowInSpectatorMode();
-        const pge_network::PgeNetworkConnectionHandle& cameraGetPlayerConnectionHandleToFollowInSpectatingView() const;
+        PureVector& cameraGetPosToFollowWhenSpectating();
+        const pge_network::PgeNetworkConnectionHandle& cameraGetPlayerConnectionHandleToFollowWhenSpectating() const;
 
         bool findNextValidPlayerToFollowInPlayerSpectatingView(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
@@ -103,7 +103,7 @@ namespace proofps_dd
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed);
-        void cameraUpdatePosAndAngleWhenPlayerIsInSpectatorMode(
+        void cameraUpdatePosAndAngleWhenSpectating(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             PureCamera& cam,
             XHair& xhair,

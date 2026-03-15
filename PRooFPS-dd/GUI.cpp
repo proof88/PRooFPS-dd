@@ -2671,7 +2671,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
     }
 
     const Player* pPlayer = &player;
-    const bool bWeAreSpectatingNow = player.isInSpectatorMode();
+    const bool bWeAreSpectatingNow = player.isInSpectatorMode() || player.isForcedSpectating();
     if (bWeAreSpectatingNow)
     {
         if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
@@ -2680,10 +2680,10 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         }
         
         // Players are added/deleted before each frame, and GUI as drawn at the end of each frame, so
-        // in theory cameraGetPlayerConnectionHandleToFollowInSpectatingView() always returns a valid
+        // in theory cameraGetPlayerConnectionHandleToFollowWhenSpectating() always returns a valid
         // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
         // still checking its validity.
-        const auto itSpectatedPlayer = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+        const auto itSpectatedPlayer = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowWhenSpectating());
         if (itSpectatedPlayer == m_pMapPlayers->end())
         {
             return;
@@ -4138,7 +4138,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         return;
     }
 
-    if (!player.isInSpectatorMode())
+    if (!player.isInSpectatorMode() && !player.isForcedSpectating())
     {
         return;
     }
@@ -4162,7 +4162,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
     else
     {
         // players are added/deleted before each frame, and GUI as drawn at the end of each frame, so
-        // in theory cameraGetPlayerConnectionHandleToFollowInSpectatingView() always returns a valid
+        // in theory cameraGetPlayerConnectionHandleToFollowWhenSpectating() always returns a valid
         // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
         // still checking its validity with getPlayerNameAndTeamColorByConnHandle().
         assert(m_pMapPlayers);
@@ -4171,7 +4171,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         sFollowedPlayerName =
             getPlayerNameAndTeamColorByConnHandle(
                 *m_pMapPlayers,
-                m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView(),
+                m_pCamera->cameraGetPlayerConnectionHandleToFollowWhenSpectating(),
                 teamColor);
         static std::string sPlayerFollowViewCaption;
         sPlayerFollowViewCaption = std::string("Spectating: ") + sFollowedPlayerName;
@@ -4199,7 +4199,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
     if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
     {
         // RFR: OPT: getPlayerNameAndTeamColorByConnHandle() should be refactored so we would not need to find player again here
-        const auto playerSpectatedIt = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowInSpectatingView());
+        const auto playerSpectatedIt = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowWhenSpectating());
         if (m_pMapPlayers->end() != playerSpectatedIt)
         {
             const Player& playerSpectated = playerSpectatedIt->second;
@@ -4253,18 +4253,19 @@ void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
 {
     static bool bPrevFrameSpectator = false;
 
-    if (player.isInSpectatorMode() && (!bPrevFrameSpectator || bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements))
+    if ((player.isInSpectatorMode() || player.isForcedSpectating()) &&
+        (!bPrevFrameSpectator || bRequireForcedInvokeHandleEnterSpectatorModeToSetLateLoadedElements))
     {
         handleEnterSpectatorMode(player);
     }
-    else if (!player.isInSpectatorMode() && bPrevFrameSpectator)
+    else if (!player.isInSpectatorMode() && !player.isForcedSpectating() && bPrevFrameSpectator)
     {
         handleExitSpectatorMode(player);
     }
 
     drawSpectatorMode(player);
 
-    bPrevFrameSpectator = player.isInSpectatorMode();
+    bPrevFrameSpectator = player.isInSpectatorMode() || player.isForcedSpectating();
 }
 
 /**

@@ -264,8 +264,8 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             const bool bCurrentClient = isMyConnection(player.getServerSideConnectionHandle());
             if (bCurrentClient)
             {
-                m_camera.cameraGetPosToFollowInSpectatorMode().SetX(player.getObject3D()->getPosVec().getX());
-                m_camera.cameraGetPosToFollowInSpectatorMode().SetY(player.getObject3D()->getPosVec().getY());
+                m_camera.cameraGetPosToFollowWhenSpectating().SetX(player.getObject3D()->getPosVec().getX());
+                m_camera.cameraGetPosToFollowWhenSpectating().SetY(player.getObject3D()->getPosVec().getY());
 
                 if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
                 {
@@ -1086,7 +1086,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     player.setWeaponMomentaryAccuracy(msg.m_fWpnMomentaryAccuracy);
-    if (bCurrentClient && !player.isInSpectatorMode())
+    if (bCurrentClient && !player.isInSpectatorMode() && !player.isForcedSpectating())
     {
         // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
         m_gui.getXHair()->setRelativeScaling(
