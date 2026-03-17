@@ -73,6 +73,9 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     XHair& xhair,
     const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide)
 {
+    const GameMode* const gameMode = GameMode::getGameMode();
+    assert(gameMode);
+
     // here design is good because server and client share the same code
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     
@@ -126,7 +129,10 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
         // from v0.2.5, server shows respawn timer here for themselves, client shows upon receiving MsgDeathNotificationFromServer
         if (isMyConnection(player.getServerSideConnectionHandle()))
         {
-            m_gui.showRespawnTimer(pPlayerKiller);
+            if (gameMode->isRespawnAllowedAfterDie())
+            {
+                m_gui.showRespawnTimer(pPlayerKiller);
+            }
         }
     }
 }
@@ -192,7 +198,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     proofps_dd::GameMode& gameMode,
     proofps_dd::Durations& durations)
 {
-    if (gameMode.isGameWon())
+    if (gameMode.isGameWon() || !gameMode.isRespawnAllowedAfterDie())
     {
         return;
     }
@@ -670,6 +676,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
     // TODO: make sure received user name is properly null-terminated! someone else could had sent that, e.g. malicious client or server
 
     GameMode* gameMode = GameMode::getGameMode();
+    assert(gameMode);
 
     const auto playerIt = m_mapPlayers.find(connHandleServerSide);
     if (m_mapPlayers.end() == playerIt)
@@ -1224,7 +1231,10 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     return true;
 }  // handleUserUpdateFromServer()
 
-bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg)
+bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(
+    pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide,
+    const proofps_dd::MsgDeathNotificationFromServer& msg,
+    proofps_dd::GameMode& gameMode)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -1268,8 +1278,11 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(pge_network::
     // from v0.2.5, client shows respawn timer here instead of in handlePlayerDied()
     if (isMyConnection(nDeadConnHandleServerSide))
     {
-        m_gui.showRespawnTimer(
-            sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
+        if (gameMode.isRespawnAllowedAfterDie())
+        {
+            m_gui.showRespawnTimer(
+                sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
+        }
     }
 
     // Server does death notification on GUI in HandlePlayerDied(), clients do here.

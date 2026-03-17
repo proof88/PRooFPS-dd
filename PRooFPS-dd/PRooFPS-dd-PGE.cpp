@@ -539,7 +539,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgDeathNotificationFromServer::id:
             bRet = handleDeathNotificationFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgDeathNotificationFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgDeathNotificationFromServer>(pkt),
+                *GameMode::getGameMode());
             break;
         case proofps_dd::MsgPlayerEventFromServer::id:
             bRet = handlePlayerEventFromServer(

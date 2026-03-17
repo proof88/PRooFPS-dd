@@ -357,6 +357,12 @@ namespace proofps_dd
         */
         virtual bool isRoundBased() const = 0;
 
+        /*
+        * Derived class shall return true if a player is allowed to respawn after dieing (with optional respawn countdown), false otherwise.
+        * In case of false, game logic shall skip showing the respawn countdown and shall wait for a different condition to allow respawn.
+        */
+        virtual bool isRespawnAllowedAfterDie() const = 0;
+
         /**
         * Checks if given player is allowed for gameplay.
         * For example, in a team-based game mode, server can freeze player actions when no team is assigned to the player.
@@ -472,6 +478,7 @@ namespace proofps_dd
 
         virtual bool isTeamBasedGame() const override;
         virtual bool isRoundBased() const override;
+        virtual bool isRespawnAllowedAfterDie() const override;
 
         virtual bool isPlayerAllowedForGameplay(const Player& player) const override;
 
@@ -543,7 +550,6 @@ namespace proofps_dd
             pge_network::PgeINetwork& network) override;
 
         virtual bool isTeamBasedGame() const override;
-        virtual bool isRoundBased() const override;
 
         /**
         * Extending parent class implementation by rejecting player if team id is 0.
@@ -632,6 +638,7 @@ namespace proofps_dd
             pge_network::PgeINetwork& network) override;
 
         virtual bool isRoundBased() const override;
+        virtual bool isRespawnAllowedAfterDie() const override;
 
         /**
         * @return Configured round win limit previously set by setRoundWinLimit().

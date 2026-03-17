@@ -684,6 +684,11 @@ bool proofps_dd::DeathMatchMode::isRoundBased() const
     return false;
 }
 
+bool proofps_dd::DeathMatchMode::isRespawnAllowedAfterDie() const
+{
+    return true;
+}
+
 bool proofps_dd::DeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
 {
     return GameMode::isPlayerAllowedForGameplay(player);
@@ -793,11 +798,6 @@ bool proofps_dd::TeamDeathMatchMode::updatePlayer(const Player& player, pge_netw
 bool proofps_dd::TeamDeathMatchMode::isTeamBasedGame() const
 {
     return true;
-}
-
-bool proofps_dd::TeamDeathMatchMode::isRoundBased() const
-{
-    return false;
 }
 
 bool proofps_dd::TeamDeathMatchMode::isPlayerAllowedForGameplay(const Player& player) const
@@ -928,6 +928,11 @@ bool proofps_dd::TeamRoundGameMode::removePlayer(const Player& player, pge_netwo
 bool proofps_dd::TeamRoundGameMode::isRoundBased() const
 {
     return true;
+}
+
+bool proofps_dd::TeamRoundGameMode::isRespawnAllowedAfterDie() const
+{
+    return false;
 }
 
 unsigned int proofps_dd::TeamRoundGameMode::getRoundWinLimit() const

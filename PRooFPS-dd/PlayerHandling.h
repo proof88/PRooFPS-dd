@@ -115,7 +115,9 @@ namespace proofps_dd
             proofps_dd::GameMode& gameMode,
             PgeObjectPool<proofps_dd::Smoke>& smokes);
         bool handleDeathNotificationFromServer(
-            pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide, const proofps_dd::MsgDeathNotificationFromServer& msg);
+            pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide,
+            const proofps_dd::MsgDeathNotificationFromServer& msg,
+            proofps_dd::GameMode& gameMode);
         bool handlePlayerEventFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgPlayerEventFromServer& msg,

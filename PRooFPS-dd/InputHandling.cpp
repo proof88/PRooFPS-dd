@@ -161,17 +161,20 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     if (playerConst.getHealth() == 0)
     {
-        if (pktUserCmdMove.m_bShootAction)
+        if (gameMode.isRespawnAllowedAfterDie())
         {
-            //getConsole().EOLn("InputHandling::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
+            // for dead player, only the shoot action is allowed which is treated as respawn request
+            if (pktUserCmdMove.m_bShootAction)
+            {
+                //getConsole().EOLn("InputHandling::%s(): user %s is requesting respawn", __func__, sClientUserName.c_str());
 
-            // this is for server's player timer respawn logic, independent of GUI respawn countdown, which is handled in clientMouseWhenConnectedToServer()
-            player.moveTimeDiedEarlier(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+                // this is for server's player timer respawn logic, independent of GUI respawn countdown, which is handled in clientMouseWhenConnectedToServer()
+                player.moveTimeDiedEarlier(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
 
-            return true;
+                return true;
+            }
         }
-
-        // for dead player, only the shoot action is allowed which is treated as respawn request
+        
         //getConsole().OLn("InputHandling::%s(): ignoring cmdMove for user %s due to health is 0!", __func__, sClientUserName.c_str());
         return true;
     }
@@ -1159,6 +1162,11 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
     if (!gameMode.isPlayerAllowedForGameplay(player))
     {
         // not error, valid state, maybe player not selected team yet
+        return false;
+    }
+
+    if (!gameMode.isRespawnAllowedAfterDie())
+    {
         return false;
     }
 

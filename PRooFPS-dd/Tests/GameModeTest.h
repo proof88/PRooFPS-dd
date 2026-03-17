@@ -77,6 +77,11 @@ public:
         return false;
     }
 
+    virtual bool isRespawnAllowedAfterDie() const override
+    {
+        return false;
+    }
+
     virtual bool isPlayerAllowedForGameplay(const proofps_dd::Player&) const override
     {
         return true;
@@ -403,6 +408,7 @@ private:
         b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
+        b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
 
         return b;
     }
@@ -424,6 +430,7 @@ private:
         b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
+        b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
     
         return b;
     }
@@ -445,6 +452,7 @@ private:
         b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertTrue(gm->isRoundBased(), "round based");
+        b &= assertFalse(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
 
         return b;
     }
