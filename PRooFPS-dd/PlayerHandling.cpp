@@ -76,6 +76,11 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     const GameMode* const gameMode = GameMode::getGameMode();
     assert(gameMode);
 
+    if (!gameMode->isRespawnAllowedAfterDie())
+    {
+        player.setForcedSpectating(true);
+    }
+
     // here design is good because server and client share the same code
     player.die(isMyConnection(player.getServerSideConnectionHandle()), m_pge.getNetwork().isServer());
     
@@ -173,6 +178,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
     player.setHealth(100);
     player.getRespawnFlag() = true;
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+    player.setForcedSpectating(false);
     if (restartGame)
     {
         if (GameMode::getGameMode()->isTeamBasedGame())
