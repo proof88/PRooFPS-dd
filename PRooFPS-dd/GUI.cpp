@@ -1083,21 +1083,23 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             PGEcfgVariable& cvarSvGamemode = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGamemode];
             ImGui::AlignTextToFramePadding();
 
+            assert(m_pMapPlayers);
+
             // dont forget there is also 3-param version of RadioButton
             if (ImGui::RadioButton("Deathmatch (Free for All)##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::DeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::DeathMatch));
-                GameMode::createGameMode(GameModeType::DeathMatch);
+                GameMode::createGameMode(GameModeType::DeathMatch, *m_pMapPlayers);
             }
             if (ImGui::RadioButton("Team Deathmatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
-                GameMode::createGameMode(GameModeType::TeamDeathMatch);
+                GameMode::createGameMode(GameModeType::TeamDeathMatch, *m_pMapPlayers);
             }
             if (ImGui::RadioButton("Team Round Game##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamRoundGame)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamRoundGame));
-                GameMode::createGameMode(GameModeType::TeamRoundGame);
+                GameMode::createGameMode(GameModeType::TeamRoundGame, *m_pMapPlayers);
             }
 
             if (!GameMode::getGameMode()->isTeamBasedGame())
@@ -2177,6 +2179,7 @@ void proofps_dd::GUI::drawInGameWelcomeTeamSelectSpectatorMenu(
     {
         drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
 
+        assert(m_pMapPlayers);
         if (itCurrentPlayer == m_pMapPlayers->end())
         {
             drawText(
@@ -2683,6 +2686,7 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         // in theory cameraGetPlayerConnectionHandleToFollowWhenSpectating() always returns a valid
         // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
         // still checking its validity.
+        assert(m_pMapPlayers);
         const auto itSpectatedPlayer = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowWhenSpectating());
         if (itSpectatedPlayer == m_pMapPlayers->end())
         {
@@ -4144,6 +4148,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
     }
 
     assert(m_pCamera);
+    assert(m_pMapPlayers);
 
     if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
     {
@@ -4165,7 +4170,6 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         // in theory cameraGetPlayerConnectionHandleToFollowWhenSpectating() always returns a valid
         // conn handle if we are in SpectatingView::PlayerFollow view now, however to be safe we are
         // still checking its validity with getPlayerNameAndTeamColorByConnHandle().
-        assert(m_pMapPlayers);
         static PureColor teamColor;
         static std::string sFollowedPlayerName;
         sFollowedPlayerName =

@@ -175,7 +175,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     cameraInitForGameStart();
 
     // create GameMode right away here, based on config, will be recreated later anyway if config is changed.
-    if (!proofps_dd::GameMode::createGameMode(GameMode::getGameModeTypeFromConfig(getConfigProfiles())))
+    if (!proofps_dd::GameMode::createGameMode(GameMode::getGameModeTypeFromConfig(getConfigProfiles()), m_mapPlayers))
     {
         getConsole().EOLnOO("ERROR: createGameMode() failed!");
         return false;
@@ -467,7 +467,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
         case proofps_dd::MsgServerInfoFromServer::id:
             bRet = m_config.clientHandleServerInfoFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
-                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt));
+                pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgServerInfoFromServer>(pkt),
+                m_mapPlayers);
             break;
         case proofps_dd::MsgGameSessionStateFromServer::id:
             bRet = clientHandleGameSessionStateFromServer(

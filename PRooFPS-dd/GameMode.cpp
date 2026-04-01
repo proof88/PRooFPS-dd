@@ -53,7 +53,9 @@ const char* proofps_dd::GameMode::getLoggerModuleName()
     return "GameMode";
 }
 
-proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType gm)
+proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(
+    proofps_dd::GameModeType gm,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     // unlike with traditional singleton, here we always destroy the already existing instance, due to
     // reassigning the unique_ptr to the new instance!
@@ -62,13 +64,13 @@ proofps_dd::GameMode* proofps_dd::GameMode::createGameMode(proofps_dd::GameModeT
     {
     case proofps_dd::GameModeType::DeathMatch:
         // here std::move() is not needed to compile, but just to make it clear: unique_ptr is moved here, obviously, since it cannot be copied :)
-        m_gamemode = std::move(proofps_dd::DeathMatchMode::createGameMode());
+        m_gamemode = std::move(proofps_dd::DeathMatchMode::createGameMode(mapPlayers));
         break;
     case proofps_dd::GameModeType::TeamDeathMatch:
-        m_gamemode = std::move(proofps_dd::TeamDeathMatchMode::createGameMode());
+        m_gamemode = std::move(proofps_dd::TeamDeathMatchMode::createGameMode(mapPlayers));
         break;
     case proofps_dd::GameModeType::TeamRoundGame:
-        m_gamemode = std::move(proofps_dd::TeamRoundGameMode::createGameMode());
+        m_gamemode = std::move(proofps_dd::TeamRoundGameMode::createGameMode(mapPlayers));
         break;
     default:
         m_gamemode = nullptr;
@@ -364,6 +366,11 @@ const std::list<proofps_dd::PlayersTableRow>& proofps_dd::GameMode::getPlayersTa
     return m_players;
 }
 
+const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& proofps_dd::GameMode::getExternalPlayersContainer() const
+{
+    return m_mapPlayersExternal;
+}
+
 bool proofps_dd::GameMode::renamePlayer(const std::string& sOldName, const std::string& sNewName)
 {
     if (sOldName.empty() || sNewName.empty())
@@ -423,7 +430,10 @@ void proofps_dd::GameMode::text(PR00FsUltimateRenderingEngine& pure, const std::
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::GameMode::GameMode(proofps_dd::GameModeType gm) :
+proofps_dd::GameMode::GameMode(
+    proofps_dd::GameModeType gm,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
+    m_mapPlayersExternal(mapPlayers),
     m_gameModeType(gm)
 {
 }
@@ -489,10 +499,11 @@ std::unique_ptr<proofps_dd::GameMode> proofps_dd::GameMode::m_gamemode{};
 // ############################### PUBLIC ################################
 
 
-std::unique_ptr<proofps_dd::DeathMatchMode> proofps_dd::DeathMatchMode::createGameMode()
+std::unique_ptr<proofps_dd::DeathMatchMode> proofps_dd::DeathMatchMode::createGameMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     // instead of std::make_unique, because that cannot access protected DeathMatchMode() ctor
-    return std::unique_ptr<proofps_dd::DeathMatchMode>(new proofps_dd::DeathMatchMode());
+    return std::unique_ptr<proofps_dd::DeathMatchMode>(new proofps_dd::DeathMatchMode(mapPlayers));
 }
 
 proofps_dd::DeathMatchMode::~DeathMatchMode()
@@ -710,8 +721,9 @@ int proofps_dd::DeathMatchMode::comparePlayers(int p1frags, int p2frags, int p1d
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::DeathMatchMode::DeathMatchMode() :
-    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
+proofps_dd::DeathMatchMode::DeathMatchMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
+    proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch, mapPlayers)
 {
 }
 
@@ -743,10 +755,11 @@ const PureColor& proofps_dd::TeamDeathMatchMode::getTeamColor(unsigned int iTeam
     return vecTeamColors[iTeamId];
 }
 
-std::unique_ptr<proofps_dd::TeamDeathMatchMode> proofps_dd::TeamDeathMatchMode::createGameMode()
+std::unique_ptr<proofps_dd::TeamDeathMatchMode> proofps_dd::TeamDeathMatchMode::createGameMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     // instead of std::make_unique, because that cannot access protected TeamDeathMatchMode() ctor
-    return std::unique_ptr<proofps_dd::TeamDeathMatchMode>(new proofps_dd::TeamDeathMatchMode());
+    return std::unique_ptr<proofps_dd::TeamDeathMatchMode>(new proofps_dd::TeamDeathMatchMode(mapPlayers));
 }
 
 proofps_dd::TeamDeathMatchMode::~TeamDeathMatchMode()
@@ -842,11 +855,40 @@ unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iT
     return nTeamTotalPlayers;
 }
 
+unsigned int proofps_dd::TeamDeathMatchMode::getAliveTeamPlayersCount(unsigned int iTeamId) const
+{
+    if (iTeamId == 0)
+    {
+        return 0;
+    }
+    
+    unsigned int nTeamTotalAlivePlayers = 0;
+    for (const auto& player : m_players)
+    {
+        const auto playerIt = m_mapPlayersExternal.find(player.m_connHandle);
+        if (playerIt == m_mapPlayersExternal.end())
+        {
+            //getConsole().EOLn(
+            //    "TeamDeathMatchMode::%s(): WARNING: player with connHandle %u is not found in m_mapPlayersExternal!",
+            //    __func__, player.m_connHandle);
+            continue;
+        }
+
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating && (std::as_const(playerIt->second).getHealth() > 0))
+        {
+            ++nTeamTotalAlivePlayers;
+        }
+    }
+    return nTeamTotalAlivePlayers;
+}
+
 
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
+proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
+    proofps_dd::DeathMatchMode(mapPlayers)
 {
     m_gameModeType = proofps_dd::GameModeType::TeamDeathMatch;
 }
@@ -857,7 +899,7 @@ proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
 
 /*
    ###########################################################################
-   proofps_dd::TeamRoundGameMode
+   proofps_dd::TeamRoundGameMode::RoundStateFSM
    ###########################################################################
 */
 
@@ -865,10 +907,176 @@ proofps_dd::TeamDeathMatchMode::TeamDeathMatchMode()
 // ############################### PUBLIC ################################
 
 
-std::unique_ptr<proofps_dd::TeamRoundGameMode> proofps_dd::TeamRoundGameMode::createGameMode()
+const char* proofps_dd::TeamRoundGameMode::RoundStateFSM::getLoggerModuleName()
+{
+    return "RoundStateFSM";
+}
+
+CConsole& proofps_dd::TeamRoundGameMode::RoundStateFSM::getConsole() const
+{
+    return CConsole::getConsoleInstance(getLoggerModuleName());
+}
+
+const proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState& proofps_dd::TeamRoundGameMode::RoundStateFSM::getState() const
+{
+    return m_state;
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::update()
+{
+    stateUpdate();
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::reset()
+{
+    stateEnter(RoundState::Prepare);
+    // manually update this timestamp because if we are in Prepare state already, it wont be updated
+    m_timeEnteredCurrentState = std::chrono::steady_clock::now();
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::roundWon()
+{
+    stateEnter(RoundState::WaitForReset);
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::transitionToPlayState()
+{
+    stateEnter(RoundState::Play);
+}
+
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeEnteredCurrentState() const
+{
+    return m_timeEnteredCurrentState;
+}
+
+
+// ############################## PROTECTED ##############################
+
+
+// ############################### PRIVATE ###############################
+
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::stateEntered(
+    const proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState& /*oldState*/,
+    const proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState& newState)
+{
+    switch (newState)
+    {
+    case RoundState::Prepare:
+        break;
+    case RoundState::Play:
+        break;
+    case RoundState::WaitForReset:
+        break;
+    default:
+        getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, newState);
+    }
+};
+
+bool proofps_dd::TeamRoundGameMode::RoundStateFSM::stateEnter(
+    const proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState& newState)
+{
+    getConsole().EOLn("RoundStateFSM::%s(): %d -> %d", __func__, m_state, newState);
+
+    switch (newState)
+    {
+    case RoundState::Prepare:
+        /* transition to this state is always allowed, e.g.: reset() */
+        break;
+    case RoundState::Play:
+        if (m_state == RoundState::WaitForReset)
+        {
+            getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, newState);
+            return false;
+        }
+        break;
+    case RoundState::WaitForReset:
+        /* transition to this state is always allowed */
+        break;
+    default:
+        getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, newState);
+        return false;
+    }
+
+    const RoundState oldState = m_state;
+    m_state = newState;
+
+    if (oldState != newState)
+    {
+        m_timeEnteredCurrentState = std::chrono::steady_clock::now();
+    }
+
+    stateEntered(oldState, newState);
+
+    return true;
+} // stateEnter()
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::stateUpdate()
+{
+    const auto nSecondsSpentInCurrentState = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - m_timeEnteredCurrentState).count();
+
+    switch (m_state)
+    {
+    case RoundState::Prepare:
+        if (nSecondsSpentInCurrentState >= 3)
+        {
+            stateEnter(RoundState::Play);
+        }
+        break;
+    case RoundState::Play:
+        //stateEnter();
+        break;
+    case RoundState::WaitForReset:
+        if (nSecondsSpentInCurrentState >= 5)
+        {
+            stateEnter(RoundState::Prepare);
+        }
+        break;
+    default:
+        getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled current state: %d!", __func__, m_state);
+    }
+} // stateUpdate()
+
+
+/*
+   ###########################################################################
+   proofps_dd::TeamRoundGameMode
+   ###########################################################################
+*/
+
+
+std::ostream& proofps_dd::operator<<(std::ostream& s, const TeamRoundGameMode::RoundStateFSM::RoundState& rs)
+{
+    switch (rs)
+    {
+    case proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare:
+        s << "RoundState::Prepare (";
+        break;
+    case proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play:
+        s << "RoundState::Play (";
+        break;
+    case proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset:
+        s << "RoundState::WaitForReset (";
+        break;
+    default:
+        s << "Unknown RoundState (";
+    }
+
+    s << std::to_string(static_cast<int>(rs)) << ")";
+
+    return s;
+}
+
+
+// ############################### PUBLIC ################################
+
+
+std::unique_ptr<proofps_dd::TeamRoundGameMode> proofps_dd::TeamRoundGameMode::createGameMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     // instead of std::make_unique, because that cannot access protected TeamRoundGameMode() ctor
-    return std::unique_ptr<proofps_dd::TeamRoundGameMode>(new proofps_dd::TeamRoundGameMode());
+    return std::unique_ptr<proofps_dd::TeamRoundGameMode>(new proofps_dd::TeamRoundGameMode(mapPlayers));
 }
 
 proofps_dd::TeamRoundGameMode::~TeamRoundGameMode()
@@ -887,6 +1095,7 @@ void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::P
 {
     m_nTeam1RoundWins = 0;
     m_nTeam2RoundWins = 0;
+    m_fsm.reset();
     TeamDeathMatchMode::restartWithoutRemovingPlayers(network);
 }
 
@@ -894,21 +1103,47 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
 {
     if (GameMode::serverCheckAndUpdateWinningConditions(network))
     {
+        // We dont care about RoundStateFSM once the game is won.
         return true;
     }
 
-    // if time limit is hit then game is won, but don't check round wins if any team has 0 players!
-    if ((getTeamPlayersCount(1) == 0) || (getTeamPlayersCount(2) == 0))
+    static unsigned int nOldTeam1AlivePlayers = 0;
+    static unsigned int nOldTeam2AlivePlayers = 0;
+    
+    m_fsm.update();
+    if (m_fsm.getState() == RoundStateFSM::RoundState::Play)
     {
-        return false;
-    }
+        // team win due to no more alive players in the other team is achievable only if both teams have assigned players!
+        if ((getTeamPlayersCount(1) != 0) && (getTeamPlayersCount(2) != 0))
+        {
+            const unsigned int nCurrentTeam1AlivePlayers = getAliveTeamPlayersCount(1);
+            const unsigned int nCurrentTeam2AlivePlayers = getAliveTeamPlayersCount(2);
+            
+            if ((nOldTeam1AlivePlayers > 0) && (getAliveTeamPlayersCount(1) == 0))
+            {
+                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2!", __func__);
+                m_nTeam2RoundWins++;
+                m_fsm.roundWon();
+            }
+            if ((nOldTeam2AlivePlayers > 0) && (getAliveTeamPlayersCount(2) == 0))
+            {
+                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1!", __func__);
+                m_nTeam1RoundWins++;
+                m_fsm.roundWon();
+            }
 
-    if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
-    {
-        handleEventGameWon(network);
-        return true;
-    }
+            nOldTeam1AlivePlayers = nCurrentTeam1AlivePlayers;
+            nOldTeam2AlivePlayers = nCurrentTeam2AlivePlayers;
 
+            if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
+            {
+                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win Limit Reached!", __func__);
+                handleEventGameWon(network);
+                return true;
+            }
+        }
+    }
+    
     return false;
 }
 
@@ -959,13 +1194,21 @@ unsigned int proofps_dd::TeamRoundGameMode::getTeamRoundWins(unsigned int iTeamI
     return (iTeamId == 1) ? m_nTeam1RoundWins : m_nTeam2RoundWins;
 }
 
+proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::getFSM()
+{
+    return m_fsm;
+}
+
 
 // ############################## PROTECTED ##############################
 
 
-proofps_dd::TeamRoundGameMode::TeamRoundGameMode()
+proofps_dd::TeamRoundGameMode::TeamRoundGameMode(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers) :
+    proofps_dd::TeamDeathMatchMode(mapPlayers)
 {
     m_gameModeType = proofps_dd::GameModeType::TeamRoundGame;
+    m_fsm.reset();
 }
 
 void proofps_dd::TeamRoundGameMode::setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins)

@@ -64,7 +64,7 @@ protected:
         m_engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         assert(m_engine);
 
-        m_gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch);
+        m_gm = proofps_dd::GameMode::createGameMode(proofps_dd::GameModeType::DeathMatch, m_mapPlayers);
 
         m_maps = new proofps_dd::Maps(m_audio, m_cfgProfiles, *m_engine);
         // no need to init Maps for this test

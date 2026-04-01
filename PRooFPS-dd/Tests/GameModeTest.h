@@ -30,8 +30,8 @@ class SpecialGameMode : public proofps_dd::GameMode
 {
 public:
 
-    SpecialGameMode() :
-        proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch)
+    SpecialGameMode(const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayers) :
+        proofps_dd::GameMode(proofps_dd::GameModeType::DeathMatch, m_mapPlayers)
     {
 
     }
@@ -163,11 +163,19 @@ protected:
         addSubTest("test_deathmatch_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_is_player_allowed_for_gameplay));
         addSubTest("test_team_deathmatch_get_team_color", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_deathmatch_get_team_color));
         addSubTest(
-            "test_team_games_do_not_count_frags_with_zero_team_id_or_spectating",
-            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_do_not_count_frags_with_zero_team_id_or_spectating));
+            "test_team_games_do_not_count_frags_with_zero_team_id_or_in_spectator_mode",
+            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_do_not_count_frags_with_zero_team_id_or_in_spectator_mode));
         addSubTest("test_team_games_do_not_allow_any_team_id", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_do_not_allow_any_team_id));
         addSubTest("test_team_games_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_is_player_allowed_for_gameplay));
+        addSubTest("test_team_games_get_alive_team_players_count", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_get_alive_team_players_count));
         addSubTest("test_round_games_winning_cond_time_and_round_win_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_winning_cond_time_and_round_win_limit));
+        addSubTest("test_round_games_transition_to_play_state_after_n_seconds", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_transition_to_play_state_after_n_seconds));
+        addSubTest(
+            "test_round_games_transition_to_wait_for_reset_state_after_a_team_dies", 
+            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_transition_to_wait_for_reset_state_after_a_team_dies));
+        addSubTest(
+            "test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty",
+            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty));
     }
 
     virtual bool setUp() override
@@ -189,6 +197,7 @@ protected:
 
     virtual void tearDown() override
     {
+        m_mapPlayers.clear();
         m_network.shutdown();
     }
 
@@ -207,7 +216,7 @@ protected:
 
     bool testInitGamemode(const proofps_dd::GameModeType& gamemode)
     {
-        gm = proofps_dd::GameMode::createGameMode(gamemode);
+        gm = proofps_dd::GameMode::createGameMode(gamemode, m_mapPlayers);
         bool b = assertNotNull(gm, (std::string("gm null, ") + std::string(proofps_dd::GameMode::getGameModeTypeName(gamemode))).c_str());
         if (b)
         {
@@ -242,6 +251,10 @@ protected:
 
 private:
 
+    // GameMode ctors require this external container, note that it is used in rare occasions only when a player attribute
+    // needs to be fetched that is not stored in the GameMode's internal container, therefore in the unit tests we
+    // fill this internal container rarely.
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player> m_mapPlayers;
     proofps_dd::GameMode* gm;
     proofps_dd::DeathMatchMode* dm;
     proofps_dd::TeamDeathMatchMode* tdm;
@@ -274,7 +287,7 @@ private:
                 b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Name in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_connHandle, itFragTable->m_connHandle, ("ConnHandle in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_iTeamId, itFragTable->m_iTeamId, ("Team in row " + std::to_string(i) + " " + sLogText).c_str());
-                b &= assertEquals(itExpectedPlayers->m_bSpectating, itFragTable->m_bSpectating, ("Spectating in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_bSpectating, itFragTable->m_bSpectating, ("Spectator in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nFrags, itFragTable->m_nFrags, ("Frags in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Deaths in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nSuicides, itFragTable->m_nSuicides, ("Suicides in row " + std::to_string(i) + " " + sLogText).c_str());
@@ -405,7 +418,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
+        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectator mode players count");
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
@@ -427,7 +440,7 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
+        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectator mode players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
@@ -449,10 +462,14 @@ private:
         b &= assertFalse(gm->isGameWon(), "game not won");
         b &= assertFalse(gm->wasGameWonAlreadyInPreviousTick(), "game not won previous tick");
         b &= assertTrue(gm->getPlayersTable().empty(), "playerdata");
-        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectating players count");
+        b &= assertEquals(0u, gm->getSpectatorModePlayersCount(), "spectator mode players count");
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertTrue(gm->isRoundBased(), "round based");
         b &= assertFalse(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
+        b &= assertEquals(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(),
+            "fsm state");
 
         return b;
     }
@@ -475,7 +492,7 @@ private:
                 }
             }
 
-            SpecialGameMode sgm;
+            SpecialGameMode sgm(m_mapPlayers);
 
             sgm.restart(m_network);
             b &= (assertLess(0, sgm.getResetTime().time_since_epoch().count(), (std::string("reset time fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
@@ -503,7 +520,7 @@ private:
                 }
             }
 
-            SpecialGameMode sgm;
+            SpecialGameMode sgm(m_mapPlayers);
 
             b &= assertFalse(sgm.renamePlayer("alma", "gg"), (std::string("rename 1 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
             b &= assertFalse(sgm.renamePlayer("", ""), (std::string("rename 2 fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str());
@@ -515,7 +532,7 @@ private:
             player1.setName("Adam");
             player1.getFrags() = 2;
             player1.getDeaths() = 0;
-            //player1.isInSpectatorMode() = false; // we keep Adam in spectating, as spectating shall not influence rename (and grouping is not task of GameMode)!
+            //player1.isInSpectatorMode() = false; // we keep Adam in spectator mode, as it shall not influence rename (and grouping is not task of GameMode)!
 
             proofps_dd::Player player2(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -635,7 +652,7 @@ private:
                 }
             }
 
-            SpecialGameMode sgm;
+            SpecialGameMode sgm(m_mapPlayers);
 
             b &= (assertEquals(0u, sgm.getTimeLimitSecs(), (std::string("default time limit fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str()) &
                 assertEquals(0u, sgm.getTimeRemainingMillisecs(), (std::string("remaining default fail, testing as ") + (bTestingAsServer ? "server" : "client")).c_str())) != 0;
@@ -653,7 +670,7 @@ private:
     bool test_time_limit_client_update_time_remaining_secs()
     {
         // client-only test
-        SpecialGameMode sgm;
+        SpecialGameMode sgm(m_mapPlayers);
 
         constexpr unsigned int nTimeLimitSecs = 13u;
         constexpr unsigned int nTimeRemainingServerSideMillisecs = 4000u;
@@ -686,7 +703,7 @@ private:
             return assertFalse(true, "network reinit as server");
         }
 
-        SpecialGameMode sgm;
+        SpecialGameMode sgm(m_mapPlayers);
 
         sgm.setTimeLimitSecs(2);
         sgm.restart(m_network);
@@ -741,7 +758,7 @@ private:
 
     bool test_receive_and_update_winning_conditions_client()
     {
-        SpecialGameMode sgm;
+        SpecialGameMode sgm(m_mapPlayers);
 
         bool b = assertEquals(0, sgm.getWinTime().time_since_epoch().count(), "win time 1");
         b &= assertFalse(sgm.isGameWon(), "winning state 1");
@@ -1001,7 +1018,7 @@ private:
             player2.getFrags() = 0;
             player2.getDeaths() = 0;
             player2.getTeamId() = 2;
-            //player2.isInSpectatorMode() = false; // we keep Apple in spectating, as spectating shall not influence order (and grouping is not task of GameMode)!
+            //player2.isInSpectatorMode() = false; // we keep Apple in spectator mode, as it shall not influence order (and grouping is not task of GameMode)!
 
             proofps_dd::Player player3(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1108,7 +1125,7 @@ private:
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
             player3.getTeamId() = 1;
-            //player3.isInSpectatorMode() = false; // we keep Joe in spectating, as spectating shall not influence order (and grouping is not task of GameMode)!
+            //player3.isInSpectatorMode() = false; // we keep Joe in spectator mode, as it shall not influence order (and grouping is not task of GameMode)!
 
             proofps_dd::Player player4(
                 m_audio, m_cfgProfiles, m_bullets,
@@ -1355,6 +1372,11 @@ private:
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
+            trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+            b &= assertEqualsEz(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                trg->getFSM().getState(),
+                gamemode, true /*server*/, "FSM state 1");
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 2");
 
             // we only have 1 virtual client connected in network stub, regardless of how many players are now in GameMode,
@@ -1537,6 +1559,11 @@ private:
 
                 /* win the game by reaching round win limit: we are allowed to do this because we are testing updatePlayer() itself */
                 trg->setTeamRoundWins(1, 1);
+                trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+                b &= assertEqualsEz(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                    trg->getFSM().getState(),
+                    gamemode, true /*server*/, "FSM state 1");
 
                 // try winning the game again
                 b &= assertTrueEz(gm->updatePlayer(playerAdam, m_network), gamemode, bTestingAsServer, "update player Adam 2 fail");
@@ -1741,6 +1768,11 @@ private:
             {
                 // team round game does not care about frag limit so we have to set this to see if removePlayer() works fine
                 trg->setTeamRoundWins(2, 1);
+                trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+                b &= assertEqualsEz(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                    trg->getFSM().getState(),
+                    gamemode, true /*server*/, "FSM state 1");
 
                 // no round win can be achieved if any team is empty at the moment of winning!
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2 TRG");
@@ -2065,6 +2097,11 @@ private:
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
+            trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+            b &= assertEqualsEz(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                trg->getFSM().getState(),
+                gamemode, true /*server*/, "FSM state 1");
             
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
             // cannot win yet, other team has 0 players
@@ -2125,6 +2162,10 @@ private:
                         b &= assertFalseEz(true, gamemode, bTestingAsServer, "tx msg count 3");
                     }
                 }
+                b &= assertEqualsEz(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                    trg->getFSM().getState(),
+                    gamemode, bTestingAsServer, "FSM state 2");
             }
             b &= assertTrueEz(gm->getPlayersTable().empty(), gamemode, bTestingAsServer, "players empty fail");
 
@@ -2396,6 +2437,11 @@ private:
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
+            trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+            b &= assertEqualsEz(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                trg->getFSM().getState(),
+                gamemode, true /*server*/, "FSM state 1");
 
             b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
             // cannot win yet, other team has 0 players
@@ -2455,6 +2501,10 @@ private:
                         b &= assertFalse(true, "tx msg count 3");
                     }
                 }
+                b &= assertEqualsEz(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                    trg->getFSM().getState(),
+                    gamemode, bTestingAsServer, "FSM state 2");
             }
 
             const std::vector<proofps_dd::PlayersTableRow> expectedPlayersStillThereWithResetStats = {
@@ -2513,7 +2563,7 @@ private:
         return b;
     }
 
-    bool test_winning_cond_frag_limit(const proofps_dd::GameModeType& gamemode, bool playersSpectating)
+    bool test_winning_cond_frag_limit(const proofps_dd::GameModeType& gamemode, bool playersSpectatorMode)
     {
         // server-only test
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
@@ -2576,7 +2626,7 @@ private:
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
         player1.getTeamId() = 1;
-        player1.isInSpectatorMode() = playersSpectating;
+        player1.isInSpectatorMode() = playersSpectatorMode;
 
         proofps_dd::Player player2(
             m_audio, m_cfgProfiles, m_bullets,
@@ -2586,7 +2636,7 @@ private:
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
         player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-        player2.isInSpectatorMode() = playersSpectating;
+        player2.isInSpectatorMode() = playersSpectatorMode;
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -2647,7 +2697,7 @@ private:
         for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
             b &= assertTrue(
-                test_winning_cond_frag_limit(gamemode, false /* players spectating state */),
+                test_winning_cond_frag_limit(gamemode, false /* players spectator mode */),
                 proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
             // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
@@ -2918,7 +2968,7 @@ private:
 
         bool b = true;
 
-        // spectating not allowed
+        // spectator mode player not allowed to play
         b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 0");
         player1.isInSpectatorMode() = false;
         
@@ -2945,7 +2995,7 @@ private:
             assertEquals(expectedPureColor2, resultPureColor2, "2")) != 0;
     }
 
-    bool test_team_games_do_not_count_frags_with_zero_team_id_or_spectating(const proofps_dd::GameModeType& gamemode)
+    bool test_team_games_do_not_count_frags_with_zero_team_id_or_in_spectator_mode(const proofps_dd::GameModeType& gamemode)
     {
         // in this test we also test getTeamFrags() and getTeamPlayersCount()
 
@@ -2993,7 +3043,7 @@ private:
         player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
         player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
-        // we do not test with player who is not spectating but has no team because it cannot happen since spectating is default mode, exiting from it
+        // we do not test with player who is not in spectator mode but has no team because it cannot happen since spectator mode is default mode, exiting from it
         // in TDM and TRG can be done only be selecting team!
 
         proofps_dd::Player player3_spectate_and_team_unassigned(
@@ -3005,16 +3055,16 @@ private:
         player3_spectate_and_team_unassigned.getDeaths() = 0;
         player3_spectate_and_team_unassigned.getTeamId() = 0; // intentionally zero, meaning no team selected!
 
-        proofps_dd::Player player4_team_assigned_but_spectating(
+        proofps_dd::Player player4_team_assigned_but_in_spectator_mode(
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.4");
-        player4_team_assigned_but_spectating.setName("Banana");
-        player4_team_assigned_but_spectating.getFrags() = dm->getFragLimit();  // game would be already won if this player was not spectating!
-        player4_team_assigned_but_spectating.getDeaths() = 0;
-        player4_team_assigned_but_spectating.getTeamId() = 2;
+        player4_team_assigned_but_in_spectator_mode.setName("Banana");
+        player4_team_assigned_but_in_spectator_mode.getFrags() = dm->getFragLimit();  // game would be already won if this player was not in spectator mode!
+        player4_team_assigned_but_in_spectator_mode.getDeaths() = 0;
+        player4_team_assigned_but_in_spectator_mode.getTeamId() = 2;
 
-        // 1 more player into the other team, because round game requires both teams to have non-spectating players for game win condition
+        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
         proofps_dd::Player player5(
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
@@ -3032,12 +3082,12 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 1"); // team 0 always has 0 players
         b &= assertEquals(0u, tdm->getTeamPlayersCount(1), "team 1 players count 1");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(2), "team 2 players count 1");
-        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectating players count 1");
+        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectator mode players count 1");
         
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
         b &= assertTrueEz(gm->addPlayer(player3_spectate_and_team_unassigned, m_network), gamemode, true/*server*/, "add player 3");
-        b &= assertTrueEz(gm->addPlayer(player4_team_assigned_but_spectating, m_network), gamemode, true/*server*/, "add player 4");
+        b &= assertTrueEz(gm->addPlayer(player4_team_assigned_but_in_spectator_mode, m_network), gamemode, true/*server*/, "add player 4");
         b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, true/*server*/, "add player 5");
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 2");  // team 0 always 0 summed frags
         b &= assertEquals(2, tdm->getTeamFrags(1), "team 1 frags 2");
@@ -3045,7 +3095,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 2"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 2");
         b &= assertEquals(1u, tdm->getTeamPlayersCount(2), "team 2 players count 2");
-        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectating players count 2");
+        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectator mode players count 2");
 
         unsigned int i = 0;
         bool bPrevWonState = false;
@@ -3068,7 +3118,7 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 3"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 3");
         b &= assertEquals(1u, tdm->getTeamPlayersCount(2), "team 2 players count 3");
-        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectating players count 3");
+        b &= assertEquals(2u, tdm->getSpectatorModePlayersCount(), "spectator mode players count 3");
 
         b &= assertEqualsEz(5u, i, gamemode, true/*server*/, "frags collected");
 
@@ -3115,29 +3165,29 @@ private:
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 4"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 4");
         b &= assertEquals(2u, tdm->getTeamPlayersCount(2), "team 2 players count 4");
-        b &= assertEquals(1u, tdm->getSpectatorModePlayersCount(), "spectating players count 4");
+        b &= assertEquals(1u, tdm->getSpectatorModePlayersCount(), "spectator mode players count 4");
 
-        // now toggle the spectating state of the last player who was already assigned to team 2 but were spectating for the whole time!
-        player4_team_assigned_but_spectating.isInSpectatorMode() = false;
-        b &= assertTrueEz(gm->updatePlayer(player4_team_assigned_but_spectating, m_network), gamemode, true/*server*/, "update player 3");
+        // now toggle the spectator mode of the last player who was already assigned to team 2 but were in spectator mode for the whole time!
+        player4_team_assigned_but_in_spectator_mode.isInSpectatorMode() = false;
+        b &= assertTrueEz(gm->updatePlayer(player4_team_assigned_but_in_spectator_mode, m_network), gamemode, true/*server*/, "update player 3");
         b &= assertEquals(0, tdm->getTeamFrags(0), "team 0 frags 5");  // team 0 always 0 summed frags
         b &= assertEquals(7, tdm->getTeamFrags(1), "team 1 frags 5");
         b &= assertEquals(11, tdm->getTeamFrags(2), "team 2 frags 5");
         b &= assertEquals(0u, tdm->getTeamPlayersCount(0), "team 0 players count 5"); // team 0 always has 0 players
         b &= assertEquals(2u, tdm->getTeamPlayersCount(1), "team 1 players count 5");
         b &= assertEquals(3u, tdm->getTeamPlayersCount(2), "team 2 players count 5");
-        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectating players count 5");
+        b &= assertEquals(0u, tdm->getSpectatorModePlayersCount(), "spectator mode players count 5");
 
         return b;
     }
 
-    bool test_team_games_do_not_count_frags_with_zero_team_id_or_spectating()
+    bool test_team_games_do_not_count_frags_with_zero_team_id_or_in_spectator_mode()
     {
         bool b = true;
         for (auto gamemode = proofps_dd::GameModeType::TeamDeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
             b &= assertTrue(
-                test_team_games_do_not_count_frags_with_zero_team_id_or_spectating(gamemode),
+                test_team_games_do_not_count_frags_with_zero_team_id_or_in_spectator_mode(gamemode),
                 proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
             // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
@@ -3262,6 +3312,9 @@ private:
         player1.getTeamId() = 2;
         b &= assertTrueEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 3");
 
+        player1.isInSpectatorMode() = true;
+        b &= assertFalseEz(gm->isPlayerAllowedForGameplay(player1), gamemode, true/*server*/, "allowed 4");
+
         return b;
     }
 
@@ -3272,6 +3325,150 @@ private:
         {
             b &= assertTrue(
                 test_team_games_is_player_allowed_for_gameplay(gamemode),
+                proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+            // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
+            tearDown();
+        }
+        return b;
+    }
+
+    bool test_team_games_get_alive_team_players_count(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            assert(gm->isTeamBasedGame());
+
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(0), gamemode, bTestingAsServer, "team 0 alive count 1");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 1");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 1");
+
+            auto insertRes = m_mapPlayers.insert(
+                {
+                    1,
+                    proofps_dd::Player(
+                        m_audio, m_cfgProfiles, m_bullets,
+                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+                }); // TODO: emplace_back()
+            b &= assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+            proofps_dd::Player& player1 = insertRes.first->second;
+            if (b)
+            {
+                player1.setName("Adam");
+                player1.getFrags() = 0;
+                player1.getDeaths() = 0;
+                player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+                player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            }
+
+            insertRes = m_mapPlayers.insert(
+                {
+                    2,
+                    proofps_dd::Player(
+                        m_audio, m_cfgProfiles, m_bullets,
+                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
+                }); // TODO: emplace_back()
+            b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
+            proofps_dd::Player& player2 = insertRes.first->second;
+            if (b)
+            {
+                player2.setName("Apple");
+                player2.getFrags() = 2;
+                player2.getDeaths() = 0;
+                player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+                player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            }
+
+            // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
+            insertRes = m_mapPlayers.insert(
+                {
+                    3,
+                    proofps_dd::Player(
+                        m_audio, m_cfgProfiles, m_bullets,
+                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
+                }); // TODO: emplace_back()
+            b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
+            proofps_dd::Player& player5 = insertRes.first->second;
+            if (b)
+            {
+                player5.setName("Bela");
+                player5.getFrags() = 0;
+                player5.getDeaths() = 0;
+                player5.getTeamId() = 2;
+                player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            }
+
+            if (!b)
+            {
+                return false;
+            }
+
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(0), gamemode, bTestingAsServer, "team 0 alive count 2");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 2");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 2");
+
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, bTestingAsServer, "add player 5 fail 1");
+            
+            if (!b)
+            {
+                return false;
+            }
+
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(0), gamemode, bTestingAsServer, "team 0 alive count 3");
+            b &= assertEqualsEz(2u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 3");
+            b &= assertEqualsEz(1u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 3");
+            
+            player5.isInSpectatorMode() = true;
+            b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, bTestingAsServer, "update player 5 fail 1");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 4");
+
+            player1.isInSpectatorMode() = true;
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, bTestingAsServer, "update player 1 fail 1");
+            b &= assertEqualsEz(1u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 4");
+
+            player2.setHealth(0); /* no need to update this player in gm since HP is fetched from Player object */
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 5");
+
+            m_mapPlayers.clear();
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(0), gamemode, bTestingAsServer, "team 0 alive count 6");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 6");
+            b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 6");
+        }
+
+        return b;
+    }
+
+    bool test_team_games_get_alive_team_players_count()
+    {
+        bool b = true;
+        for (auto gamemode = proofps_dd::GameModeType::TeamDeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
+        {
+            b &= assertTrue(
+                test_team_games_get_alive_team_players_count(gamemode),
                 proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
             // just in case test does not invoke tearDown() before reinitializing something like network, call it here before next iteration
@@ -3296,43 +3493,75 @@ private:
 
         assert(gm->isRoundBased());
 
-        proofps_dd::Player player1(
-            m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
-        player1.setName("Adam");
-        player1.getFrags() = 0;
-        player1.getDeaths() = 0;
-        player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
-        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        auto insertRes = m_mapPlayers.insert(
+            {
+                1,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+            }); // TODO: emplace_back()
+        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+        proofps_dd::Player& player1 = insertRes.first->second;
+        if (b)
+        {
+            player1.setName("Adam");
+            player1.getFrags() = 0;
+            player1.getDeaths() = 0;
+            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
 
-        proofps_dd::Player player2(
-            m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
-        player2.setName("Apple");
-        player2.getFrags() = 2;
-        player2.getDeaths() = 0;
-        player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        insertRes = m_mapPlayers.insert(
+            {
+                2,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
+        proofps_dd::Player& player2 = insertRes.first->second;
+        if (b)
+        {
+            player2.setName("Apple");
+            player2.getFrags() = 2;
+            player2.getDeaths() = 0;
+            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
 
-        // 1 more player into the other team, because round game requires both teams to have non-spectating players for game win condition
-        proofps_dd::Player player5(
-            m_audio, m_cfgProfiles, m_bullets,
-            m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-            *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12");
-        player5.setName("Bela");
-        player5.getFrags() = 0;
-        player5.getDeaths() = 0;
-        player5.getTeamId() = 2;
-        player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
+        insertRes = m_mapPlayers.insert(
+            { 
+                3,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
+        proofps_dd::Player& player5 = insertRes.first->second;
+        if (b)
+        {
+            player5.setName("Bela");
+            player5.getFrags() = 0;
+            player5.getDeaths() = 0;
+            player5.getTeamId() = 2;
+            player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        if (!b)
+        {
+            return false;
+        }
 
         trg->setRoundWinLimit(5);
         gm->setTimeLimitSecs(2);
 
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
-        bool b = assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 1");
+        b &= assertEqualsEz(1u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 1");
         if (b)
         {
             try
@@ -3422,6 +3651,11 @@ private:
         unsigned int i = 0;
         bPrevWonState = false;
         trg->setTeamRoundWins(1, 3); // just because why not
+        trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /*server*/, "FSM state 1");
         while (!gm->isGameWon() && (i < 5))
         {
             i++;
@@ -3470,6 +3704,441 @@ private:
                 proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
         return b;
+    }
+
+    bool test_round_games_transition_to_play_state_after_n_seconds(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test, clients do not transition FSM on their own but they receive state changes
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        // need to restart to correctly initialize time-specific values if we have time limit!
+        gm->restartWithoutRemovingPlayers(m_network);
+
+        bool b = true;
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 1");
+
+        std::set<std::chrono::seconds::rep> setRemainingSecs = { 0, 1, 2 };
+        int iSleep = 0;
+        while ((iSleep++ < 10) &&
+            !trg->serverCheckAndUpdateWinningConditions(m_network) /* this drives RoundStateFSM */ &&
+            (trg->getFSM().getState() != proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+            const auto nSecondsRemaining = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredCurrentState()).count();
+            setRemainingSecs.erase(nSecondsRemaining);
+        }
+       
+        /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
+        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 2");
+        
+        /* game won state did not change */
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won");
+        b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "winning");
+
+        return b;
+    }
+
+    bool test_round_games_transition_to_play_state_after_n_seconds()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_transition_to_play_state_after_n_seconds(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_transition_to_wait_for_reset_state_after_a_team_dies(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test, clients do not transition FSM on their own but they receive state changes
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        auto insertRes = m_mapPlayers.insert(
+            {
+                1,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+            }); // TODO: emplace_back()
+        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+        proofps_dd::Player& player1 = insertRes.first->second;
+        if (b)
+        {
+            player1.setName("Adam");
+            player1.getFrags() = 0;
+            player1.getDeaths() = 0;
+            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        insertRes = m_mapPlayers.insert(
+            {
+                2,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
+        proofps_dd::Player& player2 = insertRes.first->second;
+        if (b)
+        {
+            player2.setName("Apple");
+            player2.getFrags() = 2;
+            player2.getDeaths() = 0;
+            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
+        insertRes = m_mapPlayers.insert(
+            {
+                3,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
+        proofps_dd::Player& player5 = insertRes.first->second;
+        if (b)
+        {
+            player5.setName("Bela");
+            player5.getFrags() = 0;
+            player5.getDeaths() = 0;
+            player5.getTeamId() = 2;
+        }
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, true/*server*/, "add player 5");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        trg->setRoundWinLimit(2);
+
+        // need to restart to correctly initialize time-specific values if we have time limit!
+        gm->restartWithoutRemovingPlayers(m_network);
+
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+
+        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 1 fail 1");
+        b &= assertTrueEz(gm->updatePlayer(player2, m_network), gamemode, true/*server*/, "update player 2 fail 1");
+        b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 1");
+
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 1");
+
+        /* test-drive FSM but we don't expect any change at this moment */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 1");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 2");
+
+        /* ----- test 1: Team 2 dies ----------------------------- */
+
+        player5.setHealth(0);
+        /* drive FSM */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 2");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 3");
+        b &= assertEqualsEz(1u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        /* round winning not necessarily means game win */
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 1");
+
+        /* reset stuff */
+        player5.setHealth(100);
+        trg->getFSM().reset();
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 3");
+
+        /* ----- test 2: Team 1 dies ----------------------------- */
+
+        player1.setHealth(0);
+        player2.setHealth(0);
+        /* drive FSM */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 4");
+        b &= assertEqualsEz(1u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
+        b &= assertEqualsEz(1u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        
+        /* round winning not necessarily means game win */
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
+
+        /* reset stuff */
+        player1.setHealth(100);
+        player2.setHealth(100);
+        trg->getFSM().reset();
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 5");
+
+        /* ----- test 3: Team 2 dies again ----------------------- */
+
+        player5.setHealth(0);
+        /* drive FSM */
+        b &= assertTrueEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 4");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 6");
+        b &= assertEqualsEz(2u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 4");
+        b &= assertEqualsEz(1u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 4");
+        /* finally hit game round win limit */
+        b &= assertTrueEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 3");
+
+        return b;
+    }
+
+    bool test_round_games_transition_to_wait_for_reset_state_after_a_team_dies()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_transition_to_wait_for_reset_state_after_a_team_dies(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test, clients do not transition FSM on their own but they receive state changes
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        auto insertRes = m_mapPlayers.insert(
+            {
+                1,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+            }); // TODO: emplace_back()
+        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+        proofps_dd::Player& player1 = insertRes.first->second;
+        if (b)
+        {
+            player1.setName("Adam");
+            player1.getFrags() = 0;
+            player1.getDeaths() = 0;
+            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        insertRes = m_mapPlayers.insert(
+            {
+                2,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
+        proofps_dd::Player& player2 = insertRes.first->second;
+        if (b)
+        {
+            player2.setName("Apple");
+            player2.getFrags() = 2;
+            player2.getDeaths() = 0;
+            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
+        insertRes = m_mapPlayers.insert(
+            {
+                3,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
+        proofps_dd::Player& player5 = insertRes.first->second;
+        if (b)
+        {
+            player5.setName("Bela");
+            player5.getFrags() = 0;
+            player5.getDeaths() = 0;
+            player5.getTeamId() = 2;
+        }
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
+        b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, true/*server*/, "add player 5");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        trg->setRoundWinLimit(3);
+
+        // need to restart to correctly initialize time-specific values if we have time limit!
+        gm->restartWithoutRemovingPlayers(m_network);
+
+        player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+
+        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 1 fail 1");
+        b &= assertTrueEz(gm->updatePlayer(player2, m_network), gamemode, true/*server*/, "update player 2 fail 1");
+        b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 1");
+
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 1");
+
+        /* test-drive FSM but we don't expect any change at this moment */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 1");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 2");
+
+        /* ----- test 1: Team 2 becomes empty due to spectator mode ----------------------------- */
+
+        player5.isInSpectatorMode() = true;
+        b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 3");
+        /* drive FSM */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 4");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 5");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
+
+        /* reset stuff */
+        player5.isInSpectatorMode() = false;
+        b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 4");
+        trg->getFSM().reset();
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 6");
+       
+        /* ----- test 2: Team 2 becomes empty due to disconnecting player ----------------------------- */
+        b &= assertTrueEz(gm->removePlayer(player5, m_network), gamemode, true/*server*/, "remove player 5 fail");
+        b &= assertEqualsEz(1u, m_mapPlayers.erase(player5.getServerSideConnectionHandle()), gamemode, true/*server*/, "erase player 5 fail");
+        
+        /* drive FSM */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 5");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 7");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 3");
+
+        return b;
+    }
+
+    bool test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+
     }
 
 };

@@ -54,12 +54,12 @@ namespace proofps_dd
         *                              |                                                     ¡
         *                              |          update():              update(): timeout,  |         update():
         *                   show()     ^      FinishPos reached                hide()        ¡    FinishPos reached
-        *     >-> Finished -------> SlidingIn ------------> WaitingForTimeout -------> SlidingOut --------------->
+        * o--->-> Finished -------> SlidingIn ------------> WaitingForTimeout -------> SlidingOut --------------->
         *     ^   ^      ¡          ^      ¡ ^                ^      ¡                 ^      ¡ ¡                 ¡
         *     |   |hide()|          |show()| |                |show()|                 |hide()| |                 |
         *     |   ^------<          ^------< |                ^------<                 ^------< |                 |
         *     |                              |                           show()                 |                 |
-        *     |                              ^--------------<-----------------<------------------<                 |
+        *     |                              ^--------------<-----------------<-----------------<                 |
         *     |                                                                                                   |
         *     ^----------<---------------<---------------<-----------------<--------------------<-----------------<
         */

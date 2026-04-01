@@ -2846,22 +2846,3 @@ PgeOldNewValue<float>& proofps_dd::Player::getWeaponMomentaryAccuracy()
     // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
     return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvWpnMomentaryAccuracy));
 }
-
-std::ostream& proofps_dd::operator<<(std::ostream& s, const proofps_dd::Player::CameraSpectatingMode& csm)
-{
-    switch (csm)
-    {
-    case proofps_dd::Player::CameraSpectatingMode::Free:
-        s << "CameraSpectatingMode::Free (";
-        break;
-    case proofps_dd::Player::CameraSpectatingMode::PlayerFollow:
-        s << "CameraSpectatingMode::PlayerFollow (";
-        break;
-    default:
-        s << "Unknown CameraSpectatingMode (";
-    }
-
-    s << std::to_string(static_cast<int>(csm)) << ")";
-
-    return s;
-}

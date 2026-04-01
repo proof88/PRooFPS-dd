@@ -10,6 +10,7 @@
 */
 
 #include <functional>
+#include <map>
 #include <string>
 
 #include "CConsole.h"
@@ -79,6 +80,8 @@ namespace proofps_dd
     static constexpr char* szCvarClWpnEmptyMagNonemptyUnmagBehavior = "cl_wpn_empty_mag_nonempty_unmag_behavior";
     static constexpr char* szCvarClWpnEmptyMagEmptyUnmagBehavior = "cl_wpn_empty_mag_empty_unmag_behavior";
 
+    class Player;
+
     class Config
     {
     public:
@@ -117,7 +120,8 @@ namespace proofps_dd
 
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
-            const MsgServerInfoFromServer& msgServerInfo);
+            const MsgServerInfoFromServer& msgServerInfo,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
         bool serverSendServerInfo(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide);
         void serverSaveServerInfo(

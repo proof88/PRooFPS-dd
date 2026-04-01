@@ -47,12 +47,6 @@ namespace proofps_dd
     {
     public:
 
-        enum class CameraSpectatingMode
-        {
-            Free = 0,
-            PlayerFollow
-        };
-
         /**
         * See explanation of this at Smoke::smokeEmitOperValues.
         */
@@ -640,7 +634,5 @@ namespace proofps_dd
         PgeOldNewValue<float>& getWeaponMomentaryAccuracy();
 
     }; // class Player
-
-    std::ostream& operator<< (std::ostream& s, const Player::CameraSpectatingMode& csm);  /**< Write to stream. */
 
 } // namespace proofps_dd

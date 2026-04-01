@@ -503,7 +503,8 @@ const unsigned int& proofps_dd::Config::getPlayerRespawnInvulnerabilityDelaySeco
 
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
-    const proofps_dd::MsgServerInfoFromServer& msgServerInfo)
+    const proofps_dd::MsgServerInfoFromServer& msgServerInfo,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers)
 {
     if (m_pge.getNetwork().isServer())
     {
@@ -534,7 +535,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().OLn(
             "Config::%s(): creating new GameMode due to mismatch with server: %d != %d !",
             __func__, gameMode->getGameModeType(), m_serverInfo.m_iGameModeType);
-        gameMode = GameMode::createGameMode(m_serverInfo.m_iGameModeType);
+        gameMode = GameMode::createGameMode(m_serverInfo.m_iGameModeType, mapPlayers);
 
         getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
     }

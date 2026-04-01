@@ -105,13 +105,18 @@ namespace proofps_dd
         /**
         * Similar to singleton design pattern, there is always maximum one instance.
         * However, if there is an already existing instance, it automatically gets destroyed before the new one is created.
-        * This make sure we always get a fresh object built up from scratch, and we can forget about the previous one.
+        * This makes sure we always get a fresh object built up from scratch, and we can forget about the previous one.
         * This is exactly the mechanism we need for GameMode, from the application's perspective.
+        * 
+        * @param gm         Type of game to create.
+        * @param mapPlayers Players container, sometimes might be needed to fetch some attributes of players (e.g. HP).
         * 
         * @return Raw pointer to the created GameMode instance.
         *         Shall not be stored by anyone but always queried using getGameMode().
         */
-        static GameMode* createGameMode(GameModeType gm);
+        static GameMode* createGameMode(
+            GameModeType gm,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         /**
         * @return The last created GameMode instance created by createGameMode().
@@ -284,6 +289,11 @@ namespace proofps_dd
         * @return Player table, which is basically the frag table in specific game modes, but here at this abstract level it has a more general name.
         */
         const std::list<PlayersTableRow>& getPlayersTable() const;
+
+        /**
+        * @return The external container storing connected players, that was passed in createGameMode() / ctor.
+        */
+        const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& getExternalPlayersContainer() const;
         
         /**
         * Adds the specified player.
@@ -387,11 +397,14 @@ namespace proofps_dd
         // derived class can set these based on their winning conditions and actions
         std::chrono::time_point<std::chrono::steady_clock> m_timeWin;
         std::list<PlayersTableRow> m_players;
+        const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& m_mapPlayersExternal;
         bool m_bWon{ false };
         bool m_bWonPrevious{ false };
         GameModeType m_gameModeType;
 
-        GameMode(GameModeType gm);
+        GameMode(
+            GameModeType gm,
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         GameMode(const GameMode&) = delete;
         GameMode& operator=(const GameMode&) = delete;
@@ -431,7 +444,8 @@ namespace proofps_dd
         * 
         * @return Smart pointer to the created TeamRoundGameMode instance.
         */
-        static std::unique_ptr<DeathMatchMode> createGameMode();
+        static std::unique_ptr<DeathMatchMode> createGameMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         // ---------------------------------------------------------------------------
 
@@ -485,7 +499,8 @@ namespace proofps_dd
     protected:
         unsigned int m_nFragLimit{};
 
-        DeathMatchMode();
+        DeathMatchMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
     private:
 
@@ -519,7 +534,8 @@ namespace proofps_dd
         * 
         * @return Smart pointer to the created TeamRoundGameMode instance.
         */
-        static std::unique_ptr<TeamDeathMatchMode> createGameMode();
+        static std::unique_ptr<TeamDeathMatchMode> createGameMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         // ---------------------------------------------------------------------------
 
@@ -576,9 +592,19 @@ namespace proofps_dd
         */
         unsigned int getTeamPlayersCount(unsigned int iTeamId) const;
 
+        /**
+        * @param iTeamId    Team ID for which team we want to get the count of alive players.
+        *
+        * @return Number of assigned (not in spectator mode) AND alive players in the specified team.
+        *         Basically: getTeamPlayersCount(iTeamId) - number of dead players in iTeamId.
+        *         Always 0 when iTeamId is 0, so for counting spectators use getSpectatorModePlayersCount() instead!
+        */
+        unsigned int getAliveTeamPlayersCount(unsigned int iTeamId) const;
+
     protected:
 
-        TeamDeathMatchMode();
+        TeamDeathMatchMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
     private:
 
@@ -589,16 +615,104 @@ namespace proofps_dd
     /**
     * In Team Round Game mode, players are grouped into teams, same way as in Team DeathMatch.
     * However, the game mode features rounds.
-    * Unlike in deathmatch-style game modes, here players cannot respawn immediately after being killed.
+    * 
+    * Unlike in deathmatch-style game modes, here players cannot respawn immediately after being killed:
+    * isRespawnAllowedAfterDie() return false.
     * Instead, they have to wait for the next round to start.
+    * 
     * Each round ends when any of the teams loses all its players.
-    * The number of rounds is configured by the server.
+    * 
     * The team reaching the predefined round win limit earlier wins the game, or the team with the most
     * round wins if time limit is reached.
+    * The round win limit is configured by the server.
+    * 
+    * Note that although setFragLimit() functionality is inherited from parent classes, it is not used.
+    * 
+    * Each round has different states, governed by RoundStateFSM.
+    * 
+    * Note that when the game is won, RoundStateFSM might stay in Prepare or Play states, for example if
+    * game won reason is game time limit reached (getTimeLimitSecs()).
     */
     class TeamRoundGameMode : public TeamDeathMatchMode
     {
     public:
+
+        /**
+        *                         update():
+        *         round won (all players disconnected from a team)
+        *           >------------>------------>------------>-->
+        *           ^                                         ¡
+        *           |       update():                         |          reset(),
+        *           |    timeoutPrepare       update():       |          update():
+        *           ^       elapsed           round won       ¡     timeoutBeforeReset elapsed,
+        * o--->-> Prepare ------------> Play ------------> WaitForReset ----->
+        *     ^                          ¡                                   ¡
+        *     |         reset()          |                                   |
+        *     ^----------<---------------<                                   |
+        *     |                                                              |
+        *     ^----------<---------------<---------------<---------------<----
+        * 
+        */
+        class RoundStateFSM
+        {
+        public:
+            enum class RoundState
+            {
+                Prepare,
+                Play,
+                WaitForReset
+            };
+
+            static const char* getLoggerModuleName();
+
+            // ---------------------------------------------------------------------------
+
+            CConsole& getConsole() const;
+
+            RoundStateFSM() = default;
+            ~RoundStateFSM() = default;
+
+            RoundStateFSM(const RoundStateFSM&) = default;
+            RoundStateFSM& operator=(const RoundStateFSM&) = default;
+            RoundStateFSM(RoundStateFSM&&) = default;
+            RoundStateFSM& operator=(RoundStateFSM&&) = default;
+
+            /**
+            * @return The current round state, controlled by update().
+            */
+            const RoundState& getState() const;
+
+            /**
+            * Expected to be invoked periodically.
+            */
+            void update();
+
+            void reset();
+
+            void roundWon();
+
+            void transitionToPlayState();
+
+            const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredCurrentState() const;
+
+        private:
+            RoundState m_state{ RoundState::Prepare };
+            std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
+
+            void stateEntered(const RoundState& /*oldState*/, const RoundState& newState);
+
+            /**
+            * Expected to be invoked only for events, such as explicit call to reset(), or when update() detects an event.
+            * @return True if the state transition is valid, false otherwise.
+            *         If false is returned, state transition did not happen.
+            */
+            bool stateEnter(const RoundState& newState);
+
+            /**
+            * Expected to be invoked periodically.
+            */
+            void stateUpdate();
+        };  // class RoundStateFSM
 
         /**
         * Used by GameMode::createGameMode(), this way we don't need to be friend with GameMode.
@@ -607,7 +721,8 @@ namespace proofps_dd
         *
         * @return Smart pointer to the created TeamRoundGameMode instance.
         */
-        static std::unique_ptr<TeamRoundGameMode> createGameMode();
+        static std::unique_ptr<TeamRoundGameMode> createGameMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         // ---------------------------------------------------------------------------
 
@@ -626,6 +741,9 @@ namespace proofps_dd
         * Altering parent class implementation by checking won rounds per team, instead of frag limit.
         * Frag limit is not considered at all.
         * Time limit is still considered.
+        * 
+        * This also drives RoundStateFSM. Note that when the game is won, RoundStateFSM might stay in
+        * Prepare or Play states, for example if game won reason is game time limit reached (getTimeLimitSecs()).
         */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
@@ -664,9 +782,12 @@ namespace proofps_dd
         */
         unsigned int getTeamRoundWins(unsigned int iTeamId) const;
 
+        RoundStateFSM& getFSM();
+
     protected:
 
-        TeamRoundGameMode();
+        TeamRoundGameMode(
+            const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
 
         void setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins);
 
@@ -679,7 +800,10 @@ namespace proofps_dd
         unsigned int m_nRoundWinLimit{ GameMode::nSvRgmRoundWinLimitDef };
         unsigned int m_nTeam1RoundWins{ 0 };
         unsigned int m_nTeam2RoundWins{ 0 };
+        RoundStateFSM m_fsm;
 
     }; // class TeamRoundGameMode
+
+    std::ostream& operator<< (std::ostream& s, const TeamRoundGameMode::RoundStateFSM::RoundState& rs);  /**< Write to stream. */
 
 } // namespace proofps_dd
