@@ -361,6 +361,73 @@ private:
             (strText + ", testing as " + (bTestingAsServer ? "server, " : "client, ") + proofps_dd::GameMode::getGameModeTypeName(gamemode)).c_str());
     }
 
+    /**
+    * Creates 3 new players in m_mapPlayers, assigns the first 2 to Team 1, and the last player to Team 2.
+    * @return True on success, false otherwise.
+    */
+    bool add2plus1players()
+    {
+        auto insertRes = m_mapPlayers.insert(
+            {
+                1,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+            }); // TODO: emplace_back()
+        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+        proofps_dd::Player& player1 = insertRes.first->second;
+        if (b)
+        {
+            player1.setName("Adam");
+            player1.getFrags() = 0;
+            player1.getDeaths() = 0;
+            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        insertRes = m_mapPlayers.insert(
+            {
+                2,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
+        proofps_dd::Player& player2 = insertRes.first->second;
+        if (b)
+        {
+            player2.setName("Apple");
+            player2.getFrags() = 2;
+            player2.getDeaths() = 0;
+            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
+        insertRes = m_mapPlayers.insert(
+            {
+                3,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
+        proofps_dd::Player& player5 = insertRes.first->second;
+        if (b)
+        {
+            player5.setName("Bela");
+            player5.getFrags() = 0;
+            player5.getDeaths() = 0;
+            player5.getTeamId() = 2;
+            player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+        }
+
+        return b;
+    }
+
     bool test_get_gamemodetype_name()
     {
         return (assertEquals("Deathmatch / Free for All", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::DeathMatch), "dm") &
@@ -3362,68 +3429,14 @@ private:
             b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 1");
             b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(2), gamemode, bTestingAsServer, "team 2 alive count 1");
 
-            auto insertRes = m_mapPlayers.insert(
-                {
-                    1,
-                    proofps_dd::Player(
-                        m_audio, m_cfgProfiles, m_bullets,
-                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
-                }); // TODO: emplace_back()
-            b &= assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
-            proofps_dd::Player& player1 = insertRes.first->second;
-            if (b)
-            {
-                player1.setName("Adam");
-                player1.getFrags() = 0;
-                player1.getDeaths() = 0;
-                player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
-                player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-            }
-
-            insertRes = m_mapPlayers.insert(
-                {
-                    2,
-                    proofps_dd::Player(
-                        m_audio, m_cfgProfiles, m_bullets,
-                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
-                }); // TODO: emplace_back()
-            b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
-            proofps_dd::Player& player2 = insertRes.first->second;
-            if (b)
-            {
-                player2.setName("Apple");
-                player2.getFrags() = 2;
-                player2.getDeaths() = 0;
-                player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-                player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-            }
-
-            // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
-            insertRes = m_mapPlayers.insert(
-                {
-                    3,
-                    proofps_dd::Player(
-                        m_audio, m_cfgProfiles, m_bullets,
-                        m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                        *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
-                }); // TODO: emplace_back()
-            b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
-            proofps_dd::Player& player5 = insertRes.first->second;
-            if (b)
-            {
-                player5.setName("Bela");
-                player5.getFrags() = 0;
-                player5.getDeaths() = 0;
-                player5.getTeamId() = 2;
-                player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-            }
-
-            if (!b)
+            if (!add2plus1players())
             {
                 return false;
             }
+            assert(m_mapPlayers.size() == 3u);
+            proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+            proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+            proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
 
             b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(0), gamemode, bTestingAsServer, "team 0 alive count 2");
             b &= assertEqualsEz(0u, tdm->getAliveTeamPlayersCount(1), gamemode, bTestingAsServer, "team 1 alive count 2");
@@ -3493,68 +3506,15 @@ private:
 
         assert(gm->isRoundBased());
 
-        auto insertRes = m_mapPlayers.insert(
-            {
-                1,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
-            }); // TODO: emplace_back()
-        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
-        proofps_dd::Player& player1 = insertRes.first->second;
-        if (b)
-        {
-            player1.setName("Adam");
-            player1.getFrags() = 0;
-            player1.getDeaths() = 0;
-            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
-            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        insertRes = m_mapPlayers.insert(
-            {
-                2,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
-        proofps_dd::Player& player2 = insertRes.first->second;
-        if (b)
-        {
-            player2.setName("Apple");
-            player2.getFrags() = 2;
-            player2.getDeaths() = 0;
-            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
-        insertRes = m_mapPlayers.insert(
-            { 
-                3,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
-        proofps_dd::Player& player5 = insertRes.first->second;
-        if (b)
-        {
-            player5.setName("Bela");
-            player5.getFrags() = 0;
-            player5.getDeaths() = 0;
-            player5.getTeamId() = 2;
-            player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        if (!b)
+        if (!add2plus1players())
         {
             return false;
         }
+        assert(m_mapPlayers.size() == 3u);
+        proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+        proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+        proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
+        bool b = true;
 
         trg->setRoundWinLimit(5);
         gm->setTimeLimitSecs(2);
@@ -3786,67 +3746,15 @@ private:
 
         assert(gm->isRoundBased());
 
-        auto insertRes = m_mapPlayers.insert(
-            {
-                1,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
-            }); // TODO: emplace_back()
-        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
-        proofps_dd::Player& player1 = insertRes.first->second;
-        if (b)
-        {
-            player1.setName("Adam");
-            player1.getFrags() = 0;
-            player1.getDeaths() = 0;
-            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
-            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        insertRes = m_mapPlayers.insert(
-            {
-                2,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
-        proofps_dd::Player& player2 = insertRes.first->second;
-        if (b)
-        {
-            player2.setName("Apple");
-            player2.getFrags() = 2;
-            player2.getDeaths() = 0;
-            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
-        insertRes = m_mapPlayers.insert(
-            {
-                3,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
-        proofps_dd::Player& player5 = insertRes.first->second;
-        if (b)
-        {
-            player5.setName("Bela");
-            player5.getFrags() = 0;
-            player5.getDeaths() = 0;
-            player5.getTeamId() = 2;
-        }
-
-        if (!b)
+        if (!add2plus1players())
         {
             return false;
         }
+        assert(m_mapPlayers.size() == 3u);
+        proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+        proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+        proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
+        bool b = true;
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
@@ -3984,67 +3892,15 @@ private:
 
         assert(gm->isRoundBased());
 
-        auto insertRes = m_mapPlayers.insert(
-            {
-                1,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
-            }); // TODO: emplace_back()
-        bool b = assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
-        proofps_dd::Player& player1 = insertRes.first->second;
-        if (b)
-        {
-            player1.setName("Adam");
-            player1.getFrags() = 0;
-            player1.getDeaths() = 0;
-            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
-            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        insertRes = m_mapPlayers.insert(
-            {
-                2,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player2 insert into m_mapPlayers");
-        proofps_dd::Player& player2 = insertRes.first->second;
-        if (b)
-        {
-            player2.setName("Apple");
-            player2.getFrags() = 2;
-            player2.getDeaths() = 0;
-            player2.getTeamId() = player1.getTeamId(); // yes, intentionally in same team
-            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
-        }
-
-        // 1 more player into the other team, because round game requires both teams to have non-spectator mode players for game win condition
-        insertRes = m_mapPlayers.insert(
-            {
-                3,
-                proofps_dd::Player(
-                    m_audio, m_cfgProfiles, m_bullets,
-                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
-                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.12")
-            }); // TODO: emplace_back()
-        b &= assertTrue(insertRes.second, "player5 insert into m_mapPlayers");
-        proofps_dd::Player& player5 = insertRes.first->second;
-        if (b)
-        {
-            player5.setName("Bela");
-            player5.getFrags() = 0;
-            player5.getDeaths() = 0;
-            player5.getTeamId() = 2;
-        }
-
-        if (!b)
+        if (!add2plus1players())
         {
             return false;
         }
+        assert(m_mapPlayers.size() == 3u);
+        proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+        proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+        proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
+        bool b = true;
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true/*server*/, "add player 2");
