@@ -287,7 +287,7 @@ private:
                 b &= assertEquals(itExpectedPlayers->m_sName, itFragTable->m_sName, ("Name in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_connHandle, itFragTable->m_connHandle, ("ConnHandle in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_iTeamId, itFragTable->m_iTeamId, ("Team in row " + std::to_string(i) + " " + sLogText).c_str());
-                b &= assertEquals(itExpectedPlayers->m_bSpectating, itFragTable->m_bSpectating, ("Spectator in row " + std::to_string(i) + " " + sLogText).c_str());
+                b &= assertEquals(itExpectedPlayers->m_bSpectatorMode, itFragTable->m_bSpectatorMode, ("Spectator in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nFrags, itFragTable->m_nFrags, ("Frags in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nDeaths, itFragTable->m_nDeaths, ("Deaths in row " + std::to_string(i) + " " + sLogText).c_str());
                 b &= assertEquals(itExpectedPlayers->m_nSuicides, itFragTable->m_nSuicides, ("Suicides in row " + std::to_string(i) + " " + sLogText).c_str());

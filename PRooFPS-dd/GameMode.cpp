@@ -276,7 +276,7 @@ void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwor
     m_bWon = false;
     for (auto& player : m_players)
     {
-        player.m_bSpectating = true;
+        player.m_bSpectatorMode = true;
         player.m_nFrags = 0;
         player.m_nDeaths = 0;
         player.m_nSuicides = 0;
@@ -413,7 +413,7 @@ unsigned int proofps_dd::GameMode::getSpectatorModePlayersCount() const
     unsigned int nCount = 0;
     for (const auto& player : m_players)
     {
-        if (player.m_bSpectating)
+        if (player.m_bSpectatorMode)
         {
             ++nCount;
         }
@@ -620,7 +620,7 @@ bool proofps_dd::DeathMatchMode::updatePlayer(const Player& player, pge_network:
 
     // quickly update some data (even if no change because it shall be fast enough) which do not contribute to ordering
     itFound->m_iTeamId = player.getTeamId();
-    itFound->m_bSpectating = player.isInSpectatorMode();
+    itFound->m_bSpectatorMode = player.isInSpectatorMode();
     itFound->m_nSuicides = player.getSuicides();
     itFound->m_fFiringAcc = player.getFiringAccuracy();
     itFound->m_nShotsFired = player.getShotsFiredCount();
@@ -829,7 +829,7 @@ int proofps_dd::TeamDeathMatchMode::getTeamFrags(unsigned int iTeamId) const
     int nTeamTotalFrags = 0;
     for (const auto& player : m_players)
     {
-        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating)
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectatorMode)
         {
             nTeamTotalFrags += player.m_nFrags;
         }
@@ -847,7 +847,7 @@ unsigned int proofps_dd::TeamDeathMatchMode::getTeamPlayersCount(unsigned int iT
     unsigned int nTeamTotalPlayers = 0;
     for (const auto& player : m_players)
     {
-        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating)
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectatorMode)
         {
             ++nTeamTotalPlayers;
         }
@@ -874,7 +874,7 @@ unsigned int proofps_dd::TeamDeathMatchMode::getAliveTeamPlayersCount(unsigned i
             continue;
         }
 
-        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectating && (std::as_const(playerIt->second).getHealth() > 0))
+        if ((player.m_iTeamId == iTeamId) && !player.m_bSpectatorMode && (std::as_const(playerIt->second).getHealth() > 0))
         {
             ++nTeamTotalAlivePlayers;
         }

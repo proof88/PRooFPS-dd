@@ -44,7 +44,7 @@ namespace proofps_dd
         std::string m_sName;
         pge_network::PgeNetworkConnectionHandle m_connHandle{};
         unsigned int m_iTeamId{ 0 };  // 0 means no team selected
-        bool m_bSpectating{ true };
+        bool m_bSpectatorMode{ true };
         int m_nFrags{ 0 };    // frags allowed to be negative due to player doing suicides decreases fragcount
         int m_nDeaths{ 0 };   // TODO: this should be unsigned, but then everywhere else like in CPlayer!
         unsigned int m_nSuicides{ 0 };

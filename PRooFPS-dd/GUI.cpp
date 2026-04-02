@@ -3628,7 +3628,7 @@ void proofps_dd::GUI::drawFragTable(
             fTableHeightPixels,
             iColNetworkDataStart,
             [iTeam](const proofps_dd::PlayersTableRow& player) {
-                return !player.m_bSpectating && (player.m_iTeamId == iTeam); },
+                return !player.m_bSpectatorMode && (player.m_iTeamId == iTeam); },
             drawFragTable_columnLoopForPlayer
         );
 
@@ -3674,7 +3674,7 @@ void proofps_dd::GUI::drawFragTable(
             fPlayerNameColWidthPixels,
             fTableHeightPixels,
             iColNetworkDataStart,
-            [](const proofps_dd::PlayersTableRow& player) { return player.m_bSpectating; },
+            [](const proofps_dd::PlayersTableRow& player) { return player.m_bSpectatorMode; },
             drawFragTable_columnLoopForPlayer
         );
     } // end spectating players
