@@ -777,7 +777,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 gameMode->getTimeLimitSecs(),
                 config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
-                config.getPlayerRespawnInvulnerabilityDelaySeconds());
+                config.getPlayerRespawnInvulnerabilityDelaySeconds(),
+                config.getFriendlyFire());
             
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 

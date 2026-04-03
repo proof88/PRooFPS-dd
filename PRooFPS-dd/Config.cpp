@@ -589,6 +589,10 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    if (gameMode->isTeamBasedGame())
+    {
+        getConsole().OLn("bFriendlyFire         : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
+    }
     getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
@@ -640,7 +644,8 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         pGameMode->getTimeRemainingMillisecs(),
         getFallDamageMultiplier(),
         getPlayerRespawnDelaySeconds(),
-        getPlayerRespawnInvulnerabilityDelaySeconds()))
+        getPlayerRespawnInvulnerabilityDelaySeconds(),
+        getFriendlyFire()))
     {
         getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -661,7 +666,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     const unsigned int& nTimeLimitSecs,
     const int& nFallDamageMultiplier,
     const unsigned int& nRespawnTimeSecs,
-    const unsigned int& nRespawnInvulnerabilityTimeSecs)
+    const unsigned int& nRespawnInvulnerabilityTimeSecs,
+    const bool& bFriendlyFire)
 {
     assert(m_pge.getNetwork().isServer());
 
@@ -678,6 +684,8 @@ void proofps_dd::Config::serverSaveServerInfo(
 
     m_serverInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
     m_serverInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
+
+    m_serverInfo.m_bFriendlyFire = bFriendlyFire;
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
@@ -700,6 +708,10 @@ void proofps_dd::Config::serverSaveServerInfo(
     getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
     getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    if (GameMode::isTeamBasedGame(iGameModeType))
+    {
+        getConsole().OLn("bFriendlyFire         : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
+    }
     getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);

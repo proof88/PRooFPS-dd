@@ -106,7 +106,8 @@ namespace proofps_dd
             const unsigned int& nTimeRemainingMillisecs,
             const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
-            const unsigned int& nRespawnInvulnerabilityTimeSecs)
+            const unsigned int& nRespawnInvulnerabilityTimeSecs,
+            const bool& bFriendlyFire)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -138,6 +139,8 @@ namespace proofps_dd
             msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
             msgServerInfo.m_nRespawnInvulnerabilityTimeSecs = nRespawnInvulnerabilityTimeSecs;
 
+            msgServerInfo.m_bFriendlyFire = bFriendlyFire;
+
             return true;
         }
 
@@ -147,7 +150,7 @@ namespace proofps_dd
         unsigned int m_nClientUpdateRate;
 
         GameModeType m_iGameModeType;
-        unsigned int m_nScoreLimit;   /** Either frag limit or round win limit, depending on game mode. */
+        unsigned int m_nScoreLimit;   /**< Either frag limit or round win limit, depending on game mode. */
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nTimeRemainingMillisecs;
 
@@ -155,6 +158,8 @@ namespace proofps_dd
 
         unsigned int m_nRespawnTimeSecs;
         unsigned int m_nRespawnInvulnerabilityTimeSecs;
+
+        bool m_bFriendlyFire;
 
     };  // struct MsgServerInfoFromServer
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);

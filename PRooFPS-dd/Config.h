@@ -134,7 +134,8 @@ namespace proofps_dd
             const unsigned int& nTimeLimitSecs,
             const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
-            const unsigned int& nRespawnInvulnerabilityTimeSec);
+            const unsigned int& nRespawnInvulnerabilityTimeSec,
+            const bool& bFriendlyFire);
 
         const MsgServerInfoFromServer& getServerInfo() const;
         bool isServerInfoReceived() const;

@@ -4070,6 +4070,14 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Respawn Invulnerability Time: ") + std::to_string(m_pConfig->getServerInfo().m_nRespawnInvulnerabilityTimeSecs) + " s");
     
+    if (GameMode::isTeamBasedGame(m_pConfig->getServerInfo().m_iGameModeType))
+    {
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Friendly Fire: ") + (m_pConfig->getServerInfo().m_bFriendlyFire ? "yes" : "no"));
+    }
+
     if (!m_pNetworking->isServer())
     {
         fThisRowY += 2 * fRowSizeY;
