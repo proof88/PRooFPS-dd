@@ -657,7 +657,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
 
     const auto& playerConst = player;
 
-    if (playerConst.getHealth() == 0)
+    if (!gameMode.isRoundBased() && (playerConst.getHealth() == 0))
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
