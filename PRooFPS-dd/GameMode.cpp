@@ -1035,6 +1035,7 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::stateUpdate()
     case RoundState::WaitForReset:
         if (nSecondsSpentInCurrentState >= 5)
         {
+            /* no need to check game won state since FSM is driven by GameMode, but once game is won FSM is not driven */
             stateEnter(RoundState::Prepare);
         }
         break;
