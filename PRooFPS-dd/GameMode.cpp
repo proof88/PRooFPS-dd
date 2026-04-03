@@ -949,6 +949,17 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::transitionToPlayState()
     stateEnter(RoundState::Play);
 }
 
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::forceSetState(const RoundState& newState)
+{
+    getConsole().EOLn("RoundStateFSM::%s(): %d -> %d, bypassed stateEnter()!", __func__, m_state, newState);
+    const RoundState oldState = m_state;
+    m_state = newState;
+    if (oldState != newState)
+    {
+        stateEntered(oldState, newState);
+    }
+}
+
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeEnteredCurrentState() const
 {
     return m_timeEnteredCurrentState;
@@ -1102,7 +1113,7 @@ void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::P
     m_nTeam1RoundWins = 0;
     m_nTeam2RoundWins = 0;
     m_fsm.reset();
-    TeamDeathMatchMode::restartWithoutRemovingPlayers(network);
+    TeamDeathMatchMode::restartWithoutRemovingPlayers(network); /* due to overrides, this also sends out MsgGameRoundStateFromServer */
 }
 
 bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
@@ -1116,6 +1127,7 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
     static unsigned int nOldTeam1AlivePlayers = 0;
     static unsigned int nOldTeam2AlivePlayers = 0;
     
+    const auto oldFsmState = m_fsm.getState();
     m_fsm.update();
     if (m_fsm.getState() == RoundStateFSM::RoundState::Play)
     {
@@ -1144,10 +1156,15 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
             if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
             {
                 getConsole().EOLn("TeamRoundGameMode::%s(): Round Win Limit Reached!", __func__);
-                handleEventGameWon(network);
+                handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
                 return true;
             }
         }
+    }
+
+    if (oldFsmState != m_fsm.getState())
+    {
+        serverSendRoundStateToClients(network);
     }
     
     return false;
@@ -1210,6 +1227,62 @@ proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::get
     return m_fsm;
 }
 
+bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
+    pge_network::PgeINetwork& network,
+    const MsgGameRoundStateFromServer& msgRoundState)
+{
+    if (network.isServer())
+    {
+        getConsole().EOLn("TeamRoundGameMode::%s(): ERROR: server received, CANNOT HAPPEN!", __func__);
+        assert(false);  // crash in debug
+        return false;
+    }
+
+    m_nTeam1RoundWins = msgRoundState.m_nTeam1RoundWins;
+    m_nTeam2RoundWins = msgRoundState.m_nTeam2RoundWins;
+    m_fsm.forceSetState(msgRoundState.m_fsmState);
+
+    return true;
+}
+
+bool proofps_dd::TeamRoundGameMode::serverSendRoundStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle)
+{
+    assert(network.isServer());
+    pge_network::PgePacket pktRoundState;
+    if (!proofps_dd::MsgGameRoundStateFromServer::initPkt(
+        pktRoundState,
+        m_fsm.getState(),
+        m_nTeam1RoundWins,
+        m_nTeam2RoundWins))
+    {
+        getConsole().EOLn("TeamRoundGameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return false;
+    }
+    network.getServer().send(pktRoundState, connHandle);
+
+    return true;
+}
+
+bool proofps_dd::TeamRoundGameMode::serverSendRoundStateToClients(pge_network::PgeINetwork& network)
+{
+    assert(network.isServer());
+    pge_network::PgePacket pktRoundState;
+    if (!proofps_dd::MsgGameRoundStateFromServer::initPkt(
+        pktRoundState,
+        m_fsm.getState(),
+        m_nTeam1RoundWins,
+        m_nTeam2RoundWins))
+    {
+        getConsole().EOLn("TeamRoundGameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+        assert(false);
+        return false;
+    }
+    network.getServer().sendToAllClientsExcept(pktRoundState);
+
+    return true;
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -1220,6 +1293,24 @@ proofps_dd::TeamRoundGameMode::TeamRoundGameMode(
 {
     m_gameModeType = proofps_dd::GameModeType::TeamRoundGame;
     m_fsm.reset();
+}
+
+bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle)
+{
+    if (GameMode::serverSendGameSessionStateToClient(network, connHandle))
+    {
+        return serverSendRoundStateToClient(network, connHandle);
+    }
+    return false;
+}
+
+bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart)
+{
+    if (GameMode::serverSendGameSessionStateToClients(network, bGameRestart))
+    {
+        return serverSendRoundStateToClients(network);
+    }
+    return false;
 }
 
 void proofps_dd::TeamRoundGameMode::setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins)

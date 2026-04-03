@@ -417,8 +417,8 @@ namespace proofps_dd
         GameMode(GameMode&&) = delete;
         GameMode&& operator=(GameMode&&) = delete;
 
-        bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
-        bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart);
+        virtual bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
+        virtual bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart);
         void handleEventGameWon(pge_network::PgeINetwork& network);
 
     private:
@@ -618,6 +618,8 @@ namespace proofps_dd
 
     }; // class TeamDeathMatchMode
 
+    struct MsgGameRoundStateFromServer;
+
     /**
     * In Team Round Game mode, players are grouped into teams, same way as in Team DeathMatch.
     * However, the game mode features rounds.
@@ -698,6 +700,11 @@ namespace proofps_dd
             void roundWon();
 
             void transitionToPlayState();
+
+            /**
+            * To be used only by client instances as they receive state from server.
+            */
+            void forceSetState(const RoundState& newState);
 
             const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredCurrentState() const;
 
@@ -791,10 +798,27 @@ namespace proofps_dd
 
         RoundStateFSM& getFSM();
 
+        bool clientHandleGameRoundStateFromServer(
+            pge_network::PgeINetwork& network,
+            const MsgGameRoundStateFromServer& msgRoundState);
+
+        bool serverSendRoundStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
+        bool serverSendRoundStateToClients(pge_network::PgeINetwork& network);
+
     protected:
 
         TeamRoundGameMode(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers);
+
+        /**
+        * Extends original behavior by also sending out MsgGameRoundStateFromServer to the specific client.
+        */
+        virtual bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle) override;
+        
+        /**
+        * Extends original behavior by also sending out MsgGameRoundStateFromServer to all clients.
+        */
+        virtual bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart) override;
 
         void setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins);
 

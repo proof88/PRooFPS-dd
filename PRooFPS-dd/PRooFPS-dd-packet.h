@@ -27,6 +27,7 @@ namespace proofps_dd
     {
         ServerInfoFromServer = 0,
         GameSessionStateFromServer,
+        GameRoundStateFromServer,
         MapChangeFromServer,
         UserSetupFromServer,
         UserNameChangeAndBootupDone,
@@ -52,6 +53,7 @@ namespace proofps_dd
     (
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::ServerInfoFromServer,        "MsgServerInfoFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::GameSessionStateFromServer,  "MsgGameSessionStateFromServer" },
+        PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::GameRoundStateFromServer,    "MsgGameRoundStateFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::MapChangeFromServer,         "MsgMapChangeFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserSetupFromServer,         "MsgUserSetupFromServer" },
         PRooFPSappMsgId2ZStringPair{ PRooFPSappMsgId::UserNameChangeAndBootupDone, "MsgUserNameChangeAndBootupDone" },
@@ -204,6 +206,53 @@ namespace proofps_dd
     static_assert(std::is_trivial_v<MsgGameSessionStateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgGameSessionStateFromServer>);
     static_assert(std::is_standard_layout_v<MsgGameSessionStateFromServer>);
+
+    // Server -> Clients.
+    // Sent to all clients when:
+    //  - RoundState is changed, or
+    //  - team round wins count is changed, or
+    //  - MsgGameSessionStateFromServer is sent out, or
+    //  - when the after-bootup delayed MsgServerInfoFromServer is sent out.
+    // Used for round-based game modes.
+    struct MsgGameRoundStateFromServer
+    {
+        static const PRooFPSappMsgId id = PRooFPSappMsgId::GameRoundStateFromServer;
+
+        static bool initPkt(
+            pge_network::PgePacket& pkt,
+            TeamRoundGameMode::RoundStateFSM::RoundState fsmState,
+            unsigned int nTeam1RoundWins,
+            unsigned int nTeam2RoundWins)
+        {
+            // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
+            static_assert(sizeof(MsgGameRoundStateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
+
+            // TODO: initPkt to be invoked only once by app, in future it might already contain some message we shouldnt zero out!
+            pge_network::PgePacket::initPktMsgApp(pkt, 0u /*m_connHandleServerSide is ignored in this message*/);
+
+            pge_network::TByte* const pMsgAppData = pge_network::PgePacket::preparePktMsgAppFill(
+                pkt, static_cast<pge_network::MsgApp::TMsgId>(id), sizeof(MsgGameRoundStateFromServer));
+            if (!pMsgAppData)
+            {
+                return false;
+            }
+
+            proofps_dd::MsgGameRoundStateFromServer& msgGameRoundState = reinterpret_cast<proofps_dd::MsgGameRoundStateFromServer&>(*pMsgAppData);
+
+            msgGameRoundState.m_fsmState = fsmState;
+            msgGameRoundState.m_nTeam1RoundWins = nTeam1RoundWins;
+            msgGameRoundState.m_nTeam2RoundWins = nTeam2RoundWins;
+
+            return true;
+        }
+
+        TeamRoundGameMode::RoundStateFSM::RoundState m_fsmState;
+        unsigned int m_nTeam1RoundWins;
+        unsigned int m_nTeam2RoundWins;
+    };  // struct MsgGameRoundStateFromServer 
+    static_assert(std::is_trivial_v<MsgGameRoundStateFromServer >);
+    static_assert(std::is_trivially_copyable_v<MsgGameRoundStateFromServer >);
+    static_assert(std::is_standard_layout_v<MsgGameRoundStateFromServer >);
 
     // server -> self (inject) and clients
     // sent to all clients when map is changing

@@ -474,6 +474,28 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
             bRet = clientHandleGameSessionStateFromServer(
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgGameSessionStateFromServer>(pkt));
             break;
+        case proofps_dd::MsgGameRoundStateFromServer::id:
+            if (GameMode::getGameMode()->isRoundBased())
+            {
+                TeamRoundGameMode* const pTRGmode = dynamic_cast<proofps_dd::TeamRoundGameMode*>(GameMode::getGameMode());
+                if (pTRGmode)
+                {
+                    bRet = pTRGmode->clientHandleGameRoundStateFromServer(
+                        getNetwork(),
+                        pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgGameRoundStateFromServer>(pkt));
+                }
+                else
+                {
+                    getConsole().EOLn("PRooFPSddPGE::%s(): ERROR: pTRGmode null!", __func__);
+                    bRet = false;
+                }
+            }
+            else
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s(): ERROR: MsgGameRoundStateFromServer!", __func__);
+                bRet = false;
+            }
+            break;
         case proofps_dd::MsgMapChangeFromServer::id:
             bRet = handleMapChangeFromServer(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
@@ -775,7 +797,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
         // @PHYSICS-RATE END
     }  // for iPhyIter
     serverUpdateRespawnTimers(m_config, *GameMode::getGameMode(), m_durations);
-    serverSendUserUpdates(getConfigProfiles(), m_config, m_durations);
+    serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *GameMode::getGameMode());
 
     // @TICK-RATE END
 }

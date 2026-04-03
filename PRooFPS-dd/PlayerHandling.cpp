@@ -540,6 +540,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             return false;
         }
 
+        // MsgGameRoundStateFromServer will be sent out later by GameMode::addPlayer(), when player is detected as booted up in handleUserNameChange()
+
         pge_network::PgePacket newPktSetup;
         if (!proofps_dd::MsgUserSetupFromServer::initPkt(newPktSetup, connHandleServerSide, false, msg.m_szIpAddress, m_maps.getFilename()))
         {
@@ -913,7 +915,8 @@ void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues(
 void proofps_dd::PlayerHandling::serverSendUserUpdates(
     PGEcfgProfiles& /*cfgProfiles*/,
     proofps_dd::Config& config,
-    proofps_dd::Durations& durations)
+    proofps_dd::Durations& durations,
+    proofps_dd::GameMode& gameMode)
 {
     if (!m_pge.getNetwork().isServer())
     {
@@ -938,13 +941,37 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
         {
             player.setExpectingAfterBootUpDelayedUpdate(false);
 
+            bool bSendAfterBootupDelayedUpdatesSuccessful = true;
             if (!config.serverSendServerInfo(playerPair.first))
             {
                 getConsole().EOLn("PlayerHandling::%s(): serverSendServerInfo() FAILED at line %d!", __func__, __LINE__);
+                bSendAfterBootupDelayedUpdatesSuccessful = false;
                 assert(false);
                 return;
             }
-            getConsole().OLn("PlayerHandling::%s(): WA: sent out after-bootup delayed update to: %u", __func__, playerPair.first);
+
+            if (gameMode.isRoundBased())
+            {
+                TeamRoundGameMode* const pTRGmode = dynamic_cast<proofps_dd::TeamRoundGameMode*>(&gameMode);
+                if (pTRGmode)
+                {
+                    pTRGmode->serverSendRoundStateToClient(m_pge.getNetwork(), playerPair.first);
+                }
+                else
+                {
+                    bSendAfterBootupDelayedUpdatesSuccessful = false;
+                    getConsole().EOLn("PlayerHandling::%s(): ERROR: pTRGmode null at line %d!", __func__, __LINE__);
+                }
+            }
+
+            if (bSendAfterBootupDelayedUpdatesSuccessful)
+            {
+                getConsole().OLn("PlayerHandling::%s(): WA: sent out after-bootup delayed updates to: %u", __func__, playerPair.first);
+            }
+            else
+            {
+                getConsole().EOLn("PlayerHandling::%s(): WA: ERROR: could NOT send out all after-bootup delayed updates to: %u", __func__, playerPair.first);
+            }
         } // isExpectingAfterBootUpDelayedUpdate()
 
         if (bSendUserUpdates && player.isNetDirty())
