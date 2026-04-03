@@ -387,6 +387,11 @@ namespace proofps_dd
         virtual bool isPlayerAllowedForGameplay(const Player& player) const;
 
         /**
+        * @return True if player movement is allowed, false otherwise.
+        */
+        virtual bool isPlayerMovementAllowed() const;
+
+        /**
         * @return Number of players in spectator mode (team id is irrelevant).
         */
         unsigned int getSpectatorModePlayersCount() const;
@@ -757,6 +762,7 @@ namespace proofps_dd
 
         virtual bool isRoundBased() const override;
         virtual bool isRespawnAllowedAfterDie() const override;
+        virtual bool isPlayerMovementAllowed() const override;
 
         /**
         * @return Configured round win limit previously set by setRoundWinLimit().

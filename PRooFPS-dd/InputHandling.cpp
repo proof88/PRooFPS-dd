@@ -199,6 +199,32 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
     }
 
+    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+    if (!wpn)
+    {
+        getConsole().EOLn("InputHandling::%s(): getWeapon() failed!", __func__);
+        assert(false);  // crash in debug
+        return false;
+    }
+
+    // make sure we have an up-to-date angle Y so startSomersaultServer() has the up-to-date data to decide things
+    if ((pktUserCmdMove.m_fPlayerAngleY != -1.f) && (!player.isSomersaulting()))
+    {
+        player.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
+        player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
+    }
+
+    if (!gameMode.isPlayerMovementAllowed())
+    {
+        // not error, valid state, e.g. TeamRoundGame FSM is not in Play state.
+        // player angles are still allowed to be updated, that is why this check is so late.
+        
+        player.getWeaponAngle().set(PureVector(0.f, player.getAngleY(), pktUserCmdMove.m_fWpnAngleZ));
+        wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
+        wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
+        return true;
+    }
+
     if (pktUserCmdMove.m_bToggleUseItem)
     {
         const auto nMillisecsSinceLastToggle =
@@ -215,13 +241,6 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         {
             player.handleToggleInventoryItem(MapItemType::ITEM_JETLAX, false);
         }
-    }
-
-    // make sure we have an up-to-date angle Y so startSomersaultServer() has the up-to-date data to decide things
-    if ((pktUserCmdMove.m_fPlayerAngleY != -1.f) && (!player.isSomersaulting()))
-    {
-        player.getAngleY() = pktUserCmdMove.m_fPlayerAngleY;
-        player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
     const auto nMillisecsSinceLastStrafe =
@@ -334,14 +353,6 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
                 }
             }
         }
-    }
-
-    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-    if (!wpn)
-    {
-        getConsole().EOLn("InputHandling::%s(): getWeapon() failed!", __func__);
-        assert(false);
-        return false;
     }
 
     if (!pktUserCmdMove.m_bShootAction)
@@ -695,6 +706,11 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     if (playerConst.isInSpectatorMode() || playerConst.isForcedSpectating())
     {
         clientKeyboardWhenConnectedToServer_Spectating(gameMode, playerConst);
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+    }
+
+    if (!gameMode.isPlayerMovementAllowed() || !gameMode.isPlayerAllowedForGameplay(player))
+    {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
@@ -1165,78 +1181,79 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
         return false;
     }
 
-    if (!gameMode.isRespawnAllowedAfterDie())
+    if (gameMode.isPlayerMovementAllowed())
     {
-        return false;
-    }
+        const bool bFireButtonPressed =
+            m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT) &&
+            ((std::as_const(player).getHealth() > 0) ||
+             ((std::as_const(player).getHealth() == 0) && gameMode.isRespawnAllowedAfterDie()));
 
-    const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
-
-    bool bShootActionBeingSent = false;
-    const auto nSecsSinceLastWeaponSwitchMillisecs =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
-        ).count();
-    if (bFireButtonPressed)
-    {
-        // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
-        // as respawn request
-        if (nSecsSinceLastWeaponSwitchMillisecs < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
+        bool bShootActionBeingSent = false;
+        const auto nSecsSinceLastWeaponSwitchMillisecs =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
+            ).count();
+        if (bFireButtonPressed)
         {
-            //getConsole().OLn("InputHandling::%s(): ignoring too early m_pge.getInput().getMouse() action!", __func__);
-        }
-        else
-        {
-            m_bAttack = true;
-            if (m_bAttack != m_bPrevAttack)
+            // sending m_pge.getInput().getMouse() action is still allowed when player is dead, since server will treat that
+            // as respawn request
+            if (nSecsSinceLastWeaponSwitchMillisecs < m_nWeaponActionMinimumWaitMillisecondsAfterSwitch)
             {
-                proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
-                bShootActionBeingSent = true;
+                //getConsole().OLn("InputHandling::%s(): ignoring too early m_pge.getInput().getMouse() action!", __func__);
+            }
+            else
+            {
+                m_bAttack = true;
+                if (m_bAttack != m_bPrevAttack)
+                {
+                    proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
+                    bShootActionBeingSent = true;
 
-                if (std::as_const(player).getHealth() > 0)
-                {
-                    // this is very bad, but I decided to play weapon dry fire here, because:
-                    // - client does not get response from server for dry fire;
-                    // - client also has enough data to decide if fire will be dry or not.
-                    // Ideally, the pullTrigger() executed on server side should generate transparent traffic towards client which
-                    // would trigger the dry fire sound, but such mechanism does not exist currently.
-                    // Downside of this approach is that this can be heard only by current player and not by other players around.
-                    Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
-                    if (wpn && (wpn->getState() == Weapon::WPN_READY) && (wpn->getMagBulletCount() == 0))
+                    if (std::as_const(player).getHealth() > 0)
                     {
-                        const auto sndWpnDryFireHandle = m_pge.getAudio().play3dSound(wpn->getDryFiringSound(), player.getPos().getNew());
-                        m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnDryFireHandle, SndWpnDryFireDistMin, SndWpnDryFireDistMax);
-                        m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnDryFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                        // this is very bad, but I decided to play weapon dry fire here, because:
+                        // - client does not get response from server for dry fire;
+                        // - client also has enough data to decide if fire will be dry or not.
+                        // Ideally, the pullTrigger() executed on server side should generate transparent traffic towards client which
+                        // would trigger the dry fire sound, but such mechanism does not exist currently.
+                        // Downside of this approach is that this can be heard only by current player and not by other players around.
+                        Weapon* const wpn = player.getWeaponManager().getCurrentWeapon();
+                        if (wpn && (wpn->getState() == Weapon::WPN_READY) && (wpn->getMagBulletCount() == 0))
+                        {
+                            const auto sndWpnDryFireHandle = m_pge.getAudio().play3dSound(wpn->getDryFiringSound(), player.getPos().getNew());
+                            m_pge.getAudio().getAudioEngineCore().set3dSourceMinMaxDistance(sndWpnDryFireHandle, SndWpnDryFireDistMin, SndWpnDryFireDistMax);
+                            m_pge.getAudio().getAudioEngineCore().set3dSourceAttenuation(sndWpnDryFireHandle, SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+                        }
                     }
-                }
-                else
-                {
-                    m_gui.fastForwardRespawnTimer(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+                    else
+                    {
+                        m_gui.fastForwardRespawnTimer(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        m_bAttack = false;
-        if (m_bAttack != m_bPrevAttack)
+        else
         {
-            proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
+            m_bAttack = false;
+            if (m_bAttack != m_bPrevAttack)
+            {
+                proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
+            }
         }
-    }
-    m_bPrevAttack = m_bAttack;
+        m_bPrevAttack = m_bAttack;
 
-    const auto& playerConst = player;
-    if (playerConst.getHealth() == 0)
-    {
-        return false;
-    }
-
-    if (!bFireButtonPressed && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
-    {
-        if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+        const auto& playerConst = player;
+        if (playerConst.getHealth() == 0)
         {
-            clientMouseWheel(nMouseWheelChange, pkt, player);
+            return false;
+        }
+
+        if (!bFireButtonPressed && !proofps_dd::MsgUserCmdFromClient::getReloadRequest(pkt))
+        {
+            if (nSecsSinceLastWeaponSwitchMillisecs >= m_nKeyPressOnceWpnHandlingMinumumWaitMilliseconds)
+            {
+                clientMouseWheel(nMouseWheelChange, pkt, player);
+            }
         }
     }
 

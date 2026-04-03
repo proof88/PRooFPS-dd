@@ -408,6 +408,11 @@ bool proofps_dd::GameMode::isPlayerAllowedForGameplay(const Player& player) cons
     return !player.isInSpectatorMode();
 }
 
+bool proofps_dd::GameMode::isPlayerMovementAllowed() const
+{
+    return true;
+}
+
 unsigned int proofps_dd::GameMode::getSpectatorModePlayersCount() const
 {
     unsigned int nCount = 0;
@@ -1168,6 +1173,11 @@ bool proofps_dd::TeamRoundGameMode::isRoundBased() const
 bool proofps_dd::TeamRoundGameMode::isRespawnAllowedAfterDie() const
 {
     return false;
+}
+
+bool proofps_dd::TeamRoundGameMode::isPlayerMovementAllowed() const
+{
+    return (m_fsm.getState() == TeamRoundGameMode::RoundStateFSM::RoundState::Play);
 }
 
 unsigned int proofps_dd::TeamRoundGameMode::getRoundWinLimit() const

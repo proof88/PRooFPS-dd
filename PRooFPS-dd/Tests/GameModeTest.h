@@ -176,6 +176,7 @@ protected:
         addSubTest(
             "test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty",
             static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_cannot_be_won_by_killing_a_team_if_the_other_team_is_empty));
+        addSubTest("test_round_games_player_movement_allowed", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_player_movement_allowed));
     }
 
     virtual bool setUp() override
@@ -489,6 +490,7 @@ private:
         b &= assertFalse(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
+        b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed");
 
         return b;
     }
@@ -511,6 +513,7 @@ private:
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
+        b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed");
     
         return b;
     }
@@ -533,6 +536,7 @@ private:
         b &= assertTrue(gm->isTeamBasedGame(), "team based");
         b &= assertTrue(gm->isRoundBased(), "round based");
         b &= assertFalse(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
+        b &= assertFalse(gm->isPlayerMovementAllowed(), "movement allowed");
         b &= assertEquals(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(),
@@ -3995,6 +3999,67 @@ private:
 
         return b;
 
+    }
+
+    bool test_round_games_player_movement_allowed(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            assert(gm->isRoundBased());
+
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                trg->getFSM().getState(),
+                "fsm state 1");
+            b &= assertFalse(gm->isPlayerMovementAllowed(), "movement allowed 1");
+           
+            trg->getFSM().transitionToPlayState();
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                trg->getFSM().getState(),
+                "fsm state 2");
+            b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed 2");
+
+            trg->getFSM().roundWon();
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+                trg->getFSM().getState(),
+                "fsm state 3");
+            b &= assertFalse(gm->isPlayerMovementAllowed(), "movement allowed 3");
+        }
+
+        return b;
+    }
+
+    bool test_round_games_player_movement_allowed()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_player_movement_allowed(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
     }
 
 };
