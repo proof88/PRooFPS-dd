@@ -60,6 +60,7 @@ namespace proofps_dd
     * 
     * TODO: not sure exactly about my original idea, but definitely the current design should be changed a bit.
     * GameMode should NOT contain anything related to "frags", it should be more abstract.
+    * It should be called scores, frag limit shall be score limit, which is the round win limit in TRG but frag limit otherwise.
     * Frags, frag table, etc. should be introduced in derived class such as DeathMatchMode.
     * However this definitely won't be "fixed" in 2024.
     * 

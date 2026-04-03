@@ -130,7 +130,7 @@ namespace proofps_dd
             const unsigned int& nPhysicsRateMin,
             const unsigned int& nClientUpdateRate,
             const GameModeType& iGameModeType,
-            const unsigned int& nFragLimit,
+            const unsigned int& nScoreLimit,
             const unsigned int& nTimeLimitSecs,
             const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,

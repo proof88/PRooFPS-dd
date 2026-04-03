@@ -101,7 +101,7 @@ namespace proofps_dd
             const unsigned int& nPhysicsRateMin,
             const unsigned int& nClientUpdateRate,
             const GameModeType& iGameModeType,
-            const unsigned int& nFragLimit,
+            const unsigned int& nScoreLimit,
             const unsigned int& nTimeLimitSecs,
             const unsigned int& nTimeRemainingMillisecs,
             const int& nFallDamageMultiplier,
@@ -129,7 +129,7 @@ namespace proofps_dd
             msgServerInfo.m_nClientUpdateRate = nClientUpdateRate;
 
             msgServerInfo.m_iGameModeType = iGameModeType;
-            msgServerInfo.m_nFragLimit = nFragLimit;
+            msgServerInfo.m_nScoreLimit = nScoreLimit;
             msgServerInfo.m_nTimeLimitSecs = nTimeLimitSecs;
             msgServerInfo.m_nTimeRemainingMillisecs = nTimeRemainingMillisecs;
 
@@ -147,7 +147,7 @@ namespace proofps_dd
         unsigned int m_nClientUpdateRate;
 
         GameModeType m_iGameModeType;
-        unsigned int m_nFragLimit;
+        unsigned int m_nScoreLimit;   /** Either frag limit or round win limit, depending on game mode. */
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nTimeRemainingMillisecs;
 

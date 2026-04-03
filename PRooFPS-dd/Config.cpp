@@ -508,7 +508,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 {
     if (m_pge.getNetwork().isServer())
     {
-        getConsole().EOLn("Config::%s(): server received, CANNOT HAPPEN!", __func__);
+        getConsole().EOLn("Config::%s(): ERROR: server received, CANNOT HAPPEN!", __func__);
         assert(false);
         return false;
     }
@@ -540,15 +540,31 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
     }
 
-    DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
+    GameMode* const pGameMode = GameMode::getGameMode();
+    assert(pGameMode);
+    pGameMode->setTimeLimitSecs(m_serverInfo.m_nTimeLimitSecs);
+    pGameMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
+
+    DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(pGameMode);
     if (!pDeathMatchMode)
     {
-        getConsole().EOLn("ERROR: pDeathMatchMode null!");
+        getConsole().EOLn("Config::%s(): ERROR: pDeathMatchMode null!", __func__);
         return false;
     }
-    pDeathMatchMode->setFragLimit(m_serverInfo.m_nFragLimit);
-    pDeathMatchMode->setTimeLimitSecs(m_serverInfo.m_nTimeLimitSecs);
-    pDeathMatchMode->clientUpdateTimeRemainingMillisecs(m_serverInfo.m_nTimeRemainingMillisecs, m_pge.getNetwork());
+    pDeathMatchMode->setFragLimit(m_serverInfo.m_nScoreLimit);
+
+    if (pGameMode->isRoundBased())
+    {
+        TeamRoundGameMode* const pTRGmode = dynamic_cast<proofps_dd::TeamRoundGameMode*>(pGameMode);
+        if (pTRGmode)
+        {
+            pTRGmode->setRoundWinLimit(m_serverInfo.m_nScoreLimit);
+        }
+        else
+        {
+            getConsole().EOLn("Config::%s(): ERROR: pTRGmode null!", __func__);
+        }
+    }
 
     // keep logging here, after clientUpdateTimeRemainingMillisecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
@@ -560,7 +576,14 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
     getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
     getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
-    getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
+    if (gameMode->isRoundBased())
+    {
+        getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
+    }
+    else
+    {
+        getConsole().OLn("nFragLimit            : %u", m_serverInfo.m_nScoreLimit);
+    }
     getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
     getConsole().OLn("nTimeRemainingMsecs   : %u ms",  m_serverInfo.m_nTimeRemainingMillisecs);
     getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
@@ -577,11 +600,31 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
 {
     assert(m_pge.getNetwork().isServer());
 
-    const DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
+    const GameMode* const pGameMode = GameMode::getGameMode();
+    assert(pGameMode);
+    const DeathMatchMode* const pDeathMatchMode = dynamic_cast<const proofps_dd::DeathMatchMode*>(pGameMode);
     if (!pDeathMatchMode)
     {
         getConsole().EOLn("ERROR: pDeathMatchMode null!");
         return false;
+    }
+
+    unsigned int nScoreLimit = 0;
+    if (pGameMode->isRoundBased())
+    {
+        const TeamRoundGameMode* const pTRGmode = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(pGameMode);
+        if (pTRGmode)
+        {
+            nScoreLimit = pTRGmode->getRoundWinLimit();
+        }
+        else
+        {
+            getConsole().EOLn("Config::%s(): ERROR: pTRGmode null!", __func__);
+        }
+    }
+    else
+    {
+        nScoreLimit = pDeathMatchMode->getFragLimit();
     }
 
     pge_network::PgePacket newPktServerInfo;
@@ -592,9 +635,9 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         getPhysicsRate(),
         getClientUpdateRate(),
         GameMode::getGameMode()->getGameModeType(),
-        pDeathMatchMode->getFragLimit(),
-        pDeathMatchMode->getTimeLimitSecs(),
-        pDeathMatchMode->getTimeRemainingMillisecs(),
+        nScoreLimit,
+        pGameMode->getTimeLimitSecs(),
+        pGameMode->getTimeRemainingMillisecs(),
         getFallDamageMultiplier(),
         getPlayerRespawnDelaySeconds(),
         getPlayerRespawnInvulnerabilityDelaySeconds()))
@@ -614,7 +657,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     const unsigned int& nPhysicsRateMin,
     const unsigned int& nClientUpdateRate,
     const GameModeType& iGameModeType,
-    const unsigned int& nFragLimit,
+    const unsigned int& nScoreLimit,
     const unsigned int& nTimeLimitSecs,
     const int& nFallDamageMultiplier,
     const unsigned int& nRespawnTimeSecs,
@@ -628,7 +671,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_nClientUpdateRate = nClientUpdateRate;
 
     m_serverInfo.m_iGameModeType = iGameModeType;
-    m_serverInfo.m_nFragLimit = nFragLimit;
+    m_serverInfo.m_nScoreLimit = nScoreLimit;
     m_serverInfo.m_nTimeLimitSecs = nTimeLimitSecs;
 
     m_serverInfo.m_nFallDamageMultiplier = nFallDamageMultiplier;
@@ -645,7 +688,14 @@ void proofps_dd::Config::serverSaveServerInfo(
     getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
     getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
     getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
-    getConsole().OLn("nFragLimit            : %u",     m_serverInfo.m_nFragLimit);
+    if (GameMode::isRoundBased(iGameModeType))
+    {
+        getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
+    }
+    else
+    {
+        getConsole().OLn("nFragLimit            : %u", m_serverInfo.m_nScoreLimit);
+    }
     getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
     getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
     getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);

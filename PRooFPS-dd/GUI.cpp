@@ -4041,9 +4041,18 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
         fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Game Mode Type: ") + std::to_string(static_cast<int>(m_pConfig->getServerInfo().m_iGameModeType)));
     fThisRowY += fRowSizeY;
-    drawTextHighlighted(
-        fGameInfoPagesStartX + fIndentX, fThisRowY,
-        std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nFragLimit));
+    if (GameMode::isRoundBased(m_pConfig->getServerInfo().m_iGameModeType))
+    {
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Round Win Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nScoreLimit));
+    }
+    else
+    {
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Frag Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nScoreLimit));
+    }
     fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
