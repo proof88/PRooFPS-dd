@@ -3532,7 +3532,8 @@ void proofps_dd::GUI::drawFragTable(
     const int& iColNetworkDataStart /* server-side only */)
 {
     assert(m_pNetworking);
-    assert(GameMode::getGameMode());
+    const proofps_dd::GameMode* const pGameMode = GameMode::getGameMode();
+    assert(pGameMode);
     assert(m_pPge);
 
     static constexpr float fTableColIndentPixels = 4.f;
@@ -3562,7 +3563,7 @@ void proofps_dd::GUI::drawFragTable(
     );
 
     const int nTablesCount =
-        GameMode::getGameMode()->isTeamBasedGame() ?
+        pGameMode->isTeamBasedGame() ?
         3 /* 2 for teams + 1 for spectators */ :
         2 /* 1 for playing + 1 for spectators */;
 
@@ -3575,13 +3576,14 @@ void proofps_dd::GUI::drawFragTable(
         iTeam = 0;
 
     // might become null at this point, so check before using it!
-    const proofps_dd::TeamDeathMatchMode* const tdm = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(GameMode::getGameMode());
+    const proofps_dd::TeamDeathMatchMode* const tdm = dynamic_cast<const proofps_dd::TeamDeathMatchMode*>(pGameMode);
+    const proofps_dd::TeamRoundGameMode* const trg = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(pGameMode);
 
     // first draw tables for non-spectating players
     for (int i = 1; i <= nTablesCount-1; i++)
     {
         // optional team table caption/header
-        if (GameMode::getGameMode()->isTeamBasedGame())
+        if (pGameMode->isTeamBasedGame())
         {
             assert(tdm);
             assert(iTeam != 0);
@@ -3598,11 +3600,24 @@ void proofps_dd::GUI::drawFragTable(
                 sTeamTableCaption += "s";
             }
             
-            const int nTeamFragsCount = tdm->getTeamFrags(iTeam);
-            sTeamTableCaption += " with " + std::to_string(nTeamFragsCount) + " total frag";
-            if ((nTeamFragsCount == 0) || (abs(nTeamFragsCount) > 1))
+            if (pGameMode->isRoundBased())
             {
-                sTeamTableCaption += "s";
+                assert(trg);
+                const unsigned int nTeamScoreCount = trg->getTeamRoundWins(iTeam);
+                sTeamTableCaption += " and " + std::to_string(nTeamScoreCount) + " round win";
+                if ((nTeamScoreCount == 0) || (nTeamScoreCount > 1))
+                {
+                    sTeamTableCaption += "s";
+                }
+            }
+            else
+            {
+                const int nTeamFragsCount = tdm->getTeamFrags(iTeam);
+                sTeamTableCaption += " with " + std::to_string(nTeamFragsCount) + " total frag";
+                if ((nTeamFragsCount == 0) || (abs(nTeamFragsCount) > 1))
+                {
+                    sTeamTableCaption += "s";
+                }
             }
 
             drawTableCaptionColored(
@@ -3638,7 +3653,7 @@ void proofps_dd::GUI::drawFragTable(
     // From v0.7, spectator mode is added, and players having team assigned can be also spectators, they also go into the bottom table.
     // In TDM, players with team id 0 is possible only in spectator mode, therefore we dont need to check for team id == 0 here.
     // We do not want to draw an empty table for unassigned players in ANY game mode.
-    const unsigned int nUnassignedPlayersCount = GameMode::getGameMode()->getSpectatorModePlayersCount();
+    const unsigned int nUnassignedPlayersCount = pGameMode->getSpectatorModePlayersCount();
     const bool bDrawUnassignedPlayersTable = (nUnassignedPlayersCount > 0u);
 
     // then draw table for spectating players (only if there is any)
@@ -3679,7 +3694,7 @@ void proofps_dd::GUI::drawFragTable(
         );
     } // end spectating players
 
-    if (!GameMode::getGameMode()->isGameWon())
+    if (!pGameMode->isGameWon())
     {
         static const std::string sTeamSelectNotice =
             std::string("Use '") + GAME_INPUT_KEY_MENU_TEAMSELECTION + "' key to join or spectate.";
@@ -3908,29 +3923,50 @@ void proofps_dd::GUI::drawGameObjectives(const int& nYPosBiasToMinimapBottom)
     // However, I cannot include GUI.h now in GameMode.
     // As also explained in PRooFPSddPGE::clientHandleGameSessionStateFromServer().
 
-    const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<proofps_dd::DeathMatchMode*>(GameMode::getGameMode());
+    const proofps_dd::GameMode* const pGameMode = GameMode::getGameMode();
+    if (!pGameMode)
+    {
+        getConsole().EOLn("GUI::%s(): ERROR: pGameMode null!", __func__);
+        return;
+    }
+
+    const proofps_dd::DeathMatchMode* const pDeathMatchMode = dynamic_cast<const proofps_dd::DeathMatchMode*>(pGameMode);
     if (!pDeathMatchMode)
     {
-        getConsole().EOLn("ERROR: pDeathMatchMode null!");
+        getConsole().EOLn("GUI::%s(): ERROR: pDeathMatchMode null!", __func__);
         return;
     }
 
     std::string sCaption;
-    if (GameMode::getGameMode()->isGameWon())
+    if (pGameMode->isGameWon())
     {
         sCaption = "Game Ended! Waiting maximum 1 minute for server to restart ...";
     }
     else
     {
-        sCaption = GameMode::getGameMode()->getGameModeTypeName();
-        if (pDeathMatchMode->getFragLimit() > 0)
+        sCaption = pGameMode->getGameModeTypeName();
+        if (pGameMode->isRoundBased())
+        {
+            const proofps_dd::TeamRoundGameMode* const pTRG = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(pGameMode);
+            if (pTRG)
+            {
+                sCaption += " | Round Win Limit: " + std::to_string(pTRG->getRoundWinLimit());
+            }
+            else
+            {
+                sCaption += " | Round Win Limit: ???";
+                getConsole().EOLn("GUI::%s(): ERROR: pTRG null!", __func__);
+            }
+        }
+        else if (pDeathMatchMode->getFragLimit() > 0)
         {
             sCaption += " | Frag Limit: " + std::to_string(pDeathMatchMode->getFragLimit());
         }
-        if (pDeathMatchMode->getTimeLimitSecs() > 0)
+
+        if (pGameMode->getTimeLimitSecs() > 0)
         {
-            sCaption += " | Time Limit: " + std::to_string(pDeathMatchMode->getTimeLimitSecs()) +
-                " s, Remaining: " + std::to_string(pDeathMatchMode->getTimeRemainingMillisecs() / 1000) + " s";
+            sCaption += " | Time Limit: " + std::to_string(pGameMode->getTimeLimitSecs()) +
+                " s, Remaining: " + std::to_string(pGameMode->getTimeRemainingMillisecs() / 1000) + " s";
         }
     }
 
