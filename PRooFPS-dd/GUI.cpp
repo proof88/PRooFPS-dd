@@ -3316,29 +3316,47 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
                 3);
             break;
         case 1:
+        {
+            assert(m_pMapPlayers);
+            const auto itPlayer = m_pMapPlayers->find(player.m_connHandle);
+            if (itPlayer != m_pMapPlayers->end())
+            {
+                if (std::as_const(itPlayer->second).getHealth() == 0)
+                {
+                    ImGuiTextTableCurrentCellRightAdjusted("Dead");
+                }
+            }
+            else
+            {
+                // should not happen
+                ImGuiTextTableCurrentCellRightAdjusted("N/A");
+            }
+        }
+            break;
+        case 2:
             ImGuiTextTableCurrentCellRightAdjusted(
                 GameMode::getRank(player)
             /*"Cl0wN"*/);
             break;
-        case 2:
+        case 3:
             ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nFrags) /*"999"*/);
             break;
-        case 3:
+        case 4:
             ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nDeaths) /*"999"*/);
             break;
-        case 4:
+        case 5:
             ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nSuicides) /*"999"*/);
             break;
-        case 5:
+        case 6:
             ImGuiTextTableCurrentCellRightAdjusted(
                 (player.m_nShotsFired > 0) ?
                 std::to_string(std::lroundf(player.m_fFiringAcc * 100)) + " %" /*"100 %"*/ :
                 "-");
             break;
-        case 6:
+        case 7:
             ImGuiTextTableCurrentCellRightAdjusted(std::to_string(player.m_nShotsFired) /*"9999999"*/);
             break;
-        case 7:
+        case 8:
             ImGuiTextTableCurrentCellRightAdjusted(
                 std::to_string(m_pPge->getNetwork().getServer().getPing(player.m_connHandle, true)) /*"999"*/);
             break;
@@ -3721,6 +3739,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sCaption, cons
     // keep this in sync with drawGameObjectivesClient()
     static const std::vector<const char*> vecHeaderLabels = {
         "Name",
+        "Status",
         "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",
@@ -3730,7 +3749,7 @@ void proofps_dd::GUI::drawGameObjectivesServer(const std::string& sCaption, cons
         "Ping"
     };
 
-    drawFragTable(sCaption, fStartPosY, vecHeaderLabels, 7 /* iColNetworkDataStart */);
+    drawFragTable(sCaption, fStartPosY, vecHeaderLabels, 8 /* iColNetworkDataStart */);
 }  // drawGameObjectivesServer()
 
 /**
@@ -3747,6 +3766,7 @@ void proofps_dd::GUI::drawGameObjectivesClient(const std::string& sCaption, cons
     // keep this in sync with drawGameObjectivesServer()
     static const std::vector<const char*> vecHeaderLabels = {
         "Name",
+        "Status",
         "Rank  ", /* add spaces so more width will be added to the col */
         "Frags",
         "Deaths",
