@@ -946,6 +946,7 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::roundWon()
 
 void proofps_dd::TeamRoundGameMode::RoundStateFSM::transitionToPlayState()
 {
+    // TODO: shall be invoked only from tests!
     stateEnter(RoundState::Play);
 }
 
@@ -1167,6 +1168,19 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
         serverSendRoundStateToClients(network);
     }
     
+    return false;
+}
+
+bool proofps_dd::TeamRoundGameMode::addPlayer(const Player& player, pge_network::PgeINetwork& network)
+{
+    if (TeamDeathMatchMode::addPlayer(player, network))
+    {
+        if (network.isServer() && (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle))
+        {
+            return serverSendRoundStateToClient(network, player.getServerSideConnectionHandle());
+        }
+        return true;
+    }
     return false;
 }
 

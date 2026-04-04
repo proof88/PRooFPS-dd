@@ -1406,28 +1406,43 @@ private:
 
         b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 fail");
 
-        // initially there is no sent out packets because game is NOT yet won
-        b &= assertEqualsEz(0u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 1");
-
-        // adding same player fails so still no sent out packets
-        b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 again fail 1");
-        b &= assertEqualsEz(0u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 1");
-
-        // game is now won, expecting 1 sent pkts to the virtually connected client (ServerStub has 1 virtual always-connected client)
-        player1.getFrags()++;
-        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 1");
-
-        const uint32_t nExpectedTxPktCount1 =
-            (gamemode == proofps_dd::GameModeType::TeamRoundGame) ?
-            0u /* team round game: does not care about frag limit */ :
-            1u;
-
-        b &= assertEqualsEz(nExpectedTxPktCount1, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 2");
+        // TRG sends out FSM state for any added player
+        const uint32_t nExpectedTxPktCount1 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 1u : 0u);
+        b &= assertEqualsEz(nExpectedTxPktCount1, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 1");
         if (b && (nExpectedTxPktCount1 != 0))
         {
             try
             {
                 b &= assertEqualsEz(nExpectedTxPktCount1, m_network.getServer().getTxMsgCount().at(
+                    static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
+                    gamemode, true /*server*/, "tx msg count 1"
+                );
+            }
+            catch (...)
+            {
+                b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 1");
+            }
+        }
+
+        // adding same player fails so still no sent out packets
+        b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 again fail 1");
+        b &= assertEqualsEz(nExpectedTxPktCount1, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 1");
+
+        // game is now won, expecting 1 sent pkts to the virtually connected client (ServerStub has 1 virtual always-connected client)
+        player1.getFrags()++;
+        b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 1");
+
+        const uint32_t nExpectedTxPktCount2 =
+            (gamemode == proofps_dd::GameModeType::TeamRoundGame) ?
+            nExpectedTxPktCount1 /* team round game: does not care about frag limit */ :
+            1u;
+
+        b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 2");
+        if (b && (gamemode != proofps_dd::GameModeType::TeamRoundGame))
+        {
+            try
+            {
+                b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                     gamemode, true /*server*/, "tx msg count 2"
                 );
@@ -1438,10 +1453,26 @@ private:
             }
         }
 
+        const uint32_t nExpectedTxPktCountTRG = 2u;
         if (b && (gamemode == proofps_dd::GameModeType::TeamRoundGame))
         {
             // need to add player3 because if any team is empty than game cannot be win
             b &= assertTrueEz(gm->addPlayer(player3, m_network), gamemode, true /*server*/, "add player 3 fail");
+            b &= assertEqualsEz(nExpectedTxPktCountTRG, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 1");
+            if (b)
+            {
+                try
+                {
+                    b &= assertEqualsEz(nExpectedTxPktCountTRG, m_network.getServer().getTxMsgCount().at(
+                        static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
+                        gamemode, true /*server*/, "tx msg count 3"
+                    );
+                }
+                catch (...)
+                {
+                    b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 3");
+                }
+            }
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
@@ -1449,59 +1480,62 @@ private:
             b &= assertEqualsEz(
                 proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
                 trg->getFSM().getState(),
-                gamemode, true /*server*/, "FSM state 1");
+                gamemode, true /*server*/, "FSM state 2");
             b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true /*server*/, "update player 1 fail 2");
 
             // we only have 1 virtual client connected in network stub, regardless of how many players are now in GameMode
-            b &= assertEqualsEz(2u, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 3");
+            b &= assertEqualsEz(nExpectedTxPktCountTRG + 2, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 3");
             try
             {
                 b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                    gamemode, true /*server*/, "tx msg count 3"
-                );
-                b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
-                    static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                     gamemode, true /*server*/, "tx msg count 4"
+                );
+                b &= assertEqualsEz(nExpectedTxPktCountTRG + 1, m_network.getServer().getTxMsgCount().at(
+                    static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
+                    gamemode, true /*server*/, "tx msg count 5"
                 );
             }
             catch (...)
             {
-                b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 3 or 4");
+                b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 4 or 5");
             }
         }
 
-        const uint32_t nExpectedTxPktCount2 = m_network.getServer().getTxPacketCount();
+        const uint32_t nExpectedTxPktCount3 = m_network.getServer().getTxPacketCount();
         // adding same player fails so number of sent pkts should not change
         b &= assertFalseEz(gm->addPlayer(player1, m_network), gamemode, true /*server*/, "add player 1 again fail 2");
-        b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 4");
+        b &= assertEqualsEz(nExpectedTxPktCount3, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 5");
 
-        // now adding new player should trigger sending out MsgGameSessionStateFromServer to the player since game state is already won
-        const uint32_t nExpectedTxPktCount3 =
+        // now adding new player should trigger sending out MsgGameSessionStateFromServer to the player since game state is already won,
+        // for TRG MsgGameRoundStateFromServer is sent out 2 times:
+        // - 1 for addPlayer() override in TRG class,
+        // - 1 for addPlayer() default behavior: game is won, serverSendGameSessionStateToClient() is invoked and it has override in TRG class.
+        const uint32_t nExpectedTxPktCount4 =
             (gamemode == proofps_dd::GameModeType::TeamRoundGame) ?
-            nExpectedTxPktCount2 + 2 :
-            nExpectedTxPktCount2 + 1;
+            nExpectedTxPktCount3 + 3 :
+            nExpectedTxPktCount3 + 1;
         b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true /*server*/, "add player 2 fail");
-        b &= assertEqualsEz(nExpectedTxPktCount3, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 4");
+        b &= assertEqualsEz(nExpectedTxPktCount4, m_network.getServer().getTxPacketCount(), gamemode, true /*server*/, "tx pkt count 6");
         if (b)
         {
             try
             {
                 b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
-                    gamemode, true /*server*/, "tx msg count 5"
+                    gamemode, true /*server*/, "tx msg count 6"
                 );
                 if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                 {
-                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEqualsEz(nExpectedTxPktCountTRG + 3, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
-                        gamemode, true /*server*/, "tx msg count 6"
+                        gamemode, true /*server*/, "tx msg count 7"
                     );
                 }
             }
             catch (...)
             {
-                b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 5 or 6");
+                b &= assertFalseEz(true, gamemode, true /*server*/, "tx msg count 6 or 7");
             }
         }
 
@@ -1666,7 +1700,8 @@ private:
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time fail");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning server");
                 
-                const uint32_t nExpectedTxPktCount = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 2u : 1u);
+                /* TRG: 3 addPlayer()'s send out 3 MsgGameRoundStateFromServer, and we have 1 more MsgGameRoundStateFromServer send when winning the game */
+                const uint32_t nExpectedTxPktCount = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 5u : 1u);
                 b &= assertEqualsEz(nExpectedTxPktCount, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count");
                 if (b)
                 {
@@ -1678,7 +1713,7 @@ private:
                         );
                         if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                         {
-                            b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                            b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
                                 static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                                 gamemode, true /*server*/, "tx msg count 2"
                             );
@@ -2216,14 +2251,15 @@ private:
                 b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
-                b &= assertEqualsEz(4u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
+                b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
                 try
                 {
                     b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                         gamemode, bTestingAsServer, "tx msg count 3"
                     );
-                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                    // addPlayer() also sends out MsgGameRoundState
+                    b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 4"
                     );
@@ -2252,7 +2288,7 @@ private:
                 b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
+                b &= assertEqualsEz(8u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
                 if (b)
                 {
                     try
@@ -2261,7 +2297,7 @@ private:
                             static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                             gamemode, bTestingAsServer, "tx msg count 5"
                         );
-                        b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                        b &= assertEqualsEz(5u, m_network.getServer().getTxMsgCount().at(
                             static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                             gamemode, true /*server*/, "tx msg count 6"
                         );
@@ -2568,14 +2604,15 @@ private:
                 b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
-                b &= assertEqualsEz(4u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
+                b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
                 try
                 {
                     b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                         gamemode, bTestingAsServer, "tx msg count 3"
                     );
-                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                    // addPlayer()'s also send out MsgGameRoundState
+                    b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 4"
                     );
@@ -2603,7 +2640,7 @@ private:
                 b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
-                b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
+                b &= assertEqualsEz(8u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
                 if (b)
                 {
                     try
@@ -2612,7 +2649,7 @@ private:
                             static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                             gamemode, bTestingAsServer, "tx msg count 5"
                         );
-                        b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                        b &= assertEqualsEz(5u, m_network.getServer().getTxMsgCount().at(
                             static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                             gamemode, true /*server*/, "tx msg count 6"
                         );
@@ -2800,9 +2837,10 @@ private:
             b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning dm");
         }
 
-        /* TRG already sent out 2 pkts at the beginning, DM and TDM sent only 1 but they won the game now so now 2 pkts for all game modes */
-        const uint32_t nExpectedTxPktCount2 = 2u;
-        b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count");
+        /* TRG already sent out 2 pkts at the beginning, DM and TDM sent only 1 but they won the game now so now 2 pkts for them,
+           however addPlayer()'s also send out MsgGameRoundState in case of TRG */
+        const uint32_t nExpectedTxPktCount2 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 4u : 2u);
+        b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 2");
         if (b)
         {
             const uint32_t nExpectedTxMsgSessionStateCount = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 1u : 2u);
@@ -2814,7 +2852,7 @@ private:
                 );
                 if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                 {
-                    b &= assertEqualsEz(1u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 4"
                     );
@@ -2977,7 +3015,7 @@ private:
         b &= assertLequalsEz(static_cast<std::chrono::seconds::rep>(gm->getTimeLimitSecs()), durationSecs.count(), gamemode, true/*server*/, "time limit elapsed");
         b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true/*server*/, "no remaining");
 
-        const uint32_t nExpectedTxPktCount2 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 4u : 2u);
+        const uint32_t nExpectedTxPktCount2 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? 6u : 2u);
         b &= assertEqualsEz(nExpectedTxPktCount2, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 2");
         if (b)
         {
@@ -2989,8 +3027,8 @@ private:
                 );
                 if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                 {
-                    /* no change, even if FSM won't transition in this case (unlike if it was round time limit), its update msg is sent out */
-                    b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                    // addPlayer()'s also send out MsgGameRoundState
+                    b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 4"
                     );
@@ -3018,7 +3056,7 @@ private:
                 );
                 if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                 {
-                    b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                    b &= assertEqualsEz(5u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 6"
                     );
@@ -3067,7 +3105,7 @@ private:
             b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning due to frags dm");
         }
 
-        const uint32_t nExpectedTxPktCount4 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? nExpectedTxPktCount3 : nExpectedTxPktCount3 + 1);
+        const uint32_t nExpectedTxPktCount4 = ((gamemode == proofps_dd::GameModeType::TeamRoundGame) ? nExpectedTxPktCount3 + 2 : nExpectedTxPktCount3 + 1);
         b &= assertEqualsEz(nExpectedTxPktCount4, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 4");
         if (b)
         {
@@ -3081,7 +3119,8 @@ private:
                 );
                 if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
                 {
-                    b &= assertEqualsEz(3u /* no change */, m_network.getServer().getTxMsgCount().at(
+                    // addPlayer()'s also send out MsgGameRoundState
+                    b &= assertEqualsEz(7u, m_network.getServer().getTxMsgCount().at(
                         static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                         gamemode, true /*server*/, "tx msg count 8"
                     );
@@ -3670,7 +3709,7 @@ private:
         b &= assertLequalsEz(static_cast<std::chrono::seconds::rep>(gm->getTimeLimitSecs()), durationSecs.count(), gamemode, true/*server*/, "time limit elapsed");
         b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true/*server*/, "no remaining");
 
-        b &= assertEqualsEz(4u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 2");
+        b &= assertEqualsEz(7u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 2");
         if (b)
         {
             try
@@ -3679,7 +3718,8 @@ private:
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                     gamemode, true/*server*/, "tx msg count 3"
                 );
-                b &= assertEqualsEz(2u, m_network.getServer().getTxMsgCount().at(
+                // addPlayer()'s also send out MsgGameRoundState
+                b &= assertEqualsEz(5u, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                     gamemode, true /*server*/, "tx msg count 4"
                 );
@@ -3694,7 +3734,7 @@ private:
         gm->setTimeLimitSecs(100);
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
-        b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 3");
+        b &= assertEqualsEz(9u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 3");
         if (b)
         {
             try
@@ -3703,7 +3743,7 @@ private:
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                     gamemode, true/*server*/, "tx msg count 5"
                 );
-                b &= assertEqualsEz(3u, m_network.getServer().getTxMsgCount().at(
+                b &= assertEqualsEz(6u, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                     gamemode, true /*server*/, "tx msg count 6"
                 );
@@ -3749,7 +3789,7 @@ private:
         b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, true/*server*/, "win time");
         b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true/*server*/, "winning due to frags");
 
-        b &= assertEqualsEz(8u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 4");
+        b &= assertEqualsEz(14u, m_network.getServer().getTxPacketCount(), gamemode, true/*server*/, "tx pkt count 4");
         if (b)
         {
             try
@@ -3758,7 +3798,8 @@ private:
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameSessionStateFromServer::id)),
                     gamemode, true/*server*/, "tx msg count 7"
                 );
-                b &= assertEqualsEz(4u, m_network.getServer().getTxMsgCount().at(
+                // addPlayer()'s also send out MsgGameRoundState
+                b &= assertEqualsEz(10u, m_network.getServer().getTxMsgCount().at(
                     static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgGameRoundStateFromServer::id)),
                     gamemode, true /*server*/, "tx msg count 8"
                 );

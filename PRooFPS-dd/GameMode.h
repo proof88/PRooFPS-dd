@@ -699,8 +699,6 @@ namespace proofps_dd
 
             void roundWon();
 
-            void transitionToPlayState();
-
             /**
             * To be used only by client instances as they receive state from server.
             */
@@ -711,6 +709,8 @@ namespace proofps_dd
         private:
             RoundState m_state{ RoundState::Prepare };
             std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
+
+            void transitionToPlayState();  // for tests only
 
             void stateEntered(const RoundState& /*oldState*/, const RoundState& newState);
 
@@ -725,6 +725,8 @@ namespace proofps_dd
             * Expected to be invoked periodically.
             */
             void stateUpdate();
+
+            friend class ::GameModeTest;  // only to invoke transitionToPlayState()
         };  // class RoundStateFSM
 
         /**
@@ -759,6 +761,14 @@ namespace proofps_dd
         * Prepare or Play states, for example if game won reason is game time limit reached (getTimeLimitSecs()).
         */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+
+        /*
+        * Extending parent class implementation by sending out MsgGameRoundStateFromServer to the newly
+        * added player.
+        */
+        virtual bool addPlayer(
+            const Player& player,
+            pge_network::PgeINetwork& network) override;
 
         /*
         * Extending parent class implementation by forcing check for round- or game winning conditions, since
