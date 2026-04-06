@@ -22,7 +22,8 @@ namespace proofps_dd
             Disconnected,
             TeamChanged,
             ExplosionMultiKill,
-            GameRestarted
+            GameRestarted,
+            NewRound
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
@@ -45,6 +46,9 @@ namespace proofps_dd
             {
             case EventType::GameRestarted:
                 m_sAuxText = "Game restarted";
+                break;
+            case EventType::NewRound:
+                m_sAuxText = "New round";
                 break;
             default:
                 assert(false);
@@ -184,6 +188,11 @@ namespace proofps_dd
         void addGameRestartedEvent()
         {
             addEvent(std::move(ServerEvent(ServerEvent::EventType::GameRestarted)));
+        }
+
+        void addNewRoundEvent()
+        {
+            addEvent(std::move(ServerEvent(ServerEvent::EventType::NewRound)));
         }
 
     protected:

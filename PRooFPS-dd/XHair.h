@@ -56,7 +56,15 @@ namespace proofps_dd
             const ImVec4& color = {1.f, 1.f, 1.f, 1.f});
         void hideIdText();
         const std::string& getIdText() const;
-        const ImVec4& getColor() const;
+
+        void showAboveText(
+            const std::string& sText,
+            const ImVec4& color = { 1.f, 1.f, 1.f, 1.f });
+        void hideAboveText();
+        const std::string& getAboveText() const;
+
+        const ImVec4& getIdTextColor() const;
+        const ImVec4& getAboveTextColor() const;
 
         void startBlinking();
         void stopBlinking();
@@ -97,6 +105,8 @@ namespace proofps_dd
         PureObject3D* m_vHLightRects[4] = {};
         std::string m_sIdText;
         ImVec4 m_clrIdText;
+        std::string m_sAboveText;
+        ImVec4 m_clrAboveText{ 1.f, 1.f, 1.f, 1.f };
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedBlinking;
         bool m_bVisible = false;
         bool m_bBlinking = false;

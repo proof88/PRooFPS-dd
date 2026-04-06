@@ -239,6 +239,7 @@ namespace proofps_dd
 
         static void drawRespawnTimer();
         static void drawXHairHoverText();
+        static void drawXHairAboveText();
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static void updateDeathKillEvents();

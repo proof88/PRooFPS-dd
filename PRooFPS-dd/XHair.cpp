@@ -234,9 +234,30 @@ const std::string& proofps_dd::XHair::getIdText() const
     return m_sIdText;
 }
 
-const ImVec4& proofps_dd::XHair::getColor() const
+void proofps_dd::XHair::showAboveText(const std::string& sText, const ImVec4& color)
+{
+    m_sAboveText = sText;
+    m_clrAboveText = color;
+}
+
+void proofps_dd::XHair::hideAboveText()
+{
+    m_sAboveText.clear();
+}
+
+const std::string& proofps_dd::XHair::getAboveText() const
+{
+    return m_sAboveText;
+}
+
+const ImVec4& proofps_dd::XHair::getIdTextColor() const
 {
     return m_clrIdText;
+}
+
+const ImVec4& proofps_dd::XHair::getAboveTextColor() const
+{
+    return m_clrAboveText;
 }
 
 void proofps_dd::XHair::startBlinking()

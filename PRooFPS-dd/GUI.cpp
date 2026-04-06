@@ -2621,13 +2621,33 @@ void proofps_dd::GUI::drawXHairHoverText()
         return;
     }
 
-    ImGui::PushStyleColor(ImGuiCol_Text, m_pXHair->getColor());
+    ImGui::PushStyleColor(ImGuiCol_Text, m_pXHair->getIdTextColor());
 
     drawTextShadowed(
         getDearImGui2DposXforCenteredText(
             m_pXHair->getIdText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
-            getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
-            m_pXHair->getIdText());
+        getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) + m_pXHair->getObject3D().getSizeVec().getY() / 2.f,
+        m_pXHair->getIdText());
+
+    ImGui::PopStyleColor();
+}
+
+void proofps_dd::GUI::drawXHairAboveText()
+{
+    assert(m_pXHair); // only updateXHair() calls this
+
+    if (!m_pXHair->visible() || m_pXHair->getAboveText().empty())
+    {
+        return;
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_Text, m_pXHair->getAboveTextColor());
+
+    drawTextShadowed(
+        getDearImGui2DposXforCenteredText(
+            m_pXHair->getAboveText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
+        getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) - m_pXHair->getObject3D().getSizeVec().getY(),
+        m_pXHair->getAboveText());
 
     ImGui::PopStyleColor();
 }
@@ -2639,6 +2659,7 @@ void proofps_dd::GUI::updateXHair()
     // RFR: in the future this , but first drawTextShadowed need to be moved to separate class
     // so that both GUI and XHair classes can utilize it
     drawXHairHoverText();
+    drawXHairAboveText();
 }
 
 void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
@@ -3119,7 +3140,7 @@ void proofps_dd::GUI::updateServerEvents()
             ImGui::PopStyleColor();
             break;
 
-        default: // ExplosionMultiKill
+        default: // ExplosionMultiKill, GameRestarted, NewRound, etc.
             drawTextHighlighted(
                 ImGui::GetCursorPos().x,
                 ImGui::GetCursorPos().y,

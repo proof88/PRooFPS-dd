@@ -1063,19 +1063,20 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
                 {
                     // come here only once
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
-                    // TODO: m_gui.getXHair()->showAboveText("! GET READY !");
+                    m_gui.getXHair()->showAboveText("! GET READY !");
+                    m_gui.getServerEvents()->addNewRoundEvent();
                 }
                 else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
                 {
                     // come here only once
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
-                    // TODO: m_gui.getXHair()->hideAboveText();
+                    m_gui.getXHair()->hideAboveText();
                 }
                 else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
                 {
                     // come here only once
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
-                    // TODO: m_gui.getXHair()->showAboveText("ROUND ENDED!");
+                    m_gui.getXHair()->showAboveText("ROUND ENDED!");
                 }
             }
             else
