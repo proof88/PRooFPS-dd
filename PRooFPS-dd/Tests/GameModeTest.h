@@ -180,6 +180,9 @@ protected:
             "test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state",
             static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state));
         addSubTest("test_round_games_player_movement_allowed", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_player_movement_allowed));
+        addSubTest("test_round_games_hasJustTransitionedTo_functions_server", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_functions_server));
+        addSubTest("test_round_games_hasJustTransitionedTo_functions_client", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_functions_client));
+        addSubTest("test_round_games_hasJustTransitionedTo_always_detects_restart", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_always_detects_restart));
     }
 
     virtual bool setUp() override
@@ -4347,4 +4350,386 @@ private:
         return b;
     }
 
+    bool test_round_games_hasJustTransitionedTo_functions_server(const proofps_dd::GameModeType& gamemode)
+    {
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        if (!add2plus1players())
+        {
+            return false;
+        }
+        assert(m_mapPlayers.size() == 3u);
+        proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+        proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+        proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
+
+        bool b = true;
+
+        gm->restartWithoutRemovingPlayers(m_network);  // for time-limit-sensitive stuff
+
+        /* server tick 1 */
+
+        // server transitions to Prepare (from Prepare) this tick, but also a player joins:
+        // this is important detail, because addPlayer() also invokes serverCheckAndUpdateWinningConditions(), so
+        // what we are testing here is that hasJustTransitionedTo_RoundPrepareState_InThisTick() does not revert to
+        // false until explicitly cleared by serverTickUpdateWinningConditions().
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true /* server */, "add player 1 fail 1");
+
+        b &= assertFalse(trg->serverCheckAndUpdateWinningConditions(m_network), "serverCheck 1");
+        
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 1 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 1 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 1 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 1");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick 2 */
+
+        b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, true /* server */, "add player 2 fail 1");
+        b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, true /* server */, "add player 5 fail 1");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertFalse(trg->serverCheckAndUpdateWinningConditions(m_network), "serverCheck 2");
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 2 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 2 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 2");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick 3..n */
+
+        std::set<std::chrono::seconds::rep> setRemainingSecs = { 0, 1, 2 };
+        int iSleep = 0;
+        while ((iSleep++ < 10) &&
+            !trg->serverCheckAndUpdateWinningConditions(m_network) /* this drives RoundStateFSM */ &&
+            (trg->getFSM().getState() != proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+            const auto nSecondsRemaining = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredCurrentState()).count();
+            setRemainingSecs.erase(nSecondsRemaining);
+        }
+
+        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 3 1");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 3 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 3 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 3");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick n+1 */
+
+        b &= assertFalse(trg->serverCheckAndUpdateWinningConditions(m_network), "serverCheck 4");
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 4 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 4 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 4 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 4");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick (n+2)..m */
+
+        player5.setHealth(0);
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 5");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 5 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 5 2");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 5 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 5");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick m+1 */
+
+        b &= assertFalse(trg->serverCheckAndUpdateWinningConditions(m_network), "serverCheck 6");
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 6 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 6 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 6 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 6");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick (m+2)..p  */
+
+        setRemainingSecs = { 0, 1, 2, 3, 4 };
+        iSleep = 0;
+        while ((iSleep++ < 15) &&
+            !trg->serverCheckAndUpdateWinningConditions(m_network) /* this drives RoundStateFSM */ &&
+            (trg->getFSM().getState() != proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+            const auto nSecondsRemaining = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredCurrentState()).count();
+            setRemainingSecs.erase(nSecondsRemaining);
+        }
+
+        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining 2");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 7 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 7 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 7 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 7");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        /* server tick p+1 */
+
+        b &= assertFalse(trg->serverCheckAndUpdateWinningConditions(m_network), "serverCheck 8");
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 8 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 8 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 8 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, true /* server */, "FSM state 8");
+
+        trg->serverTickUpdateWinningConditions(m_network);
+
+        return b;
+    }
+
+    bool test_round_games_hasJustTransitionedTo_functions_server()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_hasJustTransitionedTo_functions_server(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_hasJustTransitionedTo_functions_client(const proofps_dd::GameModeType& gamemode)
+    {
+        bool b = true;
+        b &= assertFalse(
+            m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].getAsBool(), "client");
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, false/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        /* client tick 1 */
+
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 1 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 1 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 1 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 1");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 2 */
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 2 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 2 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 2");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 3 */
+
+        proofps_dd::MsgGameRoundStateFromServer msgGameRoundState{};
+        msgGameRoundState.m_fsmState = proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play;
+        trg->clientHandleGameRoundStateFromServer(m_network, msgGameRoundState);
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 3 1");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 3 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 3 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 3");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 4 */
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 4 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 4 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 4 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 4");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 5 */
+
+        msgGameRoundState.m_fsmState = proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset;
+        msgGameRoundState.m_nTeam1RoundWins++;
+        trg->clientHandleGameRoundStateFromServer(m_network, msgGameRoundState);
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 5 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 5 2");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 5 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 5");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 6 */
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 6 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 6 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 6 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 6");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 7 */
+
+        msgGameRoundState.m_fsmState = proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare;
+        trg->clientHandleGameRoundStateFromServer(m_network, msgGameRoundState);
+
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 7 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 7 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 7 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 7");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        /* client tick 8 */
+
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 8 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 8 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 8 3");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, false /* server */, "FSM state 8");
+
+        trg->clientTickUpdateWinningConditions(m_network);
+
+        return b;
+    }
+
+    bool test_round_games_hasJustTransitionedTo_functions_client()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_hasJustTransitionedTo_functions_client(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_hasJustTransitionedTo_always_detects_restart(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            assert(gm->isRoundBased());
+
+            /* ending current tick */
+            if (bTestingAsServer)
+            {
+                trg->serverTickUpdateWinningConditions(m_network);
+            }
+            else
+            {
+                trg->clientTickUpdateWinningConditions(m_network);
+            }
+
+            /* sanity check */
+            b &= assertFalse(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 1 1");
+            b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 1 2");
+            b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 1 3");
+            b &= assertEqualsEz(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                trg->getFSM().getState(), gamemode, false /* server */, "FSM state 1");
+
+            /* hasJustTransitionedTo_RoundPrepareState_InThisTick() must detect transition upon game restart
+               even though it was not a real state transition */
+            gm->restartWithoutRemovingPlayers(m_network);
+
+            b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 2 1");
+            b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2 2");
+            b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 2 3");
+            b &= assertEqualsEz(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                trg->getFSM().getState(), gamemode, false /* server */, "FSM state 2");
+        }
+
+        return b;
+    }
+
+    bool test_round_games_hasJustTransitionedTo_always_detects_restart()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_hasJustTransitionedTo_always_detects_restart(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
 };

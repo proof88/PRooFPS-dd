@@ -895,11 +895,17 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_maps.update(m_fps, *player.getObject3D());
     m_maps.updateVisibilitiesForRenderer();
 
+    // TODO: following functions are finishing a tick, therefore they should be invoked at the end of each tick or
+    // should be renamed to ...FrameUpdateWinningConditions() to indicate they might be invoked more frequently than a tick.
     GameMode* const gm = GameMode::getGameMode();
     assert(gm);
-    if (!getNetwork().isServer())
+    if (getNetwork().isServer())
     {
-        gm->clientTickUpdateWinningConditions();
+        gm->serverTickUpdateWinningConditions(getNetwork());
+    }
+    else
+    {
+        gm->clientTickUpdateWinningConditions(getNetwork());
     }
 }
 
@@ -1024,10 +1030,10 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
     // both server and client instances execute this
     const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
 
-    GameMode* const gm = GameMode::getGameMode();
+    const GameMode* const gm = GameMode::getGameMode();
     assert(gm);
 
-    if (GameMode::getGameMode()->hasJustBeenWonThisTick())
+    if (gm->hasJustBeenWonThisTick())
     {
         // come here only once
         getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
@@ -1044,6 +1050,38 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
         {
             playerPair.second.hide();
             playerPair.second.forceDeactivateCurrentInventoryItem();
+        }
+    }
+    else
+    {
+        if (gm->isRoundBased())
+        {
+            const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
+            if (trg)
+            {
+                if (trg->hasJustTransitionedTo_RoundPrepareState_InThisTick())
+                {
+                    // come here only once
+                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
+                    // TODO: m_gui.getXHair()->showAboveText("! GET READY !");
+                }
+                else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
+                {
+                    // come here only once
+                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
+                    // TODO: m_gui.getXHair()->hideAboveText();
+                }
+                else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
+                {
+                    // come here only once
+                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
+                    // TODO: m_gui.getXHair()->showAboveText("ROUND ENDED!");
+                }
+            }
+            else
+            {
+                getConsole().EOLn("PRooFPSddPGE::%s() ERROR: trg is null!", __func__);
+            }
         }
     }
 

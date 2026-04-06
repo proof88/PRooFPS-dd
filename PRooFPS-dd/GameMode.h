@@ -239,13 +239,22 @@ namespace proofps_dd
         void clientReceiveAndUpdateWinningConditions(pge_network::PgeINetwork& network, bool bGameSessionWon);
 
         /**
+        * Shall be invoked regularly (per tick or per frame) at the end of server tick or frame loop so
+        * hasJustBeenWonThisTick() and further functionalities in derived classes can work properly.
+        *
+        * This function is for server instance only.
+        *
+        */
+        virtual void serverTickUpdateWinningConditions(pge_network::PgeINetwork& network);
+
+        /**
         * Shall be invoked regularly (per tick or per frame) at the end of client tick or frame loop so
-        * hasJustBeenWonThisTick() can work properly.
+        * hasJustBeenWonThisTick() and further functionalities in derived classes can work properly.
         * 
         * This function is for client instance only.
         * 
         */
-        void clientTickUpdateWinningConditions();
+        virtual void clientTickUpdateWinningConditions(pge_network::PgeINetwork& network);
 
         /**
         * Returns the current game session win state i.e. game goal is reached or not.
@@ -277,7 +286,7 @@ namespace proofps_dd
         * of winning state.
         * 
         * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
-        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientUpdateWinningConditions().
+        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientTickUpdateWinningConditions().
         */
         bool hasJustBeenWonThisTick() const;
         
@@ -762,6 +771,24 @@ namespace proofps_dd
         */
         virtual bool serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network) override;
 
+        /**
+        * Extending original implementation with focus on RoundStateFSM.
+        * See original GameMode::serverTickUpdateWinningConditions() documentation for details.
+        *
+        * This function is for server instance only.
+        *
+        */
+        virtual void serverTickUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+
+        /**
+        * Extending original implementation with focus on RoundStateFSM.
+        * See original GameMode::clientTickUpdateWinningConditions() documentation for details.
+        *
+        * This function is for client instance only.
+        *
+        */
+        virtual void clientTickUpdateWinningConditions(pge_network::PgeINetwork& network) override;
+
         /*
         * Extending parent class implementation by sending out MsgGameRoundStateFromServer to the newly
         * added player.
@@ -808,6 +835,57 @@ namespace proofps_dd
 
         RoundStateFSM& getFSM();
 
+        /**
+        * Returns if RoundStateFSM has been just detected as transitioned to Prepare state in this tick i.e. it was in different state in
+        * the previous tick.
+        *
+        * This function is the recommended way for both server and client instances to check for and handle the change to a new round.
+        *
+        * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
+        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientTickUpdateWinningConditions().
+        * 
+        * The idea is the following:
+        *  - server shall invoke serverCheckAndUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientTickUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientHandleGameRoundStateFromServer() when it receives MsgGameRoundStateFromServer
+        *    from the server.
+        */
+        bool hasJustTransitionedTo_RoundPrepareState_InThisTick() const;
+
+        /**
+        * Returns if RoundStateFSM has been just detected as transitioned to Play state in this tick i.e. it was in different state in
+        * the previous tick.
+        *
+        * This function is the recommended way for both server and client instances to check for and handle the change.
+        *
+        * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
+        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientTickUpdateWinningConditions().
+        * 
+        * The idea is the following:
+        *  - server shall invoke serverCheckAndUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientTickUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientHandleGameRoundStateFromServer() when it receives MsgGameRoundStateFromServer
+        *    from the server.
+        */
+        bool hasJustTransitionedTo_RoundPlayState_InThisTick() const;
+
+        /**
+        * Returns if RoundStateFSM has been just detected as transitioned to WaitForReset state in this tick i.e. it was in different state in
+        * the previous tick.
+        *
+        * This function is the recommended way for both server and client instances to check for and handle round end.
+        *
+        * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
+        * game instance invokes either serverCheckAndUpdateWinningConditions() or clientTickUpdateWinningConditions().
+        * 
+        * The idea is the following:
+        *  - server shall invoke serverCheckAndUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientTickUpdateWinningConditions() in every frame or in every game tick;
+        *  - client shall invoke clientHandleGameRoundStateFromServer() when it receives MsgGameRoundStateFromServer
+        *    from the server.
+        */
+        bool hasJustTransitionedTo_RoundWaitForResetState_InThisTick() const;
+
         bool clientHandleGameRoundStateFromServer(
             pge_network::PgeINetwork& network,
             const MsgGameRoundStateFromServer& msgRoundState);
@@ -842,6 +920,9 @@ namespace proofps_dd
         unsigned int m_nTeam1RoundWins{ 0 };
         unsigned int m_nTeam2RoundWins{ 0 };
         RoundStateFSM m_fsm;
+        RoundStateFSM::RoundState m_oldFsmState{ RoundStateFSM::RoundState::Prepare };
+        bool m_bFsmStateTransitionHasJustHappenedThisTick_Sticky{ true };  /**< Sticky because it requires explicit clear at the end of a tick. */
+        bool m_bFirstTick{ true };
 
     }; // class TeamRoundGameMode
 

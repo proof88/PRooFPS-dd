@@ -336,8 +336,15 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
     }
 }
 
-void proofps_dd::GameMode::clientTickUpdateWinningConditions()
+void proofps_dd::GameMode::serverTickUpdateWinningConditions(pge_network::PgeINetwork& network)
 {
+    assert(network.isServer());
+    /* no-op */
+}
+
+void proofps_dd::GameMode::clientTickUpdateWinningConditions(pge_network::PgeINetwork& network)
+{
+    assert(!network.isServer());
     m_bWonPrevious = m_bWon;
 }
 
@@ -1114,6 +1121,8 @@ void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::P
     m_nTeam1RoundWins = 0;
     m_nTeam2RoundWins = 0;
     m_fsm.reset();
+    m_bFirstTick = true;
+    m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = true;
     TeamDeathMatchMode::restartWithoutRemovingPlayers(network); /* due to overrides, this also sends out MsgGameRoundStateFromServer */
 }
 
@@ -1128,7 +1137,7 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
     static unsigned int nOldTeam1AlivePlayers = 0;
     static unsigned int nOldTeam2AlivePlayers = 0;
     
-    const auto oldFsmState = m_fsm.getState();
+    m_oldFsmState = m_fsm.getState();
     m_fsm.update();
     if (m_fsm.getState() == RoundStateFSM::RoundState::Play)
     {
@@ -1163,12 +1172,32 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
         }
     }
 
-    if (oldFsmState != m_fsm.getState())
+    if (!m_bFsmStateTransitionHasJustHappenedThisTick_Sticky)
+    {
+        m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = m_bFirstTick || (m_oldFsmState != m_fsm.getState());
+    }
+    if (m_oldFsmState != m_fsm.getState())
     {
         serverSendRoundStateToClients(network);
     }
+    m_bFirstTick = false;
     
     return false;
+}
+
+void proofps_dd::TeamRoundGameMode::serverTickUpdateWinningConditions(pge_network::PgeINetwork& network)
+{
+    GameMode::serverTickUpdateWinningConditions(network);
+    m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = false;
+}
+
+void proofps_dd::TeamRoundGameMode::clientTickUpdateWinningConditions(pge_network::PgeINetwork& network)
+{
+    GameMode::clientTickUpdateWinningConditions(network);
+    // when client receives new state in clientHandleGameRoundStateFromServer(), it sets
+    // m_bFsmStateTransitionHasJustHappenedThisTick_Sticky to true. This is at the beginning of client game loop.
+    // Since clientTickUpdateWinningConditions() is invoked at end of client game loop, we set it to false here.
+    m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = false;
 }
 
 bool proofps_dd::TeamRoundGameMode::addPlayer(const Player& player, pge_network::PgeINetwork& network)
@@ -1241,6 +1270,21 @@ proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::get
     return m_fsm;
 }
 
+bool proofps_dd::TeamRoundGameMode::hasJustTransitionedTo_RoundPrepareState_InThisTick() const
+{
+    return m_bFsmStateTransitionHasJustHappenedThisTick_Sticky && (m_fsm.getState() == RoundStateFSM::RoundState::Prepare);
+}
+
+bool proofps_dd::TeamRoundGameMode::hasJustTransitionedTo_RoundPlayState_InThisTick() const
+{
+    return m_bFsmStateTransitionHasJustHappenedThisTick_Sticky && (m_fsm.getState() == RoundStateFSM::RoundState::Play);
+}
+
+bool proofps_dd::TeamRoundGameMode::hasJustTransitionedTo_RoundWaitForResetState_InThisTick() const
+{
+    return m_bFsmStateTransitionHasJustHappenedThisTick_Sticky && (m_fsm.getState() == RoundStateFSM::RoundState::WaitForReset);
+}
+
 bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
     pge_network::PgeINetwork& network,
     const MsgGameRoundStateFromServer& msgRoundState)
@@ -1254,6 +1298,11 @@ bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
 
     m_nTeam1RoundWins = msgRoundState.m_nTeam1RoundWins;
     m_nTeam2RoundWins = msgRoundState.m_nTeam2RoundWins;
+    if (msgRoundState.m_fsmState != m_fsm.getState())
+    {
+        m_oldFsmState = m_fsm.getState();
+        m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = true;
+    }
     m_fsm.forceSetState(msgRoundState.m_fsmState);
 
     return true;
