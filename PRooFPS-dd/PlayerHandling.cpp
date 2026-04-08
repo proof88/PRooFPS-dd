@@ -1062,6 +1062,18 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     const auto& playerConst = player;
     //getConsole().OLn("PlayerHandling::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
 
+    if (m_pge.getNetwork().isServer() && player.getRespawnFlag() && !msg.m_bRespawn)
+    {
+        // looks like this is an outdated msg that server injected into its queue AFTER calling serverRespawnPlayer(),
+        // which happens AFTER server tick, so let's ignore this msg because it can overwrite HP, pos, etc. with stale data while these
+        // have been already updated by serverRespawnPlayer() AFTER this msg was injected.
+        // Note that Player's respawn flag is cleared when MsgUserUpdateFromServer is being sent, so whoever sets the flag to true,
+        // will also set Player HP, pos, etc. values that will make netDirty() also true, which means that definitely there will be a more
+        // up-to-date msg after this one, that will contain msg.m_bRespawn as true (but Player's respawn flag will be already false at that time).
+        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return true;
+    }
+
     const bool bOriginalExpectingStartPos = player.isJustCreatedAndExpectingStartPos();
     if (player.isJustCreatedAndExpectingStartPos())
     {
