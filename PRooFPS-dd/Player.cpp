@@ -770,7 +770,6 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     //    getJumpForce().getY(),
     //    getJumpForce().getZ(),
     //    getGravity());
-
     doStandupShared();
     getWantToStandup() = true;
     getImpactForce().SetZero();

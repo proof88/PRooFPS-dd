@@ -153,6 +153,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         player.getWeaponManager().getDefaultAvailableWeaponFilename());
     assert(wpnDefaultAvailable);  // cannot be null since it is already verified in handleUserSetupFromServer()
     player.respawn(isMyConnection(player.getServerSideConnectionHandle()), *wpnDefaultAvailable, m_pge.getNetwork().isServer());
+    player.setForcedSpectating(false);
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
@@ -178,7 +179,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
     player.setHealth(100);
     player.getRespawnFlag() = true;
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
-    player.setForcedSpectating(false);
+    player.setForcedSpectating(false);  // clients will set this once they receive MsgUserUpdateFromServer with respawn flag set
     if (restartGame)
     {
         if (GameMode::getGameMode()->isTeamBasedGame())
@@ -1127,13 +1128,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     player.getWeaponManager().getCurrentWeapon()->getObject3D().getAngleVec().SetZ(msg.m_fWpnAngleZ);
 
     player.setWeaponMomentaryAccuracy(msg.m_fWpnMomentaryAccuracy);
-    if (bCurrentClient && !player.isInSpectatorMode() && !player.isForcedSpectating())
-    {
-        // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
-        m_gui.getXHair()->setRelativeScaling(
-            PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
-        );
-    }
 
     // server has already set this in physics, however probably this is still faster than with condition: if (!m_pge.getNetwork().isServer())
     player.getActuallyRunningOnGround() = msg.m_bActuallyRunningOnGround;
@@ -1238,6 +1232,15 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
             // now we have handleDeathNotificationFromServer(), we could simply move this code to there!
             // Client does not invoke HandlePlayerDied() anywhere else.
         }
+    }
+
+    // this block must be AFTER handlePlayerRespawned() and handlePlayerDied() are optionally invoked so that isForcedSpectating() is updated as necessary
+    if (bCurrentClient && !player.isInSpectatorMode() && !player.isForcedSpectating())
+    {
+        // note that if we change values here, then setBaseScaling() might also need to be adjusted in GUI init!
+        m_gui.getXHair()->setRelativeScaling(
+            PFL::lerp(0.5f, 1.2f, msg.m_fWpnMomentaryAccuracy / player.getWeaponManager().getCurrentWeapon()->getLowestAccuracyPossible())
+        );
     }
 
     // We might receive update for another player who has not yet handshaked its name with the server, in that case the name is empty, that

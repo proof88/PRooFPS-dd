@@ -981,41 +981,10 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
     
     for (auto& playerPair : m_mapPlayers)
     {
-        serverRespawnPlayer(playerPair.second, true, m_config);
+        serverRespawnPlayer(playerPair.second, true /* restartGame */, m_config);
     }
 
-    // respawn all map items
-    pge_network::PgePacket newPktMapItemUpdate;
-    for (auto& itemPair : m_maps.getItems())
-    {
-        if (!itemPair.second)
-        {
-            continue;
-        }
-
-        MapItem& mapItem = *(itemPair.second);
-        if (!mapItem.isTaken())
-        {
-            // just to avoid unnecessary server -> client network traffic
-            continue;
-        }
-
-        mapItem.unTake();
-
-        if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
-            newPktMapItemUpdate,
-            0,
-            mapItem.getId(),
-            mapItem.isTaken()))
-        {
-            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
-        }
-        else
-        {
-            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
-            assert(false);
-        }
-    } // end for items
+    serverRespawnItems();
 
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
@@ -1023,6 +992,21 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
     m_gui.getServerEvents()->addGameRestartedEvent(); // server adds it here, clients add when they process MsgGameSessionStateFromServer
     GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
     m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer(); // server does it here, clients add when they process MsgGameSessionStateFromServer 
+}
+
+void proofps_dd::PRooFPSddPGE::serverNewRound()
+{
+    assert(getNetwork().isServer());
+
+    for (auto& playerPair : m_mapPlayers)
+    {
+        if (!playerPair.second.isInSpectatorMode())
+        {
+            serverRespawnPlayer(playerPair.second, false /* restartGame */, m_config);
+        }
+    }
+
+    serverRespawnItems();
 }
 
 void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
@@ -1065,6 +1049,10 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
                     m_gui.getXHair()->showAboveText("! GET READY !");
                     m_gui.getServerEvents()->addNewRoundEvent();
+                    if (getNetwork().isServer())
+                    {
+                        serverNewRound();
+                    }
                 }
                 else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
                 {
@@ -1099,6 +1087,42 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
     }
 
     m_durations.m_nUpdateGameModeDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+}
+
+void proofps_dd::PRooFPSddPGE::serverRespawnItems()
+{
+    // respawn all map items
+    pge_network::PgePacket newPktMapItemUpdate;
+    for (auto& itemPair : m_maps.getItems())
+    {
+        if (!itemPair.second)
+        {
+            continue;
+        }
+
+        MapItem& mapItem = *(itemPair.second);
+        if (!mapItem.isTaken())
+        {
+            // just to avoid unnecessary server -> client network traffic
+            continue;
+        }
+
+        mapItem.unTake();
+
+        if (proofps_dd::MsgMapItemUpdateFromServer::initPkt(
+            newPktMapItemUpdate,
+            0,
+            mapItem.getId(),
+            mapItem.isTaken()))
+        {
+            getNetwork().getServer().sendToAllClientsExcept(newPktMapItemUpdate);
+        }
+        else
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+            assert(false);
+        }
+    }
 }
 
 void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
