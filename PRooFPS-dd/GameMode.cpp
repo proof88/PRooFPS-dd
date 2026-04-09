@@ -1141,35 +1141,52 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
     m_fsm.update();
     if (m_fsm.getState() == RoundStateFSM::RoundState::Play)
     {
-        // team win due to no more alive players in the other team is achievable only if both teams have assigned players!
-        if ((getTeamPlayersCount(1) != 0) && (getTeamPlayersCount(2) != 0))
+        const unsigned int nCurrentTeam1Players = getTeamPlayersCount(1);
+        const unsigned int nCurrentTeam2Players = getTeamPlayersCount(2);
+        // except round time limit reach, a round cannot be ended if both teams are empty
+        if ((nCurrentTeam1Players != 0) || (nCurrentTeam2Players != 0))
         {
             const unsigned int nCurrentTeam1AlivePlayers = getAliveTeamPlayersCount(1);
             const unsigned int nCurrentTeam2AlivePlayers = getAliveTeamPlayersCount(2);
-            
-            if ((nOldTeam1AlivePlayers > 0) && (getAliveTeamPlayersCount(1) == 0))
+
+            // team win due to no more alive players in the other team is achievable only if both teams have assigned players!
+            if ((nCurrentTeam1Players != 0) && (nCurrentTeam2Players != 0))
             {
-                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2!", __func__);
-                m_nTeam2RoundWins++;
-                m_fsm.roundWon();
+                if ((nOldTeam1AlivePlayers > 0) && (nCurrentTeam1AlivePlayers == 0))
+                {
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2!", __func__);
+                    m_nTeam2RoundWins++;
+                    m_fsm.roundWon();
+                }
+                if ((nOldTeam2AlivePlayers > 0) && (nCurrentTeam2AlivePlayers == 0))
+                {
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1!", __func__);
+                    m_nTeam1RoundWins++;
+                    m_fsm.roundWon();
+                }
+
+                if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
+                {
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win Limit Reached!", __func__);
+                    handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
+                    return true;
+                }
             }
-            if ((nOldTeam2AlivePlayers > 0) && (getAliveTeamPlayersCount(2) == 0))
+            else
             {
-                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1!", __func__);
-                m_nTeam1RoundWins++;
-                m_fsm.roundWon();
+                // if maximum 1 team has player(s) and no more alive players left, we also need to transition to next round but without actual win
+                if (((nCurrentTeam1Players != 0) && (nOldTeam1AlivePlayers > 0) && (nCurrentTeam1AlivePlayers == 0))
+                    ||
+                    ((nCurrentTeam2Players != 0) && (nOldTeam2AlivePlayers > 0) && (nCurrentTeam2AlivePlayers == 0)))
+                {
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win", __func__);
+                    m_fsm.roundWon();
+                }
             }
 
             nOldTeam1AlivePlayers = nCurrentTeam1AlivePlayers;
             nOldTeam2AlivePlayers = nCurrentTeam2AlivePlayers;
-
-            if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
-            {
-                getConsole().EOLn("TeamRoundGameMode::%s(): Round Win Limit Reached!", __func__);
-                handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
-                return true;
-            }
-        }
+        }  // end if there is at least 1 player in a team
     }
 
     if (!m_bFsmStateTransitionHasJustHappenedThisTick_Sticky)
