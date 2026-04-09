@@ -225,6 +225,9 @@ namespace proofps_dd
         bool& getRespawnFlag();
         void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
 
+        bool& getResettlingFlag();
+        void resettleAndRespawnShared();
+
         const PgeOldNewValue<bool>& getInvulnerability() const;
         void setInvulnerability(const bool& bState, const unsigned int& nSeconds = 0 /* relevant only if bState is true */);
         const unsigned int& getInvulnerabilityDurationSeconds() const;
@@ -495,6 +498,7 @@ namespace proofps_dd
         bool m_bNetDirty = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeDied;
         bool m_bRespawn = false;
+        bool m_bResettle = false;
         std::chrono::time_point<std::chrono::steady_clock> m_timeStartedInvulnerability;
         unsigned int m_nInvulnerabilityDurationSecs = 0;
 

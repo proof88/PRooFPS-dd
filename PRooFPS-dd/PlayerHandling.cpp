@@ -179,6 +179,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
     player.setHealth(100);
     player.getRespawnFlag() = true;
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+    // dead player needs to exit forced-spectating mode
     player.setForcedSpectating(false);  // clients will set this once they receive MsgUserUpdateFromServer with respawn flag set
     if (restartGame)
     {
@@ -198,6 +199,38 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
         player.getShotsHitTarget() = 0;
         player.forceDeactivateCurrentInventoryItem(); // clients will invoke this when they process MsgGameSessionStateFromServer
     }
+}
+
+void proofps_dd::PlayerHandling::serverResettlePlayer(Player& player, const proofps_dd::Config& config)
+{
+    if (std::as_const(player).getHealth() == 0)
+    {
+        getConsole().EOLn("PlayerHandling::%s(): ERROR: dead player %s shall not be resettled, they need to be respawned instead!", __func__, player.getName().c_str());
+        assert(false);  // crash in debug
+        return;
+    }
+
+    if (std::as_const(player).isInSpectatorMode())
+    {
+        getConsole().EOLn("PlayerHandling::%s(): ERROR: spectator-mode player %s shall not be resettled!", __func__, player.getName().c_str());
+        assert(false);  // crash in debug
+        return;
+    }
+
+    if (std::as_const(player).isForcedSpectating())
+    {
+        getConsole().EOLn("PlayerHandling::%s(): ERROR: player %s is forced-spectating even though not dead!", __func__, player.getName().c_str());
+        assert(false);  // crash in debug
+        return;
+    }
+
+    player.getResettlingFlag() = true;  // handleUserUpdateFromServer() understands this
+    // to resettle, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
+    player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
+    player.setHealth(100);
+    player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+    player.resettleAndRespawnShared();
+    // alive player is not in forced-spectating mode, no need to set it to false
 }
 
 void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
@@ -1070,9 +1103,22 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         // Note that Player's respawn flag is cleared when MsgUserUpdateFromServer is being sent, so whoever sets the flag to true,
         // will also set Player HP, pos, etc. values that will make netDirty() also true, which means that definitely there will be a more
         // up-to-date msg after this one, that will contain msg.m_bRespawn as true (but Player's respawn flag will be already false at that time).
-        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+
+        // clients invoke handlePlayerRespawned() in this function later, server invokes it now:
+        handlePlayerRespawned(player, xhair);
+
+        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for respawning user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;
     }
+
+    if (m_pge.getNetwork().isServer() && player.getResettlingFlag())
+    {
+        // server has already updated everything for this player, do not accept stale injected msg data
+        player.getResettlingFlag() = false;
+        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for resettling user with connHandleServerSide: %u!", __func__, connHandleServerSide);
+        return true;
+    }
+    
 
     const bool bOriginalExpectingStartPos = player.isJustCreatedAndExpectingStartPos();
     if (player.isJustCreatedAndExpectingStartPos())

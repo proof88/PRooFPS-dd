@@ -387,6 +387,7 @@ private:
             assertFalse(player.getAttack(), "attack") &
             assertEquals(0.f, playerConst.getWeaponMomentaryAccuracy(), "wpn aim") &
             assertFalse(player.getRespawnFlag(), "respawn flag") &
+            assertFalse(player.getResettlingFlag(), "resettling flag")&
             assertFalse(player.getInvulnerability().isDirty(), "old invulnerability") &
             assertTrue(player.getInvulnerability(), "invulnerability") &
             assertEquals(0, player.getTimeInvulnerabilityStarted().time_since_epoch().count(), "time invulnerability started") &

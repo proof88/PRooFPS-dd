@@ -70,7 +70,33 @@ namespace proofps_dd
             XHair& xhair,
             const pge_network::PgeNetworkConnectionHandle& nKillerConnHandleServerSide);
         void handlePlayerRespawned(Player& player, XHair& xhair);
+
+        /**
+        * Respawn is required when either a game is started, restarted, or a dead player needs to be revived.
+        * The player can be either dead or alive, doesn't matter.
+        * Player's HP and AP will be reset to defaults, also items and weapons.
+        * 
+        * @param player      The player to be respawned.
+        * @param restartGame Set it to true if reason for respawning is game restart, in such case even player's stats
+        *                    and other stuff will be defaulted as well.
+        * @param config      The usual Config instance.
+        */
         void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);
+        
+        /**
+        * Resettle is required when a round-based game starts a new round, and we need to reposition alive
+        * players back to spawn points. Their HP will be defaulted as well to 100.
+        * Player's AP, items and weapons are not touched, so these are carried over to next round.
+        * 
+        * Shall not be invoked for dead players: dead players shall be respawned, not resettled.
+        * Shall not be invoked for players in spectator mode: they must toggle their spectator mode state manually
+        * to trigger respawn.
+        *
+        * @param player      The player to be resettled.
+        * @param config      The usual Config instance.
+        */
+        void serverResettlePlayer(Player& player, const proofps_dd::Config& config);
+
         void serverUpdateRespawnTimers(
             const proofps_dd::Config& config,
             proofps_dd::GameMode& gameMode,

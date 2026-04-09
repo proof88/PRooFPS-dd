@@ -1002,7 +1002,14 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
     {
         if (!playerPair.second.isInSpectatorMode())
         {
-            serverRespawnPlayer(playerPair.second, false /* restartGame */, m_config);
+            if (std::as_const(playerPair.second).getHealth() == 0)
+            {
+                serverRespawnPlayer(playerPair.second, false /* restartGame */, m_config);
+            }
+            else
+            {
+                serverResettlePlayer(playerPair.second, m_config);
+            }
         }
     }
 
@@ -1165,7 +1172,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
             {
                 auto& player = playerPair.second;
                 const auto& playerConst = player;
-                if ((playerConst.getHealth() <= 0) || (player.getRespawnFlag()))
+                if ((playerConst.getHealth() <= 0) || (player.getRespawnFlag()) || player.getResettlingFlag())
                 {
                     continue;
                 }

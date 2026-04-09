@@ -371,7 +371,7 @@ void proofps_dd::Physics::serverGravity(
     {
         auto& player = playerPair.second;
 
-        if (player.getRespawnFlag())
+        if (player.getRespawnFlag() || player.getResettlingFlag())
         {
             // do not do anything until server clears this flag!
             continue;
@@ -1748,7 +1748,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_legacy(const unsigned i
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
-        if (player.getRespawnFlag())
+        if (player.getRespawnFlag() || player.getResettlingFlag())
         {
             // do not do anything until server clears this flag!
             continue;
@@ -1803,7 +1803,7 @@ void proofps_dd::Physics::serverPlayerCollisionWithWalls_bvh(const unsigned int&
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
-        if (player.getRespawnFlag())
+        if (player.getRespawnFlag() || player.getResettlingFlag())
         {
             // do not do anything until server clears this flag!
             continue;

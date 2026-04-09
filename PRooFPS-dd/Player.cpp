@@ -240,6 +240,7 @@ proofps_dd::Player::Player(const proofps_dd::Player& other) :
     m_bNetDirty(other.m_bNetDirty),
     m_timeDied(other.m_timeDied),
     m_bRespawn(other.m_bRespawn),
+    m_bResettle(other.m_bResettle),
     m_vecImpactForce(other.m_vecImpactForce),
     m_vecAntiGravityForce(other.m_vecAntiGravityForce),
     m_pObj(PGENULL),
@@ -760,6 +761,8 @@ bool& proofps_dd::Player::getRespawnFlag()
 
 void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable, bool bServer)
 {
+    // both server and clients come here
+
     // Remember this function is NOT invoked when just connected to a new game!
     // For setting initial stuff after connect, use handleUserUpdateFromServer(), where it checks for isJustCreatedAndExpectingStartPos()!
     // 
@@ -771,18 +774,13 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     //    getJumpForce().getZ(),
     //    getGravity());
     doStandupShared();
+    resettleAndRespawnShared();
     getWantToStandup() = true;
-    getImpactForce().SetZero();
-    getAntiGravityForce().SetZero();
-    getJumpForce().SetZero();
-    setGravity(0.f);
-    setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     m_prevActualStrafe = Strafe::NONE;
-    setArmor(0);
     forceDeactivateCurrentInventoryItem();
     setHasAntiGravityActive(false);
     setHasJetLax(false);
-
+    setArmor(0);
     for (auto pWpn : m_wpnMgr.getWeapons())
     {
         if (!pWpn)
@@ -804,6 +802,28 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     }
 
     show();
+}
+
+bool& proofps_dd::Player::getResettlingFlag()
+{
+    return m_bResettle;
+}
+
+void proofps_dd::Player::resettleAndRespawnShared()
+{
+    // clients dont understand "resettle", but to avoid code redundancy we have this shared code with respawn(), so
+    // only put here stuff that both server and client can understand, or only server uses but replicated by server automatically
+    // in case only server invokes this for player resettle!
+
+    // these are used by server to calculate physics, client just doesn't care
+    getImpactForce().SetZero();
+    getAntiGravityForce().SetZero();
+    getJumpForce().SetZero();
+    setGravity(0.f);
+    setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
+    
+    // we don't put here stuff like setHasAntiGravityActive(false) because client is not informed about "resettle", server
+    // does not automatically replicate antigravityActive from here, therefore it can lead to server-client being out of sync.
 }
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
