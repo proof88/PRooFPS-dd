@@ -553,6 +553,10 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(),
             "fsm state");
+        b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 1");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2");
+        b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 3");
+        b &= assertFalse(trg->hasCurrentRoundJustBeenWon_InThisTick(), "round has just been won");
 
         return b;
     }
@@ -4156,6 +4160,9 @@ private:
 
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
         
         trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
         b &= assertEqualsEz(
@@ -4171,6 +4178,8 @@ private:
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 2");
 
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
+
         /* ----- test 1: Team 2 dies ----------------------------- */
 
         player5.setHealth(0);
@@ -4183,8 +4192,11 @@ private:
             gamemode, true /* testing as server */, "FSM state 3");
         b &= assertEqualsEz(1u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        b &= assertTrueEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
         /* round winning not necessarily means game win */
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 1");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player5.setHealth(100);
@@ -4194,6 +4206,7 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
 
         /* ----- test 2: Team 1 dies ----------------------------- */
 
@@ -4208,9 +4221,12 @@ private:
             gamemode, true /* testing as server */, "FSM state 4");
         b &= assertEqualsEz(1u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
         b &= assertEqualsEz(1u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        b &= assertTrueEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
         
         /* round winning not necessarily means game win */
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player1.setHealth(100);
@@ -4221,6 +4237,7 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 5");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
 
         /* ----- test 3: Team 2 dies again ----------------------- */
 
@@ -4234,6 +4251,7 @@ private:
             gamemode, true /* testing as server */, "FSM state 6");
         b &= assertEqualsEz(2u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 4");
         b &= assertEqualsEz(1u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 4");
+        b &= assertTrueEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 6");
         /* finally hit game round win limit */
         b &= assertTrueEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 3");
 
@@ -4302,6 +4320,7 @@ private:
 
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
 
         trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
         b &= assertEqualsEz(
@@ -4316,6 +4335,9 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 1: Team 2 becomes empty due to spectator mode ----------------------------- */
 
@@ -4330,7 +4352,10 @@ private:
             gamemode, true /* testing as server */, "FSM state 5");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player5.isInSpectatorMode() = false;
@@ -4341,6 +4366,9 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 6");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
       
         /* ----- test 3: Team 2 becomes empty due to disconnecting player ----------------------------- */
 
@@ -4356,6 +4384,7 @@ private:
             gamemode, true /* testing as server */, "FSM state 9");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 3");
 
         return b;
@@ -4427,6 +4456,7 @@ private:
 
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
 
         trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
         b &= assertEqualsEz(
@@ -4441,6 +4471,9 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 1: Team 1 becomes empty due to spectator mode (no change in empty Team 2) ----------------------------- */
 
@@ -4457,7 +4490,10 @@ private:
             gamemode, true /* testing as server */, "FSM state 5");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player1.isInSpectatorMode() = false;
@@ -4468,6 +4504,9 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 6");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 2: Team 1 is killed due to player dies (no change in empty Team 2) ----------------------------- */
 
@@ -4483,7 +4522,10 @@ private:
             gamemode, true /* testing as server */, "FSM state 7");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 3");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player1.setHealth(100);  /* no need to update this player in gm since HP is fetched from Player object */
@@ -4493,6 +4535,9 @@ private:
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 8");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 6");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 3: Team 1 becomes empty due to disconnecting player (no change in empty Team 2) ----------------------------- */
 
@@ -4510,6 +4555,7 @@ private:
             gamemode, true /* testing as server */, "FSM state 9");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 4");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 4");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 7");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 4");
 
         return b;
@@ -4579,6 +4625,9 @@ private:
 
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         if (fsmStateBeingTested == proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset)
         {
@@ -4597,6 +4646,9 @@ private:
             fsmStateBeingTested,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 1: Team 2 dies ----------------------------- */
 
@@ -4610,7 +4662,10 @@ private:
             gamemode, true /* testing as server */, "FSM state 3");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 1");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* reset stuff */
         player5.setHealth(100);
@@ -4618,6 +4673,9 @@ private:
             fsmStateBeingTested,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
 
         /* ----- test 2: Team 1 dies ----------------------------- */
 
@@ -4632,6 +4690,7 @@ private:
             gamemode, true /* testing as server */, "FSM state 4");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 3");
         b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");
 
         return b;
@@ -4762,6 +4821,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4783,6 +4843,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4808,6 +4869,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4821,6 +4883,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 4");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4835,6 +4898,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 5");
+        b &= assertTrueEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4848,6 +4912,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 6");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 6");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4873,6 +4938,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 7");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 7");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4886,6 +4952,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, true /* server */, "FSM state 8");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 8");
 
         trg->serverTickUpdateWinningConditions(m_network);
 
@@ -4925,6 +4992,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -4936,6 +5004,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -4951,6 +5020,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 3");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -4962,6 +5032,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 4");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 4");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -4977,6 +5048,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 5");
+        b &= assertTrueEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 5");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -4988,6 +5060,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 6");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 6");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -5002,6 +5075,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 7");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 7");
 
         trg->clientTickUpdateWinningConditions(m_network);
 
@@ -5013,6 +5087,7 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, false /* server */, "FSM state 8");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 8");
 
         trg->clientTickUpdateWinningConditions(m_network);
 

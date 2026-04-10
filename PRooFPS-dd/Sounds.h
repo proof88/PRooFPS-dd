@@ -37,6 +37,8 @@ namespace proofps_dd
         SoLoud::handle m_sndMenuMusicHandle{};
         SoLoud::Wav m_sndEndgameMusic;
         SoLoud::handle m_sndEndgameMusicHandle{};
+        SoLoud::Wav m_sndRoundWin;
+        SoLoud::handle m_sndRoundWinHandle{};
         SoLoud::Wav m_sndLetsgo;
         SoLoud::Wav m_sndChangeWeapon;
         SoLoud::Wav m_sndPlayerDie;

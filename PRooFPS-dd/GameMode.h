@@ -902,6 +902,8 @@ namespace proofps_dd
         */
         bool hasJustTransitionedTo_RoundWaitForResetState_InThisTick() const;
 
+        bool hasCurrentRoundJustBeenWon_InThisTick() const;
+
         bool clientHandleGameRoundStateFromServer(
             pge_network::PgeINetwork& network,
             const MsgGameRoundStateFromServer& msgRoundState);
@@ -939,6 +941,7 @@ namespace proofps_dd
         RoundStateFSM::RoundState m_oldFsmState{ RoundStateFSM::RoundState::Prepare };
         bool m_bFsmStateTransitionHasJustHappenedThisTick_Sticky{ true };  /**< Sticky because it requires explicit clear at the end of a tick. */
         bool m_bFirstTick{ true };
+        bool m_bCurrentRoundHasJustBeenWon_Sticky{ false };  /**< Sticky because it requires explicit clear at the end of a tick. */
 
     }; // class TeamRoundGameMode
 

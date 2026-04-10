@@ -1184,6 +1184,7 @@ void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::P
     m_fsm.reset();
     m_bFirstTick = true;
     m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = true;
+    m_bCurrentRoundHasJustBeenWon_Sticky = false;
     TeamDeathMatchMode::restartWithoutRemovingPlayers(network); /* due to overrides, this also sends out MsgGameRoundStateFromServer */
 }
 
@@ -1218,12 +1219,14 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
                     getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2!", __func__);
                     m_nTeam2RoundWins++;
                     m_fsm.roundWon();
+                    m_bCurrentRoundHasJustBeenWon_Sticky = true;
                 }
                 if ((nOldTeam2AlivePlayers > 0) && (nCurrentTeam2AlivePlayers == 0))
                 {
                     getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1!", __func__);
                     m_nTeam1RoundWins++;
                     m_fsm.roundWon();
+                    m_bCurrentRoundHasJustBeenWon_Sticky = true;
                 }
 
                 if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
@@ -1267,6 +1270,7 @@ void proofps_dd::TeamRoundGameMode::serverTickUpdateWinningConditions(pge_networ
 {
     GameMode::serverTickUpdateWinningConditions(network);
     m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = false;
+    m_bCurrentRoundHasJustBeenWon_Sticky = false;
 }
 
 void proofps_dd::TeamRoundGameMode::clientTickUpdateWinningConditions(pge_network::PgeINetwork& network)
@@ -1276,6 +1280,7 @@ void proofps_dd::TeamRoundGameMode::clientTickUpdateWinningConditions(pge_networ
     // m_bFsmStateTransitionHasJustHappenedThisTick_Sticky to true. This is at the beginning of client game loop.
     // Since clientTickUpdateWinningConditions() is invoked at end of client game loop, we set it to false here.
     m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = false;
+    m_bCurrentRoundHasJustBeenWon_Sticky = false;
 }
 
 bool proofps_dd::TeamRoundGameMode::addPlayer(const Player& player, pge_network::PgeINetwork& network)
@@ -1368,6 +1373,11 @@ bool proofps_dd::TeamRoundGameMode::hasJustTransitionedTo_RoundWaitForResetState
     return m_bFsmStateTransitionHasJustHappenedThisTick_Sticky && (m_fsm.getState() == RoundStateFSM::RoundState::WaitForReset);
 }
 
+bool proofps_dd::TeamRoundGameMode::hasCurrentRoundJustBeenWon_InThisTick() const
+{
+    return m_bCurrentRoundHasJustBeenWon_Sticky;
+}
+
 bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
     pge_network::PgeINetwork& network,
     const MsgGameRoundStateFromServer& msgRoundState)
@@ -1379,6 +1389,12 @@ bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
         return false;
     }
 
+    if ( (msgRoundState.m_fsmState == TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset) &&
+         ((m_nTeam1RoundWins < msgRoundState.m_nTeam1RoundWins) || (m_nTeam2RoundWins < msgRoundState.m_nTeam2RoundWins))
+       )
+    {
+        m_bCurrentRoundHasJustBeenWon_Sticky = true;
+    }
     m_nTeam1RoundWins = msgRoundState.m_nTeam1RoundWins;
     m_nTeam2RoundWins = msgRoundState.m_nTeam2RoundWins;
     if (msgRoundState.m_fsmState != m_fsm.getState())
