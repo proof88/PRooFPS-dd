@@ -711,10 +711,24 @@ namespace proofps_dd
             /**
             * To be used only by client instances as they receive state from server.
             */
-            void forceSetState(const RoundState& newState);
+            void clientForceSetState(const RoundState& newState);
+
+            std::chrono::seconds::rep getTimeLimitInCurrentStateSeconds() const;
+
+            /**
+            * Updates the remaining time in the current RoundState on client side, based on the remaining time received from server.
+            * Basically it corrects the round state start time on client side so client will have the roughly same round state start
+            * time as the server.
+            *
+            * @param nRemMillisecs Remaining time in milliseconds, from server.
+            * @param network       PGE network instance to be used to know if we are server or client.
+        */
+            void clientUpdateTimeRemainingInCurrentStateMillisecs(
+                const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
             const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredCurrentState() const;
-            const std::chrono::seconds::rep getTimeRemainingInCurrentStateSeconds() const;
+            std::chrono::seconds::rep getTimeRemainingInCurrentStateSeconds() const;
+            std::chrono::milliseconds::rep getTimeRemainingInCurrentStateMilliseconds() const;
 
         private:
             RoundState m_state{ RoundState::Prepare };

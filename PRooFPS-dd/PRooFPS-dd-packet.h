@@ -221,6 +221,7 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             TeamRoundGameMode::RoundStateFSM::RoundState fsmState,
+            unsigned int nTimeRemainingInCurrentStateMillisecs,
             unsigned int nTeam1RoundWins,
             unsigned int nTeam2RoundWins)
         {
@@ -240,6 +241,7 @@ namespace proofps_dd
             proofps_dd::MsgGameRoundStateFromServer& msgGameRoundState = reinterpret_cast<proofps_dd::MsgGameRoundStateFromServer&>(*pMsgAppData);
 
             msgGameRoundState.m_fsmState = fsmState;
+            msgGameRoundState.m_nTimeRemainingInCurrentStateMillisecs = nTimeRemainingInCurrentStateMillisecs;
             msgGameRoundState.m_nTeam1RoundWins = nTeam1RoundWins;
             msgGameRoundState.m_nTeam2RoundWins = nTeam2RoundWins;
 
@@ -247,6 +249,7 @@ namespace proofps_dd
         }
 
         TeamRoundGameMode::RoundStateFSM::RoundState m_fsmState;
+        unsigned int m_nTimeRemainingInCurrentStateMillisecs;
         unsigned int m_nTeam1RoundWins;
         unsigned int m_nTeam2RoundWins;
     };  // struct MsgGameRoundStateFromServer 

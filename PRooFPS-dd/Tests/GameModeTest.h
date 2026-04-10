@@ -169,7 +169,9 @@ protected:
         addSubTest("test_team_games_is_player_allowed_for_gameplay", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_is_player_allowed_for_gameplay));
         addSubTest("test_team_games_get_alive_team_players_count", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_team_games_get_alive_team_players_count));
         addSubTest("test_round_games_winning_cond_time_and_round_win_limit", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_winning_cond_time_and_round_win_limit));
-        addSubTest("test_round_games_get_time_remaining_in_current_state_seconds", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_get_time_remaining_in_current_state_seconds));
+        addSubTest("test_round_games_get_time_limit_in_current_state", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_get_time_limit_in_current_state));
+        addSubTest("test_round_games_get_time_remaining_in_current_state", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_get_time_remaining_in_current_state));
+        addSubTest("test_round_games_client_update_time_remaining_in_current_state_millisecs", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_client_update_time_remaining_in_current_state_millisecs));
         addSubTest("test_round_games_transition_to_play_state_after_n_seconds", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_transition_to_play_state_after_n_seconds));
         addSubTest(
             "test_round_games_round_is_won_when_a_team_dies_and_other_team_is_not_empty", 
@@ -3832,7 +3834,61 @@ private:
         return b;
     }
 
-    bool test_round_games_get_time_remaining_in_current_state_seconds(const proofps_dd::GameModeType& gamemode)
+    bool test_round_games_get_time_limit_in_current_state(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        bool b = true;
+
+        /* -------------- Test 1: Prepare --------------------------------------- */
+
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(), gamemode, true /*server*/, "FSM state 1");
+        b &= assertEqualsEz(3ll, trg->getFSM().getTimeLimitInCurrentStateSeconds(), gamemode, true /*server*/, "time limit 1");
+
+        trg->getFSM().transitionToPlayState();
+
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(), gamemode, true /*server*/, "FSM state 2");
+        b &= assertEqualsEz(999ll, trg->getFSM().getTimeLimitInCurrentStateSeconds(), gamemode, true /*server*/, "time limit 2");
+
+        trg->getFSM().roundWon();
+
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(), gamemode, true /*server*/, "FSM state 3");
+        b &= assertEqualsEz(5ll, trg->getFSM().getTimeLimitInCurrentStateSeconds(), gamemode, true /*server*/, "time limit 3");
+
+        return b;
+    }
+
+    bool test_round_games_get_time_limit_in_current_state()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_get_time_limit_in_current_state(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_get_time_remaining_in_current_state(const proofps_dd::GameModeType& gamemode)
     {
         // server-only test, clients do not transition FSM on their own but they receive state changes
         m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
@@ -3870,6 +3926,11 @@ private:
 
             const auto nSecondsRemaining = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
             setRemainingSecs.erase(nSecondsRemaining);
+
+            b &= assertLequals(
+                trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(),
+                static_cast<std::chrono::milliseconds::rep>((nSecondsRemaining + 1) * 1000),
+                "millisecs 1");
         }
 
         /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
@@ -3883,7 +3944,8 @@ private:
         b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won");
         b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "winning");
 
-        b &= assertEquals(999ll, trg->getFSM().getTimeRemainingInCurrentStateSeconds(), "remaining in Play state");
+        b &= assertEquals(999ll, trg->getFSM().getTimeRemainingInCurrentStateSeconds(), "remaining secs in Play state");
+        b &= assertEquals(999000ll, trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(), "remaining millisecs in Play state");
 
         /* -------------- Test 2: WaitForReset -> Prepare --------------------------------------- */
 
@@ -3903,6 +3965,11 @@ private:
 
             const auto nSecondsRemaining = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
             setRemainingSecs.erase(nSecondsRemaining);
+
+            b &= assertLequals(
+                trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(),
+                static_cast<std::chrono::milliseconds::rep>((nSecondsRemaining + 1) * 1000),
+                "millisecs 2");
         }
 
         /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
@@ -3915,13 +3982,61 @@ private:
         return b;
     }
 
-    bool test_round_games_get_time_remaining_in_current_state_seconds()
+    bool test_round_games_get_time_remaining_in_current_state()
     {
         const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
 
         bool b = true;
         b &= assertTrue(
-            test_round_games_get_time_remaining_in_current_state_seconds(gamemode),
+            test_round_games_get_time_remaining_in_current_state(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_client_update_time_remaining_in_current_state_millisecs(const proofps_dd::GameModeType& gamemode)
+    {
+        // client-only test
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        // need to restart to correctly initialize time-specific values if we have time limit!
+        gm->restartWithoutRemovingPlayers(m_network);
+
+        bool b = true;
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 1");
+
+        //constexpr unsigned int nTimeLimitSecs = 13u;
+        //m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nTimeLimitSecs);
+        //gm->fetchConfig(m_cfgProfiles, m_network);
+        trg->getFSM().clientUpdateTimeRemainingInCurrentStateMillisecs(1300u, m_network);
+
+        // positive case
+        b &= //assertEquals(nTimeLimitSecs, sgm.getTimeLimitSecs(), "time limit") &
+            assertLequals(trg->getFSM().getTimeRemainingInCurrentStateSeconds(), 2u, "remaining prepare 1") &
+            assertNotEquals(0u, trg->getFSM().getTimeRemainingInCurrentStateSeconds(), "remaining prepare 2");
+
+        // negative case: remaining time as seconds is bigger than time limit as seconds
+        trg->getFSM().clientUpdateTimeRemainingInCurrentStateMillisecs(6000u, m_network);
+        b &= assertLequals(1300u, trg->getFSM().getTimeRemainingInCurrentStateSeconds()*1000, "remaining prepare 3");
+
+        return b;
+    }
+
+    bool test_round_games_client_update_time_remaining_in_current_state_millisecs()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_client_update_time_remaining_in_current_state_millisecs(gamemode),
             proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
         return b;

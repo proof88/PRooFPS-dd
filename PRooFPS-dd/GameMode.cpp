@@ -957,15 +957,52 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::transitionToPlayState()
     stateEnter(RoundState::Play);
 }
 
-void proofps_dd::TeamRoundGameMode::RoundStateFSM::forceSetState(const RoundState& newState)
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::clientForceSetState(const RoundState& newState)
 {
     getConsole().EOLn("RoundStateFSM::%s(): %d -> %d, bypassed stateEnter()!", __func__, m_state, newState);
     const RoundState oldState = m_state;
     m_state = newState;
     if (oldState != newState)
     {
+        // clientUpdateTimeRemainingInCurrentStateMillisecs() is invoked separately after clientForceSetState()
         stateEntered(oldState, newState);
     }
+}
+
+std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeLimitInCurrentStateSeconds() const
+{
+    switch (m_state)
+    {
+    case RoundState::Prepare:
+        return 3ll;
+    case RoundState::Play:
+        return 999ll;
+    case RoundState::WaitForReset:
+        return 5ll;
+    default:
+        getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, m_state);
+        return 0ll;
+    }
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::clientUpdateTimeRemainingInCurrentStateMillisecs(
+    const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network)
+{
+    assert(!network.isServer());
+
+    const unsigned int nRemSecs = static_cast<unsigned int>(std::floor(nRemMillisecs / 1000));
+    const auto nTimeLimitCurrentRoundStateSecs = getTimeLimitInCurrentStateSeconds();
+    if (static_cast<unsigned int>(nRemSecs) > static_cast<unsigned int>(nTimeLimitCurrentRoundStateSecs))
+    {
+        // should not happen, but should log as error
+        getConsole().EOLn(
+            "GameMode::%s(): SHOULD NOT HAPPEN (expected error in unit test): nRemSecs > nTimeLimitCurrentRoundStateSecs: %u > %u!",
+            __func__, nRemSecs, static_cast<unsigned int>(nTimeLimitCurrentRoundStateSecs));
+    }
+
+    m_timeEnteredCurrentState =
+        std::chrono::steady_clock::now() -
+        std::chrono::seconds(nTimeLimitCurrentRoundStateSecs - std::min(static_cast<unsigned int>(nRemSecs), static_cast<unsigned int>(nTimeLimitCurrentRoundStateSecs)));
 }
 
 const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeEnteredCurrentState() const
@@ -973,19 +1010,24 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundG
     return m_timeEnteredCurrentState;
 }
 
-const std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeRemainingInCurrentStateSeconds() const
+std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeRemainingInCurrentStateSeconds() const
 {
-    const auto nSecondsSpentInCurrentState = std::chrono::duration_cast<std::chrono::seconds>(
+    return static_cast<std::chrono::seconds::rep>(std::lroundf(std::floorf(getTimeRemainingInCurrentStateMilliseconds() / 1000.f)));
+}
+
+std::chrono::milliseconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeRemainingInCurrentStateMilliseconds() const
+{
+    const auto nMillisecondsSpentInCurrentState = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - m_timeEnteredCurrentState).count();
 
     switch (m_state)
     {
     case RoundState::Prepare:
-        return std::max(3ll - nSecondsSpentInCurrentState, 0ll);
+        return std::max(3000ll - nMillisecondsSpentInCurrentState, 0ll);
     case RoundState::Play:
-        return 999;
+        return 999000ll;
     case RoundState::WaitForReset:
-        return std::max(5ll - nSecondsSpentInCurrentState, 0ll);
+        return std::max(5000ll - nMillisecondsSpentInCurrentState, 0ll);
     default:
         getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, m_state);
         return 0;
@@ -1344,7 +1386,8 @@ bool proofps_dd::TeamRoundGameMode::clientHandleGameRoundStateFromServer(
         m_oldFsmState = m_fsm.getState();
         m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = true;
     }
-    m_fsm.forceSetState(msgRoundState.m_fsmState);
+    m_fsm.clientForceSetState(msgRoundState.m_fsmState);
+    m_fsm.clientUpdateTimeRemainingInCurrentStateMillisecs(msgRoundState.m_nTimeRemainingInCurrentStateMillisecs, network);
 
     return true;
 }
@@ -1356,6 +1399,7 @@ bool proofps_dd::TeamRoundGameMode::serverSendRoundStateToClient(pge_network::Pg
     if (!proofps_dd::MsgGameRoundStateFromServer::initPkt(
         pktRoundState,
         m_fsm.getState(),
+        static_cast<unsigned int>(m_fsm.getTimeRemainingInCurrentStateMilliseconds()),
         m_nTeam1RoundWins,
         m_nTeam2RoundWins))
     {
@@ -1375,6 +1419,7 @@ bool proofps_dd::TeamRoundGameMode::serverSendRoundStateToClients(pge_network::P
     if (!proofps_dd::MsgGameRoundStateFromServer::initPkt(
         pktRoundState,
         m_fsm.getState(),
+        static_cast<unsigned int>(m_fsm.getTimeRemainingInCurrentStateMilliseconds()),
         m_nTeam1RoundWins,
         m_nTeam2RoundWins))
     {
