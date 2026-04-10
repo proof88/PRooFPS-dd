@@ -714,6 +714,7 @@ namespace proofps_dd
             void forceSetState(const RoundState& newState);
 
             const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredCurrentState() const;
+            const std::chrono::seconds::rep getTimeRemainingInCurrentStateSeconds() const;
 
         private:
             RoundState m_state{ RoundState::Prepare };
@@ -834,6 +835,7 @@ namespace proofps_dd
         unsigned int getTeamRoundWins(unsigned int iTeamId) const;
 
         RoundStateFSM& getFSM();
+        const RoundStateFSM& getFSM() const;
 
         /**
         * Returns if RoundStateFSM has been just detected as transitioned to Prepare state in this tick i.e. it was in different state in

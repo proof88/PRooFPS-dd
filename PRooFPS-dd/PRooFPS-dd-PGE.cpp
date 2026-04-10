@@ -1054,7 +1054,6 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
                 {
                     // come here only once
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
-                    m_gui.getXHair()->showAboveText("! GET READY !");
                     m_gui.getServerEvents()->addNewRoundEvent();
                     if (getNetwork().isServer())
                     {
@@ -1072,6 +1071,24 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
                     // come here only once
                     getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
                     m_gui.getXHair()->showAboveText("ROUND ENDED!");
+                    m_gui.getServerEvents()->addRoundEndEvent();
+                }
+
+                static std::string sXHairAboveText;  // hopefully fast being static
+                const auto nTimeRemainingInCurrentRoundStateSecs = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
+                switch (trg->getFSM().getState())
+                {
+                case TeamRoundGameMode::RoundStateFSM::RoundState::Prepare:
+                    sXHairAboveText = "COMBAT STARTS IN " + std::to_string(nTimeRemainingInCurrentRoundStateSecs) + " ...";
+                    m_gui.getXHair()->showAboveText(sXHairAboveText);
+                    break;
+                case TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset:
+                    sXHairAboveText = "ROUND ENDED, RELAX TIME: " + std::to_string(nTimeRemainingInCurrentRoundStateSecs);
+                    m_gui.getXHair()->showAboveText(sXHairAboveText);
+                    break;
+                default: /* RoundState::Play */
+                    /* no-op */
+                    break;
                 }
             }
             else

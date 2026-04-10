@@ -973,6 +973,25 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundG
     return m_timeEnteredCurrentState;
 }
 
+const std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeRemainingInCurrentStateSeconds() const
+{
+    const auto nSecondsSpentInCurrentState = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - m_timeEnteredCurrentState).count();
+
+    switch (m_state)
+    {
+    case RoundState::Prepare:
+        return std::max(3ll - nSecondsSpentInCurrentState, 0ll);
+    case RoundState::Play:
+        return 999;
+    case RoundState::WaitForReset:
+        return std::max(5ll - nSecondsSpentInCurrentState, 0ll);
+    default:
+        getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, m_state);
+        return 0;
+    }
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -1283,6 +1302,11 @@ unsigned int proofps_dd::TeamRoundGameMode::getTeamRoundWins(unsigned int iTeamI
 }
 
 proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::getFSM()
+{
+    return m_fsm;
+}
+
+const proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::getFSM() const
 {
     return m_fsm;
 }

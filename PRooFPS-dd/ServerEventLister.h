@@ -23,7 +23,8 @@ namespace proofps_dd
             TeamChanged,
             ExplosionMultiKill,
             GameRestarted,
-            NewRound
+            NewRound,
+            EndRound
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
@@ -49,6 +50,9 @@ namespace proofps_dd
                 break;
             case EventType::NewRound:
                 m_sAuxText = "New round";
+                break;
+            case EventType::EndRound:
+                m_sAuxText = "Round Ended";
                 break;
             default:
                 assert(false);
@@ -193,6 +197,11 @@ namespace proofps_dd
         void addNewRoundEvent()
         {
             addEvent(std::move(ServerEvent(ServerEvent::EventType::NewRound)));
+        }
+
+        void addRoundEndEvent()
+        {
+            addEvent(std::move(ServerEvent(ServerEvent::EventType::EndRound)));
         }
 
     protected:
