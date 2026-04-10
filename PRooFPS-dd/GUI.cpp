@@ -2646,7 +2646,7 @@ void proofps_dd::GUI::drawXHairAboveText()
     drawTextShadowed(
         getDearImGui2DposXforCenteredText(
             m_pXHair->getAboveText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
-        getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) - m_pXHair->getObject3D().getSizeVec().getY(),
+        getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) - m_pXHair->getObject3D().getSizeVec().getY() - 5,
         m_pXHair->getAboveText());
 
     ImGui::PopStyleColor();
