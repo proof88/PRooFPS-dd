@@ -1083,6 +1083,10 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
                     {
                         serverNewRound();
                     }
+                    for (auto& playerPair : m_mapPlayers)
+                    {
+                        playerPair.second.forceDeactivateCurrentInventoryItem();
+                    }
                 }
                 else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
                 {

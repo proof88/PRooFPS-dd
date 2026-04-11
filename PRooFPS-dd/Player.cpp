@@ -778,7 +778,6 @@ void proofps_dd::Player::respawn(bool /*bMe*/, const Weapon& wpnDefaultAvailable
     getWantToStandup() = true;
     m_prevActualStrafe = Strafe::NONE;
     forceDeactivateCurrentInventoryItem();
-    setHasAntiGravityActive(false);
     setHasJetLax(false);
     setArmor(0);
     for (auto pWpn : m_wpnMgr.getWeapons())
@@ -824,6 +823,9 @@ void proofps_dd::Player::resettleAndRespawnShared()
     
     // we don't put here stuff like setHasAntiGravityActive(false) because client is not informed about "resettle", server
     // does not automatically replicate antigravityActive from here, therefore it can lead to server-client being out of sync.
+    // forceDeactivateCurrentInventoryItem() is invoked by both server and client in updateAudioVisualsForGameModeShared(), it
+    // needs to be done that way, different to respawn case because in that case player.respawn() is invoked both all instances,
+    // however resettle is done only on server-side.
 }
 
 PgeOldNewValue<PureVector>& proofps_dd::Player::getPos()
