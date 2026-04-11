@@ -1321,7 +1321,7 @@ bool proofps_dd::TeamRoundGameMode::isRespawnAllowedAfterDie() const
 
 bool proofps_dd::TeamRoundGameMode::isPlayerMovementAllowed() const
 {
-    return (m_fsm.getState() == TeamRoundGameMode::RoundStateFSM::RoundState::Play);
+    return (m_fsm.getState() != TeamRoundGameMode::RoundStateFSM::RoundState::Prepare);
 }
 
 unsigned int proofps_dd::TeamRoundGameMode::getRoundWinLimit() const

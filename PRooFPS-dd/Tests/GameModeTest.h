@@ -4759,7 +4759,7 @@ private:
                 proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
                 trg->getFSM().getState(),
                 "fsm state 3");
-            b &= assertFalse(gm->isPlayerMovementAllowed(), "movement allowed 3");
+            b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed 3");
         }
 
         return b;
