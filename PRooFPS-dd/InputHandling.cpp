@@ -159,6 +159,11 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         return true;
     }
 
+    // Some words about gameMode.isPlayerMovementAllowed(): to simplify client code, clients are still allowed to send any kind of inputs
+    // if gameMode.isPlayerMovementAllowed() is false. So we filter inputs here in server code.
+    // Therefore, if gameMode.isPlayerMovementAllowed() is false, it is not an error but a valid state, e.g. TeamRoundGame FSM is in Prepare state.
+    // We need to check gameMode.isPlayerMovementAllowed() in this function multiple times: some actions are allowed, some not.
+
     if (playerConst.getHealth() == 0)
     {
         if (gameMode.isRespawnAllowedAfterDie())
@@ -214,18 +219,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         player.getObject3D()->getAngleVec().SetY(pktUserCmdMove.m_fPlayerAngleY);
     }
 
-    if (!gameMode.isPlayerMovementAllowed())
-    {
-        // not error, valid state, e.g. TeamRoundGame FSM is not in Play state.
-        // player angles are still allowed to be updated, that is why this check is so late.
-        
-        player.getWeaponAngle().set(PureVector(0.f, player.getAngleY(), pktUserCmdMove.m_fWpnAngleZ));
-        wpn->getObject3D().getAngleVec().SetY(player.getAngleY());
-        wpn->getObject3D().getAngleVec().SetZ(pktUserCmdMove.m_fWpnAngleZ);
-        return true;
-    }
-
-    if (pktUserCmdMove.m_bToggleUseItem)
+    if (pktUserCmdMove.m_bToggleUseItem && gameMode.isPlayerMovementAllowed())
     {
         const auto nMillisecsSinceLastToggle =
             std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastToggleUseItem()).count();
@@ -246,8 +240,15 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     const auto nMillisecsSinceLastStrafe =
         std::chrono::duration_cast<std::chrono::milliseconds>(timeStart - player.getTimeLastActualStrafe()).count();
     const auto prevStrafeState = player.getStrafe();
-    // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
-    player.setStrafe(pktUserCmdMove.m_strafe);
+    if (gameMode.isPlayerMovementAllowed())
+    {
+        // since v0.1.3 strafe is a continuous operation until client explicitly requests server to stop simulating it, so Strafe::NONE is always accepted.
+        player.setStrafe(pktUserCmdMove.m_strafe);
+    }
+    else
+    {
+        player.setStrafe(Strafe::NONE);
+    }
     if ((prevStrafeState == Strafe::NONE) && (player.getStrafe() != Strafe::NONE) && (player.getPreviousActualStrafe() == player.getStrafe()))
     {
         // at this point, player triggered either a LEFT-NONE-LEFT or a RIGHT-NONE-RIGHT combo
@@ -293,11 +294,11 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
     // in v0.6 crouch input was also used for descending with jetlax without actually crouching, however
     // v0.7 allowed crouching with jetlax but looked bad whenever player pressed crouch for descending and it also crouched, so
     // v0.7 has introduced separate msg field only for descending, so player can operate descent and crouch separately.
-    player.getDescentInput().set(pktUserCmdMove.m_bDescent);  /* antigravity descent is handled in serverGravity() */
+    player.getDescentInput().set(pktUserCmdMove.m_bDescent && gameMode.isPlayerMovementAllowed());  /* antigravity descent is handled in serverGravity() */
 
     // since v0.6 jump is also continuous op to support antigravity movement (e.g. jetpack)
-    player.getJumpInput().set(pktUserCmdMove.m_bJumpAction);
-    if (pktUserCmdMove.m_bJumpAction && !player.hasAntiGravityActive() /* antigravity lifting is handled in serverGravity() */)
+    player.getJumpInput().set(pktUserCmdMove.m_bJumpAction && gameMode.isPlayerMovementAllowed());
+    if (pktUserCmdMove.m_bJumpAction && !player.hasAntiGravityActive() /* antigravity lifting is handled in serverGravity() */ && gameMode.isPlayerMovementAllowed())
     {
         //getConsole().EOLn("InputHandling::%s(): asd 1", __func__);
 
@@ -355,7 +356,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
         }
     }
 
-    if (!pktUserCmdMove.m_bShootAction)
+    if (!pktUserCmdMove.m_bShootAction || !gameMode.isPlayerMovementAllowed())
     {
         if (!wpn->isTriggerReleased())
         {
@@ -523,7 +524,7 @@ bool proofps_dd::InputHandling::serverHandleUserCmdMoveFromClient(
 
     // we should be allowed to come here if current wpn's state is NOT ready, because in some cases it is allowed to shoot: for example,
     // if wpn has per-bullet reload, shooting can cancel the reloading state!
-    if (pktUserCmdMove.m_bShootAction)
+    if (pktUserCmdMove.m_bShootAction && gameMode.isPlayerMovementAllowed())
     {
         const auto nSecsSinceLastWeaponSwitch =
             std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -709,14 +710,14 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
-    if (!gameMode.isPlayerMovementAllowed() || !gameMode.isPlayerAllowedForGameplay(player))
+    if (!gameMode.isPlayerAllowedForGameplay(player))
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }
 
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('t')))
     {
-        if (m_pge.getNetwork().isServer())
+        if (m_pge.getNetwork().isServer() && gameMode.isPlayerMovementAllowed())
         {
             // for testing purpose only, we can teleport server player to random spawn point
             // TODO: probably we should just call serverRespawnPlayer() but cannot access that from here :/
@@ -782,11 +783,13 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     }
 
     // For now we dont need rate limit for strafe, but in future if FPS limit can be disable we probably will want to limit this!
-    if (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a')))
+    if (gameMode.isPlayerMovementAllowed() &&
+        (m_pge.getInput().getKeyboard().isKeyPressed(VK_LEFT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('a'))))
     {
         m_strafe = proofps_dd::Strafe::LEFT;
     }
-    else if (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d')))
+    else if (gameMode.isPlayerMovementAllowed() &&
+        (m_pge.getInput().getKeyboard().isKeyPressed(VK_RIGHT) || m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('d'))))
     {
         m_strafe = proofps_dd::Strafe::RIGHT;
     }
@@ -800,15 +803,17 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     m_bCrouch = m_pge.getInput().getKeyboard().isKeyPressed(VK_CONTROL);
 
     // in v0.6 crouch also controlled jetlax descent, but v0.7 separated descent from crouch, both now can be done separately or together.
-    m_bDescent = m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
+    m_bDescent = gameMode.isPlayerMovementAllowed() && m_pge.getInput().getKeyboard().isKeyPressed((unsigned char)VkKeyScan('s'));
 
     if (player.hasAntiGravityActive())
     {
-        m_bJump = m_pge.getInput().getKeyboard().areKeysPressed(VK_SPACE, (unsigned char)VkKeyScan('w'));
+        m_bJump = gameMode.isPlayerMovementAllowed() &&
+            m_pge.getInput().getKeyboard().areKeysPressed(VK_SPACE, (unsigned char)VkKeyScan('w'));
     }
     else
     {
-        m_bJump = m_pge.getInput().getKeyboard().areKeysPressedOnce(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
+        m_bJump = gameMode.isPlayerMovementAllowed() &&
+            m_pge.getInput().getKeyboard().areKeysPressedOnce(VK_SPACE, (unsigned char)VkKeyScan('w'), m_nKeyPressOnceJumpMinumumWaitMilliseconds);
     }
 
     bool bToggleRunWalk = false;
@@ -818,7 +823,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     }
 
     bool bToggleUseItem = false;
-    if (m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('e'), m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds))
+    if (gameMode.isPlayerMovementAllowed() &&
+        m_pge.getInput().getKeyboard().isKeyPressedOnce((unsigned char)VkKeyScan('e'), m_nKeyPressOnceToggleUseItemMinumumWaitMilliseconds))
     {
         if (player.hasJetLax())
         {
@@ -826,7 +832,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
-    const bool bFireButtonPressed = m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
+    const bool bFireButtonPressed = gameMode.isPlayerMovementAllowed() && m_pge.getInput().getMouse().isButtonPressed(PGEInputMouse::MouseButton::MBTN_LEFT);
     if (bFireButtonPressed)
     {
         // neither of the firing-induced auto-reload or auto-switch behaviors can be executed if user is still pressing fire button, however
