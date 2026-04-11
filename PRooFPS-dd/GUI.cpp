@@ -1956,7 +1956,7 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 {
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 400.f;
+    constexpr float fContentHeight = 420.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -2065,6 +2065,10 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     if (ImGui::TextHyperLink("Crazy dog laughing meme template (on Effectus lab Youtube Channel)", true))
     {
         browseToUrl("https://www.youtube.com/watch?v=_oHXa4y1BOM");
+    }
+    if (ImGui::TextHyperLink("Small group moderate applause (on Free Sound Effect Youtube Channel)", true))
+    {
+        browseToUrl("https://www.youtube.com/watch?v=UovDfgbGeXk");
     }
 
     ImGui::Separator();
