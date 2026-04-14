@@ -114,6 +114,7 @@ protected:
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        m_timeSetupFinished = std::chrono::steady_clock::now();
         return true;
     } // setUp()
 
@@ -182,6 +183,15 @@ protected:
             // need a bit sleep after team selection in-game menu closes, otherwise
             // player control inputs will be ignored
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+            if (proofps_dd::GameMode::isRoundBased(m_eGameModeType))
+            {
+                // make sure we transitioned to RoundState::Play state from Prepare
+                while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeSetupFinished) < std::chrono::seconds(3))
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                }
+            }
 
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
             {
@@ -265,7 +275,19 @@ protected:
         }
 
         // wait for the killed server player to respawn
-        std::this_thread::sleep_for(std::chrono::milliseconds(m_nSvDmPlayerRespawnDelaySecs * 1000 + 200));
+        if (proofps_dd::GameMode::isRoundBased(m_eGameModeType))
+        {
+            // make sure we transitioned to RoundState::WaitForReset, Prepare and then back to Play state
+            while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeSetupFinished) < std::chrono::seconds(5+3))
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+        }
+        else
+        {
+            // respawn almost immediately, no new round
+            std::this_thread::sleep_for(std::chrono::milliseconds(m_nSvDmPlayerRespawnDelaySecs * 1000 + 200));
+        }
 
         {
             // it is recommended to be a bit more patient here, since after respawn the camera will reposition gradually, which
@@ -343,6 +365,7 @@ private:
 
     int nTeamTotalFrags1 = 0;
     int nTeamTotalFrags2 = 0;
+    std::chrono::time_point<std::chrono::steady_clock> m_timeSetupFinished;
     std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
     struct EvaluateWpn
@@ -774,9 +797,18 @@ private:
             assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["bullets_default"].getAsInt()), evaluateWpnData[2].nMagBulletCount, "client wpn 2 mag bullet count") &
             assertEquals(static_cast<TPureUInt>(cfgWpnPistol.getVars()["reloadable"].getAsInt()), evaluateWpnData[2].nUnmagBulletCount, "client wpn 2 unmag bullet count");
 
-        // after being shot twice by pistol
-        bRet &= assertEquals(20, nPlayerHealth, "client player health");
-        bRet &= assertEquals(0, nPlayerArmor, "client player armor");  // no armor pickup happened
+        if (proofps_dd::GameMode::isRoundBased(m_eGameModeType))
+        {
+            // new round started, default HP
+            bRet &= assertEquals(100, nPlayerHealth, "client player health");
+            bRet &= assertEquals(0, nPlayerArmor, "client player armor");  // no armor pickup happened
+        }
+        else
+        {
+            // after being shot twice by pistol
+            bRet &= assertEquals(20, nPlayerHealth, "client player health");
+            bRet &= assertEquals(0, nPlayerArmor, "client player armor");  // no armor pickup happened
+        }
 
         return bRet;
     }
