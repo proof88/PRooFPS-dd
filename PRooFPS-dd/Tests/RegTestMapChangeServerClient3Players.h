@@ -176,11 +176,8 @@ protected:
                 input_sim_test::bringWindowToFront(hServerMainGameWindow);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-                if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
-                {
-                    // hide team selection menu, otherwise we cannot open server admin menu
-                    input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
-                }
+                // hide welcome/team selection menu, otherwise we cannot open server admin menu
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('m'), 100);
 
                 // need a bit sleep after team selection in-game menu closes, otherwise
                 // any control inputs will be ignored
