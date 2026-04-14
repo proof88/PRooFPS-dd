@@ -1492,15 +1492,32 @@ void proofps_dd::InputHandling::regTestDumpToFile(
 
     if (gameMode.isTeamBasedGame())
     {
-        fRegTestDump << "Frag Table: Team Total Frags, then for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]" << std::endl;
-        const proofps_dd::TeamDeathMatchMode* const pTeamDeathMatchMode = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(&gameMode);
-        if (!pTeamDeathMatchMode)
+        if (gameMode.isRoundBased())
         {
-            getConsole().EOLnOO("ERROR: pTeamDeathMatchMode null!");
-            return;
+            fRegTestDump << "Frag Table: Team Round Wins, then for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]" << std::endl;
+
+            const proofps_dd::TeamRoundGameMode* const pTRG = dynamic_cast<proofps_dd::TeamRoundGameMode*>(&gameMode);
+            if (!pTRG)
+            {
+                getConsole().EOLnOO("ERROR: pTRG null!");
+                return;
+            }
+            fRegTestDump << pTRG->getTeamRoundWins(1) << std::endl;
+            fRegTestDump << pTRG->getTeamRoundWins(2) << std::endl;
         }
-        fRegTestDump << pTeamDeathMatchMode->getTeamFrags(1) << std::endl;
-        fRegTestDump << pTeamDeathMatchMode->getTeamFrags(2) << std::endl;
+        else
+        {
+            fRegTestDump << "Frag Table: Team Total Frags, then for each Player: [Player Name, Team, Frags, Deaths, Suicides, Aim Accuracy, Shots Fired]" << std::endl;
+        
+            const proofps_dd::TeamDeathMatchMode* const pTeamDeathMatchMode = dynamic_cast<proofps_dd::TeamDeathMatchMode*>(&gameMode);
+            if (!pTeamDeathMatchMode)
+            {
+                getConsole().EOLnOO("ERROR: pTeamDeathMatchMode null!");
+                return;
+            }
+            fRegTestDump << pTeamDeathMatchMode->getTeamFrags(1) << std::endl;
+            fRegTestDump << pTeamDeathMatchMode->getTeamFrags(2) << std::endl;
+        }
     }
     else
     {

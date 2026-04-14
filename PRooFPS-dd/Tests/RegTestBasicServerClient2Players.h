@@ -363,8 +363,8 @@ private:
         PktStatRange nInjectPktPerSecond;
     };
 
-    int nTeamTotalFrags1 = 0;
-    int nTeamTotalFrags2 = 0;
+    int nTeam1TotalScore = 0;
+    int nTeam2TotalScore = 0;
     std::chrono::time_point<std::chrono::steady_clock> m_timeSetupFinished;
     std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
@@ -525,9 +525,9 @@ private:
             // If this is team-based game, then Team Total Frags first:
             if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
             {
-                f >> nTeamTotalFrags1;
+                f >> nTeam1TotalScore;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
-                f >> nTeamTotalFrags2;
+                f >> nTeam2TotalScore;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
             }
 
@@ -656,8 +656,16 @@ private:
 
         if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
         {
-            bRet &= assertEquals(0, nTeamTotalFrags1, "team 1 frags") &
-                assertEquals(1, nTeamTotalFrags2, "team 2 frags");
+            if (proofps_dd::GameMode::isRoundBased(m_eGameModeType))
+            {
+                bRet &= assertEquals(0, nTeam1TotalScore, "team 1 frags") &
+                    assertEquals(1, nTeam2TotalScore, "team 2 frags");
+            }
+            else
+            {
+                bRet &= assertEquals(0, nTeam1TotalScore, "team 1 round wins") &
+                    assertEquals(1, nTeam2TotalScore, "team 2 round wins");
+            }
         }
 
         const unsigned int iTeamPlayer1Expected =

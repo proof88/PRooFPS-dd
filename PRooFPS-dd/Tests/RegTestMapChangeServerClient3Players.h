@@ -226,8 +226,8 @@ protected:
 
 private:
 
-    int nTeamTotalFrags1 = 0;
-    int nTeamTotalFrags2 = 0;
+    int nTeam1TotalScore = 0;
+    int nTeam2TotalScore = 0;
     std::vector<proofps_dd::PlayersTableRow> evaluateFragTable;
 
     const unsigned int m_nTickRate;
@@ -284,9 +284,9 @@ private:
             // If this is team-based game, then Team Total Frags first:
             if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
             {
-                f >> nTeamTotalFrags1;
+                f >> nTeam1TotalScore;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
-                f >> nTeamTotalFrags2;
+                f >> nTeam2TotalScore;
                 f.getline(szLine, nBuffSize);  // consume remaining newline char in same line
             }
             
