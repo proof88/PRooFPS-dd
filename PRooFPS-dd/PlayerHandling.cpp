@@ -392,21 +392,60 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
 
     if (m_pge.getNetwork().isServer())
     {
+        bool bRoundGame = GameMode::getGameMode()->isRoundBased();
+        TeamRoundGameMode* trg = nullptr;
+        if (bRoundGame)
+        {
+            trg = dynamic_cast<TeamRoundGameMode*>(GameMode::getGameMode());
+            bRoundGame = (trg != nullptr);
+        }
         if ( (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */) ||
              (iPrevTeamId == player.getTeamId() /* i.e. no actual team change happened, just exited spectator mode this way */)
             )
         {
-            // even tho player is already on a random global spawn point selected in handleUserConnected(), now
-            // with proper team id respawn is needed to deal with team spawn groups;
-            // but do this only if NOT regression test is running because it messes with positioning players to the leftmost/rightmost spawnpoints!
-            if (!cfgProfiles.getVars()["testing"].getAsBool())
+            if (!bRoundGame ||
+                (bRoundGame && (trg->getFSM().getState() == TeamRoundGameMode::RoundStateFSM::RoundState::Prepare)))
             {
-                serverRespawnPlayer(player, false, config);
+                // even tho player is already on a random global spawn point selected in handleUserConnected(), now
+                // with proper team id respawn is needed to deal with team spawn groups;
+                // but do this only if NOT regression test is running because it messes with positioning players to the leftmost/rightmost spawnpoints!
+                if (!cfgProfiles.getVars()["testing"].getAsBool())
+                {
+                    getConsole().EOLn(
+                        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
+                        __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+                    serverRespawnPlayer(player, false, config);
+                }
+            }
+            else
+            {
+                // we are in either RoundState::Play or WaitForReset state, no need to register death for this player but shall be dead until new round
+                getConsole().EOLn(
+                    "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team but need to wait until next round!",
+                    __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+                
+                if (!cfgProfiles.getVars()["testing"].getAsBool())
+                {
+                    getConsole().EOLn(
+                        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
+                        __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+                    serverRespawnPlayer(player, false, config);
+                }
+                // TODO: instead of this, I think we should have default 0 HP for all players, since nowadays all game modes require Join which would eventually
+                // do a respawn, here in this false branch we wouldn't need to do anything because player is by default dead.
+                // Also. forcedSpectating shall be also default.
+                
+                //player.setHealth(0);
+                //player.updateOldValues();
+                //player.setForcedSpectating(true);
             }
         }
         else
         {
             // any consecutive team changes shall kill the player
+            getConsole().EOLn(
+                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s changed team, need to die!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
             handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
         }
     }
