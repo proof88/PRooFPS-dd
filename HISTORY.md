@@ -42,10 +42,9 @@ This version brings the following **NEW FEATURES**:
  - **Gameplay: Team Round Game: this is a new, round-based team game mode**, not deathmatch. This practially means 2 things:
    - whenever a player dies, they cannot respawn until the next round starts, and
    - to win the game, your team shall have more round wins than the other team.
-
-Similar to CS 1.6. Each round ends when all players of any team die.  
-The game goal in this game mode is reaching the preconfigured round win limit: the team hitting this limit first wins the game.  
-Alternatively, the usual game time limit can kick in, in such case the team with most won rounds wins the game (unhandled case: when both teams have same amount of round wins, the team winning the 1st round earlier is the winner of the game, however since the game is not explicitly telling who is the winner in any game mode, we don't deal with this either).
+  Similar to CS 1.6. Each round ends when all players of any team die.  
+  The game goal in this game mode is reaching the preconfigured round win limit: the team hitting this limit first wins the game.  
+  Alternatively, the usual game time limit can kick in, in such case the team with most won rounds wins the game (unhandled case: when both teams have same amount of round wins, the team winning the 1st round earlier is the winner of the game, however since the game is not explicitly telling who is the winner in any game mode, we don't deal with this either).
  - **Physics:** non-explosive bullets can **ricochet** off the walls if colliding them in **small angle (<= 10°)**.
  - **Physics: fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration, so teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
