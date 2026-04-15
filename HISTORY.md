@@ -40,8 +40,8 @@ This version brings the following **NEW FEATURES**:
  - **Gameplay: Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
    Entering Spectator Mode is always available during gameplay by pressing 'M'.
  - **Gameplay: Team Round Game: this is a new, round-based team game mode**, not deathmatch. This practially means 2 things:
-  - whenever a player dies, they cannot respawn until the next round starts, and
-  - to win the game, your team shall have more round wins than the other team.
+   - whenever a player dies, they cannot respawn until the next round starts, and
+   - to win the game, your team shall have more round wins than the other team.
 Similar to CS 1.6. Each round ends when all players of any team die.  
 The game goal in this game mode is reaching the preconfigured round win limit: the team hitting this limit first wins the game.  
 Alternatively, the usual game time limit can kick in, in such case the team with most won rounds wins the game (unhandled case: when both teams have same amount of round wins, the team winning the 1st round earlier is the winner of the game, however since the game is not explicitly telling who is the winner in any game mode, we don't deal with this either).
