@@ -37,35 +37,41 @@ NOT all versions have the ALP label, be careful!
 A compressed build for Windows is available for TODO.
 
 This version brings the following **NEW FEATURES**:
- - Gameplay: **Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
+ - **Gameplay: Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
    Entering Spectator Mode is always available during gameplay by pressing 'M'.
- - Physics: non-explosive bullets can **ricochet** off the walls if colliding them in small angle (<= 10°).
- - Physics: **fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
+ - **Gameplay: Team Round Game: this is a new, round-based team game mode**, not deathmatch. This practially means 2 things:
+  - whenever a player dies, they cannot respawn until the next round starts, and
+  - to win the game, your team shall have more round wins than the other team.
+Similar to CS 1.6. Each round ends when all players of any team die.  
+The game goal in this game mode is reaching the preconfigured round win limit: the team hitting this limit first wins the game.  
+Alternatively, the usual game time limit can kick in, in such case the team with most won rounds wins the game (unhandled case: when both teams have same amount of round wins, the team winning the 1st round earlier is the winner of the game, however since the game is not explicitly telling who is the winner in any game mode, we don't deal with this either).
+ - **Physics:** non-explosive bullets can **ricochet** off the walls if colliding them in **small angle (<= 10°)**.
+ - **Physics: fragile bullet vs any bullet collision**: fragile bullets (rocket, grenade) can collide with any kind of bullet, leading to destroying fragile bullets.  
  In team deathmatch, this collision might be suppressed based on the friendly fire configuration, so teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
- - Physics: **fragile bullet vs explosion**: fragile bullets (rocket, grenade) are destroyed if they are within the damage radius of an explosion.  
+ - **Physics: fragile bullet vs explosion**: fragile bullets (rocket, grenade) are destroyed if they are within the damage radius of an explosion.  
  In team deathmatch, this behavior might be suppressed based on the friendly fire configuration, so explosions triggered by teammates cannot destroy each other's fragile bullets when friendly fire is disabled.
- - Physics: **weapon recoil and bullet impact push the player being in the air (jump/fall/JetLax):**
+ - **Physics: weapon recoil and bullet impact push the player being in the air (jump/fall/JetLax):**
    - recoil of fired weapons mid-air push the player back a bit,
    - players mid-air are pushed a bit when being hit by bullets.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
- - Gameplay: in previous versions, as a design choice, player disconnecting from the server did not result in immediate deleting of their bullets, and those bullets were still able to travel until hitting something.
+ - **Gameplay:** in previous versions, as a design choice, player disconnecting from the server did not result in immediate deleting of their bullets, and those bullets were still able to travel until hitting something.
    This also means that when a bullet was hitting someone or something, the shooter was still considered as an active player, and could cause damage even when not present anymore on the server.  
    But now as spectator mode has been introduced, to simplify game code, **bullets shot by a player entering spectator mode are handled in the same way as bullets from a disconnecting player: immediately deleted**.  
    In such case, explosive bullets are deleted without causing explosion, to make sure such players cause minimum consequence to gameplay.
- - Physics: Grenade Launcher: **grenade hitting a player** also triggers explosion.  
+ - **Physics:** Grenade Launcher: **grenade hitting a player** also triggers explosion.  
    In team deathmatch, it is based on the friendly fire configuration, so teammates cannot hit each other with grenade when friendly fire is disabled.
- - Physics: JetLax: now **crouch is allowed together with using JetLax**, allowing flying into narrow tunnels.  
+ - **Input/Physics:** JetLax: now **crouch is allowed together with using JetLax**, allowing flying into narrow tunnels.  
    Key 'CTRL' is kept for crouching only. Key 'S' is for descending only.  
    This way crouching and descending actions can be controlled independently when using JetLax.
- - Physics: JetLax: when activated but idle, **randomized micro-forces** push the player to give a bit more floating-like feeling.
- - Physics: **impact force** on players has been tweaked a bit, in particular the explosions now throw players over a more visually appealing 2D-curve.
- - GFX: **smoke colors** are a bit more **randomized** (nobody will notice it though).
+ - **Physics: JetLax:** when activated but idle, **randomized micro-forces** push the player to give a bit more floating-like feeling.
+ - **Physics: impact force** on players has been tweaked a bit, in particular the explosions now throw players over a more visually appealing 2D-curve.
+ - **GFX: smoke colors** are a bit more **randomized** (nobody will notice it though).
 
 This version brings the following **BUG FIXES**:
- - Physics: **Jumping when Running Down Stairs** is now working properly, previously it was not possible most of the time.
- - Physics: **Team Deathmatch**: when friendly fire was disabled, the player was not **taking damage from self-caused explosions**.
- - Gameplay: when the current game session was already won and showing the results, if a client disconnected then reconnected from/to the server while the server was still waiting for the restart, the results were not shown automatically to the client as expected. Even worse, in Team DeathMatch mode, the Team Select menu was shown to the client, and the client could still join any team (while all the others were already waiting for the restart). Now in both game modes the results are shown automatically after reconnecting as expected, and joining a team is not possible when the game has already ended.
+ - **Physics: Jumping when Running Down Stairs** is now working properly, previously it was not possible most of the time.
+ - **Physics: Team Deathmatch**: when friendly fire was disabled, the player was not **taking damage from self-caused explosions**.
+ - **Gameplay:** when the current game session was already won and showing the results, if a client disconnected then reconnected from/to the server while the server was still waiting for the restart, the results were not shown automatically to the client as expected. Even worse, in Team DeathMatch mode, the Team Select menu was shown to the client, and the client could still join any team (while all the others were already waiting for the restart). Now in both game modes the **results are shown automatically after reconnecting as expected, and joining a team is not possible when the game has already ended**.
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
