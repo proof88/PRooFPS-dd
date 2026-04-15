@@ -32,7 +32,7 @@ NOT all versions have the ALP label, be careful!
   * [v0.1.1 Private Beta (March 10, 2023)](#v011-private-beta-march-10-2023)
   * [v0.1 Private Beta (Dec 16, 2022)](#v01-private-beta-dec-16-2022)
 
-## v0.7.0 Private Beta (March 5, 2026)
+## v0.7.0 Private Beta (Apr 15, 2026)
 
 A compressed build for Windows is available for TODO.
 
