@@ -37,7 +37,7 @@ NOT all versions have the ALP label, be careful!
 A compressed build for Windows is available for TODO.
 
 This version brings the following **NEW FEATURES**:
- - **Gameplay: Spectator Mode** is the initial state for all joined players, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
+ - **Gameplay: Spectator Mode** is the initial state for all joined players now in all game modes, where they can observe the game with either "free camera spectating" or "player spectating camera" mode.
    Entering Spectator Mode is always available during gameplay by pressing 'M'.
  - **Gameplay: Team Round Game: this is a new, round-based team game mode**, not deathmatch. This practially means 2 things:
    - whenever a player dies, they cannot respawn until the next round starts, and
