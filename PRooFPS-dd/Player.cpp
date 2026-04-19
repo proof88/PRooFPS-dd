@@ -444,7 +444,7 @@ void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bo
         const auto nInvulTimeElapsedMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_timeStartedInvulnerability).count();
         // only server instance is allowed to decide about ENDING invulnerability, client will be notified over network msg
         const bool bEndInvul = bServer && (nInvulTimeElapsedMillisecs >= static_cast<long long>(config.getPlayerRespawnInvulnerabilityDelaySeconds()) * 1000);
-        const bool bShowPlayer = bEndInvul || ((nInvulTimeElapsedMillisecs / nBlinkPeriodMillisecs) % 2) == 0;
+        const bool bShowPlayer = (getHealth() > 0) && (bEndInvul || ((nInvulTimeElapsedMillisecs / nBlinkPeriodMillisecs) % 2) == 0);
         setVisibilityState(bShowPlayer);
         if (bEndInvul)
         {
@@ -2803,6 +2803,9 @@ void proofps_dd::Player::BuildPlayerObject(bool blend) {
     m_pTexPlayerStand = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe1m.bmp").c_str());
     m_pTexPlayerCrouch = m_gfx.getTextureManager().createFromFile((std::string(proofps_dd::GAME_TEXTURES_DIR) + "giraffe_crouch.bmp").c_str());
     m_pObj->getMaterial().setTexture(m_pTexPlayerStand);
+
+    // since default HP is 0, hide the object as well, game should show it again when player really spawns on the map
+    m_pObj->Hide();
 
     m_timeCtor = std::chrono::steady_clock::now();
 }

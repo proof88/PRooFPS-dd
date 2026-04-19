@@ -373,6 +373,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
             __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iTeamId);
     }
 
+    // TODO: we want to save the number, not the copy of the PgeOldNewValue!
     const auto iPrevTeamId = player.getTeamId();
 
     // need to trigger updating player teamId here because that is needed for serverRespawnPlayer() to work properly
@@ -390,15 +391,16 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
         }
     }
 
+    bool bRoundGame = GameMode::getGameMode()->isRoundBased();
+    TeamRoundGameMode* trg = nullptr;
+    if (bRoundGame)
+    {
+        trg = dynamic_cast<TeamRoundGameMode*>(GameMode::getGameMode());
+        bRoundGame = (trg != nullptr);
+    }
+
     if (m_pge.getNetwork().isServer())
     {
-        bool bRoundGame = GameMode::getGameMode()->isRoundBased();
-        TeamRoundGameMode* trg = nullptr;
-        if (bRoundGame)
-        {
-            trg = dynamic_cast<TeamRoundGameMode*>(GameMode::getGameMode());
-            bRoundGame = (trg != nullptr);
-        }
         if ( (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */) ||
              (iPrevTeamId == player.getTeamId() /* i.e. no actual team change happened, just exited spectator mode this way */)
             )
@@ -424,20 +426,16 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team but need to wait until next round!",
                     __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
                 
+                // when we introduce fast game restart, it can be used in regtest, so we won't need separate condition here for "testing"
                 if (!cfgProfiles.getVars()["testing"].getAsBool())
                 {
-                    getConsole().EOLn(
-                        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
-                        __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                    serverRespawnPlayer(player, false, config);
+                    // this condition here looks unnecessary since round game doesn't allow respawn after die but let's stay formal
+                    if (!GameMode::getGameMode()->isRespawnAllowedAfterDie())
+                    {
+                        player.setForcedSpectating(true);
+                    }
+                    
                 }
-                // TODO: instead of this, I think we should have default 0 HP for all players, since nowadays all game modes require Join which would eventually
-                // do a respawn, here in this false branch we wouldn't need to do anything because player is by default dead.
-                // Also. forcedSpectating shall be also default.
-                
-                //player.setHealth(0);
-                //player.updateOldValues();
-                //player.setForcedSpectating(true);
             }
         }
         else
@@ -447,6 +445,27 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                 "PlayerHandling::%s(): connHandleServerSide: %u, name: %s changed team, need to die!",
                 __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
             handlePlayerDied(player, *m_gui.getXHair(), player.getServerSideConnectionHandle());
+        }
+    }
+    else
+    {
+        // client path, keep this condition in sync with the other condition in the server path
+        if (bRoundGame && (trg->getFSM().getState() != TeamRoundGameMode::RoundStateFSM::RoundState::Prepare))
+        {
+            getConsole().EOLn(
+                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team but need to wait until next round!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+
+            // when we introduce fast game restart, it can be used in regtest, so we won't need separate condition here for "testing"
+            if (!cfgProfiles.getVars()["testing"].getAsBool())
+            {
+                // this condition here looks unnecessary since round game doesn't allow respawn after die but let's stay formal
+                if (!GameMode::getGameMode()->isRespawnAllowedAfterDie())
+                {
+                    player.setForcedSpectating(true);
+                }
+
+            }
         }
     }
 
@@ -543,7 +562,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     0.f /* weapon angle Z */,
                     0.f /* weapon momentary accuracy */,
                     false /* bActuallyRunningOnGround*/, false /* bCrouch */, 0.f /* fSomersaultAngle */,
-                    0 /* AP */, 100 /* HP */,
+                    0 /* AP */, 0 /* HP */,
                     false /* bRespawn */,
                     0 /* nFrags */, 0 /* nDeaths */,
                     0 /* nSuicides */,
@@ -635,7 +654,7 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             0.f /* weapon angle Z */,
             0.f /* weapon momentary accuracy */,
             false /* bActuallyRunningOnGround*/, false /* bCrouch */, 0.f /* fSomersaultAngle*/,
-            0 /* AP */, 100 /* HP */,
+            0 /* AP */, 0 /* HP */,
             false /* bRespawn */,
             0 /* nFrags */, 0 /* nDeaths */,
             0 /* nSuicides */,

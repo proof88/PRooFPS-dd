@@ -16,8 +16,13 @@
    - instead of Frag Limit, Round Win Limit shall be shown above the table.
 
  - Start a server instance with "Team Round Game" Game Mode, and 1 client instance (connect it to server), then test the following:
-   - server joins team 1, client joins team 2,
-   - Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it),
+   - both players will stay in Spectator mode at the beginning. On the Team Select menu, select Spectator Mode on both instances.
+   - check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players.
+   - check in both instances that neither the player objects nor their representation in the minimap are visible.
+   - We assume that in the meantime Round game state has transitioned to Play state, so now restart the server from 'H' menu and
+     quickly join the teams with both players:
+     in Team Select menu, server joins team 1, client joins team 2.
+   - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it),
    - Unless configured otherwise, Prepare state is 3 seconds, Play state is not limited in time, WaitForReset is 5 seconds.
    - Restarting the game zeros out not only player stats but also team round wins.
    - Reaching configured round win limit actually puts the game in won state and frag table is shown as being done also in other game modes.

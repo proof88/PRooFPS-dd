@@ -459,7 +459,7 @@ namespace proofps_dd
             PgeOldNewValue<PureVector>
             >> m_vecOldNewValues = {
                 {OldNewValueName::OvArmor,                PgeOldNewValue<int>(0)},
-                {OldNewValueName::OvHealth,               PgeOldNewValue<int>(100)},
+                {OldNewValueName::OvHealth,               PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvFrags,                PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvDeaths,               PgeOldNewValue<int>(0)},
                 {OldNewValueName::OvSuicides,             PgeOldNewValue<unsigned int>(0)},

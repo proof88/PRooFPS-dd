@@ -392,6 +392,8 @@ private:
         proofps_dd::Player& player1 = insertRes.first->second;
         if (b)
         {
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 0;
             player1.getDeaths() = 0;
@@ -411,6 +413,8 @@ private:
         proofps_dd::Player& player2 = insertRes.first->second;
         if (b)
         {
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 2;
             player2.getDeaths() = 0;
@@ -431,6 +435,8 @@ private:
         proofps_dd::Player& player5 = insertRes.first->second;
         if (b)
         {
+            player5.setHealth(100);
+            player5.updateOldValues();
             player5.setName("Bela");
             player5.getFrags() = 0;
             player5.getDeaths() = 0;
@@ -616,6 +622,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 2;
             player1.getDeaths() = 0;
@@ -625,6 +633,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 1;
             player2.getDeaths() = 0;
@@ -634,6 +644,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            player3.setHealth(100);
+            player3.updateOldValues();
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
@@ -643,6 +655,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            player4.setHealth(100);
+            player4.updateOldValues();
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
@@ -1091,6 +1105,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 0;
             player1.getDeaths() = 0;
@@ -1101,6 +1117,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 0;
             player2.getDeaths() = 0;
@@ -1111,6 +1129,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            player3.setHealth(100);
+            player3.updateOldValues();
             player3.setName("Joe");
             player3.getFrags() = 0;
             player3.getDeaths() = 0;
@@ -1121,6 +1141,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            player4.setHealth(100);
+            player4.updateOldValues();
             player4.setName("Banana");
             player4.getFrags() = 0;
             player4.getDeaths() = 0;
@@ -1188,6 +1210,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
@@ -1198,6 +1222,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -1208,6 +1234,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            player3.setHealth(100);
+            player3.updateOldValues();
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
@@ -1218,6 +1246,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            player4.setHealth(100);
+            player4.updateOldValues();
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
@@ -1285,6 +1315,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 10;
             player1.getDeaths() = 0;
@@ -1295,6 +1327,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -1305,6 +1339,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            player3.setHealth(100);
+            player3.updateOldValues();
             player3.setName("Joe");
             player3.getFrags() = 8;
             player3.getDeaths() = 2;
@@ -1315,6 +1351,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(4), "192.168.1.4");
+            player4.setHealth(100);
+            player4.updateOldValues();
             player4.setName("Banana");
             player4.getFrags() = 8;
             player4.getDeaths() = 0;
@@ -1390,6 +1428,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Adam");
         player1.getFrags() = 10;
         player1.getDeaths() = 0;
@@ -1400,6 +1440,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setHealth(100);
+        player2.updateOldValues();
         player2.setName("Apple");
         player2.getFrags() = 5;
         player2.getDeaths() = 2;
@@ -1411,6 +1453,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+        player3.setHealth(100);
+        player3.updateOldValues();
         player3.setName("Ggg");
         player3.getFrags() = 0;
         player3.getDeaths() = 0;
@@ -1623,6 +1667,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            playerAdam.setHealth(100);
+            playerAdam.updateOldValues();
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
@@ -1633,6 +1679,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            playerApple.setHealth(100);
+            playerApple.updateOldValues();
             playerApple.setName("Apple");
             playerApple.getFrags() = 5;
             playerApple.getDeaths() = 2;
@@ -1643,6 +1691,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            playerJoe.setHealth(100);
+            playerJoe.updateOldValues();
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -1785,6 +1835,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            playerAdam.setHealth(100);
+            playerAdam.updateOldValues();
             playerAdam.setName("Adam");
             playerAdam.getFrags() = 10;
             playerAdam.getDeaths() = 0;
@@ -1809,6 +1861,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            playerJoe.setHealth(100);
+            playerJoe.updateOldValues();
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -1869,6 +1923,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            playerAdam.setHealth(100);
+            playerAdam.updateOldValues();
             playerAdam.setName("Adam");
             playerAdam.getFrags() = dm->getFragLimit();
             playerAdam.getDeaths() = 0;
@@ -1898,6 +1954,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(3), "192.168.1.3");
+            playerJoe.setHealth(100);
+            playerJoe.updateOldValues();
             playerJoe.setName("Joe");
             playerJoe.getFrags() = 4;
             playerJoe.getDeaths() = 2;
@@ -2063,6 +2121,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
@@ -2073,6 +2133,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -2228,6 +2290,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 15;
             player1.getDeaths() = 0;
@@ -2238,6 +2302,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getFrags() = 5;
             player2.getDeaths() = 2;
@@ -2396,6 +2462,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getTeamId() = 1;
             player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -2409,6 +2477,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getTeamId() = 2;
             player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -2575,6 +2645,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getTeamId() = 1;
             player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -2588,6 +2660,8 @@ private:
                 m_audio, m_cfgProfiles, m_bullets,
                 m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
                 *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+            player2.setHealth(100);
+            player2.updateOldValues();
             player2.setName("Apple");
             player2.getTeamId() = 2;
             player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -2801,6 +2875,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
@@ -2811,6 +2887,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setHealth(100);
+        player2.updateOldValues();
         player2.setName("Adam");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
@@ -2933,6 +3011,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Adam");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
@@ -2943,6 +3023,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(2), "192.168.1.2");
+        player2.setHealth(100);
+        player2.updateOldValues();
         player2.setName("Apple");
         player2.getFrags() = 2;
         player2.getDeaths() = 0;
@@ -3182,6 +3264,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
@@ -3448,6 +3532,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
@@ -3514,6 +3600,8 @@ private:
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
             *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1");
+        player1.setHealth(100);
+        player1.updateOldValues();
         player1.setName("Apple");
         player1.getFrags() = 0;
         player1.getDeaths() = 0;
@@ -4431,6 +4519,8 @@ private:
         proofps_dd::Player& player1 = insertRes.first->second;
         if (b)
         {
+            player1.setHealth(100);
+            player1.updateOldValues();
             player1.setName("Adam");
             player1.getFrags() = 0;
             player1.getDeaths() = 0;

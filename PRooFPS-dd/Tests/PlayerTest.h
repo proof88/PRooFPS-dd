@@ -329,7 +329,7 @@ private:
             assertFalse(player.hasBootedUp(), "has booted up") &
             assertTrue(player.isExpectingAfterBootUpDelayedUpdate(), "expecting after bootup delayed update") &
             assertNotNull(player.getObject3D(), "object3d") &
-            assertTrue(player.getObject3D() && player.getObject3D()->isRenderingAllowed(), "object3d visible") &
+            assertTrue(player.getObject3D() && !player.getObject3D()->isRenderingAllowed(), "object3d visible") &
             assertTrue(player.isInSpectatorMode(), "spectator mode") &
             assertFalse(player.isForcedSpectating(), "forced spectating") &
             assertFalse(player.isDirty(), "isDirty") &
@@ -337,7 +337,7 @@ private:
             assertFalse(playerConst.getArmor().isDirty(), "old armor") &
             assertEquals(0, playerConst.getArmor(), "armor") &
             assertFalse(playerConst.getHealth().isDirty(), "old health") &
-            assertEquals(100, playerConst.getHealth(), "health") &
+            assertEquals(0, playerConst.getHealth(), "health") &
             assertFalse(player.getDeaths().isDirty(), "old deaths") &
             assertEquals(0, player.getDeaths(), "deaths") &
             assertFalse(player.getSuicides().isDirty(), "old suicides") &
@@ -493,6 +493,7 @@ private:
             return false;
         };
 
+        player.show();
         player.hide();
 
         bool b = true;
@@ -515,6 +516,7 @@ private:
             return false;
         };
 
+        player.setVisibilityState(true);
         player.setVisibilityState(false);
 
         bool b = true;
@@ -553,6 +555,8 @@ private:
         {
             return false;
         }
+
+        player.show();
 
         b &= assertTrue(player.isVisible(), "isVisible 1");
         
@@ -866,21 +870,27 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         const auto& playerConst = player;
 
-        player.setHealth(200);
-        bool b = (assertEquals(100, playerConst.getHealth(), "health 1") &
+        player.setHealth(0);
+        bool b = (assertEquals(0, playerConst.getHealth(), "health 1") &
             assertFalse(playerConst.getHealth().isDirty(), "dirty 1") &
             assertFalse(playerConst.isDirty(), "dirty 2")) != 0;
 
-        player.setHealth(-1);
-        b &= (assertEquals(0, playerConst.getHealth(), "health 2") &
+        player.setHealth(100);
+        b &= (assertEquals(100, playerConst.getHealth(), "health 1") &
             assertTrue(playerConst.getHealth().isDirty(), "dirty 3") &
             assertTrue(playerConst.isDirty(), "dirty 4")) != 0;
-
-        player.updateOldValues();
-        b &= assertTrue(playerConst.isNetDirty(), "is net dirty");
-        b &= (assertEquals(0, playerConst.getHealth().getOld(), "health 3") &
+        
+        player.setHealth(-1);
+        b &= (assertEquals(0, playerConst.getHealth(), "health 3") &
             assertFalse(playerConst.getHealth().isDirty(), "dirty 5") &
             assertFalse(playerConst.isDirty(), "dirty 6")) != 0;
+
+        player.setHealth(5);
+        player.updateOldValues();
+        b &= assertTrue(playerConst.isNetDirty(), "is net dirty");
+        b &= (assertEquals(5, playerConst.getHealth().getOld(), "health 4") &
+            assertFalse(playerConst.getHealth().isDirty(), "dirty 7") &
+            assertFalse(playerConst.isDirty(), "dirty 8")) != 0;
 
         return b;
     }
@@ -889,6 +899,9 @@ private:
     {
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
         const auto& playerConst = player;
+
+        player.setHealth(100);
+        player.updateOldValues();
 
         /* these are with default 0 AP, so we expect 100% of HP damage to be subtracted from player HP */
 
@@ -974,6 +987,8 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
+        player.setHealth(100);
+        player.updateOldValues();
         m_cfgProfiles.getVars()[proofps_dd::Player::szCVarSvSomersaultMidAirAutoCrouch].Set(true);
         player.setJumpAllowed(true);
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
@@ -1041,6 +1056,9 @@ private:
             return false;
         };
 
+        player.setHealth(100);
+        player.updateOldValues();
+
         player.die(true, bServer);
         const auto nFirstTimeDiedSinceEpoch = player.getTimeDied().time_since_epoch().count();
         bool b = (assertEquals(0, playerConst.getHealth(), "health 1") &
@@ -1082,6 +1100,8 @@ private:
             {
                 return false;
             };
+            player.setHealth(100);
+            player.updateOldValues();
 
             player.moveTimeDiedEarlier(timeMoveMillisecs);
             b &= assertEquals(
@@ -1114,6 +1134,9 @@ private:
         };
         player.getWeaponManager().getWeapons()[2]->SetAvailable(true);
         bool b = assertTrue(player.getWeaponManager().setCurrentWeapon(player.getWeaponManager().getWeapons()[2], false, bServer), "set current wpn");
+
+        player.setHealth(100);
+        player.updateOldValues();
 
         // TODO: maybe we should also check for object height
         player.getWantToStandup() = false;
@@ -1171,6 +1194,9 @@ private:
         for (int i = 0; i < 2; i++)
         {
             proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+
+            player.setHealth(100);
+            player.updateOldValues();
 
             player.getPos().set(PureVector(1.f, 2.f, 3.f));
             player.getPos().commit();
@@ -2243,6 +2269,8 @@ private:
     bool test_attack()
     {
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(12345), "192.168.1.12");
+        player.setHealth(100);
+        player.updateOldValues();
         if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::No)))
         {
             return false;
@@ -2312,6 +2340,9 @@ private:
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const proofps_dd::MapItem miHealth(*m_engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
 
+        player.setHealth(100);
+        player.updateOldValues();
+
         bool b = assertFalse(player.canTakeItem(miHealth), "1");
 
         player.setHealth(50);
@@ -2324,6 +2355,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        player.setHealth(100);
+        player.updateOldValues();
         const proofps_dd::MapItem miPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         const proofps_dd::MapItem miMchgun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         const proofps_dd::MapItem miBazooka(*m_engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
@@ -2356,6 +2389,8 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
         const auto& playerConst = player;
+        player.setHealth(100);
+        player.updateOldValues();
         proofps_dd::MapItem miHealth(*m_engine, proofps_dd::MapItemType::ITEM_HEALTH, PureVector(1, 2, 3));
         pge_network::PgePacket newPktWpnUpdate;
         bool bHasJustBecomeAvailable = false;
@@ -2372,6 +2407,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        player.setHealth(100);
+        player.updateOldValues();
         proofps_dd::MapItem miPistol(*m_engine, proofps_dd::MapItemType::ITEM_WPN_PISTOL, PureVector(1, 2, 3));
         proofps_dd::MapItem miMchGun(*m_engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
         proofps_dd::MapItem miBazooka(*m_engine, proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, PureVector(1, 2, 3));
@@ -2659,6 +2696,10 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerServer.setHealth(100);
+        playerServer.updateOldValues();
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2708,6 +2749,10 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerServer.setHealth(100);
+        playerServer.updateOldValues();
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2761,6 +2806,8 @@ private:
         }
 
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound for itself (I cannot check sound now, need stubs for that)
@@ -2787,6 +2834,8 @@ private:
         }
 
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound for itself (I cannot check sound now, need stubs for that)
@@ -2803,6 +2852,8 @@ private:
     {
         const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        playerServer.setHealth(100);
+        playerServer.updateOldValues();
 
         if (!assertTrue(loadWeaponsForPlayer(playerServer, SetDfltWpn::Yes)))
         {
@@ -2828,6 +2879,10 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerServer.setHealth(100);
+        playerServer.updateOldValues();
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
 
         bool b = true;
         // sound play only (I cannot check sound now, need stubs for that), no pkt for server player
@@ -2880,6 +2935,8 @@ private:
         }
 
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
         bool b = true;
 
         // client never sends pkt from this function, and always plays sound (I cannot check sound now, need stubs for that)
@@ -2895,6 +2952,10 @@ private:
         const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
         proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
         proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        playerServer.setHealth(100);
+        playerServer.updateOldValues();
+        playerClient.setHealth(100);
+        playerClient.updateOldValues();
 
         bool b = true;
         // (I cannot check sound now, need stubs for that)

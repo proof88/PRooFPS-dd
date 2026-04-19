@@ -2313,7 +2313,6 @@ void proofps_dd::GUI::drawInGameWelcomeTeamSelectSpectatorMenu(
                     }
                     else /* bToggleSpectatorMode is true */
                     {
-                        // entering spectator mode automatically makes this player exit from any team,
                         // exiting spectator mode can be done with team selection only in team-based games, and anytime in non-team-based games.
                         proofps_dd::MsgUserInGameMenuCmd::toggleSpectatorMode(pktUserInGameMenuCmd);
                         m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
