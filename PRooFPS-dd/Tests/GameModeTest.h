@@ -183,6 +183,9 @@ protected:
             "test_round_games_round_ends_without_win_when_a_team_dies_and_other_team_is_empty",
             static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_ends_without_win_when_a_team_dies_and_other_team_is_empty));
         addSubTest(
+            "test_round_games_round_ends_without_win_when_first_player_joins_a_team",
+            static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_ends_without_win_when_first_player_joins_a_team));
+        addSubTest(
             "test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state",
             static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state));
         addSubTest("test_round_games_player_movement_allowed", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_player_movement_allowed));
@@ -1999,9 +2002,7 @@ private:
                 // by hitting round win limit if any team is empty!
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 3 TRG");
 
-                // temporarily decrease win count otherwise addPlayer() would trigger the win
-                trg->setTeamRoundWins(2, 0);
-
+                trg->getFSM().reset(); // go back to Prepare state
                 b &= assertTrueEz(gm->addPlayer(playerAdam, m_network), gamemode, bTestingAsServer, "add player Adam fail 2");
                 b &= assertTrueEz(gm->addPlayer(playerJoe, m_network), gamemode, bTestingAsServer, "add player Joe fail 2");
 
@@ -2023,8 +2024,13 @@ private:
                 };
                 b &= assertFragTableEqualsEz(expectedPlayers3, gm->getPlayersTable(), gamemode, bTestingAsServer, "table 3 fail");
 
-                // now set win condition again and test removePlayer() can finally detect it
-                trg->setTeamRoundWins(2, 1);
+                trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
+                b &= assertEqualsEz(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                    trg->getFSM().getState(),
+                    gamemode, true /*server*/, "FSM state 2");
+                b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 4 TRG");
+
                 b &= assertTrueEz(gm->removePlayer(playerBanana, m_network), gamemode, bTestingAsServer, "remove player Banana 1 fail");
                 const std::vector<proofps_dd::PlayersTableRow> expectedPlayers4 = {
                     { "Adam", playerAdam.getServerSideConnectionHandle(), 1 /* iTeamId*/, playerAdam.isInSpectatorMode(), 10, 0 },
@@ -2034,7 +2040,7 @@ private:
                 
                 if (bTestingAsServer)
                 {
-                    b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 4 TRG");
+                    b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 5 TRG");
                     b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick TRG");
                     b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time TRG");
                     b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning TRG");
@@ -2046,7 +2052,7 @@ private:
 
                 if (bTestingAsServer)
                 {
-                    b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 5 TRG");
+                    b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 6 TRG");
                     b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick TRG 2");
                     b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time TRG 2");
                     b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning TRG 2");
@@ -2309,6 +2315,11 @@ private:
             player2.getDeaths() = 2;
             player2.getTeamId() = 2;
             player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
+            // cannot win yet, we are in Prepare state
+            b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 0");
 
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
@@ -2317,19 +2328,13 @@ private:
                 proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
                 trg->getFSM().getState(),
                 gamemode, true /*server*/, "FSM state 1");
-            
-            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
-            // cannot win yet, other team has 0 players
-            b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 0");
-
-            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
 
             if (bTestingAsServer)
             {
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 0");
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
                 b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
-                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
                 b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
                 try
                 {
@@ -2357,14 +2362,13 @@ private:
 
             if (bTestingAsServer)
             {
+                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
-                b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
                 b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
                 b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, bTestingAsServer, "team round wins 1");
                 b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, bTestingAsServer, "team round wins 2");
- 
-                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
                 b &= assertEqualsEz(8u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
@@ -2671,6 +2675,11 @@ private:
             player2.getFiringAccuracy() = 0.5f;
             player2.getShotsFiredCount() = 10;
 
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
+            // cannot win yet, we are in Prepare state
+            b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 0");
+
             /* win the game by reaching round win limit: we are allowed to do this because we are not testing the mechanism of auto-incrementing won rounds now */
             trg->setTeamRoundWins(1, 1);
             trg->getFSM().transitionToPlayState(); /* forcing FSM to Play state, otherwise team round wins are not checked against round win limit */
@@ -2679,18 +2688,12 @@ private:
                 trg->getFSM().getState(),
                 gamemode, true /*server*/, "FSM state 1");
 
-            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
-            // cannot win yet, other team has 0 players
-            b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 0");
-
-            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
-
             if (bTestingAsServer)
             {
+                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 0");
                 b &= assertTrueEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 1");
                 b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 1");
                 b &= assertLessEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
-                b &= assertTrueEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 1");
                 b &= assertEqualsEz(6u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 2");
                 try
                 {
@@ -2718,13 +2721,13 @@ private:
 
             if (bTestingAsServer)
             {
+                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
                 b &= assertFalseEz(gm->isGameWon(), gamemode, bTestingAsServer, "game won 2");
-                b &= assertTrueEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
+                b &= assertFalseEz(gm->wasGameWonAlreadyInPreviousTick(), gamemode, true/*server*/, "game not won previous tick 2");
                 b &= assertEqualsEz(0, gm->getWinTime().time_since_epoch().count(), gamemode, bTestingAsServer, "win time");
                 b &= assertLessEz(0, gm->getResetTime().time_since_epoch().count(), gamemode, bTestingAsServer, "reset time");
                 b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, bTestingAsServer, "team round wins 1");
                 b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, bTestingAsServer, "team round wins 2");
-                b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "winning 2");
 
                 // outgoing packet for winning state true -> false transition too
                 b &= assertEqualsEz(8u, m_network.getServer().getTxPacketCount(), gamemode, bTestingAsServer, "tx pkt count 3");
@@ -4658,6 +4661,104 @@ private:
         bool b = true;
         b &= assertTrue(
             test_round_games_round_ends_without_win_when_a_team_dies_and_other_team_is_empty(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_round_ends_without_win_when_first_player_joins_a_team(const proofps_dd::GameModeType& gamemode)
+    {
+        // server-only test, clients do not transition FSM on their own but they receive state changes
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(true);
+        if (!m_network.initialize())
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "network reinit as server");
+        }
+
+        if (!testInitGamemode(gamemode))
+        {
+            return assertFalseEz(true, gamemode, true/*server*/, "testInitGamemode fail");
+        }
+
+        assert(gm->isRoundBased());
+
+        trg->setRoundWinLimit(3);
+
+        // need to restart to correctly initialize time-specific values if we have time limit!
+        gm->restartWithoutRemovingPlayers(m_network);
+
+        trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
+        bool b = true;
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 1");
+
+        auto insertRes = m_mapPlayers.insert(
+            {
+                1,
+                proofps_dd::Player(
+                    m_audio, m_cfgProfiles, m_bullets,
+                    m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
+                    *m_engine, m_network, static_cast<pge_network::PgeNetworkConnectionHandle>(1), "192.168.1.1")
+            }); // TODO: emplace_back()
+        b &= assertTrue(insertRes.second, "player1 insert into m_mapPlayers");
+        proofps_dd::Player& player1 = insertRes.first->second;
+        if (b)
+        {
+            // player is dead, forced-spectating initially
+            //player1.setHealth(100);
+            //player1.updateOldValues();
+            player1.setName("Adam");
+            player1.getFrags() = 0;
+            player1.getDeaths() = 0;
+            player1.getTeamId() = 1; // required non-zero teamId for TDM test, otherwise TDM does not count frags
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            player1.setForcedSpectating(true);
+        }
+
+        b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, true/*server*/, "add player 1");
+
+        if (!b)
+        {
+            return false;
+        }
+
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 1");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 1");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 1");
+
+        /* drive FSM: round shall end due to the only player who joined is dead (initial game start scenario) */
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 1");
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 1");
+        b &= assertEqualsEz(
+            proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+            trg->getFSM().getState(),
+            gamemode, true /* testing as server */, "FSM state 2");
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 2");
+
+        trg->serverTickUpdateWinningConditions(m_network); // closing current tick
+
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(1), gamemode, true /* testing as server */, "team 1 round wins 2");
+        b &= assertEqualsEz(0u, trg->getTeamRoundWins(2), gamemode, true /* testing as server */, "team 2 round wins 2");
+        
+        // next tick
+        b &= assertFalseEz(
+            trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 2");
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won 2");      
+        b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
+
+        return b;
+    }
+
+    bool test_round_games_round_ends_without_win_when_first_player_joins_a_team()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_round_ends_without_win_when_first_player_joins_a_team(gamemode),
             proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
         return b;

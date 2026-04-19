@@ -1238,12 +1238,13 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
             }
             else
             {
-                // if maximum 1 team has player(s) and no more alive players left, we also need to transition to next round but without actual win
-                if (((nCurrentTeam1Players != 0) && (nOldTeam1AlivePlayers > 0) && (nCurrentTeam1AlivePlayers == 0))
+                // if maximum 1 team has player(s) and no more alive players left, we also need to transition to next round but without actual win.
+                // This also the case when the first player joins the server since from v0.7 new players are also dead by default.
+                if (((nCurrentTeam1Players != 0) /* && (nOldTeam1AlivePlayers > 0) */ && (nCurrentTeam1AlivePlayers == 0))
                     ||
-                    ((nCurrentTeam2Players != 0) && (nOldTeam2AlivePlayers > 0) && (nCurrentTeam2AlivePlayers == 0)))
+                    ((nCurrentTeam2Players != 0) /* && (nOldTeam2AlivePlayers > 0) */ && (nCurrentTeam2AlivePlayers == 0)))
                 {
-                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win", __func__);
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win: one team is empty, other team is dead", __func__);
                     m_fsm.roundWon();
                 }
             }
