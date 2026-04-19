@@ -1,6 +1,6 @@
 /*
   ###################################################################################
-  _how-to-manual-test-01-team-deathmatch.txt
+  _how-to-manual-test-02-team-deathmatch.txt
   Part of the PRooFPS-dd manual tests.
   Made by PR00F88, West Whiskhyll Entertainment
   2025
@@ -8,6 +8,17 @@
 */
 
  - Start a server instance with "Team Deathmatch" Game Mode, and 1 client instance (connect it to server), then test the following:
+   - In both instances, select "Spectator Mode" in the Team Select / Welcome menu:
+     - Check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players;
+     - Check in both instances that neither the player objects nor their representation in the minimap are visible;
+     - Check if both players have 0 deaths registered in the Frag table in both instances.
+   
+   - Join the game with both instances so both players will be visible on the map:
+     - Server player shall join Team 1, client player shall join Team 2;
+     - Check if both players still have 0 deaths;
+     - Frag table shall show Server player in Team 1, Client player in Team 2 in both instances;
+     - Frag table shall hide Spectators table now because no player is in Spectator mode now.
+   
    - Friendly fire working as per current config?
      - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,
      - Check non-bouncing explosive bullets (e.g. rocket) DIRECTLY hitting other players,

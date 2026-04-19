@@ -1,6 +1,6 @@
 /*
   ###################################################################################
-  _how-to-manual-test-04-general.txt
+  _how-to-manual-test-05-general.txt
   Part of the PRooFPS-dd manual tests.
   Made by PR00F88, West Whiskhyll Entertainment
   2025
@@ -29,12 +29,12 @@
    - check if non-bouncing bullets are actually able to ricochet off the wall (hit angle <= 10 degrees).
 
    - Spectator Mode:
-     - negative test: check if neither server nor client instance can enter into Spectator mode when the game is already won
+     - negative test: check if neither server nor client instance can enter Spectator mode when the game is already won
        (during showing end-game results).
        - further check if welcome/team select menu is NOT shown to a new client who joins the server when the game is already won
          (during showing end-game results).
 
-     - check if all players can correctly enter into Spectator Mode:
+     - check if all players can correctly enter Spectator Mode:
        - right after connecting to server,
        - later back from active gameplay.
 

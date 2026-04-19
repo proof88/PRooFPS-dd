@@ -1,6 +1,6 @@
 /*
   ###################################################################################
-  _how-to-manual-test-05-weapon-settings.txt
+  _how-to-manual-test-06-weapon-settings.txt
   Part of the PRooFPS-dd manual tests.
   Made by PR00F88, West Whiskhyll Entertainment
   2025

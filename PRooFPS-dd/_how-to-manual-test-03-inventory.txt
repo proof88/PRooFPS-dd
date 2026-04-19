@@ -1,6 +1,6 @@
 /*
   ###################################################################################
-  _how-to-manual-test-02-inventory.txt
+  _how-to-manual-test-03-inventory.txt
   Part of the PRooFPS-dd manual tests.
   Made by PR00F88, West Whiskhyll Entertainment
   2025

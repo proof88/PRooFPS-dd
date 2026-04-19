@@ -1,31 +1,40 @@
 /*
   ###################################################################################
-  _how-to-manual-test-06-team-roundgame.txt
+  _how-to-manual-test-07-team-roundgame.txt
   Part of the PRooFPS-dd manual tests.
   Made by PR00F88, West Whiskhyll Entertainment
   2026
   ###################################################################################
 */
 
- - Assuming Team Deathmatch manual test passes (_how-to-manual-test-01-team-deathmatch.txt) and that those
+ - Assuming Team Deathmatch manual test passes (_how-to-manual-test-02-team-deathmatch.txt) and that those
    functionalities are also working in Team Round Game mode, except 1 that is mentioned below separately.
-   Therefore, not listing them here again.
+   Therefore, not listing them here again but shall be executed in this game mode too!
 
  - Difference in Frag table compared to Team Deathmatch:
    - instead of Per-Team Total Frags, Per-Team Round Wins shall be shown next to number of players in team.
    - instead of Frag Limit, Round Win Limit shall be shown above the table.
 
- - Start a server instance with "Team Round Game" Game Mode, and 1 client instance (connect it to server), then test the following:
-   - both players will stay in Spectator mode at the beginning. On the Team Select menu, select Spectator Mode on both instances.
-   - check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players.
-   - check in both instances that neither the player objects nor their representation in the minimap are visible.
+   - Repeating the beginning few steps from the Team Deathmatch manual test:
+     - In both instances, select "Spectator Mode" in the Team Select / Welcome menu:
+       - Check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players;
+       - Check in both instances that neither the player objects nor their representation in the minimap are visible;
+       - Check if both players have 0 deaths registered in the Frag table in both instances.
+
    - We assume that in the meantime Round game state has transitioned to Play state, so now restart the server from 'H' menu and
      quickly join the teams with both players:
      in Team Select menu, server joins team 1, client joins team 2.
+
+   - Same steps as in the Team Deathmatch manual test, after both players joined teams:
+     - Check if both players still have 0 deaths;
+     - Frag table shall show Server player in Team 1, Client player in Team 2 in both instances;
+     - Frag table shall hide Spectators table now because no player is in Spectator mode now.
+
    - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it),
    - Unless configured otherwise, Prepare state is 3 seconds, Play state is not limited in time, WaitForReset is 5 seconds.
-   - Restarting the game zeros out not only player stats but also team round wins.
    - Reaching configured round win limit actually puts the game in won state and frag table is shown as being done also in other game modes.
+   - Restarting the game zeros out not only player stats but also team round wins.
+   
    - Disconnect and then reconnect the client when the server is in WaitForReset state, check if client immediately replicates
      this state and allows all movements and actions in such state.
    - Disconnect and then reconnect the client when the server is in Prepare state, check if client immediately replicates
@@ -38,12 +47,16 @@
      shall be registered due to the other team is empty.
 
    - TBD: Reconnect the client when the round is in Prepare state and join a team. The client player shall spawn immediately.
+
    - TBD: Reconnect the client when the round is in Play state and join a team. The client shall stay in force-spectating state (dead) until
-     the next round begins.
+     the next round begins, with 0 registered deaths.
+
    - TBD: Reconnect the client when the round is in WaitForReset state and join a team. The client shall stay in force-spectating state (dead) until
-     the next round begins.
+     the next round begins, with 0 registered deaths.
+
    - TBD: connect 1 more client and join that client into the same team as the first client is already in. Now there shall be 2 client players in team 2,
-     and 1 server player in team 1. When the round is in Play state, put 1 of the clients into spectator mode and join team 1. This player shall stay 
-     dead until next round. This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
-     increasing deaths count of such player by 1 and shall wait until next round begins.
+     and 1 server player in team 1:
+      - When the round is in Play state, put 1 of the clients into spectator mode and join team 1. This player shall stay 
+        dead until next round. This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
+        increasing deaths count of such player by 1 and shall wait until next round begins.
 
