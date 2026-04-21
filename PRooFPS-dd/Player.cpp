@@ -431,7 +431,7 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::Player::ge
 */
 void proofps_dd::Player::updateAudioVisuals(const proofps_dd::Config& config, bool bServer, bool bAllowedForGameplay)
 {
-    if (!bAllowedForGameplay)
+    if (!bAllowedForGameplay || isForcedSpectating())
     {
         hide();
         forceDeactivateCurrentInventoryItem();
