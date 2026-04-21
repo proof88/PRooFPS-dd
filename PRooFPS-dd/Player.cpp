@@ -2715,7 +2715,7 @@ void proofps_dd::Player::handleToggleSpectatorMode()
     // clients will invoke it from PlayerHandling::handlePlayerEventFromServer() which is sent by server at the end of this function!
 
     // entering spectator mode shall not ditch already selected team, we keep that info, so that
-    // when player already has a team and exits spectator mode, it won't be detected as a team change in game logic.
+    // when player already has a team and exits spectator mode by selecting the same team again, it won't be detected as a team change in game logic.
 
     isInSpectatorMode() = !isInSpectatorMode();
 
@@ -2732,6 +2732,7 @@ void proofps_dd::Player::handleToggleSpectatorMode()
         // oldnew values stay unchanged, e.g. if have armor, it is not zeroed even though Player::respawn() clearly zeroes it out,
         // so as a workaround for players who enter and exit spectator mode, zero these stuff right when entering spectator mode!
         setArmor(0);
+        setHealth(0);
     }
 
     pge_network::PgePacket pktPlayerEvent;

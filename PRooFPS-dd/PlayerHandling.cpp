@@ -401,7 +401,6 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
 
     if (m_pge.getNetwork().isServer())
     {
-        // TODO: in case of round game, if no actual team change happens, still player needs to be killed if not Prepare state!
         if ( (iPrevTeamId == 0u /* i.e. the 1st team selection right after connecting to server */) ||
              (iPrevTeamId == player.getTeamId() /* i.e. no actual team change happened, just exited spectator mode this way */)
             )
@@ -435,7 +434,6 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     {
                         player.setForcedSpectating(true);
                     }
-                    
                 }
             }
         }

@@ -111,6 +111,8 @@ protected:
         addSubTest("test_handle_take_non_inventory_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_non_inventory_item_client_instance);
         addSubTest("test_handle_take_inventory_item_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_inventory_item_client_instance);
         addSubTest("test_handle_take_weapon_item", (PFNUNITSUBTEST)&PlayerTest::test_handle_take_weapon_item);
+        addSubTest("test_handle_toggle_spectator_mode_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_toggle_spectator_mode_server);
+        addSubTest("test_handle_toggle_spectator_mode_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_toggle_spectator_mode_client);
         addSubTest("test_handle_jumppad_activated_server", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_server);
         addSubTest("test_handle_jumppad_activated_client", (PFNUNITSUBTEST)&PlayerTest::test_handle_jumppad_activated_client);
         addSubTest("test_handle_team_id_changed", (PFNUNITSUBTEST)&PlayerTest::test_handle_team_id_changed);
@@ -2871,6 +2873,150 @@ private:
             proofps_dd::MapItemType::ITEM_WPN_PISTOL, *wpnPistol, true, 3);
 
         return true;
+    }
+
+    bool test_handle_toggle_spectator_mode_server()
+    {
+        /* server network instance, with 1 server- and 1 client player */
+
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+        
+        playerServer.setHealth(100);
+        playerServer.setArmor(100);
+        playerServer.updateOldValues();
+
+        playerClient.setHealth(100);
+        playerClient.setArmor(100);
+        playerClient.updateOldValues();
+
+        bool b = true;
+        playerServer.handleToggleSpectatorMode();
+        b &= assertFalse(playerServer.isInSpectatorMode(), "spec mode 1");
+        b &= assertEquals(100, std::as_const(playerServer).getHealth(), "server health 1");
+        b &= assertEquals(100, std::as_const(playerServer).getArmor(), "server armor 1");
+        b &= assertEquals(1u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+        try
+        {
+            b &= assertEquals(1u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 1"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 1");
+        }
+
+        playerServer.handleToggleSpectatorMode();
+        b &= assertTrue(playerServer.isInSpectatorMode(), "spec mode 2");
+        b &= assertEquals(0, std::as_const(playerServer).getHealth(), "server health 2");
+        b &= assertEquals(0, std::as_const(playerServer).getArmor(), "server armor 2");
+        b &= assertEquals(2u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+        try
+        {
+            b &= assertEquals(2u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 2"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 2");
+        }
+
+        playerClient.handleToggleSpectatorMode();
+        b &= assertFalse(playerClient.isInSpectatorMode(), "spec mode 3");
+        b &= assertEquals(100, std::as_const(playerClient).getHealth(), "client health 1");
+        b &= assertEquals(100, std::as_const(playerClient).getArmor(), "client armor 1");
+        b &= assertEquals(3u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+        try
+        {
+            b &= assertEquals(3u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 3"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 3");
+        }
+
+        playerClient.handleToggleSpectatorMode();
+        b &= assertTrue(playerClient.isInSpectatorMode(), "spec mode 4");
+        b &= assertEquals(0, std::as_const(playerClient).getHealth(), "client health 2");
+        b &= assertEquals(0, std::as_const(playerClient).getArmor(), "client armor 2");
+        b &= assertEquals(4u, m_network.getServer().getTxPacketCount(), "tx pkt count 4");
+        try
+        {
+            b &= assertEquals(4u, m_network.getServer().getTxMsgCount().at(
+                static_cast<pge_network::MsgApp::TMsgId>(proofps_dd::MsgPlayerEventFromServer::id)),
+                "tx msg count 4"
+            );
+        }
+        catch (...)
+        {
+            b &= assertFalse(true, "no such tx msg found 4");
+        }
+
+        return b;
+    }
+
+    bool test_handle_toggle_spectator_mode_client()
+    {
+        /* client network instance, with 1 server- and 1 client player */
+
+        m_network.shutdown();
+        m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(false);
+        if (!m_network.initialize())
+        {
+            return assertFalse(true, "network reinit as client");
+        }
+
+        const pge_network::PgeNetworkConnectionHandle connHandleServer = pge_network::ServerConnHandle;
+        const pge_network::PgeNetworkConnectionHandle connHandleClient = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player playerServer(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleServer, "192.168.1.11");
+        proofps_dd::Player playerClient(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleClient, "192.168.1.12");
+
+        playerServer.setHealth(100);
+        playerServer.setArmor(100);
+        playerServer.updateOldValues();
+
+        playerClient.setHealth(100);
+        playerClient.setArmor(100);
+        playerClient.updateOldValues();
+
+        bool b = true;
+
+        /* client network instance does not change HP/AP and does not send msg for executing the toggling as per server request */
+
+        playerServer.handleToggleSpectatorMode();
+        b &= assertFalse(playerServer.isInSpectatorMode(), "spec mode 1");
+        b &= assertEquals(100, std::as_const(playerServer).getHealth(), "server health 1");
+        b &= assertEquals(100, std::as_const(playerServer).getArmor(), "server armor 1");
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 1");
+
+        playerServer.handleToggleSpectatorMode();
+        b &= assertTrue(playerServer.isInSpectatorMode(), "spec mode 2");
+        b &= assertEquals(100, std::as_const(playerServer).getHealth(), "server health 2");
+        b &= assertEquals(100, std::as_const(playerServer).getArmor(), "server armor 2");
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 2");
+
+        playerClient.handleToggleSpectatorMode();
+        b &= assertFalse(playerClient.isInSpectatorMode(), "spec mode 3");
+        b &= assertEquals(100, std::as_const(playerClient).getHealth(), "client health 1");
+        b &= assertEquals(100, std::as_const(playerClient).getArmor(), "client armor 1");
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 3");
+
+        playerClient.handleToggleSpectatorMode();
+        b &= assertTrue(playerClient.isInSpectatorMode(), "spec mode 4");
+        b &= assertEquals(100, std::as_const(playerClient).getHealth(), "client health 2");
+        b &= assertEquals(100, std::as_const(playerClient).getArmor(), "client armor 2");
+        b &= assertEquals(0u, m_network.getServer().getTxPacketCount(), "tx pkt count 4");
+
+        return b;
     }
 
     bool test_handle_jumppad_activated_server()

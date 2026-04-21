@@ -3345,7 +3345,11 @@ void proofps_dd::GUI::drawFragTable_columnLoopForPlayer(
             const auto itPlayer = m_pMapPlayers->find(player.m_connHandle);
             if (itPlayer != m_pMapPlayers->end())
             {
-                if (std::as_const(itPlayer->second).getHealth() == 0)
+                if (itPlayer->second.isInSpectatorMode())
+                {
+                    ImGuiTextTableCurrentCellRightAdjusted("N/A");
+                }
+                else if (std::as_const(itPlayer->second).getHealth() == 0)
                 {
                     ImGuiTextTableCurrentCellRightAdjusted("Dead");
                 }
