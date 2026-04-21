@@ -1270,6 +1270,10 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
     player.setArmor(msg.m_nArmor);
     player.setHealth(msg.m_nHealth);
+    if (!gameMode.isRespawnAllowedAfterDie() && (msg.m_nHealth == 0))
+    {
+        player.setForcedSpectating(true);
+    }
 
     if (bCurrentClient)
     {

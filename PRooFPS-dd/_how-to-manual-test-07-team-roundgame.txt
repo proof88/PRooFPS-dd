@@ -7,6 +7,11 @@
   ###################################################################################
 */
 
+ - Due to many tests in this file concentrate on Spectator Mode / Forced-Spectating, and when to
+   actually allow a player to spawn on the map, visibility state of players and their weapons need
+   to be checked often, therefore doing these tests on a small map is recommended, e.g.
+   map_test_good_stairs.txt.
+ 
  - Assuming Team Deathmatch manual test passes (_how-to-manual-test-02-team-deathmatch.txt) and that those
    functionalities are also working in Team Round Game mode, except 1 that is mentioned below separately.
    Therefore, not listing them here again but shall be executed in this game mode too!
@@ -48,7 +53,6 @@
      check if client immediately replicates this state, DOES NOT spawn immediately and kept being dead until round restarts,
      the client shall have 0 registered deaths even when next round starts automatically
      (to reach WaitForReset state after client disconnects, kill the server player);
-     TODO: here only the weapon of the dead server player was visible!
    - Disconnect and then reconnect the client when the server is in Prepare state, Join a team:
      Check if client immediately replicates this state and spawns immediately, but does not allow any movement in this state
      (except crouch and inventory item use) AND DOES NOT allow shooting.
