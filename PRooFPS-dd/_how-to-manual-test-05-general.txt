@@ -45,7 +45,6 @@
          - check with and without "Camera Rolling" setting.
        - player follow camera spectating mode.
 
- 
    - Make the game won somehow (e.g. 10 sec time limit) while the 2 clients are also connected, so for all 3 instances the end-game results are shown.
      Disconnect the 2 clients, then reconnect them to the server while still the end-game results are shown.
      Expectation: again the end-game results are shown for the reconnected clients.

@@ -1235,7 +1235,6 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
                     handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
                     return true;
                 }
-
                 
                 if ((nCurrentTeam1AlivePlayers == 0) || (nCurrentTeam2AlivePlayers == 0))
                 {

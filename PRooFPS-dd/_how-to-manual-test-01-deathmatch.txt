@@ -23,7 +23,7 @@
      - Frag table shall show both players now in the first table;
      - Frag table shall hide Spectators table now because no player is in Spectator mode now.
    
-   - Friendly fire working as per current config?
+   - Friendly fire is NOT available in this game mode, therefore:
      - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,
      - Check non-bouncing explosive bullets (e.g. rocket) DIRECTLY hitting other players,
      - Check bouncing explosive bullets (e.g. grenade) DIRECTLY hitting other players,
@@ -37,9 +37,6 @@
    
    - Check if Frag Table shows players properly (players ordered by frags).
    - Check if any non-first switching to Spectator Mode and Joining the game again actually increases death count by 1.
-
- - Now disconnect the client and server instances, and invert the Friendly fire and Team Spawn Groups config, then
-   repeat the above tests.
 
  - Check if Server Admin menu actions such as Restart Game and Next Map are working properly (with client still connected to server).
    - Player stats must be reset and everybody must be in spectator mode again.
