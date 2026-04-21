@@ -1235,6 +1235,15 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
                     handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
                     return true;
                 }
+
+                
+                if ((nCurrentTeam1AlivePlayers == 0) || (nCurrentTeam2AlivePlayers == 0))
+                {
+                    /* both teams have players but 1 team is dead without being alive in previous tick, this can happen
+                       if e.g. a new player joins a previously empty team while the other team is already filled with players */
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win: one team is empty, other team is dead, case 1", __func__);
+                    m_fsm.roundWon();
+                }
             }
             else
             {
@@ -1244,7 +1253,7 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
                     ||
                     ((nCurrentTeam2Players != 0) /* && (nOldTeam2AlivePlayers > 0) */ && (nCurrentTeam2AlivePlayers == 0)))
                 {
-                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win: one team is empty, other team is dead", __func__);
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win: one team is empty, other team is dead, case 2", __func__);
                     m_fsm.roundWon();
                 }
             }
