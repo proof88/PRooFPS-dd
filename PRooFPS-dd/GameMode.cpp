@@ -263,20 +263,25 @@ void proofps_dd::GameMode::clientUpdateTimeRemainingMillisecs(const unsigned int
 void proofps_dd::GameMode::restart(pge_network::PgeINetwork& network)
 {
     m_players.clear();
-    restartWithoutRemovingPlayers(network);
+    restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType::Hard /* dontcare because players are removed anyway */);
     // extended in derived class
 }
 
-void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network)
+void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
 {
     // invoked by both server and client
+
+    assert(eRestartType != proofps_dd::GameRestartType::None);
 
     m_timeReset = std::chrono::steady_clock::now();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
     for (auto& player : m_players)
     {
-        player.m_bSpectatorMode = true;
+        if (eRestartType == proofps_dd::GameRestartType::Hard)
+        {
+            player.m_bSpectatorMode = true;
+        }
         player.m_nFrags = 0;
         player.m_nDeaths = 0;
         player.m_nSuicides = 0;
@@ -286,7 +291,7 @@ void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwor
 
     if (network.isServer())
     {
-        serverSendGameSessionStateToClients(network, true /* restart flag */);
+        serverSendGameSessionStateToClients(network, eRestartType);
     }
     // extended in derived class
 }
@@ -332,7 +337,7 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
     }
     else
     {
-        restartWithoutRemovingPlayers(network);
+        restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType::Hard);
     }
 }
 
@@ -457,7 +462,7 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
         pktGameSessionState,
         m_bWon,
-        false /* this is never a restart case when we are sending this to a single client only */))
+        proofps_dd::GameRestartType::None /* this is never a restart case when we are sending this to a single client only */))
     {
         getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -468,14 +473,14 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     return true;
 }
 
-bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart)
+bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
 {
     assert(network.isServer());
     pge_network::PgePacket pktGameSessionState;
     if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
         pktGameSessionState,
         m_bWon,
-        bGameRestart))
+        eRestartType))
     {
         getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -491,7 +496,7 @@ void proofps_dd::GameMode::handleEventGameWon(pge_network::PgeINetwork& network)
     m_bWon = true;
     m_timeWin = std::chrono::steady_clock::now();
     serverSendGameSessionStateToClients(
-        network, false /* game winning is never a restart case */);
+        network, proofps_dd::GameRestartType::None /* game winning is never a restart case */);
 }
 
 
@@ -1177,7 +1182,9 @@ void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge
     setRoundWinLimit(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsUInt());
 }
 
-void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network)
+void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(
+    pge_network::PgeINetwork& network,
+    const proofps_dd::GameRestartType& eRestartType)
 {
     m_nTeam1RoundWins = 0;
     m_nTeam2RoundWins = 0;
@@ -1185,7 +1192,7 @@ void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(pge_network::P
     m_bFirstTick = true;
     m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = true;
     m_bCurrentRoundHasJustBeenWon_Sticky = false;
-    TeamDeathMatchMode::restartWithoutRemovingPlayers(network); /* due to overrides, this also sends out MsgGameRoundStateFromServer */
+    TeamDeathMatchMode::restartWithoutRemovingPlayers(network, eRestartType); /* due to overrides, this also sends out MsgGameRoundStateFromServer */
 }
 
 bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_network::PgeINetwork& network)
@@ -1478,9 +1485,9 @@ bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClient(pge_netwo
     return false;
 }
 
-bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart)
+bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
 {
-    if (GameMode::serverSendGameSessionStateToClients(network, bGameRestart))
+    if (GameMode::serverSendGameSessionStateToClients(network, eRestartType))
     {
         return serverSendRoundStateToClients(network);
     }

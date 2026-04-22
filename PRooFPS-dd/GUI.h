@@ -107,7 +107,8 @@ namespace proofps_dd
         * have a callback registered by PRooFPSddPGE in GUI so GUI can simply invoke it without dependency on PRooFPSddPGE's dependencies.
         */
         using ServerRestartGameCallback = std::function<void()>;
-        static void setServerRestartGameCallback(ServerRestartGameCallback cb);
+        static void setServerSoftRestartGameCallback(ServerRestartGameCallback cb);
+        static void setServerHardRestartGameCallback(ServerRestartGameCallback cb);
 
         const InGameMenuState& getInGameMenuState() const;
         static void hideInGameMenu();
@@ -190,7 +191,8 @@ namespace proofps_dd
 
         /* In-Game Menu Handling */
 
-        static ServerRestartGameCallback m_cbServerRestartGame;
+        static ServerRestartGameCallback m_cbServerSoftRestartGame;
+        static ServerRestartGameCallback m_cbServerHardRestartGame;
         static InGameMenuState m_currentMenuInInGameMenu;
 
         /* Misc */

@@ -172,24 +172,28 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
     }
 }
 
-void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config)
+void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType& eRestartType, const proofps_dd::Config& config)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
     player.setHealth(100);
+    player.setArmor(0);
     player.getRespawnFlag() = true;
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     // dead player needs to exit forced-spectating mode
     player.setForcedSpectating(false);  // clients will set this once they receive MsgUserUpdateFromServer with respawn flag set
-    if (restartGame)
+    if (eRestartType != proofps_dd::GameRestartType::None)
     {
-        if (GameMode::getGameMode()->isTeamBasedGame())
+        if (eRestartType == proofps_dd::GameRestartType::Hard)
         {
-            player.handleTeamIdChanged(0); // changing to 0 won't trigger implicit exit from spectator mode
-        }
-        if (!player.isInSpectatorMode())
-        {
-            player.handleToggleSpectatorMode();
+            if (GameMode::getGameMode()->isTeamBasedGame())
+            {
+                player.handleTeamIdChanged(0); // changing to 0 won't trigger implicit exit from spectator mode
+            }
+            if (!player.isInSpectatorMode())
+            {
+                player.handleToggleSpectatorMode();
+            }
         }
         player.getFrags() = 0;
         player.getDeaths() = 0;
@@ -198,6 +202,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, bool restar
         player.getShotsFiredCount() = 0;
         player.getShotsHitTarget() = 0;
         player.forceDeactivateCurrentInventoryItem(); // clients will invoke this when they process MsgGameSessionStateFromServer
+        player.setHasJetLax(false);
     }
 }
 
@@ -259,7 +264,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= static_cast<std::chrono::seconds::rep>(config.getPlayerRespawnDelaySeconds()))
         {
-            serverRespawnPlayer(player, false, config);
+            serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
         }
     }
 
@@ -339,7 +344,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
                 if (!cfgProfiles.getVars()["testing"].getAsBool())
                 {
-                    serverRespawnPlayer(player, false, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
                 }
             }
         }
@@ -416,7 +421,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     getConsole().EOLn(
                         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
                         __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                    serverRespawnPlayer(player, false, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
                 }
             }
             else
@@ -876,7 +881,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 
             // as last step, restart the game mode now, this is important to be last step, for example remaining game time starts to count down now!
-            gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork());
+            gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork(), proofps_dd::GameRestartType::Hard);
 
             // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
             //m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +

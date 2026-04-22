@@ -385,9 +385,14 @@ const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
     return m_currentMenuInMainMenu;
 }
 
-void proofps_dd::GUI::setServerRestartGameCallback(ServerRestartGameCallback cb)
+void proofps_dd::GUI::setServerSoftRestartGameCallback(ServerRestartGameCallback cb)
 {
-    m_cbServerRestartGame = std::move(cb);
+    m_cbServerSoftRestartGame = std::move(cb);
+}
+
+void proofps_dd::GUI::setServerHardRestartGameCallback(ServerRestartGameCallback cb)
+{
+    m_cbServerHardRestartGame = std::move(cb);
 }
 
 const proofps_dd::GUI::InGameMenuState& proofps_dd::GUI::getInGameMenuState() const
@@ -700,7 +705,8 @@ proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
 const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
 
-proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerRestartGame{};
+proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerSoftRestartGame{};
+proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerHardRestartGame{};
 
 proofps_dd::GUI::MainMenuState proofps_dd::GUI::m_currentMenuInMainMenu = proofps_dd::GUI::MainMenuState::Main;
 
@@ -2365,13 +2371,13 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
     const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
 
-    const float fButtonWidthMinPixels = ImGui::CalcTextSize("(R)ESTART GAME").x + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonWidthMinPixels = ImGui::CalcTextSize("SOFT (R)ESTART").x + 2 * ImGui::GetStyle().FramePadding.x;
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
     constexpr int nTextRows = 4; /* 2 x (window title on top + notice text at bottom) */
-    constexpr int nButtonRows = 2;
+    constexpr int nButtonRows = 3;
     const float fContentHeight =
         m_fFontSizePxHudGeneralScaled * nTextRows +
         nButtonRows * fBtnHeight +
@@ -2403,13 +2409,23 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
         drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), szWindowTitle);
 
         bool bCloseThisPopup = false;
+
         ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
         // In case of buttons, remove size argument (ImVec2) to auto-resize.
-        if (ImGui::Button("(R)ESTART GAME", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_R))
+        if (ImGui::Button("SOFT (R)ESTART", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_R))
         {
             bCloseThisPopup = true;
-            assert(m_cbServerRestartGame);
-            m_cbServerRestartGame();
+            assert(m_cbServerSoftRestartGame);
+            m_cbServerSoftRestartGame();
+        }
+
+        ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));
+        // In case of buttons, remove size argument (ImVec2) to auto-resize.
+        if (ImGui::Button("H(A)RD RESTART", ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(ImGuiKey_A))
+        {
+            bCloseThisPopup = true;
+            assert(m_cbServerHardRestartGame);
+            m_cbServerHardRestartGame();
         }
 
         ImGui::SetCursorPos(ImVec2(fWindowWidth / 2 - fBtnWidth / 2, ImGui::GetCursorPosY()));

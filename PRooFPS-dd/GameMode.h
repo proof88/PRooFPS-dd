@@ -25,6 +25,26 @@ class GameModeTest;
 namespace proofps_dd
 {
 
+    /**
+    * Game is being restarted:
+    *  - when server player boots up after loading a map (as an initialization, Hard),
+    *  - when game is won and we also finished showing the results (Hard),
+    *  - when server player restarts the game from the Server Admin menu (Soft or Hard).
+    * 
+    * Practically the restart type now controls how much Player data shall be cleared:
+    * in some cases only Player stats, in some other cases even team assignments also
+    * need to be cleared.
+    * 
+    * So for now this class could be renamed to PlayerResetType, but maybe in the future
+    * it will also reset some other, non-Player-related stuff too.
+    */
+    enum class GameRestartType
+    {
+        None, /**< No restart happened. */
+        Soft, /**< Players keep their team assignments and are not being put back into Spectator Mode. */
+        Hard  /**< Players get deassigned from their teams and are being put back into Spectator Mode. */
+    };
+
     // TODO: on the long run, this should be deleted.
     // Derived classes shall implement stuff like isRoundBasedGame() etc ... and game logic should
     // depend on those instead of checking gamemodetype.
@@ -204,9 +224,11 @@ namespace proofps_dd
         * 
         * Used by both server and clients: clients invoke it upon receiving MsgGameSessionStateFromServer.
         * 
-        * @param network PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
+        * @param network      PGE network instance to be used to send out MsgGameSessionStateFromServer to clients.
+        * @param eRestartType Players stats are defaulted depending on restart type.
+        *                     Cannot be GameRestartType::None.
         */
-        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network);
+        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType);
 
         /**
         * Evaluates conditions to see if game is won or not.
@@ -427,7 +449,9 @@ namespace proofps_dd
         GameMode&& operator=(GameMode&&) = delete;
 
         virtual bool serverSendGameSessionStateToClient(pge_network::PgeINetwork& network, const pge_network::PgeNetworkConnectionHandle& connHandle);
-        virtual bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart);
+        virtual bool serverSendGameSessionStateToClients(
+            pge_network::PgeINetwork& network,
+            const proofps_dd::GameRestartType& eRestartType);
         void handleEventGameWon(pge_network::PgeINetwork& network);
 
     private:
@@ -774,7 +798,7 @@ namespace proofps_dd
 
         virtual void fetchConfig(PGEcfgProfiles& cfgProfiles, pge_network::PgeINetwork& network) override;
 
-        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network);
+        virtual void restartWithoutRemovingPlayers(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType) override;
 
         /**
         * Altering parent class implementation by checking won rounds per team, instead of frag limit.
@@ -924,7 +948,7 @@ namespace proofps_dd
         /**
         * Extends original behavior by also sending out MsgGameRoundStateFromServer to all clients.
         */
-        virtual bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, bool bGameRestart) override;
+        virtual bool serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType) override;
 
         void setTeamRoundWins(unsigned int iTeamId, unsigned int nRoundWins);
 

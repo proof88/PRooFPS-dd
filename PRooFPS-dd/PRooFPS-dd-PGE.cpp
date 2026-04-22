@@ -193,7 +193,8 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     serverSetCollisionModeBvh(getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
 
     m_gui.initialize();
-    m_gui.setServerRestartGameCallback([this]() { serverRestartGame(); });
+    m_gui.setServerSoftRestartGameCallback([this]() { serverRestartGame(proofps_dd::GameRestartType::Soft); });
+    m_gui.setServerHardRestartGameCallback([this]() { serverRestartGame(proofps_dd::GameRestartType::Hard); });
 
     m_cbDisplayMapLoadingProgressUpdate = [this](int nProgress)
     {
@@ -979,13 +980,16 @@ void proofps_dd::PRooFPSddPGE::updateFramesPerSecond(PureWindow& window)
 
 // TODO: RFR: Shall be moved this to where we are able to access: playerhandling, maps, gui, gamemode, and
 // gui shall be able to invoke it. For now we just register this as callback in gui so gui can call it back.
-void proofps_dd::PRooFPSddPGE::serverRestartGame()
+void proofps_dd::PRooFPSddPGE::serverRestartGame(const proofps_dd::GameRestartType& eRestartType)
 {
     assert(getNetwork().isServer());
+    assert(eRestartType != proofps_dd::GameRestartType::None);
+
+    getConsole().EOLn("PRooFPSddPGE::%s(): %s", __func__, ((eRestartType == proofps_dd::GameRestartType::Soft) ? "SOFT" : "HARD"));
     
     for (auto& playerPair : m_mapPlayers)
     {
-        serverRespawnPlayer(playerPair.second, true /* restartGame */, m_config);
+        serverRespawnPlayer(playerPair.second, eRestartType, m_config);
     }
 
     serverRespawnItems();
@@ -995,7 +999,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame()
     getAudio().stopSoundInstance(m_sounds.m_sndEndgameMusicHandle); // server stops it here, clients stop it when they process MsgGameSessionStateFromServer
     getAudio().stopSoundInstance(m_sounds.m_sndRoundWinHandle); // server stops it here, clients stop it when they process MsgGameSessionStateFromServer
     m_gui.getServerEvents()->addGameRestartedEvent(); // server adds it here, clients add when they process MsgGameSessionStateFromServer
-    GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork());
+    GameMode::getGameMode()->restartWithoutRemovingPlayers(getNetwork(), eRestartType);
     m_gui.showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer(); // server does it here, clients add when they process MsgGameSessionStateFromServer 
 }
 
@@ -1009,7 +1013,7 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
         {
             if (std::as_const(playerPair.second).getHealth() == 0)
             {
-                serverRespawnPlayer(playerPair.second, false /* restartGame */, m_config);
+                serverRespawnPlayer(playerPair.second, proofps_dd::GameRestartType::None, m_config);
             }
             else
             {
@@ -1133,7 +1137,7 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
             const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode()->getWinTime()).count();
             if (nSecsSinceWin >= 60)
             {
-                serverRestartGame();
+                serverRestartGame(proofps_dd::GameRestartType::Hard);
             }
         }
     }
@@ -1322,8 +1326,10 @@ bool proofps_dd::PRooFPSddPGE::clientHandleGameSessionStateFromServer(const proo
         m_gui.getDeathKillEvents()->clear();
     }
 
-    if (msg.m_bGameRestarted)
+    if (msg.m_eGameRestart != proofps_dd::GameRestartType::None)
     {
+        getConsole().EOLn("PRooFPSddPGE::%s(): %s", __func__, ((msg.m_eGameRestart == proofps_dd::GameRestartType::Soft) ? "SOFT" : "HARD"));
+
         for (auto& playerPair : m_mapPlayers)
         {
             // server handled this in PlayerHandling::serverRespawnPlayer() already

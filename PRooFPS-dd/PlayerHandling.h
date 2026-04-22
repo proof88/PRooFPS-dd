@@ -76,12 +76,11 @@ namespace proofps_dd
         * The player can be either dead or alive, doesn't matter.
         * Player's HP and AP will be reset to defaults, also items and weapons.
         * 
-        * @param player      The player to be respawned.
-        * @param restartGame Set it to true if reason for respawning is game restart, in such case even player's stats
-        *                    and other stuff will be defaulted as well.
-        * @param config      The usual Config instance.
+        * @param player       The player to be respawned.
+        * @param eRestartType Depending on restart type, player's stats and other stuff will be defaulted as well.
+        * @param config       The usual Config instance.
         */
-        void serverRespawnPlayer(Player& player, bool restartGame, const proofps_dd::Config& config);
+        void serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType& eRestartType, const proofps_dd::Config& config);
         
         /**
         * Resettle is required when a round-based game starts a new round, and we need to reposition alive

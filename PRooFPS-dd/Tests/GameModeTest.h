@@ -2446,7 +2446,7 @@ private:
             dm->setFragLimit(15u);
 
             // need to restart to correctly initialize time-specific values if we have time limit!
-            gm->restartWithoutRemovingPlayers(m_network);
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
             if (bTestingAsServer)
             {
@@ -2538,7 +2538,7 @@ private:
                 }
             }
 
-            gm->restartWithoutRemovingPlayers(m_network);
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
             b &= assertEqualsEz(25u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "time limit fail");
             b &= assertEqualsEz(15u, dm->getFragLimit(), gamemode, bTestingAsServer, "frag limit fail");
@@ -2625,7 +2625,7 @@ private:
             trg->setRoundWinLimit(1);
 
             // need to restart to correctly initialize time-specific values if we have time limit!
-            gm->restartWithoutRemovingPlayers(m_network);
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
             if (bTestingAsServer)
             {
@@ -2716,7 +2716,7 @@ private:
                 }
             }
 
-            gm->restartWithoutRemovingPlayers(m_network);
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
             b &= assertEqualsEz(25u, gm->getTimeLimitSecs(), gamemode, bTestingAsServer, "time limit fail");
             b &= assertEqualsEz(15u, dm->getFragLimit(), gamemode, bTestingAsServer, "frag limit fail");
@@ -4003,7 +4003,7 @@ private:
         assert(gm->isRoundBased());
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         bool b = true;
 
@@ -4103,7 +4103,7 @@ private:
         assert(gm->isRoundBased());
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         bool b = true;
         b &= assertEqualsEz(
@@ -4157,7 +4157,7 @@ private:
         assert(gm->isRoundBased());
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         bool b = true;
         b &= assertEqualsEz(
@@ -4242,7 +4242,7 @@ private:
         trg->setRoundWinLimit(2);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
         player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -4402,7 +4402,7 @@ private:
         trg->setRoundWinLimit(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
         player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -4544,7 +4544,7 @@ private:
         trg->setRoundWinLimit(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
 
@@ -4688,7 +4688,7 @@ private:
         trg->setRoundWinLimit(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         trg->getFSM().transitionToPlayState();  /* do not wait for countdown in Prepare state */
         bool b = true;
@@ -4786,7 +4786,7 @@ private:
         trg->setRoundWinLimit(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         bool b = true;
 
@@ -4935,7 +4935,7 @@ private:
         trg->setRoundWinLimit(2);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
-        gm->restartWithoutRemovingPlayers(m_network);
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
         player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
         player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
@@ -5125,7 +5125,7 @@ private:
 
         bool b = true;
 
-        gm->restartWithoutRemovingPlayers(m_network);  // for time-limit-sensitive stuff
+        gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);  // for time-limit-sensitive stuff
 
         /* server tick 1 */
 
@@ -5473,7 +5473,7 @@ private:
 
             /* hasJustTransitionedTo_RoundPrepareState_InThisTick() must detect transition upon game restart
                even though it was not a real state transition */
-            gm->restartWithoutRemovingPlayers(m_network);
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType::Hard);
 
             b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 2 1");
             b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2 2");
