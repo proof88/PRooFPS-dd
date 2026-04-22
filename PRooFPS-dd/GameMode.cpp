@@ -263,22 +263,22 @@ void proofps_dd::GameMode::clientUpdateTimeRemainingMillisecs(const unsigned int
 void proofps_dd::GameMode::restart(pge_network::PgeINetwork& network)
 {
     m_players.clear();
-    restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType::Hard /* dontcare because players are removed anyway */);
+    restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType_KeepPlayers::Hard /* dontcare because players are removed anyway */);
     // extended in derived class
 }
 
-void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
+void proofps_dd::GameMode::restartWithoutRemovingPlayers(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType_KeepPlayers& eRestartType)
 {
     // invoked by both server and client
 
-    assert(eRestartType != proofps_dd::GameRestartType::None);
+    assert(eRestartType != proofps_dd::GameRestartType_KeepPlayers::None);
 
     m_timeReset = std::chrono::steady_clock::now();
     m_timeWin = std::chrono::time_point<std::chrono::steady_clock>(); // reset back to epoch
     m_bWon = false;
     for (auto& player : m_players)
     {
-        if (eRestartType == proofps_dd::GameRestartType::Hard)
+        if (eRestartType == proofps_dd::GameRestartType_KeepPlayers::Hard)
         {
             player.m_bSpectatorMode = true;
         }
@@ -337,7 +337,7 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
     }
     else
     {
-        restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType::Hard);
+        restartWithoutRemovingPlayers(network, proofps_dd::GameRestartType_KeepPlayers::Hard);
     }
 }
 
@@ -462,7 +462,7 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     if (!proofps_dd::MsgGameSessionStateFromServer::initPkt(
         pktGameSessionState,
         m_bWon,
-        proofps_dd::GameRestartType::None /* this is never a restart case when we are sending this to a single client only */))
+        proofps_dd::GameRestartType_KeepPlayers::None /* this is never a restart case when we are sending this to a single client only */))
     {
         getConsole().EOLn("GameMode::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -473,7 +473,7 @@ bool proofps_dd::GameMode::serverSendGameSessionStateToClient(pge_network::PgeIN
     return true;
 }
 
-bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
+bool proofps_dd::GameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType_KeepPlayers& eRestartType)
 {
     assert(network.isServer());
     pge_network::PgePacket pktGameSessionState;
@@ -496,7 +496,7 @@ void proofps_dd::GameMode::handleEventGameWon(pge_network::PgeINetwork& network)
     m_bWon = true;
     m_timeWin = std::chrono::steady_clock::now();
     serverSendGameSessionStateToClients(
-        network, proofps_dd::GameRestartType::None /* game winning is never a restart case */);
+        network, proofps_dd::GameRestartType_KeepPlayers::None /* game winning is never a restart case */);
 }
 
 
@@ -1184,7 +1184,7 @@ void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge
 
 void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(
     pge_network::PgeINetwork& network,
-    const proofps_dd::GameRestartType& eRestartType)
+    const proofps_dd::GameRestartType_KeepPlayers& eRestartType)
 {
     m_nTeam1RoundWins = 0;
     m_nTeam2RoundWins = 0;
@@ -1485,7 +1485,7 @@ bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClient(pge_netwo
     return false;
 }
 
-bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType& eRestartType)
+bool proofps_dd::TeamRoundGameMode::serverSendGameSessionStateToClients(pge_network::PgeINetwork& network, const proofps_dd::GameRestartType_KeepPlayers& eRestartType)
 {
     if (GameMode::serverSendGameSessionStateToClients(network, eRestartType))
     {

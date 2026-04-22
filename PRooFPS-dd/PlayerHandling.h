@@ -80,7 +80,7 @@ namespace proofps_dd
         * @param eRestartType Depending on restart type, player's stats and other stuff will be defaulted as well.
         * @param config       The usual Config instance.
         */
-        void serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType& eRestartType, const proofps_dd::Config& config);
+        void serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType_KeepPlayers& eRestartType, const proofps_dd::Config& config);
         
         /**
         * Resettle is required when a round-based game starts a new round, and we need to reposition alive

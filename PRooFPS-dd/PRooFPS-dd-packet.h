@@ -177,7 +177,7 @@ namespace proofps_dd
         static bool initPkt(
             pge_network::PgePacket& pkt,
             bool bGameSessionEnd,
-            const GameRestartType& eGameRestart)
+            const GameRestartType_KeepPlayers& eGameRestart)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgGameSessionStateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -201,7 +201,7 @@ namespace proofps_dd
         }
 
         bool m_bGameSessionEnd;
-        GameRestartType m_eGameRestart;
+        GameRestartType_KeepPlayers m_eGameRestart;
     };  // struct MsgGameSessionStateFromServer
     static_assert(std::is_trivial_v<MsgGameSessionStateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgGameSessionStateFromServer>);

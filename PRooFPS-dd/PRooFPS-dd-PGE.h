@@ -120,7 +120,7 @@ namespace proofps_dd
             PureWindow& window);                                        /**< Both clients and listen-server executes this. */
 
         void updateFramesPerSecond(PureWindow& window);
-        void serverRestartGame(const proofps_dd::GameRestartType& eRestartType);
+        void serverRestartGame(const proofps_dd::GameRestartType_KeepPlayers& eRestartType);
         void serverNewRound();
         void updateAudioVisualsForGameModeShared();
 

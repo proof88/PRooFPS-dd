@@ -172,7 +172,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
     }
 }
 
-void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType& eRestartType, const proofps_dd::Config& config)
+void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType_KeepPlayers& eRestartType, const proofps_dd::Config& config)
 {
     // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
     player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
@@ -182,9 +182,9 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, const proof
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     // dead player needs to exit forced-spectating mode
     player.setForcedSpectating(false);  // clients will set this once they receive MsgUserUpdateFromServer with respawn flag set
-    if (eRestartType != proofps_dd::GameRestartType::None)
+    if (eRestartType != proofps_dd::GameRestartType_KeepPlayers::None)
     {
-        if (eRestartType == proofps_dd::GameRestartType::Hard)
+        if (eRestartType == proofps_dd::GameRestartType_KeepPlayers::Hard)
         {
             if (GameMode::getGameMode()->isTeamBasedGame())
             {
@@ -264,7 +264,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= static_cast<std::chrono::seconds::rep>(config.getPlayerRespawnDelaySeconds()))
         {
-            serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
+            serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
         }
     }
 
@@ -344,7 +344,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
                 if (!cfgProfiles.getVars()["testing"].getAsBool())
                 {
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
                 }
             }
         }
@@ -421,7 +421,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     getConsole().EOLn(
                         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
                         __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType::None, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
                 }
             }
             else
@@ -881,7 +881,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 
             // as last step, restart the game mode now, this is important to be last step, for example remaining game time starts to count down now!
-            gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork(), proofps_dd::GameRestartType::Hard);
+            gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork(), proofps_dd::GameRestartType_KeepPlayers::Hard);
 
             // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
             //m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
@@ -1166,14 +1166,14 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         // will also set Player HP, pos, etc. values that will make netDirty() also true, which means that definitely there will be a more
         // up-to-date msg after this one, that will contain msg.m_bRespawn as true (but Player's respawn flag will be already false at that time).
 
-        // clients invoke handlePlayerRespawned() in this function later, server invokes it now:
+        // clients invoke handlePlayerRespawned() in this function later, server invokes it now but might also invoke it later as clients do
         handlePlayerRespawned(player, xhair);
 
         getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for respawning user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;
     }
 
-    if (m_pge.getNetwork().isServer() && player.getResettlingFlag())
+    if (m_pge.getNetwork().isServer() && player.getResettlingFlag() && !msg.m_bRespawn /* if respawn is set, it wins over resettling */)
     {
         // server has already updated everything for this player, do not accept stale injected msg data
         player.getResettlingFlag() = false;
