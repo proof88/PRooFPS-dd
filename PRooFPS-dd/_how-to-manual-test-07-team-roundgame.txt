@@ -21,6 +21,8 @@
    - instead of Frag Limit, Round Win Limit shall be shown above the table.
 
  - Repeating the beginning few steps from the Team Deathmatch manual test:
+   - In the Team Select / Welcome menu, "You are not in any team." shall be shown.
+
    - In both instances, select "View Teams" in the Team Select / Welcome menu:
      - Check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players;
      - Check in both instances that neither the player objects nor their representation in the minimap are visible;
@@ -31,7 +33,9 @@
      - Check in both instances that neither the player objects nor their representation in the minimap are visible;
      - Check if both players have 0 deaths registered in the Frag table in both instances.
 
- - We assume that in the meantime Round game state has transitioned to Play state, so now restart the server from Server Admin menu ('H' key) and
+   - In the Team Select / Welcome menu, still "You are not in any team." shall be shown.
+
+ - We assume that in the meantime Round game state has transitioned to Play state, so now Hard restart the server from Server Admin menu ('H' key) and
    quickly join the teams with both players while the new round is still in Prepare state:
    in Team Select menu, server joins Team 1, client joins Team 2.
 
@@ -40,13 +44,19 @@
    - Frag table shall show Server player in Team 1, Client player in Team 2 in both instances;
    - Frag table shall hide Spectators table now because no player is in Spectator mode now.
 
+ - In the Team Select / Welcome menu, "You are in Team 1/2." shall be shown depending on the assigned team.
+ - From now on, "were" and "are" words shall be displayed in that sentence based on if the player is in Spectator mode or
+   has assigned team.
+
  - Testing basic gameplay:
    - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it);
    - Unless configured otherwise, Prepare state is 3 seconds, Play state is not limited in time, WaitForReset is 5 seconds;
    - Shooting and movements are NOT allowed in Prepare state;
    - Shooting and movements are ALLOWED in WaitForReset state;
    - Reaching configured round win limit actually puts the game in won state and frag table is shown as being done also in other game modes;
-   - Restarting the game zeros out not only player stats but also team round wins.
+   - Restarting the game zeros out not only player stats but also team round wins:
+     - Hard Restart also puts all players into Spectator Mode;
+     - Soft Restart keeps team assignments.
  
  - Testing proper FSM state replication to late connecting clients:
    - Disconnect and then reconnect the client when the server is in WaitForReset state, Join a team:
@@ -58,7 +68,7 @@
      (except crouch and inventory item use) AND DOES NOT allow shooting.
  
  - Testing proper FSM state transition by detecting different cases of round ending without actual round win:
-   - Restart the Game, Server player joins Team 1, Client player joins Team 2;
+   - Hard Restart the Game, Server player joins Team 1, Client player joins Team 2;
    - Put the client player into Spectator Mode. The current round shall keep going in RoundState::Play state;
    - With the server player being the only active player assigned to a team, kill the player: the round state shall transition to WaitForReset
      but no round win shall be registered due to the other team is empty;
@@ -81,4 +91,8 @@
       This player shall stay dead until next round and its deaths count shall be increased by 1.
       This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
       increasing death count of such player and shall wait until next round begins.
+
+ - Check if Server Admin menu action Next Map is working properly (with client still connected to server).
+   - Player stats must be reset and everybody must be in spectator mode again.
+   - Check it also when a game is already won and we are waiting for the game to restart (with client still connected to server).
 

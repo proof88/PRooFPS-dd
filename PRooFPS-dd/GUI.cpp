@@ -2211,10 +2211,20 @@ void proofps_dd::GUI::drawInGameWelcomeTeamSelectSpectatorMenu(
                 }
                 else
                 {
-                    drawText(
-                        ImGui::GetCursorPosX(),
-                        ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
-                        "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+                    if (currentPlayer.isInSpectatorMode())
+                    {
+                        drawText(
+                            ImGui::GetCursorPosX(),
+                            ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                            "You were in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+                    }
+                    else
+                    {
+                        drawText(
+                            ImGui::GetCursorPosX(),
+                            ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                            "You are in Team " + std::to_string(currentPlayer.getTeamId()) + ".");
+                    }
                 }
             }
             else

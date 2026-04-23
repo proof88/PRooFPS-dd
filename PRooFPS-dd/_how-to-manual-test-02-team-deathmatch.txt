@@ -8,6 +8,8 @@
 */
 
  - Start a server instance with "Team Deathmatch" Game Mode, and 1 client instance (connect it to server), then test the following:
+   - In the Team Select / Welcome menu, "You are not in any team." shall be shown.
+
    - In both instances, select "View Teams" in the Team Select / Welcome menu:
      - Check in both instances that Frag Table shows both players in the bottom table (Spectators), and both teams have 0 players;
      - Check in both instances that neither the player objects nor their representation in the minimap are visible;
@@ -18,16 +20,34 @@
      - Check in both instances that neither the player objects nor their representation in the minimap are visible;
      - Check if both players have 0 deaths registered in the Frag table in both instances.
    
+   - In the Team Select / Welcome menu, still "You are not in any team." shall be shown.
+
    - Join the game with both instances so both players will be visible on the map:
      - Server player shall join Team 1, client player shall join Team 2;
      - Check if both players still have 0 deaths;
      - Frag table shall show Server player in Team 1, Client player in Team 2 in both instances;
      - Frag table shall hide Spectators table now because no player is in Spectator mode now.
 
+   - In the Team Select / Welcome menu, "You are in Team 1/2." shall be shown depending on the assigned team.
+
    - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall not increase when
      staying in same team.
 
+   - In the Team Select / Welcome menu, "You were in Team 1/2." shall be shown depending on the assigned team.
+   - From now on, "were" and "are" words shall be displayed in that sentence based on if the player is in Spectator mode or
+     has assigned team.
+
    - If any player switches teams, their death counts shall increase by 1.
+
+   - Make both players join Team 1 and 2 again as before.
+
+   - Testing basic gameplay:
+     - kill each players, check if frags and death counts increase as expected;
+     - make the game won by reaching frag limit;
+     - Restarting the game zeros out not only player stats but also team frags:
+       - Hard Restart also puts all players into Spectator Mode;
+       - Soft Restart keeps team assignments.
+       - Check these also when a game is not yet won.
    
    - Friendly fire working as per current config?
      - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,
@@ -53,6 +73,6 @@
  - Now disconnect the client and server instances, and invert the Friendly fire and Team Spawn Groups config, then
    repeat the above tests.
 
- - Check if Server Admin menu actions such as Restart Game and Next Map are working properly (with client still connected to server).
-   - Not only player stats but team id also need to be reset for all players and everybody must be in spectator mode again.
-   - Check these also when a game is already won and we are waiting for the game to restart (with client still connected to server).
+ - Check if Server Admin menu action Next Map is working properly (with client still connected to server).
+   - Player stats must be reset and everybody must be in spectator mode again.
+   - Check it also when a game is already won and we are waiting for the game to restart (with client still connected to server).
