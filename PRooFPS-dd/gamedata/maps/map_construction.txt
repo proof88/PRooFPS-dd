@@ -48,7 +48,8 @@ decal = boiler.bmp 18 14.5 3 3
 # '+' char represents health/medkit.
 # '.' char represents JetLax.
 
-spawngroup_1 = 0
+spawngroup_1 = 0 1 2 3 4
+spawngroup_2 = 8 9 10 11 12
 
 jumppad_0 = 1.6 -10
 jumppad_1 = 2.0 -1.4
@@ -57,24 +58,24 @@ jumppad_3 = 3 1.2
 jumppad_4 = 1.6 -1.2
 
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-aaaaaaaa7aS2aaaa4aaaaIa2Sa7aaaaaaaaaaaaaaaa
-aaaa,HHHHHHHHHHHHHHaaHHHHHHHaaaaaaaaaaaaaaa
-aaaaHcccccccccccccccccccccccHaaaaaaaaaaaaaa
-aaaaaccccccccccccccccccccGcceeeeeaaaaaaaaaa
-aaIaac6Gc7c.crrcccccBI5cSGGce6eeT^aaaaaaaaa
+aaaaaaa2aaSa+aSaa2aaaIaaSa2aaaaaaaaaaaaaaaa
+aaaa.HHHHHHHHHHHHHHaaHHHHHHH.aaaaaaaaaaaaaa
+aaaaHcccccccccccccccccccccc8Haaaaaaaaaaaaaa
+aa5aaccScccccc+ccccc,+cccGcceeeeeaaaaaaaaaa
+aaIaaccGcccc3rrccc,cBIccSGGceeeeT^aaaaaaaaa
 aaIIIIIIIIIIIIrrrrIIIIIIIIIIIIIIIIaaaaaaaaa
-aaInnnnnnnnnnnI\rrrrIwwwwwwwwIeee,aaaaaaaaa
+aaInnnnnnnnnnnI\rrrrIwwwwwwwwIeeeeaaaaaaaaa
 aaInnnnnnnnnnnII\rrrIwwwwwwwwIeeeeaaaaaaaaa
-aaInnnnn+nnnnnrrr\rrwww+wwwwwIeee.aaaaaaaaa
-aaIn7nn2QnnnnnrrrrrrwwwKww6wwweeeeaaaaaaaaa
-aaInQnSQQQnnnnrrrrrJw4KKwwJwwweeeSSaT^aaaaa
-aaIIIIIIIIIIIrrrIILLLLLLLLLLL+eeeIIIIIaaaaa
-aaI8oooIooooI\rrrrrrIooooooo4I\oeeeeeeaaaaa
-aaIIo.oooo+ooI\rrrrrooooooooDII\oeeeeeaaaaa
-aaI,oIoS2IIooooIrrr6oooSD7ooDIII\oeSeeB^aaa
+aaInnnnn7nnnnnrrr\rrwww7wwwwwIeeeeaaaaaaaaa
+aaIn4nnnQ,nnnnrrrrrrwwwKww4wwweeeeaaaaaaaaa
+aaInQnSQQQn6nnrrrrrJw,KKwwJw5weeeSSaT^aaaaa
+aaIIIIIIIIIIIrrrIILLLLLLLLLLLeeeeIIIIIaaaaa
+aaI4oooIooooI\rrrrrrIooooooo8I\oeeeeeeaaaaa
+aaIIoooooooooI\rrrrrooooooooDII\oeeeeeaaaaa
+aaIo+IoS+IIooooIrrrr6ooSDoo3DIII\oeS2eB^aaa
 aamIIIIIIIIIoooIIooIIIIIIIIIIIIIIIIIIIIIaaa
-aamm4mmmmmmmmmmmmmmeeeeeeeeeeeeeeeeeeeeeaaa
-aammmmmmmmmmmBmmmmmeeeeeeeeeeeeeeeeeeeeeaaa
-I^mm,mmS2mmFFFBmmFmeeBBB,eFBee2SFe+++eeeF^a
+aammmmmmmmmmmmmmmmmeeeeeeeeeeeeeeeeeeeeeaaa
+aammmmmmmmmmmBmmmmmeee,+eeeeeeeeeeeeeeeeaaa
+I^m.m2mSmmmFFFBmmFmeeBBBeeFBe2eSFee+ee.eF^a
 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 # After or in between the map layout lines, we do not accept anything else.
