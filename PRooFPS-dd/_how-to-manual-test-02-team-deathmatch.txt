@@ -23,6 +23,11 @@
      - Check if both players still have 0 deaths;
      - Frag table shall show Server player in Team 1, Client player in Team 2 in both instances;
      - Frag table shall hide Spectators table now because no player is in Spectator mode now.
+
+   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall not increase when
+     staying in same team.
+
+   - If any player switches teams, their death counts shall increase by 1.
    
    - Friendly fire working as per current config?
      - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,

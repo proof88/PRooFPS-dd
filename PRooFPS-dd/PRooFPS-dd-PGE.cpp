@@ -989,7 +989,10 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame(const proofps_dd::GameRestartTy
     
     for (auto& playerPair : m_mapPlayers)
     {
-        serverRespawnPlayer(playerPair.second, eRestartType, m_config);
+        if (!playerPair.second.isInSpectatorMode())
+        {
+            serverRespawnPlayer(playerPair.second, eRestartType, m_config);
+        }
     }
 
     serverRespawnItems();

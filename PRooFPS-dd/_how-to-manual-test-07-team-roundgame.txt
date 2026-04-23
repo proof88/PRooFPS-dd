@@ -68,6 +68,11 @@
    - Reconnect the client when the round is in Play state and Join Team 2.
      The round should transition to WaitForReset state, the client shall stay in force-spectating state (dead) until the next round begins,
      the client shall have 0 registered deaths.
+   - Now Server player enters Spectator Mode.
+     Soft Restart the game from the Server Admin menu.
+     Wait until RoundState transitions to Play state.
+     Now Server player shall select its original Team 1.
+     Expectation is that RoundState transitions to WaitForReset state and Server player is shown as Dead in the Frag Table.
 
  - Connect 1 more client and join that client into the same team as the first client is already in (Team 2).
    Now there shall be 2 client players in Team 2, and 1 server player in Team 1:

@@ -22,6 +22,8 @@
      - Check if both still have 0 deaths;
      - Frag table shall show both players now in the first table;
      - Frag table shall hide Spectators table now because no player is in Spectator mode now.
+
+   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall not increase.
    
    - Friendly fire is NOT available in this game mode, therefore:
      - Check simple bullets (e.g. pistol, machine gun) DIRECTLY hitting other players,
