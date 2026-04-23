@@ -490,6 +490,29 @@ void proofps_dd::WeaponHandling::serverUpdateWeapons(proofps_dd::GameMode& gameM
     m_durations.m_nUpdateWeaponsDurationUSecs += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
 }
 
+void proofps_dd::WeaponHandling::serverDeleteAllBulletsNow(
+    proofps_dd::GameMode& gameMode, XHair& xhair, PureVector& vecCamShakeForce)
+{
+    PgeObjectPool<PooledBullet>& bullets = m_pge.getBullets();
+    size_t iti = 0; // to track how many used bullets we processed in the loop, to exit early if we already processed all used
+    // we need iti because there is no way to explicitly iterate over the used elems on the object pool
+    auto it = bullets.begin();
+    while ((iti != bullets.size()) && (it != bullets.end()))
+    {
+        if (!it->used())
+        {
+            it++;
+            continue;
+        }
+        iti++;
+
+        auto& bullet = *it;
+        bullet.markForDeletion();
+        // delete it right now, otherwise later we would send further updates to clients about this bullet
+        it = deleteBulletServer(bullets, it, false, false, xhair, vecCamShakeForce, gameMode, false /*bEndGame*/);
+    }
+}
+
 void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlayers(
     proofps_dd::GameMode& gameMode, XHair& xhair, const unsigned int& nPhysicsRate, PureVector& vecCamShakeForce)
 {
@@ -530,7 +553,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
         {
             bullet.markForDeletion();
         }
-        else
+        else if (!bullet.isMarkedForDeletion() /* mark for delete might happen async from game- or round-restart as well */)
         {
             bullet.update(nPhysicsRate, fGravityChangePerTick, GAME_FALL_GRAVITY_MIN);
 

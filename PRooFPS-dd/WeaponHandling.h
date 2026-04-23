@@ -104,6 +104,8 @@ namespace proofps_dd
 
         void serverUpdateWeapons(proofps_dd::GameMode& gameMode);
         
+        void serverDeleteAllBulletsNow(
+            proofps_dd::GameMode& gameMode, XHair& xhair, PureVector& vecCamShakeForce);
         void serverUpdateBulletsAndHandleHittingWallsAndPlayers(
             proofps_dd::GameMode& gameMode,
             XHair& xhair,

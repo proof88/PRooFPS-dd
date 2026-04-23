@@ -996,6 +996,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame(const proofps_dd::GameRestartTy
     }
 
     serverRespawnItems();
+    serverDeleteAllBulletsNow(*GameMode::getGameMode(), *m_gui.getXHair(), cameraGetShakeForce());
 
     m_gui.hideGameObjectives();
     m_gui.getDeathKillEvents()->clear();
@@ -1026,6 +1027,7 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
     }
 
     serverRespawnItems();
+    serverDeleteAllBulletsNow(*GameMode::getGameMode(), *m_gui.getXHair(), cameraGetShakeForce());
 }
 
 void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
