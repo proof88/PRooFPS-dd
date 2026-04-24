@@ -75,6 +75,13 @@ This version brings the following **BUG FIXES**:
  - **Physics: Team Deathmatch**: when friendly fire was disabled, the player was not **taking damage from self-caused explosions**.
  - **Gameplay:** when the current game session was already won and showing the results, if a client disconnected then reconnected from/to the server while the server was still waiting for the restart, the results were not shown automatically to the client as expected. Even worse, in Team DeathMatch mode, the Team Select menu was shown to the client, and the client could still join any team (while all the others were already waiting for the restart). Now in both game modes the **results are shown automatically after reconnecting as expected, and joining a team is not possible when the game has already ended**.
 
+**Limitations Removed:**
+ - JetLax cannot be used while crouching.
+
+**Limitations Still in Effect:**
+ - Shotgun does not contribute to player aim accuracy stats.
+ 
+
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
 
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1mQHlZnRwHb49QlxFFJzH5OrF5sCReG67/view?usp=drive_link).
