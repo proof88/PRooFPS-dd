@@ -25,7 +25,7 @@
      - Frag table shall show both players now in the first table;
      - Frag table shall hide Spectators table now because no player is in Spectator mode now.
 
-   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall not increase.
+   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall NOT increase.
 
    - Testing basic gameplay:
      - kill each players, check if frags and death counts increase as expected;
@@ -48,7 +48,6 @@
        - expect: all players' fagile bullets can be destroyed within each other's explosion radius.
    
    - Check if Frag Table shows players properly (players ordered by frags).
-   - Check if any non-first switching to Spectator Mode and Joining the game again actually increases death count by 1.
 
  - Check if Server Admin menu action Next Map is working properly (with client still connected to server).
    - Player stats must be reset and everybody must be in spectator mode again.

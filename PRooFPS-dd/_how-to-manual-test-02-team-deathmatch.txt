@@ -30,7 +30,7 @@
 
    - In the Team Select / Welcome menu, "You are in Team 1/2." shall be shown depending on the assigned team.
 
-   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall not increase when
+   - Now try entering and exiting Spectator Mode with both players. It should always work, death counts shall NOT increase when
      staying in same team.
 
    - In the Team Select / Welcome menu, "You were in Team 1/2." shall be shown depending on the assigned team.
@@ -68,7 +68,6 @@
    - Team Spawn Groups working as per current config?
    - Check if Frag Table shows the 2 teams properly (players grouped by teams, ordered by frags within teams).
      - Per-Team Total Frags shall be also shown next to number of players in team.
-   - Check if any non-first team change actually increases death count by 1.
 
  - Now disconnect the client and server instances, and invert the Friendly fire and Team Spawn Groups config, then
    repeat the above tests.

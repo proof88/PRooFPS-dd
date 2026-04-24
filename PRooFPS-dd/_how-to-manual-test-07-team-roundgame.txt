@@ -91,6 +91,7 @@
       This player shall stay dead until next round and its deaths count shall be increased by 1.
       This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
       increasing death count of such player and shall wait until next round begins.
+    - Disconnect the 2nd client now.
 
  - Check if Server Admin menu action Next Map is working properly (with client still connected to server).
    - Player stats must be reset and everybody must be in spectator mode again.
