@@ -172,10 +172,30 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
     }
 }
 
-void proofps_dd::PlayerHandling::serverRespawnPlayer(Player& player, const proofps_dd::GameRestartType_KeepPlayers& eRestartType, const proofps_dd::Config& config)
+void proofps_dd::PlayerHandling::serverRespawnPlayer(
+    Player& player,
+    const proofps_dd::GameRestartType_KeepPlayers& eRestartType,
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles)
 {
-    // to respawn, we just need to set these values, because SendUserUpdates() will automatically send out changes to everyone
-    player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
+    if (cfgProfiles.getVars()["testing"].getAsBool())
+    {
+        if (player.getServerSideConnectionHandle() == pge_network::ServerConnHandle)
+        {
+            // server player, put it to the left side
+            player.getPos() = m_maps.getLeftMostSpawnpoint();
+        }
+        else
+        {
+            // client, put it to the right side
+            player.getPos() = m_maps.getRightMostSpawnpoint();
+        }
+    }
+    else
+    {
+        player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
+    }
+
     player.setHealth(100);
     player.setArmor(0);
     player.getRespawnFlag() = true;
@@ -240,6 +260,7 @@ void proofps_dd::PlayerHandling::serverResettlePlayer(Player& player, const proo
 
 void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     const proofps_dd::Config& config,
+    PGEcfgProfiles& cfgProfiles,
     proofps_dd::GameMode& gameMode,
     proofps_dd::Durations& durations)
 {
@@ -264,7 +285,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= static_cast<std::chrono::seconds::rep>(config.getPlayerRespawnDelaySeconds()))
         {
-            serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
+            serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
         }
     }
 
@@ -342,9 +363,9 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                 getConsole().EOLn(
                     "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, respawning player due to exited spectator mode.",
                     __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                if (!cfgProfiles.getVars()["testing"].getAsBool())
+                if (!cfgProfiles.getVars()["testing"].getAsBool())  /* TODO: probably this condition is not needed anymore, we integrated into serverRespawnPlayer() */
                 {
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
                 }
             }
         }
@@ -416,12 +437,12 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                 // even tho player is already on a random global spawn point selected in handleUserConnected(), now
                 // with proper team id respawn is needed to deal with team spawn groups;
                 // but do this only if NOT regression test is running because it messes with positioning players to the leftmost/rightmost spawnpoints!
-                if (!cfgProfiles.getVars()["testing"].getAsBool())
+                if (!cfgProfiles.getVars()["testing"].getAsBool())  /* TODO: probably this condition is not needed anymore, we integrated into serverRespawnPlayer() */
                 {
                     getConsole().EOLn(
                         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
                         __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
                 }
             }
             else

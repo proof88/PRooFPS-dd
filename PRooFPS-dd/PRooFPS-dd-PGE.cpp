@@ -801,7 +801,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
 
         // @PHYSICS-RATE END
     }  // for iPhyIter
-    serverUpdateRespawnTimers(m_config, *GameMode::getGameMode(), m_durations);
+    serverUpdateRespawnTimers(m_config, getConfigProfiles(), *GameMode::getGameMode(), m_durations);
     serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *GameMode::getGameMode());
 
     // @TICK-RATE END
@@ -991,7 +991,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame(const proofps_dd::GameRestartTy
     {
         if (!playerPair.second.isInSpectatorMode())
         {
-            serverRespawnPlayer(playerPair.second, eRestartType, m_config);
+            serverRespawnPlayer(playerPair.second, eRestartType, m_config, getConfigProfiles());
         }
     }
 
@@ -1017,7 +1017,7 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
         {
             if (std::as_const(playerPair.second).getHealth() == 0)
             {
-                serverRespawnPlayer(playerPair.second, proofps_dd::GameRestartType_KeepPlayers::None, m_config);
+                serverRespawnPlayer(playerPair.second, proofps_dd::GameRestartType_KeepPlayers::None, m_config, getConfigProfiles());
             }
             else
             {

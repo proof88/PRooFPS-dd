@@ -183,14 +183,30 @@ protected:
             // need a bit sleep after team selection in-game menu closes, otherwise
             // player control inputs will be ignored
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
+            
             if (proofps_dd::GameMode::isRoundBased(m_eGameModeType))
             {
-                // make sure we transitioned to RoundState::Play state from Prepare
+                // we should join now with client player too to trigger new round
+                input_sim_test::bringWindowToFront(hClientMainGameWindow);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+                // client player selects team 2
+                input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100);
+
+                // round end triggered
+
+                // need a bit sleep after team selection in-game menu closes, otherwise
+                // player control inputs will be ignored
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                // make sure we transitioned to RoundState::WaitForReset then Prepare then Play (new round starts automatically)
                 while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - m_timeSetupFinished) < std::chrono::seconds(3))
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5000 + 3000 + 500));
                 }
+
+                input_sim_test::bringWindowToFront(hServerMainGameWindow);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
 
             input_sim_test::keybdPressNoRelease(VK_RIGHT);
@@ -213,15 +229,18 @@ protected:
             input_sim_test::bringWindowToFront(hClientMainGameWindow);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-            if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+            if (!proofps_dd::GameMode::isRoundBased(m_eGameModeType))
             {
-                // client player selects team 2
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100);
-            }
-            else
-            {
-                // client player selects "join game"
-                input_sim_test::keybdPress((unsigned char)VkKeyScan('j'), 100);
+                if (proofps_dd::GameMode::isTeamBasedGame(m_eGameModeType))
+                {
+                    // client player selects team 2
+                    input_sim_test::keybdPress((unsigned char)VkKeyScan('2'), 100);
+                }
+                else
+                {
+                    // client player selects "join game"
+                    input_sim_test::keybdPress((unsigned char)VkKeyScan('j'), 100);
+                }
             }
 
             // need a bit sleep after team selection in-game menu closes, otherwise
