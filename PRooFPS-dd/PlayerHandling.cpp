@@ -1168,6 +1168,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
         // clients invoke handlePlayerRespawned() in this function later, server invokes it now but might also invoke it later as clients do
         handlePlayerRespawned(player, xhair);
+        player.getPos().commit();  
 
         getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for respawning user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;
@@ -1177,6 +1178,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     {
         // server has already updated everything for this player, do not accept stale injected msg data
         player.getResettlingFlag() = false;
+        player.getPos().commit();  // Jetlaxing player did not properly reposition upon respawn upon new round
         getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for resettling user with connHandleServerSide: %u!", __func__, connHandleServerSide);
         return true;
     }
