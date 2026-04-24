@@ -83,7 +83,7 @@ This version brings the following **BUG FIXES**:
  - Shotgun does not contribute to player aim accuracy stats.
 
 **New Limitations:**
- - At the end of a game, Frag Table is not always automatically shown to the server player.
+ - At the end of a game, Frag Table is not always automatically shown to the server player and HUD stays visible.
  
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
