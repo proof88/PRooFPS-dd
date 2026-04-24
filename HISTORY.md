@@ -69,6 +69,7 @@ This version brings the following **CHANGES AND ENHANCEMENTS**:
  - **Physics: JetLax:** when activated but idle, **randomized micro-forces** push the player to give a bit more floating-like feeling.
  - **Physics: impact force** on players has been tweaked a bit, in particular the explosions now throw players over a more visually appealing 2D-curve.
  - **GFX: smoke colors** are a bit more **randomized** (nobody will notice it though).
+ - **Fan-made map_construction** has revised spawn points, suitable for team game modes.
 
 This version brings the following **BUG FIXES**:
  - **Physics: Jumping when Running Down Stairs** is now working properly, previously it was not possible most of the time.
@@ -80,6 +81,9 @@ This version brings the following **BUG FIXES**:
 
 **Limitations Still in Effect:**
  - Shotgun does not contribute to player aim accuracy stats.
+
+**New Limitations:**
+ - At the end of a game, Frag Table is not always automatically shown to the server player.
  
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
