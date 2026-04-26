@@ -1,6 +1,6 @@
 \page baddesign Bad Design
 
-This page is about what I don't like in the code of PRooFPS-dd, and should be changed in 2026.  
+This page is about what I don't like in the code of PRooFPS-dd, and should be changed after 2026.  
 Stuff here will be turned into Issues on Github at some point, but currently these are only thoughts.
 
 [TOC]
