@@ -1,4 +1,4 @@
-﻿\page networking Networking
+﻿\page page_networking Networking
 
 PRooFPS-dd uses the networking subsystem of [PGE](https://github.com/proof88/PGE).  
 This page is basically the continuation of [PGE documentation's Networking page](https://proof88.github.io/pge-doc/networking.html).

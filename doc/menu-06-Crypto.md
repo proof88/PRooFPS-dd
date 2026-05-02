@@ -1,4 +1,4 @@
-\page crypto Crypto
+\page page_crypto Crypto
 
 This page is about how to make money with crypto.  
 Written by PRooF, using my own experience.  
@@ -34,7 +34,7 @@ TODO:
  
 [TOC]
 
-\section terms Terminology
+\section crypto_terms Terminology
 
  - **Fiat Currency:** real-world money such as HUF, USD, EUR. [More on Wikipedia.](https://en.wikipedia.org/wiki/Fiat_money)
  - **Blockchain:** a list of records securely linked together via cryptographic hashes. Examples: Ethereum, Tron, Solana. [More on Wikipedia.](https://en.wikipedia.org/wiki/Blockchain)
@@ -57,14 +57,14 @@ TODO:
  - **FUD:** Fear, uncertainty, doubt. Tricky investor uses it as manipulative strategy to make other people sell their asset, so that its prices goes down and the investory can buy it low.
  - **Satoshi:** Satoshi Nakamoto is the pseudoname of the inventor of Bitcoin. Nobody knows how made Bitcoin. But Satoshi [has a statue in Budapest](https://www.statueofsatoshi.com/). There are [suspects though](https://coinmarketcap.com/academy/article/who-is-satoshi-nakamoto).
   
-\section whybuy Why Buy?
+\section crypto_whybuy Why Buy?
 
 To get RICH.  
 If you are not an idiot, then it is not riskier than investing in stocks.  
 REAL MEN are expanding their portfolio with crypto, not avoiding it.  
 When there is a pandemic, a war or an economic breakdown, or any other bigger crysis, both the crypto- and stock market fall together anyway.
 
-\section howmuch How Much to Buy?
+\section crypto_howmuch How Much to Buy?
 
 The exact amount of money you wouldn't mind losing.  
 A lot of noobs did put most of their salary into crypto because they heard it can go up to 10 times.  
@@ -80,9 +80,9 @@ Thus, you need to put in big money to make big money!
 
 Later in this document I made a section about what to buy: I believe that for [Easy Level](#whatbuy_easy) and [Medium Level](#whatbuy_medium) you can invest more money with more safety than on other levels.
 
-\section wherebuy Where to Buy?
+\section crypto_wherebuy Where to Buy?
 
-\subsection revo Revolut
+\subsection crypto_revo Revolut
 
 <table>
 <tr><th>Pros<th>Cons
@@ -99,7 +99,7 @@ But this one is the most convenient for a beginner. Suitable if you wanna keep y
 Also, the coins listed here are more safe to buy, i.e. not tricking you into a honeypot, etc. Still, price is volatile, so be careful!  
 As per my latest info there is no way to convert your crypto to other crypto but maybe they already implemented it in 2024.
 
-\subsection cex CEX (Centralized Exchange)
+\subsection crypto_cex CEX (Centralized Exchange)
 
 <table>
 <tr><th>Pros<th>Cons
@@ -148,7 +148,7 @@ Anytime later if you want, you can send back (deposit) the crypto from your own 
 
 Since you can withdraw/deposit/trade your cryptocurrencies without involving fiat money in these exchanges, you save money on fees you cannot save using Revolut.
 
-\subsection dex DEX (Decentralized Exchange)
+\subsection crypto_dex DEX (Decentralized Exchange)
 
 <table>
 <tr><th>Pros<th>Cons
@@ -175,14 +175,14 @@ Examples of recognized DEX are:
  - [Raydium](https://raydium.io/swap/) (Solana chain; Phantom and MetaMask are supported, may lag with Phantom wallet so I use Jupiter instead)
  - [Osmosis](https://app.osmosis.zone/) (works across multiple chains; neither Phantom nor MetaMask is supported yet)
 
-\section whenbuy When Buy?
+\section crypto_whenbuy When Buy?
 
 They always say to buy low and sell high.  
 But what is low and what is high?  
 It is difficult to tell if the current price is low or high because we don't know what is the reference price.  
 The following rules might help.
 
-\subsection whenbuy_01 When: Rule 1: Mind the Global Sentiment
+\subsection crypto_whenbuy_01 When: Rule 1: Mind the Global Sentiment
 
 Always check the all-time price chart of the selected coin and find reference points matching with global events, such as:
  - beginning of a pandemic;
@@ -194,14 +194,14 @@ This way you can get a clue about what would be a correct reference price of the
 
 Also, some other decisions also have influence on Bitcoin price, like [Fed (Federal Reserve) interest rate changes](https://www.stlouisfed.org/in-plain-english/the-fed-implements-monetary-policy), [halving events](https://halvingdates.com/), etc.
 
-\subsection whenbuy_02 When: Rule 2: Aim for Local Low
+\subsection crypto_whenbuy_02 When: Rule 2: Aim for Local Low
 
 Also, try to find shorter-term cycles in the price and try to time your buy when the current price seems to be at local low height.  
 Example: [short-term cycles in SAD HAMSTER price](https://coinmarketcap.com/currencies/sad-hamster/).  
 There were around 6 cycles between 2024 Jun and Sep where one could earn at least 6x~50% gains.  
 Imagine you spent 100k HUF on HAMMY in Jun, then realize the total profit of ~1M HUF by the end of Sep!
 
-\subsection whenbuy_03 When: Rule 3: Do NOT FOMO
+\subsection crypto_whenbuy_03 When: Rule 3: Do NOT FOMO
 
 I think most of my losses were because of FOMO-buys.  
 I immediately lost a lot of money when I started crypto-trading at the beginning of 2022 because that was the WORST timing for entering the market.  
@@ -218,11 +218,11 @@ This is one of the most difficult part because it is about controlling your emot
 Based on my experience you will just lose money and regret all the FOMO-buys.  
 Patience with buying something always brings gains.
 
-\section whatbuy What to Buy?
+\section crypto_whatbuy What to Buy?
 
 This question is both the easiest and most difficult to answer.
 
-\subsection whatbuy_easy Easy Level
+\subsection crypto_whatbuy_easy Easy Level
 
 If you want to invest zero time in it and want nice gains, buy Bitcoin and hold (hodl) it for years.  
 You can simply do this in Revolut too.  
@@ -244,7 +244,7 @@ As you can see in the below picture, Bitcoin gives three chances to buy before i
 <tr><td>BTC gives 3 chances<td>BTC 4-year cycles<td>BTC quarterly returns<td>BTC price history and USA elections
 </table>
 
-\subsection whatbuy_medium Medium Level
+\subsection crypto_whatbuy_medium Medium Level
 
 If you want to invest more time and want even nicer gains in shorter term (weeks/months), then you need to have more diverse crypto portfolio, with cryptocurrencies of different sectors of the crypto world.  
 You should discover what altcoins are in the market and buy yourself in.  
@@ -278,7 +278,7 @@ You can easily spend a few dollars worth of Eth for only 1 transaction on the Et
 Therefore, I recommend considering this before investing in a coin on the Ethereum chain.  
 Also, you can time your transaction [for less busy time periods](https://etherscan.io/gastracker) when gas fees are usually lower.
 
-\subsection whatbuy_advanced Advanced / Difficult Level
+\subsection crypto_whatbuy_advanced Advanced / Difficult Level
 
 Speculate to accumulate.  
 The advanced level involves listening to **[signals and analyzing the charts](#signals)**.  
@@ -288,13 +288,13 @@ Also, you can try **trading bots** which are auto-trading using your assets, bas
 Such trading bots are available on CEX for free, you can also see setups of other users as well.  
 And there are external trading bots also which can use your soft wallet to trade, in this case no CEX registration is needed.
 
-\subsection whatbuy_degen Degen Level / Casino
+\subsection crypto_whatbuy_degen Degen Level / Casino
 
 Degen is the short form of degenerate.  
 These levels of the crypto world are for degens who risk some money for big returns within a very short period of time (minutes/hours).  
 If you think that trading normal crypto is gambling, you are wrong: this level is the real gambling.
 
-\subsubsection whatbuy_degen_general Random Hints
+\subsubsection crypto_whatbuy_degen_general Random Hints
 
 Random hints on what to buy, what would be a good deal can come from various sources, including Twitter and Telegram.  
 For example, there are Telegram groups where chart analysis predictions come regularly for various assets, and I can assure many of them actually predicts well.  
@@ -308,7 +308,7 @@ Even if a signal tells you should buy, mind [the global sentiment](#whenbuy_01).
 
 And always check the token with honeypot checkers, see [honeypot scam in later section](#scams_honeypot).
 
-\subsubsection whatbuy_degen_pumpfun Pump Fun
+\subsubsection crypto_whatbuy_degen_pumpfun Pump Fun
 
 On [PumpFun](https://pump.fun/) anyone can create a coin on the Solana blockchain and other users can invest.  
 The idea is, once the market cap reaches a specific value, the coin becomes publicly tradeable on the [Raydium DEX](https://raydium.io/swap/).  
@@ -346,7 +346,7 @@ If you want, you can repeat the above process with the same coin at its next dip
 Still, you can find some real projects here (0.01% of the coins here), which are unique and a community is formed on Telegram who take care of the marketing even after the coin hits [Raydium](https://raydium.io/swap/).  
 In such rare occurrence of finding such, try to hold your investment in that coin and work together with the community in the marketing to bring in more and more people.
 
-\subsubsection whatbuy_degen_sunpump Sun Pump
+\subsubsection crypto_whatbuy_degen_sunpump Sun Pump
 
 In Aug 2024 a similar website was born: [SunPump](https://sun.io/?lang=en-US#/pumpVote).  
 The idea is the same, but this operates on the Tron blockchain, and its name comes from the creator of the blockchain (Justin Sun).  
@@ -361,16 +361,16 @@ The classic rocket crash game also has its Solana-based versions where you can r
 
 Note that there are other versions for other cryptocurrencies as well, use Google.
 
-\subsubsection whatbuy_degen_cockfight Cock Fight Games
+\subsubsection crypto_whatbuy_degen_cockfight Cock Fight Games
 
 You can [bet on the winning cock](https://www.degencockfight.com/cockfight) using Solana.
 
-\section whensell When Sell?
+\section crypto_whensell When Sell?
 
 It depends on YOUR expectations of the coin.  
 But here is my opinion.
 
-\subsection whensell_btc Selling Bitcoin
+\subsection crypto_whensell_btc Selling Bitcoin
 
 We never sell Bitcoin. We hold it for life!  
 But here are some example long-term gains with Bitcoin:
@@ -406,7 +406,7 @@ For example, I sold Bitcoin around $60k on Aug 3, 2024 because I sensed the nega
 So a few days later it could be bought back at $50k.  
 Selling Bitcoin must be temporal only.
 
-\subsection whensell_alts Selling Altcoins
+\subsection crypto_whensell_alts Selling Altcoins
 
 Again: it depends on YOUR expectations of the coin.  
 Unlike Bitcoin, not all altcoins should be kept forever.  
@@ -416,11 +416,11 @@ Check [my altcoins table for reference prices](https://docs.google.com/spreadshe
 And also consider the transaction fee which differs from blockchain to blockchain and also depends on the load on the network.  
 Transactions can be really pricey on Ethereum chain. Try to time your transaction [for less busy time periods](https://etherscan.io/gastracker) when gas fees are usually lower.
 
-\section appendix Appendix
+\section crypto_appendix Appendix
 
-\subsection signals Chart Analysis and Signals
+\subsection crypto_signals Chart Analysis and Signals
 
-\subsubsection signals_charts Chart Analysis
+\subsubsection crypto_signals_charts Chart Analysis
 
 This topic is not crypto specific, this is coming from the stock market but applies to crypto as well.  
 This is basically the art and/or science of analysing charts and trying to understand the market from the charts, and try to predict the near future of price movement.  
@@ -443,7 +443,7 @@ Additional content:
 
 Needless to say, chart analysis should be tied together with understanding [the global sentiment](#whenbuy_01).
 
-\subsubsection signals_signals Signals
+\subsubsection crypto_signals_signals Signals
 
 Your chart analysis can also generate a buy or sell signal but you can also receive signals.
 
@@ -459,7 +459,7 @@ if signal predicts increasing price, then crowds will be buying the same asset, 
 
 Always avoid pump groups where they say that a specific asset's price will be pumped at a specific time, I call it as [pump scam](#scams_pump_signal).
 
-\subsection memes Memes
+\subsection crypto_memes Memes
 
 There are lot of types of memes, some of them are political.  
 2024 was the year of memes born from [Matt Furie: Boy's Club](https://www.fantagraphics.com/products/boys-club?srsltid=AfmBOor1nhcrxat_thimbWedbrvMq4TIgOBvD27YqhWZKTSv16THEe9r) cartoon characters.  
@@ -470,15 +470,15 @@ Also, this picture explains all the other frogs closely related to Pepe:
 
 TODO add picture when I find it!
 
-\subsection scams Scams
+\subsection crypto_scams Scams
 
-\subsubsection scams_copycat Copycat Scam
+\subsubsection crypto_scams_copycat Copycat Scam
 
 A copycat token is basically a token created with the same name, logo, etc. as an already existing token, so if someone is not careful enough, might accidentally buy the copycat token instead of the original.  
 Usually the creator of the copycat token already bought themselves in, so after other people also bought themselves in accidentally, the creator simply sells their share with higher price.  
 Worse case is if this copycat token is [a honeypot](#scams_honeypot).
 
-\subsubsection scams_honeypot Honeypot Scam
+\subsubsection crypto_scams_honeypot Honeypot Scam
 
 Before buying a token on a DEX, we should check if the token is actually safe to trade.  
 This safeness has nothing to do with the price, as the price is very volatile anyway.  
@@ -493,14 +493,14 @@ I use these:
  - https://rugcheck.xyz/ (specifically for Solana-based coins. Make sure most of the LP is locked, Mint Authority is "-", and all of the top holders are in with low percentage (max 4-5%) per holder).
  - https://www.solsniffer.com
 
-\subsubsection scams_elonmuskgiveaway Elon Musk Crypto Giveaway Scam
+\subsubsection crypto_scams_elonmuskgiveaway Elon Musk Crypto Giveaway Scam
 
 It is multiple years old but still being used on various occasions. For example, when Donald Trump gave a speech on Bitcoin Conference in July 2024, there were multiple live streams on YouTube with this scam.  
 This scam is about streaming a pre-recorded video about Elon Musk talking in front of the audience. The video is a deepfake, using Elon's voice and face faked to tell you that if you send Bitcoin or any other coin to their address, you will immediately get back double.  
 Obviously the wallet address you are sending your coins to, is owned by the scammer, and you will never see your coins again.  
 One such [fake YouTube channel is this](https://www.youtube.com/c/SamirAldby29), trying to fake Tesla's YouTube channel. Occasionally you can see the fake live video being streamed here.
 
-\subsubsection scams_pumpfun Pump Fun Scams
+\subsubsection crypto_scams_pumpfun Pump Fun Scams
 
 In the older days of [Pump.Fun](#whatbuy_degen_pumpfun), there were a lot of original ideas turned into coins that could make a lot of profit for both the creator and the early investors.  
 However, nowadays most coins there are made for ripping off people.  
@@ -518,7 +518,7 @@ This is true, but unfortunately, some scammers are streaming pre-recorded videos
 To make this even more real, the scammer or friends of the scammer write questions in the live chat, and the person in the video is answering these questions like it was really a real video, even though it is pre-recorded.  
 Usually the person in the video is a cute girl, to gain more fools investing in the coin.
 
-\subsubsection scams_arbitrage Alleged Exploit of Arbitrage Scam
+\subsubsection crypto_scams_arbitrage Alleged Exploit of Arbitrage Scam
 
 This kind of scam is still being done in some Telegram channels.  
 They explain to you that the difference in price of a token on different crypto exchanges can be used to earn money:  
@@ -544,7 +544,7 @@ On [medium.com there are articles written by fake user](https://medium.com/@Mich
 <td>Nice post from scammer<td>Fake feedbacks shown by scammer<td>Finishing post from scammer
 </table>
 
-\subsubsection scams_pump_signal Pump Signal Scam
+\subsubsection crypto_scams_pump_signal Pump Signal Scam
 
 This kind of scam is regularly done in some Telegram channels.  
 They say they will pump up the price of a token with the help of other insiders, whales, marketing, and anyone willing to participate in the group can also take profit by buying the token.  
@@ -560,7 +560,7 @@ The following screenshots show an example of a recent rug pull:
 In the above pictures we can see the Telegram posts, the coin name comes exactly at 18:00 CET which is shown as 16:00 GMT in the TradingView chart picture.  
 3 minutes after the signal, rug pull happened, only the scammer earned anything.
 
-\subsection websites Websites
+\subsection crypto_websites Websites
 
  - [CoinMarketCap (see prices, charts, track your portfolio, community)](https://coinmarketcap.com/)
  - [coinglass (similar to CoinMarketCap)](https://www.coinglass.com/)
@@ -578,7 +578,7 @@ In the above pictures we can see the Telegram posts, the coin name comes exactly
  - [Merkle Tree Compression](https://www.metaplex.com/posts/expanding-digital-assets-with-compression-for-nfts)
  - [Render Network Migration Summary](https://github.com/rendernetwork/RNPs/blob/main/RNP-002.md)
 
-\subsection videos Videos
+\subsection crypto_videos Videos
 
  - [What are Smart Contracts in Crypto? (4 Examples + Animated)](https://www.youtube.com/watch?v=pyaIppMhuic)
  - [Crypto Coin vs Token (Differences + Examples)](https://www.youtube.com/watch?v=422HORNUfkU&ab_channel=WhiteboardCrypto)
@@ -593,13 +593,13 @@ In the above pictures we can see the Telegram posts, the coin name comes exactly
  - [How To Read Price Action Using Candlestick Psychology (Trading Strategy)](https://www.youtube.com/watch?v=dU-I67JaJrc&ab_channel=TheSecretMindset)
  - [BEST Technical Analysis Blueprint For Day Trading (Full Course For Beginners)](https://www.youtube.com/watch?v=OpTLs-86qwQ&ab_channel=TheSecretMindset)
 
-\subsection tax Paying Taxes
+\subsection crypto_tax Paying Taxes
 
 This is country specific, but for Hungary the rules are clearly written on the [web page of the National Tax and Customs Administration (NAV) here](https://nav.gov.hu/ado/szja/a-kriptougyletek-jovedelmenek-adozasa).
  
-\section faq FAQ
+\section crypto_faq FAQ
 
-\subsection wallet How to Get a Crypto Wallet?
+\subsection crypto_wallet How to Get a Crypto Wallet?
 
 There are soft- and hard wallets.  
 It does not matter where/how you get your crypto, you should be able to transfer it to either a hard- or soft-wallet for long-term storage.  
@@ -617,12 +617,12 @@ Examples:
  - [MetaMask](https://metamask.io/)
  - [Phantom](https://phantom.app/)
 
-\subsection wherecoin I Know which Coin to Buy, but Where can I Buy it?
+\subsection crypto_wherecoin I Know which Coin to Buy, but Where can I Buy it?
 
 I always check a price-tracking website such as [CoinMarketCap](https://coinmarketcap.com/) which lists all CEX and DEX where a specific coin can be traded.  
 For example, in case of Bitcoin, you can find this info [under the chart in the "Bitcoin Markets"](https://coinmarketcap.com/currencies/bitcoin/) section.
 
-\subsection anon Am I Anonymous in Crypto Trading?
+\subsection crypto_anon Am I Anonymous in Crypto Trading?
 
 No, even if they try to make you believe, you are not.  
 In 2024 we are already late to trade anonymously in the crypto market due to the regulations and security measures they introduced in recent years to fight against money laundering.  

@@ -23,7 +23,7 @@
  - Update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections if needed,
    with special attention on the controls (keyboard + mouse).
 
- - Update the manual tests.
+ - Update the manual tests in the Tests directory.
 
  - Execute at least the recently added manual tests and any older manual tests that might have any relation to
    this feature.

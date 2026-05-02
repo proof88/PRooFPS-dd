@@ -1,4 +1,4 @@
-\page game_logic Game Logic
+\page page_game_logic Game Logic
 
 Some basic knowledge about game logic implementation.
 
@@ -7,7 +7,7 @@ Some basic knowledge about game logic implementation.
 \section gameplay_basics Basics
 
 There is no separate binary for server and client instance.  
-There is only a single executable that can behave either as a server or a client, depending on if we create or join a server.
+There is only a single executable that can behave either as a server or a client, depending on if we create or join a server from the main menu.
 
 There is some shared code between server and clients, some examples:
  - keyboard and mouse inputs are detected and sent to the server (see [section: Player Input Handling](#gameplay_player_input_handling)),
@@ -32,14 +32,6 @@ TODO explain ticks, link to Networking page.
 
 \section gameplay_spectating Spectator Mode and Forced Spectating
 
-What is common in Spectator Mode and Forced Spectating state:
- - both offer "free camera spectating" and "player spectating camera" modes, the latter allows switching between different players and automatically moving the camera,
- - both is maintained per player.
-
-What is different between Spectator Mode and Forced Spectating state:
- - Spectator Mode is the player's choice, entering and exiting it is manual action,
- - Forced Spectating state is controlled by the server automatically.
-
 **Spectator Mode** is the initial state for all joined players in all game modes, where they can observe the game without affecting it.  
 They can actually start playing the game by explicitly exiting Spectator Mode:
  - in team-based games this is done by selecting a team in the Team Selection menu,
@@ -50,6 +42,14 @@ Entering Spectator Mode again is always available during gameplay by pressing 'M
 **Forced Spectating**, on the other hand, is not the player's choice: some game modes such as Team Round Game does not allow immediate respawn after dieing,
 dead players need to wait for the next round to respawn. Until that happens, they are automatically put into Forced Spectating state, where they can observe the game
 without affecting it, similarly to Spectator Mode. Server takes care of automatic exiting from Forced Spectating state too.
+
+What is common in Spectator Mode and Forced Spectating state:
+ - both offer "free camera spectating" and "player spectating camera" modes, the latter allows switching between different players and automatically moving the camera,
+ - both is maintained per player.
+
+What is different between Spectator Mode and Forced Spectating state:
+ - Spectator Mode is the player's choice, entering and exiting it is manual action,
+ - Forced Spectating state is controlled by the server automatically.
 
 A player can be in Spectator Mode and Forced Spectating state at the same time. A typical example is after connecting to a server running Team Round Game mode:  
 by default the player is dead, so it is in Forced Spectating state, and by default all new players are in Spectator Mode too.  
@@ -68,7 +68,7 @@ A player is considered as "booted up" when its initiated connection to the serve
  - player is aware of the game objectives and their state on this server,
  - proofps_dd::PlayerHandling::hasPlayerBootedUp() returns true for the new player,
  - proofps_dd::Player::hasBootedUp() returns true for the new player,
- - server has logged "Player BOOTED UP" (visible only if PlayerHandling logs are enabled).
+ - server has logged "Player BOOTED UP" for the new player (visible only if PlayerHandling logs are enabled).
 
 Only after finished bootup, the player is allowed to exit Spectator Mode.
 
@@ -161,4 +161,4 @@ Physics calculations consist of the following:
 
 Player weapon handling is implemented in proofps_dd::WeaponHandling class.  
 Similar to physics, weapon actions are executed on server side for all players, therefore cheating is not possible by a client by locally modifying weapon files or trying to switch to an unavailable weapon, since
-even weapon switch action is executed on server side, only after basic checks such as weapon availability for the given player pass.
+even the weapon switch action is executed on server side, only after basic checks such as weapon availability for the given player pass.
