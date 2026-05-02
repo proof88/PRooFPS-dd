@@ -55,7 +55,7 @@ A player can be in Spectator Mode and Forced Spectating state at the same time. 
 by default the player is dead, so it is in Forced Spectating state, and by default all new players are in Spectator Mode too.  
 Exiting Spectator Mode by selecting a team may not automatically exit Forced Spectating state, the player stays in that state until a new round starts.
 
-DOC: create flowchart about handlePlayerTeamIdChangedOrToggledSpectatorMode(), to understand when serverRespawnPlayer() is invoked, how it has effect on isForcedSpectating().
+TODO: DOC: create flowchart about handlePlayerTeamIdChangedOrToggledSpectatorMode(), to understand when serverRespawnPlayer() is invoked, how it has effect on isForcedSpectating().
 
 \section gameplay_player_bootup Player Bootup
 
