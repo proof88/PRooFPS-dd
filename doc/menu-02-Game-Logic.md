@@ -55,7 +55,7 @@ A player can be in Spectator Mode and Forced Spectating state at the same time. 
 by default the player is dead, so it is in Forced Spectating state, and by default all new players are in Spectator Mode too.  
 Exiting Spectator Mode by selecting a team may not automatically exit Forced Spectating state, the player stays in that state until a new round starts.
 
-TODO: DOC: create flowchart about handlePlayerTeamIdChangedOrToggledSpectatorMode(), to understand when serverRespawnPlayer() is invoked, how it has effect on isForcedSpectating().
+![](img/SelectTeam-ToggleSpectatorMode.drawio.png)
 
 \section gameplay_player_bootup Player Bootup
 
@@ -94,24 +94,31 @@ This is received by ALL instances, including the server, other clients and the d
 Server sends out proofps_dd::MsgMapChangeFromServer to all instances (including self) with the name of the target map in case of map change.  
 Server disconnects all clients during map change, in such case the clients are required to automatically try reconnecting to the server after they have loaded the target map.
 
-\section gameplay_game_objectives Game Objectives
+\section gameplay_gamemode GameMode Class
 
-Only the server instance defines and checks the fulfillment of game objectives.  
-Clients just accept updates about this from the server.
-
-Game objectives handling is implemented by the proofps_dd::GameMode parent class and its derived classes.  
+The proofps_dd::GameMode parent class and its derived classes are responsible for implementing game objectives.  
 Each derived class represents a game mode:
  - proofps_dd::DeathMatchMode implements Deathmatch,
  - proofps_dd::TeamDeathMatchMode implements Team Deathmatch, and
  - proofps_dd::TeamRoundGameMode implements Team Round Game.
  
+As a reference, [this umbrella task was tracking the development of Team Round Game](https://github.com/proof88/PRooFPS-dd/issues/57).
+
+\subsection gameplay_game_objectives Game Objectives
+
+Only the server instance defines and checks the fulfillment of game objectives.  
+Clients just accept updates about this from the server.
+ 
 Game objectives are primarily checked by proofps_dd::GameMode::serverCheckAndUpdateWinningConditions(), however as these can be different in each
 game mode, it is overridden by derived classes.  
 Check is being done by server in every frame or tick.
 
-Keeping an ordered list of players based on their frags and deaths is also done by proofps_dd::GameMode parent class, so rendering the Frag Table in the proofps_dd::GUI class depends on this.
+\subsection gameplay_gamemode_players Relation between GameMode and Player Classes
 
-There are 2 methods in proofps_dd::GameMode class that are used to check if players are allowed to play in any given moment.  
+Keeping an ordered list of players based on their frags and deaths is also done by proofps_dd::GameMode parent class, so rendering the Frag Table in the proofps_dd::GUI class depends on this.  
+The proofps_dd::Player class instances are served as inputs to the current GameMode instance and it takes care of the job.
+
+There are 2 methods in proofps_dd::GameMode class that are used to **check if players are allowed to play in any given moment**.  
 The difference between them is that one decides based on configurational data, the other decides based on operational data:
  - proofps_dd::GameMode::isPlayerAllowedForGameplay():  
    this is specific to a player instance and depends on player configuration.  
