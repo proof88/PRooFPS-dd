@@ -97,7 +97,7 @@ int WINAPI WinMain(const _In_ HINSTANCE /*hInstance*/, const _In_opt_ HINSTANCE 
     //perfTests.push_back(std::unique_ptr<Test>(new EventListerPerfTest()));
     
     // regression tests
-    const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::DeathMatch;
+    const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
     //for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
     {
         regTests.push_back(std::unique_ptr<Test>(new RegTestBasicServerClient2Players(60, 60, 60, gamemode)));

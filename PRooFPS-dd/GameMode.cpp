@@ -300,7 +300,6 @@ bool proofps_dd::GameMode::serverCheckAndUpdateWinningConditions(pge_network::Pg
 {
     assert(network.isServer());
 
-    m_bWonPrevious = m_bWon;
     if (m_bWon)
     {
         // once it is won, it stays won until next restart()
@@ -344,7 +343,7 @@ void proofps_dd::GameMode::clientReceiveAndUpdateWinningConditions(pge_network::
 void proofps_dd::GameMode::serverTickUpdateWinningConditions(pge_network::PgeINetwork& network)
 {
     assert(network.isServer());
-    /* no-op */
+    m_bWonPrevious = m_bWon;
 }
 
 void proofps_dd::GameMode::clientTickUpdateWinningConditions(pge_network::PgeINetwork& network)

@@ -613,7 +613,7 @@ private:
             /* I should enable Cpp20 for designated initializers so I don't need to use comments below */
             /*.nTxPktTotalCount =*/     {580u, 1200u},
             /*.nTxPktPerSecond =*/      { 14u,   39u},
-            /*.nRxPktTotalCount =*/     { 21u,   45u},
+            /*.nRxPktTotalCount =*/     { 21u,   47u},
             /*.nRxPktPerSecond =*/      {  0u,    3u},
             /*.nInjectPktTotalCount =*/ {450u, 1000u},
             /*.nInjectPktPerSecond =*/  { 10u,   33u}

@@ -309,6 +309,8 @@ namespace proofps_dd
         * 
         * It is true only for a short period of time slice which can be 1 tick or 1 frame, depending on how often your
         * game instance invokes either serverCheckAndUpdateWinningConditions() or clientTickUpdateWinningConditions().
+        * Anyhow, the recommendation is to use this function BEFORE you close your tick or frame with any of the
+        * mentioned functions.
         */
         bool hasJustBeenWonThisTick() const;
         
