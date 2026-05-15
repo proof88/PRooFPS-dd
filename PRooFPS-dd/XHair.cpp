@@ -147,6 +147,9 @@ void proofps_dd::XHair::hide()
 
     m_bVisible = false;
     stopBlinking();
+
+    hideIdText();
+    hideAboveText();
 }
 
 bool proofps_dd::XHair::visible() const
