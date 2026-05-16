@@ -555,10 +555,14 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 
     if (pGameMode->isRoundBased())
     {
+        // TODO: instead of casting, so called secondary- and tertiary time limits shall be introduced in GameMode class,
+        // which would not have meaning in some game modes but would have meaning in TRG game mode.
+        // This is already done in MsgServerInfoFromServer.
         TeamRoundGameMode* const pTRGmode = dynamic_cast<proofps_dd::TeamRoundGameMode*>(pGameMode);
         if (pTRGmode)
         {
             pTRGmode->setRoundWinLimit(m_serverInfo.m_nScoreLimit);
+            pTRGmode->getFSM().setRoundTimeLimitSecs(m_serverInfo.m_nSecondaryTimeLimitSecs);
         }
         else
         {
@@ -579,6 +583,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     if (gameMode->isRoundBased())
     {
         getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
     }
     else
     {
@@ -614,12 +619,17 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
     }
 
     unsigned int nScoreLimit = 0;
+    unsigned int nRoundTimeLimitSecs = 0;
     if (pGameMode->isRoundBased())
     {
+        // TODO: instead of casting, so called secondary- and tertiary time limits shall be introduced in GameMode class,
+        // which would not have meaning in some game modes but would have meaning in TRG game mode.
+        // This is already done in MsgServerInfoFromServer.
         const TeamRoundGameMode* const pTRGmode = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(pGameMode);
         if (pTRGmode)
         {
             nScoreLimit = pTRGmode->getRoundWinLimit();
+            nRoundTimeLimitSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundTimeLimitSecs());
         }
         else
         {
@@ -645,7 +655,8 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         getFallDamageMultiplier(),
         getPlayerRespawnDelaySeconds(),
         getPlayerRespawnInvulnerabilityDelaySeconds(),
-        getFriendlyFire()))
+        getFriendlyFire(),
+        nRoundTimeLimitSecs))
     {
         getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -667,7 +678,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     const int& nFallDamageMultiplier,
     const unsigned int& nRespawnTimeSecs,
     const unsigned int& nRespawnInvulnerabilityTimeSecs,
-    const bool& bFriendlyFire)
+    const bool& bFriendlyFire,
+    const unsigned int& nSecondaryTimeLimitSecs)
 {
     assert(m_pge.getNetwork().isServer());
 
@@ -687,6 +699,8 @@ void proofps_dd::Config::serverSaveServerInfo(
 
     m_serverInfo.m_bFriendlyFire = bFriendlyFire;
 
+    m_serverInfo.m_nSecondaryTimeLimitSecs = nSecondaryTimeLimitSecs;
+
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 
@@ -699,6 +713,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     if (GameMode::isRoundBased(iGameModeType))
     {
         getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
     }
     else
     {

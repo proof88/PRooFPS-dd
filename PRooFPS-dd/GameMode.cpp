@@ -980,13 +980,23 @@ std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeL
     case RoundState::Prepare:
         return 3ll;
     case RoundState::Play:
-        return 999ll;
+        return getRoundTimeLimitSecs();
     case RoundState::WaitForReset:
         return 5ll;
     default:
         getConsole().EOLn("RoundStateFSM::%s(): ERROR: unhandled new state: %d!", __func__, m_state);
         return 0ll;
     }
+}
+
+std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getRoundTimeLimitSecs() const
+{
+    return m_nRoundTimeLimitSecs;
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::setRoundTimeLimitSecs(std::chrono::seconds::rep secs)
+{
+    m_nRoundTimeLimitSecs = std::max(secs, static_cast<std::chrono::seconds::rep>(0));
 }
 
 void proofps_dd::TeamRoundGameMode::RoundStateFSM::clientUpdateTimeRemainingInCurrentStateMillisecs(
@@ -1029,7 +1039,18 @@ std::chrono::milliseconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::get
     case RoundState::Prepare:
         return std::max(3000ll - nMillisecondsSpentInCurrentState, 0ll);
     case RoundState::Play:
-        return 999000ll;
+    {
+        if ((getRoundTimeLimitSecs() == 0) || (m_timeEnteredCurrentState.time_since_epoch().count() == 0))
+        {
+            return 999000ll;
+        }
+        const std::chrono::milliseconds::rep nRoundTimeLimitMilliseconds = getRoundTimeLimitSecs() * 1000;
+        if (nRoundTimeLimitMilliseconds <= nMillisecondsSpentInCurrentState)
+        {
+            return 0;
+        }
+        return nRoundTimeLimitMilliseconds - nMillisecondsSpentInCurrentState;
+    }
     case RoundState::WaitForReset:
         return std::max(5000ll - nMillisecondsSpentInCurrentState, 0ll);
     default:
@@ -1179,6 +1200,7 @@ void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge
     // assuming config is correct, because Config instance invokes us after its own validation is done
     // (Config instance validates data in cfgProfiles instance)
     setRoundWinLimit(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsUInt());
+    m_fsm.setRoundTimeLimitSecs(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundTimeLimit].getAsUInt());
 }
 
 void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(

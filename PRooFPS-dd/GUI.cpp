@@ -4174,6 +4174,10 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
         drawTextHighlighted(
             fGameInfoPagesStartX + fIndentX, fThisRowY,
             std::string("Round Win Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nScoreLimit));
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Round Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nSecondaryTimeLimitSecs) + " s");
     }
     else
     {

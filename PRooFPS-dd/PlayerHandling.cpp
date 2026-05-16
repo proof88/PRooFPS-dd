@@ -881,6 +881,26 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             assert(false);
             return false;
         }
+
+        unsigned int nRoundTimeLimitSecs = 0;
+        if (GameMode::getGameMode()->isRoundBased())
+        {
+            // TODO: instead of casting, so called secondary- and tertiary time limits shall be introduced in GameMode class,
+            // which would not have meaning in some game modes but would have meaning in TRG game mode.
+            // This is already done in MsgServerInfoFromServer.
+            const TeamRoundGameMode* const pTRGmode = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(GameMode::getGameMode());
+            if (pTRGmode)
+            {
+                nRoundTimeLimitSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundTimeLimitSecs());
+            }
+            else
+            {
+                getConsole().EOLn("PlayerHandling::%s(): cast FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                return false;
+            }
+        }
+
         if (msg.m_bCurrentClient)
         {
             // this is the moment when server player has fully booted up
@@ -897,17 +917,13 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds(),
-                config.getFriendlyFire());
+                config.getFriendlyFire(),
+                nRoundTimeLimitSecs);
             
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 
             // as last step, restart the game mode now, this is important to be last step, for example remaining game time starts to count down now!
             gameMode->restartWithoutRemovingPlayers(m_pge.getNetwork(), proofps_dd::GameRestartType_KeepPlayers::Hard);
-
-            // UPDATE: commented out due to text is now added in GUI::drawCurrentPlayerInfo(), just kept comment here in case we want some other actions in the future
-            //m_gui.textPermanent("Server, User name: " + std::string(szNewUserName) +
-            //    (cfgProfiles.getVars()["testing"].getAsBool() ? "; Testing Mode" : ""),
-            //    10, 30);
         }
         else
         {
@@ -1069,6 +1085,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
 
             if (gameMode.isRoundBased())
             {
+                // TODO: instead of casting, and checking for game mode type, just send it out always. So code will be more general.
                 TeamRoundGameMode* const pTRGmode = dynamic_cast<proofps_dd::TeamRoundGameMode*>(&gameMode);
                 if (pTRGmode)
                 {

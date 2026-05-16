@@ -196,14 +196,15 @@ namespace proofps_dd
         /**
         * Set the time limit for the game.
         * If time limit expires, the winner is the player with most frags, even if frag limit is not set or not reached.
-        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() explicitly.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() or
+        * restartWithoutRemovingPlayers() explicitly.
         *
-        * @param secs The time limit in seconds. If 0, there is no time limit.
+        * @param secs The game time limit in seconds. If 0, there is no time limit.
         */
         void setTimeLimitSecs(unsigned int secs);
 
         /**
-        * @return Milliseconds remaining until time limit is reached, calculated from the current time and last reset time (getResetTime()).
+        * @return Milliseconds remaining until game time limit is reached, calculated from the current time and last reset time (getResetTime()).
         *         0 if there is no time limit set, or if the game was not yet reset, or if the time limit has been already reached, or the game has been won for any reason.
         */
         unsigned int getTimeRemainingMillisecs() const;
@@ -517,6 +518,9 @@ namespace proofps_dd
         */
         unsigned int getFragLimit() const;
 
+        // TODO: instead of introducing frag limit here, Score Limit shall be introduced in GameMode class, which then would have
+        // different meaning here (frag limit) and in round-based game modes (round win limit). This is already done in MsgServerInfoFromServer.
+
         /**
         * Set the frag limit for the game.
         * If the frag limit is reached, the winner is with the most frags, even if time limit is not yet reached or there is no time limit set.
@@ -750,13 +754,29 @@ namespace proofps_dd
             std::chrono::seconds::rep getTimeLimitInCurrentStateSeconds() const;
 
             /**
+            * @return Configured round time limit previously set by setRoundTimeLimitSecs().
+            *         0 means no round time limit.
+            */
+            std::chrono::seconds::rep getRoundTimeLimitSecs() const;
+
+            /**
+            * Set the round time limit: maximum time a round can be in Play state.
+            * If round time limit expires, the winner is the team with more alive players, even if there are still alive players in both teams.
+            * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() or
+            * restartWithoutRemovingPlayers() explicitly.
+            *
+            * @param secs The round time limit in seconds. If 0, there is no round time limit.
+            */
+            void setRoundTimeLimitSecs(std::chrono::seconds::rep secs);
+
+            /**
             * Updates the remaining time in the current RoundState on client side, based on the remaining time received from server.
             * Basically it corrects the round state start time on client side so client will have the roughly same round state start
             * time as the server.
             *
             * @param nRemMillisecs Remaining time in milliseconds, from server.
             * @param network       PGE network instance to be used to know if we are server or client.
-        */
+            */
             void clientUpdateTimeRemainingInCurrentStateMillisecs(
                 const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
@@ -767,6 +787,7 @@ namespace proofps_dd
         private:
             RoundState m_state{ RoundState::Prepare };
             std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
+            std::chrono::seconds::rep m_nRoundTimeLimitSecs{};
 
             void transitionToPlayState();  // for tests only
 
@@ -862,6 +883,9 @@ namespace proofps_dd
         * @return Configured round win limit previously set by setRoundWinLimit().
         */
         unsigned int getRoundWinLimit() const;
+
+        // TODO: instead of introducing round win limit here, Score Limit shall be introduced in GameMode class, which then would have
+        // different meaning here (round win limit) and in deathmatch-style game modes (frag limit). This is already done in MsgServerInfoFromServer.
 
         /**
         * Set the round win limit for the game.
