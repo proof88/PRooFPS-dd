@@ -1141,6 +1141,24 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             {
                 ImGui::EndDisabled();
             }
+
+            if (GameMode::getGameMode()->isRoundBased())
+            {
+                PGEcfgVariable& cvarSvRgmRoundTimeLimitSecs = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundTimeLimit];
+                ImGui::AlignTextToFramePadding();
+                static std::string sHintSvRgmRoundTimeLimit; // static so it is built up by addHintToItemByCVar() only once
+                addHintToItemByCVar(sHintSvRgmRoundTimeLimit, cvarSvRgmRoundTimeLimitSecs);
+                ImGui::TextUnformatted("Round Time Limit:");
+                ImGui::SameLine();
+                int nCvarSvRgmRoundTimeLimitSecs = cvarSvRgmRoundTimeLimitSecs.getAsInt();
+                ImGui::PushItemWidth(100);
+                if (ImGui::InputInt("seconds##inputSvRgmRoundTimeLimit", &nCvarSvRgmRoundTimeLimitSecs, 60, 1))
+                {
+                    nCvarSvRgmRoundTimeLimitSecs = std::max(GameMode::nSvRgmRoundTimeLimitSecsMin, std::min(GameMode::nSvRgmRoundTimeLimitSecsMax, nCvarSvRgmRoundTimeLimitSecs));
+                    cvarSvRgmRoundTimeLimitSecs.Set(nCvarSvRgmRoundTimeLimitSecs);
+                }
+                ImGui::PopItemWidth();
+            }
         }
         ImGui::EndGroup();
     }
@@ -1194,7 +1212,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
         ImGui::SameLine();
         int nCvarSvDmTimeLimit = cvarSvDmTimeLimit.getAsInt();
         ImGui::PushItemWidth(100);
-        if (ImGui::InputInt("seconds##inputSvDmTimeLimit", &nCvarSvDmTimeLimit, 1, 60))
+        if (ImGui::InputInt("seconds##inputSvDmTimeLimit", &nCvarSvDmTimeLimit, 60, 1))
         {
             nCvarSvDmTimeLimit = std::max(GameMode::nSvGmTimeLimitSecsMin, std::min(GameMode::nSvGmTimeLimitSecsMax, nCvarSvDmTimeLimit));
             cvarSvDmTimeLimit.Set(nCvarSvDmTimeLimit);
