@@ -100,6 +100,7 @@ namespace proofps_dd
         static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
         static constexpr char* szCvarSvRgmRoundWinLimit = "sv_rgm_roundwinlimit";
         static constexpr char* szCvarSvRgmRoundTimeLimit = "sv_rgm_round_timelimit_secs";
+        static constexpr char* szCvarSvRgmRoundPrepareTimeSecs = "sv_rgm_round_prepare_duration_secs";
 
         static constexpr int nSvGmTimeLimitSecsDef = 0;
         static constexpr int nSvGmTimeLimitSecsMin = 0;
@@ -128,6 +129,13 @@ namespace proofps_dd
         static_assert(nSvRgmRoundTimeLimitSecsMin < nSvRgmRoundTimeLimitSecsMax, "Min round time limit should be smaller than max round time limit.");
         static_assert(nSvRgmRoundTimeLimitSecsMin <= nSvRgmRoundTimeLimitSecsDef, "Min round time limit should not be greater than default round time limit.");
         static_assert(nSvRgmRoundTimeLimitSecsDef <= nSvRgmRoundTimeLimitSecsMax, "Max round time limit should not be smaller than default round time limit.");
+
+        static constexpr int nSvRgmRoundPrepareTimeSecsDef = 3;
+        static constexpr int nSvRgmRoundPrepareTimeSecsMin = 0;
+        static constexpr int nSvRgmRoundPrepareTimeSecsMax = 30;
+        static_assert(nSvRgmRoundPrepareTimeSecsMin < nSvRgmRoundPrepareTimeSecsMax, "Min round prepare time should be smaller than max round prepare time.");
+        static_assert(nSvRgmRoundPrepareTimeSecsMin <= nSvRgmRoundPrepareTimeSecsDef, "Min round prepare time should not be greater than default round prepare time.");
+        static_assert(nSvRgmRoundPrepareTimeSecsDef <= nSvRgmRoundPrepareTimeSecsMax, "Max round prepare time should not be smaller than default round prepare time.");
 
         static const char* getLoggerModuleName();
 

@@ -1148,7 +1148,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                 ImGui::AlignTextToFramePadding();
                 static std::string sHintSvRgmRoundTimeLimit; // static so it is built up by addHintToItemByCVar() only once
                 addHintToItemByCVar(sHintSvRgmRoundTimeLimit, cvarSvRgmRoundTimeLimitSecs);
-                ImGui::TextUnformatted("Round Time Limit:");
+                ImGui::TextUnformatted("Round Time Limit  :");
                 ImGui::SameLine();
                 int nCvarSvRgmRoundTimeLimitSecs = cvarSvRgmRoundTimeLimitSecs.getAsInt();
                 ImGui::PushItemWidth(100);
@@ -1156,6 +1156,21 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                 {
                     nCvarSvRgmRoundTimeLimitSecs = std::max(GameMode::nSvRgmRoundTimeLimitSecsMin, std::min(GameMode::nSvRgmRoundTimeLimitSecsMax, nCvarSvRgmRoundTimeLimitSecs));
                     cvarSvRgmRoundTimeLimitSecs.Set(nCvarSvRgmRoundTimeLimitSecs);
+                }
+                ImGui::PopItemWidth();
+
+                PGEcfgVariable& cvarSvRgmRoundPrepareTimeSecs = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundPrepareTimeSecs];
+                ImGui::AlignTextToFramePadding();
+                static std::string sHintSvRgmRoundPrepareTimeSecs; // static so it is built up by addHintToItemByCVar() only once
+                addHintToItemByCVar(sHintSvRgmRoundPrepareTimeSecs, cvarSvRgmRoundPrepareTimeSecs);
+                ImGui::TextUnformatted("Round Prepare Time:");
+                ImGui::SameLine();
+                int nCvarSvRgmRoundPrepareTimeSecs = cvarSvRgmRoundPrepareTimeSecs.getAsInt();
+                ImGui::PushItemWidth(100);
+                if (ImGui::InputInt("seconds##inputSvRgmRoundPrepareTimeSecs", &nCvarSvRgmRoundPrepareTimeSecs, 1, 1))
+                {
+                    nCvarSvRgmRoundPrepareTimeSecs = std::max(GameMode::nSvRgmRoundPrepareTimeSecsMin, std::min(GameMode::nSvRgmRoundPrepareTimeSecsMax, nCvarSvRgmRoundPrepareTimeSecs));
+                    cvarSvRgmRoundPrepareTimeSecs.Set(nCvarSvRgmRoundPrepareTimeSecs);
                 }
                 ImGui::PopItemWidth();
             }
@@ -1431,7 +1446,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     assert(m_pMaps);
 
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 300.f;
+    constexpr float fContentHeight = 340.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
