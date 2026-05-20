@@ -811,8 +811,8 @@ namespace proofps_dd
         private:
             RoundState m_state{ RoundState::Prepare };
             std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
-            std::chrono::seconds::rep m_nRoundTimeLimitSecs{};
-            std::chrono::seconds::rep m_nRoundPrepareTimeSecs{};
+            std::chrono::seconds::rep m_nRoundTimeLimitSecs{ nSvRgmRoundTimeLimitSecsDef  };
+            std::chrono::seconds::rep m_nRoundPrepareTimeSecs{ nSvRgmRoundPrepareTimeSecsDef };
 
             void transitionToPlayState();  // for tests only
 

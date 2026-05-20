@@ -143,7 +143,7 @@ protected:
         addSubTest("test_receive_and_update_winning_conditions_client", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_receive_and_update_winning_conditions_client));
         addSubTest("test_frag_limit_get_set", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_frag_limit_get_set));
         addSubTest("test_round_win_limit_get_set", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_win_limit_get_set));
-        addSubTest("test_deathmatch_fetch_config", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_deathmatch_fetch_config));
+        addSubTest("test_fetch_config", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_fetch_config));
         addSubTest("test_teamroundgame_fetch_config", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_teamroundgame_fetch_config));
         addSubTest("test_add_player_zero_values_maintains_adding_order", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_add_player_zero_values_maintains_adding_order));
         addSubTest("test_add_player_random_values", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_add_player_random_values));
@@ -977,7 +977,7 @@ private:
         return b;
     }
 
-    bool test_deathmatch_fetch_config(const proofps_dd::GameModeType& gamemode)
+    bool test_fetch_config(const proofps_dd::GameModeType& gamemode)
     {
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvDmFragLimit].Set(25);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(13);
@@ -1018,12 +1018,12 @@ private:
         return b;
     }
 
-    bool test_deathmatch_fetch_config()
+    bool test_fetch_config()
     {
         bool b = true;
         for (auto gamemode = proofps_dd::GameModeType::DeathMatch; gamemode != proofps_dd::GameModeType::Max; ++gamemode)
         {
-            b &= assertTrue( test_deathmatch_fetch_config(gamemode), proofps_dd::GameMode::getGameModeTypeName(gamemode) );
+            b &= assertTrue( test_fetch_config(gamemode), proofps_dd::GameMode::getGameModeTypeName(gamemode) );
         }
         return b;
     }
@@ -1032,7 +1032,12 @@ private:
     {
         // extension of test_deathmatch_fetch_config()
 
-        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundWinLimit].Set(10);
+        constexpr unsigned int nRoundWinLimit = 10u;
+        constexpr unsigned int nRoundTimeLimitSecs = 2u;
+        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundWinLimit].Set(nRoundWinLimit);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundTimeLimit].Set(nRoundTimeLimitSecs);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
 
         bool bTestingAsServer = false;
         bool b = true;
@@ -1059,10 +1064,18 @@ private:
             b &= assertEqualsEz(
                 static_cast<unsigned int>(proofps_dd::GameMode::nSvRgmRoundWinLimitDef),
                 trg->getRoundWinLimit(), gamemode, bTestingAsServer, "default round win limit fail");
+            b &= assertEqualsEz(
+                static_cast<unsigned int>(proofps_dd::GameMode::nSvRgmRoundTimeLimitSecsDef),
+                trg->getFSM().getRoundTimeLimitSecs(), gamemode, bTestingAsServer, "default round time limit fail");
+            b &= assertEqualsEz(
+                static_cast<unsigned int>(proofps_dd::GameMode::nSvRgmRoundPrepareTimeSecsDef),
+                trg->getFSM().getRoundPrepareTimeSecs(), gamemode, bTestingAsServer, "default round prepare time fail");
 
             gm->fetchConfig(m_cfgProfiles, m_network);
 
-            b &= assertEqualsEz(10u, trg->getRoundWinLimit(), gamemode, bTestingAsServer, "new round win limit fail");
+            b &= assertEqualsEz(nRoundWinLimit, trg->getRoundWinLimit(), gamemode, bTestingAsServer, "new round win limit fail");
+            b &= assertEqualsEz(nRoundTimeLimitSecs, trg->getFSM().getRoundTimeLimitSecs(), gamemode, bTestingAsServer, "new round time limit fail");
+            b &= assertEqualsEz(nRoundPrepareTimeSecs, trg->getFSM().getRoundPrepareTimeSecs(), gamemode, bTestingAsServer, "new round prepare time fail");
         }
 
         return b;
@@ -1070,11 +1083,10 @@ private:
 
     bool test_teamroundgame_fetch_config()
     {
-        // extension of test_deathmatch_fetch_config()
+        // extension of test_fetch_config()
         const proofps_dd::GameModeType gamemodetype = proofps_dd::GameModeType::TeamRoundGame;
         bool b = true;
 
-        b &= assertTrue( test_deathmatch_fetch_config(gamemodetype), proofps_dd::GameMode::getGameModeTypeName(gamemodetype) );
         b &= test_teamroundgame_fetch_config(gamemodetype);
 
         return b;
@@ -1428,6 +1440,9 @@ private:
         if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
         {
             trg->setRoundWinLimit(1);
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
         }
 
         proofps_dd::Player player1(
@@ -1663,6 +1678,9 @@ private:
                 // TRG does not care about frag limit but we are also testing that actually it does not care
                 dm->setFragLimit(16);
                 trg->setRoundWinLimit(1);
+                // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+                trg->getFSM().setRoundTimeLimitSecs(60);
+                trg->getFSM().setRoundPrepareTimeSecs(3);
             }
             else
             {
@@ -1923,6 +1941,9 @@ private:
             if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
             {
                 trg->setRoundWinLimit(1);
+                // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+                trg->getFSM().setRoundTimeLimitSecs(60);
+                trg->getFSM().setRoundPrepareTimeSecs(3);
             }
 
             proofps_dd::Player playerAdam(
@@ -2859,6 +2880,9 @@ private:
             // TRG does not care about frag limit but we are also testing that actually it does not care
             dm->setFragLimit(7);
             trg->setRoundWinLimit(1);
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
         }
         else
         {
@@ -3069,6 +3093,9 @@ private:
             // TRG does not care about frag limit but we are also testing that actually it does not care
             dm->setFragLimit(7);
             trg->setRoundWinLimit(1);
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
         }
         else
         {
@@ -3351,6 +3378,13 @@ private:
         // no further logic is needed in GUI, just separate them by team ID!
         dm->setFragLimit(7);
 
+        if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
+        {
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
+        }
+
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
             m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents,
@@ -3550,6 +3584,12 @@ private:
         // GUI will take care of displaying the players, and it can still simply iterate over the players in the order as DM or TDM is containing the players,
         // no further logic is needed in GUI, just separate them by team ID!
         dm->setFragLimit(7);
+        if (gamemode == proofps_dd::GameModeType::TeamRoundGame)
+        {
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
+        }
 
         proofps_dd::Player player1(
             m_audio, m_cfgProfiles, m_bullets,
@@ -3783,6 +3823,9 @@ private:
 
         trg->setRoundWinLimit(5);
         gm->setTimeLimitSecs(2);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         gm->restart(m_network);
         // restart triggers MsgGameSessionStateFromServer out no matter current state
@@ -4208,7 +4251,7 @@ private:
 
         constexpr unsigned int nGameTimeLimitSecs = 0u;  /* unlimited game time */
         constexpr unsigned int nRoundTimeLimitSecs = 2u;
-        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
+        constexpr unsigned int nRoundPrepareTimeSecs = 6u;
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nGameTimeLimitSecs);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundTimeLimit].Set(nRoundTimeLimitSecs);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
@@ -4399,6 +4442,9 @@ private:
         }
 
         trg->setRoundWinLimit(2);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -4559,6 +4605,9 @@ private:
         }
 
         trg->setRoundWinLimit(3);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -4701,6 +4750,9 @@ private:
         }
 
         trg->setRoundWinLimit(3);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -4845,6 +4897,9 @@ private:
         assert(gm->isRoundBased());
 
         trg->setRoundWinLimit(3);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -4943,6 +4998,9 @@ private:
         assert(gm->isRoundBased());
 
         trg->setRoundWinLimit(3);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -5092,6 +5150,9 @@ private:
         }
 
         trg->setRoundWinLimit(2);
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
@@ -5222,6 +5283,10 @@ private:
 
             assert(gm->isRoundBased());
 
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
+
             b &= assertEquals(
                 proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
                 trg->getFSM().getState(),
@@ -5283,6 +5348,10 @@ private:
         proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
 
         bool b = true;
+
+        // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+        trg->getFSM().setRoundTimeLimitSecs(60);
+        trg->getFSM().setRoundPrepareTimeSecs(3);
 
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);  // for time-limit-sensitive stuff
 
@@ -5611,6 +5680,10 @@ private:
             }
 
             assert(gm->isRoundBased());
+
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
 
             /* ending current tick */
             if (bTestingAsServer)
