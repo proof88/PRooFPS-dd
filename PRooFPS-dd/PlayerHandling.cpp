@@ -883,6 +883,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
         }
 
         unsigned int nRoundTimeLimitSecs = 0;
+        unsigned int nRoundPrepareTimeSecs = 0;
         if (GameMode::getGameMode()->isRoundBased())
         {
             // TODO: instead of casting, so called secondary- and tertiary time limits shall be introduced in GameMode class,
@@ -892,6 +893,7 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
             if (pTRGmode)
             {
                 nRoundTimeLimitSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundTimeLimitSecs());
+                nRoundPrepareTimeSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundPrepareTimeSecs());
             }
             else
             {
@@ -918,7 +920,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds(),
                 config.getFriendlyFire(),
-                nRoundTimeLimitSecs);
+                nRoundTimeLimitSecs,
+                nRoundPrepareTimeSecs);
             
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 

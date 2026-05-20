@@ -100,7 +100,7 @@ namespace proofps_dd
         static constexpr char* szCvarSvDmFragLimit = "sv_dm_fraglimit";
         static constexpr char* szCvarSvRgmRoundWinLimit = "sv_rgm_roundwinlimit";
         static constexpr char* szCvarSvRgmRoundTimeLimit = "sv_rgm_round_timelimit_secs";
-        static constexpr char* szCvarSvRgmRoundPrepareTimeSecs = "sv_rgm_round_prepare_duration_secs";
+        static constexpr char* szCvarSvRgmRoundPrepareTime = "sv_rgm_round_prepare_duration_secs";
 
         static constexpr int nSvGmTimeLimitSecsDef = 0;
         static constexpr int nSvGmTimeLimitSecsMin = 0;
@@ -778,6 +778,22 @@ namespace proofps_dd
             void setRoundTimeLimitSecs(std::chrono::seconds::rep secs);
 
             /**
+            * @return Configured round prepare time previously set by setRoundPrepareTimeSecs().
+            *         0 means no round prepare time.
+            */
+            std::chrono::seconds::rep getRoundPrepareTimeSecs() const;
+
+            /**
+            * Set the round prepare time: time a round spends in Prepare state.
+            * In Prepare state, players are not allowed to move.
+            * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() or
+            * restartWithoutRemovingPlayers() explicitly.
+            *
+            * @param secs The round prepare time in seconds. If 0, there is no round prepare time.
+            */
+            void setRoundPrepareTimeSecs(std::chrono::seconds::rep secs);
+
+            /**
             * Updates the remaining time in the current RoundState on client side, based on the remaining time received from server.
             * Basically it corrects the round state start time on client side so client will have the roughly same round state start
             * time as the server.
@@ -796,6 +812,7 @@ namespace proofps_dd
             RoundState m_state{ RoundState::Prepare };
             std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
             std::chrono::seconds::rep m_nRoundTimeLimitSecs{};
+            std::chrono::seconds::rep m_nRoundPrepareTimeSecs{};
 
             void transitionToPlayState();  // for tests only
 

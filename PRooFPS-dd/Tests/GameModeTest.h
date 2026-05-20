@@ -3971,8 +3971,10 @@ private:
 
         constexpr unsigned int nGameTimeLimitSecs = 0u;  /* unlimited game time */
         constexpr unsigned int nRoundTimeLimitSecs = 2u;
+        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nGameTimeLimitSecs);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundTimeLimit].Set(nRoundTimeLimitSecs);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
         gm->fetchConfig(m_cfgProfiles, m_network);
 
         bool b = true;
@@ -3982,7 +3984,9 @@ private:
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(), gamemode, true /*server*/, "FSM state 1");
-        b &= assertEqualsEz(3ll, trg->getFSM().getTimeLimitInCurrentStateSeconds(), gamemode, true /*server*/, "time limit 1");
+        b &= assertEqualsEz(
+            static_cast<std::chrono::seconds::rep>(nRoundPrepareTimeSecs),
+            trg->getFSM().getTimeLimitInCurrentStateSeconds(), gamemode, true /*server*/, "time limit 1");
 
         /* -------------- Test 2: Play --------------------------------------- */
 
@@ -4037,8 +4041,10 @@ private:
 
         constexpr unsigned int nGameTimeLimitSecs = 0u;  /* unlimited game time */
         constexpr unsigned int nRoundTimeLimitSecs = 2u;
+        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nGameTimeLimitSecs);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundTimeLimit].Set(nRoundTimeLimitSecs);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
         gm->fetchConfig(m_cfgProfiles, m_network);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
@@ -4064,9 +4070,10 @@ private:
             const auto nSecondsRemaining = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
             setRemainingSecs.erase(nSecondsRemaining);
 
-            b &= assertLequals(
+            b &= assertLequalsEz(
                 trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(),
                 static_cast<std::chrono::milliseconds::rep>((nSecondsRemaining + 1) * 1000),
+                gamemode, true /* testing as server */,
                 "millisecs 1");
         }
 
@@ -4078,7 +4085,7 @@ private:
         auto itSetRemainingSecs = setRemainingSecs.begin();
         while (b && (itSetRemainingSecs != setRemainingSecs.end()))
         {
-            b &= assertLessEz(nRoundTimeLimitSecs, *itSetRemainingSecs, gamemode, true /* testing as server */, "remaining 1 set elem");
+            b &= assertLequalsEz(nRoundPrepareTimeSecs, *itSetRemainingSecs, gamemode, true /* testing as server */, "remaining 1 set elem");
             ++itSetRemainingSecs;
         }
 
@@ -4096,13 +4103,53 @@ private:
         b &= assertGequals(nRoundTimeLimitSecs * 1000, trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(), "remaining millisecs in Play state 1") &
             assertNotEquals(static_cast<std::chrono::seconds::rep>(0), trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(), "remaining millisecs in Play state 2");
 
-        /* -------------- Test 2: WaitForReset -> Prepare --------------------------------------- */
+        /* -------------- Test 2: Play -> WaitForReset --------------------------------------- */
 
-        trg->getFSM().roundWon();
+        setRemainingSecs = { 0, 1, 2, 3, 4, 5 };
+        iSleep = 0;
+        while ((iSleep++ < 10) &&
+            !trg->serverCheckAndUpdateWinningConditions(m_network) /* this drives RoundStateFSM */ &&
+            (trg->getFSM().getState() != proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+            const auto nSecondsRemaining = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
+            setRemainingSecs.erase(nSecondsRemaining);
+
+            b &= assertLequalsEz(
+                trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(),
+                static_cast<std::chrono::milliseconds::rep>((nSecondsRemaining + 1) * 1000),
+                gamemode, true /* testing as server */,
+                "millisecs 2");
+        }
+
+        /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
+
+        // we erased valid elements from the set, so only remaining elements that were too big to be remaining time
+        b &= assertFalseEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining 2");
+
+        itSetRemainingSecs = setRemainingSecs.begin();
+        while (b && (itSetRemainingSecs != setRemainingSecs.end()))
+        {
+            b &= assertLequalsEz(nRoundTimeLimitSecs, *itSetRemainingSecs, gamemode, true /* testing as server */, "remaining 2 set elem");
+            ++itSetRemainingSecs;
+        }
+
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 3");
+
+        /* game won state did not change */
+        b &= assertFalseEz(gm->isGameWon(), gamemode, true /* testing as server */, "game won");
+        b &= assertFalseEz(gm->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "winning");
+
+        b &= assertGequals(5u, trg->getFSM().getTimeRemainingInCurrentStateSeconds(), "remaining secs in WaitForReset state 1") &
+            assertNotEquals(static_cast<std::chrono::seconds::rep>(0), trg->getFSM().getTimeRemainingInCurrentStateSeconds(), "remaining secs in WaitForReset state 2");
+        b &= assertGequals(5 * 1000, trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(), "remaining millisecs in WaitForReset state 1") &
+            assertNotEquals(static_cast<std::chrono::seconds::rep>(0), trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(), "remaining millisecs in WaitForReset state 2");
+        
+        /* -------------- Test 3: WaitForReset -> Prepare --------------------------------------- */
 
         setRemainingSecs = { 0, 1, 2, 3, 4 };
         iSleep = 0;
@@ -4115,14 +4162,15 @@ private:
             const auto nSecondsRemaining = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
             setRemainingSecs.erase(nSecondsRemaining);
 
-            b &= assertLequals(
+            b &= assertLequalsEz(
                 trg->getFSM().getTimeRemainingInCurrentStateMilliseconds(),
                 static_cast<std::chrono::milliseconds::rep>((nSecondsRemaining + 1) * 1000),
-                "millisecs 2");
+                gamemode, true /* testing as server */,
+                "millisecs 3");
         }
 
         /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
-        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining 2");
+        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining 3");
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
             trg->getFSM().getState(),
@@ -4160,8 +4208,10 @@ private:
 
         constexpr unsigned int nGameTimeLimitSecs = 0u;  /* unlimited game time */
         constexpr unsigned int nRoundTimeLimitSecs = 2u;
+        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvGmTimeLimit].Set(nGameTimeLimitSecs);
         m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundTimeLimit].Set(nRoundTimeLimitSecs);
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
         gm->fetchConfig(m_cfgProfiles, m_network);
 
         // need to restart to correctly initialize time-specific values if we have time limit!
@@ -4253,6 +4303,10 @@ private:
 
         assert(gm->isRoundBased());
 
+        constexpr unsigned int nRoundPrepareTimeSecs = 1u;
+        m_cfgProfiles.getVars()[proofps_dd::GameMode::szCvarSvRgmRoundPrepareTime].Set(nRoundPrepareTimeSecs);
+        gm->fetchConfig(m_cfgProfiles, m_network);
+
         // need to restart to correctly initialize time-specific values if we have time limit!
         gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
 
@@ -4262,7 +4316,7 @@ private:
             trg->getFSM().getState(),
             gamemode, true /* testing as server */, "FSM state 1");
 
-        std::set<std::chrono::seconds::rep> setRemainingSecs = { 0, 1, 2 };
+        std::set<std::chrono::seconds::rep> setRemainingSecs = { 0, 1, 2, 3 };
         int iSleep = 0;
         while ((iSleep++ < 10) &&
             !trg->serverCheckAndUpdateWinningConditions(m_network) /* this drives RoundStateFSM */ &&
@@ -4276,7 +4330,15 @@ private:
         }
        
         /* check: we exited the loop because time elapsed the FSM has transitioned to next state */
-        b &= assertTrueEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "no remaining");
+        b &= assertFalseEz(setRemainingSecs.empty(), gamemode, true /* testing as server */, "remaining");
+
+        auto itSetRemainingSecs = setRemainingSecs.begin();
+        while (b && (itSetRemainingSecs != setRemainingSecs.end()))
+        {
+            b &= assertLessEz(nRoundPrepareTimeSecs, *itSetRemainingSecs, gamemode, true /* testing as server */, "remaining set elem");
+            ++itSetRemainingSecs;
+        }
+
         b &= assertEqualsEz(
             proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
             trg->getFSM().getState(),

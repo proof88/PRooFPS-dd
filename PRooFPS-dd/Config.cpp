@@ -563,6 +563,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         {
             pTRGmode->setRoundWinLimit(m_serverInfo.m_nScoreLimit);
             pTRGmode->getFSM().setRoundTimeLimitSecs(m_serverInfo.m_nSecondaryTimeLimitSecs);
+            pTRGmode->getFSM().setRoundPrepareTimeSecs(m_serverInfo.m_nTertiaryTimeLimitSecs);
         }
         else
         {
@@ -584,6 +585,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     {
         getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
         getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
+        getConsole().OLn("nTertiaryTimeLimitSecs: %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
     }
     else
     {
@@ -620,6 +622,7 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
 
     unsigned int nScoreLimit = 0;
     unsigned int nRoundTimeLimitSecs = 0;
+    unsigned int nRoundPrepareTimeSecs = 0;
     if (pGameMode->isRoundBased())
     {
         // TODO: instead of casting, so called secondary- and tertiary time limits shall be introduced in GameMode class,
@@ -630,6 +633,7 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         {
             nScoreLimit = pTRGmode->getRoundWinLimit();
             nRoundTimeLimitSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundTimeLimitSecs());
+            nRoundPrepareTimeSecs = static_cast<unsigned int>(pTRGmode->getFSM().getRoundPrepareTimeSecs());
         }
         else
         {
@@ -656,7 +660,8 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         getPlayerRespawnDelaySeconds(),
         getPlayerRespawnInvulnerabilityDelaySeconds(),
         getFriendlyFire(),
-        nRoundTimeLimitSecs))
+        nRoundTimeLimitSecs,
+        nRoundPrepareTimeSecs))
     {
         getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -679,7 +684,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     const unsigned int& nRespawnTimeSecs,
     const unsigned int& nRespawnInvulnerabilityTimeSecs,
     const bool& bFriendlyFire,
-    const unsigned int& nSecondaryTimeLimitSecs)
+    const unsigned int& nSecondaryTimeLimitSecs,
+    const unsigned int& nTertiaryTimeLimitSecs)
 {
     assert(m_pge.getNetwork().isServer());
 
@@ -700,6 +706,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_bFriendlyFire = bFriendlyFire;
 
     m_serverInfo.m_nSecondaryTimeLimitSecs = nSecondaryTimeLimitSecs;
+    m_serverInfo.m_nTertiaryTimeLimitSecs = nTertiaryTimeLimitSecs;
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
@@ -714,6 +721,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     {
         getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
         getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
+        getConsole().OLn("nTertiaryTimeLimitSecs: %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
     }
     else
     {

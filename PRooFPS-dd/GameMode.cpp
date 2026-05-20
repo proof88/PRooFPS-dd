@@ -978,7 +978,7 @@ std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeL
     switch (m_state)
     {
     case RoundState::Prepare:
-        return 3ll;
+        return getRoundPrepareTimeSecs();
     case RoundState::Play:
         return getRoundTimeLimitSecs();
     case RoundState::WaitForReset:
@@ -997,6 +997,16 @@ std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getRound
 void proofps_dd::TeamRoundGameMode::RoundStateFSM::setRoundTimeLimitSecs(std::chrono::seconds::rep secs)
 {
     m_nRoundTimeLimitSecs = std::max(secs, static_cast<std::chrono::seconds::rep>(0));
+}
+
+std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getRoundPrepareTimeSecs() const
+{
+    return m_nRoundPrepareTimeSecs;
+}
+
+void proofps_dd::TeamRoundGameMode::RoundStateFSM::setRoundPrepareTimeSecs(std::chrono::seconds::rep secs)
+{
+    m_nRoundPrepareTimeSecs = std::max(secs, static_cast<std::chrono::seconds::rep>(0));
 }
 
 void proofps_dd::TeamRoundGameMode::RoundStateFSM::clientUpdateTimeRemainingInCurrentStateMillisecs(
@@ -1037,7 +1047,18 @@ std::chrono::milliseconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::get
     switch (m_state)
     {
     case RoundState::Prepare:
-        return std::max(3000ll - nMillisecondsSpentInCurrentState, 0ll);
+    {
+        if ((getRoundPrepareTimeSecs() == 0) || (m_timeEnteredCurrentState.time_since_epoch().count() == 0))
+        {
+            return 999000ll;
+        }
+        const std::chrono::milliseconds::rep nRoundPrepareTimeMilliseconds = getRoundPrepareTimeSecs() * 1000;
+        if (nRoundPrepareTimeMilliseconds <= nMillisecondsSpentInCurrentState)
+        {
+            return 0;
+        }
+        return nRoundPrepareTimeMilliseconds - nMillisecondsSpentInCurrentState;
+    }
     case RoundState::Play:
     {
         if ((getRoundTimeLimitSecs() == 0) || (m_timeEnteredCurrentState.time_since_epoch().count() == 0))
@@ -1201,6 +1222,7 @@ void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge
     // (Config instance validates data in cfgProfiles instance)
     setRoundWinLimit(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsUInt());
     m_fsm.setRoundTimeLimitSecs(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundTimeLimit].getAsUInt());
+    m_fsm.setRoundPrepareTimeSecs(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundPrepareTime].getAsUInt());
 }
 
 void proofps_dd::TeamRoundGameMode::restartWithoutRemovingPlayers(

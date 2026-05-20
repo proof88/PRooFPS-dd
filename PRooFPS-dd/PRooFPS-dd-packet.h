@@ -110,7 +110,8 @@ namespace proofps_dd
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSecs,
             const bool& bFriendlyFire,
-            const unsigned int& nSecondaryTimeLimitSecs)
+            const unsigned int& nSecondaryTimeLimitSecs,
+            const unsigned int& nTertiaryTimeLimitSecs)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -144,6 +145,7 @@ namespace proofps_dd
 
             msgServerInfo.m_bFriendlyFire = bFriendlyFire;
             msgServerInfo.m_nSecondaryTimeLimitSecs = nSecondaryTimeLimitSecs;
+            msgServerInfo.m_nTertiaryTimeLimitSecs = nTertiaryTimeLimitSecs;
 
             return true;
         }
@@ -166,6 +168,7 @@ namespace proofps_dd
         bool m_bFriendlyFire;
 
         unsigned int m_nSecondaryTimeLimitSecs;            /**< Used in Round-games only. Round time limit. */
+        unsigned int m_nTertiaryTimeLimitSecs;             /**< Used in Round-games only. Round prepare time. */
 
     };  // struct MsgServerInfoFromServer
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);

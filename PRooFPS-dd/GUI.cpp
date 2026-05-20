@@ -1159,7 +1159,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                 }
                 ImGui::PopItemWidth();
 
-                PGEcfgVariable& cvarSvRgmRoundPrepareTimeSecs = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundPrepareTimeSecs];
+                PGEcfgVariable& cvarSvRgmRoundPrepareTimeSecs = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmRoundPrepareTime];
                 ImGui::AlignTextToFramePadding();
                 static std::string sHintSvRgmRoundPrepareTimeSecs; // static so it is built up by addHintToItemByCVar() only once
                 addHintToItemByCVar(sHintSvRgmRoundPrepareTimeSecs, cvarSvRgmRoundPrepareTimeSecs);
@@ -4193,6 +4193,10 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
         drawTextHighlighted(
             fGameInfoPagesStartX + fIndentX, fThisRowY,
             std::string("Round Time Limit: ") + std::to_string(m_pConfig->getServerInfo().m_nSecondaryTimeLimitSecs) + " s");
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Round Prepare Time: ") + std::to_string(m_pConfig->getServerInfo().m_nTertiaryTimeLimitSecs) + " s");
     }
     else
     {
