@@ -430,6 +430,10 @@ void proofps_dd::Config::validate()
     // because I'm lazy, and anyway, if a client messes it up intentionally, then sorry not sorry! I will fix validation later when this validate()
     // is not hundreds of lines anymore ...
     // TODO: later also add validation for cl_wpn_auto_reload_when_switched_to_empty_mag_nonempty_unmag !
+    // TODO: add for validation:
+    // - sv_rgm_round_timelimit_secs 
+    // - sv_rgm_round_prepare_duration_secs
+    // - sv_rgm_market_open_duration_secs
 
     getConsole().OOOLn("Config validation finished!");
 
