@@ -10,7 +10,7 @@
  - Due to many tests in this file concentrate on Spectator Mode / Forced-Spectating, and when to
    actually allow a player to spawn on the map, visibility state of players and their weapons need
    to be checked often, therefore doing these tests on a small map is recommended, e.g.
-   map_test_good_stairs.txt.
+   map_test_good_stairs.txt, so the manual tester can easily do visual confirmation.
  
  - Assuming Team Deathmatch manual test passes (_how-to-manual-test-02-team-deathmatch.txt) and that those
    functionalities are also working in Team Round Game mode, except 1 that is mentioned below separately.
@@ -45,14 +45,18 @@
    - Frag table shall hide Spectators table now because no player is in Spectator mode now.
 
  - In the Team Select / Welcome menu, "You are in Team 1/2." shall be shown depending on the assigned team.
- - From now on, "were" and "are" words shall be displayed in that sentence based on if the player is in Spectator mode or
-   has assigned team.
+ - From now on, "were" and "are" words shall be displayed in that sentence based on if the player is in Spectator Mode or
+   has assigned team: since players in Spectator Mode are officially unassigned players, "were" word shall be displayed
+   instead of "are" in Spectator Mode.
 
  - Testing basic gameplay:
    - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it);
-   - Unless configured otherwise, Prepare state is 3 seconds, Play state is not limited in time, WaitForReset is 5 seconds;
+   - Unless configured otherwise, Prepare state is 3 seconds, Play state is 3 minutes, WaitForReset is 5 seconds;
    - Shooting and movements are NOT allowed in Prepare state;
    - Shooting and movements are ALLOWED in WaitForReset state;
+   - Team Round Win is achieved by the team who kills all players of the other team;
+   - Team Round Win can be also achieved by reaching the round time limit:
+     in such case, the team having more alive players wins the round.
    - Reaching configured round win limit actually puts the game in won state and frag table is shown as being done also in other game modes;
    - Restarting the game zeros out not only player stats but also team round wins:
      - Hard Restart also puts all players into Spectator Mode;
@@ -67,31 +71,49 @@
      Check if client immediately replicates this state and spawns immediately, but does not allow any movement in this state
      (except crouch and inventory item use) AND DOES NOT allow shooting.
  
- - Testing proper FSM state transition by detecting different cases of round ending without actual round win:
-   - Hard Restart the Game, Server player joins Team 1, Client player joins Team 2;
-   - Put the client player into Spectator Mode. The current round shall keep going in RoundState::Play state;
-   - With the server player being the only active player assigned to a team, kill the player: the round state shall transition to WaitForReset
-     but no round win shall be registered due to the other team is empty;
-   - Disconnect the client;
-   - With the server player being the only player, kill the player: the round state shall transition to WaitForReset but no round win
-     shall be registered due to the other team is empty.
-   - Reconnect the client when the round is in Play state and Join Team 2.
-     The round should transition to WaitForReset state, the client shall stay in force-spectating state (dead) until the next round begins,
-     the client shall have 0 registered deaths.
-   - Now Server player enters Spectator Mode.
-     Soft Restart the game from the Server Admin menu.
-     Wait until RoundState transitions to Play state.
-     Now Server player shall select its original Team 1.
-     Expectation is that RoundState transitions to WaitForReset state and Server player is shown as Dead in the Frag Table.
+ - Testing proper FSM state transition by detecting different cases of round ending WITHOUT actual round win:
+   - Case 1 of round end without round win:
+       - Hard Restart the Game, Server player joins Team 1, Client player joins Team 2;
+       - Put the client player into Spectator Mode. The current round shall keep going in RoundState::Play state;
+       - With the server player being the only active player assigned to a team, kill the player: the round state shall transition to WaitForReset
+         but no round win shall be registered due to the other team is empty;
+   - Case 1 again of round end without round win:
+       - Disconnect the client;
+       - With the server player being the only player, kill the player: the round state shall transition to WaitForReset but no round win
+         shall be registered due to the other team is empty.
+   - Case 2 of round end without round win:
+       - In the new round, with the server player being the only player on this server,
+       - Reconnect the client when the round is in Play state and Join Team 2.
+         The round should transition to WaitForReset state but no round win shall be registered due to the client was dead before joining Team 2.
+         The client shall stay in force-spectating state (dead) until the next round begins, and shall have 0 registered deaths.
+   - Case 2 again of round end without round win:
+       - Now Server player enters Spectator Mode.
+       - Soft Restart the game from the Server Admin menu.
+       - Wait until RoundState transitions to Play state.
+       - Now Server player shall select its original Team 1.
+         Expectation is that RoundState transitions to WaitForReset state but no round win shall be registered due to the server player was dead before
+         joining Team 1.
+         The server player is shown as Dead in the Frag Table and shall stay in force-spectating state until the next round begins, and
+         shall have 0 registered deaths.
+   - Case 3 of round end without round win:
+       - With the Server instance, exit to main menu.
+       - Start a new Server with Round Time limit set to a very low value, for example 10 seconds.
+       - Reconnect the client.
+       - For both players, select teams (Team 1 and Team 2, respectively).
+       - Soft-Restart the game.
+       - Wait until Round Time Limit is hit.
+         Expectation is that RoundState transitions to WaitForReset state but no round win shall be registered due to both teams have equal number
+         of alive players.
 
- - Connect 1 more client and join that client into the same team as the first client is already in (Team 2).
-   Now there shall be 2 client players in Team 2, and 1 server player in Team 1:
-    - Make sure all players are alive and not in forced-spectating state (make the current round won so all players will be alive in next round);
-    - When the round is in Play state, put 1 of the clients into Spectator mode and Join Team 1.
-      This player shall stay dead until next round and its deaths count shall be increased by 1.
-      This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
-      increasing death count of such player and shall wait until next round begins.
-    - Disconnect the 2nd client now.
+ - Testing sanctioning of team-hopping:
+   - Connect 1 more client and join that client into the same team as the first client is already in (Team 2).
+     Now there shall be 2 client players in Team 2, and 1 server player in Team 1:
+       - Make sure all players are alive and not in forced-spectating state (make the current round won so all players will be alive in next round);
+       - When the round is in Play state, put 1 of the clients into Spectator mode and Join Team 1.
+         This player shall stay dead until next round and its deaths count shall be increased by 1.
+         This is to sanction team-hopping players: consecutive team changes (i.e. any non-first team change) shall be penalized by
+         increasing death count of such player and shall wait until next round begins.
+       - Disconnect the 2nd client now.
 
  - Check if Server Admin menu action Next Map is working properly (with client still connected to server).
    - Player stats must be reset and everybody must be in spectator mode again.

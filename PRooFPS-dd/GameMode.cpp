@@ -1269,14 +1269,14 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
             {
                 if ((nOldTeam1AlivePlayers > 0) && (nCurrentTeam1AlivePlayers == 0))
                 {
-                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2!", __func__);
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2, reason: Team 1 is dead!", __func__);
                     m_nTeam2RoundWins++;
                     m_fsm.roundWon();
                     m_bCurrentRoundHasJustBeenWon_Sticky = true;
                 }
                 if ((nOldTeam2AlivePlayers > 0) && (nCurrentTeam2AlivePlayers == 0))
                 {
-                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1!", __func__);
+                    getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1, reason: Team 2 is dead!", __func__);
                     m_nTeam1RoundWins++;
                     m_fsm.roundWon();
                     m_bCurrentRoundHasJustBeenWon_Sticky = true;
@@ -1313,6 +1313,50 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
             nOldTeam1AlivePlayers = nCurrentTeam1AlivePlayers;
             nOldTeam2AlivePlayers = nCurrentTeam2AlivePlayers;
         }  // end if there is at least 1 player in a team
+    }
+    else if ((m_fsm.getState() == RoundStateFSM::RoundState::WaitForReset) && (m_oldFsmState == RoundStateFSM::RoundState::Play))
+    {
+        /* FSM just have transitioned because Round Time Limit expired */
+        const unsigned int nCurrentTeam1Players = getTeamPlayersCount(1);
+        const unsigned int nCurrentTeam2Players = getTeamPlayersCount(2);
+        // team win upon expired Round Time is achievable only if both teams have players
+        if ((nCurrentTeam1Players != 0) && (nCurrentTeam2Players != 0))
+        {
+            // team win upon expired Round Time requires alive players in both teams not only NOW but also in the previous tick:
+            // this rules out the case when a team has dead players only just because they connected recently to the game.
+            // Thinking about this more ... maybe we don't need this extra check here but anyway it doesn't hurt.
+            if ((nOldTeam1AlivePlayers > 0) && (nOldTeam2AlivePlayers > 0))
+            {
+                const unsigned int nCurrentTeam1AlivePlayers = getAliveTeamPlayersCount(1);
+                const unsigned int nCurrentTeam2AlivePlayers = getAliveTeamPlayersCount(2);
+                if ((nCurrentTeam1AlivePlayers > 0) && (nCurrentTeam2AlivePlayers > 0))
+                {
+                    if (nCurrentTeam1AlivePlayers > nCurrentTeam2AlivePlayers)
+                    {
+                        getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 1, reason: Team 2 has fewer alive players at round time limit!", __func__);
+                        m_nTeam1RoundWins++;
+                        m_bCurrentRoundHasJustBeenWon_Sticky = true;
+                    }
+                    else if (nCurrentTeam1AlivePlayers < nCurrentTeam2AlivePlayers)
+                    {
+                        getConsole().EOLn("TeamRoundGameMode::%s(): Round Win for Team 2, reason: Team 1 has fewer alive players at round time limit!", __func__);
+                        m_nTeam2RoundWins++;
+                        m_bCurrentRoundHasJustBeenWon_Sticky = true;
+                    }
+                    else
+                    {
+                        getConsole().EOLn("TeamRoundGameMode::%s(): Round End without Win: teams have equal number of alive players at round time limit!", __func__);
+                    }
+
+                    if ((getTeamRoundWins(1) == getRoundWinLimit()) || (getTeamRoundWins(2) == getRoundWinLimit()))
+                    {
+                        getConsole().EOLn("TeamRoundGameMode::%s(): Round Win Limit Reached!", __func__);
+                        handleEventGameWon(network);  /* due to overrides, this also sends out MsgGameRoundStateFromServer */
+                        return true;
+                    }
+                }
+            }
+        }
     }
 
     if (!m_bFsmStateTransitionHasJustHappenedThisTick_Sticky)
