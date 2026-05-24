@@ -41,6 +41,9 @@
 
    - Make both players join Team 1 and 2 again as before.
 
+   - If Game Time Limit is configured, the countdown shall be displayed at the bottom of the screen in
+     MM:SS format.
+
    - Testing basic gameplay:
      - kill each players, check if frags and death counts increase as expected;
      - make the game won by reaching frag limit;

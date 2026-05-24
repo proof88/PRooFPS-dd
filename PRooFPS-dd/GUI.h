@@ -244,6 +244,8 @@ namespace proofps_dd
         static void drawXHairAboveText();
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
+        static int getEarliestTimeExpirationSeconds();
+        static void drawGameModeBasicStuff();
         static void updateDeathKillEvents();
         static void updateItemPickupEvents();
         static void updatePlayerHpChangeEvents();

@@ -213,7 +213,7 @@ void proofps_dd::GUI::initialize()
     m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
 
     // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
-    // Anyway, for I will just use height for scaling the default font size.
+    // Anyway, for now I will just use height for scaling the default font size.
     // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
     // And under display resolution I actually mean window client size.
     m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels * fScalingFactor;
@@ -2584,6 +2584,8 @@ void proofps_dd::GUI::drawDearImGuiCb()
                 handleSpectatorMode(it->second);
             }
 
+            drawGameModeBasicStuff();
+
             ImGui::PopFont();
 
             drawGameInfoPages();
@@ -2738,22 +2740,22 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
 
     // we start at the bottom of the screen, in reverse order from bottom to top
     const float fStartY = m_pPge->getPure().getCamera().getViewport().size.height - m_fFontSizePxHudGeneralScaled - 10 /* spacing from viewport bottom edge */;
-    if (m_pNetworking->isServer())
+    ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX(), fStartY));
+    if (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool())
     {
-        drawTextHighlighted(
-            10,
-            fStartY,
-            "You are Server, Name: " + player.getName() +
-            (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
+        if (m_pNetworking->isServer())
+        {
+            drawTextHighlighted(10, fStartY, "Server, Testing Mode");
+        }
+        else
+        {
+            drawTextHighlighted(10, fStartY, "Client, IP: " + player.getIpAddress() + ", Testing Mode");
+        }
     }
     else
     {
-        drawTextHighlighted(
-            10,
-            fStartY,
-            "You are Client, Name: " + player.getName() +
-            "; IP: " + player.getIpAddress() +
-            (m_pPge->getConfigProfiles().getVars()["testing"].getAsBool() ? "; Testing Mode" : ""));
+        // empty text draw, just to calculate 'fYdiffBetweenRows' properly
+        drawTextHighlighted(10, fStartY, "");
     }
 
     const Player* pPlayer = &player;
@@ -2862,6 +2864,125 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         {
             updatePlayerInventoryChangeEvents();
         }
+    }
+}
+
+/**
+* @return Seconds remaining until the earliest relevant game timer expires.
+*         In round-based games, this is the number of seconds in until the currend round ends, or
+*         the number of seconds until the game ends (if there is game time limit set), whichever would happen earlier.
+*         In other game modes, this is the number of seconds until the game ends (if there is game time limit set).
+*         -1 is returned when such expiration does not exist, in such case nothing shall be displayed on the HUD.
+*/
+int proofps_dd::GUI::getEarliestTimeExpirationSeconds()
+{
+    const auto gm = GameMode::getGameMode();
+    assert(gm);
+
+    if (gm->isRoundBased())
+    {
+        const TeamRoundGameMode* const pTRGmode = dynamic_cast<const proofps_dd::TeamRoundGameMode*>(gm);
+        if (pTRGmode)
+        {
+            if (pTRGmode->getFSM().getState() != TeamRoundGameMode::RoundStateFSM::RoundState::Play)
+            {
+                // display countdown only in Play state because other states display state countdown above XHair
+                return -1;
+            }
+
+            if (pTRGmode->getFSM().getRoundTimeLimitSecs() == 0)
+            {
+                if (gm->getTimeLimitSecs() == 0)
+                {
+                    // neither round time limit nor game time limit
+                    return -1;
+                }
+                // have game time limit only
+                return static_cast<int>(gm->getTimeRemainingMillisecs() / 1000);
+            }
+            if (gm->getTimeLimitSecs() == 0)
+            {
+                // have round time limit only, no game time limit
+                return static_cast<int>(pTRGmode->getFSM().getTimeRemainingInCurrentStateSeconds());
+            }
+            // we have both round time- and game time limit too
+            return std::min(
+                static_cast<int>(gm->getTimeRemainingMillisecs() / 1000),
+                static_cast<int>(pTRGmode->getFSM().getTimeRemainingInCurrentStateSeconds()));
+        }
+        else
+        {
+            getConsole().EOLn("PRooFPSddPGE::%s(): ERROR: pTRGmode null!", __func__);
+            return -1;
+        }
+    }
+
+    // assuming DM or TDM
+    
+    if (gm->getTimeLimitSecs() == 0)
+    {
+        // no game time limit
+        return -1;
+    }
+
+    // have game time limit
+    return static_cast<int>(gm->getTimeRemainingMillisecs() / 1000);
+}
+
+void proofps_dd::GUI::drawGameModeBasicStuff()
+{
+    assert(m_pMinimap);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
+
+    // Minimap visibility is properly controlled, so use it here too
+    if (!m_pMinimap->visible())
+    {
+        return;
+    }
+
+    const int nSecondsRemaining = getEarliestTimeExpirationSeconds();
+    if (nSecondsRemaining < 0)
+    {
+        return;
+    }
+
+    const int nMinutes = nSecondsRemaining / 60;
+    const int nSeconds = nSecondsRemaining % 60;
+
+    std::string sDisplayedCountdown;
+    if (nMinutes < 10)
+    {
+        sDisplayedCountdown = "0";
+    }
+    sDisplayedCountdown += std::to_string(nMinutes) + ":";
+    
+    if (nSeconds < 10)
+    {
+        sDisplayedCountdown += "0";
+    }
+    sDisplayedCountdown += std::to_string(nSeconds);
+
+    assert(m_pPge);
+
+    const bool bRedText = ((nSeconds < 10) && ((nSeconds % 2) == 0));
+    const bool bYellowText = ((nSeconds < 10) && ((nSeconds % 2) == 1));
+    if (bRedText)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+    }
+    else if (bYellowText)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
+    }
+
+    const float fPosY = m_pPge->getPure().getCamera().getViewport().size.height - m_fFontSizePxHudGeneralScaled - 10 /* spacing from viewport bottom edge */;
+    drawTextHighlighted(
+        getDearImGui2DposXforCenteredText(sDisplayedCountdown, getDearImGui2DposXFromPure2DposX(0)),
+        fPosY,
+        sDisplayedCountdown);
+
+    if (bRedText || bYellowText)
+    {
+        ImGui::PopStyleColor();
     }
 }
 

@@ -49,6 +49,10 @@
    has assigned team: since players in Spectator Mode are officially unassigned players, "were" word shall be displayed
    instead of "are" in Spectator Mode.
 
+ - If either Game Time Limit or Round Time Limit is configured, the countdown shall be displayed at the bottom of the screen in
+   MM:SS format: whichever would be hit earlier, shall be displayed in Play state only.
+   So if Round Time Limit would be hit earlier, its countdown shall be displayed, otherwise the Game Time Limit countdown.
+
  - Testing basic gameplay:
    - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it);
    - Unless configured otherwise, Prepare state is 3 seconds, Play state is 3 minutes, WaitForReset is 5 seconds;
