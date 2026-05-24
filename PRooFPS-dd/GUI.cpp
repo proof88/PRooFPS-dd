@@ -2963,8 +2963,8 @@ void proofps_dd::GUI::drawGameModeBasicStuff()
 
     assert(m_pPge);
 
-    const bool bRedText = ((nSeconds < 10) && ((nSeconds % 2) == 0));
-    const bool bYellowText = ((nSeconds < 10) && ((nSeconds % 2) == 1));
+    const bool bRedText = ((nMinutes == 0) && (nSeconds < 10) && ((nSeconds % 2) == 0));
+    const bool bYellowText = ((nMinutes == 0) && (nSeconds < 10) && ((nSeconds % 2) == 1));
     if (bRedText)
     {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
