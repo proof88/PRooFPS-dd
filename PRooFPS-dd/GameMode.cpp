@@ -1150,13 +1150,13 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::stateUpdate()
     switch (m_state)
     {
     case RoundState::Prepare:
-        if (nSecondsSpentInCurrentState >= m_nRoundPrepareTimeSecs)
+        if ((m_nRoundPrepareTimeSecs == 0) || (nSecondsSpentInCurrentState >= m_nRoundPrepareTimeSecs))
         {
             stateEnter(RoundState::Play);
         }
         break;
     case RoundState::Play:
-        if (nSecondsSpentInCurrentState >= m_nRoundTimeLimitSecs)
+        if ((m_nRoundTimeLimitSecs > 0) && (nSecondsSpentInCurrentState >= m_nRoundTimeLimitSecs))
         {
             stateEnter(RoundState::WaitForReset);
         }
