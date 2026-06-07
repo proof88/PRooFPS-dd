@@ -21,6 +21,7 @@
 
 
 static constexpr float fDefaultFontSizePixels = 20.f;
+static constexpr float fDefaultFontSizeMarkdownH3Pixels = 14.f;
 
 static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 255.f, 0.7f); /* bg color for typically 1 row within a table to be highlighted */
 
@@ -227,6 +228,17 @@ void proofps_dd::GUI::initialize()
         getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneralScaled: %f", __func__, m_fFontSizePxHudGeneralScaled);
     }
 
+    m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels * fScalingFactor;
+    if (m_fFontSizePxMarkdownH3Scaled <= 0.f)
+    {
+        m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled was non-positive, reset to: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
+    }
+
     ImGui::GetIO().Fonts->AddFontDefault();
     m_pImFontFragTableNonScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
     
@@ -242,6 +254,9 @@ void proofps_dd::GUI::initialize()
     m_pImFontHudGeneralScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneralScaled);
     assert(m_pImFontFragTableNonScaled);
     assert(m_pImFontHudGeneralScaled);
+
+    ImGuiInitMarkdown();
+
     assert(ImGui::GetIO().Fonts->Build());
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
@@ -376,6 +391,11 @@ void proofps_dd::GUI::shutdown()
     }
 
     // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
+
+    m_pFontMarkdownH1 = nullptr;
+    m_pFontMarkdownH2 = nullptr;
+    m_pFontMarkdownH3 = nullptr;
+
     m_pImFontFragTableNonScaled = nullptr;
     m_pImFontHudGeneralScaled = nullptr;
 }
@@ -737,6 +757,11 @@ proofps_dd::PureObject3dInOutSlider proofps_dd::GUI::m_pSlidingProof88Laugh;
 ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
 float proofps_dd::GUI::m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
+float proofps_dd::GUI::m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizeMarkdownH3Pixels; /* after init, should be adjusted based on display resolution */
+ImGui::MarkdownConfig proofps_dd::GUI::m_mdConfig{};
+ImFont* proofps_dd::GUI::m_pFontMarkdownH1 = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownH2 = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownH3 = nullptr;
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 
@@ -1992,18 +2017,8 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
     ImGui::Unindent();
 } // drawSettingsMenu
 
-void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
+void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
 {
-    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 420.f;
-    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
-
-    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
-    ImGui::TextUnformatted("[  A B O U T  ]");
-
-    ImGui::Separator();
-    ImGui::Indent();
-
     const std::string sVersion = proofps_dd::GAME_NAME + std::string(" v") + proofps_dd::GAME_VERSION;
     ImGui::TextUnformatted(sVersion.c_str());
     ImGui::TextUnformatted("A 2.5d multiplayer platform shooter game.");
@@ -2044,7 +2059,31 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     {
         browseToUrl("https://github.com/proof88/PGE/blob/master/LICENSE");
     }
+}
 
+void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory()
+{
+    const std::string markdownText = u8R"(
+# H1 Header: Text and Links
+You can add [links like this one to enkisoftware](https://www.enkisoftware.com/) and lines will wrap well.
+You can also insert images ![image alt text](image identifier e.g. filename)
+Horizontal rules:
+***
+___
+*Emphasis* and **strong emphasis** change the appearance of the text.
+## H2 Header: indented text.
+  This text has an indent (two leading spaces).
+    This one has two.
+### H3 Header: Lists
+  * Unordered lists
+    * Lists can be indented with two extra spaces.
+  * Lists can have [links like this one to Avoyd](https://www.avoyd.com/) and *emphasized text*
+)";
+    ImGuiRenderMarkdown(markdownText);
+}
+
+void proofps_dd::GUI::drawTab_AboutMenu_License()
+{
     ImGui::TextUnformatted("");
     ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\" by Kevin MacLeod");
     if (ImGui::TextHyperLink("[visit incompetech.com for more royalty-free music]", true))
@@ -2108,6 +2147,39 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
     if (ImGui::TextHyperLink("Small group moderate applause (on Free Sound Effect Youtube Channel)", true))
     {
         browseToUrl("https://www.youtube.com/watch?v=UovDfgbGeXk");
+    }
+}
+
+void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
+{
+    // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
+    constexpr float fContentHeight = 420.f;
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+
+    ImGui::SetCursorPos(ImVec2(20, fContentStartY));
+    ImGui::TextUnformatted("[  A B O U T  ]");
+
+    ImGui::Separator();
+    ImGui::Indent();
+
+    if (ImGui::BeginTabBar("AboutTabBar", ImGuiTabBarFlags_None | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
+    {
+        if (ImGui::BeginTabItem("General Info"))
+        {
+            drawTab_AboutMenu_GeneralInfo();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Version History"))
+        {
+            drawTab_AboutMenu_VersionHistory();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("License"))
+        {
+            drawTab_AboutMenu_License();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
 
     ImGui::Separator();
@@ -4781,6 +4853,101 @@ void proofps_dd::GUI::ImGuiTextTableCurrentCellRightAdjusted(const std::string& 
 {
     ImGui::SetCursorPosX(getDearImGui2DposXforTableCurrentCellRightAdjustedText(text));
     ImGui::TextUnformatted(text.c_str());
+}
+
+void proofps_dd::GUI::ImGuiInitMarkdown()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    m_pFontMarkdownH3 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled);
+    m_pFontMarkdownH2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f);
+    m_pFontMarkdownH1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f * 1.15f);
+
+    assert(m_pFontMarkdownH3);
+    assert(m_pFontMarkdownH2);
+    assert(m_pFontMarkdownH1);
+
+    // You can make your own Markdown function with your prefered string container and markdown config.
+    // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
+    m_mdConfig.linkCallback = ImGuiMarkdownLinkCb;
+    m_mdConfig.tooltipCallback = NULL;
+    m_mdConfig.imageCallback = ImGuiMarkdownImageCb;
+    //m_mdConfig.linkIcon = ICON_FA_LINK;
+    m_mdConfig.headingFormats[0] = { m_pFontMarkdownH1, true };
+    m_mdConfig.headingFormats[1] = { m_pFontMarkdownH2, true };
+    m_mdConfig.headingFormats[2] = { m_pFontMarkdownH3, false };
+    m_mdConfig.userData = NULL;
+    m_mdConfig.formatCallback = ImGuiMarkdownFormatCb;
+}
+
+void proofps_dd::GUI::ImGuiMarkdownLinkCb(ImGui::MarkdownLinkCallbackData data_)
+{
+    std::string url(data_.link, data_.linkLength);
+    if (!data_.isImage)
+    {
+        browseToUrl(url.c_str());
+    }
+}
+
+ImGui::MarkdownImageData proofps_dd::GUI::ImGuiMarkdownImageCb(ImGui::MarkdownLinkCallbackData /*data_*/)
+{
+    // In your application you would load an image based on data_ input. Here we just use the imgui font texture.
+    ImTextureID image = ImGui::GetIO().Fonts->TexID;
+    // > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
+    ImGui::MarkdownImageData imageData;
+    imageData.isValid = true;
+    imageData.useLinkCallback = false;
+    imageData.user_texture_id = image;
+    imageData.size = ImVec2(40.0f, 20.0f);
+
+    // For image resize when available size.x > image width, add
+    ImVec2 const contentSize = ImGui::GetContentRegionAvail();
+    if (imageData.size.x > contentSize.x)
+    {
+        float const ratio = imageData.size.y / imageData.size.x;
+        imageData.size.x = contentSize.x;
+        imageData.size.y = contentSize.x * ratio;
+    }
+
+    return imageData;
+}
+
+void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
+{
+    // Call the default first so any settings can be overwritten by our implementation.
+    // Alternatively could be called or not called in a switch statement on a case by case basis.
+    // See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
+    ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
+
+    // this is just an example
+
+    //switch (markdownFormatInfo_.type)
+    //{
+    //    // example: change the colour of heading level 2
+    //case ImGui::MarkdownFormatType::HEADING:
+    //{
+    //    if (markdownFormatInfo_.level == 2)
+    //    {
+    //        if (start_)
+    //        {
+    //            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+    //        }
+    //        else
+    //        {
+    //            ImGui::PopStyleColor();
+    //        }
+    //    }
+    //    break;
+    //}
+    //default:
+    //{
+    //    break;
+    //}
+    //}
+}
+
+void proofps_dd::GUI::ImGuiRenderMarkdown(const std::string& markdown_)
+{
+    ImGui::Markdown(markdown_.c_str(), markdown_.length(), m_mdConfig);
 }
 
 proofps_dd::GUI::GUI()

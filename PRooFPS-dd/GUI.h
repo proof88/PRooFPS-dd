@@ -33,6 +33,8 @@
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
 #include "imgui.h"  // ImFont, ImVec4
 
+#include "imgui_markdown.h"  // ImGui::MarkdownFormatInfo, etc.
+
 namespace proofps_dd
 {
 
@@ -214,6 +216,14 @@ namespace proofps_dd
         static ImFont* m_pImFontFragTableNonScaled;
         static ImFont* m_pImFontHudGeneralScaled;
         static float m_fFontSizePxHudGeneralScaled;
+        static float m_fFontSizePxMarkdownH3Scaled;
+
+        /* Markdown Rendering */
+
+        static ImGui::MarkdownConfig m_mdConfig;
+        static ImFont* m_pFontMarkdownH1;
+        static ImFont* m_pFontMarkdownH2;
+        static ImFont* m_pFontMarkdownH3;
 
         static GameInfoPage m_gameInfoPageCurrent;
 
@@ -234,6 +244,9 @@ namespace proofps_dd
         static void drawTabMiscSettings();
         static void showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId);
         static void drawSettingsMenu(const float& fRemainingSpaceY);
+        static void drawTab_AboutMenu_GeneralInfo();
+        static void drawTab_AboutMenu_VersionHistory();
+        static void drawTab_AboutMenu_License();
         static void drawAboutMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
 
@@ -362,6 +375,14 @@ namespace proofps_dd
         static void ImGuiTextTableCurrentCellShortenedFit(const std::string& text, size_t nAppendLastNChars = 0);
         static void ImGuiTextTableCurrentCellCentered(const std::string& text);
         static void ImGuiTextTableCurrentCellRightAdjusted(const std::string& text);
+
+        /* Markdown Rendering */
+
+        static void ImGuiInitMarkdown();
+        static void ImGuiMarkdownLinkCb(ImGui::MarkdownLinkCallbackData data_);
+        static ImGui::MarkdownImageData ImGuiMarkdownImageCb(ImGui::MarkdownLinkCallbackData /*data_*/);
+        static void ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_);
+        static void ImGuiRenderMarkdown(const std::string& markdown_);
 
         static void drawDearImGuiCb(); // this needs to be static, causing a lot of other members also need to be static
 
