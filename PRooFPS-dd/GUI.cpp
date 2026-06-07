@@ -39,7 +39,11 @@ static constexpr float fGameInfoPagesStartX = 20.f;
 #endif
 static void browseToUrl(const char* url)
 {
-    assert(strncmp(url, "http", strlen("http")) == 0);
+    if (strncmp(url, "http", strlen("http")) != 0)
+    {
+        return;
+    }
+
 #if defined(__EMSCRIPTEN__)
     char js_command[1024];
     snprintf(js_command, 1024, "window.open(\"%s\");", url);
@@ -1960,23 +1964,74 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
 
 void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory()
 {
-    const std::string markdownText = u8R"(
-# H1 Header: Text and Links
-You can add [links like this one to enkisoftware](https://www.enkisoftware.com/) and lines will wrap well.
-You can also insert images ![image alt text](image identifier e.g. filename)
-Horizontal rules:
-***
-___
-*Emphasis* and **strong emphasis** change the appearance of the text.
-## H2 Header: indented text.
-  This text has an indent (two leading spaces).
-    This one has two.
-### H3 Header: Lists
-  * Unordered lists
-    * Lists can be indented with two extra spaces.
-  * Lists can have [links like this one to Avoyd](https://www.avoyd.com/) and *emphasized text*
-)";
-    ImGuiRenderMarkdown(markdownText);
+    /* when ran by a user as a released version, it will be historyFilename1, but
+       when ran from dev directory, it will be historyFilename2.
+       This way, it is always up-to-date with the github wiki version, no double-edit needed. */
+
+    static constexpr char* const historyFilename1 = "HISTORY.md";
+    static constexpr char* const historyFilename2 = "../HISTORY.md";
+
+    const char* historyFilename =
+        PFL::fileExists(historyFilename1) ? historyFilename1 :
+        (PFL::fileExists(historyFilename2) ? historyFilename2 : nullptr);
+
+    if (!historyFilename)
+    {
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        static bool bFileExistsErrorReported = false;
+        if (!bFileExistsErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): missing HISTORY.md!", __func__);
+            bFileExistsErrorReported = true;
+        }
+        return;
+    }
+
+    // make sure we load the file only once, since we are in a loop (being continuously called back by main menu draw logic)
+    static std::string sFileContent{};
+    static bool bFileLoaded = false;
+    static bool bFileReadErrorReported = false;
+
+    try
+    {
+        if (!bFileLoaded)
+        {
+            if (!bFileReadErrorReported)
+            {
+                const uintmax_t nFilesize = std::filesystem::file_size(historyFilename);
+                if (nFilesize > 1024ull * 1024)
+                {
+                    // nonsense filesize, HISTORY.md should never be over 1 MiB
+                    getConsole().EOLn("GUI::%s(): nonsense file size!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                sFileContent.resize(static_cast<size_t>(nFilesize), '\0');
+                std::ifstream inFileStream(historyFilename);
+                inFileStream.read(&sFileContent[0], nFilesize);
+                bFileLoaded = !inFileStream.bad() && inFileStream.eof();
+                if (!bFileLoaded)
+                {
+                    getConsole().EOLn("GUI::%s(): failed to stream in the file!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+            }
+        }
+        if (bFileLoaded && !bFileReadErrorReported)
+        {
+            ImGuiRenderMarkdown(sFileContent);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        if (!bFileReadErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): exception: %s", __func__, e.what());
+            bFileReadErrorReported = true;
+        }
+    }
 }
 
 void proofps_dd::GUI::drawTab_AboutMenu_License()
