@@ -362,6 +362,8 @@ namespace proofps_dd
 
         /* Misc */
 
+        static bool init2dObjects(const float& fScalingFactor);
+        static bool initFonts(const float& fScalingFactor);
         static float getDearImGui2DposXFromPure2DposX(const float& fPureX);
         static float getDearImGui2DposYFromPure2DposY(const float& fPureY);
         static float getDearImGui2DposXforCenteredText(const std::string& text, const float& fImGuiX);
@@ -378,7 +380,7 @@ namespace proofps_dd
 
         /* Markdown Rendering */
 
-        static void ImGuiInitMarkdown();
+        static bool ImGuiInitMarkdown();
         static void ImGuiMarkdownLinkCb(ImGui::MarkdownLinkCallbackData data_);
         static ImGui::MarkdownImageData ImGuiMarkdownImageCb(ImGui::MarkdownLinkCallbackData /*data_*/);
         static void ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_);

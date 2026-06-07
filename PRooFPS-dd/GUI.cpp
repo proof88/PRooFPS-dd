@@ -60,6 +60,23 @@ static void browseToUrl(const char* url)
 }
 
 
+/*
+    Useful Dear ImGui links:
+        - https://github.com/ocornut/imgui/tree/master/docs
+        - https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
+        - https://github.com/ocornut/imgui/wiki/Useful-Extensions
+        - https://github.com/pthom/imgui_bundle/
+        - https://github.com/pthom/hello_imgui
+        - Interactive online manual: https://pthom.github.io/imgui_manual_online/manual/imgui_manual.html
+        - GUI Editors:
+        - online: https://raa.is/ImStudio/
+        - https://github.com/Half-People/HImGuiEditor/tree/main
+        - https://github.com/tpecholt/imrad
+        - https://github.com/Code-Building/ImGuiBuilder
+        - https://github.com/iamclint/ImGuiDesigner
+*/
+
+
 // ############################### PUBLIC ################################
 
 
@@ -116,62 +133,19 @@ void proofps_dd::GUI::initialize()
 
     resetMenuStates(false);
 
-    // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
-    // this is needed because it is not trivial when to show/hide the xhair for the server.
-    m_pXHair = new XHair(*m_pPge);
+    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
 
-    m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
-
-    m_pEventsDeathKill = new DeathKillEventLister();
-    m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
-    m_pEventsPlayerInventoryChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
-    m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
-    m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
-    m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
-    m_pEventsServer = new ServerEventLister();
-
-    if (!m_pSlidingProof88Laugh.createPureObject(
-        m_pPge->getPure().getTextureManager(),
-        m_pPge->getPure().getObject3DManager(),
-        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "proof88-laugh-mirrored-size256.bmp").c_str()))
+    if (!init2dObjects(fScalingFactor))
     {
-        getConsole().EOLn("GUI::%s(): ERROR: failed to create m_pSlidingProof88Laugh!", __func__);
+        getConsole().EOLn("GUI::%s(): init2dObjects() failed!", __func__);
         return;
     }
-    m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
-    m_pSlidingProof88Laugh.getMaterial()->getTexture()->setTextureWrappingMode(PURE_TW_REPEAT, PURE_TW_MIRRORED_REPEAT);
-    m_pSlidingProof88Laugh.setTimeoutInWaitingState(5000);
-    m_pSlidingProof88Laugh.loadSoundForSlidingIn(m_pPge->getAudio(), (std::string(proofps_dd::GAME_AUDIO_DIR) + "player/PR00F_20060606_220744.wav").c_str());
 
-    // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
-    // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
-    // This bg plane is used to cover game objects such as map, players, etc.,
-    // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
-    m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
-        m_pPge->getPure().getCamera().getViewport().size.width,
-        m_pPge->getPure().getCamera().getViewport().size.height);
-    m_pObjLoadingScreenBg->SetStickedToScreen(true);
-    m_pObjLoadingScreenBg->SetDoubleSided(true);
-    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenBg->SetLit(false);
-    PureTexture* const pTexBlack = m_pPge->getPure().getTextureManager().createFromFile(
-        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
-    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
-
-    // Logo img size should have an upper limit, otherwise it looks blurry in big window!
-    const auto fLoadingScreenLogoImgWidth = std::min(825.f, m_pPge->getPure().getCamera().getViewport().size.width * 0.8f);
-    m_pObjLoadingScreenLogoImg = m_pPge->getPure().getObject3DManager().createPlane(
-        fLoadingScreenLogoImgWidth,
-        (fLoadingScreenLogoImgWidth * 0.5f) * 0.5f);
-    m_pObjLoadingScreenLogoImg->getPosVec().SetY(
-        (m_pPge->getPure().getCamera().getViewport().size.height / 2) - (m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2));
-    m_pObjLoadingScreenLogoImg->SetStickedToScreen(true);
-    m_pObjLoadingScreenLogoImg->SetDoubleSided(true);
-    m_pObjLoadingScreenLogoImg->SetTestingAgainstZBuffer(false);
-    m_pObjLoadingScreenLogoImg->SetLit(false);
-    PureTexture* const pTexLoadingScreenLogoImg = m_pPge->getPure().getTextureManager().createFromFile(
-        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
-    m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
+    if (!initFonts(fScalingFactor))
+    {
+        getConsole().EOLn("GUI::%s(): initFonts() failed!", __func__);
+        return;
+    }
 
     m_sAvailableMapsListForForceSelectComboBox.clear();
     // we force-create a string from empty " " and append it, otherwise the extra NULL char wont be appended.
@@ -182,82 +156,6 @@ void proofps_dd::GUI::initialize()
         m_sAvailableMapsListForForceSelectComboBox += sMapName + '\0';
         //m_sAvailableMapsListForMapcycleListBox += sMapName + '\0';
     }
-
-    /*
-        Useful Dear ImGui links:
-         - https://github.com/ocornut/imgui/tree/master/docs
-         - https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
-         - https://github.com/ocornut/imgui/wiki/Useful-Extensions
-         - https://github.com/pthom/imgui_bundle/
-         - https://github.com/pthom/hello_imgui
-         - Interactive online manual: https://pthom.github.io/imgui_manual_online/manual/imgui_manual.html
-         - GUI Editors:
-           - online: https://raa.is/ImStudio/
-           - https://github.com/Half-People/HImGuiEditor/tree/main
-           - https://github.com/tpecholt/imrad
-           - https://github.com/Code-Building/ImGuiBuilder
-           - https://github.com/iamclint/ImGuiDesigner
-    */
-
-    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
-
-    // note that setRelativeScaling() called with weapon accuracy also has impact on the general scaling so lerp() values
-    // there should be also adjusted if we modify base scaling here!
-    m_pXHair->setBaseScaling(fScalingFactor * 1.5f);
-    m_pSlidingProof88Laugh.setScaling(fScalingFactor);
-    m_pSlidingProof88Laugh.getScreenStartPos().x = m_pPge->getPure().getWindow().getClientWidth() / 2.f +
-        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX() / 2.f;
-    m_pSlidingProof88Laugh.getScreenStartPos().y = m_pPge->getPure().getWindow().getClientHeight() / -2.f +
-        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getY() / 2.f;
-    m_pSlidingProof88Laugh.getScreenFinishPos().x = m_pSlidingProof88Laugh.getScreenStartPos().x -
-        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX();
-    m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
-
-    // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
-    // Anyway, for now I will just use height for scaling the default font size.
-    // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
-    // And under display resolution I actually mean window client size.
-    m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels * fScalingFactor;
-    if (m_fFontSizePxHudGeneralScaled <= 0.f)
-    {
-        m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels;
-        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneralScaled was non-positive, reset to: %f", __func__, m_fFontSizePxHudGeneralScaled);
-    }
-    else
-    {
-        getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneralScaled: %f", __func__, m_fFontSizePxHudGeneralScaled);
-    }
-
-    m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels * fScalingFactor;
-    if (m_fFontSizePxMarkdownH3Scaled <= 0.f)
-    {
-        m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels;
-        getConsole().EOLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled was non-positive, reset to: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
-    }
-    else
-    {
-        getConsole().OLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
-    }
-
-    ImGui::GetIO().Fonts->AddFontDefault();
-    m_pImFontFragTableNonScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
-    
-    // By the time we get here, m_fFontSizePxHudGeneralScaled is set according to display resolution.
-    // This also means that upon windowed/fullscreen mode change, we should reinit GUI, but this is already happening.
-    /*
-    * Currently there is no proper font scaling in Dear ImGui, i.e. different size font needs to be built as different font.
-    * See tickets:
-    *  - https://github.com/ocornut/imgui/issues/797
-    *  - https://github.com/ocornut/imgui/pull/3471
-    *  - https://github.com/ocornut/imgui/issues/6967
-    */
-    m_pImFontHudGeneralScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneralScaled);
-    assert(m_pImFontFragTableNonScaled);
-    assert(m_pImFontHudGeneralScaled);
-
-    ImGuiInitMarkdown();
-
-    assert(ImGui::GetIO().Fonts->Build());
 
     // no need to initialize Dear ImGui since its resources are managed by PURE/PGE
     const ImVec4 imColorDefaultGreen(100 / 255.f, 114 / 255.f, 63 / 255.f, 1.f);
@@ -318,7 +216,6 @@ void proofps_dd::GUI::initialize()
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
 
-    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(m_fFontSizePxHudGeneralScaled)));
     m_pPge->getPure().getUImanager().setGuiDrawCallback(drawDearImGuiCb);
 } // initialize()
 
@@ -4633,6 +4530,177 @@ void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
     bPrevFrameSpectator = player.isInSpectatorMode() || player.isForcedSpectating();
 }
 
+bool proofps_dd::GUI::init2dObjects(const float& fScalingFactor)
+{
+    // make the xhair earlier than the loading screen, so whenever loading screen is visible, xhair stays behind it!
+    // this is needed because it is not trivial when to show/hide the xhair for the server.
+    m_pXHair = new XHair(*m_pPge);
+    if (!m_pXHair)
+    {
+        getConsole().EOLn("GUI::%s(): m_pXHair failed!", __func__);
+        return false;
+    }
+
+    m_pMinimap = new Minimap(*m_pPge, *m_pMaps, *m_pMapPlayers);
+    if (!m_pMinimap)
+    {
+        getConsole().EOLn("GUI::%s(): m_pMinimap failed!", __func__);
+        return false;
+    }
+
+    m_pEventsDeathKill = new DeathKillEventLister();
+    m_pEventsItemPickup = new EventLister(5 /* time limit secs */, 10 /* event count limit */);
+    m_pEventsPlayerInventoryChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsPlayerHpChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsPlayerApChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsPlayerAmmoChange = new EventLister(3 /* time limit secs */, 3 /* event count limit */, Orientation::Horizontal);
+    m_pEventsServer = new ServerEventLister();
+
+    if (!m_pEventsDeathKill || !m_pEventsItemPickup || !m_pEventsPlayerInventoryChange ||
+        !m_pEventsPlayerHpChange || !m_pEventsPlayerApChange || !m_pEventsPlayerAmmoChange || !m_pEventsServer)
+    {
+        getConsole().EOLn("GUI::%s(): creating an event lister failed!", __func__);
+        return false;
+    }
+
+    if (!m_pSlidingProof88Laugh.createPureObject(
+        m_pPge->getPure().getTextureManager(),
+        m_pPge->getPure().getObject3DManager(),
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "proof88-laugh-mirrored-size256.bmp").c_str()))
+    {
+        getConsole().EOLn("GUI::%s(): ERROR: failed to create m_pSlidingProof88Laugh!", __func__);
+        return false;
+    }
+    m_pSlidingProof88Laugh.setBlendFuncs(PURE_SRC_ALPHA, PURE_ONE_MINUS_SRC_ALPHA);
+    m_pSlidingProof88Laugh.getMaterial()->getTexture()->setTextureWrappingMode(PURE_TW_REPEAT, PURE_TW_MIRRORED_REPEAT);
+    m_pSlidingProof88Laugh.setTimeoutInWaitingState(5000);
+    m_pSlidingProof88Laugh.loadSoundForSlidingIn(m_pPge->getAudio(), (std::string(proofps_dd::GAME_AUDIO_DIR) + "player/PR00F_20060606_220744.wav").c_str());
+
+    // create loading screen AFTER we created the xhair because otherwise in some situations the xhair
+    // might appear ABOVE the loading screen ... this is still related to the missing PURE feature: custom Z-ordering of 2D objects.
+    // This bg plane is used to cover game objects such as map, players, etc.,
+    // so we can refresh the screen without showing those, for example to refresh progress bar during loading.
+    m_pObjLoadingScreenBg = m_pPge->getPure().getObject3DManager().createPlane(
+        m_pPge->getPure().getCamera().getViewport().size.width,
+        m_pPge->getPure().getCamera().getViewport().size.height);
+    if (!m_pObjLoadingScreenBg)
+    {
+        getConsole().EOLn("GUI::%s(): m_pObjLoadingScreenBg failed!", __func__);
+        return false;
+    }
+    m_pObjLoadingScreenBg->SetStickedToScreen(true);
+    m_pObjLoadingScreenBg->SetDoubleSided(true);
+    m_pObjLoadingScreenBg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenBg->SetLit(false);
+    PureTexture* const pTexBlack = m_pPge->getPure().getTextureManager().createFromFile(
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "black.bmp").c_str());
+    m_pObjLoadingScreenBg->getMaterial().setTexture(pTexBlack);
+
+    // Logo img size should have an upper limit, otherwise it looks blurry in big window!
+    const auto fLoadingScreenLogoImgWidth = std::min(825.f, m_pPge->getPure().getCamera().getViewport().size.width * 0.8f);
+    m_pObjLoadingScreenLogoImg = m_pPge->getPure().getObject3DManager().createPlane(
+        fLoadingScreenLogoImgWidth,
+        (fLoadingScreenLogoImgWidth * 0.5f) * 0.5f);
+    if (!m_pObjLoadingScreenLogoImg)
+    {
+        getConsole().EOLn("GUI::%s(): m_pObjLoadingScreenLogoImg failed!", __func__);
+        return false;
+    }
+    m_pObjLoadingScreenLogoImg->getPosVec().SetY(
+        (m_pPge->getPure().getCamera().getViewport().size.height / 2) - (m_pObjLoadingScreenLogoImg->getSizeVec().getY() / 2));
+    m_pObjLoadingScreenLogoImg->SetStickedToScreen(true);
+    m_pObjLoadingScreenLogoImg->SetDoubleSided(true);
+    m_pObjLoadingScreenLogoImg->SetTestingAgainstZBuffer(false);
+    m_pObjLoadingScreenLogoImg->SetLit(false);
+    PureTexture* const pTexLoadingScreenLogoImg = m_pPge->getPure().getTextureManager().createFromFile(
+        (std::string(proofps_dd::GAME_TEXTURES_DIR) + "PRooFPS-dd-logo.bmp").c_str());
+    m_pObjLoadingScreenLogoImg->getMaterial().setTexture(pTexLoadingScreenLogoImg);
+
+    // note that setRelativeScaling() called with weapon accuracy also has impact on the general scaling so lerp() values
+    // there should be also adjusted if we modify base scaling here!
+    m_pXHair->setBaseScaling(fScalingFactor * 1.5f);
+    m_pSlidingProof88Laugh.setScaling(fScalingFactor);
+    m_pSlidingProof88Laugh.getScreenStartPos().x = m_pPge->getPure().getWindow().getClientWidth() / 2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX() / 2.f;
+    m_pSlidingProof88Laugh.getScreenStartPos().y = m_pPge->getPure().getWindow().getClientHeight() / -2.f +
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getY() / 2.f;
+    m_pSlidingProof88Laugh.getScreenFinishPos().x = m_pSlidingProof88Laugh.getScreenStartPos().x -
+        m_pSlidingProof88Laugh.getPureObject()->getScaledSizeVec().getX();
+    m_pSlidingProof88Laugh.getScreenFinishPos().y = m_pSlidingProof88Laugh.getScreenStartPos().y;
+
+    return true;
+}
+
+bool proofps_dd::GUI::initFonts(const float& fScalingFactor)
+{
+    // somehow we should use both the width and height of display resolution but I'm not sure exactly how.
+    // Anyway, for now I will just use height for scaling the default font size.
+    // So I used 20 px fonts for 1024x768, so any height bigger than that will use bigger than 20 px font size.
+    // And under display resolution I actually mean window client size.
+    m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels * fScalingFactor;
+    if (m_fFontSizePxHudGeneralScaled <= 0.f)
+    {
+        m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudGeneralScaled was non-positive, reset to: %f", __func__, m_fFontSizePxHudGeneralScaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneralScaled: %f", __func__, m_fFontSizePxHudGeneralScaled);
+    }
+
+    m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels * fScalingFactor;
+    if (m_fFontSizePxMarkdownH3Scaled <= 0.f)
+    {
+        m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled was non-positive, reset to: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
+    }
+
+    if (!ImGui::GetIO().Fonts->AddFontDefault())
+    {
+        getConsole().EOLn("GUI::%s(): Fonts->AddFontDefault() failed!", __func__);
+        return false;
+    }
+
+    m_pImFontFragTableNonScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
+
+    // By the time we get here, m_fFontSizePxHudGeneralScaled is set according to display resolution.
+    // This also means that upon windowed/fullscreen mode change, we should reinit GUI, but this is already happening.
+    /*
+    * Currently there is no proper font scaling in Dear ImGui, i.e. different size font needs to be built as different font.
+    * See tickets:
+    *  - https://github.com/ocornut/imgui/issues/797
+    *  - https://github.com/ocornut/imgui/pull/3471
+    *  - https://github.com/ocornut/imgui/issues/6967
+    */
+    m_pImFontHudGeneralScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneralScaled);
+
+    if (!m_pImFontFragTableNonScaled || !m_pImFontHudGeneralScaled)
+    {
+        getConsole().EOLn("GUI::%s(): Fonts->AddFontFromFileTTF() failed!", __func__);
+        return false;
+    }
+
+    if (!ImGuiInitMarkdown())
+    {
+        getConsole().EOLn("GUI::%s(): ImGuiInitMarkdown() failed!", __func__);
+        return false;
+    }
+
+    if (!ImGui::GetIO().Fonts->Build())
+    {
+        getConsole().EOLn("GUI::%s(): Fonts->Build() failed!", __func__);
+        return false;
+    }
+
+    m_pPge->getPure().getUImanager().setDefaultFontSizeLegacy(static_cast<int>(std::lroundf(m_fFontSizePxHudGeneralScaled)));
+
+    return true;
+}
+
 /**
 * Converts the given X position specified in PURE 2D coordinate system to an X position in ImGui's 2D coordinate system.
 * 
@@ -4855,16 +4923,18 @@ void proofps_dd::GUI::ImGuiTextTableCurrentCellRightAdjusted(const std::string& 
     ImGui::TextUnformatted(text.c_str());
 }
 
-void proofps_dd::GUI::ImGuiInitMarkdown()
+bool proofps_dd::GUI::ImGuiInitMarkdown()
 {
     ImGuiIO& io = ImGui::GetIO();
     m_pFontMarkdownH3 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled);
     m_pFontMarkdownH2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f);
     m_pFontMarkdownH1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f * 1.15f);
 
-    assert(m_pFontMarkdownH3);
-    assert(m_pFontMarkdownH2);
-    assert(m_pFontMarkdownH1);
+    if (!m_pFontMarkdownH1 || !m_pFontMarkdownH2 || !m_pFontMarkdownH3)
+    {
+        getConsole().EOLn("GUI::%s(): Fonts->AddFontFromFileTTF() failed!", __func__);
+        return false;
+    }
 
     // You can make your own Markdown function with your prefered string container and markdown config.
     // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
@@ -4877,6 +4947,8 @@ void proofps_dd::GUI::ImGuiInitMarkdown()
     m_mdConfig.headingFormats[2] = { m_pFontMarkdownH3, false };
     m_mdConfig.userData = NULL;
     m_mdConfig.formatCallback = ImGuiMarkdownFormatCb;
+
+    return true;
 }
 
 void proofps_dd::GUI::ImGuiMarkdownLinkCb(ImGui::MarkdownLinkCallbackData data_)
