@@ -1962,7 +1962,7 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
     }
 }
 
-void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory()
+void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeightLeft)
 {
     /* when ran by a user as a released version, it will be historyFilename1, but
        when ran from dev directory, it will be historyFilename2.
@@ -2020,7 +2020,12 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory()
         }
         if (bFileLoaded && !bFileReadErrorReported)
         {
-            ImGuiRenderMarkdown(sFileContent);
+            // for newer version: ImGui::BeginChild("ChildR", ImVec2(0, 260), ImGuiChildFlags_Borders, ImGuiWindowFlags_None);
+            ImGui::BeginChild("ScrollFrame", ImVec2(0, fContentHeightLeft), true, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
+            {
+                ImGuiRenderMarkdown(sFileContent);
+            }
+            ImGui::EndChild();
         }
     }
     catch (const std::exception& e)
@@ -2116,6 +2121,7 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
 
     if (ImGui::BeginTabBar("AboutTabBar", ImGuiTabBarFlags_None | ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
     {
+        const float fContentHeightLeft = fContentHeight - (ImGui::GetCursorPosY() - fContentStartY);
         if (ImGui::BeginTabItem("General Info"))
         {
             drawTab_AboutMenu_GeneralInfo();
@@ -2123,7 +2129,7 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
         }
         if (ImGui::BeginTabItem("Version History"))
         {
-            drawTab_AboutMenu_VersionHistory();
+            drawTab_AboutMenu_VersionHistory(fContentHeightLeft);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("License"))

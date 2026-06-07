@@ -245,7 +245,7 @@ namespace proofps_dd
         static void showConfigApplyAndRestartDialogBox(PGEcfgVariable& cvar, const std::string& sPopupId);
         static void drawSettingsMenu(const float& fRemainingSpaceY);
         static void drawTab_AboutMenu_GeneralInfo();
-        static void drawTab_AboutMenu_VersionHistory();
+        static void drawTab_AboutMenu_VersionHistory(const float& fContentHeightLeft);
         static void drawTab_AboutMenu_License();
         static void drawAboutMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
