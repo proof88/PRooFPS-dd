@@ -5049,33 +5049,15 @@ void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& mar
     // Call the default first so any settings can be overwritten by our implementation.
     // Alternatively could be called or not called in a switch statement on a case by case basis.
     // See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
-    ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
-
-    // this is just an example
-
-    //switch (markdownFormatInfo_.type)
-    //{
-    //    // example: change the colour of heading level 2
-    //case ImGui::MarkdownFormatType::HEADING:
-    //{
-    //    if (markdownFormatInfo_.level == 2)
-    //    {
-    //        if (start_)
-    //        {
-    //            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-    //        }
-    //        else
-    //        {
-    //            ImGui::PopStyleColor();
-    //        }
-    //    }
-    //    break;
-    //}
-    //default:
-    //{
-    //    break;
-    //}
-    //}
+    
+    switch (markdownFormatInfo_.type)
+    {
+    case ImGui::MarkdownFormatType::EMPHASIS:
+        // do not do anything special right now with bold text
+        break;
+    default:
+        ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
+    }
 }
 
 void proofps_dd::GUI::ImGuiRenderMarkdown(const std::string& markdown_)
