@@ -216,14 +216,26 @@ namespace proofps_dd
         static ImFont* m_pImFontFragTableNonScaled;
         static ImFont* m_pImFontHudGeneralScaled;
         static float m_fFontSizePxHudGeneralScaled;
-        static float m_fFontSizePxMarkdownH3Scaled;
+        static float fEmbeddedDefaultFontSizePixelsScaled;
 
         /* Markdown Rendering */
 
+        static float m_fFontSizePxMarkdownH3Scaled;
+        static float m_fFontSizePxMarkdownDefaultScaled;
+
         static ImGui::MarkdownConfig m_mdConfig;
+        // non-scaled versions for main menu
+        static ImFont* m_pFontMarkdownDefault;
+        static ImFont* m_pFontMarkdownDefaultBold;
         static ImFont* m_pFontMarkdownH1;
         static ImFont* m_pFontMarkdownH2;
         static ImFont* m_pFontMarkdownH3;
+        // scaled versions for in-game menu stuff
+        static ImFont* m_pFontMarkdownDefaultScaled;
+        static ImFont* m_pFontMarkdownDefaultBoldScaled;
+        static ImFont* m_pFontMarkdownH1Scaled;
+        static ImFont* m_pFontMarkdownH2Scaled;
+        static ImFont* m_pFontMarkdownH3Scaled;
 
         static GameInfoPage m_gameInfoPageCurrent;
 

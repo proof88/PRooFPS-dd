@@ -20,8 +20,10 @@
 #include "WeaponHandling.h"
 
 
+static constexpr float fEmbeddedDefaultFontSizePixels = 13.f; /* Dear ImGui's embedded ProggyClean.ttf is also loaded with size 13 by default */
 static constexpr float fDefaultFontSizePixels = 20.f;
-static constexpr float fDefaultFontSizeMarkdownH3Pixels = 14.f;
+static constexpr float fDefaultFontSizeMarkdownPixels = 14.f;
+static constexpr float fDefaultFontSizeMarkdownH3Pixels = fDefaultFontSizeMarkdownPixels;
 
 static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 255.f, 0.7f); /* bg color for typically 1 row within a table to be highlighted */
 
@@ -293,9 +295,17 @@ void proofps_dd::GUI::shutdown()
 
     // no need to destroy Dear ImGui since its resources are managed by PURE/PGE
 
+    m_pFontMarkdownDefault = nullptr;
+    m_pFontMarkdownDefaultBold = nullptr;
     m_pFontMarkdownH1 = nullptr;
     m_pFontMarkdownH2 = nullptr;
     m_pFontMarkdownH3 = nullptr;
+
+    m_pFontMarkdownDefaultScaled = nullptr;
+    m_pFontMarkdownDefaultBoldScaled = nullptr;
+    m_pFontMarkdownH1Scaled = nullptr;
+    m_pFontMarkdownH2Scaled = nullptr;
+    m_pFontMarkdownH3Scaled = nullptr;
 
     m_pImFontFragTableNonScaled = nullptr;
     m_pImFontHudGeneralScaled = nullptr;
@@ -658,11 +668,21 @@ proofps_dd::PureObject3dInOutSlider proofps_dd::GUI::m_pSlidingProof88Laugh;
 ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
 float proofps_dd::GUI::m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
+float proofps_dd::GUI::fEmbeddedDefaultFontSizePixelsScaled = fEmbeddedDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
+
 float proofps_dd::GUI::m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizeMarkdownH3Pixels; /* after init, should be adjusted based on display resolution */
+float proofps_dd::GUI::m_fFontSizePxMarkdownDefaultScaled = fDefaultFontSizeMarkdownPixels; /* after init, should be adjusted based on display resolution */
 ImGui::MarkdownConfig proofps_dd::GUI::m_mdConfig{};
+ImFont* proofps_dd::GUI::m_pFontMarkdownDefault = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownDefaultBold = nullptr;
 ImFont* proofps_dd::GUI::m_pFontMarkdownH1 = nullptr;
 ImFont* proofps_dd::GUI::m_pFontMarkdownH2 = nullptr;
 ImFont* proofps_dd::GUI::m_pFontMarkdownH3 = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownDefaultScaled = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownDefaultBoldScaled = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownH1Scaled = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownH2Scaled = nullptr;
+ImFont* proofps_dd::GUI::m_pFontMarkdownH3Scaled = nullptr;
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 
@@ -4736,6 +4756,28 @@ bool proofps_dd::GUI::initFonts(const float& fScalingFactor)
         getConsole().OLn("GUI::%s(): m_fFontSizePxMarkdownH3Scaled: %f", __func__, m_fFontSizePxMarkdownH3Scaled);
     }
 
+    m_fFontSizePxMarkdownDefaultScaled = fDefaultFontSizeMarkdownPixels * fScalingFactor;
+    if (m_fFontSizePxMarkdownDefaultScaled <= 0.f)
+    {
+        m_fFontSizePxMarkdownDefaultScaled = fDefaultFontSizeMarkdownPixels;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxMarkdownDefaultScaled was non-positive, reset to: %f", __func__, m_fFontSizePxMarkdownDefaultScaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): m_fFontSizePxMarkdownDefaultScaled: %f", __func__, m_fFontSizePxMarkdownDefaultScaled);
+    }
+
+    fEmbeddedDefaultFontSizePixelsScaled = fEmbeddedDefaultFontSizePixels * fScalingFactor;
+    if (fEmbeddedDefaultFontSizePixelsScaled <= 0.f)
+    {
+        fEmbeddedDefaultFontSizePixelsScaled = fEmbeddedDefaultFontSizePixels;
+        getConsole().EOLn("GUI::%s(): fEmbeddedDefaultFontSizePixelsScaled was non-positive, reset to: %f", __func__, fEmbeddedDefaultFontSizePixelsScaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): fEmbeddedDefaultFontSizePixelsScaled: %f", __func__, fEmbeddedDefaultFontSizePixelsScaled);
+    }
+
     if (!ImGui::GetIO().Fonts->AddFontDefault())
     {
         getConsole().EOLn("GUI::%s(): Fonts->AddFontDefault() failed!", __func__);
@@ -5003,11 +5045,21 @@ void proofps_dd::GUI::ImGuiTextTableCurrentCellRightAdjusted(const std::string& 
 bool proofps_dd::GUI::ImGuiInitMarkdown()
 {
     ImGuiIO& io = ImGui::GetIO();
-    m_pFontMarkdownH3 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled);
-    m_pFontMarkdownH2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f);
-    m_pFontMarkdownH1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.15f * 1.15f);
 
-    if (!m_pFontMarkdownH1 || !m_pFontMarkdownH2 || !m_pFontMarkdownH3)
+    m_pFontMarkdownH3 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizeMarkdownH3Pixels);
+    m_pFontMarkdownH2 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizeMarkdownH3Pixels * 1.1f);
+    m_pFontMarkdownH1 = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizeMarkdownH3Pixels * 1.1f * 1.1f);
+    m_pFontMarkdownDefault = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizeMarkdownPixels);
+    m_pFontMarkdownDefaultBold = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arialbd.ttf", fDefaultFontSizeMarkdownPixels);
+
+    m_pFontMarkdownH3Scaled = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled);
+    m_pFontMarkdownH2Scaled = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.1f);
+    m_pFontMarkdownH1Scaled = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownH3Scaled * 1.1f * 1.1f);
+    m_pFontMarkdownDefaultScaled = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxMarkdownDefaultScaled);
+    m_pFontMarkdownDefaultBoldScaled = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arialbd.ttf", m_fFontSizePxMarkdownDefaultScaled);
+
+    if (!m_pFontMarkdownH1 || !m_pFontMarkdownH2 || !m_pFontMarkdownH3 || !m_pFontMarkdownDefault || !m_pFontMarkdownDefaultBold ||
+        !m_pFontMarkdownH1Scaled || !m_pFontMarkdownH2Scaled || !m_pFontMarkdownH3Scaled || !m_pFontMarkdownDefaultScaled || !m_pFontMarkdownDefaultBoldScaled)
     {
         getConsole().EOLn("GUI::%s(): Fonts->AddFontFromFileTTF() failed!", __func__);
         return false;
@@ -5060,6 +5112,8 @@ ImGui::MarkdownImageData proofps_dd::GUI::ImGuiMarkdownImageCb(ImGui::MarkdownLi
     return imageData;
 }
 
+// TODO: in the future if we want to use the scaled markdown fonts, we need to create a separate Cb specifically
+// for using the scaled fonts instead
 void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
 {
     // Call the default first so any settings can be overwritten by our implementation.
@@ -5068,8 +5122,62 @@ void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& mar
     
     switch (markdownFormatInfo_.type)
     {
+    case ImGui::MarkdownFormatType::NORMAL_TEXT:
+    case ImGui::MarkdownFormatType::UNORDERED_LIST:
+        if (start_)
+        {
+            ImGui::PushFont(m_pFontMarkdownDefault);
+        }
+        else
+        {
+            ImGui::PopFont();
+        }
+        break;
     case ImGui::MarkdownFormatType::EMPHASIS:
-        // do not do anything special right now with bold text
+        // bold text
+        // note: *normal emphasis* and **strong emphasis** can be also differentiated, see it in defaultMarkdownFormatCallback()
+        if (start_)
+        {
+            ImGui::PushFont(m_pFontMarkdownDefaultBold);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertFloat4ToU32({ 1.f, 1.f, 0.f, 1.f }));
+        }
+        else
+        {
+            ImGui::PopStyleColor();
+            ImGui::PopFont();
+        }
+        break;
+    case ImGui::MarkdownFormatType::LINK:
+    {
+        // copied colors from ImGui::TextHyperLink()
+        const ImU32 linkColor = ImGui::ColorConvertFloat4ToU32({ 0.4f, 0.6f, 0.8f, 1.f });
+        const ImU32 linkHoverColor = ImGui::ColorConvertFloat4ToU32({ 1.f, 1.f, 1.f, 1.f });
+        if (start_)
+        {
+            ImGui::PushFont(m_pFontMarkdownDefaultScaled);
+            if (markdownFormatInfo_.itemHovered)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, linkHoverColor);
+            }
+            else
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, linkColor);
+            }
+        }
+        else
+        {
+            ImGui::PopStyleColor();
+            ImGui::PopFont();
+            if (markdownFormatInfo_.itemHovered)
+            {
+                ImGui::UnderLine(linkHoverColor);
+            }
+            else
+            {
+                ImGui::UnderLine(linkColor);
+            }
+        }
+    }
         break;
     default:
         ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
