@@ -2165,7 +2165,7 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
         }
         if (ImGui::BeginTabItem("Version History"))
         {
-            drawTab_AboutMenu_VersionHistory(fContentHeightLeft);
+            drawTab_AboutMenu_VersionHistory(fContentHeightLeft + 100);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("License"))
