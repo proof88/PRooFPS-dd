@@ -5154,7 +5154,7 @@ void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& mar
         const ImU32 linkHoverColor = ImGui::ColorConvertFloat4ToU32({ 1.f, 1.f, 1.f, 1.f });
         if (start_)
         {
-            ImGui::PushFont(m_pFontMarkdownDefaultScaled);
+            ImGui::PushFont(m_pFontMarkdownDefault);
             if (markdownFormatInfo_.itemHovered)
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, linkHoverColor);
