@@ -2006,9 +2006,25 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
                     bFileReadErrorReported = true;
                     return;
                 }
-                sFileContent.resize(static_cast<size_t>(nFilesize), '\0');
+                sFileContent.reserve(static_cast<size_t>(nFilesize));
+                sFileContent = "";
                 std::ifstream inFileStream(historyFilename);
-                inFileStream.read(&sFileContent[0], nFilesize);
+                if (!inFileStream.good())
+                {
+                    getConsole().EOLn("GUI::%s(): failed to open file stream!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                constexpr std::streamsize nLineBuffSize = 1024;
+                char cLine[nLineBuffSize];
+                while (!inFileStream.eof() && !inFileStream.bad())
+                {
+                    inFileStream.getline(cLine, nLineBuffSize);
+                    // TODO: we should finally have a strClr() version for std::string
+                    PFL::strClrLeads(cLine);
+                    sFileContent += cLine;
+                    sFileContent += '\n';
+                }
                 bFileLoaded = !inFileStream.bad() && inFileStream.eof();
                 if (!bFileLoaded)
                 {
