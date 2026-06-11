@@ -38,13 +38,16 @@
  - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
    directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
 
- - make sure the LICENSE file is also copied into the main directory of the game;
+ - make sure the HISTORY.md and LICENSE files are also copied into the main directory of the game;
 
  - delete any recently generated log file from the directory;
 
  - except map_test_good, delete any other test-purpose map from gamedata/maps and other unneeded files from other directories under gamedata dir;
 
- - check if game is able to start up from this new release directory, if so then compress and upload to Google Drive (to the usual LAN directory);
+ - check if game is able to start up from this new release directory, and able to display the contents of HISTORY.md and LICENSE files
+   in the About menu
+   
+ - if everything is fine so far, then compress and upload to Google Drive (to the usual LAN directory);
 
  - check if game is able to start up on a separate machine after downloading;
 
