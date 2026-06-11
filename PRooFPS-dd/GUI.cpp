@@ -5149,32 +5149,62 @@ void proofps_dd::GUI::ImGuiMarkdownFormatCb(const ImGui::MarkdownFormatInfo& mar
         break;
     case ImGui::MarkdownFormatType::LINK:
     {
-        // copied colors from ImGui::TextHyperLink()
-        const ImU32 linkColor = ImGui::ColorConvertFloat4ToU32({ 0.4f, 0.6f, 0.8f, 1.f });
-        const ImU32 linkHoverColor = ImGui::ColorConvertFloat4ToU32({ 1.f, 1.f, 1.f, 1.f });
-        if (start_)
+        // links to local anchors don't work here so we should not render them as links, so first
+        // check if this is link to local anchor?
+        bool bRenderAsLink = false;
+        if (markdownFormatInfo_.text)
         {
-            ImGui::PushFont(m_pFontMarkdownDefault);
-            if (markdownFormatInfo_.itemHovered)
+            const char* const pClosingSquareBracket = strstr(markdownFormatInfo_.text, "]");
+            if (pClosingSquareBracket)
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, linkHoverColor);
+                const char* const pOpeningRoundBracket = strstr(pClosingSquareBracket, "(");
+                if (pOpeningRoundBracket && (*(pOpeningRoundBracket + 1) != '#'))
+                {
+                    bRenderAsLink = true;
+                }
+            }
+        }
+
+        if (bRenderAsLink)
+        {
+            // copied colors from ImGui::TextHyperLink()
+            const ImU32 linkColor = ImGui::ColorConvertFloat4ToU32({ 0.4f, 0.6f, 0.8f, 1.f });
+            const ImU32 linkHoverColor = ImGui::ColorConvertFloat4ToU32({ 1.f, 1.f, 1.f, 1.f });
+            if (start_)
+            {
+                ImGui::PushFont(m_pFontMarkdownDefault);
+                if (markdownFormatInfo_.itemHovered)
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, linkHoverColor);
+                }
+                else
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, linkColor);
+                }
             }
             else
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, linkColor);
+                ImGui::PopStyleColor();
+                ImGui::PopFont();
+                if (markdownFormatInfo_.itemHovered)
+                {
+                    ImGui::UnderLine(linkHoverColor);
+                }
+                else
+                {
+                    ImGui::UnderLine(linkColor);
+                }
             }
         }
         else
         {
-            ImGui::PopStyleColor();
-            ImGui::PopFont();
-            if (markdownFormatInfo_.itemHovered)
+            if (start_)
             {
-                ImGui::UnderLine(linkHoverColor);
+                ImGui::PushFont(m_pFontMarkdownDefault);
             }
             else
             {
-                ImGui::UnderLine(linkColor);
+                ImGui::PopFont();
             }
         }
     }
