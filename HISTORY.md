@@ -1,7 +1,5 @@
 # PRooFPS-dd Version History
-
 ## Latest: v0.7.0 Private Beta (Apr 24, 2026)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1vEVX3JWLLVoMms9vUY3BM30BzGeLQ80l/view?usp=sharing).
 
 This version brings the following **NEW FEATURES**:
