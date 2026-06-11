@@ -52,7 +52,6 @@ This version brings the following **BUG FIXES**:
  - At the end of a game, Frag Table is not always automatically shown to the server player and HUD stays visible.
 
 ## Older Versions
-
   * [v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)](#v060-private-beta-dec-13-2025-latest-alp) **<-- Latest ALP!**
   * [v0.5.1 Private Beta (July 20, 2025, ALP)](#v051-private-beta-july-20-2025-alp)
   * [v0.5.0 Private Beta (March 07, 2025, ALP)](#v050-private-beta-march-07-2025-alp)
@@ -85,7 +84,6 @@ NOT all versions have the ALP label, be careful!
 **Meaning of "Latest ALP"**: the most recent version with ALP qualification.
 
 ## v0.6.0 Private Beta (Dec 13, 2025, Latest ALP)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1mQHlZnRwHb49QlxFFJzH5OrF5sCReG67/view?usp=drive_link).
 
 This version brings the following **features**:
@@ -116,7 +114,6 @@ This version brings the following **features**:
  - JetLax cannot be used while crouching.
 
 ## v0.5.1 Private Beta (July 20, 2025, ALP)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1JUiqWUTJKve-xOOZnN4rkNGRUu0_KuPI/view?usp=sharing).
 
 This version brings the long-awaited **fast collision detection** feature.  
@@ -129,7 +126,6 @@ Also, **a fix is delivered**: in the previous release we introduced stairs, but 
 This could lead to a visual glitch or even to get stuck in wall elements on the mutans map, but the fix takes care of this.
 
 ## v0.5.0 Private Beta (March 07, 2025, ALP)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1DJGDVqWaAaNDSENsDF7ofiL028kTMzCB/view?usp=drive_link).
 
 This version brings the following new features:
@@ -151,7 +147,6 @@ This version brings the following behavior changes:
  - auto-crouching for mid-air somersault is now enabled by default in the server settings. The reason is because the jump-crouch-jump combo is too difficult to be pressed on notebook keyboards.
 
 ## v0.4.3 Private Beta (Dec 07, 2024, ALP)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1T5d9ksZYaB6SNq0FGmOuKkerI0h_QFiY/view?usp=drive_link).
 
 This version finally introduces **footstep sounds** during running.
@@ -161,7 +156,6 @@ The following bugs have been also fixed:
  - crash or unspecified behavior could happen in the following situation: a player picking up a weapon, scheduled for auto-switching to, while the game window is inactive, and then map change happens, and game window becomes active again, the previously scheduled auto-switch is executed, with invalid Weapon pointer.
  
 ## v0.4.2 Private Beta (Nov 17, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1J2gwseaGRFgDWa9ZrErKDOC2Z8TNP_og/view?usp=drive_link).
 
 This version does not change anything related to gameplay.  
@@ -170,7 +164,6 @@ This version brings improvements to the map file format:
  - introduced decal assignment which creates decal/poster in defined position with defined size.
 
 ## v0.4.1 Private Beta (Nov 11, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/15FFxkeoAWKrQNeouH-Bqo9yLLXW7ki32/view?usp=drive_link).
 
 This version introduces an essential **performance optimization**, by implementing a **generalized Object Pool**.  
@@ -193,7 +186,6 @@ Finally I **split the Settings menu** into 2 tabs so it looks cleaner.
 I also added an **About menu** into the main menu where some credits are made.
 
 ## v0.3.0 Private Beta (Sep 29, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1-ak_jENCH8j6LGdAwNrJPfRwKzSCSWe3/view?usp=drive_link).
 
 This version brings 2 new weapons:
@@ -203,7 +195,6 @@ This version brings 2 new weapons:
 A background music has been also added to the main menu.
 
 ## v0.2.8.0 Private Beta (Aug 26, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1V4wl4JHIYGnKYFpQFEQwgYPqdISptjk6/view?usp=sharing).
 
 This version brings the following new features:
@@ -221,7 +212,6 @@ the amount of HP decrease is explicitly showed.
  - **Weapon Sounds:** all weapons have reload sounds now. An attempt to fire an empty weapon will trigger a dry fire sound.
 
 ## v0.2.7.0 Private Beta (Aug 01, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/16QYDMoym2gqJh81LV-YYPc8-6XG8Rrl2/view?usp=sharing).
 
 This version brings the following 3 new features:
@@ -232,7 +222,6 @@ This version brings the following 3 new features:
 Note that weapon auto-switch does not work yet when we pick up a better weapon, currently it just switches when the current weapon goes empty.
 
 ## v0.2.6.0 Private Beta (Jul 14, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1nIdAWqx1dva6QCfJVhB7QNCC7bbswZP_/view?usp=drive_link).
 
 This version brings the following new features:
@@ -252,7 +241,6 @@ This version fixes the following issues:
  - Physics: respawn sometimes resulted in mispositioning the player from the selected spawn point.
 
 ## v0.2.5.0 Private Beta (Jun 18, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1aeAHzyzymTpu_TWFa2OqtRaQc43ydbTG/view?usp=drive_link).
 
 This version brings the following new features, all related to the HUD (Heads Up Display):
@@ -269,7 +257,6 @@ This version fixes the following bugs:
  - When a client player's weapon received state update from server, and the player was dead, the weapon could re-appear during the respawn countdown.
 
 ## v0.2.4.0 Private Beta (May 22, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/14LFeXtEJIeAmZXRS7tQooMIVSmikNdog/view?usp=drive_link).
 
 This version brings the following new features:
@@ -285,7 +272,6 @@ This version fixes the following bugs:
  - Bullets were not deleted when game ended, instead they continued their travel after game restart, causing potential damage to players.
 
 ## v0.2.3.0 Private Beta (May 06, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/19oEKgra3Vjw2lB4bMzyWXGh-lkcWOj9u/view?usp=drive_link).
 
 All changes in this version are related to **player respawn functionality**.
@@ -313,7 +299,6 @@ Some **under-the-hood changes**:
  - **FTR: CVAR for Max Framerate:** a new CVAR `gfx_fps_max` is added to the configuration which controls the maximum framerate. Previously 60 was hardcoded, now it is possible to change it from the config file. This is still serving development benchmarking purposes only, so this config is not accessible from the menu GUI.
 
 ## v0.2.2.0 Private Beta (Mar 26, 2024)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1vDM_siI_4xKFpkhx_2AsiFiCdx5YY5fO/view?usp=drive_link).
 
 This version brings a new feature and a bug fix:
@@ -326,7 +311,6 @@ Some **under-the-hood changes** just to mention that are fulfilling prerequisite
  - **FTR: In-Game GUI/HUD:** since v0.2.0.0 a GUI library is used for implementing the Main Menu, but during a game session that was unavailable for displaying GUI elements. In this new version the GUI library can be used also during a game session, which will enable adding UI elements and also replacing the current legacy text rendering implementation that has been around in the graphics engine since 2014 (and probably slower than the library's implementation).
 
 ## v0.2.1.0 Private Beta (Mar 17, 2024, ALP)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/17b1RFXXoP8qCyIGxTNDUV2xEEtLSQLa1/view?usp=sharing).
 
 This version brings 4 major improvements:
@@ -341,7 +325,6 @@ A new CVAR `gui_mainmenu` has been added just in case someone wants to turn this
  - **New Map: Mutans:** the 3rd official map of the game is finally here, created by the mighty [elmisto](https://github.com/elmisto)! This map is a tribute to the legendary [Mutáns-Klán](https://mutansok.gportal.hu/), a team of PRO Starcraft playerz.
 
 ## v0.1.6.1 Private Beta (Dec 29, 2023)
-
 A compressed build for Windows is available for[ download here](https://drive.google.com/file/d/1ruZMjLmeU571It93LEwDnRKt72csj2tv/view?usp=drive_link).
 
 This version addresses 2 issues:
@@ -351,7 +334,6 @@ This version addresses 2 issues:
 A **regression test** has been also added that is triggering map change in loop with 3 players.
 
 ## v0.1.6 Private Beta (Dec 16, 2023)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1sAsAn1u0nTLE2Rqy9q1c2dEVbRPYvXA7/view?usp=drive_link).
 
 The major improvements in this version are related to **gameplay**:
@@ -362,7 +344,6 @@ Connected clients are automatically notified and load the requested map, and con
  - **Loading Screen:** during map loading, a loading screen with the game logo and progress of loading in percentage is shown.
 
 ## v0.1.5 Private Beta (Nov 15, 2023)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1n1HiC5JYTBkp3LGDGQSalIdAIOyuiITO/view?usp=sharing).
 
 The major improvements in this version are related to **gameplay**:
@@ -401,7 +382,6 @@ Major **under-the-hood changes**:
  - a `PRooFPS-dd-as-client.sh` is added for Linux, similar to `PRooFPS-dd-as-client.bat` for Windows.
 
 ## v0.1.4 Private Beta (Oct 13, 2023)
-
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/14iu3raQSt0GcuE3IlXKdd6FQdUTGr7W-/view?usp=share_link).
 
 The major improvements in this version are the **networking improvements** that solved [all the networking-related problems experienced with v0.1.0](https://github.com/proof88/PRooFPS-dd/issues/184):
@@ -425,7 +405,6 @@ This version was tested with 9 players with 20 and 60 Hz tickrate configs and di
 Contains NO changes to gameplay compared to the previous version except fixing [bug of removed players after the first round](https://github.com/proof88/PRooFPS-dd/issues/221).
 
 ## v0.1.3 Private Beta (Aug 20, 2023)
-
 This version contains **no changes to gameplay** compared to the previous version except that the movement of the player might have a slightly different feeling.  
 This version introduces **a lot of changes to overcome network- and physics related issues** experienced with v0.1 Private Beta during the LAN Party event last December: lost packets between server and clients and occasional huge jumps of players.
 
@@ -441,11 +420,9 @@ Expected changes in upcoming v0.1.4 Private Beta:
  - further decrease packet rate in server->client direction by reducing bullet travel updates by doing bullet movement simulation in clients (in the form of prediction, still server remains the authoritive).
 
 ## v0.1.2 Private Beta (May 13, 2023)
-
 This version contains **no changes to gameplay** compared to the previous version, only **massive code refactoring**.
 
 ## v0.1.1 Private Beta (March 10, 2023)
-
 This version contains **no changes to gameplay** compared to the previous version, only changes that **make testing for regression easier**:
  - **FTR: user profile config support**: each user can have their own config files. Currently the config file of the first found user profile is loaded automatically. With this change, there is no more need for `gyorsan.txt` and `server.txt`.
 The following cvars (config variables) are supported so far: **cl_name, cl_server_ip, gfx_windowed, gfx_vsync, net_server, sv_map**.
@@ -457,7 +434,6 @@ Example command line to start up a client: `PRooFPS-dd.exe --net_server=false --
  - **RFR: OPT**: when loading a map and creating blocks, instead of reallocating array every time we are creating a new block, now we count the number of blocks and allocate array with the proper size only once, before actually creating blocks. This also supposed to speed up the loading.
 
 ## v0.1 Private Beta (Dec 16, 2022)
-
 On Dec 16, 2022, the game reached **v0.1 private beta version**, and a compressed build for Windows is available for **[download here](https://drive.google.com/file/d/1K_BQpJHMxsSwKw0s62dnDM7hJs5gK4RP/view?usp=share_link)**.
 
 The Visual C++ Redistributable Package installer is also included in the zip, it might be needed to be installed before running the game (use the x86 version).
