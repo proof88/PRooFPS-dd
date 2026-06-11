@@ -1940,14 +1940,16 @@ void proofps_dd::GUI::drawSettingsMenu(const float& fRemainingSpaceY)
 
 void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
 {
-    const std::string sVersion = proofps_dd::GAME_NAME + std::string(" v") + proofps_dd::GAME_VERSION;
+    const std::string sGameTitle = std::string(proofps_dd::GAME_NAME) + ": a 2.5d multiplayer platform shooter game.";
+    ImGui::TextUnformatted(sGameTitle.c_str());
+
+    ImGui::TextUnformatted("");
+    const std::string sVersion = std::string("Version ") + proofps_dd::GAME_VERSION;
     ImGui::TextUnformatted(sVersion.c_str());
-    ImGui::TextUnformatted("A 2.5d multiplayer platform shooter game.");
-    ImGui::TextUnformatted("Made by West Whiskhyll Entertainment");
     ImGui::SameLine();
-    if (ImGui::TextHyperLink("[follow on facebook]", true))
+    if (ImGui::TextHyperLink("[visit github]", true))
     {
-        browseToUrl("https://www.facebook.com/whiskhyll");
+        browseToUrl("https://github.com/proof88/PRooFPS-dd");
     }
 
     // Expecting NDEBUG to be reliable: https://man7.org/linux/man-pages/man3/assert.3.html
@@ -1958,27 +1960,26 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
 #endif   
     const std::string sBuild = sBuildType + " build (" + __DATE__ + " @ " + __TIME__ + ")";
     ImGui::TextUnformatted(sBuild.c_str());
+    
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("Made by West Whiskhyll Entertainment");
     ImGui::SameLine();
-    if (ImGui::TextHyperLink("[check history]", true))
+    if (ImGui::TextHyperLink("[follow on facebook]", true))
     {
-        browseToUrl("https://github.com/proof88/PRooFPS-dd/blob/main/HISTORY.md");
-    }
-    if (ImGui::TextHyperLink("License: GNU GPL-3.0", true))
-    {
-        browseToUrl("https://github.com/proof88/PRooFPS-dd/blob/main/LICENSE");
+        browseToUrl("https://www.facebook.com/whiskhyll");
     }
 
     ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Using PR00F's Game Engine");
-    ImGui::SameLine();
-    if (ImGui::TextHyperLink("[visit github]", true))
-    {
-        browseToUrl("https://github.com/proof88/PGE");
-    }
-    ImGui::TextUnformatted(PGE::getVersionString());
+    const std::string sEngineInfo = std::string("Powered by PGE ") + PGE::getVersionString();
+    ImGui::TextUnformatted(sEngineInfo.c_str());
+
     if (ImGui::TextHyperLink("Licensed under GNU LGPL-3.0 License", true))
     {
         browseToUrl("https://github.com/proof88/PGE/blob/master/LICENSE");
+    }
+    if (ImGui::TextHyperLink("[visit github]", true))
+    {
+        browseToUrl("https://github.com/proof88/PGE");
     }
 }
 
