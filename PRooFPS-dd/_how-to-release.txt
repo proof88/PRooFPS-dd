@@ -38,7 +38,7 @@
  - make a new directory somewhere based on the copy of the previous released game directory, and from our develop
    directory, copy the binaries and the "gamedata" directory, fully overwriting everything;
 
- - make sure the HISTORY.md and LICENSE files are also copied into the main directory of the game;
+ - make sure HISTORY.md, THIRD-PARTY.md and LICENSE files are also copied into the main directory of the game;
 
  - delete any recently generated log file from the directory;
 
@@ -55,6 +55,9 @@
    (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
  - update the version changes page "History" (HISTORY.md)
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
+
+ - update the "3rd-Party Assets" page (THIRD-PARTY.md)
    (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
  - make sure you pull the updated README.md, and then push a new commit including the changes regarding the

@@ -2214,71 +2214,102 @@ void proofps_dd::GUI::drawTab_AboutMenu_License(const float& fContentHeightLeft)
     }
 }
 
-void proofps_dd::GUI::drawTab_AboutMenu_3rdPartyAssets()
+void proofps_dd::GUI::drawTab_AboutMenu_3rdPartyAssets(const float& fContentHeightLeft)
 {
-    ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\" by Kevin MacLeod");
-    if (ImGui::TextHyperLink("[visit incompetech.com for more royalty-free music]", true))
+    // TODO: RFR: same as drawTab_AboutMenu_VersionHistory(), shall be extracted into class
+
+    /* when ran by a user as a released version, it will be historyFilename1, but
+       when ran from dev directory, it will be historyFilename2.
+       This way, it is always up-to-date with the github wiki version, no double-edit needed. */
+
+    static constexpr char* const assetsFilename1 = "THIRD-PARTY.md";
+    static constexpr char* const assetsFilename2 = "../THIRD-PARTY.md";
+
+    const char* const assetsFilename =
+        PFL::fileExists(assetsFilename1) ? assetsFilename1 :
+        (PFL::fileExists(assetsFilename2) ? assetsFilename2 : nullptr);
+
+    if (!assetsFilename)
     {
-        browseToUrl("https://incompetech.com/music/royalty-free/music.html");
-    }
-    if (ImGui::TextHyperLink("Licensed under Creative Commons: By Attribution 4.0 License", true))
-    {
-        browseToUrl("http://creativecommons.org/licenses/by/4.0/");
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        static bool bFileExistsErrorReported = false;
+        if (!bFileExistsErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): missing THIRD-PARTY.md!", __func__);
+            bFileExistsErrorReported = true;
+        }
+        return;
     }
 
-    ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Game End Music:");
-    ImGui::SameLine();
-    if (ImGui::TextHyperLink("\"Fart with Musical Instrument\" by X Sound Effect", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=lCCwBYcPads");
-    }
+    // make sure we load the file only once, since we are in a loop (being continuously called back by main menu draw logic)
+    static std::string sFileContent{};
+    static bool bFileLoaded = false;
+    static bool bFileReadErrorReported = false;
 
-    ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Smoke Texture:");
-    ImGui::SameLine();
-    if (ImGui::TextHyperLink("OpenGameArt.org", true))
+    try
     {
-        browseToUrl("https://opengameart.org/node/7758");
+        if (!bFileLoaded)
+        {
+            if (!bFileReadErrorReported)
+            {
+                const uintmax_t nFilesize = std::filesystem::file_size(assetsFilename);
+                if (nFilesize > 1024ull * 1024)
+                {
+                    // nonsense filesize, THIRD-PARTY.md should never be over 1 MiB
+                    getConsole().EOLn("GUI::%s(): nonsense file size!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                // fileSize + 1 to make sure we have terminating null char at the end even if for any reason
+                // we really use all our reserved buffer (which is unlikely though due to trimming but
+                // without this the code would be bad)
+                sFileContent.reserve(static_cast<size_t>(nFilesize + 1));
+                sFileContent = "";
+                std::ifstream inFileStream(assetsFilename);
+                if (!inFileStream.good())
+                {
+                    getConsole().EOLn("GUI::%s(): failed to open file stream!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                constexpr std::streamsize nLineBuffSize = 1024;
+                char cLine[nLineBuffSize];
+                while (!inFileStream.eof() && !inFileStream.bad())
+                {
+                    inFileStream.getline(cLine, nLineBuffSize);
+                    // TODO: we should finally have a strClr() version for std::string
+                    PFL::strClrLeads(cLine);
+                    sFileContent += cLine;
+                    sFileContent += '\n';
+                }
+                bFileLoaded = !inFileStream.bad() && inFileStream.eof();
+                if (!bFileLoaded)
+                {
+                    getConsole().EOLn("GUI::%s(): failed to stream in the file!", __func__);
+                    bFileReadErrorReported = true;
+                    sFileContent = "";
+                    return;
+                }
+            }
+        }
+        if (bFileLoaded && !bFileReadErrorReported)
+        {
+            // for newer version: ImGui::BeginChild("ChildR", ImVec2(0, 260), ImGuiChildFlags_Borders, ImGuiWindowFlags_None);
+            ImGui::BeginChild("ScrollFrameAssets", ImVec2(0, fContentHeightLeft), true, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
+            {
+                ImGuiRenderMarkdown(sFileContent);
+            }
+            ImGui::EndChild();
+        }
     }
-    if (ImGui::TextHyperLink("Licensed under Creative Commons: CC0 1.0 Universal License", true))
+    catch (const std::exception& e)
     {
-        browseToUrl("https://creativecommons.org/publicdomain/zero/1.0/");
-    }
-
-    ImGui::TextUnformatted("");
-    ImGui::TextUnformatted("Jump pad Arrow Texture:");
-    ImGui::SameLine();
-    if (ImGui::TextHyperLink("Flaticon.com", true))
-    {
-        browseToUrl("https://www.flaticon.com/free-icon/up-arrow_5181212?term=arrow&related_id=5181212");
-    }
-    if (ImGui::TextHyperLink("Licensed under Flaticon License", true))
-    {
-        browseToUrl("https://www.flaticon.com/legal#nav-flaticon-agreement");
-    }
-
-    ImGui::TextUnformatted("");
-    if (ImGui::TextHyperLink("Stomach Growling Sound Effect (on Game Sounds Youtube Channel)", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=NPTBnYUb9pc");
-    }
-    if (ImGui::TextHyperLink("World's Longest Flappy Fart, from Catapult Reservatory, LLC", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=ZuRJWukmr2g");
-    }
-    if (ImGui::TextHyperLink("Fart SFX, Long and Deep, from Catapult Reservatory, LLC", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=A_TIwbqMw_c");
-    }
-    if (ImGui::TextHyperLink("Crazy dog laughing meme template (on Effectus lab Youtube Channel)", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=_oHXa4y1BOM");
-    }
-    if (ImGui::TextHyperLink("Small group moderate applause (on Free Sound Effect Youtube Channel)", true))
-    {
-        browseToUrl("https://www.youtube.com/watch?v=UovDfgbGeXk");
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        if (!bFileReadErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): exception: %s", __func__, e.what());
+            bFileReadErrorReported = true;
+        }
     }
 }
 
@@ -2314,7 +2345,7 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
         }
         if (ImGui::BeginTabItem("3rd Party Assets"))
         {
-            drawTab_AboutMenu_3rdPartyAssets();
+            drawTab_AboutMenu_3rdPartyAssets(fContentHeightLeft + 100);
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
