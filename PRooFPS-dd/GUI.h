@@ -258,7 +258,8 @@ namespace proofps_dd
         static void drawSettingsMenu(const float& fRemainingSpaceY);
         static void drawTab_AboutMenu_GeneralInfo();
         static void drawTab_AboutMenu_VersionHistory(const float& fContentHeightLeft);
-        static void drawTab_AboutMenu_License();
+        static void drawTab_AboutMenu_License(const float& fContentHeightLeft);
+        static void drawTab_AboutMenu_3rdPartyAssets();
         static void drawAboutMenu(const float& fRemainingSpaceY);
         static void drawWindowForMainMenu();
 

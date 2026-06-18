@@ -1981,6 +1981,11 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
     {
         browseToUrl("https://github.com/proof88/PGE");
     }
+
+    ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("This program comes with ABSOLUTELY NO WARRANTY.");
+    ImGui::TextWrapped("This is free software, and you are welcome to redistribute it under certain conditions.");
+    ImGui::TextUnformatted("Read the License for details.");
 }
 
 void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeightLeft)
@@ -1992,7 +1997,7 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
     static constexpr char* const historyFilename1 = "HISTORY.md";
     static constexpr char* const historyFilename2 = "../HISTORY.md";
 
-    const char* historyFilename =
+    const char* const historyFilename =
         PFL::fileExists(historyFilename1) ? historyFilename1 :
         (PFL::fileExists(historyFilename2) ? historyFilename2 : nullptr);
 
@@ -2027,7 +2032,10 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
                     bFileReadErrorReported = true;
                     return;
                 }
-                sFileContent.reserve(static_cast<size_t>(nFilesize));
+                // fileSize + 1 to make sure we have terminating null char at the end even if for any reason
+                // we really use all our reserved buffer (which is unlikely though due to trimming but
+                // without this the code would be bad)
+                sFileContent.reserve(static_cast<size_t>(nFilesize + 1));
                 sFileContent = "";
                 std::ifstream inFileStream(historyFilename);
                 if (!inFileStream.good())
@@ -2051,6 +2059,7 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
                 {
                     getConsole().EOLn("GUI::%s(): failed to stream in the file!", __func__);
                     bFileReadErrorReported = true;
+                    sFileContent = "";
                     return;
                 }
             }
@@ -2058,7 +2067,7 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
         if (bFileLoaded && !bFileReadErrorReported)
         {
             // for newer version: ImGui::BeginChild("ChildR", ImVec2(0, 260), ImGuiChildFlags_Borders, ImGuiWindowFlags_None);
-            ImGui::BeginChild("ScrollFrame", ImVec2(0, fContentHeightLeft), true, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
+            ImGui::BeginChild("ScrollFrameVersions", ImVec2(0, fContentHeightLeft), true, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
             {
                 ImGuiRenderMarkdown(sFileContent);
             }
@@ -2076,7 +2085,136 @@ void proofps_dd::GUI::drawTab_AboutMenu_VersionHistory(const float& fContentHeig
     }
 }
 
-void proofps_dd::GUI::drawTab_AboutMenu_License()
+void proofps_dd::GUI::drawTab_AboutMenu_License(const float& fContentHeightLeft)
+{
+    /* when ran by a user as a released version, it will be licenseFilename1, but
+       when ran from dev directory, it will be licenseFilename2.
+       This way, it is always up-to-date with the github wiki version, no double-edit needed. */
+
+    static constexpr char* const licenseFilename1 = "LICENSE";
+    static constexpr char* const licenseFilename2 = "../LICENSE";
+
+    const char* const licenseFilename =
+        PFL::fileExists(licenseFilename1) ? licenseFilename1 :
+        (PFL::fileExists(licenseFilename2) ? licenseFilename2 : nullptr);
+
+    if (!licenseFilename)
+    {
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        static bool bFileExistsErrorReported = false;
+        if (!bFileExistsErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): missing LICENSE file!", __func__);
+            bFileExistsErrorReported = true;
+        }
+        return;
+    }
+
+    // make sure we load the file only once, since we are in a loop (being continuously called back by main menu draw logic)
+    //static std::string sFileContent{};
+    static std::vector<std::string> sFileContent{};
+    static int nLineCount = 0;
+    static bool bFileLoaded = false;
+    static bool bFileReadErrorReported = false;
+
+    try
+    {
+        if (!bFileLoaded)
+        {
+            if (!bFileReadErrorReported)
+            {
+                const uintmax_t nFilesize = std::filesystem::file_size(licenseFilename);
+                if (nFilesize > 1024ull * 1024)
+                {
+                    // nonsense filesize, LICENSE should never be over 1 MiB
+                    getConsole().EOLn("GUI::%s(): nonsense file size!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                // We could simply load the file like this, however we need to stick to
+                // line-by-line reading, to be able to hand over the lines separately
+                // to ImGuiListClipper, because with ImGui::TextWrapped() I have
+                // overflow as explained below. 
+                //    fileSize + 1 to make sure we have terminating null char at the end
+                //   sFileContent.resize(static_cast<size_t>(nFilesize + 1));
+                //   std::ifstream inFileStream(licenseFilename);
+                //   if (!inFileStream.good())
+                //   {
+                //       getConsole().EOLn("GUI::%s(): failed to open file stream!", __func__);
+                //       bFileReadErrorReported = true;
+                //       return;
+                //   }
+                //   inFileStream.read(&sFileContent[0], static_cast<std::streamsize>(nFilesize));
+                //   bFileLoaded = !inFileStream.bad() && inFileStream.eof();
+                std::ifstream inFileStream(licenseFilename);
+                if (!inFileStream.good())
+                {
+                    getConsole().EOLn("GUI::%s(): failed to open file stream!", __func__);
+                    bFileReadErrorReported = true;
+                    return;
+                }
+                constexpr std::streamsize nLineBuffSize = 1024;
+                char cLine[nLineBuffSize];
+                while (!inFileStream.eof() && !inFileStream.bad())
+                {
+                    inFileStream.getline(cLine, nLineBuffSize);
+                    // TODO: we should finally have a strClr() version for std::string
+                    PFL::strClrLeads(cLine);
+                    sFileContent.push_back(cLine);
+                    sFileContent.back() += '\n';
+                    nLineCount++;
+                }
+                bFileLoaded = !inFileStream.bad() && inFileStream.eof();
+                if (!bFileLoaded)
+                {
+                    getConsole().EOLn("GUI::%s(): failed to stream in the file!", __func__);
+                    bFileReadErrorReported = true;
+                    sFileContent.clear();
+                    return;
+                }
+            }
+        }
+        if (bFileLoaded && !bFileReadErrorReported)
+        {
+            // for newer version: ImGui::BeginChild("ChildR", ImVec2(0, 260), ImGuiChildFlags_Borders, ImGuiWindowFlags_None);
+            ImGui::BeginChild("ScrollFrameLicense", ImVec2(0, fContentHeightLeft), true, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
+            {
+                // with TextWrapped, casting to smaller type exception happens in ImFont::RenderText() due to ImDrawIdx overflow.
+                // Technically there are 2 ways to overcome this limitation (see ImDrawIdx comments) but for now I rather not change ImGui
+                // config only to workaround this, instead I'm using ImGuiListClipper + many Text calls.
+                //ImGui::TextWrapped("%s", sFileContent.c_str());
+
+                ImGui::PushFont(m_pFontMarkdownDefault);
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+                {
+                    ImGuiListClipper clipper;
+                    clipper.Begin(nLineCount);
+                    while (clipper.Step())
+                    {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                        {
+                            ImGui::TextWrapped("%s", sFileContent[i].c_str());
+                        }
+                    }
+                }
+                ImGui::PopStyleVar();
+                ImGui::PopFont();
+            }
+            ImGui::EndChild();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        // avoid flooding, since we are in a loop (being continuously called back by main menu draw logic)
+        if (!bFileReadErrorReported)
+        {
+            getConsole().EOLn("GUI::%s(): exception: %s", __func__, e.what());
+            bFileReadErrorReported = true;
+        }
+    }
+}
+
+void proofps_dd::GUI::drawTab_AboutMenu_3rdPartyAssets()
 {
     ImGui::TextUnformatted("");
     ImGui::TextUnformatted("Menu Music: \"Monkeys Spinning Monkeys\" by Kevin MacLeod");
@@ -2171,7 +2309,12 @@ void proofps_dd::GUI::drawAboutMenu(const float& fRemainingSpaceY)
         }
         if (ImGui::BeginTabItem("License"))
         {
-            drawTab_AboutMenu_License();
+            drawTab_AboutMenu_License(fContentHeightLeft + 100);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("3rd Party Assets"))
+        {
+            drawTab_AboutMenu_3rdPartyAssets();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
