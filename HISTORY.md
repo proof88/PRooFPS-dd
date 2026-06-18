@@ -1,4 +1,29 @@
 # PRooFPS-dd Version History
+## TBD: v0.7.1 Private Beta (TBD, 2026)
+A compressed build for Windows is available for TBD.
+
+This version brings the following **NEW FEATURES**:
+ - **Gameplay:** for round-based game mode, **Round Time Limit** can be set.  
+   This is the maximum amount of time a round can last.  
+   If this limit is hit, the team having more alive players wins the round.  
+   No win is registered if both teams have exactly same number of alive players when this time limit is hit.
+ - **Gameplay:** for round-based game mode, **Round Prepare Time** can be set.  
+   This is the short preparation period at the beginning of each round when players cannot move.
+ - **GUI:** at the bottom of the screen the **Remaining Time is displayed**.  
+   In all game modes this takes the game time limit into account, but in round-based game mode it also considers the round time limit if set:  
+   whichever expires sooner, will be used to show the countdown clock.
+
+This version brings the following **CHANGES AND ENHANCEMENTS**:
+ - **Menu: About** has been reorganized, now with **markdown rendering, HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
+
+This version brings the following **BUG FIXES**:
+ - **Gameplay:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
+   This happened in lower FPS situations when multiple game ticks were executed within a single frame.
+ - **GUI:** XHair text was not removed during map change.
+
+**LIMITATIONS Still in Effect:**
+ - Shotgun does not contribute to player aim accuracy stats.
+
 ## Latest: v0.7.0 Private Beta (Apr 24, 2026)
 A compressed build for Windows is available for [download here](https://drive.google.com/file/d/1vEVX3JWLLVoMms9vUY3BM30BzGeLQ80l/view?usp=sharing).
 
