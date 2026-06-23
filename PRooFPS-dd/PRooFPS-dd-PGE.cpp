@@ -236,7 +236,6 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getAudio().loadSound(m_sounds.m_sndRoundWin, std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Small_group_moderate_applause_Youtube_Free_Sound_Effect.mp3");
     m_sounds.m_sndRoundWin.setSingleInstance(true);
     
-    getAudio().loadSound(m_sounds.m_sndLetsgo,        std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/locknload.wav");
     getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
 
@@ -1466,8 +1465,6 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         {
             m_gui.showMandatoryGameModeConfigMenu();
         }
-        
-        getAudio().playSound(m_sounds.m_sndLetsgo);
     }
     else
     {
