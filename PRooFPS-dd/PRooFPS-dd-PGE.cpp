@@ -233,17 +233,34 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_sounds.m_sndMenuMusic.setSingleInstance(true);
     getAudio().loadSound(m_sounds.m_sndEndgameMusic, std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Fart_with_Musical_Instrument_XSoundEffect.mp3");
     m_sounds.m_sndEndgameMusic.setSingleInstance(true);
-    getAudio().loadSound(m_sounds.m_sndRoundWin, std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Small_group_moderate_applause_Youtube_Free_Sound_Effect.mp3");
+
+    getAudio().loadSound(m_sounds.m_sndRoundStart, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Boat-Horn_Sound-Effects-YT.wav");
+    m_sounds.m_sndRoundStart.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndRoundWin, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Small_group_moderate_applause_Youtube_Free_Sound_Effect.mp3");
     m_sounds.m_sndRoundWin.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndRoundEnd, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Chan-Chan-Chan-Suspense_Sound-Effects-YT.wav");
+    m_sounds.m_sndRoundEnd.setSingleInstance(true);
+
+    getAudio().loadSound(m_sounds.m_sndBassImpact, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Bass-Impact_Game-Sounds-YT.wav");
+    m_sounds.m_sndBassImpact.setSingleInstance(true);
+
+    getAudio().loadSound(m_sounds.m_sndCountdown_1s_long, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Clock-countdown-bleeps_1s-long_Free-Sound-Effect-YT.wav");
+    m_sounds.m_sndCountdown_1s_long.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndCountdown_1s_short, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Clock-countdown-bleeps_1s-short_Free-Sound-Effect-YT.wav");
+    m_sounds.m_sndCountdown_1s_short.setSingleInstance(true);
     
     getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
+    getAudio().loadSound(m_sounds.m_sndPlayerBruh,    std::string(proofps_dd::GAME_AUDIO_DIR) + "player/Bruh-MEME_Game-Sounds-YT.wav");
 
     static constexpr float SndPlayerDieDistMin = 6.f;
     static constexpr float SndPlayerDieDistMax = 12.f;
 
     m_sounds.m_sndPlayerDie.set3dMinMaxDistance(SndPlayerDieDistMin, SndPlayerDieDistMax);
     m_sounds.m_sndPlayerDie.set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
+
+    m_sounds.m_sndPlayerBruh.set3dMinMaxDistance(SndPlayerDieDistMin, SndPlayerDieDistMax);
+    m_sounds.m_sndPlayerBruh.set3dAttenuation(SoLoud::AudioSource::ATTENUATION_MODELS::LINEAR_DISTANCE, 1.f);
 
     getConsole().OOOLn("PRooFPSddPGE::onGameInitialized() done!");
 

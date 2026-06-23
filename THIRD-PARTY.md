@@ -21,7 +21,6 @@ Misc:
 [Bass Impact (on Game Sounds Youtube Channel)](https://www.youtube.com/watch?v=xxM4Om-O_os)  
 [Boat Horn (on Sound Effects - No Copyright & Free Download Youtube Channel)](https://www.youtube.com/watch?v=jFBu_o6PqQs)  
 [Clock countdown bleeps (on Free Sound Effect Youtube Channel)](https://www.youtube.com/watch?v=tooeuSjF-U4)  
-[Contest Winner Announcement (on Sound Effects - No Copyright & Free Download Youtube Channel)](https://www.youtube.com/watch?v=6y7o-C_4-cU)  
 [Chan Chan Chan Suspense (on Sound Effects - No Copyright & Free Download Youtube Channel)](https://www.youtube.com/watch?v=hackvzhW6aE)
 
 ## Textures
