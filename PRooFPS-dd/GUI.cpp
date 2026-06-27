@@ -93,7 +93,8 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     proofps_dd::Maps& maps,
     proofps_dd::Networking& networking,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-    const PgeObjectPool<proofps_dd::Smoke>& smokes)
+    const PgeObjectPool<proofps_dd::Smoke>& smokes,
+    proofps_dd::Sounds& sounds)
 {
     // we are expecting a PGE instance which is also static since PGE is singleton, it looks ok a singleton object saves ref to a singleton object ...
     // Note that the following should not be touched here as they are not fully constructed when we are here:
@@ -107,6 +108,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     m_pNetworking = &networking;
     m_pMapPlayers = &mapPlayers;
     m_pSmokes = &smokes;
+    m_pSounds = &sounds;
     return m_guiInstance;
 }
 
@@ -635,6 +637,7 @@ proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
 const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
+proofps_dd::Sounds* proofps_dd::GUI::m_pSounds = nullptr;
 
 proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerSoftRestartGame{};
 proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerHardRestartGame{};
@@ -2823,9 +2826,8 @@ void proofps_dd::GUI::drawDearImGuiCb()
             {
                 drawCurrentPlayerInfo(it->second);
                 handleSpectatorMode(it->second);
+                drawGameModeBasicStuff(it->second);
             }
-
-            drawGameModeBasicStuff();
 
             ImGui::PopFont();
 
@@ -3170,7 +3172,7 @@ int proofps_dd::GUI::getEarliestTimeExpirationSeconds()
     return static_cast<int>(gm->getTimeRemainingMillisecs() / 1000);
 }
 
-void proofps_dd::GUI::drawGameModeBasicStuff()
+void proofps_dd::GUI::drawGameModeBasicStuff(const proofps_dd::Player& currentPlayer)
 {
     assert(m_pMinimap);  // initialize() created it before configuring drawDearImGuiCb() to be the callback for PURE
 
@@ -3224,6 +3226,28 @@ void proofps_dd::GUI::drawGameModeBasicStuff()
     if (bRedText || bYellowText)
     {
         ImGui::PopStyleColor();
+    }
+
+    static int nPrevSeconds{};
+    // playing sound only for non-spectating players is actually a trick:
+    // if we change map, then right after loading the new map, for a very short period of time the remaining time is not updated,
+    // therefore it could be either 0 or other value triggering playing sound. So I don't play such sound if player just has recently
+    // booted up. The remaining time will be very quickly updated in the meantime.
+    const bool bCurrentPlayerRecentlyBootedUp =
+        (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - currentPlayer.getTimeBootedUp()).count() < 2);
+    const bool bPlaySound = (nPrevSeconds != nSeconds) && (bRedText || bYellowText) && !bCurrentPlayerRecentlyBootedUp;
+    if (bPlaySound)
+    {
+        nPrevSeconds = nSeconds;
+        assert(m_pSounds);
+        if (nSeconds > 0)
+        {
+            m_pPge->getAudio().playSound(m_pSounds->m_sndCountdown_1s_short);
+        }
+        else
+        {
+            m_pPge->getAudio().playSound(m_pSounds->m_sndCountdown_1s_long);
+        }
     }
 }
 

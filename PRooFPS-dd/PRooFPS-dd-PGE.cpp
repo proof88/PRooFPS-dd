@@ -96,7 +96,7 @@ proofps_dd::PRooFPSddPGE::PRooFPSddPGE(const char* gameTitle) :
         m_sounds,
         *this),
     m_config(Config::getConfigInstance(*this, m_maps)),
-    m_gui(GUI::getGuiInstance(*this, *this, m_config, m_maps, *this, m_mapPlayers, this->getSmokePool())),
+    m_gui(GUI::getGuiInstance(*this, *this, m_config, m_maps, *this, m_mapPlayers, this->getSmokePool(), m_sounds)),
     m_maps(getAudio(), getConfigProfiles(), getPure()),
     m_fps(GAME_MAXFPS_DEF),
     m_fps_counter(0),

@@ -27,6 +27,7 @@
 #include "PureObject3dInOutSlider.h"
 #include "ServerEventLister.h"
 #include "Smoke.h"
+#include "Sounds.h"
 #include "XHair.h"
 
 // PGE has, but here in application we dont have imconfig.h thus we should not try including it!
@@ -79,7 +80,8 @@ namespace proofps_dd
             proofps_dd::Maps& maps,
             proofps_dd::Networking& networking,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
-            const PgeObjectPool<proofps_dd::Smoke>& smokes);   /**< Gets the singleton instance. */
+            const PgeObjectPool<proofps_dd::Smoke>& smokes,
+            proofps_dd::Sounds& sounds);   /**< Gets the singleton instance. */
 
         static const char* getLoggerModuleName();
         static CConsole& getConsole();
@@ -177,6 +179,7 @@ namespace proofps_dd
         static Networking* m_pNetworking;
         static std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* m_pMapPlayers;
         static const PgeObjectPool<proofps_dd::Smoke>* m_pSmokes;
+        static Sounds* m_pSounds;
 
         /* Main Menu Handling */
 
@@ -271,7 +274,7 @@ namespace proofps_dd
         static void updateXHair();
         static void drawCurrentPlayerInfo(const proofps_dd::Player& player);
         static int getEarliestTimeExpirationSeconds();
-        static void drawGameModeBasicStuff();
+        static void drawGameModeBasicStuff(const proofps_dd::Player& currentPlayer);
         static void updateDeathKillEvents();
         static void updateItemPickupEvents();
         static void updatePlayerHpChangeEvents();
