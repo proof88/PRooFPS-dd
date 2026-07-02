@@ -1046,76 +1046,90 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
     serverDeleteAllBulletsNow(*GameMode::getGameMode(), *m_gui.getXHair(), cameraGetShakeForce());
 }
 
-void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
+void proofps_dd::PRooFPSddPGE::updateAudioForGameModeShared(const GameMode* gm)
 {
-    // both server and client instances execute this
-    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
-
-    const GameMode* const gm = GameMode::getGameMode();
     assert(gm);
 
-    if (gm->isRoundBased())
+    if (gm->hasJustBeenWonThisTick())
     {
-        const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
-        if (trg)
+        // come here only once
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndEndgameMusicHandle))
         {
-            // if a client connects when we are already in WaitForReset, play sound ONLY IF there is still enough time for that
-            if (trg->getFSM().getTimeRemainingInCurrentStateSeconds() >= 2)
-            {
-                // hasJustTransitionedTo_RoundWaitForResetState_InThisTick() is not set if game is won in this same tick, so
-                // we have to check them separately in if-then-else
-                if (gm->hasJustBeenWonThisTick())
-                {
-                    // no more rounds left in this game because the game session itself ended.
-                    if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
-                    {
-                        m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
-                    }
-                }
-                else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
-                {
-                    // still there is at least 1 more round of this game session so we could also play "suspense" sound too,
-                    // but the "win" sound should be played only if this round was actually won!
-                    const int iDivider = trg->hasCurrentRoundJustBeenWon_InThisTick() ? 3 : 2;
-                    // we don't have round counter implemented so we just sum team wins counts to "randomize" which sound to play,
-                    // this way all network instances will play the same sound without explicit sync since they are already synced
-                    // the team win counts
-                    const auto nTeamsWinsCount = trg->getTeamRoundWins(1) + trg->getTeamRoundWins(2);
-                    const int nRemainder = nTeamsWinsCount % iDivider;
-                    switch (nRemainder)
-                    {
-                    case 0:
-                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundEndHandle))
-                        {
-                            m_sounds.m_sndRoundEndHandle = getAudio().playSound(m_sounds.m_sndRoundEnd);
-                        }
-                        break;
-                    case 1:
-                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndBassImpactHandle))
-                        {
-                            m_sounds.m_sndBassImpactHandle = getAudio().playSound(m_sounds.m_sndBassImpact);
-                        }
-                        break;
-                    default: /* case 2 */
-                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
-                        {
-                            m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
-                        }
-                    }
-                }
-            }
+            m_sounds.m_sndEndgameMusicHandle = getAudio().playSound(m_sounds.m_sndEndgameMusic);
         }
     }
+
+    if (!gm->isRoundBased())
+    {
+        return;
+    }
+
+    const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
+    if (!trg)
+    {
+        return;
+    }
+    // if a client connects when we are already in WaitForReset, play sound ONLY IF there is still enough time for that
+    if (trg->getFSM().getTimeRemainingInCurrentStateSeconds() < 2)
+    {
+        return;
+    }
+
+    // hasJustTransitionedTo_RoundWaitForResetState_InThisTick() is not set if game is won in this same tick, so
+    // we have to check them separately in if-then-else
+    if (gm->hasJustBeenWonThisTick())
+    {
+        // no more rounds left in this game because the game session itself ended.
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
+        {
+            m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
+        }
+        return;
+    }
+
+    if (!trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
+    {
+        return;
+    }
+
+    // still there is at least 1 more round of this game session so we could also play "suspense" sound too,
+    // but the "win" sound should be played only if this round was actually won!
+    const int iDivider = trg->hasCurrentRoundJustBeenWon_InThisTick() ? 3 : 2;
+    // we don't have round counter implemented so we just sum team wins counts to "randomize" which sound to play,
+    // this way all network instances will play the same sound without explicit sync since they are already synced
+    // the team win counts
+    const auto nTeamsWinsCount = trg->getTeamRoundWins(1) + trg->getTeamRoundWins(2);
+    const int nRemainder = nTeamsWinsCount % iDivider;
+    switch (nRemainder)
+    {
+    case 0:
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundEndHandle))
+        {
+            m_sounds.m_sndRoundEndHandle = getAudio().playSound(m_sounds.m_sndRoundEnd);
+        }
+        break;
+    case 1:
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndBassImpactHandle))
+        {
+            m_sounds.m_sndBassImpactHandle = getAudio().playSound(m_sounds.m_sndBassImpact);
+        }
+        break;
+    default: /* case 2 */
+        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
+        {
+            m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
+        }
+    }
+}
+
+void proofps_dd::PRooFPSddPGE::updateVisualsForGameModeShared(const GameMode* gm)
+{
+    assert(gm);
 
     if (gm->hasJustBeenWonThisTick())
     {
         // come here only once
         getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
-
-        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndEndgameMusicHandle))
-        {
-            m_sounds.m_sndEndgameMusicHandle = getAudio().playSound(m_sounds.m_sndEndgameMusic);
-        }
         m_gui.hideInGameMenu();
         m_gui.showGameObjectives();
         m_gui.getXHair()->hide();
@@ -1125,68 +1139,81 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
             playerPair.second.hide();
             playerPair.second.forceDeactivateCurrentInventoryItem();
         }
+        return;
     }
-    else
+    
+    if (!gm->isRoundBased())
     {
-        if (gm->isRoundBased())
-        {
-            const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
-            if (trg)
-            {
-                if (trg->hasJustTransitionedTo_RoundPrepareState_InThisTick())
-                {
-                    // come here only once
-                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
-                    m_gui.getServerEvents()->addNewRoundEvent();
-                    if (getNetwork().isServer())
-                    {
-                        serverNewRound();
-                    }
-                    for (auto& playerPair : m_mapPlayers)
-                    {
-                        playerPair.second.forceDeactivateCurrentInventoryItem();
-                    }
-                }
-                else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
-                {
-                    // come here only once
-                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
-                    m_gui.getXHair()->hideAboveText();
-                }
-                else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
-                {
-                    // come here only once
-                    getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
-                    m_gui.getXHair()->showAboveText("ROUND ENDED!");
-                    m_gui.getServerEvents()->addRoundEndEvent();
-                }
+        return;
+    }
 
-                static std::string sXHairAboveText;  // hopefully fast being static
-                const auto nTimeRemainingInCurrentRoundStateSecs = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
-                switch (trg->getFSM().getState())
-                {
-                case TeamRoundGameMode::RoundStateFSM::RoundState::Prepare:
-                    sXHairAboveText = "COMBAT STARTS IN " + std::to_string(nTimeRemainingInCurrentRoundStateSecs) + " ...";
-                    m_gui.getXHair()->showAboveText(sXHairAboveText);
-                    break;
-                case TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset:
-                    sXHairAboveText = "ROUND ENDED, RELAX TIME: " + std::to_string(nTimeRemainingInCurrentRoundStateSecs);
-                    m_gui.getXHair()->showAboveText(sXHairAboveText);
-                    break;
-                default: /* RoundState::Play */
-                    /* no-op */
-                    break;
-                }
-            }
-            else
-            {
-                getConsole().EOLn("PRooFPSddPGE::%s() ERROR: trg is null!", __func__);
-            }
+    const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
+    if (!trg)
+    {
+        getConsole().EOLn("PRooFPSddPGE::%s() ERROR: trg is null!", __func__);
+        return;
+    }
+
+    if (trg->hasJustTransitionedTo_RoundPrepareState_InThisTick())
+    {
+        // come here only once
+        getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
+        m_gui.getServerEvents()->addNewRoundEvent();
+        if (getNetwork().isServer())
+        {
+            serverNewRound();
+        }
+        for (auto& playerPair : m_mapPlayers)
+        {
+            playerPair.second.forceDeactivateCurrentInventoryItem();
         }
     }
+    else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
+    {
+        // come here only once
+        getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
+        m_gui.getXHair()->hideAboveText();
+    }
+    else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
+    {
+        // come here only once
+        getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
+        m_gui.getXHair()->showAboveText("ROUND ENDED!");
+        m_gui.getServerEvents()->addRoundEndEvent();
+    }
+
+    static std::string sXHairAboveText;  // hopefully fast being static
+    const auto nTimeRemainingInCurrentRoundStateSecs = trg->getFSM().getTimeRemainingInCurrentStateSeconds();
+    switch (trg->getFSM().getState())
+    {
+    case TeamRoundGameMode::RoundStateFSM::RoundState::Prepare:
+        sXHairAboveText = "COMBAT STARTS IN " + std::to_string(nTimeRemainingInCurrentRoundStateSecs) + " ...";
+        m_gui.getXHair()->showAboveText(sXHairAboveText);
+        break;
+    case TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset:
+        sXHairAboveText = "ROUND ENDED, RELAX TIME: " + std::to_string(nTimeRemainingInCurrentRoundStateSecs);
+        m_gui.getXHair()->showAboveText(sXHairAboveText);
+        break;
+    default: /* RoundState::Play */
+        /* no-op */
+        break;
+    }
+}
+
+void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
+{
+    // both server and client instances execute this
+    const std::chrono::time_point<std::chrono::steady_clock> timeStart = std::chrono::steady_clock::now();
+
+    const GameMode* const gm = GameMode::getGameMode();
+    assert(gm);
+
+    updateAudioForGameModeShared(gm);
+    updateVisualsForGameModeShared(gm);
 
     if (gm->isGameWon())
     {
+        // coming here continuously until restart
         if (getNetwork().isServer())
         {
             const auto nSecsSinceWin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - GameMode::getGameMode()->getWinTime()).count();

@@ -122,6 +122,8 @@ namespace proofps_dd
         void updateFramesPerSecond(PureWindow& window);
         void serverRestartGame(const proofps_dd::GameRestartType_KeepPlayers& eRestartType);
         void serverNewRound();
+        void updateAudioForGameModeShared(const GameMode* gm);
+        void updateVisualsForGameModeShared(const GameMode* gm);
         void updateAudioVisualsForGameModeShared();
 
         void serverRespawnItems();
