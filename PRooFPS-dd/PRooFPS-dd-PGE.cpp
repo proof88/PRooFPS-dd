@@ -241,7 +241,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getAudio().loadSound(m_sounds.m_sndRoundEnd, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Chan-Chan-Chan-Suspense_Sound-Effects-YT.wav");
     m_sounds.m_sndRoundEnd.setSingleInstance(true);
 
-    getAudio().loadSound(m_sounds.m_sndBassImpact, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Bass-Impact_Game-Sounds-YT.wav");
+    getAudio().loadSound(m_sounds.m_sndBassImpact, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Bass-Impact_Game-Sounds-YT_v2.wav");
     m_sounds.m_sndBassImpact.setSingleInstance(true);
 
     getAudio().loadSound(m_sounds.m_sndCountdown_1s_long, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Clock-countdown-bleeps_1s-long_Free-Sound-Effect-YT.wav");
