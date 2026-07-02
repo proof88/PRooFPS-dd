@@ -11,7 +11,7 @@ This version brings the following **NEW FEATURES**:
    This is the short preparation period when players cannot move, before the beginning of each round.
  - **GUI:** at the bottom of the screen the **Remaining Time is displayed**.  
    In all game modes this uses the configured game time limit to count down, but in round-based game mode it also considers the round time limit if set:  
-   whichever expires sooner, will be used to show the countdown clock.
+   whichever expires sooner, will be used to show the countdown clock.  
    Per-second beeps can be heard if this remaining time is less than 10 seconds.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
