@@ -1087,6 +1087,25 @@ void proofps_dd::PRooFPSddPGE::updateAudioForGameModeShared(const GameMode* gm)
         return;
     }
 
+    if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
+    {
+        // do not play this sound if this player just booted up, since most probably the transition on server happened much earlier,
+        // but for this player it just happened now as they synced game state
+        const auto itCurrentPlayer = m_mapPlayers.find(getMyServerSideConnectionHandle());
+        if (itCurrentPlayer == m_mapPlayers.end())
+        {
+            return;
+        }
+        const bool bCurrentPlayerRecentlyBootedUp =
+            (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - itCurrentPlayer->second.getTimeBootedUp()).count() < 2);
+        if (!bCurrentPlayerRecentlyBootedUp &&
+            !getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundStartHandle))
+        {
+            m_sounds.m_sndRoundStartHandle = getAudio().playSound(m_sounds.m_sndRoundStart);
+        }
+        return;
+    }
+
     if (!trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
     {
         return;

@@ -3229,7 +3229,7 @@ void proofps_dd::GUI::drawGameModeBasicStuff(const proofps_dd::Player& currentPl
     }
 
     static int nPrevSeconds{};
-    // playing sound only for non-spectating players is actually a trick:
+    // playing sound only for not recently booted up players is actually a trick:
     // if we change map, then right after loading the new map, for a very short period of time the remaining time is not updated,
     // therefore it could be either 0 or other value triggering playing sound. So I don't play such sound if player just has recently
     // booted up. The remaining time will be very quickly updated in the meantime.
