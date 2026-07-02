@@ -53,11 +53,18 @@
    MM:SS format: whichever would be hit earlier, shall be displayed in Play state only.
    So if Round Time Limit would be hit earlier, its countdown shall be displayed, otherwise the Game Time Limit countdown.
 
+ - Rules of which round end sound shall be played at the end of a round:
+   - If the game itself is won (no matter if the current round was won), only the "crowd clap" sound shall be played.
+   - If the game itself is NOT won:
+     - If a round ends WITHOUT round win, the "crowd clap" sound should not be played, instead either the "suspense" or "bass impact"
+       sound shall be played;
+     - If a round ends WITH win, either the "crowd clap", "suspense" or "bass impact" sound can be played.
+ 
  - Testing basic gameplay:
    - Check that Round game states transition from Prepare -> Play -> WaitForReset during a round (kill players in different ways to see it);
    - Unless configured otherwise, Prepare state is 3 seconds, Play state is 3 minutes, WaitForReset is 5 seconds;
    - Shooting and movements are NOT allowed in Prepare state;
-   - Shooting and movements are ALLOWED in WaitForReset state;
+   - Shooting and movements are ALLOWED in both Play and WaitForReset states;
    - Team Round Win is achieved by the team who kills all players of the other team;
    - Team Round Win can be also achieved by reaching the round time limit:
      in such case, the team having more alive players wins the round.

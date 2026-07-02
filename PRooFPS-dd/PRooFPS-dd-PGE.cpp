@@ -1059,14 +1059,48 @@ void proofps_dd::PRooFPSddPGE::updateAudioVisualsForGameModeShared()
         const TeamRoundGameMode* const trg = dynamic_cast<const TeamRoundGameMode*>(gm);
         if (trg)
         {
-            if (trg->hasCurrentRoundJustBeenWon_InThisTick())
+            // if a client connects when we are already in WaitForReset, play sound ONLY IF there is still enough time for that
+            if (trg->getFSM().getTimeRemainingInCurrentStateSeconds() >= 2)
             {
-                // if a client connects when we are already in WaitForReset, play sound ONLY IF there is still enough time for that
-                if (trg->getFSM().getTimeRemainingInCurrentStateSeconds() >= 2)
+                // hasJustTransitionedTo_RoundWaitForResetState_InThisTick() is not set if game is won in this same tick, so
+                // we have to check them separately in if-then-else
+                if (gm->hasJustBeenWonThisTick())
                 {
+                    // no more rounds left in this game because the game session itself ended.
                     if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
                     {
                         m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
+                    }
+                }
+                else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
+                {
+                    // still there is at least 1 more round of this game session so we could also play "suspense" sound too,
+                    // but the "win" sound should be played only if this round was actually won!
+                    const int iDivider = trg->hasCurrentRoundJustBeenWon_InThisTick() ? 3 : 2;
+                    // we don't have round counter implemented so we just sum team wins counts to "randomize" which sound to play,
+                    // this way all network instances will play the same sound without explicit sync since they are already synced
+                    // the team win counts
+                    const auto nTeamsWinsCount = trg->getTeamRoundWins(1) + trg->getTeamRoundWins(2);
+                    const int nRemainder = nTeamsWinsCount % iDivider;
+                    switch (nRemainder)
+                    {
+                    case 0:
+                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundEndHandle))
+                        {
+                            m_sounds.m_sndRoundEndHandle = getAudio().playSound(m_sounds.m_sndRoundEnd);
+                        }
+                        break;
+                    case 1:
+                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndBassImpactHandle))
+                        {
+                            m_sounds.m_sndBassImpactHandle = getAudio().playSound(m_sounds.m_sndBassImpact);
+                        }
+                        break;
+                    default: /* case 2 */
+                        if (!getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundWinHandle))
+                        {
+                            m_sounds.m_sndRoundWinHandle = getAudio().playSound(m_sounds.m_sndRoundWin);
+                        }
                     }
                 }
             }
