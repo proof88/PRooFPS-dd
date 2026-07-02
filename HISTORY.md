@@ -8,18 +8,20 @@ This version brings the following **NEW FEATURES**:
    If this limit is hit, the team having more alive players wins the round.  
    No win is registered if both teams have exactly same number of alive players when this time limit is hit.
  - **Gameplay:** for round-based game mode, **Round Prepare Time** can be set.  
-   This is the short preparation period at the beginning of each round when players cannot move.
+   This is the short preparation period when players cannot move, before the beginning of each round.
  - **GUI:** at the bottom of the screen the **Remaining Time is displayed**.  
-   In all game modes this takes the game time limit into account, but in round-based game mode it also considers the round time limit if set:  
+   In all game modes this uses the configured game time limit to count down, but in round-based game mode it also considers the round time limit if set:  
    whichever expires sooner, will be used to show the countdown clock.
+   Per-second beeps can be heard if this remaining time is less than 10 seconds.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
- - **Menu: About** has been reorganized, now with **markdown rendering, HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
+ - **Menu: About** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
+ - **Audio:** new sounds at the beginning and end of each round (only in round-based game mode).
 
 This version brings the following **BUG FIXES**:
  - **Gameplay:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
    This happened in lower FPS situations when multiple game ticks were executed within a single frame.
- - **GUI:** XHair text was not removed during map change.
+ - **GUI:** XHair overlay text was not cleared during map change.
 
 **LIMITATIONS Still in Effect:**
  - Shotgun does not contribute to player aim accuracy stats.
