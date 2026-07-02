@@ -234,8 +234,13 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     getAudio().loadSound(m_sounds.m_sndEndgameMusic, std::string(proofps_dd::GAME_AUDIO_DIR) + "menu/Fart_with_Musical_Instrument_XSoundEffect.mp3");
     m_sounds.m_sndEndgameMusic.setSingleInstance(true);
 
-    getAudio().loadSound(m_sounds.m_sndRoundStart, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Boat-Horn_Sound-Effects-YT.wav");
-    m_sounds.m_sndRoundStart.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndRoundStart1, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Boat-Horn_Sound-Effects-YT.wav");
+    m_sounds.m_sndRoundStart1.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndRoundStart2, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Intense-horse-stallion-neigh_Free-Sound-Effect-YT.wav");
+    m_sounds.m_sndRoundStart2.setSingleInstance(true);
+    getAudio().loadSound(m_sounds.m_sndRoundStart3, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Boat-PH-Intro_Game-Sounds-YT.wav");
+    m_sounds.m_sndRoundStart3.setSingleInstance(true);
+
     getAudio().loadSound(m_sounds.m_sndRoundWin, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Small_group_moderate_applause_Youtube_Free_Sound_Effect.mp3");
     m_sounds.m_sndRoundWin.setSingleInstance(true);
     getAudio().loadSound(m_sounds.m_sndRoundEnd, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Chan-Chan-Chan-Suspense_Sound-Effects-YT.wav");
@@ -1089,19 +1094,41 @@ void proofps_dd::PRooFPSddPGE::updateAudioForGameModeShared(const GameMode* gm)
 
     if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
     {
-        // do not play this sound if this player just booted up, since most probably the transition on server happened much earlier,
-        // but for this player it just happened now as they synced game state
         const auto itCurrentPlayer = m_mapPlayers.find(getMyServerSideConnectionHandle());
         if (itCurrentPlayer == m_mapPlayers.end())
         {
             return;
         }
+
+        // do not play this sound if this player just booted up, since most probably the transition on server happened much earlier,
+        // but for this player it just happened now as they synced game state
         const bool bCurrentPlayerRecentlyBootedUp =
             (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - itCurrentPlayer->second.getTimeBootedUp()).count() < 2);
-        if (!bCurrentPlayerRecentlyBootedUp &&
-            !getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundStartHandle))
+        if (bCurrentPlayerRecentlyBootedUp)
         {
-            m_sounds.m_sndRoundStartHandle = getAudio().playSound(m_sounds.m_sndRoundStart);
+            return;
+        }
+
+        if (getAudio().getAudioEngineCore().isValidVoiceHandle(m_sounds.m_sndRoundStartHandle))
+        {
+            return;
+        }
+
+        // we don't have round counter implemented so we just sum team wins counts to "randomize" which sound to play,
+        // this way all network instances will play the same sound without explicit sync since they are already synced
+        // the team win counts
+        const auto nTeamsWinsCount = trg->getTeamRoundWins(1) + trg->getTeamRoundWins(2);
+        const int nRemainder = nTeamsWinsCount % 3;
+        switch (nRemainder)
+        {
+        case 0:
+            m_sounds.m_sndRoundStartHandle = getAudio().playSound(m_sounds.m_sndRoundStart1);
+            break;
+        case 1:
+            m_sounds.m_sndRoundStartHandle = getAudio().playSound(m_sounds.m_sndRoundStart2);
+            break;
+        default: /* case 2 */
+            m_sounds.m_sndRoundStartHandle = getAudio().playSound(m_sounds.m_sndRoundStart3);
         }
         return;
     }

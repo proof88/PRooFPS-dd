@@ -37,7 +37,9 @@ namespace proofps_dd
         SoLoud::handle m_sndMenuMusicHandle{};
         SoLoud::Wav m_sndEndgameMusic;
         SoLoud::handle m_sndEndgameMusicHandle{};
-        SoLoud::Wav m_sndRoundStart;
+        SoLoud::Wav m_sndRoundStart1;
+        SoLoud::Wav m_sndRoundStart2;
+        SoLoud::Wav m_sndRoundStart3;
         SoLoud::handle m_sndRoundStartHandle{};
         SoLoud::Wav m_sndRoundWin;
         SoLoud::handle m_sndRoundWinHandle{};
