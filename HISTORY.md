@@ -16,7 +16,7 @@ This version brings the following **NEW FEATURES**:
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
  - **Menu: About** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
- - **Audio:** new sounds at the beginning and end of each round (only in round-based game mode).
+ - **Audio: new sounds** at the beginning and end of each round (only in round-based game mode).
 
 This version brings the following **BUG FIXES**:
  - **Gameplay:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
