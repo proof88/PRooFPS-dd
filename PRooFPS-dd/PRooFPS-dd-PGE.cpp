@@ -238,7 +238,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     m_sounds.m_sndRoundStart1.setSingleInstance(true);
     getAudio().loadSound(m_sounds.m_sndRoundStart2, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Intense-horse-stallion-neigh_Free-Sound-Effect-YT.wav");
     m_sounds.m_sndRoundStart2.setSingleInstance(true);
-    getAudio().loadSound(m_sounds.m_sndRoundStart3, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Boat-PH-Intro_Game-Sounds-YT.wav");
+    getAudio().loadSound(m_sounds.m_sndRoundStart3, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/PH-Intro_Game-Sounds-YT.wav");
     m_sounds.m_sndRoundStart3.setSingleInstance(true);
 
     getAudio().loadSound(m_sounds.m_sndRoundWin, std::string(proofps_dd::GAME_AUDIO_DIR) + "maps/Small_group_moderate_applause_Youtube_Free_Sound_Effect.mp3");
