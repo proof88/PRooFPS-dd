@@ -256,7 +256,7 @@ bool proofps_dd::PRooFPSddPGE::onGameInitialized()
     
     getAudio().loadSound(m_sounds.m_sndChangeWeapon,  std::string(proofps_dd::GAME_AUDIO_DIR) + "weapons/m4a1_deploy.wav");
     getAudio().loadSound(m_sounds.m_sndPlayerDie,     std::string(proofps_dd::GAME_AUDIO_DIR) + "radio/die1.wav");
-    getAudio().loadSound(m_sounds.m_sndPlayerBruh,    std::string(proofps_dd::GAME_AUDIO_DIR) + "player/Bruh-MEME_Game-Sounds-YT.wav");
+    getAudio().loadSound(m_sounds.m_sndPlayerBruh,    std::string(proofps_dd::GAME_AUDIO_DIR) + "player/Bruh-MEME_Game-Sounds-YT_v2.wav");
 
     static constexpr float SndPlayerDieDistMin = 6.f;
     static constexpr float SndPlayerDieDistMax = 12.f;

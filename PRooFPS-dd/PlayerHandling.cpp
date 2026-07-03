@@ -116,6 +116,11 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
                 pPlayerKiller = &(itPlayerKiller->second);
                 sKillerName = pPlayerKiller->getName();
                 iKillerTeamId = pPlayerKiller->getTeamId();
+
+                if ((player.getTeamId() == iKillerTeamId) && (iKillerTeamId != 0))
+                {
+                    m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerBruh, player.getPos().getNew());
+                }
             }
         }
         m_gui.getDeathKillEvents()->addDeathKillEvent(
@@ -1476,6 +1481,11 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(
         {
             sKillerName = itPlayerKiller->second.getName();
             iKillerTeamId = itPlayerKiller->second.getTeamId();
+
+            if ((itPlayerDied->second.getTeamId() == iKillerTeamId) && (iKillerTeamId != 0))
+            {
+                m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerBruh, itPlayerDied->second.getPos().getNew());
+            }
         }
     }
 
