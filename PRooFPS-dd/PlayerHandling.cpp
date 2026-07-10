@@ -76,6 +76,8 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     const GameMode* const gameMode = GameMode::getGameMode();
     assert(gameMode);
 
+    //getConsole().EOLn("PlayerHandling::%s()", __func__);
+
     if (!gameMode->isRespawnAllowedAfterDie())
     {
         player.setForcedSpectating(true);
@@ -86,7 +88,6 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
     
     // TODO: other player-related sounds are played by Player instance, e.g. Player::handleLanded(), this should be consolidated in the future
     m_pge.getAudio().play3dSound(m_sounds.m_sndPlayerDie, player.getPos().getNew());
-    //getConsole().EOLn("PlayerHandling::%s() playing die sound", __func__);
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
@@ -181,7 +182,8 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(
     Player& player,
     const proofps_dd::GameRestartType_KeepPlayers& eRestartType,
     const proofps_dd::Config& config,
-    PGEcfgProfiles& cfgProfiles)
+    PGEcfgProfiles& cfgProfiles,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     if (cfgProfiles.getVars()["testing"].getAsBool())
     {
@@ -207,6 +209,7 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
     // dead player needs to exit forced-spectating mode
     player.setForcedSpectating(false);  // clients will set this once they receive MsgUserUpdateFromServer with respawn flag set
+
     if (eRestartType != proofps_dd::GameRestartType_KeepPlayers::None)
     {
         if (eRestartType == proofps_dd::GameRestartType_KeepPlayers::Hard)
@@ -229,9 +232,14 @@ void proofps_dd::PlayerHandling::serverRespawnPlayer(
         player.forceDeactivateCurrentInventoryItem(); // clients will invoke this when they process MsgGameSessionStateFromServer
         player.setHasJetLax(false);
     }
+
+    serverUpdatePlayerOldValues(player, config, smokes);
 }
 
-void proofps_dd::PlayerHandling::serverResettlePlayer(Player& player, const proofps_dd::Config& config)
+void proofps_dd::PlayerHandling::serverResettlePlayer(
+    Player& player,
+    const proofps_dd::Config& config,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     if (std::as_const(player).getHealth() == 0)
     {
@@ -259,6 +267,7 @@ void proofps_dd::PlayerHandling::serverResettlePlayer(Player& player, const proo
     player.getPos() = m_maps.getRandomSpawnpoint(GameMode::getGameMode()->isTeamBasedGame(), player.getTeamId());
     player.setHealth(100);
     player.setInvulnerability(true, config.getPlayerRespawnInvulnerabilityDelaySeconds());
+    serverUpdatePlayerOldValues(player, config, smokes);
     player.resettleAndRespawnShared();
     // alive player is not in forced-spectating mode, no need to set it to false
 }
@@ -267,7 +276,8 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
     const proofps_dd::Config& config,
     PGEcfgProfiles& cfgProfiles,
     proofps_dd::GameMode& gameMode,
-    proofps_dd::Durations& durations)
+    proofps_dd::Durations& durations,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     if (gameMode.isGameWon() || !gameMode.isRespawnAllowedAfterDie())
     {
@@ -290,7 +300,7 @@ void proofps_dd::PlayerHandling::serverUpdateRespawnTimers(
             std::chrono::steady_clock::now() - playerConst.getTimeDied()).count();
         if (timeDiffSeconds >= static_cast<std::chrono::seconds::rep>(config.getPlayerRespawnDelaySeconds()))
         {
-            serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
+            serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles, smokes);
         }
     }
 
@@ -302,7 +312,8 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
     const unsigned int& iTeamId,
     const bool& bToggledSpectatorMode,
     const proofps_dd::Config& config,
-    PGEcfgProfiles& cfgProfiles)
+    PGEcfgProfiles& cfgProfiles,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     // both server and client comes here
 
@@ -370,7 +381,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
                 if (!cfgProfiles.getVars()["testing"].getAsBool())  /* TODO: probably this condition is not needed anymore, we integrated into serverRespawnPlayer() */
                 {
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles, smokes);
                 }
             }
         }
@@ -447,7 +458,7 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
                     getConsole().EOLn(
                         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s selected a team and being respawned!",
                         __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
-                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles);
+                    serverRespawnPlayer(player, proofps_dd::GameRestartType_KeepPlayers::None, config, cfgProfiles, smokes);
                 }
             }
             else
@@ -1036,20 +1047,30 @@ void proofps_dd::PlayerHandling::resetSendClientUpdatesCounter(proofps_dd::Confi
     m_nSendClientUpdatesCntr = m_nSendClientUpdatesInEveryNthTick;
 }
 
+void proofps_dd::PlayerHandling::serverUpdatePlayerOldValues(
+    proofps_dd::Player& player,
+    const proofps_dd::Config& config,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
+{
+    assert(m_pge.getNetwork().isServer());
+
+    // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
+    // Server invokes it here in every physics iteration. 2 reasons:
+    // - consecutive physics iterations require old and new values to be properly set;
+    // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
+    player.updateCurrentInventoryItemPowerAudioVisualsShared(config, smokes);  // must be invoked BEFORE clearing old-new value dirtiness!
+    player.updateOldValues();
+}
+
 void proofps_dd::PlayerHandling::serverUpdatePlayersOldValues(
-    proofps_dd::Config& config,
+    const proofps_dd::Config& config,
     PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     assert(m_pge.getNetwork().isServer());
     for (auto& playerPair : m_mapPlayers)
     {
         auto& player = playerPair.second;
-        // From v0.1.5 clients invoke updateOldValues() in handleUserUpdateFromServer() thus they are also good to use old vs new values and isDirty().
-        // Server invokes it here in every physics iteration. 2 reasons:
-        // - consecutive physics iterations require old and new values to be properly set;
-        // - player.isNetDirty() thus serverSendUserUpdates() rely on player.updateOldValues().
-        player.updateCurrentInventoryItemPowerAudioVisualsShared(config, smokes);  // must be invoked BEFORE clearing old-new value dirtiness!
-        player.updateOldValues();
+        serverUpdatePlayerOldValues(player, config, smokes);
     }
 }
 
@@ -1156,6 +1177,7 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
 
                 // we always reset respawn flag here
                 playerPair.second.getRespawnFlag() = false;
+                playerPair.second.getResettlingFlag() = false;
 
                 // Note that health is not needed by server since it already has the updated health, but for convenience
                 // we put that into MsgUserUpdateFromServer and send anyway like all the other stuff.
@@ -1202,33 +1224,6 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
     auto& player = it->second;
     const auto& playerConst = player;
     //getConsole().OLn("PlayerHandling::%s(): user %s received MsgUserUpdateFromServer: %f", __func__, player.getName().c_str(), msg.m_pos.x);
-
-    if (m_pge.getNetwork().isServer() && player.getRespawnFlag() && !msg.m_bRespawn)
-    {
-        // looks like this is an outdated msg that server injected into its queue AFTER calling serverRespawnPlayer(),
-        // which happens AFTER server tick, so let's ignore this msg because it can overwrite HP, pos, etc. with stale data while these
-        // have been already updated by serverRespawnPlayer() AFTER this msg was injected.
-        // Note that Player's respawn flag is cleared when MsgUserUpdateFromServer is being sent, so whoever sets the flag to true,
-        // will also set Player HP, pos, etc. values that will make netDirty() also true, which means that definitely there will be a more
-        // up-to-date msg after this one, that will contain msg.m_bRespawn as true (but Player's respawn flag will be already false at that time).
-
-        // clients invoke handlePlayerRespawned() in this function later, server invokes it now but might also invoke it later as clients do
-        handlePlayerRespawned(player, xhair);
-        player.getPos().commit();  
-
-        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for respawning user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;
-    }
-
-    if (m_pge.getNetwork().isServer() && player.getResettlingFlag() && !msg.m_bRespawn /* if respawn is set, it wins over resettling */)
-    {
-        // server has already updated everything for this player, do not accept stale injected msg data
-        player.getResettlingFlag() = false;
-        player.getPos().commit();  // Jetlaxing player did not properly reposition upon respawn upon new round
-        getConsole().EOLn("PlayerHandling::%s(): ignored outdated msg for resettling user with connHandleServerSide: %u!", __func__, connHandleServerSide);
-        return true;
-    }
-    
 
     const bool bOriginalExpectingStartPos = player.isJustCreatedAndExpectingStartPos();
     if (player.isJustCreatedAndExpectingStartPos())
@@ -1281,9 +1276,17 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         player.doStandupShared();
     }
 
-    player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z)); // server does not commit here, client commits few lines below by invoking updateOldValues()
-    player.getObject3D()->getPosVec().Set(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z);
-    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(player.getObject3D()->getPosVec(), player.isSomersaulting());
+    if (!m_pge.getNetwork().isServer())
+    {
+        // server does not commit here, client commits few lines below by invoking updateOldValues(),
+        // changing position here on server-side could lead to applying stale position in case of
+        // a resettling player, therefore we accept this for clients only.
+        player.getPos().set(PureVector(msg.m_pos.x, msg.m_pos.y, msg.m_pos.z));
+    }
+
+    player.getObject3D()->getPosVec() = player.getPos().getNew();
+    player.getWeaponManager().getCurrentWeapon()->UpdatePosition(
+        player.getObject3D()->getPosVec(), player.isSomersaulting());
 
     if (msg.m_fPlayerAngleY != -1.f)
     {
@@ -1312,18 +1315,23 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         player.handleActuallyRunningOnGround();
     }
 
-    player.getFrags() = msg.m_nFrags;
-    player.getDeaths() = msg.m_nDeaths;
-    player.getSuicides() = msg.m_nSuicides;
-    player.getFiringAccuracy() = msg.m_fFiringAccuracy;
-    player.getShotsFiredCount() = msg.m_nShotsFired;
-    player.setCurrentInventoryItemPower(msg.m_fCurrentInventoryItemPower);
+    if (!m_pge.getNetwork().isServer())
+    {
+        player.getFrags() = msg.m_nFrags;
+        player.getDeaths() = msg.m_nDeaths;
+        player.getSuicides() = msg.m_nSuicides;
+        player.getFiringAccuracy() = msg.m_fFiringAccuracy;
+        player.getShotsFiredCount() = msg.m_nShotsFired;
+        player.setCurrentInventoryItemPower(msg.m_fCurrentInventoryItemPower);
 
-    //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
-    //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
-    player.setArmor(msg.m_nArmor);
-    player.setHealth(msg.m_nHealth);
-    if (!gameMode.isRespawnAllowedAfterDie() && (msg.m_nHealth == 0))
+        //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
+        //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
+        player.setArmor(msg.m_nArmor);
+        player.setHealth(msg.m_nHealth);
+    }
+
+    // TODO: this one looks redudant to calling handlePlayerDied() a few lines later since that also sets forced spectating
+    if (!gameMode.isRespawnAllowedAfterDie() && (playerConst.getHealth() == 0))
     {
         player.setForcedSpectating(true);
     }
@@ -1388,7 +1396,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     if (msg.m_bRespawn)
     {
-        //getConsole().OLn("PlayerHandling::%s(): player %s has respawned!", __func__, player.getName().c_str());
+        //getConsole().EOLn("PlayerHandling::%s(): player %s has respawned!", __func__, player.getName().c_str());
         handlePlayerRespawned(player, xhair);
     }
     else
@@ -1432,7 +1440,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 
     if (!m_pge.getNetwork().isServer())
     {
-        // server already invoked updateOldValues() when it sent out this update message
+        // server already invoked updateOldValues() when it sent out this update message OR when respawned or resettled the player
         player.updateCurrentInventoryItemPowerAudioVisualsShared(config, smokes); // must be invoked BEFORE clearing old-new value dirtiness!
         player.updateOldValues();
     }
@@ -1515,7 +1523,8 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
     const proofps_dd::MsgPlayerEventFromServer& msg,
     PureVector& vecCamShakeForce,
     const proofps_dd::Config& config,
-    PGEcfgProfiles& cfgProfiles)
+    PGEcfgProfiles& cfgProfiles,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %u about player with connHandleServerSide: %u!", __func__, msg.m_iPlayerEventId, connHandleServerSide);
 
@@ -1573,11 +1582,11 @@ bool proofps_dd::PlayerHandling::handlePlayerEventFromServer(
         break;
     case PlayerEventId::TeamIdChanged:
         handlePlayerTeamIdChangedOrToggledSpectatorMode(
-            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles);
+            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles, smokes);
         break;
     case PlayerEventId::ToggledSpectatorMode:
         handlePlayerTeamIdChangedOrToggledSpectatorMode(
-            player, 0u /* iTeamId, dontcare */, true /* bToggledSpectatorMode */, config, cfgProfiles);
+            player, 0u /* iTeamId, dontcare */, true /* bToggledSpectatorMode */, config, cfgProfiles, smokes);
         break;
     case PlayerEventId::ExplosionMultiKill:
         handleExplosionMultiKill(msg.m_optData1.m_nValue);
@@ -1595,7 +1604,8 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     pge_network::PgeNetworkConnectionHandle connHandleServerSide,
     const proofps_dd::MsgUserInGameMenuCmd& msg,
     const proofps_dd::Config& config,
-    PGEcfgProfiles& cfgProfiles)
+    PGEcfgProfiles& cfgProfiles,
+    PgeObjectPool<proofps_dd::Smoke>& smokes)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %d from player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
 
@@ -1614,7 +1624,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     {
     case static_cast<int>(GUI::InGameMenuState::Welcome_TeamSelect_Spectator):
         handlePlayerTeamIdChangedOrToggledSpectatorMode(
-            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles);
+            player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles, smokes);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);

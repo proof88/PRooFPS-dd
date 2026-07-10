@@ -597,14 +597,16 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgPlayerEventFromServer>(pkt),
                 cameraGetShakeForce(),
                 m_config,
-                getConfigProfiles());
+                getConfigProfiles(),
+                getSmokePool());
             break;
         case proofps_dd::MsgUserInGameMenuCmd::id:
             bRet = serverHandleUserInGameMenuCmd(
                 pge_network::PgePacket::getServerSideConnectionHandle(pkt),
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt),
                 m_config,
-                getConfigProfiles());
+                getConfigProfiles(),
+                getSmokePool());
             break;
         default:
             bRet = false;
@@ -822,7 +824,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedServerOnlyOneTick(
 
         // @PHYSICS-RATE END
     }  // for iPhyIter
-    serverUpdateRespawnTimers(m_config, getConfigProfiles(), *GameMode::getGameMode(), m_durations);
+    serverUpdateRespawnTimers(m_config, getConfigProfiles(), *GameMode::getGameMode(), m_durations, getSmokePool());
     serverSendUserUpdates(getConfigProfiles(), m_config, m_durations, *GameMode::getGameMode());
 
     // @TICK-RATE END
@@ -1012,7 +1014,7 @@ void proofps_dd::PRooFPSddPGE::serverRestartGame(const proofps_dd::GameRestartTy
     {
         if (!playerPair.second.isInSpectatorMode())
         {
-            serverRespawnPlayer(playerPair.second, eRestartType, m_config, getConfigProfiles());
+            serverRespawnPlayer(playerPair.second, eRestartType, m_config, getConfigProfiles(), getSmokePool());
         }
     }
 
@@ -1038,11 +1040,11 @@ void proofps_dd::PRooFPSddPGE::serverNewRound()
         {
             if (std::as_const(playerPair.second).getHealth() == 0)
             {
-                serverRespawnPlayer(playerPair.second, proofps_dd::GameRestartType_KeepPlayers::None, m_config, getConfigProfiles());
+                serverRespawnPlayer(playerPair.second, proofps_dd::GameRestartType_KeepPlayers::None, m_config, getConfigProfiles(), getSmokePool());
             }
             else
             {
-                serverResettlePlayer(playerPair.second, m_config);
+                serverResettlePlayer(playerPair.second, m_config, getSmokePool());
             }
         }
     }

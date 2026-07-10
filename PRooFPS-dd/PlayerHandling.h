@@ -84,7 +84,8 @@ namespace proofps_dd
             Player& player,
             const proofps_dd::GameRestartType_KeepPlayers& eRestartType,
             const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles);
+            PGEcfgProfiles& cfgProfiles,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
         
         /**
         * Resettle is required when a round-based game starts a new round, and we need to reposition alive
@@ -98,19 +99,24 @@ namespace proofps_dd
         * @param player      The player to be resettled.
         * @param config      The usual Config instance.
         */
-        void serverResettlePlayer(Player& player, const proofps_dd::Config& config);
+        void serverResettlePlayer(
+            Player& player,
+            const proofps_dd::Config& config,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
 
         void serverUpdateRespawnTimers(
             const proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles,
             proofps_dd::GameMode& gameMode,
-            proofps_dd::Durations& durations);
+            proofps_dd::Durations& durations,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
         void handlePlayerTeamIdChangedOrToggledSpectatorMode(
             Player& player,
             const unsigned int& iTeamId,
             const bool& bToggledSpectatorMode,
             const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles);
+            PGEcfgProfiles& cfgProfiles,
+            PgeObjectPool<proofps_dd::Smoke>& smokes);
         void handleExplosionMultiKill(
             int nPlayersDiedByExplosion);
         void writePlayerList();
@@ -130,8 +136,13 @@ namespace proofps_dd
             proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles);
         void resetSendClientUpdatesCounter(proofps_dd::Config& config);
+        void serverUpdatePlayerOldValues(
+            proofps_dd::Player& player,
+            const proofps_dd::Config& config,
+            PgeObjectPool<proofps_dd::Smoke>& smokes
+            );
         void serverUpdatePlayersOldValues(
-            proofps_dd::Config& config,
+            const proofps_dd::Config& config,
             PgeObjectPool<proofps_dd::Smoke>& smokes);
         void serverSendUserUpdates(
             PGEcfgProfiles& cfgProfiles,
@@ -154,13 +165,15 @@ namespace proofps_dd
             const proofps_dd::MsgPlayerEventFromServer& msg,
             PureVector& vecCamShakeForce,
             const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles
+            PGEcfgProfiles& cfgProfiles,
+            PgeObjectPool<proofps_dd::Smoke>& smokes
         );
         bool serverHandleUserInGameMenuCmd(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const proofps_dd::MsgUserInGameMenuCmd& msg,
             const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles
+            PGEcfgProfiles& cfgProfiles,
+            PgeObjectPool<proofps_dd::Smoke>& smokes
         );
         void updatePlayersVisuals(
             const proofps_dd::Config& config,

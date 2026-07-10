@@ -819,6 +819,11 @@ void proofps_dd::Player::resettleAndRespawnShared()
     getAntiGravityForce().SetZero();
     getJumpForce().SetZero();
     setGravity(0.f);
+    setWillJumpInNextTick(0.f, 0.f);
+    resetSomersaultServer();
+    setWillSomersaultInNextTick(false);
+    // just in case server just set it to true in the same tick as the player is being resettled
+    m_bFallingHighTriggered = false;
     setHasJustStartedFallingNaturallyInThisTick(true);  // make sure vars for calculating high fall are reset
     
     // we don't put here stuff like setHasAntiGravityActive(false) because client is not informed about "resettle", server
