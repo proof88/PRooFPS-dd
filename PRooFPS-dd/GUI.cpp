@@ -2861,12 +2861,12 @@ void proofps_dd::GUI::drawRespawnTimer()
     // if we make pos variables static, they will be wrong upon changing screen resolution!
 
     assert(m_pPge);
-    drawTextShadowed(
+    drawTextHighlighted(
         getDearImGui2DposXforWindowCenteredText(szRespawnWaitText),
         (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled * 2,
         szRespawnWaitText);
 
-    drawTextShadowed(
+    drawTextHighlighted(
         getDearImGui2DposXforWindowCenteredText(szRespawnWaitText2),
         (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled,
         szRespawnWaitText2);
@@ -2950,7 +2950,7 @@ void proofps_dd::GUI::drawXHairAboveText()
 
     ImGui::PushStyleColor(ImGuiCol_Text, m_pXHair->getAboveTextColor());
 
-    drawTextShadowed(
+    drawTextHighlighted(
         getDearImGui2DposXforCenteredText(
             m_pXHair->getAboveText(), getDearImGui2DposXFromPure2DposX(m_pXHair->getObject3D().getPosVec().getX())),
         getDearImGui2DposYFromPure2DposY(m_pXHair->getObject3D().getPosVec().getY()) - m_pXHair->getObject3D().getSizeVec().getY() - 5,
