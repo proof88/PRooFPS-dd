@@ -2902,7 +2902,7 @@ void proofps_dd::GUI::drawRespawnTimer()
     if (!m_sRespawnTimerExtraText.empty())
     {
         ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
-        drawTextShadowed(
+        drawTextHighlighted(
             getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText),
             ImGui::GetCursorPosY(),
             m_sRespawnTimerExtraText);
@@ -2911,7 +2911,7 @@ void proofps_dd::GUI::drawRespawnTimer()
     if (!m_sRespawnTimerExtraText2.empty())
     {
         ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
-        drawTextShadowed(
+        drawTextHighlighted(
             getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText2),
             ImGui::GetCursorPosY(),
             m_sRespawnTimerExtraText2);
