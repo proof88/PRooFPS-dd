@@ -142,7 +142,7 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
         {
             if (gameMode->isRespawnAllowedAfterDie())
             {
-                m_gui.showRespawnTimer(pPlayerKiller);
+                m_gui.showCountdownTimerForRespawnOrForcedSpectating(pPlayerKiller);
             }
         }
     }
@@ -172,7 +172,7 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
 
         xhair.show();
         xhair.handleMagLoaded();
-        m_gui.hideRespawnTimer();
+        m_gui.hideCountdownTimerForRespawnOrForcedSpectating();
         m_gui.hideGameObjectives(); // just in case player was checking it during respawn countdown, OR game just restarted
         m_gui.getMinimap()->show(); // even though we dont hide it when player dies, game restart eventually respawns players so we need to show because game end hides it
     }
@@ -784,7 +784,7 @@ bool proofps_dd::PlayerHandling::handleUserDisconnected(
     if (bClientShouldRemoveAllPlayers)
     {
         getConsole().OLn("PlayerHandling::%s(): it was actually the server disconnected so I'm removing every player including myself", __func__);
-        m_gui.hideRespawnTimer();
+        m_gui.hideCountdownTimerForRespawnOrForcedSpectating();
         m_gui.hideGameObjectives();
         assert(m_gui.getDeathKillEvents());
         assert(m_gui.getItemPickupEvents());
@@ -1502,7 +1502,7 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(
     {
         if (gameMode.isRespawnAllowedAfterDie())
         {
-            m_gui.showRespawnTimer(
+            m_gui.showCountdownTimerForRespawnOrForcedSpectating(
                 sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
         }
     }
@@ -1646,7 +1646,7 @@ void proofps_dd::PlayerHandling::updatePlayersVisuals(
     // as of v0.2.4 this is invoked in every frame so this is great!
     if (gameMode.isGameWon())
     {
-        m_gui.hideRespawnTimer();
+        m_gui.hideCountdownTimerForRespawnOrForcedSpectating();
     }
 
     const bool bXHairIdentifiesPlayers = m_pge.getConfigProfiles().getVars()[XHair::szCvarGuiXHairIdentifiesPlayers].getAsBool();

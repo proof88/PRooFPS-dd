@@ -729,7 +729,7 @@ void proofps_dd::PRooFPSddPGE::disconnect(bool bExitFromGameSession, const std::
         "Thinking ..." :
         "Thinking ... Reason: " + sExtraDebugText;
     m_gui.textForNextFrame(sPrintText, 200, getPure().getWindow().getClientHeight() / 2);
-    m_gui.hideRespawnTimer();
+    m_gui.hideCountdownTimerForRespawnOrForcedSpectating();
     getPure().getRenderer()->RenderScene();
 
     getConsole().SetLoggingState("4LLM0DUL3S", true);

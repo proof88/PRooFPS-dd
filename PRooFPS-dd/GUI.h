@@ -159,10 +159,10 @@ namespace proofps_dd
         static void textForNextFrame(const std::string& s, int nPureX, int nPureY);
         static void textPermanent(const std::string& s, int nPureX, int nPureY);
 
-        void showRespawnTimer(
+        void showCountdownTimerForRespawnOrForcedSpectating(
             const Player* const pKillerPlayer);
-        void hideRespawnTimer();
-        void fastForwardRespawnTimer(
+        void hideCountdownTimerForRespawnOrForcedSpectating();
+        void fastForwardCountdownTimerForRespawnOrForcedSpectating(
             std::chrono::milliseconds::rep byMillisecs);
 
         void updateNonDearImGuiElements();
@@ -187,11 +187,11 @@ namespace proofps_dd
 
         /* In-Game GUI elements */
 
-        static bool m_bShowRespawnTimer;
+        static bool m_bShowCountdownTimerForRespawnOrForcedSpectating;
         static std::chrono::time_point<std::chrono::steady_clock> m_timePlayerDied;
-        static std::string m_sRespawnTimerExtraText;
-        static std::string m_sRespawnTimerExtraText2;
-        static ImVec4 m_colorRespawnTimerExtraText;
+        static std::string m_sExtraText_CountdownTimerForRespawnOrForcedSpectating;
+        static std::string m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating;
+        static ImVec4 m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating;
         static bool m_bShowHealthAndArmor;
 
         /* In-Game Menu Handling */
@@ -268,7 +268,7 @@ namespace proofps_dd
 
         /* In-Game GUI elements */
 
-        static void drawRespawnTimer();
+        static void drawCountdownTimerForRespawnOrForcedSpectating();
         static void drawXHairHoverText();
         static void drawXHairAboveText();
         static void updateXHair();

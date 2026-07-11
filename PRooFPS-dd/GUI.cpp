@@ -561,7 +561,7 @@ void proofps_dd::GUI::textPermanent(const std::string& s, int nPureX, int nPureY
     m_pPge->getPure().getUImanager().textPermanentLegacy(s, nPureX, nPureY)->SetDropShadow(true);
 }
 
-void proofps_dd::GUI::showRespawnTimer(
+void proofps_dd::GUI::showCountdownTimerForRespawnOrForcedSpectating(
     const Player* const pKillerPlayer)
 {
     assert(GameMode::getGameMode());
@@ -572,34 +572,34 @@ void proofps_dd::GUI::showRespawnTimer(
 
     assert(m_pMapPlayers);
     m_timePlayerDied = std::chrono::steady_clock::now();
-    m_bShowRespawnTimer = true;
+    m_bShowCountdownTimerForRespawnOrForcedSpectating = true;
 
-    m_sRespawnTimerExtraText.clear();
-    m_sRespawnTimerExtraText2.clear();
+    m_sExtraText_CountdownTimerForRespawnOrForcedSpectating.clear();
+    m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating.clear();
     if (pKillerPlayer)
     {
-        m_colorRespawnTimerExtraText = GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(pKillerPlayer->getTeamId()) );
-        m_sRespawnTimerExtraText = pKillerPlayer->getName() + " killed you having";
-        m_sRespawnTimerExtraText2 =
+        m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating = GUI::getImVec4fromPureColor( TeamDeathMatchMode::getTeamColor(pKillerPlayer->getTeamId()) );
+        m_sExtraText_CountdownTimerForRespawnOrForcedSpectating = pKillerPlayer->getName() + " killed you having";
+        m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating =
             std::to_string(pKillerPlayer->getHealth().getNew()) + "% HP and " +
             std::to_string(pKillerPlayer->getArmor().getNew()) + "% AP remaining.";
     }
     else
     {
-        m_colorRespawnTimerExtraText = {1.f, 1.f, 1.f, 1.f};
+        m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating = {1.f, 1.f, 1.f, 1.f};
     }
 }
 
-void proofps_dd::GUI::hideRespawnTimer()
+void proofps_dd::GUI::hideCountdownTimerForRespawnOrForcedSpectating()
 {
-    m_bShowRespawnTimer = false;
-    m_sRespawnTimerExtraText.clear();
-    m_sRespawnTimerExtraText2.clear();
+    m_bShowCountdownTimerForRespawnOrForcedSpectating = false;
+    m_sExtraText_CountdownTimerForRespawnOrForcedSpectating.clear();
+    m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating.clear();
 }
 
-void proofps_dd::GUI::fastForwardRespawnTimer(std::chrono::milliseconds::rep byMillisecs)
+void proofps_dd::GUI::fastForwardCountdownTimerForRespawnOrForcedSpectating(std::chrono::milliseconds::rep byMillisecs)
 {
-    if (!m_bShowRespawnTimer)
+    if (!m_bShowCountdownTimerForRespawnOrForcedSpectating)
     {
         return;
     }
@@ -644,11 +644,11 @@ proofps_dd::GUI::ServerRestartGameCallback proofps_dd::GUI::m_cbServerHardRestar
 
 proofps_dd::GUI::MainMenuState proofps_dd::GUI::m_currentMenuInMainMenu = proofps_dd::GUI::MainMenuState::Main;
 
-bool proofps_dd::GUI::m_bShowRespawnTimer = false;
+bool proofps_dd::GUI::m_bShowCountdownTimerForRespawnOrForcedSpectating = false;
 std::chrono::time_point<std::chrono::steady_clock> proofps_dd::GUI::m_timePlayerDied{};
-std::string proofps_dd::GUI::m_sRespawnTimerExtraText;
-std::string proofps_dd::GUI::m_sRespawnTimerExtraText2;
-ImVec4 proofps_dd::GUI::m_colorRespawnTimerExtraText;
+std::string proofps_dd::GUI::m_sExtraText_CountdownTimerForRespawnOrForcedSpectating;
+std::string proofps_dd::GUI::m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating;
+ImVec4 proofps_dd::GUI::m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating;
 
 bool proofps_dd::GUI::m_bShowHealthAndArmor = false;
 
@@ -2811,7 +2811,7 @@ void proofps_dd::GUI::drawDearImGuiCb()
             assert(m_pImFontHudGeneralScaled);
             ImGui::PushFont(m_pImFontHudGeneralScaled);
 
-            drawRespawnTimer();
+            drawCountdownTimerForRespawnOrForcedSpectating();
             updateXHair();
             updateDeathKillEvents();
             updateItemPickupEvents();
@@ -2848,9 +2848,9 @@ void proofps_dd::GUI::drawDearImGuiCb()
     drawWindowForMainMenu();
 } // drawDearImGuiCb()
 
-void proofps_dd::GUI::drawRespawnTimer()
+void proofps_dd::GUI::drawCountdownTimerForRespawnOrForcedSpectating()
 {
-    if (!m_bShowRespawnTimer)
+    if (!m_bShowCountdownTimerForRespawnOrForcedSpectating)
     {
         return;
     }
@@ -2899,22 +2899,22 @@ void proofps_dd::GUI::drawRespawnTimer()
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
 
-    if (!m_sRespawnTimerExtraText.empty())
+    if (!m_sExtraText_CountdownTimerForRespawnOrForcedSpectating.empty())
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
+        ImGui::PushStyleColor(ImGuiCol_Text, m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating);
         drawTextHighlighted(
-            getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText),
+            getDearImGui2DposXforWindowCenteredText(m_sExtraText_CountdownTimerForRespawnOrForcedSpectating),
             ImGui::GetCursorPosY(),
-            m_sRespawnTimerExtraText);
+            m_sExtraText_CountdownTimerForRespawnOrForcedSpectating);
         ImGui::PopStyleColor();
     }
-    if (!m_sRespawnTimerExtraText2.empty())
+    if (!m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating.empty())
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, m_colorRespawnTimerExtraText);
+        ImGui::PushStyleColor(ImGuiCol_Text, m_colorExtraText_CountdownTimerForRespawnOrForcedSpectating);
         drawTextHighlighted(
-            getDearImGui2DposXforWindowCenteredText(m_sRespawnTimerExtraText2),
+            getDearImGui2DposXforWindowCenteredText(m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating),
             ImGui::GetCursorPosY(),
-            m_sRespawnTimerExtraText2);
+            m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating);
         ImGui::PopStyleColor();
     }
 }

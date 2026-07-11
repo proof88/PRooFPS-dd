@@ -1233,7 +1233,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
                     }
                     else
                     {
-                        m_gui.fastForwardRespawnTimer(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+                        m_gui.fastForwardCountdownTimerForRespawnOrForcedSpectating(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
                     }
                 }
             }
