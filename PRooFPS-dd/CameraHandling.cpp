@@ -409,6 +409,7 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     const Player& player,
     XHair& xhair,
+    bool bGuiShowingCountdownForRespawnOrSpectating,
     const float& fFps,
     bool bCamFollowsXHair,
     bool bCamTiltingAllowed,
@@ -421,7 +422,8 @@ void proofps_dd::CameraHandling::cameraUpdatePosAndAngle(
 
     auto& cam = m_pure.getCamera();
 
-    if (player.isInSpectatorMode() || player.isForcedSpectating())
+    if (!bGuiShowingCountdownForRespawnOrSpectating &&
+        (player.isInSpectatorMode() || player.isForcedSpectating()))
     {
         cameraUpdatePosAndAngleWhenSpectating(mapPlayers, cam, xhair, fFps, bCamFollowsXHair, bCamTiltingAllowed);
     }

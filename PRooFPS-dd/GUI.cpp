@@ -2895,7 +2895,7 @@ void proofps_dd::GUI::drawCountdownTimerForRespawnOrForcedSpectating()
     const float fCountdownProgress =
         gm->isRespawnAllowedAfterDie() ?
         std::min(1.f, timeDiffMillisecs / (static_cast<float>(m_pConfig->getPlayerRespawnDelaySeconds() * 1000))) :
-        std::min(1.f, timeDiffMillisecs / (static_cast<float>(3 * 1000)));
+        std::min(1.f, timeDiffMillisecs / (static_cast<float>(5 * 1000)));
 
     if (!gm->isRespawnAllowedAfterDie() && (fCountdownProgress == 1.f))
     {

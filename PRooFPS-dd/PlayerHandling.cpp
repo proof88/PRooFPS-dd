@@ -1448,7 +1448,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
 bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(
     pge_network::PgeNetworkConnectionHandle nDeadConnHandleServerSide,
     const proofps_dd::MsgDeathNotificationFromServer& msg,
-    proofps_dd::GameMode& gameMode)
+    proofps_dd::GameMode& /*gameMode*/)
 {
     if (m_pge.getNetwork().isServer())
     {

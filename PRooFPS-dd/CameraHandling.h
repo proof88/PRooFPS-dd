@@ -82,6 +82,7 @@ namespace proofps_dd
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
             const Player& player,
             XHair& xhair,
+            bool bGuiShowingCountdownForRespawnOrSpectating,
             const float& fFps,
             bool bCamFollowsXHair,
             bool bCamTiltingAllowed,

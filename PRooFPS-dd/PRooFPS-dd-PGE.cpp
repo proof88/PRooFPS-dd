@@ -913,6 +913,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
         m_mapPlayers,
         player,
         *m_gui.getXHair(),
+        m_gui.isVisible_CountdownTimerForRespawnOrForcedSpectating(),
         m_fps,
         m_config.getCameraFollowsPlayerAndXHair(),
         m_config.getCameraTilting(),
