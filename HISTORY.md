@@ -15,7 +15,7 @@ This version brings the following **NEW FEATURES**:
    Per-second **beeps can be heard** if this remaining time is less than 10 seconds.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
- - **GUI:** after dieing, instead of immediately switching to forced spectating view, the camera stays in position for 5 seconds, while the usual text "killed by xy" is being shown.
+ - **GUI: after dieing, the camera stays in position for 5 seconds** and the usual text "killed by xy" is being shown, instead of immediately switching to forced spectating view.
  - **GUI: About Menu** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
  - **Audio: new sounds** at the beginning and the end of each round (only in round-based game mode), and for team-killing.
 
