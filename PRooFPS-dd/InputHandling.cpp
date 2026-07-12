@@ -1118,9 +1118,31 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_Spectating(
     assert(!gameMode.isGameWon());
     assert(player.isInSpectatorMode() || player.isForcedSpectating());
 
+    const bool bFireButtonClicked = m_pge.getInput().getMouse().isButtonPressedOnce(PGEInputMouse::MouseButton::MBTN_LEFT);
+
+    if (m_gui.isVisible_CountdownTimerForRespawnOrForcedSpectating())
+    {
+        // we are spectating AND countdown is visible, which is possible only if
+        // we are forced-spectating after just recently dieing in a game mode that
+        // does not allow respawn after dieing (e.g. round game mode), since other
+        // game modes don't enable spectating after dieing (and manual spectator mode
+        // does not trigger the visibility of this countdown timer anyway ...
+        // Anyway, let's add an extra condition here for the sake of sanity.
+        if (!gameMode.isRespawnAllowedAfterDie())
+        {
+            // we allow the player to fast-forward the timer to switch to camera-control
+            // mode sooner, we don't need to send anything to server in this case.
+            if (bFireButtonClicked)
+            {
+                m_gui.fastForwardCountdownTimerForRespawnOrForcedSpectating(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+            }
+        }
+
+        return clientMouseWhenConnectedToServer_mouseMovesXHair(objXHair);
+    }
+
     if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
     {
-        const bool bFireButtonClicked = m_pge.getInput().getMouse().isButtonPressedOnce(PGEInputMouse::MouseButton::MBTN_LEFT);
         const bool bAltFireButtonClicked = m_pge.getInput().getMouse().isButtonPressedOnce(PGEInputMouse::MouseButton::MBTN_RIGHT);
         
         if (bFireButtonClicked)

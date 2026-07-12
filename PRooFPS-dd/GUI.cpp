@@ -2860,24 +2860,28 @@ void proofps_dd::GUI::drawCountdownTimerForRespawnOrForcedSpectating()
         return;
     }
 
-    static constexpr char* szRespawnWaitText = "... Waiting to Respawn ...";
-    static constexpr char* szRespawnWaitText2 = "CLICK to speed it up!";
+    const auto gm = GameMode::getGameMode();
+    assert(gm);
+
+    const char* const szWaitText =
+        gm->isRespawnAllowedAfterDie() ? "... Waiting to Respawn ..." : "... Begin Spectating ...";
+    static constexpr char* szWaitText2 = "CLICK to speed it up!";
     
     // if we make pos variables static, they will be wrong upon changing screen resolution!
 
     assert(m_pPge);
     drawTextHighlighted(
-        getDearImGui2DposXforWindowCenteredText(szRespawnWaitText),
+        getDearImGui2DposXforWindowCenteredText(szWaitText),
         (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled * 2,
-        szRespawnWaitText);
+        szWaitText);
 
     drawTextHighlighted(
-        getDearImGui2DposXforWindowCenteredText(szRespawnWaitText2),
+        getDearImGui2DposXforWindowCenteredText(szWaitText2),
         (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled,
-        szRespawnWaitText2);
+        szWaitText2);
 
     assert(m_pConfig);
-    if (m_pConfig->getPlayerRespawnDelaySeconds() == 0)
+    if (gm->isRespawnAllowedAfterDie() && (m_pConfig->getPlayerRespawnDelaySeconds() == 0))
     {
         return;
     }
@@ -2888,18 +2892,27 @@ void proofps_dd::GUI::drawCountdownTimerForRespawnOrForcedSpectating()
     const auto timeDiffMillisecs = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - m_timePlayerDied).count();
     
-    const float fRespawnProgress = std::min(1.f, timeDiffMillisecs / (static_cast<float>(m_pConfig->getPlayerRespawnDelaySeconds() * 1000)));
-    //const int timeRemainingUntilRespawnSecs =
-    //    std::max(0, static_cast<int>(m_pConfig->getPlayerRespawnDelaySeconds()) - timeDiffSeconds);
+    const float fCountdownProgress =
+        gm->isRespawnAllowedAfterDie() ?
+        std::min(1.f, timeDiffMillisecs / (static_cast<float>(m_pConfig->getPlayerRespawnDelaySeconds() * 1000))) :
+        std::min(1.f, timeDiffMillisecs / (static_cast<float>(3 * 1000)));
+
+    if (!gm->isRespawnAllowedAfterDie() && (fCountdownProgress == 1.f))
+    {
+        // client automatically hides countdown when progress is done, only
+        // after hiding this, the spectator GUI text will be visible and spectator inputs will be accepted.
+        m_bShowCountdownTimerForRespawnOrForcedSpectating = false;
+        return;
+    }
 
     constexpr float fProgressBarSizeY = 10.f;
-    const float fProgressBarSizeX = ImGui::CalcTextSize(szRespawnWaitText).x;
+    const float fProgressBarSizeX = ImGui::CalcTextSize(szWaitText).x;
     ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x / 2.f - (fProgressBarSizeX / 2.f), ImGui::GetCursorPosY()));
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 
-    ImGui::ProgressBar(fRespawnProgress, ImVec2(fProgressBarSizeX, fProgressBarSizeY), "");
+    ImGui::ProgressBar(fCountdownProgress, ImVec2(fProgressBarSizeX, fProgressBarSizeY), "");
 
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
@@ -4826,7 +4839,10 @@ void proofps_dd::GUI::handleSpectatorMode(const proofps_dd::Player& player)
         handleExitSpectatorMode(player);
     }
 
-    drawSpectatorMode(player);
+    if (!m_bShowCountdownTimerForRespawnOrForcedSpectating)
+    {
+        drawSpectatorMode(player);
+    }
 
     bPrevFrameSpectator = player.isInSpectatorMode() || player.isForcedSpectating();
 }
