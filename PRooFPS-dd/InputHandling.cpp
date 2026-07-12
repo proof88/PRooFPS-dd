@@ -1194,7 +1194,6 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
             ((std::as_const(player).getHealth() > 0) ||
              ((std::as_const(player).getHealth() == 0) && gameMode.isRespawnAllowedAfterDie()));
 
-        bool bShootActionBeingSent = false;
         const auto nSecsSinceLastWeaponSwitchMillisecs =
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - player.getWeaponManager().getTimeLastWeaponSwitch()
@@ -1213,7 +1212,6 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
                 if (m_bAttack != m_bPrevAttack)
                 {
                     proofps_dd::MsgUserCmdFromClient::setMouse(pkt, m_bAttack);
-                    bShootActionBeingSent = true;
 
                     if (std::as_const(player).getHealth() > 0)
                     {
@@ -1234,6 +1232,7 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer(
                     else
                     {
                         m_gui.fastForwardCountdownTimerForRespawnOrForcedSpectating(nPlayerRespawnCountdownFastForwardByClickingMillisecs);
+
                     }
                 }
             }

@@ -597,6 +597,11 @@ void proofps_dd::GUI::hideCountdownTimerForRespawnOrForcedSpectating()
     m_sExtraText_2_CountdownTimerForRespawnOrForcedSpectating.clear();
 }
 
+bool proofps_dd::GUI::isVisible_CountdownTimerForRespawnOrForcedSpectating() const
+{
+    return m_bShowCountdownTimerForRespawnOrForcedSpectating;
+}
+
 void proofps_dd::GUI::fastForwardCountdownTimerForRespawnOrForcedSpectating(std::chrono::milliseconds::rep byMillisecs)
 {
     if (!m_bShowCountdownTimerForRespawnOrForcedSpectating)

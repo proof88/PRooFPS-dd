@@ -162,6 +162,7 @@ namespace proofps_dd
         void showCountdownTimerForRespawnOrForcedSpectating(
             const Player* const pKillerPlayer);
         void hideCountdownTimerForRespawnOrForcedSpectating();
+        bool isVisible_CountdownTimerForRespawnOrForcedSpectating() const;
         void fastForwardCountdownTimerForRespawnOrForcedSpectating(
             std::chrono::milliseconds::rep byMillisecs);
 

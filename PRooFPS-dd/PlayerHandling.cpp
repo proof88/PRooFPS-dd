@@ -137,13 +137,10 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
             nKillerConnHandleServerSide);
         m_pge.getNetwork().getServer().sendToAllClientsExcept(pktDeathNotificationFromServer);
 
-        // from v0.2.5, server shows respawn timer here for themselves, client shows upon receiving MsgDeathNotificationFromServer
+        // from v0.2.5, server shows countdown here for themselves, client shows upon receiving MsgDeathNotificationFromServer
         if (isMyConnection(player.getServerSideConnectionHandle()))
         {
-            if (gameMode->isRespawnAllowedAfterDie())
-            {
-                m_gui.showCountdownTimerForRespawnOrForcedSpectating(pPlayerKiller);
-            }
+            m_gui.showCountdownTimerForRespawnOrForcedSpectating(pPlayerKiller);
         }
     }
 }
@@ -1497,14 +1494,11 @@ bool proofps_dd::PlayerHandling::handleDeathNotificationFromServer(
         }
     }
 
-    // from v0.2.5, client shows respawn timer here instead of in handlePlayerDied()
+    // from v0.2.5, client shows countdown here instead of in handlePlayerDied()
     if (isMyConnection(nDeadConnHandleServerSide))
     {
-        if (gameMode.isRespawnAllowedAfterDie())
-        {
-            m_gui.showCountdownTimerForRespawnOrForcedSpectating(
-                sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
-        }
+        m_gui.showCountdownTimerForRespawnOrForcedSpectating(
+            sKillerName.empty() ? nullptr : &(itPlayerKiller->second));
     }
 
     // Server does death notification on GUI in HandlePlayerDied(), clients do here.
