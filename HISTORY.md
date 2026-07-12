@@ -15,12 +15,13 @@ This version brings the following **NEW FEATURES**:
    Per-second beeps can be heard if this remaining time is less than 10 seconds.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
- - **Menu: About** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
+ - **GUI:** after dieing, instead of immediately switching to forced spectating view, the camera stays in position for 5 seconds, while the usual text "killed by xy" is being shown.
+ - **GUI: About Menu** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
  - **Audio: new sounds** at the beginning and the end of each round (only in round-based game mode), and for team-killing.
 
 This version brings the following **BUG FIXES**:
  - **Gameplay:** sometimes players stayed in position upon beginning of a new round when the server experienced lower FPS.
- - **Gameplay:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
+ - **GUI:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
    This happened in lower FPS situations when multiple game ticks were executed within a single frame.
  - **GUI:** XHair overlay text was not cleared during map change.
 
