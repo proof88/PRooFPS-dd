@@ -131,7 +131,7 @@ namespace proofps_dd
         static_assert(nSvRgmRoundTimeLimitSecsDef <= nSvRgmRoundTimeLimitSecsMax, "Max round time limit should not be smaller than default round time limit.");
 
         static constexpr int nSvRgmRoundPrepareTimeSecsDef = 3;
-        static constexpr int nSvRgmRoundPrepareTimeSecsMin = 0;
+        static constexpr int nSvRgmRoundPrepareTimeSecsMin = 1;  // Cannot be 0 due to: https://github.com/proof88/PRooFPS-dd/issues/380
         static constexpr int nSvRgmRoundPrepareTimeSecsMax = 30;
         static_assert(nSvRgmRoundPrepareTimeSecsMin < nSvRgmRoundPrepareTimeSecsMax, "Min round prepare time should be smaller than max round prepare time.");
         static_assert(nSvRgmRoundPrepareTimeSecsMin <= nSvRgmRoundPrepareTimeSecsDef, "Min round prepare time should not be greater than default round prepare time.");

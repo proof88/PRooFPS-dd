@@ -1254,6 +1254,15 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
     
     m_oldFsmState = m_fsm.getState();
     m_fsm.update();
+
+    // TODO: if configured round prepare time is 0, then WaitForReset -> Prepare won't be properly detected outside in updateVisualsForGameModeShared(),
+    // so server wont invoke serverNewRound().
+    // This can happen for example, if at least 2 ticks are executed by server after each other in onGameRunning(), invoking
+    // serverCheckAndUpdateWinningConditions() 2 times, but then updateAudioVisualsForGameModeShared() will be still invoked only 1, so it will
+    // miss WaitForReset -> Prepare transition.
+    // A possible solution is to move updateAudioVisualsForGameModeShared() into mainLoopConnectedServerOnlyOneTick().
+    // Ticket: https://github.com/proof88/PRooFPS-dd/issues/380
+
     if (m_fsm.getState() == RoundStateFSM::RoundState::Play)
     {
         const unsigned int nCurrentTeam1Players = getTeamPlayersCount(1);
