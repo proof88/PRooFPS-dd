@@ -91,7 +91,7 @@ Using this technique you can even continuously bounce yourself upwards between 2
 
 Currently there is no detailed user manual for the game.  
 In case of any doubt, the manual test files can clarify the normal and expected behavior of the game.  
-These are the `_how-to-manual-test-*.txt` files under the [project tree's PRooFPS-dd directory](https://github.com/proof88/PRooFPS-dd/tree/main/PRooFPS-dd).
+These are the `_how-to-manual-test-*.txt` files under the [project tree's Tests directory](https://github.com/proof88/PRooFPS-dd/tree/main/PRooFPS-dd/Tests).
 
 ### Debugging
 
