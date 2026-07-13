@@ -3,24 +3,24 @@
 A compressed build for Windows is available for TBD.
 
 This version brings the following **NEW FEATURES**:
- - **Gameplay:** for round-based game mode, **Round Time Limit** can be set.  
+ - **Gameplay: Round Time Limit** can be set for round-based game mode.  
    This is the maximum amount of time a round can last.  
    If this limit is hit, the team having more alive players wins the round.  
    No win is registered if both teams have exactly same number of alive players when this time limit is hit.
- - **Gameplay:** for round-based game mode, **Round Prepare Time** can be set.  
+ - **Gameplay: Round Prepare Time** can be set for round-based game mode.  
    This is the short preparation period when players cannot move, before the beginning of each round.
- - **GUI:** at the bottom of the screen the **Remaining Time is displayed**.  
-   In all game modes this uses the configured game time limit to count down, but in round-based game mode it also considers the round time limit if set:  
+ - **GUI: Remaining Time is displayed** at the bottom of the screen.  
+   Basically it depends on the configured game time limit, but in round-based game mode it also considers the round time limit:  
    whichever expires sooner, will be used to show the countdown clock.  
    Per-second **beeps can be heard** if this remaining time is less than 10 seconds.
 
 This version brings the following **CHANGES AND ENHANCEMENTS**:
  - **GUI: after dieing, the camera stays in position for 5 seconds** and the usual text "killed by xy" is being shown, instead of immediately switching to forced spectating view.
- - **GUI: About Menu** has been reorganized, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
+ - **GUI: About Menu** has been **reorganized**, now with **Markdown rendering: HISTORY, THIRD-PARTY and LICENSE** text files are displayed.
  - **Audio: new sounds** at the beginning and the end of each round (only in round-based game mode), and for team-killing.
 
 This version brings the following **BUG FIXES**:
- - **Gameplay:** sometimes players stayed in position upon beginning of a new round when the server experienced lower FPS.
+ - **Gameplay:** sometimes players stayed in position upon beginning of a new round when the server experienced lower FPS (instead of being repositioned to a spawn point).
  - **GUI:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
    This happened in lower FPS situations when multiple game ticks were executed within a single frame.
  - **GUI:** XHair overlay text was not cleared during map change.
