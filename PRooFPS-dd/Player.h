@@ -20,7 +20,6 @@
 #include "PGE.h" // we use audio also from here so it is easier to just include everything
 #include "Config/PgeOldNewValue.h"
 
-#include "Config.h"
 #include "Durations.h"
 #include "EventLister.h"
 #include "PRooFPS-dd-packet.h"
@@ -42,6 +41,8 @@ namespace proofps_dd
         ToggledSpectatorMode,
         ExplosionMultiKill /* not for a specific player, but felt convenient to put here */
     };
+
+    class Config;
 
     class Player
     {
@@ -95,6 +96,22 @@ namespace proofps_dd
 
         // WARNING: change this value with same caution as with above const!
         static constexpr float fJumpGravityStartFromCrouching = 15.f;
+
+        static constexpr char* szCvarSvAttackDamageMultiplier = "sv_attack_damage_multiplier";
+
+        static constexpr float fSvAttackDamageMultiplierMin = 0.1f;
+        static constexpr float fSvAttackDamageMultiplierMax = 1.0f;
+        static constexpr float fSvAttackDamageMultiplierDef = 1.0f;
+
+        static_assert(
+            fSvAttackDamageMultiplierMin <= fSvAttackDamageMultiplierDef,
+            "Min Attack damage multiplier should not be greater than default Attack damage multiplier.");
+        static_assert(
+            fSvAttackDamageMultiplierMin <= fSvAttackDamageMultiplierMax,
+            "Min Attack damage multiplier should not be greater than max Attack damage multiplier.");
+        static_assert(
+            fSvAttackDamageMultiplierDef <= fSvAttackDamageMultiplierMax,
+            "Max Attack damage multiplier should not be smaller than default Attack damage multiplier.");
 
         static constexpr char* szCVarSvMovingAffectsAim = "sv_moving_affects_aim";
 

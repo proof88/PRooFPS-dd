@@ -10,6 +10,7 @@
 #include "stdafx.h"  // PCH
 
 #include "Player.h"
+#include "Config.h"
 #include "Consts.h"
 
 

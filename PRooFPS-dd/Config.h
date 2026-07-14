@@ -113,6 +113,7 @@ namespace proofps_dd
 
         const Smoke::SmokeConfigAmount& getSmokeConfigAmount() const;
 
+        const float& getAttackDamageMultiplier() const;
         const int& getFallDamageMultiplier() const;
 
         const unsigned int& getPlayerRespawnDelaySeconds() const;
@@ -162,6 +163,7 @@ namespace proofps_dd
 
         float m_fSomersaultMidAirJumpForceMultiplier /* initialization postponed to .cpp ctor so I dont need to include Player.h here */;
 
+        float m_fAttackDamageMultiplier /* initialization postponed to .cpp ctor so I dont need to include Player.h here */;
         int m_nFallDamageMultiplier = SV_FALL_DAMAGE_MULTIPLIER_DEF;
 
         bool m_bCamFollowsXHair = true;

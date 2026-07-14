@@ -1262,6 +1262,24 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     }
     ImGui::EndGroup();
 
+    PGEcfgVariable& cvarSvAttackDamageMultiplier = m_pPge->getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvAttackDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvAttackDamageMultiplier, cvarSvAttackDamageMultiplier);
+    ImGui::TextUnformatted("Attack Damage Multiplier:");
+    ImGui::SameLine();
+    float fSvAttackDamageMultiplier = cvarSvAttackDamageMultiplier.getAsFloat();
+    ImGui::PushItemWidth(70);
+    if (ImGui::SliderFloat(
+        "x##sliderSvAttackDamageMultiplier",
+        &fSvAttackDamageMultiplier,
+        0.1f, 1.0f, "%.1f",
+        ImGuiSliderFlags_AlwaysClamp))
+    {
+        cvarSvAttackDamageMultiplier.Set(fSvAttackDamageMultiplier);
+    }
+    ImGui::PopItemWidth();
+
     PGEcfgVariable& cvarSvFallDamageMultiplier = m_pPge->getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER];
     ImGui::AlignTextToFramePadding();
     static std::string sHintSvFallDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
@@ -1271,7 +1289,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
     ImGui::PushItemWidth(70);
     if (ImGui::SliderInt(
-        "x##sliderSvallDamageMultiplier",
+        "x##sliderSvFallDamageMultiplier",
         &nSvFallDamageMultiplier,
         0, 10, "%d",
         ImGuiSliderFlags_AlwaysClamp))

@@ -280,6 +280,30 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Client update rate in config, forcing to Tickrate: %u Hz", m_nClientUpdateRate);
     }
 
+    if (!m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].getAsFloat() >= Player::fSvAttackDamageMultiplierMin) &&
+            (m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].getAsFloat() <= Player::fSvAttackDamageMultiplierMax))
+        {
+            m_fAttackDamageMultiplier = m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].getAsFloat();
+            getConsole().OLn("Attack Damage Multiplier from config: %f", m_fAttackDamageMultiplier);
+        }
+        else
+        {
+            m_fAttackDamageMultiplier = Player::fSvAttackDamageMultiplierDef;
+            getConsole().EOLn("ERROR: Invalid Attack Damage Multiplier in config: %s, forcing default: %f",
+                m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].getAsString().c_str(),
+                m_fAttackDamageMultiplier);
+            m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].Set(Player::fSvAttackDamageMultiplierDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[Player::szCvarSvAttackDamageMultiplier].Set(Player::fSvAttackDamageMultiplierDef);
+        m_fAttackDamageMultiplier = Player::fSvAttackDamageMultiplierDef;
+        getConsole().OLn("Missing Attack Damage Multiplier in config, forcing default: %f", m_fAttackDamageMultiplier);
+    }
+
     if (!m_pge.getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER].getAsString().empty())
     {
         m_nFallDamageMultiplier = m_pge.getConfigProfiles().getVars()[CVAR_SV_FALL_DAMAGE_MULTIPLIER].getAsInt();
@@ -771,7 +795,8 @@ proofps_dd::Config::Config(
     proofps_dd::Maps& maps) :
     m_pge(pge),
     m_maps(maps),
-    m_fSomersaultMidAirJumpForceMultiplier(Player::fSomersaultMidAirJumpForceMultiplierDef)
+    m_fSomersaultMidAirJumpForceMultiplier(Player::fSomersaultMidAirJumpForceMultiplierDef),
+    m_fAttackDamageMultiplier(Player::fSvAttackDamageMultiplierDef)
 {
     // Note that the following should not be touched here as they are not fully constructed when we are here:
     // maps, pge

@@ -15,6 +15,7 @@
 #include "PURE/include/external/Math/PureTransformMatrix.h"
 
 #include "CameraHandling.h"
+#include "Config.h"
 #include "GameMode.h"
 
 static constexpr float GAME_CAM_Z = -5.0f;
