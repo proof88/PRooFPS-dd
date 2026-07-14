@@ -8,7 +8,7 @@ This version brings the following **NEW FEATURES**:
    Smaller value will require players to hit enemies more times.  
    Example: if a bullet does 50 HP damage as per the weapon file, then:  
     - will do 50 HP damage indeed if multiplier is 1.0, but  
-    - will do only 5 HP damage if multiplier is 0.1.
+    - will do only 25 HP damage if multiplier is 0.5.
  - **Gameplay: Round Time Limit** can be set for round-based game mode.  
    This is the maximum amount of time a round can last.  
    If this limit is hit, the team having more alive players wins the round.  
