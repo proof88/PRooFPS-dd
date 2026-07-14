@@ -526,6 +526,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
     // COPY-PASTE END from Physics::serverGravity()
 
     const bool bCollisionModeBvh = (m_pge.getConfigProfiles().getVars()[Maps::szCVarSvMapCollisionMode].getAsInt() == 1);
+    const float fAttackDamageMplier = m_config.getAttackDamageMultiplier();
 
     // on the long run this function needs to be part of the game engine itself, however currently game engine doesn't handle collisions,
     // so once we introduce the collisions to the game engine, it will be an easy move of this function as well there
@@ -574,6 +575,9 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
             
             if (bullet.hitsPlayers())
             {
+                const int nBulletDamageHp = static_cast<int>(std::lroundf(fAttackDamageMplier * bullet.getDamageHp()));
+                const int nBulletDamageAp = static_cast<int>(std::lroundf(fAttackDamageMplier * bullet.getDamageAp()));
+
                 // check if bullet is hitting a player
                 for (auto& playerPair : m_mapPlayers)
                 {
@@ -621,7 +625,7 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                         if (bullet.getAreaDamageSize() == 0.f)
                         {
                             // non-explosive bullets do damage here, explosive bullets make explosions so then the explosion does damage in createExplosionServer()
-                            player.doDamage(bullet.getDamageAp(), bullet.getDamageHp());
+                            player.doDamage(nBulletDamageAp, nBulletDamageHp);
                             
                             // let's use any WeaponManager to retrieve weapon, even tho it is not their bullet, it doesnt matter now, we just need the weapon type!
                             /* TODO: put back const to wpnForType after we don't need to call getVars() below! */
@@ -635,7 +639,8 @@ void proofps_dd::WeaponHandling::serverUpdateBulletsAndHandleHittingWallsAndPlay
                             // that will be introduced much later in the future, even later than pistol's burst fire mode.
                             player.updateImpactForceByBulletImpactOrRecoil(false /* bRecoil */, bullet, *wpnForType);
                             
-                            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls without affecting their aim accuracy stat!
+                            // intentionally not counting with melee weapons for aim accuracy stat, let them swing the knife in the air and against walls
+                            // without affecting their aim accuracy stat!
                             if (wpnForType && (wpnForType->getType() != Weapon::Type::Melee) &&
                                 /* WA for bug: https://github.com/proof88/PRooFPS-dd/issues/354 */
                                (wpnForType->getVars()["bullet_subprojectiles"].getAsUInt() == 1))
@@ -1800,6 +1805,8 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
     const auto itShooter = m_mapPlayers.find(xpl.getOwner());
     int nPlayersDiedByThisExplosion = 0;
 
+    const float fAttackDamageMplier = m_config.getAttackDamageMultiplier();
+    
     // apply area damage to players
     for (auto& playerPair : m_mapPlayers)
     {
@@ -1844,8 +1851,13 @@ proofps_dd::Explosion& proofps_dd::WeaponHandling::createExplosionServer(
                 continue;
             }
 
-            player.doDamage(nDamageApCalculated, static_cast<int>(std::lroundf(fRadiusDamage)));
-            //getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage)));
+            // we let all above calculations done using bullet's AP and HP damage values defined in Weapon config file,
+            // but the actual damage done to the player is modified here by the server's attack damage multiplier, so
+            // the impact forces are NOT affected by that config, intentionally.
+            player.doDamage(
+                static_cast<int>(std::lroundf(nDamageApCalculated * fAttackDamageMplier)),
+                static_cast<int>(std::lroundf(fRadiusDamage * fAttackDamageMplier)));
+            getConsole().EOLn("WeaponHandling::%s(): damage: %d!", __func__, static_cast<int>(std::lroundf(fRadiusDamage * fAttackDamageMplier)));
 
             if (itShooter != m_mapPlayers.end())
             {

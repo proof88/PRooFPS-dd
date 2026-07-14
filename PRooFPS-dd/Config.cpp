@@ -514,6 +514,11 @@ const proofps_dd::Smoke::SmokeConfigAmount& proofps_dd::Config::getSmokeConfigAm
     return m_eSmokeAmount;
 }
 
+const float& proofps_dd::Config::getAttackDamageMultiplier() const
+{
+    return m_fAttackDamageMultiplier;
+}
+
 const int& proofps_dd::Config::getFallDamageMultiplier() const
 {
     return m_nFallDamageMultiplier;
