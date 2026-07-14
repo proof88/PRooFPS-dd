@@ -1148,7 +1148,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             ImGui::SameLine();
             int nCvarSvDmFragLimit = cvarSvDmFragLimit.getAsInt();
             ImGui::PushItemWidth(100);
-            if (ImGui::InputInt("##inputSvDmFragLimit", &nCvarSvDmFragLimit, 1, 10))
+            if (ImGui::InputInt("frags##inputSvDmFragLimit", &nCvarSvDmFragLimit, 1, 10))
             {
                 nCvarSvDmFragLimit = std::max(GameMode::nSvDmFragLimitMin, std::min(GameMode::nSvDmFragLimitMax, nCvarSvDmFragLimit));
                 cvarSvDmFragLimit.Set(nCvarSvDmFragLimit);
@@ -1165,7 +1165,7 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             ImGui::SameLine();
             int nCvarSvRgmRoundWinLimit = cvarSvRgmRoundWinLimit.getAsInt();
             ImGui::PushItemWidth(100);
-            if (ImGui::InputInt("##inputSvRgmRoundWinLimit", &nCvarSvRgmRoundWinLimit, 1, 10))
+            if (ImGui::InputInt("rounds##inputSvRgmRoundWinLimit", &nCvarSvRgmRoundWinLimit, 1, 10))
             {
                 nCvarSvRgmRoundWinLimit = std::max(GameMode::nSvRgmRoundWinLimitMin, std::min(GameMode::nSvRgmRoundWinLimitMax, nCvarSvRgmRoundWinLimit));
                 cvarSvRgmRoundWinLimit.Set(nCvarSvRgmRoundWinLimit);
@@ -1271,7 +1271,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
     ImGui::PushItemWidth(70);
     if (ImGui::SliderInt(
-        "##sliderSvallDamageMultiplier",
+        "x##sliderSvallDamageMultiplier",
         &nSvFallDamageMultiplier,
         0, 10, "%d",
         ImGuiSliderFlags_AlwaysClamp))
@@ -1349,7 +1349,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     float fSvSomersaultMidAirJumpForceMultiplier = cvarSvSomersaultMidAirJumpForceMultiplier.getAsFloat();
     ImGui::PushItemWidth(70);
     if (ImGui::SliderFloat(
-        "##sliderSomersaultMidAirJumpForceMultiplier",
+        "x##sliderSomersaultMidAirJumpForceMultiplier",
         &fSvSomersaultMidAirJumpForceMultiplier,
         1.0f, 2.0f, "%.1f",
         ImGuiSliderFlags_AlwaysClamp))
@@ -1367,7 +1367,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     int nSvDmPlayerRespawnDelaySecs = cvarSvDmPlayerRespawnDelaySecs.getAsInt();
     ImGui::PushItemWidth(70);
     if (ImGui::SliderInt(
-        "##sliderSvDmPlayerRespawnDelaySecs",
+        "seconds##sliderSvDmPlayerRespawnDelaySecs",
         &nSvDmPlayerRespawnDelaySecs,
         0, 5, "%d",
         ImGuiSliderFlags_AlwaysClamp))
@@ -1385,7 +1385,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     int nSvDmPlayerRespawnInvulnerabilityDelaySecs = cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.getAsInt();
     ImGui::PushItemWidth(70);
     if (ImGui::SliderInt(
-        "##sliderSvDmPlayerRespawnInvulnerabilityDelaySecs",
+        "seconds##sliderSvDmPlayerRespawnInvulnerabilityDelaySecs",
         &nSvDmPlayerRespawnInvulnerabilityDelaySecs,
         0, 3, "%d",
         ImGuiSliderFlags_AlwaysClamp))
