@@ -46,6 +46,7 @@ namespace proofps_dd
         void show();
         void showInCenter();
         void hide();
+        void setVisibility(bool state);
         bool visible() const;
 
         void updateUnprojectedCoords(PureCamera& cam);
@@ -78,7 +79,7 @@ namespace proofps_dd
         void setBaseScaling(float scaleFactor);
         void setRelativeScaling(float relativeScaleFactor);
 
-        void updateVisuals();
+        void updateVisuals(bool bVisible);
 
     protected:
 

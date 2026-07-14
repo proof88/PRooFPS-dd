@@ -91,6 +91,9 @@ void proofps_dd::PlayerHandling::handlePlayerDied(
 
     if (isMyConnection(player.getServerSideConnectionHandle()))
     {
+        // in all game modes we display some text and some countdown at the moment of dieing, so it is ok to
+        // hide xhair in this moment, and later some other logic shall explicitly show it again, either when respawning or
+        // when forced spectating is actually active, etc.
         xhair.hide();
     }
 
@@ -167,7 +170,6 @@ void proofps_dd::PlayerHandling::handlePlayerRespawned(
         camera.getTargetVec().SetX(camera.getPosVec().getX());
         camera.getTargetVec().SetY(camera.getPosVec().getY());
 
-        xhair.show();
         xhair.handleMagLoaded();
         m_gui.hideCountdownTimerForRespawnOrForcedSpectating();
         m_gui.hideGameObjectives(); // just in case player was checking it during respawn countdown, OR game just restarted

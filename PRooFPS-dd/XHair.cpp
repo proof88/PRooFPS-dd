@@ -152,6 +152,18 @@ void proofps_dd::XHair::hide()
     hideAboveText();
 }
 
+void proofps_dd::XHair::setVisibility(bool state)
+{
+    if (state)
+    {
+        show();
+    }
+    else
+    {
+        hide();
+    }
+}
+
 bool proofps_dd::XHair::visible() const
 {
     return m_bVisible;
@@ -363,9 +375,11 @@ void proofps_dd::XHair::setRelativeScaling(float relativeScaleFactor)
     getObject3D().SetScaling(m_fBaseScaling * relativeScaleFactor);
 }
 
-void proofps_dd::XHair::updateVisuals()
+void proofps_dd::XHair::updateVisuals(bool bVisible)
 {
     // expected to be invoked every frame, by the game itself, after updating XHair object position by user input
+
+    setVisibility(bVisible);
 
     if (!m_bVisible)
     {

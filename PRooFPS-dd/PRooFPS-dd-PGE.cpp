@@ -881,8 +881,10 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     m_gui.getXHair()->updateUnprojectedCoords(getPure().getCamera());
     // TODO: basically 1 single public setPosVec() should be added to XHair, which will automatically invoke these functions too!
     // Everywhere objXHair.getPosVec().Set() should be replaced by a new function: m_gui.getXHair().setPosVec().
-    m_gui.getXHair()->updateVisuals();
-
+    m_gui.getXHair()->updateVisuals(
+        !GameMode::getGameMode()->isGameWon() &&
+        !m_gui.isVisible_CountdownTimerForRespawnOrForcedSpectating());
+    
     m_gui.updateNonDearImGuiElements();
 
     //if (!isServer())
@@ -1181,7 +1183,6 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameModeShared(const GameMode* gm
         getConsole().EOLn("PRooFPSddPGE::%s() detected game has just been won in this frame or tick", __func__);
         m_gui.hideInGameMenu();
         m_gui.showGameObjectives();
-        m_gui.getXHair()->hide();
         m_gui.getMinimap()->hide();
         for (auto& playerPair : m_mapPlayers)
         {
