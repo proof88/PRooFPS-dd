@@ -4790,7 +4790,8 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
         ImGui::GetCursorPos().y,
         szText3);
 
-    if (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow)
+    if (GameMode::getGameMode()->isRespawnAllowedAfterDie() &&
+        (m_pCamera->cameraGetSpectatingView() == CameraHandling::SpectatingView::PlayerFollow))
     {
         // RFR: OPT: getPlayerNameAndTeamColorByConnHandle() should be refactored so we would not need to find player again here
         const auto playerSpectatedIt = m_pMapPlayers->find(m_pCamera->cameraGetPlayerConnectionHandleToFollowWhenSpectating());
@@ -4804,7 +4805,7 @@ void proofps_dd::GUI::drawSpectatorMode(const proofps_dd::Player& player)
                 // if we make pos variables static, they will be wrong upon changing screen resolution!
 
                 assert(m_pPge);
-                drawTextShadowed(
+                drawTextHighlighted(
                     getDearImGui2DposXforWindowCenteredText(szDeadRespawnWaitText),
                     (m_pPge->getPure().getCamera().getViewport().size.height / 2.f) - m_fFontSizePxHudGeneralScaled * 2,
                     szDeadRespawnWaitText);
