@@ -346,11 +346,22 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingVie
     const auto playerIt = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
     if (mapPlayers.end() != playerIt)
     {
+        static std::chrono::time_point<std::chrono::steady_clock> s_timeLastCouldSpectateThisPlayer;
         if (canSpectatePlayer(playerIt->second))
         {
             // current m_connHandlePlayerToFollowInSpectatingView is valid
             posPlayerToFollow = playerIt->second.getObject3D()->getPosVec();
+            s_timeLastCouldSpectateThisPlayer = std::chrono::steady_clock::now();
             return true;
+        }
+        else
+        {
+            // current m_connHandlePlayerToFollowInSpectatingView is still valid but probably will need to find another soon
+            if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - s_timeLastCouldSpectateThisPlayer).count() < 2)
+            {
+                // this is just to have some delay before we move the camera to another player after this player died or entered spectator mode
+                return true;
+            }
         }
     }
 
