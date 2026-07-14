@@ -561,6 +561,12 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
     assert(player.isInSpectatorMode() || player.isForcedSpectating());
     // in this function, m_strafe and other members are re-used for controlling the spectating view in spectator mode
 
+    // even if we are spectating, do not allow camera changes yet if the countdown-to-spectating in the center is still visible
+    if (m_gui.isVisible_CountdownTimerForRespawnOrForcedSpectating())
+    {
+        return;
+    }
+
     if (m_camera.cameraGetSpectatingView() == CameraHandling::SpectatingView::Free)
     {
         // in future if FPS limit can be disable we probably will want to divide here by fps
@@ -1086,6 +1092,12 @@ bool proofps_dd::InputHandling::clientMouseWhenConnectedToServer_mouseMovesXHair
     }
 
     if ((dx == 0) && (dy == 0))
+    {
+        return false;
+    }
+
+    // even if we are spectating, do not allow camera changes yet if the countdown-to-spectating in the center is still visible
+    if (m_gui.isVisible_CountdownTimerForRespawnOrForcedSpectating())
     {
         return false;
     }
