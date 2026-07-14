@@ -26,10 +26,11 @@ This version brings the following **CHANGES AND ENHANCEMENTS**:
  - **Audio: new sounds** at the beginning and the end of each round (only in round-based game mode), and for team-killing.
 
 This version brings the following **BUG FIXES**:
- - **Gameplay:** sometimes players stayed in position upon beginning of a new round when the server experienced lower FPS (instead of being repositioned to a spawn point).
- - **GUI:** at the end of a game, Frag Table was not always automatically shown to the server player and HUD stayed visible.  
+ - **Gameplay:** sometimes **players were NOT repositioned to spawn points** upon beginning of a new round when the server experienced lower FPS.
+ - **GUI:** after dieing in round game mode, the **X-Hair stayed hidden during forced spectating view**.
+ - **GUI:** at the end of a game, **Frag Table was not always automatically shown** to the server player and HUD stayed visible.  
    This happened in lower FPS situations when multiple game ticks were executed within a single frame.
- - **GUI:** XHair overlay text was not cleared during map change.
+ - **GUI:** X-Hair overlay text was not cleared during map change.
 
 **LIMITATIONS Still in Effect:**
  - **Gameplay:** Shotgun does not contribute to player aim accuracy stats.
