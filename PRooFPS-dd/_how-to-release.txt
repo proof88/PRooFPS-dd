@@ -45,7 +45,7 @@
  - except map_test_good, delete any other test-purpose map from gamedata/maps and other unneeded files from other directories under gamedata dir;
 
  - check if game is able to start up from this new release directory, and able to display the contents of HISTORY.md and LICENSE files
-   in the About menu
+   in the About menu, AND content of HISTORY.md is up-to-date, including the release date of the current version being released!
    
  - if everything is fine so far, then compress and upload to Google Drive (to the usual LAN directory);
 
