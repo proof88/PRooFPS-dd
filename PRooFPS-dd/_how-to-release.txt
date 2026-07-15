@@ -47,20 +47,26 @@
  - check if game is able to start up from this new release directory, and able to display the contents of HISTORY.md and LICENSE files
    in the About menu, AND content of HISTORY.md is up-to-date, including the release date of the current version being released!
    
- - if everything is fine so far, then compress and upload to Google Drive (to the usual LAN directory);
+ - if everything is fine so far, then compress and upload to Google Drive (to the usual LAN/PRooFPS-dd directory);
 
  - check if game is able to start up on a separate machine after downloading;
 
  - update the wiki page on github (README.md), especially the "Try the game" and "Debugging" sections
-   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed),
+   don't forget to add the new DOWNLOAD URL!
 
  - update the version changes page "History" (HISTORY.md)
-   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
+   (shall be already up-to-date if _how-to-add-feature.txt was always properly followed),
+   don't forget to add the new DOWNLOAD URL!
 
  - update the "3rd-Party Assets" page (THIRD-PARTY.md)
    (shall be already up-to-date if _how-to-add-feature.txt was always properly followed);
 
- - make sure you pull the updated README.md, and then push a new commit including the changes regarding the
+ - make sure you pull the updated README.md and other files, and then push a new commit including the changes regarding the
    RegTestDump files described above;
+
+ - copy the updated HISTORY.md and other required files to the directory which was previously zipped, with this up-to-date content.
+
+ - compress this directory and upload to Google Drive again, overwriting the previous zip, so the download URL stays unchanged!
 
  - finally, make a new git tag, e.g.: "v0.1.5-PrivateBeta".
