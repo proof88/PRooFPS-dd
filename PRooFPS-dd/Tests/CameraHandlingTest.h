@@ -12,6 +12,7 @@
 
 #include <list>
 #include <memory>
+#include <thread>
 
 #include "UnitTest.h"
 
@@ -874,6 +875,13 @@ private:
 
         // first player goes spectating again
         player0.isInSpectatorMode() = true;
+
+        // but within 2 seconds we still stick to same player
+        b &= assertTrue(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 3 ggg");
+        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 3");
+        b &= assertEquals(player0.getObject3D()->getPosVec(), vecPosToFollow, "pos 3");
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         b &= assertFalse(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 3");
 
         // all players join the game
@@ -969,7 +977,15 @@ private:
         b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 2");
         b &= assertEquals(player0.getObject3D()->getPosVec(), vecPosToFollow, "pos 2");
 
+        // forced to spectate, probably died in round based game mode
         player0.setForcedSpectating(true);
+
+        // but within 2 seconds we still stick to same player
+        b &= assertTrue(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 3 ggg");
+        b &= assertEquals(player0.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 3");
+        b &= assertEquals(player0.getObject3D()->getPosVec(), vecPosToFollow, "pos 3");
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         b &= assertFalse(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 3");
 
         // all players join the game
@@ -1001,7 +1017,10 @@ private:
         }
         // player0 and player1 references are now invalid, only player2 and player3 are still valid
 
+        // forced to spectate, probably died in round based game mode
         player2.setForcedSpectating(true);
+
+        // we cannot stick to previous player0 for 2 seconds since it disconnected from server so we will find another player immediately
         b &= assertTrue(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 8");
         b &= assertEquals(player3.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 8");
         b &= assertEquals(player3.getObject3D()->getPosVec(), vecPosToFollow, "pos 8");
@@ -1027,8 +1046,15 @@ private:
         b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 10");
         b &= assertEquals(player2.getObject3D()->getPosVec(), vecPosToFollow, "pos 10");
 
+        // forced to spectate, probably died in round based game mode
         player2.setForcedSpectating(true);
 
+        // but within 2 seconds we still stick to same player
+        b &= assertTrue(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 11 ggg");
+        b &= assertEquals(player2.getServerSideConnectionHandle(), camera.cameraGetPlayerConnectionHandleToFollowWhenSpectating(), "connhandle 11");
+        b &= assertEquals(player2.getObject3D()->getPosVec(), vecPosToFollow, "pos 11");
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         b &= assertFalse(camera.findAnyValidPlayerToFollowInPlayerSpectatingView(m_mapPlayers, vecPosToFollow), "find 11");
     
         b &= assertTrue(m_gm->removePlayer(player2, m_network), "remove player 3 from gamemode");

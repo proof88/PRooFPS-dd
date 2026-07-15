@@ -342,11 +342,12 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingVie
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
     PureVector& posPlayerToFollow)
 {
+    static std::chrono::time_point<std::chrono::steady_clock> s_timeLastCouldSpectateThisPlayer;
+
     // first try to spectate the same player who we were spectating previously
     const auto playerIt = mapPlayers.find(m_connHandlePlayerToFollowInSpectatingView);
     if (mapPlayers.end() != playerIt)
-    {
-        static std::chrono::time_point<std::chrono::steady_clock> s_timeLastCouldSpectateThisPlayer;
+    {   
         if (canSpectatePlayer(playerIt->second))
         {
             // current m_connHandlePlayerToFollowInSpectatingView is valid
@@ -380,6 +381,9 @@ bool proofps_dd::CameraHandling::findAnyValidPlayerToFollowInPlayerSpectatingVie
             return true;
         }
     }
+
+    // reset back to epoch
+    s_timeLastCouldSpectateThisPlayer = std::chrono::time_point<std::chrono::steady_clock>();
 
     return false;
 } // findAnyValidPlayerToFollowInPlayerSpectatingView()
