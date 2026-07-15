@@ -18,7 +18,7 @@ From this version, we introduce the following changes:
      T jobb alsó underground részhez, ahol van közel machine pistol, felszedni, majd balra nézve vízszintesen kilőni a tárat.
 
 Conclusion:
-
+N/A
 
 
 Debug 1 player: at upper left spawn point with shooting:
