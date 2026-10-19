@@ -31,6 +31,7 @@ TODO:
  - TODO: trading patterns: psychology or math? https://www.youtube.com/watch?v=oWheof70O9g
  - TODO: Benner-cycle: https://www.youtube.com/watch?v=1dD9Yl5hw6I
  - Ben: ETH regression band; going home; ETH/BTC double bottom, 2. bottomja mikor: https://www.youtube.com/watch?v=ZZNFVcbzUE4
+ - Crypto wallet security: https://www.youtube.com/watch?v=GcSdO4ZyF3k
  
 [TOC]
 
