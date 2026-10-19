@@ -464,10 +464,10 @@ private:
 
     bool test_get_gamemodetype_name()
     {
-        return (assertEquals("Deathmatch / Free for All", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::DeathMatch), "dm") &
-            assertEquals("Team Deathmatch", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamDeathMatch), "tdm") &
-            assertEquals("Team Round Game", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamRoundGame), "trg") &
-            assertEquals("", proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::Max), "max")) != 0;
+        return (assertEquals(std::string("Deathmatch / Free for All"), proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::DeathMatch), "dm") &
+            assertEquals(std::string("Team Deathmatch"), proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamDeathMatch), "tdm") &
+            assertEquals(std::string("Team Round Game"), proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::TeamRoundGame), "trg") &
+            assertEquals(std::string(""), proofps_dd::GameMode::getGameModeTypeName(proofps_dd::GameModeType::Max), "max")) != 0;
     }
 
     bool test_get_gamemodetype_from_config()
