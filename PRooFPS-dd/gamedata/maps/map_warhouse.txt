@@ -157,7 +157,8 @@ y = paperboxes.bmp
 # '6' char represents machine pistol.
 # '7' char represents shotgun.
 # '8' char represents grenade launcher.
-# ',' char represents health/medkit.
+# ',' char represents armor.
+# '+' char represents health/medkit.
 # '.' char represents JetLax.
 # Since these items are in the foreground, a background block might be implicitly
 # created behind them, if there is a previously created NEIGHBOR background block
