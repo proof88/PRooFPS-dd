@@ -1,3 +1,6 @@
+# Tired of notepad-style map editing?
+# Try this work-in-progress map editor: https://gitlab.com/bodnartibi/proofps-dd-map-editor
+
 # Lines starting with hashtag are comments and ignored by loader.
 
 # Blank lines are also ignored by loader.

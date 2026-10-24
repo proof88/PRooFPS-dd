@@ -751,6 +751,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
         MenuButton{ "C R E A T E  G A M E", MainMenuState::CreateGame },
         MenuButton{ "J O I N  G A M E", MainMenuState::JoinGame },
         MenuButton{ "S E T T I N G S", MainMenuState::Settings },
+        MenuButton{ "M A P  E D I T O R", MainMenuState::MapEditor },
         MenuButton{ "A B O U T", MainMenuState::About },
         MenuButton{ "E X I T", MainMenuState::Exiting });
 
@@ -759,7 +760,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     constexpr float fBtnSpacingY = 30.f;
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
     constexpr float fContentHeight = menuButtons.size() * (fBtnHeight + fBtnSpacingY) + fBtnSpacingY + fDefaultFontSizePixels * 2 /* 2 lines for versions texts under buttons */;
-    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
+    const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY) + 50 /* avoid starting too close to logo */;
 
     // trying to generalize previously hardcoded way of buttons draw
     for (size_t i = 0; i < menuButtons.size(); i++)
@@ -772,10 +773,15 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
         }
     }
 
-    // not nice but need to add extra logic here for exiting
+    // not nice, shall be callback but this is just a quick way of implementing stuff ...
     if (m_currentMenuInMainMenu == MainMenuState::Exiting)
     {
         m_pPge->getPure().getWindow().Close();
+    }
+    else if (m_currentMenuInMainMenu == MainMenuState::MapEditor)
+    {
+        m_currentMenuInMainMenu = MainMenuState::Main; // reset immediately
+        browseToUrl("https://gitlab.com/bodnartibi/proofps-dd-map-editor");
     }
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;

@@ -50,6 +50,7 @@ namespace proofps_dd
             CreateGame,
             JoinGame,
             Settings,
+            MapEditor,
             About,
             Exiting     /* User requested closing the app */
         };
