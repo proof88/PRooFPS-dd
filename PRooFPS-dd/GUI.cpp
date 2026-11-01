@@ -774,7 +774,14 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     }
 
     // not nice, shall be callback but this is just a quick way of implementing stuff ...
-    if (m_currentMenuInMainMenu == MainMenuState::Exiting)
+    if (m_currentMenuInMainMenu == MainMenuState::CreateGame)
+    {
+        PGEcfgVariable& cvarSvGamemode = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvGamemode];
+        // re-create game mode instance, to make sure all GUI elements are rendeder properly for the game mode
+        // even if we don't click on the game mode in drawCreateGameMenu()
+        GameMode::createGameMode(static_cast<GameModeType>(cvarSvGamemode.getAsInt()), *m_pMapPlayers);
+    }
+    else if (m_currentMenuInMainMenu == MainMenuState::Exiting)
     {
         m_pPge->getPure().getWindow().Close();
     }
@@ -1035,6 +1042,22 @@ void proofps_dd::GUI::drawCreateGameServerMapSelection()
         }
         ImGui::PopItemWidth();
 
+        if (GameMode::getGameMode()->isRoundBased() &&
+            m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance].getAsBool())
+        {
+            PGEcfgVariable& cvarSvMapPickupableItemsPresent = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent];
+            ImGui::AlignTextToFramePadding();
+            static std::string sHintSvMapPickupableItemsPresent; // static so it is built up by addHintToItemByCVar() only once
+            addHintToItemByCVar(sHintSvMapPickupableItemsPresent, cvarSvMapPickupableItemsPresent);
+            ImGui::TextUnformatted("Pickupable Items Present:");
+            ImGui::SameLine();
+            bool bSvMapPickupableItemsPresent = cvarSvMapPickupableItemsPresent.getAsBool();
+            if (ImGui::Checkbox("##cbPickupableItemsPresent", &bSvMapPickupableItemsPresent))
+            {
+                cvarSvMapPickupableItemsPresent.Set(bSvMapPickupableItemsPresent);
+            }
+        }
+
     } // end Map Config
     ImGui::Unindent();
 } // drawCreateGameServerMapSelection()
@@ -1056,16 +1079,23 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::DeathMatch));
                 GameMode::createGameMode(GameModeType::DeathMatch, *m_pMapPlayers);
+                PGEcfgVariable& cvarSvMapPickupableItemsPresent = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent];
+                cvarSvMapPickupableItemsPresent.Set(true);
             }
             if (ImGui::RadioButton("Team Deathmatch##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamDeathMatch)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamDeathMatch));
                 GameMode::createGameMode(GameModeType::TeamDeathMatch, *m_pMapPlayers);
+                PGEcfgVariable& cvarSvMapPickupableItemsPresent = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent];
+                cvarSvMapPickupableItemsPresent.Set(true);
             }
             if (ImGui::RadioButton("Team Round Game##rbtn_gm", cvarSvGamemode.getAsInt() == static_cast<int>(GameModeType::TeamRoundGame)))
             {
                 cvarSvGamemode.Set(static_cast<int>(GameModeType::TeamRoundGame));
                 GameMode::createGameMode(GameModeType::TeamRoundGame, *m_pMapPlayers);
+                PGEcfgVariable& cvarSvMapPickupableItemsPresent = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent];
+                PGEcfgVariable& cvarSvRgmFinance = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance];
+                cvarSvMapPickupableItemsPresent.Set(!cvarSvRgmFinance.getAsBool());
             }
 
             if (!GameMode::getGameMode()->isTeamBasedGame())
@@ -1133,6 +1163,58 @@ void proofps_dd::GUI::drawTabCreateGameServerSettings()
                     cvarSvRgmRoundPrepareTimeSecs.Set(nCvarSvRgmRoundPrepareTimeSecs);
                 }
                 ImGui::PopItemWidth();
+
+                PGEcfgVariable& cvarSvRgmFinance = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance];
+                ImGui::AlignTextToFramePadding();
+                static std::string sHintSvRgmFinance; // static so it is built up by addHintToItemByCVar() only once
+                addHintToItemByCVar(sHintSvRgmFinance, cvarSvRgmFinance);
+                ImGui::TextUnformatted("Finance:");
+                ImGui::SameLine();
+                bool bSvRgmFinance = cvarSvRgmFinance.getAsBool();
+                if (ImGui::Checkbox("##cbFinance", &bSvRgmFinance))
+                {
+                    cvarSvRgmFinance.Set(bSvRgmFinance);
+
+                    PGEcfgVariable& cvarSvMapPickupableItemsPresent = m_pPge->getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent];
+                    cvarSvMapPickupableItemsPresent.Set(!bSvRgmFinance);
+                }
+
+                if (!bSvRgmFinance)
+                {
+                    ImGui::BeginDisabled(true);
+                }
+
+                PGEcfgVariable& cvarSvRgmMarketOpenDurationSecs = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs];
+                ImGui::AlignTextToFramePadding();
+                static std::string sHintSvRgmMarketOpenDurationSecs; // static so it is built up by addHintToItemByCVar() only once
+                addHintToItemByCVar(sHintSvRgmMarketOpenDurationSecs, cvarSvRgmMarketOpenDurationSecs);
+                ImGui::TextUnformatted("Market Open Time  :");
+                ImGui::SameLine();
+                int nCvarSvRgmMarketOpenDurationSecs = cvarSvRgmMarketOpenDurationSecs.getAsInt();
+                ImGui::PushItemWidth(100);
+                if (ImGui::InputInt("seconds##inputSvRgmMarketOpenDurationSecs", &nCvarSvRgmMarketOpenDurationSecs, 1, 1))
+                {
+                    nCvarSvRgmMarketOpenDurationSecs = std::max(GameMode::nSvRgmMarketOpenDurationSecsMin, std::min(GameMode::nSvRgmMarketOpenDurationSecsMax, nCvarSvRgmMarketOpenDurationSecs));
+                    cvarSvRgmMarketOpenDurationSecs.Set(nCvarSvRgmMarketOpenDurationSecs);
+                }
+                ImGui::PopItemWidth();
+
+                PGEcfgVariable& cvarSvRgmTrading = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmTrading];
+                ImGui::AlignTextToFramePadding();
+                static std::string sHintSvRgmTrading; // static so it is built up by addHintToItemByCVar() only once
+                addHintToItemByCVar(sHintSvRgmTrading, cvarSvRgmTrading);
+                ImGui::TextUnformatted("Trading:");
+                ImGui::SameLine();
+                bool bSvRgmTrading = cvarSvRgmTrading.getAsBool();
+                if (ImGui::Checkbox("##cbTrading", &bSvRgmTrading))
+                {
+                    cvarSvRgmTrading.Set(bSvRgmTrading);
+                }
+
+                if (!bSvRgmFinance)
+                {
+                    ImGui::EndDisabled();
+                }
             }
         }
         ImGui::EndGroup();
@@ -1290,7 +1372,7 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
     ImGui::AlignTextToFramePadding();
     static std::string sHintSvFallDamageMultiplier; // static so it is built up by addHintToItemByCVar() only once
     addHintToItemByCVar(sHintSvFallDamageMultiplier, cvarSvFallDamageMultiplier);
-    ImGui::TextUnformatted("Fall Damage Multiplier:");
+    ImGui::TextUnformatted("Fall Damage Multiplier  :");
     ImGui::SameLine();
     int nSvFallDamageMultiplier = cvarSvFallDamageMultiplier.getAsInt();
     ImGui::PushItemWidth(70);
@@ -1417,6 +1499,21 @@ void proofps_dd::GUI::drawTabCreateGameServerTweaks()
         cvarSvDmPlayerRespawnInvulnerabilityDelaySecs.Set(nSvDmPlayerRespawnInvulnerabilityDelaySecs);
     }
     ImGui::PopItemWidth();
+
+    PGEcfgVariable& cvarSvRgmInitialFiatBudget = m_pPge->getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget];
+    ImGui::AlignTextToFramePadding();
+    static std::string sHintSvRgmInitialFiatBudget; // static so it is built up by addHintToItemByCVar() only once
+    addHintToItemByCVar(sHintSvRgmInitialFiatBudget, cvarSvRgmInitialFiatBudget);
+    ImGui::TextUnformatted("Player Initial Fiat Budget:");
+    ImGui::SameLine();
+    int nCvarSvRgmInitialFiatBudget = cvarSvRgmInitialFiatBudget.getAsInt();
+    ImGui::PushItemWidth(120);
+    if (ImGui::InputInt("USD##inputSvRgmInitialFiatBudget", &nCvarSvRgmInitialFiatBudget, 800, 1))
+    {
+        nCvarSvRgmInitialFiatBudget = std::max(GameMode::nSvRgmInitialFiatBudgetMin, std::min(GameMode::nSvRgmInitialFiatBudgetMax, nCvarSvRgmInitialFiatBudget));
+        cvarSvRgmInitialFiatBudget.Set(nCvarSvRgmInitialFiatBudget);
+    }
+    ImGui::PopItemWidth();
 } // drawTabCreateGameServerTweaks()
 
 void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
@@ -1424,7 +1521,7 @@ void proofps_dd::GUI::drawCreateGameMenu(const float& fRemainingSpaceY)
     assert(m_pMaps);
 
     // fContentHeight is now calculated manually, in future it should be calculated somehow automatically by pre-defining abstract elements
-    constexpr float fContentHeight = 340.f;
+    constexpr float fContentHeight = 400.f;
     const float fContentStartY = calcContentStartY(fContentHeight, fRemainingSpaceY);
 
     ImGui::SetCursorPos(ImVec2(20, fContentStartY));
@@ -3127,6 +3224,28 @@ void proofps_dd::GUI::drawCurrentPlayerInfo(const proofps_dd::Player& player)
         updatePlayerHpChangeEvents();
     }
 
+    if (!bWeAreSpectatingNow)  /* we are not aware of other players' money, only ours */
+    {
+        if (m_pConfig->isFinanceEnabled())
+        {
+            //const float fRightPosXlimit = m_pPge->getPure().getCamera().getViewport().size.width - 10;
+            const int nFiatMoneyAsInteger = static_cast<int>(floor(pPlayer->getFiatMoney()));
+            static int nFiatMoneyAsIntegerPrevious = 0;
+            static std::string sFiatMoneyAsInteger = "$ #########";
+            if (nFiatMoneyAsInteger != nFiatMoneyAsIntegerPrevious)
+            {
+                nFiatMoneyAsIntegerPrevious = nFiatMoneyAsInteger;
+                sFiatMoneyAsInteger = "$ " + std::to_string(nFiatMoneyAsInteger);
+            }
+            drawTextHighlighted(
+                //getDearImGui2DposXforRightAdjustedText(sFiatMoneyAsInteger, fRightPosXlimit),
+                10,
+                //fStartY,
+                ImGui::GetCursorPos().y - 2 * fYdiffBetweenRows,
+                sFiatMoneyAsInteger);
+        }
+    }
+
     if (pPlayer->hasJetLax())
     {
         if (pPlayer->hasAntiGravityActive())
@@ -4639,6 +4758,11 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
     fThisRowY += fRowSizeY;
     drawTextHighlighted(
         fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("Attack Damage Multiplier: ") + std::to_string(
+            static_cast<int>(std::lroundf(m_pConfig->getServerInfo().m_fAttackDamageMultiplier * 100))) + "%");
+    fThisRowY += fRowSizeY;
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
         std::string("Fall Damage Multiplier: ") + std::to_string(m_pConfig->getServerInfo().m_nFallDamageMultiplier) + "x");
     fThisRowY += fRowSizeY;
     drawTextHighlighted(
@@ -4655,6 +4779,29 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
         drawTextHighlighted(
             fGameInfoPagesStartX + fIndentX, fThisRowY,
             std::string("Friendly Fire: ") + (m_pConfig->getServerInfo().m_bFriendlyFire ? "yes" : "no"));
+    }
+
+    fThisRowY += fRowSizeY;
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("Finance: ") + (m_pConfig->getServerInfo().m_bFinance ? "yes" : "no"));
+
+    if (m_pConfig->getServerInfo().m_bFinance)
+    {
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Market Open Duration: ") + std::to_string(m_pConfig->getServerInfo().m_nMarketOpenDurationSecs) + " s");
+
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Player Initial Fiat Budget: ") + std::to_string(m_pConfig->getServerInfo().m_nPlayerInitialFiatBudget) + " USD");
+
+        fThisRowY += fRowSizeY;
+        drawTextHighlighted(
+            fGameInfoPagesStartX + fIndentX, fThisRowY,
+            std::string("Trading: ") + (m_pConfig->getServerInfo().m_bTrading ? "yes" : "no"));
     }
 
     if (!m_pNetworking->isServer())
@@ -5119,7 +5266,7 @@ float proofps_dd::GUI::getDearImGui2DposXforCenteredText(const std::string& text
 * Returns a Dear ImGui X-coordinate where the cursor should be placed for printing the given text to make it appear right-adjusted.
 *
 * @param text    The text to be right-adjusted.
-* @param fImGuiX Dear ImGui X-coordinate where the center of the text should be.
+* @param fImGuiX Dear ImGui X-coordinate where the end (right edge) of the text should be.
 *
 * @return Dear ImGui X-coordinate of the left edge of the text, where the Dear ImGui cursor should be placed before printing the text, to make it appear right-adjusted.
 */

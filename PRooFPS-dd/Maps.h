@@ -31,6 +31,7 @@ namespace proofps_dd
 
         static constexpr char* szCVarSvMap = "sv_map";
         static constexpr char* szCVarSvMapTeamSpawnGroups = "sv_map_team_spawn_groups";
+        static constexpr char* szCVarSvMapPickupableItemsPresent = "sv_map_pickupable_items_present";
 
         static constexpr char* szCVarSvMapCollisionMode = "sv_map_collision_mode";
         static constexpr char* szCVarSvMapCollisionBvhDebugRender = "sv_map_collision_bvh_debug_render";

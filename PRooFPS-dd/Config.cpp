@@ -230,6 +230,9 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing GameMode in config, forcing to: %d", static_cast<int>(GameModeType::DeathMatch));
     }
 
+    const bool bIsRoundGame = GameMode::isRoundBased(
+        static_cast<GameModeType>(m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGamemode].getAsInt()));
+
     if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsString().empty())
     {
         if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvGmTimeLimit].getAsInt() >= GameMode::nSvGmTimeLimitSecsMin) &&
@@ -429,6 +432,68 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Player Respawn Invulnerability Delay in config, forcing default: %u seconds", m_nPlayerRespawnInvulnerabilityDelaySecs);
     }
 
+    if (!bIsRoundGame)
+    {
+        getConsole().OLn("Not round game, forcing Finance to disabled!");
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance].Set(false);
+    }
+    m_bFinance = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance].getAsBool();
+    
+    if (!m_bFinance)
+    {
+        getConsole().OLn("Finance is disabled, forcing Trading to disabled!");
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmTrading].Set(false);
+    }
+    m_bTrading = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmTrading].getAsBool();
+
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].getAsInt() >= GameMode::nSvRgmInitialFiatBudgetMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].getAsInt() <= GameMode::nSvRgmInitialFiatBudgetMax))
+        {
+            m_nPlayerInitialFiatBudget = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].getAsInt();
+            getConsole().OLn("Player Initial Fiat Budget from config: %d USD", m_nPlayerInitialFiatBudget);
+        }
+        else
+        {
+            m_nPlayerInitialFiatBudget = GameMode::nSvRgmInitialFiatBudgetDef;
+            getConsole().EOLn("ERROR: Invalid Player Initial Fiat Budget in config: %s, forcing default: %d USD",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].getAsString().c_str(),
+                m_nPlayerInitialFiatBudget);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].Set(GameMode::nSvRgmInitialFiatBudgetDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmInitialFiatBudget].Set(GameMode::nSvRgmInitialFiatBudgetDef);
+        m_nPlayerInitialFiatBudget = GameMode::nSvRgmInitialFiatBudgetDef;
+        getConsole().OLn("Missing Player Initial Fiat Budget in config, forcing default: %d USD", m_nPlayerInitialFiatBudget);
+    }
+
+    if (!m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsString().empty())
+    {
+        if ((m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsInt() >= GameMode::nSvRgmMarketOpenDurationSecsMin) &&
+            (m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsInt() <= GameMode::nSvRgmMarketOpenDurationSecsMax))
+        {
+            m_nMarketOpenDurationSecs = m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsInt();
+            getConsole().OLn("Market Open Duration from config: %d seconds", m_nMarketOpenDurationSecs);
+        }
+        else
+        {
+            m_nMarketOpenDurationSecs = GameMode::nSvRgmMarketOpenDurationSecsDef;
+            getConsole().EOLn("ERROR: Invalid Market Open Duration in config: %s, forcing default: %d seconds",
+                m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsString().c_str(),
+                m_nMarketOpenDurationSecs);
+            m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].Set(GameMode::nSvRgmMarketOpenDurationSecsDef);
+        }
+    }
+    else
+    {
+        m_pge.getConfigProfiles().getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].Set(GameMode::nSvRgmMarketOpenDurationSecsDef);
+        m_nMarketOpenDurationSecs = GameMode::nSvRgmMarketOpenDurationSecsDef;
+        getConsole().OLn("Missing Market Open Duration in config, forcing default: %d seconds", m_nMarketOpenDurationSecs);
+    }
+
     if (!m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsString().empty())
     {
         if (m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsInt() > 0)
@@ -534,6 +599,26 @@ const unsigned int& proofps_dd::Config::getPlayerRespawnInvulnerabilityDelaySeco
     return m_nPlayerRespawnInvulnerabilityDelaySecs;
 }
 
+const bool& proofps_dd::Config::isFinanceEnabled() const
+{
+    return m_bFinance;
+}
+
+const int& proofps_dd::Config::getMarketOpenDurationSecs() const
+{
+    return m_nMarketOpenDurationSecs;
+}
+
+const int& proofps_dd::Config::getPlayerInitialFiatBudget() const
+{
+    return m_nPlayerInitialFiatBudget;
+}
+
+const bool& proofps_dd::Config::isTradingEnabled() const
+{
+    return m_bTrading;
+}
+
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
     const proofps_dd::MsgServerInfoFromServer& msgServerInfo,
@@ -551,6 +636,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
 
     m_bServerInfoReceived = true;
     m_serverInfo = msgServerInfo;
+    m_fAttackDamageMultiplier = m_serverInfo.m_fAttackDamageMultiplier;
     m_nFallDamageMultiplier = m_serverInfo.m_nFallDamageMultiplier;
     m_nPlayerRespawnDelaySecs = m_serverInfo.m_nRespawnTimeSecs;
     m_nPlayerRespawnInvulnerabilityDelaySecs = m_serverInfo.m_nRespawnInvulnerabilityTimeSecs;
@@ -604,34 +690,47 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         }
     }
 
+    m_bFinance = m_serverInfo.m_bFinance;
+    m_nMarketOpenDurationSecs = m_serverInfo.m_nMarketOpenDurationSecs;
+    m_nPlayerInitialFiatBudget = m_serverInfo.m_nPlayerInitialFiatBudget;
+    m_bTrading = m_serverInfo.m_bTrading;
+
     // keep logging here, after clientUpdateTimeRemainingMillisecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 
     getConsole().OLnOI("Config::%s(): received the following server config:", __func__);
-    getConsole().OLn("nMaxFps               : %u FPS", m_serverInfo.m_nMaxFps);
-    getConsole().OLn("nTickrate             : %u Hz",  m_serverInfo.m_nTickrate);
-    getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
-    getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
-    getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
+    getConsole().OLn("nMaxFps                 : %u FPS", m_serverInfo.m_nMaxFps);
+    getConsole().OLn("nTickrate               : %u Hz",  m_serverInfo.m_nTickrate);
+    getConsole().OLn("nPhysicsRateMin         : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
+    getConsole().OLn("nClientUpdateRate       : %u Hz",  m_serverInfo.m_nClientUpdateRate);
+    getConsole().OLn("iGameModeType           : %d",     m_serverInfo.m_iGameModeType);
     if (gameMode->isRoundBased())
     {
-        getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
-        getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
-        getConsole().OLn("nTertiaryTimeLimitSecs: %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
+        getConsole().OLn("nRoundWinLimit          : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nRoundTimeLimitSecs     : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
+        getConsole().OLn("nTertiaryTimeLimitSecs  : %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
     }
     else
     {
-        getConsole().OLn("nFragLimit            : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nFragLimit              : %u", m_serverInfo.m_nScoreLimit);
     }
-    getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
-    getConsole().OLn("nTimeRemainingMsecs   : %u ms",  m_serverInfo.m_nTimeRemainingMillisecs);
-    getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
-    getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
-    getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    getConsole().OLn("nTimeLimitSecs          : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("nTimeRemainingMsecs     : %u ms",  m_serverInfo.m_nTimeRemainingMillisecs);
+    getConsole().OLn("fAttackDamageMultiplier : %d%%",   static_cast<int>(std::lroundf(m_serverInfo.m_fAttackDamageMultiplier * 100)));
+    getConsole().OLn("nFallDamageMultiplier   : %dx",    m_serverInfo.m_nFallDamageMultiplier);
+    getConsole().OLn("nRespawnTimeSecs        : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLn("nRespawnInvulnTimeSecs  : %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     if (gameMode->isTeamBasedGame())
     {
-        getConsole().OLn("bFriendlyFire         : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
+        getConsole().OLn("bFriendlyFire           : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
+    }
+    getConsole().OLn("bFinance                : %s", (m_serverInfo.m_bFinance ? "yes" : "no"));
+    if (m_serverInfo.m_bFinance)
+    {
+        getConsole().OLn("nMarketOpenDurationSecs : %d", m_serverInfo.m_nMarketOpenDurationSecs);
+        getConsole().OLn("nPlayerInitialFiatBudget: %d", m_serverInfo.m_nPlayerInitialFiatBudget);
+        getConsole().OLn("bTrading                : %s", (m_serverInfo.m_bTrading ? "yes" : "no"));
     }
     getConsole().OLnOO("");
 
@@ -689,12 +788,17 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         nScoreLimit,
         pGameMode->getTimeLimitSecs(),
         pGameMode->getTimeRemainingMillisecs(),
+        getAttackDamageMultiplier(),
         getFallDamageMultiplier(),
         getPlayerRespawnDelaySeconds(),
         getPlayerRespawnInvulnerabilityDelaySeconds(),
         getFriendlyFire(),
         nRoundTimeLimitSecs,
-        nRoundPrepareTimeSecs))
+        nRoundPrepareTimeSecs,
+        isFinanceEnabled(),
+        getMarketOpenDurationSecs(),
+        getPlayerInitialFiatBudget(),
+        isTradingEnabled()))
     {
         getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -713,12 +817,17 @@ void proofps_dd::Config::serverSaveServerInfo(
     const GameModeType& iGameModeType,
     const unsigned int& nScoreLimit,
     const unsigned int& nTimeLimitSecs,
+    const float& fAttackDamageMultiplier,
     const int& nFallDamageMultiplier,
     const unsigned int& nRespawnTimeSecs,
     const unsigned int& nRespawnInvulnerabilityTimeSecs,
     const bool& bFriendlyFire,
     const unsigned int& nSecondaryTimeLimitSecs,
-    const unsigned int& nTertiaryTimeLimitSecs)
+    const unsigned int& nTertiaryTimeLimitSecs,
+    const bool& bFinance,
+    const int& nMarketOpenDurationSecs,
+    const int& nPlayerInitialFiatBudget,
+    const bool& bTrading)
 {
     assert(m_pge.getNetwork().isServer());
 
@@ -731,6 +840,7 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_nScoreLimit = nScoreLimit;
     m_serverInfo.m_nTimeLimitSecs = nTimeLimitSecs;
 
+    m_serverInfo.m_fAttackDamageMultiplier = fAttackDamageMultiplier;
     m_serverInfo.m_nFallDamageMultiplier = nFallDamageMultiplier;
 
     m_serverInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
@@ -741,33 +851,47 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_nSecondaryTimeLimitSecs = nSecondaryTimeLimitSecs;
     m_serverInfo.m_nTertiaryTimeLimitSecs = nTertiaryTimeLimitSecs;
 
+    m_serverInfo.m_bFinance = bFinance;
+    m_serverInfo.m_nMarketOpenDurationSecs = nMarketOpenDurationSecs;
+    m_serverInfo.m_nPlayerInitialFiatBudget = nPlayerInitialFiatBudget;
+    m_serverInfo.m_bTrading = bTrading;
+
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
 
     getConsole().OLnOI("Config::%s(): server is working with this config:", __func__);
-    getConsole().OLn("nMaxFps               : %u FPS", m_serverInfo.m_nMaxFps);
-    getConsole().OLn("nTickrate             : %u Hz",  m_serverInfo.m_nTickrate);
-    getConsole().OLn("nPhysicsRateMin       : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
-    getConsole().OLn("nClientUpdateRate     : %u Hz",  m_serverInfo.m_nClientUpdateRate);
-    getConsole().OLn("iGameModeType         : %d",     m_serverInfo.m_iGameModeType);
+    getConsole().OLn("nMaxFps                 : %u FPS", m_serverInfo.m_nMaxFps);
+    getConsole().OLn("nTickrate               : %u Hz",  m_serverInfo.m_nTickrate);
+    getConsole().OLn("nPhysicsRateMin         : %u Hz",  m_serverInfo.m_nPhysicsRateMin);
+    getConsole().OLn("nClientUpdateRate       : %u Hz",  m_serverInfo.m_nClientUpdateRate);
+    getConsole().OLn("iGameModeType           : %d",     m_serverInfo.m_iGameModeType);
     if (GameMode::isRoundBased(iGameModeType))
     {
-        getConsole().OLn("nRoundWinLimit        : %u", m_serverInfo.m_nScoreLimit);
-        getConsole().OLn("nRoundTimeLimitSecs   : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
-        getConsole().OLn("nTertiaryTimeLimitSecs: %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
+        getConsole().OLn("nRoundWinLimit          : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nRoundTimeLimitSecs     : %u s", m_serverInfo.m_nSecondaryTimeLimitSecs);
+        getConsole().OLn("nTertiaryTimeLimitSecs  : %u s", m_serverInfo.m_nTertiaryTimeLimitSecs);
     }
     else
     {
-        getConsole().OLn("nFragLimit            : %u", m_serverInfo.m_nScoreLimit);
+        getConsole().OLn("nFragLimit              : %u", m_serverInfo.m_nScoreLimit);
     }
-    getConsole().OLn("nTimeLimitSecs        : %u s",   m_serverInfo.m_nTimeLimitSecs);
-    getConsole().OLn("nFallDamageMultiplier : %dx",    m_serverInfo.m_nFallDamageMultiplier);
-    getConsole().OLn("nRespawnTimeSecs      : %u s",   m_serverInfo.m_nRespawnTimeSecs);
-    getConsole().OLn("nRespawnInvulnTimeSecs: %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
+    getConsole().OLn("nTimeLimitSecs          : %u s",   m_serverInfo.m_nTimeLimitSecs);
+    getConsole().OLn("fAttackDamageMultiplier : %d%%",   static_cast<int>(std::lroundf(m_serverInfo.m_fAttackDamageMultiplier * 100)));
+    getConsole().OLn("nFallDamageMultiplier   : %dx",    m_serverInfo.m_nFallDamageMultiplier);
+    getConsole().OLn("nRespawnTimeSecs        : %u s",   m_serverInfo.m_nRespawnTimeSecs);
+    getConsole().OLn("nRespawnInvulnTimeSecs  : %u s",   m_serverInfo.m_nRespawnInvulnerabilityTimeSecs);
     if (GameMode::isTeamBasedGame(iGameModeType))
     {
-        getConsole().OLn("bFriendlyFire         : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
+        getConsole().OLn("bFriendlyFire           : %s", (m_serverInfo.m_bFriendlyFire ? "yes" : "no"));
     }
+    getConsole().OLn("bFinance                : %s", (m_serverInfo.m_bFinance ? "yes" : "no"));
+    if (m_serverInfo.m_bFinance)
+    {
+        getConsole().OLn("nMarketOpenDurationSecs : %d", m_serverInfo.m_nMarketOpenDurationSecs);
+        getConsole().OLn("nPlayerInitialFiatBudget: %d", m_serverInfo.m_nPlayerInitialFiatBudget);
+        getConsole().OLn("bTrading                : %s", (m_serverInfo.m_bTrading ? "yes" : "no"));
+    }
+
     getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);

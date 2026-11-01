@@ -17,6 +17,11 @@ Name = Machine Gun
 # - ranged (e.g. pistol, shotgun).
 type = ranged
 
+# Price in fiat money.
+# Relevant only when server option Finance is enabled.
+# Cannot be negative. Parsed as integer (no decimal part).
+price = 1000
+
 ############
 #          #
 #  RELOAD  #

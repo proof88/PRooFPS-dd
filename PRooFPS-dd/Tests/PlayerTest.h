@@ -354,6 +354,8 @@ private:
             assertEquals(0, player.getTimeDied().time_since_epoch().count(), "time died") &
             assertFalse(player.getTeamId().isDirty(), "old team id") &
             assertEquals(0u, player.getTeamId(), "team id") &
+            assertFalse(player.getFiatMoney().isDirty(), "old fiat money") &
+            assertEquals(0.f, player.getFiatMoney(), "fiat money") &
             assertEquals(0, player.getWeaponManager().getTimeLastWeaponSwitch().time_since_epoch().count(), "time last wpn switch") &
             assertTrue(player.canFall(), "can fall") &
             assertTrue(player.isFalling(), "is falling") &
@@ -768,6 +770,15 @@ private:
         player.clearNetDirty();
         b &= assertFalse(player.isNetDirty(), "net dirty L 3");
 
+        player.getFiatMoney().set(2.f);
+        b &= assertTrue(player.isDirty(), "dirty M 1");
+        b &= assertFalse(player.isNetDirty(), "net dirty M 1");
+        player.updateOldValues();
+        b &= assertFalse(player.isDirty(), "dirty M 2");
+        b &= assertTrue(player.isNetDirty(), "net dirty M 2");
+        player.clearNetDirty();
+        b &= assertFalse(player.isNetDirty(), "net dirty M 3");
+
         return b;
     }
 
@@ -998,6 +1009,7 @@ private:
             return false;
         };
 
+        player.getFiatMoney().set(100.f); // shall stay unchanged
         player.getAttack() = true; // this should be reset by die()
         player.getJumpForce().Set(1,2,3); // this should be also reset by die()
         player.setStrafe(proofps_dd::Strafe::RIGHT);
@@ -1027,7 +1039,8 @@ private:
             assertFalse(playerConst.getObject3D()->isRenderingAllowed(), "player object visible 1") &
             assertFalse(playerConst.getWeaponManager().getCurrentWeapon()->getObject3D().isRenderingAllowed(), "wpn object visible 1") &
             assertEquals(1, playerConst.getDeaths(), "deaths 1") /* server increases it */ &
-            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 1")) != 0;
+            assertEquals(0, playerConst.getDeaths().getOld(), "old deaths 1"),
+            assertEquals(100.f, player.getFiatMoney(), "fiat money 1")) != 0;
 
         // now we just testing for getTimeDied()
         player.setHealth(100);
@@ -1140,6 +1153,8 @@ private:
         player.setHealth(100);
         player.updateOldValues();
 
+        player.getFiatMoney().set(100.f); // shall stay unchanged
+
         // TODO: maybe we should also check for object height
         player.getWantToStandup() = false;
         // "# Since a player can spawn only in standing position, placing a spawnpoint to a low-height
@@ -1167,7 +1182,8 @@ private:
             assertEquals(PureVector(), player.getJumpForce(), "jump force") &
             assertEquals(0.f, player.getGravity(), "gravity") &
             assertEquals(proofps_dd::Strafe::NONE, player.getPreviousActualStrafe(), "prev actual strafe") &
-            assertEquals(0, playerConst.getArmor(), "armor")) != 0;
+            assertEquals(0, playerConst.getArmor(), "armor") &
+            assertEquals(100.f, player.getFiatMoney(), "fiat money")) != 0;
     }
 
     bool test_set_invulnerability()

@@ -239,6 +239,9 @@ namespace proofps_dd
         unsigned int& getShotsHitTarget();
         const unsigned int& getShotsHitTarget() const;
 
+        PgeOldNewValue<float>& getFiatMoney();
+        const PgeOldNewValue<float>& getFiatMoney() const;
+
         bool& getRespawnFlag();
         void respawn(bool bMe, const Weapon& wpnDefaultAvailable, bool bServer);
 
@@ -420,7 +423,8 @@ namespace proofps_dd
             OvActuallyRunningOnGround,
             OvInvulnerability,
             OvJumpInput,
-            OvCurrentInventoryItemPower
+            OvCurrentInventoryItemPower,
+            OvFiatMoney
         };
 
         static const std::map<MapItemType, std::string> m_mapItemTypeToWeaponFilename;
@@ -494,14 +498,15 @@ namespace proofps_dd
                 /** Current state of player descent input.
                     Player is setting it as per input.
                     Continuous op. */
-                {OldNewValueName::OvDescentInput,             PgeOldNewValue<bool>(false)},
+                {OldNewValueName::OvDescentInput,            PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvActuallyRunningOnGround, PgeOldNewValue<bool>(false)},
                 {OldNewValueName::OvInvulnerability,         PgeOldNewValue<bool>(true)},
                 /** Current state of player jump input, regardless of current jumping state.
                     Player is setting it as per input.
                     Continuous op. */
                 {OldNewValueName::OvJumpInput,                 PgeOldNewValue<bool>(false)},
-                {OldNewValueName::OvCurrentInventoryItemPower, PgeOldNewValue<float>(0.f)}
+                {OldNewValueName::OvCurrentInventoryItemPower, PgeOldNewValue<float>(0.f)},
+                {OldNewValueName::OvFiatMoney,                 PgeOldNewValue<TPureFloat>(0.f)}
         };
 
         /** Which team this player belongs to.

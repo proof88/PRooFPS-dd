@@ -1712,7 +1712,8 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
                     it.second.getFiringAccuracy(),
                     it.second.getShotsFiredCount(),
                     it.second.getInvulnerability(),
-                    it.second.getCurrentInventoryItemPower()))
+                    it.second.getCurrentInventoryItemPower(),
+                    it.second.getFiatMoney()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
                     assert(false);
@@ -1791,6 +1792,11 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
         return false;
     }
     Player& insertedPlayer = insertRes.first->second;
+
+    if (getConfigProfiles().getVars()[GameMode::szCvarSvRgmFinance].getAsBool())
+    {
+        insertedPlayer.getFiatMoney() = static_cast<float>(m_config.getPlayerInitialFiatBudget());
+    }
 
     // We dont hide player here:
     // updatePlayersVisuals() is responsible for player visibility updates, thus also for hiding player not allowed for gameplay!

@@ -755,6 +755,18 @@ const unsigned int& proofps_dd::Player::getShotsHitTarget() const
     return m_nShotsHitTarget;
 }
 
+PgeOldNewValue<float>& proofps_dd::Player::getFiatMoney()
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvFiatMoney));
+}
+
+const PgeOldNewValue<float>& proofps_dd::Player::getFiatMoney() const
+{
+    // m_vecOldNewValues.at() should not throw due to how m_vecOldNewValues is initialized in class
+    return std::get<PgeOldNewValue<float>>(m_vecOldNewValues.at(OldNewValueName::OvFiatMoney));
+}
+
 bool& proofps_dd::Player::getRespawnFlag()
 {
     return m_bRespawn;

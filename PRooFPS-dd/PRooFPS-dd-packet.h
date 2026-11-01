@@ -106,12 +106,17 @@ namespace proofps_dd
             const unsigned int& nScoreLimit,
             const unsigned int& nTimeLimitSecs,
             const unsigned int& nTimeRemainingMillisecs,
+            const float& fAttackDamageMultiplier,
             const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSecs,
             const bool& bFriendlyFire,
             const unsigned int& nSecondaryTimeLimitSecs,
-            const unsigned int& nTertiaryTimeLimitSecs)
+            const unsigned int& nTertiaryTimeLimitSecs,
+            const bool& bFinance,
+            const int& nMarketOpenDurationSecs,
+            const int& nPlayerInitialFiatBudget,
+            const bool& bTrading)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -138,6 +143,7 @@ namespace proofps_dd
             msgServerInfo.m_nTimeLimitSecs = nTimeLimitSecs;
             msgServerInfo.m_nTimeRemainingMillisecs = nTimeRemainingMillisecs;
 
+            msgServerInfo.m_fAttackDamageMultiplier = fAttackDamageMultiplier;
             msgServerInfo.m_nFallDamageMultiplier = nFallDamageMultiplier;
 
             msgServerInfo.m_nRespawnTimeSecs = nRespawnTimeSecs;
@@ -146,6 +152,11 @@ namespace proofps_dd
             msgServerInfo.m_bFriendlyFire = bFriendlyFire;
             msgServerInfo.m_nSecondaryTimeLimitSecs = nSecondaryTimeLimitSecs;
             msgServerInfo.m_nTertiaryTimeLimitSecs = nTertiaryTimeLimitSecs;
+
+            msgServerInfo.m_bFinance = bFinance;
+            msgServerInfo.m_nMarketOpenDurationSecs = nMarketOpenDurationSecs;
+            msgServerInfo.m_nPlayerInitialFiatBudget = nPlayerInitialFiatBudget;
+            msgServerInfo.m_bTrading = bTrading;
 
             return true;
         }
@@ -160,6 +171,7 @@ namespace proofps_dd
         unsigned int m_nTimeLimitSecs;
         unsigned int m_nTimeRemainingMillisecs;
 
+        float m_fAttackDamageMultiplier;
         int m_nFallDamageMultiplier;
 
         unsigned int m_nRespawnTimeSecs;
@@ -169,6 +181,11 @@ namespace proofps_dd
 
         unsigned int m_nSecondaryTimeLimitSecs;            /**< Used in Round-games only. Round time limit. */
         unsigned int m_nTertiaryTimeLimitSecs;             /**< Used in Round-games only. Round prepare time. */
+
+        bool m_bFinance;
+        int m_nMarketOpenDurationSecs;        /**< Valid only if m_bFinance is enabled. */
+        int m_nPlayerInitialFiatBudget;       /**< Valid only if m_bFinance is enabled. */
+        bool m_bTrading;                      /**< Valid only if m_bFinance is enabled. */
 
     };  // struct MsgServerInfoFromServer
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);
@@ -711,7 +728,8 @@ namespace proofps_dd
             float fFiringAccuracy,
             unsigned int nShotsFired,
             bool bInvulnerability,
-            float fCurrentInventoryItemPower)
+            float fCurrentInventoryItemPower,
+            float fFiatMoney)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgUserUpdateFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -750,7 +768,7 @@ namespace proofps_dd
             msgUserCmdUpdate.m_nShotsFired = nShotsFired;
             msgUserCmdUpdate.m_bInvulnerability = bInvulnerability;
             msgUserCmdUpdate.m_fCurrentInventoryItemPower = fCurrentInventoryItemPower;
-
+            msgUserCmdUpdate.m_fFiatMoney = fFiatMoney;
             return true;
         }
 
@@ -774,6 +792,7 @@ namespace proofps_dd
         unsigned int m_nShotsFired;
         bool m_bInvulnerability;
         float m_fCurrentInventoryItemPower;  // e.g. jetlax. Makes sense to include it here since usually it changes with player's position.
+        float m_fFiatMoney;
     };  // struct MsgUserUpdateFromServer
     static_assert(std::is_trivial_v<MsgUserUpdateFromServer>);
     static_assert(std::is_trivially_copyable_v<MsgUserUpdateFromServer>);

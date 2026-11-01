@@ -101,6 +101,10 @@ namespace proofps_dd
         static constexpr char* szCvarSvRgmRoundWinLimit = "sv_rgm_roundwinlimit";
         static constexpr char* szCvarSvRgmRoundTimeLimit = "sv_rgm_round_timelimit_secs";
         static constexpr char* szCvarSvRgmRoundPrepareTime = "sv_rgm_round_prepare_duration_secs";
+        static constexpr char* szCvarSvRgmFinance = "sv_rgm_finance";
+        static constexpr char* szCvarSvRgmMarketOpenDurationSecs = "sv_rgm_market_open_duration_secs";
+        static constexpr char* szCvarSvRgmInitialFiatBudget = "sv_rgm_initial_fiat_budget";
+        static constexpr char* szCvarSvRgmTrading = "sv_rgm_trading";
 
         static constexpr int nSvGmTimeLimitSecsDef = 0;
         static constexpr int nSvGmTimeLimitSecsMin = 0;
@@ -136,6 +140,20 @@ namespace proofps_dd
         static_assert(nSvRgmRoundPrepareTimeSecsMin < nSvRgmRoundPrepareTimeSecsMax, "Min round prepare time should be smaller than max round prepare time.");
         static_assert(nSvRgmRoundPrepareTimeSecsMin <= nSvRgmRoundPrepareTimeSecsDef, "Min round prepare time should not be greater than default round prepare time.");
         static_assert(nSvRgmRoundPrepareTimeSecsDef <= nSvRgmRoundPrepareTimeSecsMax, "Max round prepare time should not be smaller than default round prepare time.");
+
+        static constexpr int nSvRgmMarketOpenDurationSecsDef = 30;
+        static constexpr int nSvRgmMarketOpenDurationSecsMin = 0;
+        static constexpr int nSvRgmMarketOpenDurationSecsMax = nSvRgmRoundPrepareTimeSecsMax + nSvRgmRoundTimeLimitSecsMax;
+        static_assert(nSvRgmMarketOpenDurationSecsMin < nSvRgmMarketOpenDurationSecsMax, "Min market open duration should be smaller than max market open duration.");
+        static_assert(nSvRgmMarketOpenDurationSecsMin <= nSvRgmMarketOpenDurationSecsDef, "Min market open duration should not be greater than default market open duration.");
+        static_assert(nSvRgmMarketOpenDurationSecsDef <= nSvRgmMarketOpenDurationSecsMax, "Max market open duration should not be smaller than default market open duration.");
+
+        static constexpr int nSvRgmInitialFiatBudgetDef = 800;
+        static constexpr int nSvRgmInitialFiatBudgetMin = 0;
+        static constexpr int nSvRgmInitialFiatBudgetMax = 999999999;
+        static_assert(nSvRgmInitialFiatBudgetMin < nSvRgmInitialFiatBudgetMax, "Min initial fiat budget should be smaller than max initial fiat budget.");
+        static_assert(nSvRgmInitialFiatBudgetMin <= nSvRgmInitialFiatBudgetDef, "Min initial fiat budget should not be greater than default initial fiat budget.");
+        static_assert(nSvRgmInitialFiatBudgetDef <= nSvRgmInitialFiatBudgetMax, "Max initial fiat budget should not be smaller than default initial fiat budget.");
 
         static const char* getLoggerModuleName();
 

@@ -118,6 +118,10 @@ namespace proofps_dd
 
         const unsigned int& getPlayerRespawnDelaySeconds() const;
         const unsigned int& getPlayerRespawnInvulnerabilityDelaySeconds() const;
+        const bool& isFinanceEnabled() const;
+        const int& getMarketOpenDurationSecs() const;
+        const int& getPlayerInitialFiatBudget() const;
+        const bool& isTradingEnabled() const;
 
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
@@ -133,12 +137,17 @@ namespace proofps_dd
             const GameModeType& iGameModeType,
             const unsigned int& nScoreLimit,
             const unsigned int& nTimeLimitSecs,
+            const float& fAttackDamageMultiplier,
             const int& nFallDamageMultiplier,
             const unsigned int& nRespawnTimeSecs,
             const unsigned int& nRespawnInvulnerabilityTimeSec,
             const bool& bFriendlyFire,
             const unsigned int& nSecondaryTimeLimitSecs,
-            const unsigned int& nTertiaryTimeLimitSecs);
+            const unsigned int& nTertiaryTimeLimitSecs,
+            const bool& bFinance,
+            const int& nMarketOpenDurationSecs,
+            const int& nPlayerInitialFiatBudget,
+            const bool& bTrading);
 
         const MsgServerInfoFromServer& getServerInfo() const;
         bool isServerInfoReceived() const;
@@ -176,6 +185,10 @@ namespace proofps_dd
 
         unsigned int m_nPlayerRespawnDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
         unsigned int m_nPlayerRespawnInvulnerabilityDelaySecs{};  // cannot include Player.h in this file thus not defaulting this properly
+        bool m_bFinance = true;
+        int m_nMarketOpenDurationSecs = GameMode::nSvRgmMarketOpenDurationSecsDef;
+        int m_nPlayerInitialFiatBudget = GameMode::nSvRgmInitialFiatBudgetDef;
+        bool m_bTrading = true;
 
         /** Server and clients use this for informational purpose, to show it as debug info.
             Actually, clients also use it for other purpose too, e.g. to know the respawn time so they draw countdown progress bar based on that!

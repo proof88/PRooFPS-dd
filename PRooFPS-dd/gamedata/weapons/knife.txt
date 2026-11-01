@@ -17,6 +17,11 @@ Name = Knife
 # - ranged (e.g. pistol, shotgun).
 type = melee
 
+# Price in fiat money.
+# Relevant only when server option Finance is enabled.
+# Cannot be negative. Parsed as integer (no decimal part).
+price = 0
+
 ############
 #          #
 #  RELOAD  #

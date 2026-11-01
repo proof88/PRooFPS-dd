@@ -609,7 +609,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                     0.f /* fFiringAccuracy */,
                     0 /* nShotsFiredCount */,
                     false /* bInvulnerability */,
-                    0.f /* fCurrentInventoryItemPower */))
+                    0.f /* fCurrentInventoryItemPower */,
+                    0.f /* fFiatMoney, deferred to PRooFPSddPGE::handleUserSetupFromServer() */))
                 {
                     // server injects this msg to self so resources for player will be allocated upon processing these
                     m_pge.getNetwork().getServer().send(newPktSetup);
@@ -701,7 +702,8 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
             0.f /* fFiringAccuracy */,
             0 /* nShotsFiredCount */,
             true /* invulnerable by default */,
-            0.f /* fCurrentInventoryItemPower */))
+            0.f /* fCurrentInventoryItemPower */,
+            0.f /* fFiatMoney, deferred to PRooFPSddPGE::handleUserSetupFromServer() */))
         {
             getConsole().EOLn("PlayerHandling::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
             assert(false);
@@ -931,12 +933,17 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 gameMode->getGameModeType(),
                 pDeathMatchMode->getFragLimit(),
                 gameMode->getTimeLimitSecs(),
+                config.getAttackDamageMultiplier(),
                 config.getFallDamageMultiplier(),
                 config.getPlayerRespawnDelaySeconds(),
                 config.getPlayerRespawnInvulnerabilityDelaySeconds(),
                 config.getFriendlyFire(),
                 nRoundTimeLimitSecs,
-                nRoundPrepareTimeSecs);
+                nRoundPrepareTimeSecs,
+                config.isFinanceEnabled(),
+                config.getMarketOpenDurationSecs(),
+                config.getPlayerInitialFiatBudget(),
+                config.isTradingEnabled());
             
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 
@@ -1162,7 +1169,8 @@ void proofps_dd::PlayerHandling::serverSendUserUpdates(
                 playerConst.getFiringAccuracy(),
                 playerConst.getShotsFiredCount(),
                 playerConst.getInvulnerability(),
-                playerConst.getCurrentInventoryItemPower()))
+                playerConst.getCurrentInventoryItemPower(),
+                playerConst.getFiatMoney()))
             {
                 player.clearNetDirty();
 
@@ -1322,6 +1330,7 @@ bool proofps_dd::PlayerHandling::handleUserUpdateFromServer(
         player.getFiringAccuracy() = msg.m_fFiringAccuracy;
         player.getShotsFiredCount() = msg.m_nShotsFired;
         player.setCurrentInventoryItemPower(msg.m_fCurrentInventoryItemPower);
+        player.getFiatMoney() = msg.m_fFiatMoney;
 
         //getConsole().EOLn("PlayerHandling::%s(): rcvd health: %d, health: %d, old health: %d",
         //    __func__, msg.m_nHealth, std::as_const(player).getHealth(), std::as_const(player).getHealth().getOld());
