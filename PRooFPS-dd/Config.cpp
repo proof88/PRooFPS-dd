@@ -494,6 +494,13 @@ void proofps_dd::Config::validate()
         getConsole().OLn("Missing Market Open Duration in config, forcing default: %d seconds", m_nMarketOpenDurationSecs);
     }
 
+    if (!bIsRoundGame)
+    {
+        getConsole().OLn("Not round game, forcing Pickupable Items Present to true!");
+        m_pge.getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent].Set(true);
+    }
+    m_bPickupableItemsPresent = m_pge.getConfigProfiles().getVars()[proofps_dd::Maps::szCVarSvMapPickupableItemsPresent].getAsBool();
+
     if (!m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsString().empty())
     {
         if (m_pge.getConfigProfiles().getVars()[Player::szCVarPlayersMax].getAsInt() > 0)
@@ -619,6 +626,11 @@ const bool& proofps_dd::Config::isTradingEnabled() const
     return m_bTrading;
 }
 
+const bool& proofps_dd::Config::arePickupableItemsPresent() const
+{
+    return m_bPickupableItemsPresent;
+}
+
 bool proofps_dd::Config::clientHandleServerInfoFromServer(
     pge_network::PgeNetworkConnectionHandle /*connHandleServerSide*/,
     const proofps_dd::MsgServerInfoFromServer& msgServerInfo,
@@ -695,6 +707,8 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
     m_nPlayerInitialFiatBudget = m_serverInfo.m_nPlayerInitialFiatBudget;
     m_bTrading = m_serverInfo.m_bTrading;
 
+    m_bPickupableItemsPresent = m_serverInfo.m_bPickupableItemsPresent;
+
     // keep logging here, after clientUpdateTimeRemainingMillisecs() is already invoked, to avoid being more delayed by slow logging, since they are still synchronouos calls
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
@@ -732,6 +746,7 @@ bool proofps_dd::Config::clientHandleServerInfoFromServer(
         getConsole().OLn("nPlayerInitialFiatBudget: %d", m_serverInfo.m_nPlayerInitialFiatBudget);
         getConsole().OLn("bTrading                : %s", (m_serverInfo.m_bTrading ? "yes" : "no"));
     }
+    getConsole().OLn("bPickupableItemsPresent : %s", (m_serverInfo.m_bPickupableItemsPresent ? "yes" : "no"));
     getConsole().OLnOO("");
 
     getConsole().SetLoggingState(getLoggerModuleName(), bPrevLoggingState);
@@ -798,7 +813,8 @@ bool proofps_dd::Config::serverSendServerInfo(pge_network::PgeNetworkConnectionH
         isFinanceEnabled(),
         getMarketOpenDurationSecs(),
         getPlayerInitialFiatBudget(),
-        isTradingEnabled()))
+        isTradingEnabled(),
+        arePickupableItemsPresent()))
     {
         getConsole().EOLn("Config::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
         assert(false);
@@ -827,7 +843,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     const bool& bFinance,
     const int& nMarketOpenDurationSecs,
     const int& nPlayerInitialFiatBudget,
-    const bool& bTrading)
+    const bool& bTrading,
+    const bool& bPickupableItemsPresent)
 {
     assert(m_pge.getNetwork().isServer());
 
@@ -855,6 +872,8 @@ void proofps_dd::Config::serverSaveServerInfo(
     m_serverInfo.m_nMarketOpenDurationSecs = nMarketOpenDurationSecs;
     m_serverInfo.m_nPlayerInitialFiatBudget = nPlayerInitialFiatBudget;
     m_serverInfo.m_bTrading = bTrading;
+
+    m_serverInfo.m_bPickupableItemsPresent = bPickupableItemsPresent;
 
     const bool bPrevLoggingState = getConsole().getLoggingState(getLoggerModuleName());
     getConsole().SetLoggingState(getLoggerModuleName(), true);
@@ -891,6 +910,7 @@ void proofps_dd::Config::serverSaveServerInfo(
         getConsole().OLn("nPlayerInitialFiatBudget: %d", m_serverInfo.m_nPlayerInitialFiatBudget);
         getConsole().OLn("bTrading                : %s", (m_serverInfo.m_bTrading ? "yes" : "no"));
     }
+    getConsole().OLn("bPickupableItemsPresent : %s", (m_serverInfo.m_bPickupableItemsPresent ? "yes" : "no"));
 
     getConsole().OLnOO("");
 

@@ -168,9 +168,15 @@ bool proofps_dd::Maps::loaded() const
     return ( m_blocks != NULL );
 }
 
-bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDisplayProgressUpdate)
+bool proofps_dd::Maps::load(
+    const char* fname,
+    std::function<void(int)>& cbDisplayProgressUpdate,
+    const bool& bLoadPickupableItems)
 {
-    getConsole().OLnOI("Maps::load(%s) ...", fname);
+    getConsole().OLnOI(
+        "Maps::load(%s, bLoadPickupableItems=%s) ...",
+        fname,
+        (bLoadPickupableItems ? "yes" : "no"));
 
     if (!isInitialized())
     {
@@ -258,7 +264,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
                 bMapLayoutReached = true;
                 fStreamPosMapLayoutStart = fStreamPosPrevLine;
             }
-            bParseError = !lineHandleLayout(sLine, y, true);
+            bParseError = !lineHandleLayout(sLine, y, true /* bDryRun */, bLoadPickupableItems);
         }
     };
 
@@ -285,7 +291,7 @@ bool proofps_dd::Maps::load(const char* fname, std::function<void(int)>& cbDispl
             {
                 continue;
             }
-            bParseError = !lineHandleLayout(sLine, y, false);
+            bParseError = !lineHandleLayout(sLine, y, false /* bDryRun */, bLoadPickupableItems);
             cbDisplayProgressUpdate(nTotalBlocks_h == 0 ? 0 : static_cast<int>((m_blocks_h / static_cast<float>(nTotalBlocks_h)) * 100));
         }
     }
@@ -1403,8 +1409,13 @@ bool proofps_dd::Maps::createSmallStairStepsForSingleBigStairsBlock(
  *                If we finish processing all lines with bDryRun as true, we will know the actual size of the map and number of
  *                blocks, thus in the next non-dry run we will have to allocate memory only once for the blocks.
  *                And yes, dry run actually creates all the items in m_items.
+ * @param bLoadPickupableItems If true, pickupable items will be created and placed on the map, otherwise not.
  */
-bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun)
+bool proofps_dd::Maps::lineHandleLayout(
+    const std::string& sLine,
+    TPureFloat& y,
+    bool bDryRun,
+    const bool& bLoadPickupableItems)
 {
     if (bDryRun)
     {
@@ -1505,8 +1516,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_ARMOR, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_ARMOR, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1516,8 +1530,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1527,8 +1544,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_JETLAX, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_JETLAX, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1538,8 +1558,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1549,8 +1572,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1560,8 +1586,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_BAZOOKA, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_BAZOOKA, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1571,8 +1600,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PUSHA, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PUSHA, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1582,8 +1614,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEPISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEPISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1593,8 +1628,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_SHOTGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_SHOTGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
@@ -1604,8 +1642,11 @@ bool proofps_dd::Maps::lineHandleLayout(const std::string& sLine, TPureFloat& y,
         {
             if (bDryRun)
             {
-                proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_GRENADELAUNCHER, PureVector(x, y, GAME_ITEMS_POS_Z));
-                m_items.insert({ pMapItem->getId(), pMapItem });
+                if (bLoadPickupableItems)
+                {
+                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_GRENADELAUNCHER, PureVector(x, y, GAME_ITEMS_POS_Z));
+                    m_items.insert({ pMapItem->getId(), pMapItem });
+                }
             }
             bSpecialBgBlock = true;
             bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;

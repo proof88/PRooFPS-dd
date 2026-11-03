@@ -75,7 +75,8 @@ namespace proofps_dd
         bool loaded() const;
         bool load(
             const char* fname,
-            std::function<void(int)>& cbDisplayProgressUpdate);
+            std::function<void(int)>& cbDisplayProgressUpdate,
+            const bool& bLoadPickupableItems);
         void unload();
         unsigned int width() const;
         unsigned int height() const;
@@ -227,7 +228,11 @@ namespace proofps_dd
             const int& iObjectBgToBeCopied,
             const float& fBlockPosX,
             const float& fBlockPosY);
-        bool lineHandleLayout(const std::string& sLine, TPureFloat& y, bool bDryRun);
+        bool lineHandleLayout(
+            const std::string& sLine,
+            TPureFloat& y,
+            bool bDryRun,
+            const bool& bLoadPickupableItems);
         bool parseTeamSpawnpointsFromString(
             const std::string& sVarValue, std::set<size_t>& targetSet);
         bool parseTeamSpawnpoints();

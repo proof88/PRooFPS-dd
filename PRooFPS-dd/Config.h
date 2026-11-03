@@ -123,6 +123,8 @@ namespace proofps_dd
         const int& getPlayerInitialFiatBudget() const;
         const bool& isTradingEnabled() const;
 
+        const bool& arePickupableItemsPresent() const;
+
         bool clientHandleServerInfoFromServer(
             pge_network::PgeNetworkConnectionHandle connHandleServerSide,
             const MsgServerInfoFromServer& msgServerInfo,
@@ -147,7 +149,8 @@ namespace proofps_dd
             const bool& bFinance,
             const int& nMarketOpenDurationSecs,
             const int& nPlayerInitialFiatBudget,
-            const bool& bTrading);
+            const bool& bTrading,
+            const bool& bPickupableItemsPresent);
 
         const MsgServerInfoFromServer& getServerInfo() const;
         bool isServerInfoReceived() const;
@@ -189,6 +192,8 @@ namespace proofps_dd
         int m_nMarketOpenDurationSecs = GameMode::nSvRgmMarketOpenDurationSecsDef;
         int m_nPlayerInitialFiatBudget = GameMode::nSvRgmInitialFiatBudgetDef;
         bool m_bTrading = true;
+
+        bool m_bPickupableItemsPresent = true;
 
         /** Server and clients use this for informational purpose, to show it as debug info.
             Actually, clients also use it for other purpose too, e.g. to know the respawn time so they draw countdown progress bar based on that!

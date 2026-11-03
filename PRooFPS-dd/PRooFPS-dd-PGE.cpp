@@ -1551,7 +1551,7 @@ bool proofps_dd::PRooFPSddPGE::handleUserSetupFromServer(pge_network::PgeNetwork
             if (m_maps.getFilename() != msg.m_szMapFilename)
             {
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
+                if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate, m_config.arePickupableItemsPresent()))
                 {
                     getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
                     assert(false);
@@ -1956,7 +1956,7 @@ bool proofps_dd::PRooFPSddPGE::handleMapChangeFromServer(pge_network::PgeNetwork
     // But programmatically client's disconnect injects a MsgUserDisconnected pkt with server's connection handle, so the client will
     // get informed about server's disconnect anyway in handleUserDisconnected() where it should delete all players.
 
-    if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate))
+    if (!m_maps.load(msg.m_szMapFilename, m_cbDisplayMapLoadingProgressUpdate, m_config.arePickupableItemsPresent()))
     {
         getConsole().EOLn("PRooFPSddPGE::%s(): m_maps.load() failed: %s!", __func__, msg.m_szMapFilename);
         assert(false);

@@ -73,19 +73,21 @@ namespace proofps_dd
 
     // server -> clients
     // sent to any connecting client, or in the future even before connecting e.g. when listing servers.
-    // Client initialization/player bringup SHALL NOT depend on this, this is just for informational purpose so that
-    // server config can be seen on client-side as well. Some values might be used to alter client's behavior, e.g.
+    // Sent out even before sending out player bringup related messages, this is crucial because it also
+    // contains stuff like if pickupable items on the map shall be loaded or not.
+    // Some other values are just for informational purpose so that server config can be seen on client-side
+    // as well. Some values might be used to alter client's behavior, e.g.
     // nRespawnTimeSecs is actually needed by client for proper visualization of the respawn time countdown.
     // 
     // Also, since this message teaches the client about the actual game mode, client shall receive it soon after
     // connecting so depending on game mode client might do additional setup, such as asking user to select team.
     // 
-    // As stated above, "client initialization/player bringup SHALL NOT depend on this", so it does not interfere with
-    // the MsgUserConnected / MsgUserSetupFromServer / MsgUserNameChangeAndBootupDone trio.
+    // Does not interfere with the MsgUserConnected / MsgUserSetupFromServer / MsgUserNameChangeAndBootupDone trio.
     // Before v0.5 this was sent out after MsgUserNameChangeAndBootupDone.
     // But from v0.5 I'm sending this msg to connecting client right in server handling MsgUserConnected, before sending
     // out any player setup stuff to client. This way, client can reconfigure GameMode instance before receiving any
-    // player info that needs to be added to the GameMode instance.
+    // player info that needs to be added to the GameMode instance, and the map can be loaded with server setting
+    // e.g. load pickupable items or not.
     // 
     // nTimeRemainingSecs is used by client to start its own countdown on its side from server's nTimeRemainingSecs.
     // Thus this message needs to be sent out at least once to new client AFTER client bringup is done.
@@ -116,7 +118,8 @@ namespace proofps_dd
             const bool& bFinance,
             const int& nMarketOpenDurationSecs,
             const int& nPlayerInitialFiatBudget,
-            const bool& bTrading)
+            const bool& bTrading,
+            const bool& bPickupableItemsPresent)
         {
             // although preparePktMsgAppFill() does runtime check, we should fail already at compile-time if msg is too big!
             static_assert(sizeof(MsgServerInfoFromServer) <= pge_network::MsgApp::nMaxMessageLengthBytes, "msg size");
@@ -158,6 +161,8 @@ namespace proofps_dd
             msgServerInfo.m_nPlayerInitialFiatBudget = nPlayerInitialFiatBudget;
             msgServerInfo.m_bTrading = bTrading;
 
+            msgServerInfo.m_bPickupableItemsPresent = bPickupableItemsPresent;
+
             return true;
         }
 
@@ -186,6 +191,7 @@ namespace proofps_dd
         int m_nMarketOpenDurationSecs;        /**< Valid only if m_bFinance is enabled. */
         int m_nPlayerInitialFiatBudget;       /**< Valid only if m_bFinance is enabled. */
         bool m_bTrading;                      /**< Valid only if m_bFinance is enabled. */
+        bool m_bPickupableItemsPresent;
 
     };  // struct MsgServerInfoFromServer
     static_assert(std::is_trivial_v<MsgServerInfoFromServer>);

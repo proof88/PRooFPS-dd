@@ -4804,6 +4804,11 @@ void proofps_dd::GUI::drawGameServerConfig(const int& nYPosBiasToMinimapBottom)
             std::string("Trading: ") + (m_pConfig->getServerInfo().m_bTrading ? "yes" : "no"));
     }
 
+    fThisRowY += fRowSizeY;
+    drawTextHighlighted(
+        fGameInfoPagesStartX + fIndentX, fThisRowY,
+        std::string("Pickupable Items Present: ") + (m_pConfig->getServerInfo().m_bPickupableItemsPresent ? "yes" : "no"));
+
     if (!m_pNetworking->isServer())
     {
         fThisRowY += 2 * fRowSizeY;

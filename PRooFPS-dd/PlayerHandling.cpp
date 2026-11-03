@@ -572,7 +572,10 @@ bool proofps_dd::PlayerHandling::handleUserConnected(
                 // save it just for error log, because upon error even getNextMapToBeLoaded() will be reset
                 const std::string sNextMapToBeLoaded = m_maps.getNextMapToBeLoaded();
                 // if we fall here with non-empty m_maps.getFilename(), it is an error, and m_maps.load() will fail as expected.
-                if (!m_maps.load(m_maps.getNextMapToBeLoaded().c_str(), cbDisplayMapLoadingProgressUpdate))
+                if (!m_maps.load(
+                    m_maps.getNextMapToBeLoaded().c_str(),
+                    cbDisplayMapLoadingProgressUpdate,
+                    config.arePickupableItemsPresent()))
                 {
                     getConsole().EOLn("PlayerHandling::%s(): m_maps.load() failed: %s!", __func__, sNextMapToBeLoaded.c_str());
                     assert(false);
@@ -943,7 +946,8 @@ bool proofps_dd::PlayerHandling::handleUserNameChange(
                 config.isFinanceEnabled(),
                 config.getMarketOpenDurationSecs(),
                 config.getPlayerInitialFiatBudget(),
-                config.isTradingEnabled());
+                config.isTradingEnabled(),
+                config.arePickupableItemsPresent());
             
             m_pge.getAudio().stopSoundInstance(m_sounds.m_sndMenuMusicHandle);
 

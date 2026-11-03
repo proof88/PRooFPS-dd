@@ -384,10 +384,9 @@ private:
         {
             procInfoServer = process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --sv_map_team_spawn_groups=false --tickrate=" +
-                std::to_string(m_nTickRate) + " --cl_updaterate=" +
-                std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
+                "--gfx_windowed=true --gui_mainmenu=false --net_server=true --sv_map=map_test_good.txt --testing=true --sv_map_team_spawn_groups=false --sv_map_pickupable_items_present=true " +
+                std::string("--tickrate=") + std::to_string(m_nTickRate) + " --cl_updaterate=" + std::to_string(m_nClUpdateRate) +
+                " --physics_rate_min=" + std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
                 " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType))
             );
         }
@@ -395,10 +394,9 @@ private:
         {
             m_vecProcInfoClient.push_back( process_stackoverflow_42531::Process::launchProcess(
                 "PRooFPS-dd.exe",
-                "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --sv_map_team_spawn_groups=false --tickrate=" +
-                std::to_string(m_nTickRate) + " --cl_updaterate=" +
-                std::to_string(m_nClUpdateRate) + " --physics_rate_min=" +
-                std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
+                "--gfx_windowed=true --gui_mainmenu=false --net_server=false --cl_server_ip=127.0.0.1 --testing=true --sv_map_team_spawn_groups=false --sv_map_pickupable_items_present=true " +
+                std::string("--tickrate=") + std::to_string(m_nTickRate) + " --cl_updaterate=" + std::to_string(m_nClUpdateRate) +
+                " --physics_rate_min=" + std::to_string(m_nPhysicsRateMin) + " --cl_name=" + sPlayerName +
                 " --" + proofps_dd::GameMode::szCvarSvGamemode + "=" + std::to_string(static_cast<int>(m_eGameModeType)))
             );
             m_vecHClientMainGameWindow.push_back(static_cast<HWND>(0)); // we set this later below

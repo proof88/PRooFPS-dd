@@ -239,9 +239,10 @@ private:
 
     bool test_map_load_bad_filename()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("egsdghsdghsdghdsghgds.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -249,9 +250,10 @@ private:
 
     bool test_map_load_bad_assignment()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_assignment.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -259,9 +261,10 @@ private:
 
     bool test_map_load_bad_order()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_order.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -269,9 +272,10 @@ private:
 
     bool test_map_load_bad_jumppad_count()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_jumppad_count.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -279,9 +283,10 @@ private:
 
     bool test_map_load_bad_jumppad_force_value()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_jumppad_force_value.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -289,9 +294,10 @@ private:
 
     bool test_map_load_bad_spawn_group_contains_all_indices()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_spawn_group_contains_all_indices.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_contains_all_indices.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -299,9 +305,10 @@ private:
 
     bool test_map_load_bad_spawn_group_double_spawn_index()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -309,9 +316,10 @@ private:
 
     bool test_map_load_bad_spawn_group_double_spawn_index_2()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index_2.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_double_spawn_index_2.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -319,9 +327,10 @@ private:
 
     bool test_map_load_bad_spawn_group_spawn_index()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_index.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -329,9 +338,10 @@ private:
 
     bool test_map_load_bad_spawn_group_spawn_word_as_index()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_word_as_index.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_spawn_group_spawn_word_as_index.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -339,9 +349,10 @@ private:
 
     bool test_map_load_bad_first_block_in_line_cannot_be_stairs()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_first_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_first_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
@@ -349,19 +360,20 @@ private:
 
     bool test_map_load_bad_last_block_in_line_cannot_be_stairs()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertFalse(maps.load("map_test_bad_last_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertFalse(maps.load("map_test_bad_last_block_in_line_cannot_be_stairs.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= test_map_has_default_values(maps);
 
         return b;
     }
 
-    bool test_map_load_good()
+    bool test_map_load_good(const bool& bLoadPickupableItems)
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals("map_test_good.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename");
@@ -400,108 +412,116 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 2 ex"); }
 
         // items
-        b &= assertEquals(11u, maps.getItems().size(), "item count");
-        b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
-        if (b)
+        if (bLoadPickupableItems)
         {
-            auto it = maps.getItems().begin();
-            b &= assertNotNull(it->second, "item 0") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, it->second->getType(), "item 0 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 0 referred obj");
+            b &= assertEquals(11u, maps.getItems().size(), "item count");
+            b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
             if (b)
             {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 0 tex");
-            }
+                auto it = maps.getItems().begin();
+                b &= assertNotNull(it->second, "item 0") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, it->second->getType(), "item 0 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 0 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 0 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 1") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, it->second->getType(), "item 1 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 1 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 1") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, it->second->getType(), "item 1 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 1 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 1 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 2") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 2 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 2 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 2 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 2") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 2 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 2 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 2 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 3") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 3 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 3 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 3 tex");
-            }
-            
-            it++;
-            b &= assertNotNull(it->second, "item 4") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 4 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 4 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 3") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, it->second->getType(), "item 3 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 3 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 3 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 5") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, it->second->getType(), "item 5 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 5 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 4") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, it->second->getType(), "item 4 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 4 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 4 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 6") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER, it->second->getType(), "item 6 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 6 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 6 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 5") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, it->second->getType(), "item 5 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 5 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 5 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 7") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 7 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 7 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 7 tex");
-            }
+                it++;
+                b &= assertNotNull(it->second, "item 6") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER, it->second->getType(), "item 6 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 6 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 6 tex");
+                }
 
-            it++;
-            b &= assertNotNull(it->second, "item 8") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, it->second->getType(), "item 8 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 8 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 8 tex");
+                it++;
+                b &= assertNotNull(it->second, "item 7") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, it->second->getType(), "item 7 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 7 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 7 tex");
+                }
+
+                it++;
+                b &= assertNotNull(it->second, "item 8") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, it->second->getType(), "item 8 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 8 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 8 tex");
+                }
+
+                it++;
+                b &= assertNotNull(it->second, "item 9") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 9 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 9 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 9 tex");
+                }
+
+                it++;
+                b &= assertNotNull(it->second, "item 10") &&
+                    assertEquals(proofps_dd::MapItemType::ITEM_JETLAX, it->second->getType(), "item 10 type");
+                b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 10 referred obj");
+                if (b)
+                {
+                    b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 10 tex");
+                }
             }
-            
-            it++;
-            b &= assertNotNull(it->second, "item 9") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, it->second->getType(), "item 9 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 9 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 9 tex");
-            }
-            
-            it++;
-            b &= assertNotNull(it->second, "item 10") &&
-                assertEquals(proofps_dd::MapItemType::ITEM_JETLAX, it->second->getType(), "item 10 type");
-            b &= assertNotNull(it->second->getObject3D().getReferredObject(), "item 10 referred obj");
-            if (b)
-            {
-                b &= assertNotNull(it->second->getObject3D().getReferredObject()->getMaterial().getTexture(), "item 10 tex");
-            }
+        }
+        else
+        {
+            b &= assertEquals(0u, maps.getItems().size(), "item count");
+            b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         }
 
         // decals
@@ -537,13 +557,23 @@ private:
         return b;
     }
 
-    bool test_map_unload_and_load_again()
+    bool test_map_load_good()
+    {
+        bool b = true;
+
+        b &= test_map_load_good(true /*bLoadPickupableItems*/);
+        b &= test_map_load_good(false /*bLoadPickupableItems*/);
+
+        return b;
+    }
+
+    bool test_map_unload_and_load_again(const bool& bLoadPickupableItems)
     {
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
 
         // ###################################### LOAD 1 ######################################
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 1");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load 1");
         b &= assertTrue(maps.loaded(), "loaded 1");
         b &= assertEquals("map_test_good.txt", maps.getNextMapToBeLoaded(), "getNextMapToBeLoaded 1");
         b &= assertEquals("map_test_good.txt", maps.getFilename(), "filename 1");
@@ -582,8 +612,16 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 1 ex"); }
 
         // items
-        b &= assertEquals(11u, maps.getItems().size(), "item count 1");
-        b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        if (bLoadPickupableItems)
+        {
+            b &= assertEquals(11u, maps.getItems().size(), "item count 1");
+            b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        }
+        else
+        {
+            b &= assertEquals(0u, maps.getItems().size(), "item count 1");
+            b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
+        }
 
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 1");
@@ -602,14 +640,14 @@ private:
         catch (const std::exception&) { b = false; /* should not come here */ }
         
         // ################################# TRY LOAD AGAIN ###################################
-        b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 2");
+        b &= assertFalse(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load 2");
 
         // ###################################### UNLOAD ######################################
         maps.unload();
         b &= assertTrue(test_map_has_default_values(maps), "def values after unload");
 
         // ###################################### LOAD 2 ######################################
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load 3");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load 3");
         b &= assertTrue(maps.loaded(), "loaded 3");
         b &= assertEquals(MAP_TEST_W, maps.width(), "width 3");
         b &= assertEquals(MAP_TEST_H, maps.height(), "height 3");
@@ -648,8 +686,16 @@ private:
         catch (const std::exception&) { b = assertTrue(false, "getVars 3 ex"); }
 
         // items
-        b &= assertEquals(11u, maps.getItems().size(), "item count 3");
-        b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        if (bLoadPickupableItems)
+        {
+            b &= assertEquals(11u, maps.getItems().size(), "item count 3");
+            b &= assertEquals(11u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        }
+        else
+        {
+            b &= assertEquals(0u, maps.getItems().size(), "item count 3");
+            b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
+        }
 
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 3");
@@ -670,13 +716,24 @@ private:
         return b;
     }
 
+    bool test_map_unload_and_load_again()
+    {
+        bool b = true;
+
+        b &= test_map_unload_and_load_again(true /*bLoadPickupableItems*/);
+        b &= test_map_unload_and_load_again(false /*bLoadPickupableItems*/);
+
+        return b;
+    }
+
     bool test_map_shutdown()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
 
         b &= assertTrue(maps.isInitialized(), "initialized");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertFalse(maps.getMapcycle().mapcycleGet().empty(), "mapcycle");
         b &= assertNotNull(maps.getMapcycle().mapcycleGetAsCharPtrArray(), "mapcycle charptrarray 1");
@@ -737,6 +794,7 @@ private:
 
     bool test_map_get_random_spawnpoint_no_teamgame()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = true;
 
@@ -753,7 +811,7 @@ private:
         }
         catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
 
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
         
@@ -778,6 +836,7 @@ private:
 
     bool test_map_get_team_spawnpoints()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = true;
 
@@ -794,7 +853,7 @@ private:
         }
         catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
         
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertFalse(maps.getSpawnpoints().empty(), "spawnpoints");
 
@@ -835,12 +894,13 @@ private:
 
     bool test_map_are_team_spawnpoints_defined()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = true;
         b &= assertFalse(maps.areTeamSpawnpointsDefined(), "1");
         b &= assertTrue(maps.initialize(), "init");
         b &= assertFalse(maps.areTeamSpawnpointsDefined(), "2");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertTrue(maps.areTeamSpawnpointsDefined(), "3");
 
@@ -849,6 +909,7 @@ private:
 
     bool test_map_can_use_team_spawnpoints()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = true;
         b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "0");
@@ -858,7 +919,7 @@ private:
 
         b &= assertFalse(maps.canUseTeamSpawnpoints(true, 1), "1");
 
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         if (!b)
         {
@@ -882,6 +943,7 @@ private:
 
     bool test_map_get_random_spawnpoint_teamgame()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = true;
 
@@ -898,7 +960,7 @@ private:
         }
         catch (const std::exception& e) { b &= assertEquals(std::string("No spawnpoints!"), e.what()); }
 
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         if (!b)
         {
@@ -941,9 +1003,10 @@ private:
 
     bool test_map_get_random_spawnpoint_teamgame_does_not_select_unassigned()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good_with_unassigned_sp.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good_with_unassigned_sp.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
 
         if (!b)
@@ -991,9 +1054,10 @@ private:
 
     bool test_map_load_without_team_spawnpoints_good()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good_no_spawn_group.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good_no_spawn_group.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         if (!b)
         {
@@ -1019,9 +1083,10 @@ private:
 
     bool test_map_get_leftmost_spawnpoint()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
 
@@ -1048,9 +1113,10 @@ private:
 
     bool test_map_get_rightmost_spawnpoint()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertEquals(3u, maps.getSpawnpoints().size(), "spawnpoints");
 
@@ -1077,9 +1143,10 @@ private:
 
     bool test_map_update()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertLess(0u, maps.getItems().size(), "items");
 
@@ -1113,9 +1180,10 @@ private:
 
     bool test_map_handle_map_item_update_from_server()
     {
+        constexpr bool bLoadPickupableItems = true;
         proofps_dd::Maps maps(m_audio, m_cfgProfiles, *engine);
         bool b = assertTrue(maps.initialize(), "init");
-        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate), "load");
+        b &= assertTrue(maps.load("map_test_good.txt", m_cbDisplayMapLoadingProgressUpdate, bLoadPickupableItems), "load");
         b &= assertTrue(maps.loaded(), "loaded");
         b &= assertFalse(maps.getItems().empty(), "items");
 
