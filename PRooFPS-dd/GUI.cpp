@@ -29,7 +29,10 @@ static const ImVec4 imClrTableRowHighlightedVec4(100 / 255.f, 50 / 255.f, 30 / 2
 
 static constexpr float fGameInfoPagesStartX = 20.f;
 
-// browseToUrl() code copied from Dear ImGui web demo: https://github.com/pthom/imgui/blob/DemoCodeDocking/imgui_demo.cpp
+constexpr char* const szBrowserDialogTitle = "Open in Web Browser?";
+
+
+// openUrlInBrowser() code copied from Dear ImGui web demo: https://github.com/pthom/imgui/blob/DemoCodeDocking/imgui_demo.cpp
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
 #elif defined(_WIN32)
@@ -39,13 +42,8 @@ static constexpr float fGameInfoPagesStartX = 20.f;
 #elif defined(__APPLE__)
 #include <TargetConditionals.h>
 #endif
-static void browseToUrl(const char* url)
+static void openUrlInBrowser(const char* url)
 {
-    if (strncmp(url, "http", strlen("http")) != 0)
-    {
-        return;
-    }
-
 #if defined(__EMSCRIPTEN__)
     char js_command[1024];
     snprintf(js_command, 1024, "window.open(\"%s\");", url);
@@ -63,6 +61,60 @@ static void browseToUrl(const char* url)
     snprintf(cmd, 1024, "xdg-open %s", url);
     system(cmd);
 #endif
+}
+
+// will render the dialog in each frame after browseToUrl(url, true) opens the dialog.
+static void browseOpenDialogHandler(const char* url)
+{
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    static std::string sBrowserDialogId;
+    sBrowserDialogId = std::string(szBrowserDialogTitle) + "##" + url;
+    if (ImGui::BeginPopupModal(sBrowserDialogId.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("The game will open this in your web browser.");
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            openUrlInBrowser(url);
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+// If no need to show a confirmation dialog to the user before opening the URL, then:
+// - just call browseToUrl(url, false).
+// 
+// If you need to show a confirmation dialog to the user before opening the URL, then:
+// Use together with browseOpenDialogHandler():
+// - call browseToUrl(url, true) once when user clicks on a URL,
+// - call browseOpenDialogHandler(url) in every frame unconditionally with same url right after the browseToUrl() handling.
+// - url shall be the same URL in the consecutive browseToUrl() and browseOpenDialogHandler() calls.
+static void browseToUrl(const char* url, bool bAskForConfirmation)
+{
+    if (strncmp(url, "http", strlen("http")) != 0)
+    {
+        return;
+    }
+
+    if (!bAskForConfirmation)
+    {
+        openUrlInBrowser(url);
+        return;
+    }
+
+    static std::string sBrowserDialogId;
+    sBrowserDialogId = std::string(szBrowserDialogTitle) + "##" + url;
+    ImGui::OpenPopup(sBrowserDialogId.c_str());
 }
 
 
@@ -773,6 +825,7 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
         }
     }
 
+    constexpr char* const szMapEditorUrl = "https://gitlab.com/bodnartibi/proofps-dd-map-editor";
     // not nice, shall be callback but this is just a quick way of implementing stuff ...
     if (m_currentMenuInMainMenu == MainMenuState::CreateGame)
     {
@@ -788,8 +841,9 @@ void proofps_dd::GUI::drawMainMenu(const float& fRemainingSpaceY)
     else if (m_currentMenuInMainMenu == MainMenuState::MapEditor)
     {
         m_currentMenuInMainMenu = MainMenuState::Main; // reset immediately
-        browseToUrl("https://gitlab.com/bodnartibi/proofps-dd-map-editor");
+        browseToUrl(szMapEditorUrl, true /* ask for confirmation */);
     }
+    browseOpenDialogHandler(szMapEditorUrl);
 
     const std::string sVersion = std::string("v") + proofps_dd::GAME_VERSION;
     ImGui::SetCursorPosX(getDearImGui2DposXforWindowCenteredText(sVersion));
@@ -2076,10 +2130,12 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
     const std::string sVersion = std::string("Version ") + proofps_dd::GAME_VERSION;
     ImGui::TextUnformatted(sVersion.c_str());
     ImGui::SameLine();
+    constexpr char* const szGameGithubPageUrl = "https://github.com/proof88/PRooFPS-dd";
     if (ImGui::TextHyperLink("[visit github]", true))
     {
-        browseToUrl("https://github.com/proof88/PRooFPS-dd");
+        browseToUrl(szGameGithubPageUrl, true /* ask for confirmation */);
     }
+    browseOpenDialogHandler(szGameGithubPageUrl);
 
     // Expecting NDEBUG to be reliable: https://man7.org/linux/man-pages/man3/assert.3.html
 #ifdef NDEBUG
@@ -2093,23 +2149,30 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
     ImGui::TextUnformatted("");
     ImGui::TextUnformatted("Made by West Whiskhyll Entertainment");
     ImGui::SameLine();
+    constexpr char* const szFacebookPageUrl = "https://www.facebook.com/whiskhyll";
     if (ImGui::TextHyperLink("[follow on facebook]", true))
     {
-        browseToUrl("https://www.facebook.com/whiskhyll");
+        browseToUrl(szFacebookPageUrl, true /* ask for confirmation */);
     }
+    browseOpenDialogHandler(szFacebookPageUrl);
 
     ImGui::TextUnformatted("");
     const std::string sEngineInfo = std::string("Powered by PGE ") + PGE::getVersionString();
     ImGui::TextUnformatted(sEngineInfo.c_str());
 
+    constexpr char* const szLicenseUrl = "https://github.com/proof88/PGE/blob/master/LICENSE";
     if (ImGui::TextHyperLink("Licensed under GNU LGPL-3.0 License", true))
     {
-        browseToUrl("https://github.com/proof88/PGE/blob/master/LICENSE");
+        browseToUrl(szLicenseUrl, true /* ask for confirmation */);
     }
-    if (ImGui::TextHyperLink("[visit github]", true))
+    browseOpenDialogHandler(szLicenseUrl);
+
+    constexpr char* const szPgeGithubUrl = "https://github.com/proof88/PGE";
+    if (ImGui::TextHyperLink("[visit on github]", true))
     {
-        browseToUrl("https://github.com/proof88/PGE");
+        browseToUrl(szPgeGithubUrl, true /* ask for confirmation */);
     }
+    browseOpenDialogHandler(szPgeGithubUrl);
 
     ImGui::TextUnformatted("");
     ImGui::TextUnformatted("This program comes with ABSOLUTELY NO WARRANTY.");
@@ -5479,10 +5542,10 @@ bool proofps_dd::GUI::ImGuiInitMarkdown()
 
 void proofps_dd::GUI::ImGuiMarkdownLinkCb(ImGui::MarkdownLinkCallbackData data_)
 {
-    std::string url(data_.link, data_.linkLength);
+    const std::string url(data_.link, data_.linkLength);
     if (!data_.isImage)
     {
-        browseToUrl(url.c_str());
+        openUrlInBrowser(url.c_str());
     }
 }
 
