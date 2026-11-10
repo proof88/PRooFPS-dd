@@ -24,7 +24,9 @@ namespace proofps_dd
             ExplosionMultiKill,
             GameRestarted,
             NewRound,
-            EndRound
+            EndRound,
+            MarketOpened,
+            MarketClosed
         };
 
         // constructing and destructing this when TimeEventPair is temporal object, too expensive!
@@ -53,6 +55,12 @@ namespace proofps_dd
                 break;
             case EventType::EndRound:
                 m_sAuxText = "Round Ended";
+                break;
+            case EventType::MarketOpened:
+                m_sAuxText = "Market Opened";
+                break;
+            case EventType::MarketClosed:
+                m_sAuxText = "Market Closed";
                 break;
             default:
                 assert(false);
@@ -202,6 +210,16 @@ namespace proofps_dd
         void addRoundEndEvent()
         {
             addEvent(std::move(ServerEvent(ServerEvent::EventType::EndRound)));
+        }
+
+        void addMarketOpenedEvent()
+        {
+            addEvent(std::move(ServerEvent(ServerEvent::EventType::MarketOpened)));
+        }
+
+        void addMarketClosedEvent()
+        {
+            addEvent(std::move(ServerEvent(ServerEvent::EventType::MarketClosed)));
         }
 
     protected:

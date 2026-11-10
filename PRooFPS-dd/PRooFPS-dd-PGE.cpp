@@ -1191,7 +1191,7 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameModeShared(const GameMode* gm
         }
         return;
     }
-    
+
     if (!gm->isRoundBased())
     {
         return;
@@ -1204,32 +1204,56 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameModeShared(const GameMode* gm
         return;
     }
 
+    static bool bMarketClosedNotificationDone = false;
+
     if (trg->hasJustTransitionedTo_RoundPrepareState_InThisTick())
     {
         // come here only once
         getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Prepare detected in this frame or tick", __func__);
         m_gui.getServerEvents()->addNewRoundEvent();
+        
         if (getNetwork().isServer())
         {
             serverNewRound();
         }
+
         for (auto& playerPair : m_mapPlayers)
         {
             playerPair.second.forceDeactivateCurrentInventoryItem();
         }
+
+        if (m_config.isFinanceEnabled() && (m_config.getMarketOpenDurationSecs() > 0))
+        {
+            bMarketClosedNotificationDone = false;
+            m_gui.getServerEvents()->addMarketOpenedEvent();
+        }
     }
-    else if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
+    else
     {
-        // come here only once
-        getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
-        m_gui.getXHair()->hideAboveText();
-    }
-    else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
-    {
-        // come here only once
-        getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
-        m_gui.getXHair()->showAboveText("ROUND ENDED!");
-        m_gui.getServerEvents()->addRoundEndEvent();
+        if (m_config.isFinanceEnabled() && (m_config.getMarketOpenDurationSecs() > 0) && !bMarketClosedNotificationDone)
+        {
+            const auto nSecondsElapsedSincePrepareStarted = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+            if (nSecondsElapsedSincePrepareStarted >= m_config.getMarketOpenDurationSecs())
+            {
+                bMarketClosedNotificationDone = true;
+                m_gui.getServerEvents()->addMarketClosedEvent();
+            }
+        }
+
+        if (trg->hasJustTransitionedTo_RoundPlayState_InThisTick())
+        {
+            // come here only once
+            getConsole().EOLn("PRooFPSddPGE::%s() round state transition to Play detected in this frame or tick", __func__);
+            m_gui.getXHair()->hideAboveText();
+        }
+        else if (trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick())
+        {
+            // come here only once
+            getConsole().EOLn("PRooFPSddPGE::%s() round state transition to WaitForReset detected in this frame or tick", __func__);
+            m_gui.getXHair()->showAboveText("ROUND ENDED!");
+            m_gui.getServerEvents()->addRoundEndEvent();
+        }
     }
 
     static std::string sXHairAboveText;  // hopefully fast being static

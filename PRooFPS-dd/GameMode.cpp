@@ -1034,6 +1034,11 @@ const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundG
     return m_timeEnteredCurrentState;
 }
 
+const std::chrono::time_point<std::chrono::steady_clock>& proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeEnteredPrepareState() const
+{
+    return m_timeEnteredPrepareState;
+}
+
 std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::RoundStateFSM::getTimeRemainingInCurrentStateSeconds() const
 {
     return static_cast<std::chrono::seconds::rep>(std::lroundf(std::floorf(getTimeRemainingInCurrentStateMilliseconds() / 1000.f)));
@@ -1094,6 +1099,7 @@ void proofps_dd::TeamRoundGameMode::RoundStateFSM::stateEntered(
     switch (newState)
     {
     case RoundState::Prepare:
+        m_timeEnteredPrepareState = std::chrono::steady_clock::now();
         break;
     case RoundState::Play:
         break;
@@ -1224,6 +1230,8 @@ void proofps_dd::TeamRoundGameMode::fetchConfig(PGEcfgProfiles& cfgProfiles, pge
     // assuming config is correct, because Config instance invokes us after its own validation is done
     // (Config instance validates data in cfgProfiles instance)
     setRoundWinLimit(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundWinLimit].getAsUInt());
+    setMarketOpenDurationSecs_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(cfgProfiles.getVars()[GameMode::szCvarSvRgmMarketOpenDurationSecs].getAsInt());
+    setFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(cfgProfiles.getVars()[GameMode::szCvarSvRgmFinance].getAsBool());
     m_fsm.setRoundTimeLimitSecs(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundTimeLimit].getAsUInt());
     m_fsm.setRoundPrepareTimeSecs(cfgProfiles.getVars()[GameMode::szCvarSvRgmRoundPrepareTime].getAsUInt());
 }
@@ -1372,6 +1380,7 @@ bool proofps_dd::TeamRoundGameMode::serverCheckAndUpdateWinningConditions(pge_ne
     {
         m_bFsmStateTransitionHasJustHappenedThisTick_Sticky = m_bFirstTick || (m_oldFsmState != m_fsm.getState());
     }
+
     if (m_oldFsmState != m_fsm.getState())
     {
         serverSendRoundStateToClients(network);
@@ -1461,6 +1470,26 @@ unsigned int proofps_dd::TeamRoundGameMode::getTeamRoundWins(unsigned int iTeamI
 {
     assert((iTeamId == 1) || (iTeamId == 2));
     return (iTeamId == 1) ? m_nTeam1RoundWins : m_nTeam2RoundWins;
+}
+
+std::chrono::seconds::rep proofps_dd::TeamRoundGameMode::getMarketOpenDurationSecs_DEPRECATED_TO_BE_DELETED_BY_2027_EOY() const
+{
+    return m_nMarketOpenDurationSecs;
+}
+
+void proofps_dd::TeamRoundGameMode::setMarketOpenDurationSecs_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(std::chrono::seconds::rep secs)
+{
+    m_nMarketOpenDurationSecs = std::max(secs, static_cast<std::chrono::seconds::rep>(0));
+}
+
+const bool& proofps_dd::TeamRoundGameMode::isFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY() const
+{
+    return m_bFinanceEnabled;
+}
+
+void proofps_dd::TeamRoundGameMode::setFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(bool bState)
+{
+    m_bFinanceEnabled = bState;
 }
 
 proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::getFSM()

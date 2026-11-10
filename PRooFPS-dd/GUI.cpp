@@ -2168,6 +2168,8 @@ void proofps_dd::GUI::drawTab_AboutMenu_GeneralInfo()
     browseOpenDialogHandler(szLicenseUrl);
 
     constexpr char* const szPgeGithubUrl = "https://github.com/proof88/PGE";
+    // intentionally NOT "[visit github]" because we already have 1 such above, and
+    // having 2 hyperlink with same id will cause the latter one to not work properly.
     if (ImGui::TextHyperLink("[visit on github]", true))
     {
         browseToUrl(szPgeGithubUrl, true /* ask for confirmation */);

@@ -823,13 +823,15 @@ namespace proofps_dd
                 const unsigned int& nRemMillisecs, pge_network::PgeINetwork& network);
 
             const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredCurrentState() const;
+            const std::chrono::time_point<std::chrono::steady_clock>& getTimeEnteredPrepareState() const;
             std::chrono::seconds::rep getTimeRemainingInCurrentStateSeconds() const;
             std::chrono::milliseconds::rep getTimeRemainingInCurrentStateMilliseconds() const;
 
         private:
             RoundState m_state{ RoundState::Prepare };
             std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredCurrentState;
-            std::chrono::seconds::rep m_nRoundTimeLimitSecs{ nSvRgmRoundTimeLimitSecsDef  };
+            std::chrono::time_point<std::chrono::steady_clock> m_timeEnteredPrepareState;
+            std::chrono::seconds::rep m_nRoundTimeLimitSecs{ nSvRgmRoundTimeLimitSecsDef };
             std::chrono::seconds::rep m_nRoundPrepareTimeSecs{ nSvRgmRoundPrepareTimeSecsDef };
 
             void transitionToPlayState();  // for tests only
@@ -949,6 +951,35 @@ namespace proofps_dd
         */
         unsigned int getTeamRoundWins(unsigned int iTeamId) const;
 
+        /**
+        * @return Configured market open duration previously set by setMarketOpenDuration().
+        *         0 means the market is always open.
+        *         Valid only if Finance is enabled.
+        */
+        std::chrono::seconds::rep getMarketOpenDurationSecs_DEPRECATED_TO_BE_DELETED_BY_2027_EOY() const;
+
+        /**
+        * Set the market open duration: time the Buy menu is available.
+        * Duration starts from the Prepare round state.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() or
+        * restartWithoutRemovingPlayers() explicitly.
+        *
+        * @param secs The market open duration in seconds. If 0, the market is always open.
+        */
+        void setMarketOpenDurationSecs_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(std::chrono::seconds::rep secs);
+
+        /**
+        * @return Configured Finance state.
+        */
+        const bool& isFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY() const;
+
+        /**
+        * Sets Finance configured state.
+        * Note: behavior is unspecified if this value is changed on-the-fly during a game. For now, please also call restart() or
+        * restartWithoutRemovingPlayers() explicitly.
+        */
+        void setFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(bool bState);
+
         RoundStateFSM& getFSM();
         const RoundStateFSM& getFSM() const;
 
@@ -1038,6 +1069,8 @@ namespace proofps_dd
         unsigned int m_nRoundWinLimit{ GameMode::nSvRgmRoundWinLimitDef };
         unsigned int m_nTeam1RoundWins{ 0 };
         unsigned int m_nTeam2RoundWins{ 0 };
+        std::chrono::seconds::rep m_nMarketOpenDurationSecs{ nSvRgmMarketOpenDurationSecsDef };
+        bool m_bFinanceEnabled{ true };
         RoundStateFSM m_fsm;
         RoundStateFSM::RoundState m_oldFsmState{ RoundStateFSM::RoundState::Prepare };
         bool m_bFsmStateTransitionHasJustHappenedThisTick_Sticky{ true };  /**< Sticky because it requires explicit clear at the end of a tick. */

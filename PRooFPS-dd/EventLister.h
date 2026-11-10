@@ -171,7 +171,7 @@ namespace proofps_dd
         }
 
         // TODO: why we need this non-const version? Only 1 reason: see it in GUI::updateDeathKillEvents() !
-        pfl::FixFIFO<TimeEventPair>& getEvents()                                                           
+        pfl::FixFIFO<TimeEventPair>& getEvents()
         {
             return m_qEvents;
         }

@@ -558,6 +558,9 @@ private:
             return assertFalse(true, "testInitGamemode fail");
         }
 
+        const auto nSecondsElapsedSincePrepareStarted = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+
         bool b = assertTrue(proofps_dd::GameModeType::TeamRoundGame == gm->getGameModeType(), "gmtype");
         b &= assertEquals(std::string("Team Round Game"), gm->getGameModeTypeName(), "gmtype name");
         b &= assertEquals(0, gm->getResetTime().time_since_epoch().count(), "reset time is epoch");
@@ -578,6 +581,7 @@ private:
         b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2");
         b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 3");
         b &= assertFalse(trg->hasCurrentRoundJustBeenWon_InThisTick(), "round has just been won");
+        b &= assertEquals(0, nSecondsElapsedSincePrepareStarted, "time since entered prepare state");
 
         return b;
     }
@@ -5782,6 +5786,10 @@ private:
 
         /* server tick 1 */
 
+        const auto nSecondsElapsedSincePrepareStarted_1 = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+        b &= assertEquals(0, nSecondsElapsedSincePrepareStarted_1, "time since entered prepare state 1");
+
         // server transitions to Prepare (from Prepare) this tick, but also a player joins:
         // this is important detail, because addPlayer() also invokes serverCheckAndUpdateWinningConditions(), so
         // what we are testing here is that hasJustTransitionedTo_RoundPrepareState_InThisTick() does not revert to
@@ -5847,6 +5855,10 @@ private:
         b &= assertFalseEz(trg->hasCurrentRoundJustBeenWon_InThisTick(), gamemode, true /* testing as server */, "round has just been won 3");
 
         trg->serverTickUpdateWinningConditions(m_network);
+
+        const auto nSecondsElapsedSincePrepareStarted_2 = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+        b &= assertNotEquals(0, nSecondsElapsedSincePrepareStarted_2, "time since entered prepare state 1");
 
         /* server tick n+1 */
 
@@ -5961,6 +5973,10 @@ private:
 
         /* client tick 1 */
 
+        const auto nSecondsElapsedSincePrepareStarted_1 = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+        b &= assertEquals(0, nSecondsElapsedSincePrepareStarted_1, "time since entered prepare state 1");
+
         b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 1 1");
         b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 1 2");
         b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 1 3");
@@ -6043,6 +6059,10 @@ private:
 
         msgGameRoundState.m_fsmState = proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare;
         trg->clientHandleGameRoundStateFromServer(m_network, msgGameRoundState);
+
+        const auto nSecondsElapsedSincePrepareStarted_2 = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+        b &= assertEquals(0, nSecondsElapsedSincePrepareStarted_2, "time since entered prepare state 2");
 
         b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 7 1");
         b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 7 2");
@@ -6131,6 +6151,10 @@ private:
             /* hasJustTransitionedTo_RoundPrepareState_InThisTick() must detect transition upon game restart
                even though it was not a real state transition */
             gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
+
+            const auto nSecondsElapsedSincePrepareStarted_1 = std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - trg->getFSM().getTimeEnteredPrepareState()).count();
+            b &= assertEquals(0, nSecondsElapsedSincePrepareStarted_1, "time since entered prepare state");
 
             b &= assertTrue(trg->hasJustTransitionedTo_RoundPrepareState_InThisTick(), "hasTransitioned 2 1");
             b &= assertFalse(trg->hasJustTransitionedTo_RoundPlayState_InThisTick(), "hasTransitioned 2 2");
