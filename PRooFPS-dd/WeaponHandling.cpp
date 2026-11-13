@@ -2059,14 +2059,29 @@ bool proofps_dd::WeaponHandling::isBulletOutOfMapBounds(const Bullet& bullet) co
     return !colliding3(vRelaxedMapMinBounds, vRelaxedMapMaxBounds, bullet.getObject3D().getPosVec(), bullet.getObject3D().getScaledSizeVec());
 }
 
-Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
+const WeaponManager* proofps_dd::WeaponHandling::getAnyPlayersWeaponManager() const
 {
     if (m_mapPlayers.empty())
     {
         return nullptr;
     }
 
-    return m_mapPlayers.begin()->second.getWeaponManager().getWeaponById(wpnId);
+    return &m_mapPlayers.begin()->second.getWeaponManager();
+}
+
+WeaponManager* proofps_dd::WeaponHandling::getAnyPlayersWeaponManager()
+{
+    // simply invoke the const-version of the function above by const-casting:
+    return const_cast<WeaponManager*>((const_cast<const WeaponHandling* const>(this))->getAnyPlayersWeaponManager());
+}
+
+Weapon* proofps_dd::WeaponHandling::getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId)
+{
+    if (auto* const ptr = getAnyPlayersWeaponManager())
+    {
+        return ptr->getWeaponById(wpnId);
+    }
+    return nullptr;
 }
 
 void proofps_dd::WeaponHandling::play3dMeleeWeaponHitSound(

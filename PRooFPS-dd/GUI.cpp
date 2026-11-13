@@ -408,6 +408,24 @@ void proofps_dd::GUI::showInGameTeamSelectMenu()
     m_currentMenuInInGameMenu = InGameMenuState::Welcome_TeamSelect_Spectator;
 }
 
+void proofps_dd::GUI::showInGameBuyMenu()
+{
+    m_currentMenuInInGameMenu = InGameMenuState::Buy;
+}
+
+void proofps_dd::GUI::showHideInGameBuyMenu()
+{
+    // reason of these complicated conditions is explained in showHideInGameServerAdminMenu()
+    if (m_currentMenuInInGameMenu == InGameMenuState::None)
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::Buy;
+    }
+    else if (m_currentMenuInInGameMenu == InGameMenuState::Buy)
+    {
+        m_currentMenuInInGameMenu = InGameMenuState::None;
+    }
+}
+
 void proofps_dd::GUI::showMandatoryGameModeConfigMenu()
 {
     showInGameTeamSelectMenu();
@@ -2945,6 +2963,176 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
 } // drawInGameServerAdminMenu()
 
+struct BuyMenuEntry
+{
+    std::string m_sLabel;
+    std::string m_sKeyToWpnMgr;
+    ImGuiKey_ m_eKeyCode;
+};
+
+static float buildBuyMenuEntries(
+    std::vector<BuyMenuEntry>& vec,
+    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* pMapPlayers,
+    const WeaponManager** pWpnMgr)
+{
+    static float fWpnNameMaxLength = 0.f;
+
+    const auto it = pMapPlayers->begin();
+    if (it == pMapPlayers->end())
+    {
+        return fWpnNameMaxLength;
+    }
+
+    const WeaponManager* wpnMgr = &it->second.getWeaponManager();
+    *pWpnMgr = wpnMgr;
+
+    if (!vec.empty() || !pMapPlayers || !pWpnMgr)
+    {
+        return fWpnNameMaxLength;
+    }
+
+    for (const auto& keyWpnPair : wpnMgr->getKeypressToWeaponMap())
+    {
+        if (keyWpnPair.first == '1')
+        {
+            continue; // intentionally skip knife, since it is always available to players
+        }
+
+        const auto* const wpn = wpnMgr->getWeaponByFilename(keyWpnPair.second);
+        assert(keyWpnPair.second == wpn->getFilename());
+
+        const std::string sLabel = std::string(1, keyWpnPair.first) + " - " + wpn->getName();
+        assert(ImGuiKey_NamedKey_BEGIN < ImGuiKey_1);
+        assert(ImGuiKey_1 > static_cast<int>('1'));
+        vec.push_back(
+            {sLabel,
+            keyWpnPair.second,
+            static_cast<ImGuiKey_>(ImGuiKey_1 - static_cast<int>('1') + static_cast<int>(keyWpnPair.first))});
+        
+        const auto fCurrentWpnNameTextSizeWidth = ImGui::CalcTextSize(sLabel.c_str()).x;
+        if (fCurrentWpnNameTextSizeWidth > fWpnNameMaxLength)
+        {
+            fWpnNameMaxLength = fCurrentWpnNameTextSizeWidth;
+        }
+    }
+    return fWpnNameMaxLength;
+}
+
+void proofps_dd::GUI::drawInGameBuyMenu()
+{
+    assert(m_pPge);
+
+    m_pPge->getPure().getWindow().SetCursorVisible(true);
+
+    constexpr char* const szWindowTitle = "Buy";
+
+    constexpr float fWindowWidthDesired = 300.f;
+    // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
+    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
+    const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
+    const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
+
+    static std::vector<BuyMenuEntry> vecBuyMenuEntries;
+    assert(m_pMapPlayers);
+    const WeaponManager* wpnMgr = nullptr;
+    const float fWpnNameMaxLength = buildBuyMenuEntries(vecBuyMenuEntries, m_pMapPlayers, &wpnMgr);
+    const bool bHaveWeaponData = ((fWpnNameMaxLength > 0.f) && !vecBuyMenuEntries.empty() && wpnMgr);
+
+    const float fButtonWidthMinPixels = fWpnNameMaxLength + 2 * ImGui::GetStyle().FramePadding.x;
+    const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
+    const float fBtnWidth = fButtonWidthMinPixels + 30.f;
+    const float fBtnHeight = fButtonHeightMinPixels + 10.f;
+
+    constexpr int nTextRows = 4; /* 2 x (window title on top + notice text at bottom) */
+    const int nButtonRows = vecBuyMenuEntries.size();
+    const float fContentHeight =
+        m_fFontSizePxHudGeneralScaled * nTextRows +
+        nButtonRows * fBtnHeight +
+        (nTextRows + nButtonRows - 1) * ImGui::GetStyle().ItemSpacing.y;
+    const float fWindowHeight = fContentHeight + 2 * ImGui::GetStyle().WindowPadding.y;
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(fWindowWidth, fWindowHeight), ImGuiCond_Appearing);
+
+    // for now we decide in-game menu transparency based on minimap transparency setting
+    const float fPopupBgAlpha =
+        m_pPge->getConfigProfiles().getVars()[Minimap::szCvarGuiMinimapTransparent].getAsBool() ? 0.8f : 1.f;
+    ImGuiStyle& style = ImGui::GetStyle();
+    const auto prevPopupBgColor = style.Colors[ImGuiCol_PopupBg];
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(prevPopupBgColor.x, prevPopupBgColor.y, prevPopupBgColor.z, fPopupBgAlpha);
+
+    // we always open the popup here, that is why we are in this function afterall!
+    // We would not need this if we were using the regular BeginWindow() stuff, but we want to use this popup/modal window functionality of
+    // Dear ImGui so GUI input is restricted to this window, and auto-dim of background is also applied which is nice!
+    // Also, OpenPopup() / EndPopup() / CloseCurrentPopup() are explicitly invoked so Dear ImGui can maintain its internal window hierarchy properly.
+    constexpr char* const szWindowMenuName = "##WndInGameBuyMenu";
+    if (!ImGui::IsPopupOpen(szWindowMenuName))
+    {
+        ImGui::OpenPopup(szWindowMenuName);
+    }
+
+    if (ImGui::BeginPopupModal(szWindowMenuName, NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
+        const float fBeginPosX = ImGui::GetCursorPosX();
+        drawText(fBeginPosX, ImGui::GetCursorPosY(), szWindowTitle);
+
+        if (!bHaveWeaponData)
+        {
+            drawText(
+                fBeginPosX,
+                ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+                "Waiting for weapon data ...");
+
+            ImGui::EndPopup();
+            style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
+            return; // returning is allowed because EndPopup() is called and colors got reset.
+            // return here so we don't need indendation for the false branch.
+        }
+
+        bool bCloseThisPopup = false;
+
+        ImGui::SetCursorPos(ImVec2(fBeginPosX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
+
+        assert(bHaveWeaponData);
+        assert(wpnMgr);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.f, 0.5f));
+        for (const auto& menuEntry : vecBuyMenuEntries)
+        {
+            const auto* const wpn = wpnMgr->getWeaponByFilename(menuEntry.m_sKeyToWpnMgr);
+            if (!wpn)
+            {
+                continue;
+            }
+
+            // In case of buttons, remove size argument (ImVec2) to auto-resize.
+            if (ImGui::Button(menuEntry.m_sLabel.c_str(), ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(menuEntry.m_eKeyCode))
+            {
+                bCloseThisPopup = true;
+            }
+        }
+        ImGui::PopStyleVar();
+
+        static const std::string sNotice =
+            std::string("Key '") + GAME_INPUT_KEY_MENU_BUY + "' toggles this window.";
+        drawText(
+            fBeginPosX,
+            ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+            sNotice);
+
+        if (bCloseThisPopup)
+        {
+            ImGui::CloseCurrentPopup();
+            showHideInGameBuyMenu();  // since it is true now, will flip it to false
+            // remember: do not return, let the entire function finish as planned with EndPopup() and prev color reset stuff!
+        }
+
+        ImGui::EndPopup();
+    } // BeginPopupModal()
+
+    style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
+} // drawInGameBuyMenu()
+
 /**
 * @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
 *                        For example, when we have just connected to the server and it not yet sent all player bringup messages to us.
@@ -2964,6 +3152,11 @@ void proofps_dd::GUI::drawInGameMenu(
     case InGameMenuState::ServerAdmin:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
         drawInGameServerAdminMenu();
+        ImGui::PopFont();
+        break;
+    case InGameMenuState::Buy:
+        ImGui::PushFont(m_pImFontHudGeneralScaled);
+        drawInGameBuyMenu();
         ImGui::PopFont();
         break;
     default:

@@ -40,5 +40,6 @@ namespace proofps_dd
 
     static constexpr char GAME_INPUT_KEY_MENU_SERVERADMIN = 'h';
     static constexpr char GAME_INPUT_KEY_MENU_TEAMSELECTION = 'm';
+    static constexpr char GAME_INPUT_KEY_MENU_BUY = 'b';
 
 } // namespace proofps_dd

@@ -235,6 +235,8 @@ namespace proofps_dd
             PureVector& vecCamShakeForce);
 
         bool isBulletOutOfMapBounds(const Bullet& bullet) const;
+        const WeaponManager* getAnyPlayersWeaponManager() const;
+        WeaponManager* getAnyPlayersWeaponManager();
         Weapon* getWeaponByIdFromAnyPlayersWeaponManager(const WeaponId& wpnId);
         void play3dMeleeWeaponHitSound(
             const WeaponId& wpnId,

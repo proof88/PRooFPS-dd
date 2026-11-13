@@ -691,6 +691,28 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
         }
     }
 
+    if (playerConst.isInSpectatorMode() || playerConst.isForcedSpectating())
+    {
+        clientKeyboardWhenConnectedToServer_Spectating(gameMode, playerConst);
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+    }
+
+    if (!gameMode.isPlayerAllowedForGameplay(player))
+    {
+        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
+    }
+
+    // put this here so dead player i.e. waiting to respawn cannot change team during respawn countdown!
+    if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_BUY))))
+    {
+        // avoid key function if we are in a differen in-game menu!
+        if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
+            (m_gui.getInGameMenuState() == GUI::InGameMenuState::Buy))
+        {
+            m_gui.showHideInGameBuyMenu();
+        }
+    }
+
     // active in-game menu cancels any player control, and
     // in-game menu input is ignored here after in-game menu is closed
     static bool bRequireKeyUpBeforeAcceptingPlayerInput = false;
@@ -706,17 +728,6 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     }
     if (bRequireKeyUpBeforeAcceptingPlayerInput ||
         (m_gui.getInGameMenuState() != GUI::InGameMenuState::None))
-    {
-        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-    }
-
-    if (playerConst.isInSpectatorMode() || playerConst.isForcedSpectating())
-    {
-        clientKeyboardWhenConnectedToServer_Spectating(gameMode, playerConst);
-        return proofps_dd::InputHandling::PlayerAppActionRequest::None;
-    }
-
-    if (!gameMode.isPlayerAllowedForGameplay(player))
     {
         return proofps_dd::InputHandling::PlayerAppActionRequest::None;
     }

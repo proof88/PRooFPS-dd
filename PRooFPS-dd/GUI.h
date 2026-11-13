@@ -59,7 +59,8 @@ namespace proofps_dd
         {
             None,
             Welcome_TeamSelect_Spectator,
-            ServerAdmin
+            ServerAdmin,
+            Buy
         };
 
         /** As of v0.5, values are looped by pressing TAB in-game. */
@@ -119,6 +120,8 @@ namespace proofps_dd
         static void hideInGameMenu();
         static void showHideInGameTeamSelectMenu();
         static void showInGameTeamSelectMenu();
+        static void showInGameBuyMenu();
+        static void showHideInGameBuyMenu();
         static void showMandatoryGameModeConfigMenu();
         static void showMandatoryGameModeConfigMenuOnlyIfGameModeIsNotYetConfiguredForCurrentPlayer();
         static void showHideInGameServerAdminMenu();
@@ -375,6 +378,7 @@ namespace proofps_dd
         static void drawInGameWelcomeTeamSelectSpectatorMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
         static void drawInGameServerAdminMenu();
+        static void drawInGameBuyMenu();
         static void drawInGameMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
 
