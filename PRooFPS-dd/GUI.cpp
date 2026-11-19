@@ -764,6 +764,21 @@ ImFont* proofps_dd::GUI::m_pFontMarkdownH3Scaled = nullptr;
 
 proofps_dd::GUI::GameInfoPage proofps_dd::GUI::m_gameInfoPageCurrent = proofps_dd::GUI::GameInfoPage::None;
 
+void proofps_dd::GUI::addHintToItem(const char* szHint)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("%s", szHint);
+    }
+    ImGui::SameLine();
+}
+
+void proofps_dd::GUI::addHintToItem(const float& fImGuiX, const float& fImGuiY, const char* szHint)
+{
+    ImGui::SetCursorPos(ImVec2(fImGuiX, fImGuiY));
+    addHintToItem(szHint);
+}
 
 void proofps_dd::GUI::addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar)
 {
@@ -3018,6 +3033,102 @@ static float buildBuyMenuEntries(
     return fWpnNameMaxLength;
 }
 
+static float getWpnCostToFire(const Weapon& wpn)
+{                          
+    const auto it = wpn.getVars().find("bullets_default");
+    if (it == wpn.getVars().end())
+    {
+        return 0.f;
+    }
+
+    const auto nAmmoPackRoundsCount = it->second.getAsInt();
+    return (nAmmoPackRoundsCount > 0) ?
+        wpn.getAmmoPrice() / static_cast<float>(nAmmoPackRoundsCount) :
+        0;
+}
+
+static float getWpnValueCostRatio(const Weapon& wpn, const float fWpnCostToFire)
+{
+    const float fWpnCostToFirePerSecond = wpn.getFiringRate() * fWpnCostToFire;
+    if (fWpnCostToFirePerSecond <= 0.000001f)
+    {
+        return wpn.getDamagePerSecondRating();
+    }
+
+    return wpn.getDamagePerSecondRating() / fWpnCostToFirePerSecond;
+}
+
+void proofps_dd::GUI::drawWeaponDetails(
+    float fBeginX,
+    float fBeginY,
+    const Weapon& wpn)
+{
+    drawText(fBeginX, fBeginY, wpn.getName());
+    drawText(
+        fBeginX, ImGui::GetCursorPosY(),
+        wpn.getCurrentFiringModeAsString());
+
+    static std::stringstream ssTemp;
+
+    addHintToItem(
+        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+        "Strike Index.\n"
+        "Compare weapons by StriX to choose for more damage per second.\n"
+        "Higher is better.");
+    ssTemp.str("");
+    ssTemp << "StriX: " << PFL::makePrintFloatShort(wpn.getDamagePerSecondRating(), 2);
+    drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), ssTemp.str());
+
+    const float fWpnConstToFile = getWpnCostToFire(wpn);
+
+    addHintToItem(
+        fBeginX, ImGui::GetCursorPosY(),
+        "Efficiency Index: Value/Cost ratio.\n"
+        "Compare weapons by EffiX to get more value for your money!\n"
+        "Higher is better = more damage for less money.");
+    ssTemp.str("");
+    ssTemp << "EffiX: " << PFL::makePrintFloatShort(getWpnValueCostRatio(wpn, fWpnConstToFile), 2);
+    drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), ssTemp.str());
+
+    drawText(
+        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+        "Price: $ " + std::to_string(wpn.getPrice()));
+    drawText(
+        fBeginX, ImGui::GetCursorPosY(),
+        "Ammo Price: $ " + std::to_string(wpn.getAmmoPrice()));
+    
+    ssTemp.str("");
+    ssTemp << "Cost to Fire: $ " << PFL::makePrintFloatShort(fWpnConstToFile, 2);
+    drawText(fBeginX, ImGui::GetCursorPosY(), ssTemp.str());
+
+    //drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, "Rate of Fire: ");
+    //ImGui::SameLine();
+    //const auto fSameX_1 = ImGui::GetCursorPosX();
+    //ssTemp.str("");
+    //ssTemp << PFL::makePrintFloatShort(wpn.getFiringRate(), 1) << " rounds/s";
+    //drawText(fSameX_1, ImGui::GetCursorPosY(), ssTemp.str());
+    //
+    //ssTemp.str("");
+    //ssTemp << std::fixed << std::setprecision(1) << wpn.getFiringRate() * 60 << " rounds/min";
+    //drawText(fSameX_1, ImGui::GetCursorPosY(), ssTemp.str());
+    
+    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, "Bullet Rate: ");
+    ImGui::SameLine();
+    const auto fSameX_2 = ImGui::GetCursorPosX();
+    ssTemp.str("");
+    ssTemp << PFL::makePrintFloatShort(wpn.getBulletRate(), 1) << " bullets/s";
+    drawText(fSameX_2, ImGui::GetCursorPosY(), ssTemp.str());
+    
+    ssTemp.str("");
+    ssTemp << std::fixed << std::setprecision(0) << wpn.getBulletRate() * 60 << " bullets/min";
+    drawText(fSameX_2, ImGui::GetCursorPosY(), ssTemp.str());
+
+    ssTemp.str("");
+    ssTemp << "Best Aim Accuracy: " << std::fixed << std::setprecision(2)
+        << wpn.getAccuracyByPose(false /* moving */, false /* run */, true /* duck */) << "°";
+    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, ssTemp.str());
+}
+
 void proofps_dd::GUI::drawInGameBuyMenu()
 {
     assert(m_pPge);
@@ -3026,11 +3137,10 @@ void proofps_dd::GUI::drawInGameBuyMenu()
 
     constexpr char* const szWindowTitle = "Buy";
 
-    constexpr float fWindowWidthDesired = 300.f;
+    constexpr float fWindowWidthDesired = 600.f;
     // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
     const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
-    const float fWindowWidth = std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels);
 
     static std::vector<BuyMenuEntry> vecBuyMenuEntries;
     assert(m_pMapPlayers);
@@ -3042,6 +3152,10 @@ void proofps_dd::GUI::drawInGameBuyMenu()
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
     const float fBtnWidth = fButtonWidthMinPixels + 30.f;
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
+
+    const float fWindowWidth = std::max(
+        std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels),
+        fWpnNameMaxLength * 2 + 30 /* because the name of the hovered weapon will be placed on the right side too */);
 
     constexpr int nTextRows = 4; /* 2 x (window title on top + notice text at bottom) */
     const int nButtonRows = vecBuyMenuEntries.size();
@@ -3075,6 +3189,7 @@ void proofps_dd::GUI::drawInGameBuyMenu()
     {
         const float fBeginPosX = ImGui::GetCursorPosX();
         drawText(fBeginPosX, ImGui::GetCursorPosY(), szWindowTitle);
+        const float fBeginPosY = ImGui::GetCursorPosY();
 
         if (!bHaveWeaponData)
         {
@@ -3096,6 +3211,12 @@ void proofps_dd::GUI::drawInGameBuyMenu()
         assert(bHaveWeaponData);
         assert(wpnMgr);
 
+        // by default show details of the 1st weapon in the list
+        static const Weapon* wpnShowDetail = wpnMgr->getWeaponByFilename(vecBuyMenuEntries.begin()->m_sKeyToWpnMgr);
+        
+        // cannot be nullptr due to buildBuyMenuEntries() and bHaveWeaponData is true
+        assert(wpnShowDetail);
+
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.f, 0.5f));
         for (const auto& menuEntry : vecBuyMenuEntries)
         {
@@ -3110,6 +3231,11 @@ void proofps_dd::GUI::drawInGameBuyMenu()
             {
                 bCloseThisPopup = true;
             }
+
+            if (ImGui::IsItemHovered())
+            {
+                wpnShowDetail = wpn;
+            }
         }
         ImGui::PopStyleVar();
 
@@ -3119,6 +3245,8 @@ void proofps_dd::GUI::drawInGameBuyMenu()
             fBeginPosX,
             ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
             sNotice);
+        
+        drawWeaponDetails(fBeginPosX + fBtnWidth + 20.f, fBeginPosY + fBtnHeight / 2.f, *wpnShowDetail);
 
         if (bCloseThisPopup)
         {

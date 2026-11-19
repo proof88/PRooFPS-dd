@@ -251,6 +251,8 @@ namespace proofps_dd
 
         /* Main Menu Handling */
 
+        static void addHintToItem(const char* szHint);
+        static void addHintToItem(const float& fImGuiX, const float& fImGuiY, const char* szHint);
         static void addHintToItemByCVar(std::string& sHint, const PGEcfgVariable& cvar);
         static float calcContentStartY(const float& fContentHeight, const float& fRemainingSpaceY);
         static void drawMainMenu(const float& fRemainingSpaceY);
@@ -378,6 +380,10 @@ namespace proofps_dd
         static void drawInGameWelcomeTeamSelectSpectatorMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
         static void drawInGameServerAdminMenu();
+        static void drawWeaponDetails(
+            float fBeginX,
+            float fBeginY,
+            const Weapon& wpn);
         static void drawInGameBuyMenu();
         static void drawInGameMenu(
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);

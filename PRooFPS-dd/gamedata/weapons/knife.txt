@@ -22,6 +22,14 @@ type = melee
 # Cannot be negative. Parsed as integer (no decimal part).
 price = 0
 
+# Price of a pack of ammunition in fiat money.
+# A pack of ammunition is basically "bullets_default" number of bullets,
+# thus buying a pack of ammo will give "bullets_default" number of bullets.
+# I chose to use "bullets_default" because "reloadable" is 0 for not reloadable weapons.
+# Relevant only when server option Finance is enabled.
+# Cannot be negative. Parsed as integer (no decimal part).
+price_ammo = 0
+
 ############
 #          #
 #  RELOAD  #
