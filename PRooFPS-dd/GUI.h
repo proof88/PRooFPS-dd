@@ -224,6 +224,7 @@ namespace proofps_dd
         static ImFont* m_pImFontFragTableNonScaled;
         static ImFont* m_pImFontHudGeneralScaled;
         static ImFont* m_pImFontHudSmallerScaled;
+        static float m_fScalingFactor;
         static float m_fFontSizePxHudGeneralScaled;
         static float m_fFontSizePxHudSmallerScaled;
         static float fEmbeddedDefaultFontSizePixelsScaled;

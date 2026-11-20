@@ -193,15 +193,15 @@ void proofps_dd::GUI::initialize()
 
     resetMenuStates(false);
 
-    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
+    m_fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
 
-    if (!init2dObjects(fScalingFactor))
+    if (!init2dObjects(m_fScalingFactor))
     {
         getConsole().EOLn("GUI::%s(): init2dObjects() failed!", __func__);
         return;
     }
 
-    if (!initFonts(fScalingFactor))
+    if (!initFonts(m_fScalingFactor))
     {
         getConsole().EOLn("GUI::%s(): initFonts() failed!", __func__);
         return;
@@ -747,6 +747,7 @@ proofps_dd::PureObject3dInOutSlider proofps_dd::GUI::m_pSlidingProof88Laugh;
 ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudSmallerScaled = nullptr;
+float proofps_dd::GUI::m_fScalingFactor = 1.f; /* after init, should be adjusted based on display resolution */
 float proofps_dd::GUI::m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
 float proofps_dd::GUI::m_fFontSizePxHudSmallerScaled = fDefaultFontSizePixels - 4; /* after init, should be adjusted based on display resolution */
 float proofps_dd::GUI::fEmbeddedDefaultFontSizePixelsScaled = fEmbeddedDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
@@ -3077,28 +3078,45 @@ void proofps_dd::GUI::drawWeaponDetails(
 
     static std::stringstream ssTemp;
 
+    const float fImageX = fBeginX + ImGui::CalcTextSize("(?) StriX: ##.##").x + 20 * m_fScalingFactor;
+    const float fImageY = ImGui::GetCursorPosY();
+
     addHintToItem(
         fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled,
-        "Strike Index.\n"
-        "Compare weapons by StriX to choose for more damage per second.\n"
-        "Higher is better.");
+        "Strike Index: Damage done per second.\n"
+        "StriX makes comparing weapons easy.\n"
+        "Higher is better = bigger slaughter.");
     ssTemp.str("");
     ssTemp << "StriX: " << PFL::makePrintFloatShort(wpn.getDamagePerSecondRating(), 2);
     drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), ssTemp.str());
 
+    const float fContinueY_1 = ImGui::GetCursorPosY();
+    ImGui::SameLine();
+    
     const float fWpnConstToFile = getWpnCostToFire(wpn);
 
     addHintToItem(
-        fBeginX, ImGui::GetCursorPosY(),
+        fBeginX, fContinueY_1,
         "Efficiency Index: Value/Cost ratio.\n"
-        "Compare weapons by EffiX to get more value for your money!\n"
-        "Higher is better = more damage for less money.");
+        "While StriX is about pure damage only, EffiX cares about your wallet too.\n"
+        "Higher is better = pay less for more damage.");
     ssTemp.str("");
     ssTemp << "EffiX: " << PFL::makePrintFloatShort(getWpnValueCostRatio(wpn, fWpnConstToFile), 2);
-    drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), ssTemp.str());
+    drawText(ImGui::GetCursorPosX(), fContinueY_1, ssTemp.str());
+
+    const float fContinueY_2 = ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled;
+    const auto* const wpnImageTex = wpn.getObject3D().getMaterial().getTexture();
+    if (wpnImageTex)
+    {
+        ImGui::SetCursorPos(ImVec2(fImageX, fImageY));
+        ImGui::Image(
+            (ImTextureID)(intptr_t)wpnImageTex->getInternalNum(),
+            ImVec2(128.f * m_fScalingFactor, 64.f * m_fScalingFactor) /* size */,
+            { 0, 1 } /* uv0 */, {1, 0} /* uv1 */);
+    }
 
     drawText(
-        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled,
+        fBeginX, fContinueY_2,
         "Price: $ " + std::to_string(wpn.getPrice()));
     drawText(
         fBeginX, ImGui::GetCursorPosY(),
@@ -3146,9 +3164,8 @@ void proofps_dd::GUI::drawInGameBuyMenu()
 
     constexpr char* const szWindowTitle = "Buy";
 
-    constexpr float fWindowWidthDesired = 600.f;
+    constexpr float fWindowWidthDesired = 500.f;
     // would be good to have this value saved in the class, but for now I'm just copy-pasting it from GUI::initialize():
-    const float fScalingFactor = m_pPge->getPure().getWindow().getClientHeight() / 768.f;
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
 
     static std::vector<BuyMenuEntry> vecBuyMenuEntries;
@@ -3163,7 +3180,7 @@ void proofps_dd::GUI::drawInGameBuyMenu()
     const float fBtnHeight = fButtonHeightMinPixels + 10.f;
 
     const float fWindowWidth = std::max(
-        std::max(fWindowWidthDesired * fScalingFactor, fWindowWidthMinPixels),
+        std::max(fWindowWidthDesired * m_fScalingFactor, fWindowWidthMinPixels),
         fWpnNameMaxLength * 2 + 30 /* because the name of the hovered weapon will be placed on the right side too */);
 
     constexpr int nTextRows = 4; /* 2 x (window title on top + notice text at bottom) */
