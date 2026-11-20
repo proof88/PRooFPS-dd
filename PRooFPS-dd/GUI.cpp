@@ -363,6 +363,7 @@ void proofps_dd::GUI::shutdown()
 
     m_pImFontFragTableNonScaled = nullptr;
     m_pImFontHudGeneralScaled = nullptr;
+    m_pImFontHudSmallerScaled = nullptr;
 }
 
 const proofps_dd::GUI::MainMenuState& proofps_dd::GUI::getMainMenuState() const
@@ -745,7 +746,9 @@ proofps_dd::PureObject3dInOutSlider proofps_dd::GUI::m_pSlidingProof88Laugh;
 
 ImFont* proofps_dd::GUI::m_pImFontFragTableNonScaled = nullptr;
 ImFont* proofps_dd::GUI::m_pImFontHudGeneralScaled = nullptr;
+ImFont* proofps_dd::GUI::m_pImFontHudSmallerScaled = nullptr;
 float proofps_dd::GUI::m_fFontSizePxHudGeneralScaled = fDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
+float proofps_dd::GUI::m_fFontSizePxHudSmallerScaled = fDefaultFontSizePixels - 4; /* after init, should be adjusted based on display resolution */
 float proofps_dd::GUI::fEmbeddedDefaultFontSizePixelsScaled = fEmbeddedDefaultFontSizePixels; /* after init, should be adjusted based on display resolution */
 
 float proofps_dd::GUI::m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizeMarkdownH3Pixels; /* after init, should be adjusted based on display resolution */
@@ -3064,6 +3067,10 @@ void proofps_dd::GUI::drawWeaponDetails(
     const Weapon& wpn)
 {
     drawText(fBeginX, fBeginY, wpn.getName());
+    
+    assert(m_pImFontHudSmallerScaled);
+    ImGui::PushFont(m_pImFontHudSmallerScaled);
+
     drawText(
         fBeginX, ImGui::GetCursorPosY(),
         wpn.getCurrentFiringModeAsString());
@@ -3071,7 +3078,7 @@ void proofps_dd::GUI::drawWeaponDetails(
     static std::stringstream ssTemp;
 
     addHintToItem(
-        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled,
         "Strike Index.\n"
         "Compare weapons by StriX to choose for more damage per second.\n"
         "Higher is better.");
@@ -3091,7 +3098,7 @@ void proofps_dd::GUI::drawWeaponDetails(
     drawText(ImGui::GetCursorPosX(), ImGui::GetCursorPosY(), ssTemp.str());
 
     drawText(
-        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
+        fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled,
         "Price: $ " + std::to_string(wpn.getPrice()));
     drawText(
         fBeginX, ImGui::GetCursorPosY(),
@@ -3101,7 +3108,7 @@ void proofps_dd::GUI::drawWeaponDetails(
     ssTemp << "Cost to Fire: $ " << PFL::makePrintFloatShort(fWpnConstToFile, 2);
     drawText(fBeginX, ImGui::GetCursorPosY(), ssTemp.str());
 
-    //drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, "Rate of Fire: ");
+    //drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled, "Rate of Fire: ");
     //ImGui::SameLine();
     //const auto fSameX_1 = ImGui::GetCursorPosX();
     //ssTemp.str("");
@@ -3112,7 +3119,7 @@ void proofps_dd::GUI::drawWeaponDetails(
     //ssTemp << std::fixed << std::setprecision(1) << wpn.getFiringRate() * 60 << " rounds/min";
     //drawText(fSameX_1, ImGui::GetCursorPosY(), ssTemp.str());
     
-    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, "Bullet Rate: ");
+    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled, "Bullet Rate: ");
     ImGui::SameLine();
     const auto fSameX_2 = ImGui::GetCursorPosX();
     ssTemp.str("");
@@ -3126,7 +3133,9 @@ void proofps_dd::GUI::drawWeaponDetails(
     ssTemp.str("");
     ssTemp << "Best Aim Accuracy: " << std::fixed << std::setprecision(2)
         << wpn.getAccuracyByPose(false /* moving */, false /* run */, true /* duck */) << "°";
-    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled, ssTemp.str());
+    drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled, ssTemp.str());
+
+    ImGui::PopFont();
 }
 
 void proofps_dd::GUI::drawInGameBuyMenu()
@@ -5528,6 +5537,17 @@ bool proofps_dd::GUI::initFonts(const float& fScalingFactor)
         getConsole().OLn("GUI::%s(): m_fFontSizePxHudGeneralScaled: %f", __func__, m_fFontSizePxHudGeneralScaled);
     }
 
+    m_fFontSizePxHudSmallerScaled = (fDefaultFontSizePixels - 4) * fScalingFactor;
+    if (m_fFontSizePxHudSmallerScaled <= 0.f)
+    {
+        m_fFontSizePxHudSmallerScaled = fDefaultFontSizePixels - 4;
+        getConsole().EOLn("GUI::%s(): m_fFontSizePxHudSmallerScaled was non-positive, reset to: %f", __func__, m_fFontSizePxHudSmallerScaled);
+    }
+    else
+    {
+        getConsole().OLn("GUI::%s(): m_fFontSizePxHudSmallerScaled: %f", __func__, m_fFontSizePxHudSmallerScaled);
+    }
+
     m_fFontSizePxMarkdownH3Scaled = fDefaultFontSizePixels * fScalingFactor;
     if (m_fFontSizePxMarkdownH3Scaled <= 0.f)
     {
@@ -5569,7 +5589,7 @@ bool proofps_dd::GUI::initFonts(const float& fScalingFactor)
 
     m_pImFontFragTableNonScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", fDefaultFontSizePixels);
 
-    // By the time we get here, m_fFontSizePxHudGeneralScaled is set according to display resolution.
+    // By the time we get here, m_fFontSizePxHudGeneralScaled and m_fFontSizePxHudSmallerScaled are set according to display resolution.
     // This also means that upon windowed/fullscreen mode change, we should reinit GUI, but this is already happening.
     /*
     * Currently there is no proper font scaling in Dear ImGui, i.e. different size font needs to be built as different font.
@@ -5580,7 +5600,9 @@ bool proofps_dd::GUI::initFonts(const float& fScalingFactor)
     */
     m_pImFontHudGeneralScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudGeneralScaled);
 
-    if (!m_pImFontFragTableNonScaled || !m_pImFontHudGeneralScaled)
+    m_pImFontHudSmallerScaled = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\arial.ttf", m_fFontSizePxHudSmallerScaled);
+
+    if (!m_pImFontFragTableNonScaled || !m_pImFontHudGeneralScaled || !m_pImFontHudSmallerScaled)
     {
         getConsole().EOLn("GUI::%s(): Fonts->AddFontFromFileTTF() failed!", __func__);
         return false;
