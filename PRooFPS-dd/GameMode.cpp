@@ -9,6 +9,7 @@
 
 #include "stdafx.h"  // PCH
 #include "GameMode.h"
+#include "Config.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
 
@@ -422,6 +423,11 @@ bool proofps_dd::GameMode::isPlayerAllowedForGameplay(const Player& player) cons
 bool proofps_dd::GameMode::isPlayerMovementAllowed() const
 {
     return true;
+}
+
+const bool proofps_dd::GameMode::isMarketOpen(bool /*bFinanceEnabled*/, int /*nMarketOpenDurationSecs*/) const
+{
+    return false;
 }
 
 unsigned int proofps_dd::GameMode::getSpectatorModePlayersCount() const
@@ -1490,6 +1496,30 @@ const bool& proofps_dd::TeamRoundGameMode::isFinanceEnabled_DEPRECATED_TO_BE_DEL
 void proofps_dd::TeamRoundGameMode::setFinanceEnabled_DEPRECATED_TO_BE_DELETED_BY_2027_EOY(bool bState)
 {
     m_bFinanceEnabled = bState;
+}
+
+const bool proofps_dd::TeamRoundGameMode::isMarketOpen(
+    bool bFinanceEnabled, int nMarketOpenDurationSecs) const
+{
+    if (isGameWon())
+    {
+        return false;
+    }
+
+    if (!bFinanceEnabled)
+    {
+        return false;
+    }
+
+    if (nMarketOpenDurationSecs <= 0)
+    {
+        return true; // 0 means always open, negative just to rule out that case also
+    }
+
+    const auto nSecondsElapsedSincePrepareStarted = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - getFSM().getTimeEnteredPrepareState()).count();
+
+    return nSecondsElapsedSincePrepareStarted < nMarketOpenDurationSecs;
 }
 
 proofps_dd::TeamRoundGameMode::RoundStateFSM& proofps_dd::TeamRoundGameMode::getFSM()

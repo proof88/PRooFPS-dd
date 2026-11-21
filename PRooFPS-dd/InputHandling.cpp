@@ -81,6 +81,7 @@ const char* proofps_dd::InputHandling::getLoggerModuleName()
 
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
     proofps_dd::GameMode& gameMode,
+    proofps_dd::Config& config,
     proofps_dd::Player& player,
     proofps_dd::XHair& xhair,
     const unsigned int nTickrate,
@@ -94,7 +95,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     proofps_dd::MsgUserCmdFromClient::initPkt(pkt, m_strafe, m_bAttack, m_bCrouch, m_bDescent, m_bJump, m_fLastPlayerAngleYSent, m_fLastWeaponAngleZSent);
 
     const proofps_dd::InputHandling::PlayerAppActionRequest playerAppActionReq =
-        clientKeyboardWhenConnectedToServer(gameMode, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin, wpnHandling);
+        clientKeyboardWhenConnectedToServer(gameMode, config, pkt, player, nTickrate, nClUpdateRate, nPhysicsRateMin, wpnHandling);
     if (playerAppActionReq == proofps_dd::InputHandling::PlayerAppActionRequest::None)
     {
         clientMouseWhenConnectedToServer(gameMode, pkt, player, xhair.getObject3D());
@@ -614,6 +615,7 @@ void proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer_Spectating(
 
 proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::clientKeyboardWhenConnectedToServer(
     proofps_dd::GameMode& gameMode,
+    proofps_dd::Config& config,
     pge_network::PgePacket& pkt,
     proofps_dd::Player& player,
     const unsigned int nTickrate,
@@ -705,11 +707,14 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     // put this here so dead player i.e. waiting to respawn cannot change team during respawn countdown!
     if (m_pge.getInput().getKeyboard().isKeyPressedOnce(static_cast<unsigned char>(VkKeyScan(GAME_INPUT_KEY_MENU_BUY))))
     {
-        // avoid key function if we are in a differen in-game menu!
-        if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
-            (m_gui.getInGameMenuState() == GUI::InGameMenuState::Buy))
+        if (gameMode.isMarketOpen(config.isFinanceEnabled(), config.getMarketOpenDurationSecs()))
         {
-            m_gui.showHideInGameBuyMenu();
+            // avoid key function if we are in a differen in-game menu!
+            if ((m_gui.getInGameMenuState() == GUI::InGameMenuState::None) ||
+                (m_gui.getInGameMenuState() == GUI::InGameMenuState::Buy))
+            {
+                m_gui.showHideInGameBuyMenu();
+            }
         }
     }
 

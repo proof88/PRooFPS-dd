@@ -19,6 +19,7 @@
 #include "PGE.h" // for Bullet and PgeCfgProfiles
 #include "Network/Stubs/PgeNetworkStub.h"
 
+#include "Config.h"
 #include "GameMode.h"
 #include "Player.h"
 #include "PRooFPS-dd-packet.h"
@@ -201,6 +202,7 @@ protected:
             "test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state",
             static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_round_cannot_be_won_by_killing_a_team_if_fsm_is_not_in_play_state));
         addSubTest("test_round_games_player_movement_allowed", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_player_movement_allowed));
+        addSubTest("test_round_games_is_market_open", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_is_market_open));
         addSubTest("test_round_games_hasJustTransitionedTo_functions_server", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_functions_server));
         addSubTest("test_round_games_hasJustTransitionedTo_functions_client", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_functions_client));
         addSubTest("test_round_games_hasJustTransitionedTo_always_detects_restart", static_cast<PFNUNITSUBTEST>(&GameModeTest::test_round_games_hasJustTransitionedTo_always_detects_restart));
@@ -524,6 +526,7 @@ private:
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
         b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed");
+        b &= assertFalse(gm->isMarketOpen(true, 30), "market open");
 
         return b;
     }
@@ -547,6 +550,7 @@ private:
         b &= assertFalse(gm->isRoundBased(), "round based");
         b &= assertTrue(gm->isRespawnAllowedAfterDie(), "respawn allowed after die");
         b &= assertTrue(gm->isPlayerMovementAllowed(), "movement allowed");
+        b &= assertFalse(gm->isMarketOpen(true, 30), "market open");
     
         return b;
     }
@@ -582,6 +586,7 @@ private:
         b &= assertFalse(trg->hasJustTransitionedTo_RoundWaitForResetState_InThisTick(), "hasTransitioned 3");
         b &= assertFalse(trg->hasCurrentRoundJustBeenWon_InThisTick(), "round has just been won");
         b &= assertEquals(0, nSecondsElapsedSincePrepareStarted, "time since entered prepare state");
+        b &= assertTrue(gm->isMarketOpen(true, 30), "market open");
 
         return b;
     }
@@ -5747,6 +5752,156 @@ private:
         bool b = true;
         b &= assertTrue(
             test_round_games_player_movement_allowed(gamemode),
+            proofps_dd::GameMode::getGameModeTypeName(gamemode));
+
+        return b;
+    }
+
+    bool test_round_games_is_market_open(const proofps_dd::GameModeType& gamemode)
+    {
+        bool bTestingAsServer = false;
+        bool b = true;
+
+        for (auto i = 1; i <= 2; i++)
+        {
+            if (i == 2)
+            {
+                tearDown();
+                bTestingAsServer = true;
+                m_cfgProfiles.getVars()[pge_network::PgeINetwork::CVAR_NET_SERVER].Set(bTestingAsServer);
+                if (!m_network.initialize())
+                {
+                    return assertFalseEz(true, gamemode, bTestingAsServer, "network reinit as server");
+                }
+            }
+
+            if (!testInitGamemode(gamemode))
+            {
+                return assertFalseEz(true, gamemode, bTestingAsServer, "testInitGamemode fail");
+            }
+
+            assert(gm->isRoundBased());
+
+            // 2nd round win will set gameWon flag, that case we also have to test
+            trg->setRoundWinLimit(1);
+
+            // set some basic time limits to avoid time-dependent state transitions in tests where we are not expecting them
+            trg->getFSM().setRoundTimeLimitSecs(60);
+            trg->getFSM().setRoundPrepareTimeSecs(3);
+
+            if (!add2plus1players())
+            {
+                return false;
+            }
+            assert(m_mapPlayers.size() == 3u);
+            proofps_dd::Player& player1 = m_mapPlayers.begin()->second;
+            proofps_dd::Player& player2 = (++m_mapPlayers.begin())->second;
+            proofps_dd::Player& player5 = (++(++m_mapPlayers.begin()))->second;
+
+            b &= assertTrueEz(gm->addPlayer(player1, m_network), gamemode, bTestingAsServer, "add player 1 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player2, m_network), gamemode, bTestingAsServer, "add player 2 fail 1");
+            b &= assertTrueEz(gm->addPlayer(player5, m_network), gamemode, bTestingAsServer, "add player 5 fail 1");
+
+            if (!b)
+            {
+                return false;
+            }
+
+            // need to restart to correctly initialize time-specific values if we have time limit!
+            gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
+
+            player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+            player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+
+            b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 1 fail 1");
+            b &= assertTrueEz(gm->updatePlayer(player2, m_network), gamemode, true/*server*/, "update player 2 fail 1");
+            b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 1");
+
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Prepare,
+                trg->getFSM().getState(),
+                "fsm state 1");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 30 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 1");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 2");
+            b &= assertFalseEz(gm->isMarketOpen(false /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 3");
+
+            trg->getFSM().transitionToPlayState();
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::Play,
+                trg->getFSM().getState(),
+                "fsm state 2");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 30 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 4");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 5");
+            b &= assertFalseEz(gm->isMarketOpen(false /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 6");
+
+            trg->getFSM().roundWon();
+            b &= assertEquals(
+                proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+                trg->getFSM().getState(),
+                "fsm state 3");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 30 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 7");
+            b &= assertTrueEz(gm->isMarketOpen(true /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 8");
+            b &= assertFalseEz(gm->isMarketOpen(false /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 9");
+
+            if (bTestingAsServer)
+            {
+                // need to restart to correctly initialize time-specific values if we have time limit!
+                gm->restartWithoutRemovingPlayers(m_network, proofps_dd::GameRestartType_KeepPlayers::Hard);
+
+                player1.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+                player2.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+                player5.isInSpectatorMode() = false; // otherwise player won't be taken into account for their assigned team, gamemode win state, etc.
+
+                b &= assertTrueEz(gm->updatePlayer(player1, m_network), gamemode, true/*server*/, "update player 1 fail 1");
+                b &= assertTrueEz(gm->updatePlayer(player2, m_network), gamemode, true/*server*/, "update player 2 fail 1");
+                b &= assertTrueEz(gm->updatePlayer(player5, m_network), gamemode, true/*server*/, "update player 5 fail 1");
+
+                trg->getFSM().transitionToPlayState();
+
+                b &= assertFalseEz(
+                    trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "serverCheck 1");
+
+                trg->serverTickUpdateWinningConditions(m_network); // closing current tick
+
+                /* ----- next tick ----------------------------- */
+
+                /* test-drive FSM but we don't expect any change at this moment */
+                b &= assertFalseEz(
+                    trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, true /* testing as server */, "serverCheck 2");
+
+                trg->serverTickUpdateWinningConditions(m_network); // closing current tick
+
+                /* ----- next tick ----------------------------- */
+
+                // Team 1 dies
+                player1.setHealth(0);
+                player2.setHealth(0);
+
+                b &= assertTrueEz(
+                    trg->serverCheckAndUpdateWinningConditions(m_network), gamemode, bTestingAsServer, "serverCheck 3");
+
+                b &= assertEquals(
+                    proofps_dd::TeamRoundGameMode::RoundStateFSM::RoundState::WaitForReset,
+                    trg->getFSM().getState(),
+                    "fsm state 5");
+                
+                b &= assertFalseEz(gm->isMarketOpen(true /* finance */, 30 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 10");
+                b &= assertFalseEz(gm->isMarketOpen(true /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 11");
+                b &= assertFalseEz(gm->isMarketOpen(false /* finance */, 0 /* market open dur. secs */), gamemode, bTestingAsServer, "prepare 12");
+            }
+        }
+
+        return b;
+    }
+
+    bool test_round_games_is_market_open()
+    {
+        const proofps_dd::GameModeType gamemode = proofps_dd::GameModeType::TeamRoundGame;
+
+        bool b = true;
+        b &= assertTrue(
+            test_round_games_is_market_open(gamemode),
             proofps_dd::GameMode::getGameModeTypeName(gamemode));
 
         return b;

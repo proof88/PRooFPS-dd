@@ -71,6 +71,7 @@ namespace proofps_dd
 
         PlayerAppActionRequest clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
             proofps_dd::GameMode& gameMode,
+            proofps_dd::Config& config,
             proofps_dd::Player& player,
             proofps_dd::XHair& xhair,
             const unsigned int nTickrate,
@@ -119,6 +120,7 @@ namespace proofps_dd
             const proofps_dd::Player& player);
         PlayerAppActionRequest clientKeyboardWhenConnectedToServer(
             proofps_dd::GameMode& gameMode,
+            proofps_dd::Config& config,
             pge_network::PgePacket& pkt, proofps_dd::Player& player,
             const unsigned int nTickrate,
             const unsigned int nClUpdateRate,

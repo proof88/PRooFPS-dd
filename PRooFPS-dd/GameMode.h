@@ -72,6 +72,7 @@ namespace proofps_dd
         unsigned int m_nShotsFired{ 0 };
     };
 
+    class Config;
     class Player;
 
     /**
@@ -459,6 +460,11 @@ namespace proofps_dd
         * @return True if player movement is allowed, false otherwise.
         */
         virtual bool isPlayerMovementAllowed() const;
+
+        /**
+        * @return True if market is open i.e. Buy menu is available, false otherwise.
+        */
+        virtual const bool isMarketOpen(bool bFinanceEnabled, int nMarketOpenDurationSecs) const;
 
         /**
         * @return Number of players in spectator mode (team id is irrelevant).
@@ -923,6 +929,7 @@ namespace proofps_dd
         virtual bool isRoundBased() const override;
         virtual bool isRespawnAllowedAfterDie() const override;
         virtual bool isPlayerMovementAllowed() const override;
+        virtual const bool isMarketOpen(bool bFinanceEnabled, int nMarketOpenDurationSecs) const override;
 
         /**
         * @return Configured round win limit previously set by setRoundWinLimit().

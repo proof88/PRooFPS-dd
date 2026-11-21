@@ -867,7 +867,7 @@ void proofps_dd::PRooFPSddPGE::mainLoopConnectedShared(PureWindow& window)
     if (window.isActive())
     {
         if (clientHandleInputWhenConnectedAndSendUserCmdMoveToServer(
-            *GameMode::getGameMode(), player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate(), *this
+            *GameMode::getGameMode(), m_config, player, *m_gui.getXHair(), m_config.getTickRate(), m_config.getClientUpdateRate(), m_config.getPhysicsRate(), *this
         ) == proofps_dd::InputHandling::PlayerAppActionRequest::Exit)
         {
             disconnect(true);
@@ -1238,6 +1238,10 @@ void proofps_dd::PRooFPSddPGE::updateVisualsForGameModeShared(const GameMode* gm
             {
                 bMarketClosedNotificationDone = true;
                 m_gui.getServerEvents()->addMarketClosedEvent();
+                if (m_gui.getInGameMenuState() == GUI::InGameMenuState::Buy)
+                {
+                    m_gui.showHideInGameBuyMenu();
+                }
             }
         }
 

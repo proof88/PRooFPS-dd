@@ -27,8 +27,8 @@ proofps_dd::Config& proofps_dd::Config::getConfigInstance(PGE& pge, proofps_dd::
     // Note that the following should not be touched here as they are not fully constructed when we are here:
     // maps, pge
     // But they can be used in other functions.
-    static Config m_guiInstance(pge, maps);
-    return m_guiInstance;
+    static Config m_configInstance(pge, maps);
+    return m_configInstance;
 }
 
 const char* proofps_dd::Config::getLoggerModuleName()
