@@ -2982,42 +2982,35 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
 } // drawInGameServerAdminMenu()
 
-struct BuyMenuEntry
+float proofps_dd::GUI::buildBuyMenuEntries(
+    std::vector<proofps_dd::GUI::BuyMenuEntry>& vec,
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
-    std::string m_sLabel;
-    std::string m_sKeyToWpnMgr;
-    ImGuiKey_ m_eKeyCode;
-};
+    assert(m_pMapPlayers);
+    if (itCurrentPlayer == m_pMapPlayers->end())
+    {
+        return 0.f;
+    }
 
-static float buildBuyMenuEntries(
-    std::vector<BuyMenuEntry>& vec,
-    std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* pMapPlayers,
-    const WeaponManager** pWpnMgr)
-{
+    const WeaponManager& wpnMgr = itCurrentPlayer->second.getWeaponManager();
+
+    // TODO: clear vec upon shutdown to handle game restart case
+
     static float fWpnNameMaxLength = 0.f;
-
-    const auto it = pMapPlayers->begin();
-    if (it == pMapPlayers->end())
+    if (!vec.empty())
     {
+        // no need to rebuild
         return fWpnNameMaxLength;
     }
 
-    const WeaponManager* wpnMgr = &it->second.getWeaponManager();
-    *pWpnMgr = wpnMgr;
-
-    if (!vec.empty() || !pMapPlayers || !pWpnMgr)
-    {
-        return fWpnNameMaxLength;
-    }
-
-    for (const auto& keyWpnPair : wpnMgr->getKeypressToWeaponMap())
+    for (const auto& keyWpnPair : wpnMgr.getKeypressToWeaponMap())
     {
         if (keyWpnPair.first == '1')
         {
             continue; // intentionally skip knife, since it is always available to players
         }
 
-        const auto* const wpn = wpnMgr->getWeaponByFilename(keyWpnPair.second);
+        const auto* const wpn = wpnMgr.getWeaponByFilename(keyWpnPair.second);
         assert(keyWpnPair.second == wpn->getFilename());
 
         const std::string sLabel = std::string(1, keyWpnPair.first) + " - " + wpn->getName();
@@ -3156,7 +3149,12 @@ void proofps_dd::GUI::drawWeaponDetails(
     ImGui::PopFont();
 }
 
-void proofps_dd::GUI::drawInGameBuyMenu()
+/**
+* @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
+*                        For example, when we have just connected to the server and it not yet sent all player bringup messages to us.
+*/
+void proofps_dd::GUI::drawInGameBuyMenu(
+    const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
 {
     assert(m_pPge);
 
@@ -3169,10 +3167,8 @@ void proofps_dd::GUI::drawInGameBuyMenu()
     const float fWindowWidthMinPixels = ImGui::CalcTextSize(szWindowTitle).x + 2 * ImGui::GetStyle().WindowPadding.x;
 
     static std::vector<BuyMenuEntry> vecBuyMenuEntries;
-    assert(m_pMapPlayers);
-    const WeaponManager* wpnMgr = nullptr;
-    const float fWpnNameMaxLength = buildBuyMenuEntries(vecBuyMenuEntries, m_pMapPlayers, &wpnMgr);
-    const bool bHaveWeaponData = ((fWpnNameMaxLength > 0.f) && !vecBuyMenuEntries.empty() && wpnMgr);
+    const float fWpnNameMaxLength = buildBuyMenuEntries(vecBuyMenuEntries, itCurrentPlayer);
+    const bool bHaveWeaponData = ((fWpnNameMaxLength > 0.f) && !vecBuyMenuEntries.empty());
 
     const float fButtonWidthMinPixels = fWpnNameMaxLength + 2 * ImGui::GetStyle().FramePadding.x;
     const float fButtonHeightMinPixels = m_fFontSizePxHudGeneralScaled + 2 * ImGui::GetStyle().FramePadding.y;
@@ -3235,18 +3231,20 @@ void proofps_dd::GUI::drawInGameBuyMenu()
         ImGui::SetCursorPos(ImVec2(fBeginPosX, ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled));
 
         assert(bHaveWeaponData);
-        assert(wpnMgr);
+        assert(itCurrentPlayer != m_pMapPlayers->end());
+        const WeaponManager& wpnMgr = itCurrentPlayer->second.getWeaponManager();
 
         // by default show details of the 1st weapon in the list
-        static const Weapon* wpnShowDetail = wpnMgr->getWeaponByFilename(vecBuyMenuEntries.begin()->m_sKeyToWpnMgr);
+        static const Weapon* wpnShowDetail = wpnMgr.getWeaponByFilename(vecBuyMenuEntries.begin()->m_sKeyToWpnMgr);
         
         // cannot be nullptr due to buildBuyMenuEntries() and bHaveWeaponData is true
         assert(wpnShowDetail);
 
+        ImGuiKey_ eBuyingKeyCode = ImGuiKey_None;
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.f, 0.5f));
         for (const auto& menuEntry : vecBuyMenuEntries)
         {
-            const auto* const wpn = wpnMgr->getWeaponByFilename(menuEntry.m_sKeyToWpnMgr);
+            const auto* const wpn = wpnMgr.getWeaponByFilename(menuEntry.m_sKeyToWpnMgr);
             if (!wpn)
             {
                 continue;
@@ -3255,6 +3253,7 @@ void proofps_dd::GUI::drawInGameBuyMenu()
             // In case of buttons, remove size argument (ImVec2) to auto-resize.
             if (ImGui::Button(menuEntry.m_sLabel.c_str(), ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(menuEntry.m_eKeyCode))
             {
+                eBuyingKeyCode = menuEntry.m_eKeyCode;
                 bCloseThisPopup = true;
             }
 
@@ -3264,6 +3263,28 @@ void proofps_dd::GUI::drawInGameBuyMenu()
             }
         }
         ImGui::PopStyleVar();
+
+        if (eBuyingKeyCode != ImGuiKey_None)
+        {
+            bCloseThisPopup = true;
+
+            pge_network::PgePacket pktUserInGameMenuCmd;
+            // it is easier to early return here in case of initPkt() failure so we do it here!
+            if (!proofps_dd::MsgUserInGameMenuCmd::initPkt(pktUserInGameMenuCmd, static_cast<int>(InGameMenuState::Buy)))
+            {
+                getConsole().EOLn("GUI::%s(): initPkt() FAILED at line %d!", __func__, __LINE__);
+                assert(false);
+                // remember: do not return, let the entire function finish as planned with EndPopup() and prev color reset stuff!
+            }
+            else
+            {
+                // sending selected team id to server automatically exits spectator mode for this player
+                proofps_dd::MsgUserInGameMenuCmd::setBuyMenuSelectedItem(pktUserInGameMenuCmd, static_cast<int>(eBuyingKeyCode));
+                // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
+                // their common interface which always points to the initialized instance, which is either client or server.
+                m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
+            }
+        }
 
         static const std::string sNotice =
             std::string("Key '") + GAME_INPUT_KEY_MENU_BUY + "' toggles this window.";
@@ -3310,7 +3331,7 @@ void proofps_dd::GUI::drawInGameMenu(
         break;
     case InGameMenuState::Buy:
         ImGui::PushFont(m_pImFontHudGeneralScaled);
-        drawInGameBuyMenu();
+        drawInGameBuyMenu(itCurrentPlayer);
         ImGui::PopFont();
         break;
     default:

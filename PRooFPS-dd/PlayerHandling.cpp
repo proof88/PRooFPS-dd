@@ -520,6 +520,76 @@ void proofps_dd::PlayerHandling::handlePlayerTeamIdChangedOrToggledSpectatorMode
     }
 }
 
+void proofps_dd::PlayerHandling::handlePlayerBuyWpnReq(
+    Player& player,
+    const ImGuiKey_& iSelectedWpnMenuItemAsImGuiKey,
+    const proofps_dd::Config& config,
+    PGEcfgProfiles& /*cfgProfiles*/)
+{
+    // both server and client comes here
+
+    const auto& keyPressToWpnMap = player.getWeaponManager().getKeypressToWeaponMap();
+    if (keyPressToWpnMap.empty())
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, EMPTY keypress-2-wpn map!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+        return;
+    }
+
+    const int iFirstAcceptedWpnKeyAsInt = static_cast<int>(keyPressToWpnMap.begin()->first);
+    const int iLastAcceptedWpnKeyAsInt = static_cast<int>((--keyPressToWpnMap.end())->first);
+    const int iSelectedWpnKeyAsInt = static_cast<int>(iSelectedWpnMenuItemAsImGuiKey) - ImGuiKey_1 + static_cast<int>('1');
+    if ((iSelectedWpnMenuItemAsImGuiKey == ImGuiKey_None) || (iSelectedWpnKeyAsInt < iFirstAcceptedWpnKeyAsInt) ||
+        (iSelectedWpnKeyAsInt > iLastAcceptedWpnKeyAsInt))
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, invalid key: %d!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+        return;
+    }
+
+    bool bRoundGame = GameMode::getGameMode()->isRoundBased();
+    const TeamRoundGameMode* trg = nullptr;
+    if (bRoundGame)
+    {
+        trg = dynamic_cast<TeamRoundGameMode*>(GameMode::getGameMode());
+        bRoundGame = (trg != nullptr);
+    }
+    if (!bRoundGame)
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, cannot buy in non-round game mode!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+        return;
+    }
+
+    assert(trg);
+    if (!config.isFinanceEnabled())
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, cannot buy when Finance is disabled!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+        return;
+    }
+
+    if (!trg->isMarketOpen(config.isFinanceEnabled(), config.getMarketOpenDurationSecs()))
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, cannot buy when market is closed!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+        return;
+    }
+
+    getConsole().EOLn(
+        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, key: %d",
+        __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
+
+    // TODO: check if player can buy.
+    // TODO: give wpn or item to player
+
+} // handlePlayerBuyWpnReq()
+
 void proofps_dd::PlayerHandling::handleExplosionMultiKill(
     int nPlayersDiedByExplosion)
 {
@@ -1635,10 +1705,13 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
         handlePlayerTeamIdChangedOrToggledSpectatorMode(
             player, static_cast<unsigned int>(msg.m_optData1.m_nValue), msg.m_optData2.m_bValue, config, cfgProfiles, smokes);
         break;
+    case static_cast<int>(GUI::InGameMenuState::Buy):
+        handlePlayerBuyWpnReq(
+            player, static_cast<ImGuiKey_>(msg.m_optData1.m_nValue), config, cfgProfiles);
+        break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
-        assert(false);  // crash in debug
-        return false;
+        assert(false);  // crash in debug, don't crash in release
     }
 
     return true;

@@ -117,6 +117,11 @@ namespace proofps_dd
             const proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles,
             PgeObjectPool<proofps_dd::Smoke>& smokes);
+        void handlePlayerBuyWpnReq(
+            Player& player,
+            const ImGuiKey_& iSelectedWpnMenuItem,
+            const proofps_dd::Config& config,
+            PGEcfgProfiles& cfgProfiles);
         void handleExplosionMultiKill(
             int nPlayersDiedByExplosion);
         void writePlayerList();

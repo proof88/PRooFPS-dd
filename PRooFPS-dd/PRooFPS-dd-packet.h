@@ -1227,6 +1227,20 @@ namespace proofps_dd
             msgUserInGameMenuCmd.m_optData2 = static_cast<bool>(true);
         }
 
+        static int getBuyMenuSelectedItem(const pge_network::PgePacket& pkt)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            const proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<const proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            return msgUserInGameMenuCmd.m_optData1.m_nValue;
+        }
+
+        static void setBuyMenuSelectedItem(pge_network::PgePacket& pkt, const int& iSelectedBuyMenuItem)
+        {
+            // TODO: later we should offset pMsgApp because other messages might be already inside this pkt!
+            proofps_dd::MsgUserInGameMenuCmd& msgUserInGameMenuCmd = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt);
+            msgUserInGameMenuCmd.m_optData1 = iSelectedBuyMenuItem;
+        }
+
         // idea is similar to as how MsgPlayerEventFromServer works
         int m_iInGameMenu; // see GUI::InGameMenuState
 
