@@ -269,7 +269,7 @@ void proofps_dd::WeaponHandling::scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmo
     m_bWpnAutoSwitchToBestWithAnyKindOfAmmoRequest = true;
 }
 
-Weapon* proofps_dd::WeaponHandling::getWeaponPickupInducedAutoSwitchRequest() const
+const Weapon* proofps_dd::WeaponHandling::getWeaponPickupInducedAutoSwitchRequest() const
 {
     return m_pWpnAutoSwitchWhenPickedUp;
 }
@@ -279,7 +279,7 @@ void proofps_dd::WeaponHandling::clearWeaponPickupInducedAutoSwitchRequest()
     m_pWpnAutoSwitchWhenPickedUp = nullptr;
 }
 
-void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn)
+void proofps_dd::WeaponHandling::scheduleWeaponPickupInducedAutoSwitchRequest(const Weapon* wpn)
 {
     if (getWeaponAutoReloadRequest() || getWeaponAutoSwitchToBestLoadedRequest() || getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest())
     {
@@ -1540,7 +1540,7 @@ void proofps_dd::WeaponHandling::handleCurrentPlayersCurrentWeaponStateChangeSha
 * This function was made specifically for deciding if we initiate auto-switch upon picking up a weapon.
 * The pickup-induced auto-reload and firing-induced actions are handled in separate functions.
 */
-void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Player& /*player*/, Weapon& wpnCurrent, Weapon& wpnPicked, const bool& bHasJustBecomeAvailable)
+void proofps_dd::WeaponHandling::handleAutoSwitchUponWeaponPickupShared(const Player& /*player*/, const Weapon& wpnCurrent, const Weapon& wpnPicked, const bool& bHasJustBecomeAvailable)
 {
     if (&wpnCurrent == &wpnPicked)
     {

@@ -606,7 +606,8 @@ bool proofps_dd::PRooFPSddPGE::onPacketReceived(const pge_network::PgePacket& pk
                 pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgUserInGameMenuCmd>(pkt),
                 m_config,
                 getConfigProfiles(),
-                getSmokePool());
+                getSmokePool(),
+                *this);
             break;
         default:
             bRet = false;
@@ -1402,7 +1403,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                     if (player.canTakeItem(mapItem))
                     {
                         bool bHasJustBecomeAvailable = false;
-                        player.takeItem(mapItem, newPktWpnUpdate, bHasJustBecomeAvailable);  // this also invokes mapItem.Take()
+                        player.takeItem(&mapItem, mapItem.getType(), newPktWpnUpdate, bHasJustBecomeAvailable);  // this also invokes mapItem.Take()
                         bSendItemUpdate = true;
                         // although item update is always sent, wpn update is sent only if takeItem() flipped the availability of the wpn,
                         // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
@@ -1416,6 +1417,7 @@ void proofps_dd::PRooFPSddPGE::serverPickupAndRespawnItems()
                             {
                                 // server handles pickup-induced switch here, clients do that in MsgWpnUpdateFromServer handler
                                 // TODO: pWpnPicked maybe const!
+                                // TODO: overcomplicated, server shall inject to itself! Complicates wpn buy logic also!
                                 auto* pWpnPicked = player.getWeaponInstanceByMapItemType(mapItem.getType());
                                 if (pWpnPicked && player.getWeaponManager().getCurrentWeapon())
                                 {

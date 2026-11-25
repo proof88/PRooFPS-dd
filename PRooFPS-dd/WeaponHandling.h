@@ -91,12 +91,20 @@ namespace proofps_dd
         void clearWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
         void scheduleWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
 
-        Weapon* getWeaponPickupInducedAutoSwitchRequest() const;
+        const Weapon* getWeaponPickupInducedAutoSwitchRequest() const;
         void clearWeaponPickupInducedAutoSwitchRequest();
-        void scheduleWeaponPickupInducedAutoSwitchRequest(Weapon* wpn);
+        void scheduleWeaponPickupInducedAutoSwitchRequest(const Weapon* wpn);
 
         PgeObjectPool<Smoke>& getSmokePool();
         const PgeObjectPool<Smoke>& getSmokePool() const;
+
+        // TODO: shall be protected. Only reason it is public is because only this way PlayerHandling::handlePlayerBuyWpnReq()
+        // can access it, but could be easily solved by making the server self-injecting MsgWpnUpdateFromServer!
+        void handleAutoSwitchUponWeaponPickupShared(
+            const Player& player,
+            const Weapon& wpnCurrent,
+            const Weapon& wpnPicked,
+            const bool& bHasJustBecomeAvailable);
 
     protected:
 
@@ -143,12 +151,6 @@ namespace proofps_dd
             const TPureUInt& nMagCount,
             const TPureUInt& nUnmagCount);
 
-        void handleAutoSwitchUponWeaponPickupShared(
-            const Player& player,
-            Weapon& wpnCurrent,
-            Weapon& wpnPicked,
-            const bool& bHasJustBecomeAvailable);
-
     private:
 
         static float getDamageAndImpactForceAtDistance(
@@ -189,7 +191,7 @@ namespace proofps_dd
         // respawning after being killed, this ptr will be set, and later when map change happens, all Player and Weapon instances are deleted and recreated,
         // this pointer will be invalid! When window becomes active again, this ptr will be tried to be used to switch to this Weapon instance which
         // has been already deleted! Result: undefined behavior, sooner or later crash.
-        Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
+        const Weapon* m_pWpnAutoSwitchWhenPickedUp = nullptr;
 
         blIteratorAPI::blRawArrayWrapper<PooledBullet>::iterator deleteBulletServer(
             PgeObjectPool<PooledBullet>& bullets,

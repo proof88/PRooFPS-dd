@@ -1996,9 +1996,9 @@ const PgeOldNewValue<unsigned int>& proofps_dd::Player::getTeamId() const
     return m_iTeamId;
 }
 
-bool proofps_dd::Player::canTakeItem(const MapItem& item) const
+bool proofps_dd::Player::canTakeItemType(const MapItemType& itemtype) const
 {
-    switch (item.getType())
+    switch (itemtype)
     {
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
@@ -2008,10 +2008,10 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
     case proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER:
     {
-        const Weapon* const pWpn = getWeaponInstanceByMapItemType(item.getType());
+        const Weapon* const pWpn = getWeaponInstanceByMapItemType(itemtype);
         if (!pWpn)
         {
-            getConsole().EOLn("Player::%s(): failed to find weapon by item type %d!", __func__, item.getType());
+            getConsole().EOLn("Player::%s(): failed to find weapon by item type %d!", __func__, itemtype);
             return false;
         }
         return pWpn->canIncBulletCount();
@@ -2028,18 +2028,39 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
     return false;
 }
 
+bool proofps_dd::Player::canTakeItem(const MapItem& item) const
+{
+    return canTakeItemType(item.getType());
+}
+
+/**
+* @param itemtype                Item type being received by the player.
+* @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet.
+* @param bHasJustBecomeAvailable Set by function only in case of weapon items.
+*                                True if player did not have this weapon before, false otherwise.
+*/
+void proofps_dd::Player::takeItemType(const MapItemType& itemtype, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable)
+{
+    takeItem(nullptr, itemtype, pktWpnUpdate, bHasJustBecomeAvailable);
+}
+
 /**
 * @param item                    Item being picked up by the player.
+*                                If null, it means the item is not being picked up from the map but the player
+*                                received it in some different way, e.g. bought it.
+* @param itemtype                If item is not null, just pass its MapItemType here.
+*                                If item is null, pass a valid MapItemType here the player shall receive.
 * @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet.
-* @param bHasJustBecomeAvailable Set by function only in case of weapon items. True if player did not have this weapon before, false otherwise.
+* @param bHasJustBecomeAvailable Set by function only in case of weapon items.
+*                                True if player did not have this weapon before, false otherwise.
 */
-void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable)
+void proofps_dd::Player::takeItem(MapItem* item, const MapItemType& itemtype, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable)
 {
     assert(m_network.isServer());
 
     const bool bCurrentPlayer = (getServerSideConnectionHandle() == pge_network::ServerConnHandle);
 
-    switch (item.getType())
+    switch (itemtype)
     {
     case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
     case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
@@ -2049,14 +2070,17 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
     case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
     case proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER:
     {
-        Weapon* const pWpnBecomingAvailable = getWeaponInstanceByMapItemType(item.getType());
+        Weapon* const pWpnBecomingAvailable = getWeaponInstanceByMapItemType(itemtype);
         if (!pWpnBecomingAvailable)
         {
-            getConsole().EOLn("Player::%s(): failed to find weapon by item type %d!", __func__, item.getType());
+            getConsole().EOLn("Player::%s(): failed to find weapon by item type %d!", __func__, itemtype);
             return;
         }
 
-        item.take();
+        if (item)
+        {
+            item->take();
+        }
         int nAmmoIncrease = 0;
         if (pWpnBecomingAvailable->isAvailable())
         {
@@ -2084,7 +2108,7 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         // Server and client could have more shared code, as they have for example in handleTakeNonWeaponItem().
         if (bCurrentPlayer)
         {
-            handleTakeWeaponItem(item.getType(), *pWpnBecomingAvailable, bHasJustBecomeAvailable, nAmmoIncrease);
+            handleTakeWeaponItem(itemtype, *pWpnBecomingAvailable, bHasJustBecomeAvailable, nAmmoIncrease);
         }
 
         pWpnBecomingAvailable->SetAvailable(true);  // becomes available on server side
@@ -2094,8 +2118,8 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         proofps_dd::MsgWpnUpdateFromServer::initPkt(
             pktWpnUpdate,
             0 /* ignored by client anyway */,
-            pWpnBecomingAvailable->getFilename() /* TODO: hopefully soon we can get rid of this member from the msg, since item.getType() should be enough!!! */,
-            item.getType(),
+            pWpnBecomingAvailable->getFilename() /* TODO: hopefully soon we can get rid of this member from the msg, since itemtype should be enough!!! */,
+            itemtype,
             pWpnBecomingAvailable->isAvailable(),
             pWpnBecomingAvailable->getState().getNew(),
             pWpnBecomingAvailable->getMagBulletCount(),
@@ -2104,22 +2128,31 @@ void proofps_dd::Player::takeItem(MapItem& item, pge_network::PgePacket& pktWpnU
         break;
     }
     case proofps_dd::MapItemType::ITEM_ARMOR:
-        item.take();
+        if (item)
+        {
+            item->take();
+        }
         setArmor(getArmor() + static_cast<int>(MapItem::ITEM_ARMOR_AP_INC)); // client will learn about new AP from the usual UserUpdateFromServer
         handleTakeNonWeaponItem(MapItemType::ITEM_ARMOR, bCurrentPlayer);
         break;
     case proofps_dd::MapItemType::ITEM_HEALTH:
-        item.take();
+        if (item)
+        {
+            item->take();
+        }
         setHealth(getHealth() + static_cast<int>(MapItem::ITEM_HEALTH_HP_INC)); // client will learn about new HP from the usual UserUpdateFromServer
         handleTakeNonWeaponItem(MapItemType::ITEM_HEALTH, bCurrentPlayer);
         break;
     case proofps_dd::MapItemType::ITEM_JETLAX:
-        item.take();
+        if (item)
+        {
+            item->take();
+        }
         handleTakeNonWeaponItem(MapItemType::ITEM_JETLAX, bCurrentPlayer);
         break;
     default:
         getConsole().EOLn(
-            "Player::%s(): unknown item type %d!", __func__, item.getType());
+            "Player::%s(): unknown item type %d!", __func__, itemtype);
     }
 }
 
@@ -2161,6 +2194,18 @@ Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemType& ma
 {
     // simply invoke the const-version of the function above by const-casting:
     return const_cast<Weapon*>((const_cast<const Player* const>(this))->getWeaponInstanceByMapItemType(mapItemType));
+}
+
+proofps_dd::MapItemType proofps_dd::Player::getMapItemTypeByWeaponInstance(const Weapon& wpn) const
+{
+    for (const auto& elem : m_mapItemTypeToWeaponFilename)
+    {
+        if (elem.second == wpn.getFilename())
+        {
+            return elem.first;
+        }
+    }
+    throw std::runtime_error(std::string("Not found ") + wpn.getFilename() + " in m_mapItemTypeToWeaponFilename!");
 }
 
 /**

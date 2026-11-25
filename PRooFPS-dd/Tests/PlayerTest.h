@@ -98,10 +98,15 @@ protected:
         addSubTest("test_is_moving", (PFNUNITSUBTEST)&PlayerTest::test_is_moving);
         addSubTest("test_attack", (PFNUNITSUBTEST)&PlayerTest::test_attack);
         addSubTest("test_can_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_health);
+        addSubTest("test_can_take_item_type_health", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_type_health);
         addSubTest("test_can_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_weapon);
+        addSubTest("test_can_take_item_type_weapon", (PFNUNITSUBTEST)&PlayerTest::test_can_take_item_type_weapon);
         addSubTest("test_take_item_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_health);
+        addSubTest("test_take_item_type_health", (PFNUNITSUBTEST)&PlayerTest::test_take_item_type_health);
         addSubTest("test_take_item_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_weapon);
+        addSubTest("test_take_item_type_weapon", (PFNUNITSUBTEST)&PlayerTest::test_take_item_type_weapon);
         addSubTest("test_get_weapon_instance_by_map_item_type", (PFNUNITSUBTEST)&PlayerTest::test_get_weapon_instance_by_map_item_type);
+        addSubTest("test_get_map_item_type_by_weapon_instance", (PFNUNITSUBTEST)&PlayerTest::test_get_map_item_type_by_weapon_instance);
         addSubTest("test_handle_falling_from_high_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_server_instance);
         addSubTest("test_handle_falling_from_high_client_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_falling_from_high_client_instance);
         addSubTest("test_handle_landed_server_instance", (PFNUNITSUBTEST)&PlayerTest::test_handle_landed_server_instance);
@@ -2369,6 +2374,22 @@ private:
         return b;
     }
 
+    bool test_can_take_item_type_health()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+
+        player.setHealth(100);
+        player.updateOldValues();
+
+        bool b = assertFalse(player.canTakeItemType(proofps_dd::MapItemType::ITEM_HEALTH), "1");
+
+        player.setHealth(50);
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_HEALTH), "2");
+
+        return b;
+    }
+
     bool test_can_take_item_weapon()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
@@ -2402,6 +2423,32 @@ private:
         return b;
     }
 
+    bool test_can_take_item_type_weapon()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        player.setHealth(100);
+        player.updateOldValues();
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        bool b = assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_PISTOL), "1");
+
+        player.getWeaponManager().getWeapons()[1]->SetUnmagBulletCount(player.getWeaponManager().getWeapons()[1]->getVars()["cap_max"].getAsInt());
+        b &= assertFalse(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_PISTOL), "2");
+
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), "3");
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA), "4");
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_PUSHA), "5");
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL), "6");
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN), "7");
+        b &= assertTrue(player.canTakeItemType(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER), "8");
+
+        return b;
+    }
+
     bool test_take_item_health()
     {
         const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
@@ -2414,11 +2461,28 @@ private:
         bool bHasJustBecomeAvailable = false;
 
         player.setHealth(90);
-        player.takeItem(miHealth, newPktWpnUpdate, bHasJustBecomeAvailable);
+        player.takeItem(&miHealth, miHealth.getType(), newPktWpnUpdate, bHasJustBecomeAvailable);
 
         // ignoring bHasJustBecomeAvailable because that is not set for health item
         return (assertEquals(100, playerConst.getHealth(), "player health") &
             assertTrue(miHealth.isTaken(), "item taken")) != 0;
+    }
+
+    bool test_take_item_type_health()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        const auto& playerConst = player;
+        player.setHealth(100);
+        player.updateOldValues();
+        pge_network::PgePacket newPktWpnUpdate;
+        bool bHasJustBecomeAvailable = false;
+
+        player.setHealth(90);
+        player.takeItemType(proofps_dd::MapItemType::ITEM_HEALTH, newPktWpnUpdate, bHasJustBecomeAvailable);
+
+        // ignoring bHasJustBecomeAvailable because that is not set for health item
+        return (assertEquals(100, playerConst.getHealth(), "player health")) != 0;
     }
 
     bool test_take_item_weapon()
@@ -2440,7 +2504,7 @@ private:
             return false;
         };
 
-        player.takeItem(miPistol, pktWpnUpdate, bHasJustBecomeAvailable);
+        player.takeItem(&miPistol, miPistol.getType(), pktWpnUpdate, bHasJustBecomeAvailable);
         bool bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
@@ -2464,7 +2528,7 @@ private:
             assertFalse(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 1")) != 0;
 
         bHasJustBecomeAvailable = false;
-        player.takeItem(miMchGun, pktWpnUpdate, bHasJustBecomeAvailable);
+        player.takeItem(&miMchGun, miMchGun.getType(), pktWpnUpdate, bHasJustBecomeAvailable);
         bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
@@ -2489,7 +2553,7 @@ private:
             assertTrue(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 2");
 
         bHasJustBecomeAvailable = false;
-        player.takeItem(miBazooka, pktWpnUpdate, bHasJustBecomeAvailable);
+        player.takeItem(&miBazooka, miBazooka.getType(), pktWpnUpdate, bHasJustBecomeAvailable);
         bStrSafeChecked = strncmp(
             player.getWeaponManager().getWeapons()[3]->getFilename().c_str(),
             msgWpnUpdate.m_szWpnName,
@@ -2499,6 +2563,95 @@ private:
             static_cast<int>(player.getWeaponManager().getWeapons()[3]->getMagBulletCount()), "wpn 3 mag") &
             assertTrue(player.getWeaponManager().getWeapons()[3]->isAvailable(), "wpn 3 available") &
             assertTrue(miBazooka.isTaken(), "item 3 taken") &
+            assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
+                "pkt 3 id") &
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
+                "msg 3 id") &
+            assertTrue(bStrSafeChecked, "msg 3 sWeaponBecomingAvailable") &
+            assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 3 becoming available") &
+            assertEquals(player.getWeaponManager().getWeapons()[3]->getVars()["reloadable"].getAsInt(),
+                static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 3 mag") &
+            assertEquals(0 /* we didnt have bazooka yet, so we expect unmag count to be 0 in msg */,
+                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 3 unmag") &
+            assertTrue(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 3");
+
+        return b;
+    }
+
+    bool test_take_item_type_weapon()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+        player.setHealth(100);
+        player.updateOldValues();
+        pge_network::PgePacket pktWpnUpdate;
+        bool bHasJustBecomeAvailable = false;
+
+        // Warning: this way of pointing to message is valid only if there is only 1 message (the first) in the packet and we want that!
+        const proofps_dd::MsgWpnUpdateFromServer& msgWpnUpdate = pge_network::PgePacket::getMsgAppDataFromPkt<proofps_dd::MsgWpnUpdateFromServer>(pktWpnUpdate);
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        player.takeItemType(proofps_dd::MapItemType::ITEM_WPN_PISTOL, pktWpnUpdate, bHasJustBecomeAvailable);
+        bool bStrSafeChecked = strncmp(
+            player.getWeaponManager().getWeapons()[1]->getFilename().c_str(),
+            msgWpnUpdate.m_szWpnName,
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
+
+        bool b = (assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[1]->getUnmagBulletCount()), "wpn 1 unmag") &
+            assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
+                "pkt 1 id") &
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
+                "msg 1 id") &
+            assertTrue(bStrSafeChecked, "msg 1 sWeaponBecomingAvailable") &
+            assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 1 becoming available") &
+            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt(),
+                static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 1 mag") &
+            assertEquals(player.getWeaponManager().getWeapons()[1]->getVars()["reloadable"].getAsInt() /* we already had pistol, so we expect unmag count to be non-zero in msg */,
+                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 1 unmag") &
+            assertFalse(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 1")) != 0;
+
+        bHasJustBecomeAvailable = false;
+        player.takeItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, pktWpnUpdate, bHasJustBecomeAvailable);
+        bStrSafeChecked = strncmp(
+            player.getWeaponManager().getWeapons()[2]->getFilename().c_str(),
+            msgWpnUpdate.m_szWpnName,
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
+
+        b &= assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[2]->getMagBulletCount()), "wpn 2 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[2]->isAvailable(), "wpn 2 available") &
+            assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
+                "pkt 2 id") &
+            assertEquals(static_cast<uint32_t>(proofps_dd::MsgWpnUpdateFromServer::id),
+                static_cast<uint32_t>(pge_network::PgePacket::getMsgAppIdFromPkt(pktWpnUpdate)),
+                "msg 2 id") &
+            assertTrue(bStrSafeChecked, "msg 2 sWeaponBecomingAvailable") &
+            assertTrue(msgWpnUpdate.m_bAvailable, "msg wpn 2 becoming available") &
+            assertEquals(player.getWeaponManager().getWeapons()[2]->getVars()["reloadable"].getAsInt(),
+                static_cast<int>(msgWpnUpdate.m_nMagBulletCount), "msg wpn 2 mag") &
+            assertEquals(0 /* we didnt have machinegun yet, so we expect unmag count to be 0 in msg */,
+                static_cast<int>(msgWpnUpdate.m_nUnmagBulletCount), "msg wpn 2 unmag") &
+            assertTrue(bHasJustBecomeAvailable, "bHasJustBecomeAvailable 2");
+
+        bHasJustBecomeAvailable = false;
+        player.takeItemType(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, pktWpnUpdate, bHasJustBecomeAvailable);
+        bStrSafeChecked = strncmp(
+            player.getWeaponManager().getWeapons()[3]->getFilename().c_str(),
+            msgWpnUpdate.m_szWpnName,
+            proofps_dd::MsgWpnUpdateFromServer::nWpnNameNameMaxLength) == 0;
+
+        b &= assertEquals(player.getWeaponManager().getWeapons()[3]->getVars()["reloadable"].getAsInt(),
+            static_cast<int>(player.getWeaponManager().getWeapons()[3]->getMagBulletCount()), "wpn 3 mag") &
+            assertTrue(player.getWeaponManager().getWeapons()[3]->isAvailable(), "wpn 3 available") &
             assertEquals(static_cast<uint32_t>(pge_network::MsgApp::id),
                 static_cast<uint32_t>(pge_network::PgePacket::getPacketId(pktWpnUpdate)),
                 "pkt 3 id") &
@@ -2540,6 +2693,29 @@ private:
             assertEquals(player.getWeaponManager().getWeaponByFilename("machinepistol.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL), "mchpistol") &
             assertEquals(player.getWeaponManager().getWeaponByFilename("shotgun.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN), "shotgun") &
             assertEquals(player.getWeaponManager().getWeaponByFilename("grenadelauncher.txt"), player.getWeaponInstanceByMapItemType(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER), "grenadelauncher");
+
+        return b;
+    }
+
+    bool test_get_map_item_type_by_weapon_instance()
+    {
+        const pge_network::PgeNetworkConnectionHandle connHandleExpected = static_cast<pge_network::PgeNetworkConnectionHandle>(12345);
+        proofps_dd::Player player(m_audio, m_cfgProfiles, m_bullets, m_itemPickupEvents, m_inventoryChangeEvents, m_ammoChangeEvents, *m_engine, m_network, connHandleExpected, "192.168.1.12");
+
+        if (!assertTrue(loadWeaponsForPlayer(player, SetDfltWpn::Yes)))
+        {
+            return false;
+        };
+
+        bool b = true;
+
+        b &= assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("pistol.txt")), "pistol") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("machinegun.txt")), "mchgun") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("bazooka.txt")), "bazooka") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("pusha.txt")), "pusha") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("machinepistol.txt")), "mchpistol") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("shotgun.txt")), "shotgun") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER, player.getMapItemTypeByWeaponInstance(*player.getWeaponManager().getWeaponByFilename("grenadelauncher.txt")), "grenadelauncher");
 
         return b;
     }

@@ -627,7 +627,7 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
     bool bWeaponAutoReloadWasRequested = wpnHandling.getWeaponAutoReloadRequest();
     bool bAutoSwitchToBestLoadedWasRequested = wpnHandling.getWeaponAutoSwitchToBestLoadedRequest();
     bool bAutoSwitchToBestWithAnyKindOfAmmoWasRequested = wpnHandling.getWeaponAutoSwitchToBestWithAnyKindOfAmmoRequest();
-    Weapon* pWeaponPickupInducedAutoSwitchWasRequested = wpnHandling.getWeaponPickupInducedAutoSwitchRequest();
+    const Weapon* pWeaponPickupInducedAutoSwitchWasRequested = wpnHandling.getWeaponPickupInducedAutoSwitchRequest();
 
     wpnHandling.clearWeaponAutoReloadRequest();
     wpnHandling.clearWeaponAutoSwitchToBestLoadedRequest();
@@ -692,6 +692,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
             getConsole().SetLoggingState("4LLM0DUL3S", false);
         }
     }
+
+    // keep conditions here in sync with layerHandling::handlePlayerBuyWpnReq() related to when Buy menu can be used!
 
     if (playerConst.isInSpectatorMode() || playerConst.isForcedSpectating())
     {
@@ -1000,7 +1002,8 @@ proofps_dd::InputHandling::PlayerAppActionRequest proofps_dd::InputHandling::cli
                     }
                     else
                     {
-                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Picked Up " + pWeaponPickupInducedAutoSwitchWasRequested->getVars()["name"].getAsString());
+                        // at() cannot throw due to how Weapon is constructed
+                        m_gui.getItemPickupEvents()->addEvent("Auto-Switch: Picked Up " + pWeaponPickupInducedAutoSwitchWasRequested->getVars().at("name").getAsString());
                         //getConsole().EOLn("InputHandling::%s(): auto switch to picked up weapon: %s!", __func__, pWeaponPickupInducedAutoSwitchWasRequested->getFilename().c_str());
                         cWeaponSwitch = itKeypressToWeaponMapCurrentWeapon->first;
                     }

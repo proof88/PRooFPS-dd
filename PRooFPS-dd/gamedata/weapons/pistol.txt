@@ -23,9 +23,9 @@ type = ranged
 price = 800
 
 # Price of a pack of ammunition in fiat money.
-# A pack of ammunition is basically "bullets_default" number of bullets,
-# thus buying a pack of ammo will give "bullets_default" number of bullets.
-# I chose to use "bullets_default" because "reloadable" is 0 for not reloadable weapons.
+# A pack of ammunition is:
+# - "bullets_default" number of bullets if "reloadable" is 0 (weapon is non-reloadable),
+# - "reloadable" number of bullets otherwise (weapon is reloadable).
 # Relevant only when server option Finance is enabled.
 # Cannot be negative. Parsed as integer (no decimal part).
 price_ammo = 10

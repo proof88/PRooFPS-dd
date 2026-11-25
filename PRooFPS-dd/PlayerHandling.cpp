@@ -12,6 +12,7 @@
 #include "PlayerHandling.h"
 #include "Physics.h"
 #include "PRooFPS-dd-packet.h"
+#include "WeaponHandling.h"
 
 
 // ############################### PUBLIC ################################
@@ -524,9 +525,28 @@ void proofps_dd::PlayerHandling::handlePlayerBuyWpnReq(
     Player& player,
     const ImGuiKey_& iSelectedWpnMenuItemAsImGuiKey,
     const proofps_dd::Config& config,
-    PGEcfgProfiles& /*cfgProfiles*/)
+    PGEcfgProfiles& /*cfgProfiles*/,
+    proofps_dd::WeaponHandling& wpnHandling)
 {
     // both server and client comes here
+
+    // keep conditions here in sync with InputHandling::clientKeyboardWhenConnectedToServer()
+
+    if (player.isInSpectatorMode() || player.isForcedSpectating())
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, player is spectating!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+        return;
+    }
+
+    if (!GameMode::getGameMode()->isPlayerAllowedForGameplay(player))
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, player not allowed for gameplay!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str());
+        return;
+    }
 
     const auto& keyPressToWpnMap = player.getWeaponManager().getKeypressToWeaponMap();
     if (keyPressToWpnMap.empty())
@@ -585,8 +605,92 @@ void proofps_dd::PlayerHandling::handlePlayerBuyWpnReq(
         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, key: %d",
         __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey));
 
-    // TODO: check if player can buy.
-    // TODO: give wpn or item to player
+    try
+    {
+        const auto& sSelectedWpnFilename = keyPressToWpnMap.at(static_cast<unsigned char>(iSelectedWpnKeyAsInt));
+        const auto* const pWpnToBuy = player.getWeaponManager().getWeaponByFilename(sSelectedWpnFilename);
+        if (!pWpnToBuy)
+        {
+            getConsole().EOLn(
+                "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, failed to find wpn by name %s!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey), sSelectedWpnFilename.c_str());
+            return;
+        }
+
+        const auto mapItemType = player.getMapItemTypeByWeaponInstance(*pWpnToBuy);
+
+        if (!player.canTakeItemType(mapItemType))
+        {
+            getConsole().EOLn(
+                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, key: %d, cannot take ammo or wpn: %s!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey), sSelectedWpnFilename.c_str());
+            return;
+        }
+
+        int nPrice = 0;
+        if (pWpnToBuy->isAvailable())
+        {
+            // buy ammo only
+            nPrice = pWpnToBuy->getAmmoPrice();
+        }
+        else
+        {
+            // buy wpn with default ammo
+            nPrice = pWpnToBuy->getPrice();
+        }
+
+        if (player.getFiatMoney() >= nPrice)
+        {
+            // keep sending MsgWpnUpdateFromServer in sync
+            // with serverPickupAndRespawnItems(), TODO: refactor to have common logic
+            pge_network::PgePacket newPktWpnUpdate;
+            proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
+            bool bHasJustBecomeAvailable = false;
+            player.takeItemType(mapItemType, newPktWpnUpdate, bHasJustBecomeAvailable);
+            // wpn update is sent only if takeItemType() flipped the availability of the wpn,
+            // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
+            if (proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate))
+            {
+                if (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
+                {
+                    m_pge.getNetwork().getServer().send(newPktWpnUpdate, player.getServerSideConnectionHandle());
+                }
+                else
+                {
+                    // server handles pickup-induced switch here, clients do that in MsgWpnUpdateFromServer handler
+                    // TODO: overcomplicated, server shall inject to itself!
+                    if (player.getWeaponManager().getCurrentWeapon())
+                    {
+                        wpnHandling.handleAutoSwitchUponWeaponPickupShared(player, *player.getWeaponManager().getCurrentWeapon(), *pWpnToBuy, bHasJustBecomeAvailable);
+                    }
+                    else
+                    {
+                        getConsole().EOLn("PRooFPSddPGE::%s(): current is nullptr around line %d!", __func__, __LINE__);
+                    }
+                }
+            }
+
+            player.getFiatMoney() -= static_cast<float>(nPrice);
+
+            getConsole().EOLn(
+                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, key: %d, bought ammo or wpn: %s for %d!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey), sSelectedWpnFilename.c_str(), nPrice);
+        }
+        else
+        {
+            getConsole().EOLn(
+                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, key: %d, insufficient funds for ammo or wpn: %s!",
+                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey), sSelectedWpnFilename.c_str());
+        }
+    }
+    catch (const std::exception& e)
+    {
+        // shall not happen due to iSelectedWpnKeyAsInt validity is checked earlier above
+        getConsole().EOLn(
+            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, key: %d, exception: %s!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), static_cast<int>(iSelectedWpnMenuItemAsImGuiKey), e.what());
+        return;
+    }
 
 } // handlePlayerBuyWpnReq()
 
@@ -1684,7 +1788,8 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
     const proofps_dd::MsgUserInGameMenuCmd& msg,
     const proofps_dd::Config& config,
     PGEcfgProfiles& cfgProfiles,
-    PgeObjectPool<proofps_dd::Smoke>& smokes)
+    PgeObjectPool<proofps_dd::Smoke>& smokes,
+    proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way */)
 {
     //getConsole().EOLn("PlayerHandling::%s(): received event id: %d from player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);
 
@@ -1707,7 +1812,7 @@ bool proofps_dd::PlayerHandling::serverHandleUserInGameMenuCmd(
         break;
     case static_cast<int>(GUI::InGameMenuState::Buy):
         handlePlayerBuyWpnReq(
-            player, static_cast<ImGuiKey_>(msg.m_optData1.m_nValue), config, cfgProfiles);
+            player, static_cast<ImGuiKey_>(msg.m_optData1.m_nValue), config, cfgProfiles, wpnHandling);
         break;
     default:
         getConsole().EOLn("PlayerHandling::%s(): bad event id: %d about player with connHandleServerSide: %u!", __func__, msg.m_iInGameMenu, connHandleServerSide);

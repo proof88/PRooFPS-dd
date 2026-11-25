@@ -35,6 +35,8 @@
 
 namespace proofps_dd
 {
+    class WeaponHandling; // TODO: delete this once server injects MsgWpnUpdateFromServer to itself!
+
     class PlayerHandling :
         protected proofps_dd::Networking
     {
@@ -121,7 +123,8 @@ namespace proofps_dd
             Player& player,
             const ImGuiKey_& iSelectedWpnMenuItem,
             const proofps_dd::Config& config,
-            PGEcfgProfiles& cfgProfiles);
+            PGEcfgProfiles& cfgProfiles,
+            WeaponHandling& wpnHandling);
         void handleExplosionMultiKill(
             int nPlayersDiedByExplosion);
         void writePlayerList();
@@ -178,7 +181,8 @@ namespace proofps_dd
             const proofps_dd::MsgUserInGameMenuCmd& msg,
             const proofps_dd::Config& config,
             PGEcfgProfiles& cfgProfiles,
-            PgeObjectPool<proofps_dd::Smoke>& smokes
+            PgeObjectPool<proofps_dd::Smoke>& smokes,
+            proofps_dd::WeaponHandling& wpnHandling /* this design is really bad this way */
         );
         void updatePlayersVisuals(
             const proofps_dd::Config& config,

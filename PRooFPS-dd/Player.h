@@ -368,11 +368,15 @@ namespace proofps_dd
         PgeOldNewValue<unsigned int>& getTeamId();
         const PgeOldNewValue<unsigned int>& getTeamId() const;
 
+        bool canTakeItemType(const MapItemType& itemtype) const;
         bool canTakeItem(const MapItem& item) const;
-        void takeItem(MapItem& item, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable);
+        void takeItemType(const MapItemType& itemtype, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable);
+        void takeItem(MapItem* item, const MapItemType& itemtype, pge_network::PgePacket& pktWpnUpdate, bool& bHasJustBecomeAvailable);
 
         const Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType) const;
         Weapon* getWeaponInstanceByMapItemType(const MapItemType& mapItemType);
+
+        MapItemType getMapItemTypeByWeaponInstance(const Weapon& wpn) const;
 
         void updateImpactForceByBulletImpactOrRecoil(
             bool bRecoil, Bullet& bullet, Weapon& wpn);
