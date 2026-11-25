@@ -52,12 +52,19 @@ namespace proofps_dd
         static constexpr uint32_t ITEM_WPN_MACHINEPISTOL_RESPAWN_SECS = 30;
         static constexpr uint32_t ITEM_WPN_SHOTGUN_RESPAWN_SECS = 20;
         static constexpr uint32_t ITEM_WPN_GRENADELAUNCHER_RESPAWN_SECS = 30;
+
+        typedef std::map<char, MapItemType> Char2MapItemTypeMap;
+
+        static Char2MapItemTypeMap mapChar2MapItemType;
     
         static const MapItemId& getGlobalMapItemId();
         static void resetGlobalData();
     
         static uint32_t getItemRespawnTimeSecs(const MapItem& mapItem);
         static std::string toString(const MapItemType& eMapItemType);
+
+        static MapItemType getMapItemTypeByChar(const char& c);
+        static char getCharByMapItemType(const MapItemType& mit);
     
         // ---------------------------------------------------------------------------
     

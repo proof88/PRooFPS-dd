@@ -1513,139 +1513,32 @@ bool proofps_dd::Maps::lineHandleLayout(
         switch (c)
         {
         case ',':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_ARMOR, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '+':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_HEALTH, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '.':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_JETLAX, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '2':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '3':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '4':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_BAZOOKA, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '5':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_PUSHA, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '6':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_MACHINEPISTOL, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '7':
-        {
-            if (bDryRun)
-            {
-                if (bLoadPickupableItems)
-                {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_SHOTGUN, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
-                }
-            }
-            bSpecialBgBlock = true;
-            bCopyPreviousBgBlock = iObjectBgToBeCopied > -1;
-            break;
-        }
         case '8':
         {
             if (bDryRun)
             {
                 if (bLoadPickupableItems)
                 {
-                    proofps_dd::MapItem* pMapItem = new proofps_dd::MapItem(m_gfx, MapItemType::ITEM_WPN_GRENADELAUNCHER, PureVector(x, y, GAME_ITEMS_POS_Z));
-                    m_items.insert({ pMapItem->getId(), pMapItem });
+                    // getMapItemTypeByChar() can throw
+                    try {
+                        proofps_dd::MapItem* const pMapItem = new proofps_dd::MapItem(m_gfx, MapItem::getMapItemTypeByChar(c), PureVector(x, y, GAME_ITEMS_POS_Z));
+                        m_items.insert({ pMapItem->getId(), pMapItem });
+                    }
+                    catch (const std::exception& e)
+                    {
+                        const std::string sc(1, c); // WA for CConsole lack support of %c
+                        getConsole().EOLn("%s No MapItemType defined for special block: %s, exception: %s!", __func__, sc.c_str(), e.what());
+                        assert(false);
+                        return false;
+                    }
                 }
             }
             bSpecialBgBlock = true;

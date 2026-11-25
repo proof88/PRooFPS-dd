@@ -42,6 +42,8 @@ protected:
         engine = &PR00FsUltimateRenderingEngine::createAndGet(m_cfgProfiles, inputHandler);
         engine->initialize(PURE_RENDERER_HW_FP, 800, 600, PURE_WINDOWED, 0, 32, 24, 0, 0);  // pretty standard display mode, should work on most systems
 
+        addSubTest("test_get_map_item_type_by_char", (PFNUNITSUBTEST)&MapItemTest::test_get_map_item_type_by_char);
+        addSubTest("test_get_char_by_map_item_type", (PFNUNITSUBTEST)&MapItemTest::test_get_char_by_map_item_type);
         addSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
         addSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
         addSubTest("test_get_item_respawn_time_secs", (PFNUNITSUBTEST)&MapItemTest::test_get_item_respawn_time_secs);
@@ -78,6 +80,43 @@ private:
     PR00FsUltimateRenderingEngine* engine;
 
     // ---------------------------------------------------------------------------
+
+    bool test_get_map_item_type_by_char()
+    {
+        bool b = true;
+
+        try {
+            // negative test: invalid char shall throw
+            proofps_dd::MapItem::getMapItemTypeByChar('\0');
+            b = assertFalse(true, "shall throw");
+        }
+        catch (const std::exception&) {}
+
+        return (b & assertEquals(proofps_dd::MapItemType::ITEM_WPN_PISTOL, proofps_dd::MapItem::getMapItemTypeByChar('2'), "2") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, proofps_dd::MapItem::getMapItemTypeByChar('3'), "3") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA, proofps_dd::MapItem::getMapItemTypeByChar('4'), "4") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_PUSHA, proofps_dd::MapItem::getMapItemTypeByChar('5'), "5") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL, proofps_dd::MapItem::getMapItemTypeByChar('6'), "6") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN, proofps_dd::MapItem::getMapItemTypeByChar('7'), "7") &
+            assertEquals(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER, proofps_dd::MapItem::getMapItemTypeByChar('8'), "8") &
+            assertEquals(proofps_dd::MapItemType::ITEM_ARMOR, proofps_dd::MapItem::getMapItemTypeByChar(','), ",") &
+            assertEquals(proofps_dd::MapItemType::ITEM_HEALTH, proofps_dd::MapItem::getMapItemTypeByChar('+'), "+") &
+            assertEquals(proofps_dd::MapItemType::ITEM_JETLAX, proofps_dd::MapItem::getMapItemTypeByChar('.'), ".")) != 0;
+    }
+
+    bool test_get_char_by_map_item_type()
+    {
+        return (assertEquals('2', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_PISTOL), "2") &
+            assertEquals('3', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), "3") &
+            assertEquals('4', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_BAZOOKA), "4") &
+            assertEquals('5', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_PUSHA), "5") &
+            assertEquals('6', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL), "6") &
+            assertEquals('7', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_SHOTGUN), "7") &
+            assertEquals('8', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER), "8") &
+            assertEquals(',', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_ARMOR), ",") &
+            assertEquals('+', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_HEALTH), "+") &
+            assertEquals('.', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_JETLAX), ".")) != 0;
+    }
 
     bool test_initially_empty()
     {

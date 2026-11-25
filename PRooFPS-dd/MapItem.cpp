@@ -27,6 +27,20 @@ constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS;
 
+proofps_dd::MapItem::Char2MapItemTypeMap proofps_dd::MapItem::mapChar2MapItemType =
+{
+    { '2', proofps_dd::MapItemType::ITEM_WPN_PISTOL },
+    { '3', proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN },
+    { '4', proofps_dd::MapItemType::ITEM_WPN_BAZOOKA },
+    { '5', proofps_dd::MapItemType::ITEM_WPN_PUSHA },
+    { '6', proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL },
+    { '7', proofps_dd::MapItemType::ITEM_WPN_SHOTGUN },
+    { '8', proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER },
+    { '+', proofps_dd::MapItemType::ITEM_HEALTH },
+    { ',', proofps_dd::MapItemType::ITEM_ARMOR },
+    { '.', proofps_dd::MapItemType::ITEM_JETLAX }
+};
+
 const proofps_dd::MapItem::MapItemId& proofps_dd::MapItem::getGlobalMapItemId()
 {
     return m_globalMapItemId;
@@ -98,6 +112,23 @@ std::string proofps_dd::MapItem::toString(const proofps_dd::MapItemType& eMapIte
     default:
         return "Unknown Item";
     }
+}
+
+proofps_dd::MapItemType proofps_dd::MapItem::getMapItemTypeByChar(const char& c)
+{
+    return mapChar2MapItemType.at(c);
+}
+
+char proofps_dd::MapItem::getCharByMapItemType(const proofps_dd::MapItemType& mit)
+{
+    for (const auto& elem : mapChar2MapItemType)
+    {
+        if (elem.second == mit)
+        {
+            return elem.first;
+        }
+    }
+    return '\0';
 }
 
 proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_dd::MapItemType& eMapItemType, const PureVector& pos) :
