@@ -27,6 +27,9 @@ constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_PISTOL_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_MACHINEGUN_RESPAWN_SECS;
 constexpr uint32_t proofps_dd::MapItem::ITEM_WPN_BAZOOKA_RESPAWN_SECS;
 
+// ATTENTION: !!!BADDESIGN!!! needs to be kept in sync with WeaponManager::getKeypressToWeaponMap()
+// initialized in WeaponHandling::initializeWeaponHandling() and with
+// Player::m_mapItemTypeToWeaponFilename and with Maps::lineHandleLayout().
 proofps_dd::MapItem::Char2MapItemTypeMap proofps_dd::MapItem::mapChar2MapItemType =
 {
     { '2', proofps_dd::MapItemType::ITEM_WPN_PISTOL },

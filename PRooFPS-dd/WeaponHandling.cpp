@@ -77,7 +77,9 @@ const char* proofps_dd::WeaponHandling::getLoggerModuleName()
 
 bool proofps_dd::WeaponHandling::initializeWeaponHandling(PGEcfgProfiles& cfgProfiles)
 {
-    // Which key should switch to which weapon
+    // Which key should switch to which weapon.
+    // ATTENTION: !!!BADDESIGN!!! needs to be kept in sync with Player::m_mapItemTypeToWeaponFilename and
+    // MapItem::mapChar2MapItemType and with Maps::lineHandleLayout().
     WeaponManager::getKeypressToWeaponMap() = {
         {'1', "knife.txt"},
         {'2', "pistol.txt"},

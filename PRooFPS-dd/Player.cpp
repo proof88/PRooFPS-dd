@@ -2186,6 +2186,7 @@ const Weapon* proofps_dd::Player::getWeaponInstanceByMapItemType(const MapItemTy
         return pWpn;
     }
     default:
+        getConsole().EOLn("Player::%s(): failed to find weapon by item type %d!", __func__, mapItemType);
         return nullptr;
     }
 }
@@ -2817,6 +2818,9 @@ void proofps_dd::Player::handleToggleSpectatorMode()
 // This map provides the logical connection between pickupable MapItems and actual weapons.
 // So when player picks up a specific MapItem, we know which weapon should become available for the player.
 // I'm not planning to move Map stuff to the game engine because this kind of Map is very game-specific.
+// 
+// ATTENTION: !!!BADDESIGN!!! needs to be kept in sync with WeaponManager::getKeypressToWeaponMap()
+// initialized in WeaponHandling::initializeWeaponHandling() and with MapItem::mapChar2MapItemType.
 const std::map<proofps_dd::MapItemType, std::string> proofps_dd::Player::m_mapItemTypeToWeaponFilename =
 {
     {proofps_dd::MapItemType::ITEM_WPN_PISTOL, "pistol.txt"},

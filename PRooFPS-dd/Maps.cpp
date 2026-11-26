@@ -1510,6 +1510,9 @@ bool proofps_dd::Maps::lineHandleLayout(
         // special background block handling
         bool bCopyPreviousBgBlock = false;
         bool bSpecialBgBlock = false;
+        // ATTENTION: !!!BADDESIGN!!! needs to be kept in sync with WeaponManager::getKeypressToWeaponMap()
+        // initialized in WeaponHandling::initializeWeaponHandling() and with
+        // Player::m_mapItemTypeToWeaponFilename and with MapItem::mapChar2MapItemType.
         switch (c)
         {
         case ',':

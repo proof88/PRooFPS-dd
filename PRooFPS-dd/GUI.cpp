@@ -2982,6 +2982,24 @@ void proofps_dd::GUI::drawInGameServerAdminMenu()
     style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
 } // drawInGameServerAdminMenu()
 
+static ImGuiKey_ char2ImGuiKey(const char& c)
+{
+    assert(ImGuiKey_NamedKey_BEGIN < ImGuiKey_1);
+    assert(ImGuiKey_1 > static_cast<int>('1'));
+    if ((c >= '1') && (c <= '9'))
+    {
+        return static_cast<ImGuiKey_>(ImGuiKey_1 - static_cast<int>('1') + static_cast<int>(c));
+    }
+
+    switch (c)
+    {
+    case '+': return ImGuiKey_KeypadAdd;
+    case ',': return ImGuiKey_Comma;
+    case '.': return ImGuiKey_Period;
+    default: return ImGuiKey_None;
+    }
+}
+
 float proofps_dd::GUI::buildBuyMenuEntries(
     std::vector<proofps_dd::GUI::BuyMenuEntry>& vec,
     const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer)
@@ -2992,42 +3010,51 @@ float proofps_dd::GUI::buildBuyMenuEntries(
         return 0.f;
     }
 
-    const WeaponManager& wpnMgr = itCurrentPlayer->second.getWeaponManager();
-
     // TODO: clear vec upon shutdown to handle game restart case
 
-    static float fWpnNameMaxLength = 0.f;
+    static float fLabelMaxLength = 0.f;
     if (!vec.empty())
     {
         // no need to rebuild
-        return fWpnNameMaxLength;
+        return fLabelMaxLength;
     }
 
-    for (const auto& keyWpnPair : wpnMgr.getKeypressToWeaponMap())
+    for (int i = 0; i < 2; i++)
     {
-        if (keyWpnPair.first == '1')
+        for (const auto& elem : MapItem::mapChar2MapItemType)
         {
-            continue; // intentionally skip knife, since it is always available to players
-        }
+            const auto* const wpn = itCurrentPlayer->second.getWeaponInstanceByMapItemType(elem.second);
+            if (((i == 0) && !wpn)
+                ||
+                ((i != 0) && wpn))
+            {
+                // force weapons to be the first items in vec
+                continue;
+            }
+            std::string sLabel;
+            if (wpn)
+            {
+                sLabel = std::string(1, elem.first) + " - " + wpn->getName();
+                vec.push_back(
+                    { sLabel, wpn->getFilename(), char2ImGuiKey(elem.first), elem.second });
+            }
+            else
+            {
+                sLabel = std::string(1, elem.first) + " - " + MapItem::toString(elem.second);
+                vec.push_back(
+                    { sLabel, "", char2ImGuiKey(elem.first), elem.second });
+            }
+            assert(vec.back().m_eKeyCode != ImGuiKey_None);
 
-        const auto* const wpn = wpnMgr.getWeaponByFilename(keyWpnPair.second);
-        assert(keyWpnPair.second == wpn->getFilename());
-
-        const std::string sLabel = std::string(1, keyWpnPair.first) + " - " + wpn->getName();
-        assert(ImGuiKey_NamedKey_BEGIN < ImGuiKey_1);
-        assert(ImGuiKey_1 > static_cast<int>('1'));
-        vec.push_back(
-            {sLabel,
-            keyWpnPair.second,
-            static_cast<ImGuiKey_>(ImGuiKey_1 - static_cast<int>('1') + static_cast<int>(keyWpnPair.first))});
-        
-        const auto fCurrentWpnNameTextSizeWidth = ImGui::CalcTextSize(sLabel.c_str()).x;
-        if (fCurrentWpnNameTextSizeWidth > fWpnNameMaxLength)
-        {
-            fWpnNameMaxLength = fCurrentWpnNameTextSizeWidth;
+            const auto fCurrentWpnNameTextSizeWidth = ImGui::CalcTextSize(sLabel.c_str()).x;
+            if (fCurrentWpnNameTextSizeWidth > fLabelMaxLength)
+            {
+                fLabelMaxLength = fCurrentWpnNameTextSizeWidth;
+            }
         }
     }
-    return fWpnNameMaxLength;
+
+    return fLabelMaxLength;
 }
 
 static float getWpnCostToFire(const Weapon& wpn)
@@ -3147,7 +3174,15 @@ void proofps_dd::GUI::drawWeaponDetails(
     drawText(fBeginX, ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled, ssTemp.str());
 
     ImGui::PopFont();
-}
+} // drawWeaponDetails()
+
+void proofps_dd::GUI::drawNonWeaponItemDetails(
+    float /*fBeginX*/,
+    float /*fBeginY*/,
+    const proofps_dd::MapItemType& /*mit*/)
+{
+    // TODO
+} // drawNonWeaponItemDetails()
 
 /**
 * @param itCurrentPlayer Might be invalid if for any reason the current player is not in m_pMapPlayers.
@@ -3218,7 +3253,7 @@ void proofps_dd::GUI::drawInGameBuyMenu(
             drawText(
                 fBeginPosX,
                 ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
-                "Waiting for weapon data ...");
+                "Waiting for equipment data ...");
 
             ImGui::EndPopup();
             style.Colors[ImGuiCol_PopupBg] = prevPopupBgColor;
@@ -3234,37 +3269,48 @@ void proofps_dd::GUI::drawInGameBuyMenu(
         assert(itCurrentPlayer != m_pMapPlayers->end());
         const WeaponManager& wpnMgr = itCurrentPlayer->second.getWeaponManager();
 
-        // by default show details of the 1st weapon in the list
+        // by default show details of the 1st weapon in the list,
+        // can become null, see later
         static const Weapon* wpnShowDetail = wpnMgr.getWeaponByFilename(vecBuyMenuEntries.begin()->m_sKeyToWpnMgr);
-        
-        // cannot be nullptr due to buildBuyMenuEntries() and bHaveWeaponData is true
-        assert(wpnShowDetail);
+        static MapItemType mapItemTypeShowDetail = MapItemType::ITEM_HEALTH;
 
-        ImGuiKey_ eBuyingKeyCode = ImGuiKey_None;
+        int eBuyingItemType = -1;
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.f, 0.5f));
         for (const auto& menuEntry : vecBuyMenuEntries)
         {
-            const auto* const wpn = wpnMgr.getWeaponByFilename(menuEntry.m_sKeyToWpnMgr);
-            if (!wpn)
+            const Weapon* wpn = nullptr;
+            if (menuEntry.m_sKeyToWpnMgr.empty())
             {
-                continue;
+                // non-weapon item
+                wpn = nullptr;
+            }
+            else
+            {
+                // weapon item
+                wpn = wpnMgr.getWeaponByFilename(menuEntry.m_sKeyToWpnMgr);
+                if (!wpn)
+                {
+                    assert(false); // crash in debug
+                    continue;
+                }
             }
 
             // In case of buttons, remove size argument (ImVec2) to auto-resize.
             if (ImGui::Button(menuEntry.m_sLabel.c_str(), ImVec2(fBtnWidth, fBtnHeight)) || ImGui::IsKeyPressed(menuEntry.m_eKeyCode))
             {
-                eBuyingKeyCode = menuEntry.m_eKeyCode;
+                eBuyingItemType = static_cast<int>(menuEntry.m_itemType);
                 bCloseThisPopup = true;
             }
 
             if (ImGui::IsItemHovered())
             {
-                wpnShowDetail = wpn;
+                wpnShowDetail = wpn; // might be null for non-wpn item
+                mapItemTypeShowDetail = menuEntry.m_itemType;
             }
         }
         ImGui::PopStyleVar();
 
-        if (eBuyingKeyCode != ImGuiKey_None)
+        if (eBuyingItemType != -1)
         {
             bCloseThisPopup = true;
 
@@ -3279,7 +3325,7 @@ void proofps_dd::GUI::drawInGameBuyMenu(
             else
             {
                 // sending selected team id to server automatically exits spectator mode for this player
-                proofps_dd::MsgUserInGameMenuCmd::setBuyMenuSelectedItem(pktUserInGameMenuCmd, static_cast<int>(eBuyingKeyCode));
+                proofps_dd::MsgUserInGameMenuCmd::setBuyMenuSelectedItem(pktUserInGameMenuCmd, eBuyingItemType);
                 // Instead of using sendToServer() of getClient() or inject() of getServer() instances, we use the send() of
                 // their common interface which always points to the initialized instance, which is either client or server.
                 m_pPge->getNetwork().getServerClientInstance()->send(pktUserInGameMenuCmd);
@@ -3293,7 +3339,14 @@ void proofps_dd::GUI::drawInGameBuyMenu(
             ImGui::GetCursorPosY() + m_fFontSizePxHudGeneralScaled,
             sNotice);
         
-        drawWeaponDetails(fBeginPosX + fBtnWidth + 20.f, fBeginPosY + fBtnHeight / 2.f, *wpnShowDetail);
+        if (wpnShowDetail)
+        {
+            drawWeaponDetails(fBeginPosX + fBtnWidth + 20.f, fBeginPosY + fBtnHeight / 2.f, *wpnShowDetail);
+        }
+        else
+        {
+            drawNonWeaponItemDetails(fBeginPosX + fBtnWidth + 20.f, fBeginPosY + fBtnHeight / 2.f, mapItemTypeShowDetail);
+        }
 
         if (bCloseThisPopup)
         {

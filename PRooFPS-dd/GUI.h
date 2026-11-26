@@ -78,6 +78,7 @@ namespace proofps_dd
             std::string m_sLabel;
             std::string m_sKeyToWpnMgr;
             ImGuiKey_ m_eKeyCode;
+            MapItemType m_itemType;
         };
 
         static constexpr char* CVAR_GUI_MAINMENU = "gui_mainmenu";
@@ -394,6 +395,10 @@ namespace proofps_dd
             float fBeginX,
             float fBeginY,
             const Weapon& wpn);
+        static void drawNonWeaponItemDetails(
+            float fBeginX,
+            float fBeginY,
+            const proofps_dd::MapItemType& mit);
         static float proofps_dd::GUI::buildBuyMenuEntries(
             std::vector<proofps_dd::GUI::BuyMenuEntry>& vec,
             const std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>::iterator& itCurrentPlayer);
