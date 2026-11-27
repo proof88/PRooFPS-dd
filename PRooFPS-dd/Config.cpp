@@ -621,6 +621,36 @@ const int& proofps_dd::Config::getPlayerInitialFiatBudget() const
     return m_nPlayerInitialFiatBudget;
 }
 
+const int proofps_dd::Config::getMedkitPrice() const
+{
+    const auto it = m_pge.getConfigProfiles().getVars().find(GameMode::szCvarSvRgmMedkitPrice);
+    if (it == m_pge.getConfigProfiles().getVars().end())
+    {
+        return 0;
+    }
+    return it->second.getAsInt();
+}
+
+const int proofps_dd::Config::getArmorPrice() const
+{
+    const auto it = m_pge.getConfigProfiles().getVars().find(GameMode::szCvarSvRgmArmorPrice);
+    if (it == m_pge.getConfigProfiles().getVars().end())
+    {
+        return 0;
+    }
+    return it->second.getAsInt();
+}
+
+const int proofps_dd::Config::getJetLaxPrice() const
+{
+    const auto it = m_pge.getConfigProfiles().getVars().find(GameMode::szCvarSvRgmJetLaxPrice);
+    if (it == m_pge.getConfigProfiles().getVars().end())
+    {
+        return 0;
+    }
+    return it->second.getAsInt();
+}
+
 const bool& proofps_dd::Config::isTradingEnabled() const
 {
     return m_bTrading;

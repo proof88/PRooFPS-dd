@@ -222,6 +222,10 @@ bool proofps_dd::Maps::load(
         TPURE_ISO_TEX_FILTERING::PURE_ISO_LINEAR_MIPMAP_LINEAR,
         TPURE_ISO_TEX_FILTERING::PURE_ISO_LINEAR);
 
+    // this is needed even if bLoadPickupableItems is false because the GUI
+    // will still need reference map items to display their textures in the Buy menu!
+    MapItem::buildReferenceMapItems(m_gfx);
+    
     bool bParseError = false;
     bool bMapLayoutReached = false;
     constexpr std::streamsize nBuffSize = 1024;
@@ -670,6 +674,17 @@ int proofps_dd::Maps::getBlockCount() const
 int proofps_dd::Maps::getForegroundBlockCount() const
 {
     return m_foregroundBlocks_h;
+}
+
+const PureObject3D* proofps_dd::Maps::getReferenceObjectByMapItemType(const MapItemType& mit) const
+{
+    const auto it = MapItem::getReferenceObjects().find(mit);
+    if (it == MapItem::getReferenceObjects().end())
+    {
+        return nullptr;
+    }
+
+    return it->second;
 }
 
 const PureBoundingVolumeHierarchy& proofps_dd::Maps::getBVH() const

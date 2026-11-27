@@ -121,6 +121,9 @@ namespace proofps_dd
         const bool& isFinanceEnabled() const;
         const int& getMarketOpenDurationSecs() const;
         const int& getPlayerInitialFiatBudget() const;
+        const int getMedkitPrice() const;
+        const int getArmorPrice() const;
+        const int getJetLaxPrice() const;
         const bool& isTradingEnabled() const;
 
         const bool& arePickupableItemsPresent() const;

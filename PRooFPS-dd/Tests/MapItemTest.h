@@ -44,6 +44,7 @@ protected:
 
         addSubTest("test_get_map_item_type_by_char", (PFNUNITSUBTEST)&MapItemTest::test_get_map_item_type_by_char);
         addSubTest("test_get_char_by_map_item_type", (PFNUNITSUBTEST)&MapItemTest::test_get_char_by_map_item_type);
+        addSubTest("test_build_reference_objects", (PFNUNITSUBTEST)&MapItemTest::test_build_reference_objects);
         addSubTest("test_initially_empty", (PFNUNITSUBTEST)&MapItemTest::test_initially_empty);
         addSubTest("test_reset_global_item_id", (PFNUNITSUBTEST)&MapItemTest::test_reset_global_item_id);
         addSubTest("test_get_item_respawn_time_secs", (PFNUNITSUBTEST)&MapItemTest::test_get_item_respawn_time_secs);
@@ -118,14 +119,33 @@ private:
             assertEquals('.', proofps_dd::MapItem::getCharByMapItemType(proofps_dd::MapItemType::ITEM_JETLAX), ".")) != 0;
     }
 
+    bool test_build_reference_objects()
+    {
+        bool b = true;
+        b &= assertTrue(proofps_dd::MapItem::getReferenceObjects().empty(), "no ref objects");
+        
+        proofps_dd::MapItem::buildReferenceMapItems(*engine);
+        b &= assertFalse(proofps_dd::MapItem::getReferenceObjects().empty(), "has ref objects");
+
+        const auto nRefObjCount = proofps_dd::MapItem::getReferenceObjects().size();
+        proofps_dd::MapItem::buildReferenceMapItems(*engine);
+        b &= assertEquals(nRefObjCount, proofps_dd::MapItem::getReferenceObjects().size(), "size");
+
+        return b;
+    }
+
     bool test_initially_empty()
     {
         const proofps_dd::MapItem::MapItemId iLastMapItemId = proofps_dd::MapItem::getGlobalMapItemId();
 
+        bool b = true;
+        b &= assertTrue(proofps_dd::MapItem::getReferenceObjects().empty(), "no ref objects");
+
         proofps_dd::MapItem mi(*engine, proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN, PureVector(1, 2, 3));
 
-        return (assertEquals(mi.getId(), iLastMapItemId, "item id") &
+        return (b & assertEquals(mi.getId(), iLastMapItemId, "item id") &
             assertEquals(proofps_dd::MapItem::getGlobalMapItemId(), iLastMapItemId + 1, "global item id") &
+            assertFalse(proofps_dd::MapItem::getReferenceObjects().empty(), "has ref objects") &
             assertEquals(static_cast<int>(proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN), static_cast<int>(mi.getType()), "type") &
             assertEquals(PureVector(1, 2, 3), mi.getPos(), "pos") &
             assertEquals(mi.getPos(), mi.getObject3D().getPosVec(), "obj pos") &
@@ -141,7 +161,8 @@ private:
 
         proofps_dd::MapItem::resetGlobalData();
 
-        return assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        return (assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id") &
+            assertTrue(proofps_dd::MapItem::getReferenceObjects().empty(), "no ref objects")) != 0;
     }
 
     bool test_get_item_respawn_time_secs()

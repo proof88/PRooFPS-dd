@@ -63,6 +63,10 @@ namespace proofps_dd
         PlayerHandling(PlayerHandling&&) = delete;
         PlayerHandling&& operator=(PlayerHandling&&) = delete;
 
+        int getNonWeaponMapItemPrice(
+            const proofps_dd::MapItemType& eSelectedMapItemType,
+            const proofps_dd::Config& config);
+
     protected:
 
         bool hasPlayerBootedUp(const pge_network::PgeNetworkConnectionHandle& connHandle) const;

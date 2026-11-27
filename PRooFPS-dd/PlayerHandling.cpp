@@ -54,6 +54,19 @@ CConsole& proofps_dd::PlayerHandling::getConsole() const
     return CConsole::getConsoleInstance(getLoggerModuleName());
 }
 
+int proofps_dd::PlayerHandling::getNonWeaponMapItemPrice(
+    const proofps_dd::MapItemType& eSelectedMapItemType,
+    const proofps_dd::Config& config)
+{
+    switch (eSelectedMapItemType)
+    {
+    case proofps_dd::MapItemType::ITEM_HEALTH: return config.getMedkitPrice();
+    case proofps_dd::MapItemType::ITEM_ARMOR: return config.getArmorPrice();
+    case proofps_dd::MapItemType::ITEM_JETLAX:  return config.getJetLaxPrice();
+    default: return -1;
+    }
+}
+
 
 // ############################## PROTECTED ##############################
 
@@ -595,88 +608,85 @@ void proofps_dd::PlayerHandling::handlePlayerBuyWpnReq(
         "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d",
         __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType);
 
-    try
+    const auto* const pWpnToBuy = player.getWeaponInstanceByMapItemType(eSelectedMapItemType);
+    int nPrice = 0;
+    if (pWpnToBuy)
     {
-        const auto* const pWpnToBuy = player.getWeaponInstanceByMapItemType(eSelectedMapItemType);
-        int nPrice = 0;
-        if (pWpnToBuy)
+        if (pWpnToBuy->isAvailable())
         {
-            if (pWpnToBuy->isAvailable())
-            {
-                // buy ammo only
-                nPrice = pWpnToBuy->getAmmoPrice();
-            }
-            else
-            {
-                // buy wpn with default ammo
-                nPrice = pWpnToBuy->getPrice();
-            }
+            // buy ammo only
+            nPrice = pWpnToBuy->getAmmoPrice();
         }
         else
         {
-            // TODO: fill nPrice
+            // buy wpn with default ammo
+            nPrice = pWpnToBuy->getPrice();
         }
+    }
+    else
+    {
+        nPrice = getNonWeaponMapItemPrice(eSelectedMapItemType, config);
+    }
 
-        if (!player.canTakeItemType(eSelectedMapItemType))
-        {
-            getConsole().EOLn(
-                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, cannot take!",
-                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType);
-            return;
-        }
+    if (nPrice < 0)
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, price is INVALID: %d!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType, nPrice);
+        assert(false); // crash in debug
+        return;
+    }
 
-        if (player.getFiatMoney() < nPrice)
-        {
-            getConsole().EOLn(
-                "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, insufficient funds!",
-                __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType);
-            return;
-        }
+    if (!player.canTakeItemType(eSelectedMapItemType))
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, cannot take!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType);
+        return;
+    }
+
+    if (player.getFiatMoney() < nPrice)
+    {
+        getConsole().EOLn(
+            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, insufficient funds!",
+            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType);
+        return;
+    }
         
-        // keep sending MsgWpnUpdateFromServer in sync
-        // with serverPickupAndRespawnItems(), TODO: refactor to have common logic
-        pge_network::PgePacket newPktWpnUpdate;
-        proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
-        bool bHasJustBecomeAvailable = false;
-        player.takeItemType(eSelectedMapItemType, newPktWpnUpdate, bHasJustBecomeAvailable);
-        // wpn update is sent only if takeItemType() flipped the availability of the wpn,
-        // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
-        if (proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate))
+    // keep sending MsgWpnUpdateFromServer in sync
+    // with serverPickupAndRespawnItems(), TODO: refactor to have common logic
+    pge_network::PgePacket newPktWpnUpdate;
+    proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate) = false;
+    bool bHasJustBecomeAvailable = false;
+    player.takeItemType(eSelectedMapItemType, newPktWpnUpdate, bHasJustBecomeAvailable);
+    // wpn update is sent only if takeItemType() flipped the availability of the wpn,
+    // since it can happen the item is not weapon-related at all, or something else, anyway let takeItem() make the decision!
+    if (pWpnToBuy && proofps_dd::MsgWpnUpdateFromServer::getAvailable(newPktWpnUpdate))
+    {
+        if (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
         {
-            if (player.getServerSideConnectionHandle() != pge_network::ServerConnHandle) // server doesnt send this to itself
+            m_pge.getNetwork().getServer().send(newPktWpnUpdate, player.getServerSideConnectionHandle());
+        }
+        else
+        {
+            // server handles pickup-induced switch here, clients do that in MsgWpnUpdateFromServer handler
+            // TODO: overcomplicated, server shall inject to itself!
+            if (player.getWeaponManager().getCurrentWeapon())
             {
-                m_pge.getNetwork().getServer().send(newPktWpnUpdate, player.getServerSideConnectionHandle());
+                wpnHandling.handleAutoSwitchUponWeaponPickupShared(player, *player.getWeaponManager().getCurrentWeapon(), *pWpnToBuy, bHasJustBecomeAvailable);
             }
             else
             {
-                // server handles pickup-induced switch here, clients do that in MsgWpnUpdateFromServer handler
-                // TODO: overcomplicated, server shall inject to itself!
-                if (player.getWeaponManager().getCurrentWeapon())
-                {
-                    wpnHandling.handleAutoSwitchUponWeaponPickupShared(player, *player.getWeaponManager().getCurrentWeapon(), *pWpnToBuy, bHasJustBecomeAvailable);
-                }
-                else
-                {
-                    getConsole().EOLn("PRooFPSddPGE::%s(): current is nullptr around line %d!", __func__, __LINE__);
-                }
+                getConsole().EOLn("PRooFPSddPGE::%s(): current is nullptr around line %d!", __func__, __LINE__);
             }
         }
-
-        player.getFiatMoney() -= static_cast<float>(nPrice);
-
-        getConsole().EOLn(
-            "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, bought %d!",
-            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType, nPrice);
-        
     }
-    catch (const std::exception& e)
-    {
-        // shall not happen due to iSelectedWpnKeyAsInt validity is checked earlier above
-        getConsole().EOLn(
-            "PlayerHandling::%s(): ERROR: connHandleServerSide: %u, name: %s, mapItemType: %d, exception: %s!",
-            __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType, e.what());
-        return;
-    }
+
+    player.getFiatMoney() -= static_cast<float>(nPrice);
+
+    getConsole().EOLn(
+        "PlayerHandling::%s(): connHandleServerSide: %u, name: %s, mapItemType: %d, bought for %d USD!",
+        __func__, player.getServerSideConnectionHandle(), player.getName().c_str(), iSelectedBuyingItemType, nPrice);
 
 } // handlePlayerBuyWpnReq()
 

@@ -65,6 +65,9 @@ namespace proofps_dd
 
         static MapItemType getMapItemTypeByChar(const char& c);
         static char getCharByMapItemType(const MapItemType& mit);
+
+        static const std::map<MapItemType, PureObject3D*>& getReferenceObjects();
+        static void buildReferenceMapItems(PR00FsUltimateRenderingEngine& gfx);
     
         // ---------------------------------------------------------------------------
     

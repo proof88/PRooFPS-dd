@@ -105,6 +105,9 @@ namespace proofps_dd
         static constexpr char* szCvarSvRgmFinance = "sv_rgm_finance";
         static constexpr char* szCvarSvRgmMarketOpenDurationSecs = "sv_rgm_market_open_duration_secs";
         static constexpr char* szCvarSvRgmInitialFiatBudget = "sv_rgm_initial_fiat_budget";
+        static constexpr char* szCvarSvRgmMedkitPrice = "sv_rgm_price_medkit";
+        static constexpr char* szCvarSvRgmArmorPrice = "sv_rgm_price_armor";
+        static constexpr char* szCvarSvRgmJetLaxPrice = "sv_rgm_price_jetlax";
         static constexpr char* szCvarSvRgmTrading = "sv_rgm_trading";
 
         static constexpr int nSvGmTimeLimitSecsDef = 0;

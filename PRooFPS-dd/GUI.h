@@ -39,6 +39,8 @@
 namespace proofps_dd
 {
 
+    class PlayerHandling;
+
     class GUI
     {
     public:
@@ -90,6 +92,7 @@ namespace proofps_dd
             proofps_dd::Maps& maps,
             proofps_dd::Networking& networking,
             std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+            proofps_dd::PlayerHandling& playerHandling,
             const PgeObjectPool<proofps_dd::Smoke>& smokes,
             proofps_dd::Sounds& sounds);   /**< Gets the singleton instance. */
 
@@ -191,6 +194,7 @@ namespace proofps_dd
         static Maps* m_pMaps;
         static Networking* m_pNetworking;
         static std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* m_pMapPlayers;
+        static PlayerHandling* m_pPlayerHandling;
         static const PgeObjectPool<proofps_dd::Smoke>* m_pSmokes;
         static Sounds* m_pSounds;
 

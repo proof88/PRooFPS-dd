@@ -165,6 +165,7 @@ private:
         // items
         b &= assertEquals(0u, maps.getItems().size(), "item count");
         b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
+        b &= assertTrue(proofps_dd::MapItem::getReferenceObjects().empty(), "no ref objects");
 
         // spawn points
         assertTrue(maps.getSpawnpoints().empty(), "spawn points");
@@ -524,6 +525,10 @@ private:
             b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id");
         }
 
+        // even if bLoadPickupableItems is false, reference objects for map items shall still exist
+        // because it is needed by GUI Buy menu
+        b &= assertFalse(proofps_dd::MapItem::getReferenceObjects().empty(), "has ref objects");
+
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count");
 
@@ -623,6 +628,10 @@ private:
             b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 1");
         }
 
+        // even if bLoadPickupableItems is false, reference objects for map items shall still exist
+        // because it is needed by GUI Buy menu
+        b &= assertFalse(proofps_dd::MapItem::getReferenceObjects().empty(), "has ref objects");
+
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 1");
 
@@ -696,6 +705,10 @@ private:
             b &= assertEquals(0u, maps.getItems().size(), "item count 3");
             b &= assertEquals(0u, proofps_dd::MapItem::getGlobalMapItemId(), "global item id 3");
         }
+
+        // even if bLoadPickupableItems is false, reference objects for map items shall still exist
+        // because it is needed by GUI Buy menu
+        b &= assertFalse(proofps_dd::MapItem::getReferenceObjects().empty(), "has ref objects");
 
         // decals
         b &= assertEquals(2u, maps.getDecals().size(), "decal count 3");

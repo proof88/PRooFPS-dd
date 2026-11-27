@@ -14,8 +14,10 @@
 #include <numeric>
 
 #include "Consts.h"
+#include "MapItem.h"
 #include "Maps.h"
 #include "Player.h"
+#include "PlayerHandling.h"
 #include "PRooFPS-dd-packet.h"
 #include "WeaponHandling.h"
 
@@ -145,6 +147,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     proofps_dd::Maps& maps,
     proofps_dd::Networking& networking,
     std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>& mapPlayers,
+    proofps_dd::PlayerHandling& playerHandling,
     const PgeObjectPool<proofps_dd::Smoke>& smokes,
     proofps_dd::Sounds& sounds)
 {
@@ -159,6 +162,7 @@ proofps_dd::GUI& proofps_dd::GUI::getGuiInstance(
     m_pMaps = &maps;
     m_pNetworking = &networking;
     m_pMapPlayers = &mapPlayers;
+    m_pPlayerHandling = &playerHandling;
     m_pSmokes = &smokes;
     m_pSounds = &sounds;
     return m_guiInstance;
@@ -712,6 +716,7 @@ proofps_dd::Config* proofps_dd::GUI::m_pConfig = nullptr;
 proofps_dd::Maps* proofps_dd::GUI::m_pMaps = nullptr;
 proofps_dd::Networking* proofps_dd::GUI::m_pNetworking = nullptr;
 std::map<pge_network::PgeNetworkConnectionHandle, proofps_dd::Player>* proofps_dd::GUI::m_pMapPlayers = nullptr;
+proofps_dd::PlayerHandling* proofps_dd::GUI::m_pPlayerHandling = nullptr;
 const PgeObjectPool<proofps_dd::Smoke>* proofps_dd::GUI::m_pSmokes = nullptr;
 proofps_dd::Sounds* proofps_dd::GUI::m_pSounds = nullptr;
 
@@ -3177,11 +3182,40 @@ void proofps_dd::GUI::drawWeaponDetails(
 } // drawWeaponDetails()
 
 void proofps_dd::GUI::drawNonWeaponItemDetails(
-    float /*fBeginX*/,
-    float /*fBeginY*/,
-    const proofps_dd::MapItemType& /*mit*/)
+    float fBeginX,
+    float fBeginY,
+    const proofps_dd::MapItemType& mit)
 {
-    // TODO
+    drawText(fBeginX, fBeginY, MapItem::toString(mit));
+
+    assert(m_pImFontHudSmallerScaled);
+    ImGui::PushFont(m_pImFontHudSmallerScaled);
+
+    static std::stringstream ssTemp;
+
+    const float fImageX = fBeginX + ImGui::CalcTextSize("Price: $ #####").x + 20 * m_fScalingFactor;
+    const float fImageY = ImGui::GetCursorPosY() + m_fFontSizePxHudSmallerScaled;
+    const float fContinueY_2 = fImageY;
+
+    assert(m_pMaps);
+    const auto* const mapItemObject = m_pMaps->getReferenceObjectByMapItemType(mit);
+    const auto* const itemImageTex = mapItemObject ? mapItemObject->getMaterial().getTexture() : nullptr;
+    if (itemImageTex)
+    {
+        ImGui::SetCursorPos(ImVec2(fImageX, fImageY));
+        ImGui::Image(
+            (ImTextureID)(intptr_t)itemImageTex->getInternalNum(),
+            ImVec2(64.f * m_fScalingFactor, 64.f * m_fScalingFactor) /* size */,
+            { 0, 1 } /* uv0 */, { 1, 0 } /* uv1 */);
+    }
+
+    assert(m_pConfig);
+    assert(m_pPlayerHandling);
+    drawText(
+        fBeginX, fContinueY_2,
+        "Price: $ " + std::to_string(m_pPlayerHandling->getNonWeaponMapItemPrice(mit, *m_pConfig)));
+
+    ImGui::PopFont();
 } // drawNonWeaponItemDetails()
 
 /**

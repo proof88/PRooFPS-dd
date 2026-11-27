@@ -102,6 +102,8 @@ namespace proofps_dd
         PureObject3D** getForegroundBlocks(); // TODO: not nice access
         int getBlockCount() const;
         int getForegroundBlockCount() const;
+        const PureObject3D* getReferenceObjectByMapItemType(
+            const MapItemType& mit) const;
         const PureBoundingVolumeHierarchy& getBVH() const;
         const std::map<MapItem::MapItemId, MapItem*>& getItems() const;
         const std::vector<PureObject3D*>& getDecals() const;

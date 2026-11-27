@@ -134,6 +134,73 @@ char proofps_dd::MapItem::getCharByMapItemType(const proofps_dd::MapItemType& mi
     return '\0';
 }
 
+const std::map<proofps_dd::MapItemType, PureObject3D*>& proofps_dd::MapItem::getReferenceObjects()
+{
+    return m_mapReferenceObjects;
+}
+
+void proofps_dd::MapItem::buildReferenceMapItems(PR00FsUltimateRenderingEngine& gfx)
+{
+    if (!m_mapReferenceObjects.empty())
+    {
+        return;
+    }
+
+    for (const auto& elem : mapChar2MapItemType)
+    {
+        const auto& eMapItemType = elem.second;
+        const auto it = m_mapReferenceObjects.find(eMapItemType);
+        if (it == m_mapReferenceObjects.end())
+        {
+            // TODO: throw when createPlane() fails
+            m_mapReferenceObjects[eMapItemType] = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
+            m_mapReferenceObjects[eMapItemType]->Hide();
+            PureTexture* tex = nullptr;
+            switch (eMapItemType)
+            {
+            case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchgun.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_bazooka.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pusha.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchpistol.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_shotgun.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_grenadelauncher.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_ARMOR:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_armor.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_HEALTH:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
+                break;
+            case proofps_dd::MapItemType::ITEM_JETLAX:
+                tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_jetlax.bmp");
+                break;
+            default:
+                // TODO: throw for unhandled type
+                break;
+            }
+
+            if (tex)
+            {
+                m_mapReferenceObjects[eMapItemType]->getMaterial().setTexture(tex);
+            }
+        }
+    }
+}
+
 proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_dd::MapItemType& eMapItemType, const PureVector& pos) :
     m_id(m_globalMapItemId++),
     m_gfx(gfx),
@@ -143,55 +210,7 @@ proofps_dd::MapItem::MapItem(PR00FsUltimateRenderingEngine& gfx, const proofps_d
     m_bTaken(false),
     m_fSinusMotionDegrees(0.f)
 {
-    const auto it = m_mapReferenceObjects.find(eMapItemType);
-    if (it == m_mapReferenceObjects.end())
-    {
-        // TODO: throw when createPlane() fails
-        m_mapReferenceObjects[eMapItemType] = gfx.getObject3DManager().createPlane(0.5f, 0.5f);
-        m_mapReferenceObjects[eMapItemType]->Hide();
-        PureTexture* tex = nullptr;
-        switch (eMapItemType)
-        {
-        case proofps_dd::MapItemType::ITEM_WPN_PISTOL:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pistol.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_MACHINEGUN:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchgun.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_BAZOOKA:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_bazooka.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_PUSHA:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_pusha.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_MACHINEPISTOL:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_mchpistol.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_SHOTGUN:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_shotgun.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_WPN_GRENADELAUNCHER:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_wpn_grenadelauncher.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_ARMOR:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_armor.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_HEALTH:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_health.bmp");
-            break;
-        case proofps_dd::MapItemType::ITEM_JETLAX:
-            tex = gfx.getTextureManager().createFromFile("gamedata\\textures\\map_item_jetlax.bmp");
-            break;
-        default:
-            // TODO: throw for unhandled type
-            break;
-        }
-
-        if (tex)
-        {
-            m_mapReferenceObjects[eMapItemType]->getMaterial().setTexture(tex);
-        }
-    }
+    buildReferenceMapItems(gfx);
 
     m_obj = gfx.getObject3DManager().createCloned(*m_mapReferenceObjects[eMapItemType]);
     m_obj->Show();

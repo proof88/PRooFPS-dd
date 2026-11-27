@@ -2035,7 +2035,8 @@ bool proofps_dd::Player::canTakeItem(const MapItem& item) const
 
 /**
 * @param itemtype                Item type being received by the player.
-* @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet.
+* @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet in case of item is a weapon.
+*                                Does not write anything here if item is non-weapon.
 * @param bHasJustBecomeAvailable Set by function only in case of weapon items.
 *                                True if player did not have this weapon before, false otherwise.
 */
@@ -2050,7 +2051,8 @@ void proofps_dd::Player::takeItemType(const MapItemType& itemtype, pge_network::
 *                                received it in some different way, e.g. bought it.
 * @param itemtype                If item is not null, just pass its MapItemType here.
 *                                If item is null, pass a valid MapItemType here the player shall receive.
-* @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet.
+* @param pktWpnUpdate            This function writes MsgWpnUpdateFromServer into this packet in case of item is a weapon.
+*                                Does not write anything here if item is non-weapon.
 * @param bHasJustBecomeAvailable Set by function only in case of weapon items.
 *                                True if player did not have this weapon before, false otherwise.
 */
